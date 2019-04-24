@@ -1,0 +1,72 @@
+#ifndef RPPI_GEOMETRIC_FUNCTIONS_H
+#define RPPI_GEOMETRIC_FUNCTIONS_H
+
+
+/**
+ * \file rppi_geometry_functions.h
+ * Image Geometry Transform Primitives.
+ */
+
+#include "rppdefs.h"
+#include "rppdefs.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * 1 channel 8-bit unsigned image flip function.
+ *
+ * \param pSrc \ref source_image_pointer.
+ * \param rSrcStep \ref source_image_line_step.
+ * \param pDst \ref destination_image_pointer.
+ * \param rDstStep \ref destination_image_line_step.
+ * \param oROI \ref roi_specification.
+ * \param flip Specifies the axis about which the image is to be mirrored.
+ * \return \ref image_data_error_codes, \ref roi_error_codes, \ref mirror_error_codes
+ */
+RppStatus
+Rppi_Flip_8u_pkd1_host(const Rpp8u * pSrc, int rSrcStep,
+                        Rpp8u * pDst, int rDstStep,
+                  RppiSize oROI, RppiAxis flip);
+
+RppStatus
+Rppi_Flip_8u_pln1(const Rpp8u * pSrc, int rSrcStep,
+                        Rpp8u * pDst, int rDstStep,
+                  RppiSize oROI, RppiAxis flip);
+
+RppStatus
+Rppi_Flip_8u_pkd3(const Rpp8u * pSrc, int rSrcStep,
+                        Rpp8u * pDst, int rDstStep,
+                  RppiSize oROI, RppiAxis flip);
+
+RppStatus
+Rppi_Flip_8u_pln3(const Rpp8u * pSrc, int rSrcStep,
+                        Rpp8u * pDst, int rDstStep,
+                  RppiSize oROI, RppiAxis flip);
+
+RppStatus
+Rppi_Flip_8u_pkd1_host(const Rpp8u * pSrc, int rSrcStep,
+                        Rpp8u * pDst, int rDstStep,
+                  RppiSize oROI, RppiAxis flip);
+
+RppStatus
+Rppi_Flip_8u_pln1_host(const Rpp8u * pSrc, int rSrcStep,
+                        Rpp8u * pDst, int rDstStep,
+                  RppiSize oROI, RppiAxis flip);
+
+RppStatus
+Rppi_Flip_8u_pkd3_host(const Rpp8u * pSrc, int rSrcStep,
+                        Rpp8u * pDst, int rDstStep,
+                  RppiSize oROI, RppiAxis flip);
+
+RppStatus
+Rppi_Flip_8u_pln3_host(const Rpp8u * pSrc, int rSrcStep,
+                        Rpp8u * pDst, int rDstStep,
+                  RppiSize oROI, RppiAxis flip);
+
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* RPP_FILTERING_FUNCTIONS_H */
