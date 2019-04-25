@@ -1,3 +1,3 @@
-#Initial Commit #
+#Initial Commit 
 
-##Radeon Performance Primitives Library##
+##Radeon Performance Primitives Library
