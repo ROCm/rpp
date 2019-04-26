@@ -1,4 +1,3 @@
-                  
 __kernel void brightness(  __global double *a,                   
                            __global double *c,                       
                                     int alpha,                   

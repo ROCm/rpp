@@ -1,10 +1,9 @@
-#include "rppdefs.h"
-#include <CL/opencl.h>
-#define C L_USE_DEPRECATED_OPENCL_1_2_APIS
-#define LOCAL_SIZE 64
-#define MAX_SOURCE_SIZE 100000
+#define OCL
+#ifdef OCL
+#include "cl/rpp_cl_common.h"
 
-//<template T>
+//File Name : cl_brightness_contrast.cpp
+//Has the opencl implementation of rpp brightness and contrast function
 int cl_brightness_contrast( unsigned char *sPtr,unsigned int height, unsigned int width,
                         unsigned char *dPtr)
 {
@@ -107,3 +106,4 @@ int cl_brightness_contrast( unsigned char *sPtr,unsigned int height, unsigned in
 
     return 0;
 }
+#endif
