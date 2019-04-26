@@ -10,51 +10,55 @@ extern "C" {
 
 #include <stdlib.h>
 
-#include <stdlib.h>
+typedef unsigned char       Rpp8u;
+typedef signed char         Rpp8s;
+typedef unsigned short      Rpp16u;
+typedef short               Rpp16s;
+typedef unsigned int        Rpp32u;
+typedef int                 Rpp32s;
+typedef unsigned long long  Rpp64u;
+typedef long long           Rpp64s;
+typedef float               Rpp32f;
+typedef double              Rpp64f;
 
-typedef unsigned char       Rpp8u;     
-typedef signed char         Rpp8s;     
-typedef unsigned short      Rpp16u;    
-typedef short               Rpp16s;    
-typedef unsigned int        Rpp32u;    
-typedef int                 Rpp32s;    
-typedef unsigned long long  Rpp64u;    
-typedef long long           Rpp64s;    
-typedef float               Rpp32f;    
-typedef double              Rpp64f;   
-
-typedef enum 
+typedef enum
 {
     RPP_SUCCESS = 0,
     RPP_ERROR   = 1,
 } RppStatus;
 
-typedef enum 
+typedef enum
 {
-    RPP_HORIZONTAL_AXIS,
-    RPP_VERTICAL_AXIS,
-    RPP_BOTH_AXIS
+    RPPI_HORIZONTAL_AXIS,
+    RPPI_VERTICAL_AXIS,
+    RPPI_BOTH_AXIS
 } RppiAxis;
 
-typedef enum 
+typedef enum
 {
-    RPP_LOW,
-    RPP_MEDIUM,
-    RPP_HIGH
+    RPPI_LOW,
+    RPPI_MEDIUM,
+    RPPI_HIGH
 } RppiFuzzyLevel;
 
+typedef enum
+{
+    RPPI_CHN_PLANAR,
+    RPPI_CHN_PACKED
+} RppiChnFormat;
 
 typedef struct {
-    int width;
-    int height;
+    unsigned int width;
+    unsigned int height;
+    unsigned int channel;
     } RppiSize;
 
 typedef struct
    {
-       int x;          
-       int y;          
-       int width;      
-       int height;     
+       int x;
+       int y;
+       int width;
+       int height;
    } RppiRect;
 
 typedef struct {
@@ -62,9 +66,9 @@ typedef struct {
        Rpp32f theta;
    } RppPointPolar;
 
-#define RPP_MIN_8U      ( 0 )                        
-#define RPP_MAX_8U      ( 255 )                      
-#define RPP_MIN_16U     ( 0 )                        
+#define RPP_MIN_8U      ( 0 )
+#define RPP_MAX_8U      ( 255 )
+#define RPP_MIN_16U     ( 0 )
 #define RPP_MAX_16U     ( 65535 )
 
 #ifdef __cplusplus
