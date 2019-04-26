@@ -5,7 +5,7 @@
 #define MAX_SOURCE_SIZE 100000
 
 //<template T>
-int cl_brightness_contrast( unsigned char *sPtr,unsigned int height, unsigned int width) 
+int cl_brightness_contrast( unsigned char *sPtr,unsigned int height, unsigned int width,
                         unsigned char *dPtr)
 {
     unsigned int n = height * width;
@@ -53,7 +53,7 @@ int cl_brightness_contrast( unsigned char *sPtr,unsigned int height, unsigned in
     // Get ID for the device
     err = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
 
-    // Create a context 
+    // Create a context
     context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
 
     // Create a command queue
@@ -87,7 +87,7 @@ int cl_brightness_contrast( unsigned char *sPtr,unsigned int height, unsigned in
     err  = clSetKernelArg(kernel, 3, sizeof(int), &beta);
     err  = clSetKernelArg(kernel, 4, sizeof(unsigned int), &n);
 
-    // Execute the kernel over the entire range of the data set 
+    // Execute the kernel over the entire range of the data set
     err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &globalSize, &localSize,
                                                               0, NULL, NULL);
 
@@ -97,7 +97,7 @@ int cl_brightness_contrast( unsigned char *sPtr,unsigned int height, unsigned in
     // Read the results from the device
     clEnqueueReadBuffer(queue, d_output, CL_TRUE, 0,
                                 bytes, dPtr, 0, NULL, NULL );
-    
+
     clReleaseMemObject(d_input);
     clReleaseMemObject(d_output);
     clReleaseProgram(program);
