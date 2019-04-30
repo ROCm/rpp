@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
-project(amd-rpp VERSION 0.1 LANGUAGES CXX)
-
-SET(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc)
-link_directories(opt/rocm/hip/lib)
+project(amd_rpp VERSION 0.1 LANGUAGES CXX)
 
 
-add_library(brightness_contrast SHARED src/imgaug/hip/hip_brightness_contract.cpp)
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/imgaug)
+
+add_library( rpp SHARED)
 
 target_include_directories(brightness_contrast
     PUBLIC
