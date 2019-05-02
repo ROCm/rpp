@@ -1,5 +1,6 @@
 #include <hip/rpp_hip_comman.hpp>
 
+
 template <typename T>
 __global__ void brightness_contrast_kernel( T* inDevPtr, T* outDevPtr,
                                             const int rows,const int cols, const int chns,
@@ -22,8 +23,8 @@ __global__ void brightness_contrast_kernel( T* inDevPtr, T* outDevPtr,
 
 
 template <typename T>
-void brightness_contrast_caller(T* inputPtr, RppiSize imgDim, T* outputPtr,
-                                Rpp32f alpha, Rpp32f beta, RppiChnFormat chnFormat )
+RppStatus hip_brightness_contrast ( T* inputPtr, RppiSize imgDim, T* outputPtr,
+                                    Rpp32f alpha, Rpp32f beta, RppiChnFormat chnFormat )
 {
 
     if (1)
@@ -45,5 +46,8 @@ void brightness_contrast_caller(T* inputPtr, RppiSize imgDim, T* outputPtr,
     {
         // Blas implementation
     }
+
+
+    return RPP_SUCCESS;
 
 }
