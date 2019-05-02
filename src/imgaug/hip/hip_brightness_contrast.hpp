@@ -1,5 +1,6 @@
 #include <hip/rpp_hip_comman.hpp>
 
+
 template <typename T>
 __global__ void brightness_contrast_kernel( T* inDevPtr, T* outDevPtr,
                                             const int rows,const int cols, const int chns,

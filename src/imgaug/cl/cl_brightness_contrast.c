@@ -1,4 +1,8 @@
-#include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <math.h>
 #include "rppdefs.h"
@@ -8,10 +12,10 @@
 const char *kernelSource =                                       "\n" \
 "#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
 "__kernel void brightness(  __global Rpp8u *a,                       \n" \
-"                       __global Rpp8u *c,                       \n"\
-"                         int alpha,                      \n" \
-"                         int beta,                       \n"\
-"                       const unsigned int n)                    \n" \
+"                           __global Rpp8u *c,                       \n"\
+"                             int alpha,                      \n" \
+"                             int beta,                       \n"\
+"                             const unsigned int n)                    \n" \
 "{                                                               \n" \
 "    //Get our global thread ID                                  \n" \
 "    int id = get_global_id(0);                                  \n" \
@@ -114,3 +118,8 @@ RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int
 
     return RPP_SUCCESS;
 }
+
+
+#ifdef __cplusplus
+}
+#endif

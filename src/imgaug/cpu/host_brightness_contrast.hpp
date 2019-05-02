@@ -1,5 +1,3 @@
-#include <rppdefs.h>
-
 
 template <typename T>
 RppStatus host_brightness_contrast(T* pSrc, RppiSize size, T* pDst,
