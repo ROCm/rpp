@@ -7,8 +7,8 @@
 
 const char *kernelSource =                                       "\n" \
 "#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
-"__kernel void brightness(  __global double *a,                       \n" \
-"                       __global double *c,                       \n"\
+"__kernel void brightness(  __global Rpp8u *a,                       \n" \
+"                       __global Rpp8u *c,                       \n"\
 "                         int alpha,                      \n" \
 "                         int beta,                       \n"\
 "                       const unsigned int n)                    \n" \
@@ -22,22 +22,14 @@ const char *kernelSource =                                       "\n" \
 "}                                                               \n" \
                                                                 "\n" ;
 
-RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int width, Rpp8u* pDst)
+RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int width,
+                                  Rpp8u* pDst, Rpp32f alpha, Rpp32f beta)
 {
     // Length of vectors
-    unsigned int n = 10000000;
-
-    // Host input vectors
-    double *h_a;
-    double *h_b;
-    // Host output vector
-    double *h_c;
-    int alpha = 2;
-    int beta = 1;
+    unsigned int n = height * width;
 
     // Device input buffers
     cl_mem d_a;
-    cl_mem d_b;
     // Device output buffer
     cl_mem d_c;
 
@@ -49,20 +41,7 @@ RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int
     cl_kernel kernel;                 // kernel
 
     // Size, in bytes, of each vector
-    size_t bytes = n*sizeof(double);
-
-    // Allocate memory for each vector on host
-    h_a = (double*)malloc(bytes);
-    //h_b = (doauble*)malloc(bytes);
-    h_c = (double*)malloc(bytes);
-
-    // Initialize vectors on host
-    int i;
-    for( i = 0; i < n; i++ )
-    {
-        h_a[i] = i;
-        //h_b[i] = cosf(i)*cosf(i);
-    }
+    size_t bytes = n*sizeof(Rpp8u);
 
     size_t globalSize, localSize;
     cl_int err;
@@ -102,7 +81,7 @@ RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int
 
     // Write our data set into the input array in device memory
     err = clEnqueueWriteBuffer(queue, d_a, CL_TRUE, 0,
-                                   bytes, h_a, 0, NULL, NULL);
+                                   bytes, pSrc, 0, NULL, NULL);
     //err |= clEnqueueWriteBuffer(queue, d_b, CL_TRUE, 0,
                                   // bytes, h_b, 0, NULL, NULL);
 
@@ -123,28 +102,15 @@ RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int
 
     // Read the results from the device
     clEnqueueReadBuffer(queue, d_c, CL_TRUE, 0,
-                                bytes, h_c, 0, NULL, NULL );
-
-    //Sum up vector c and print result divided by n, this should equal 1 within error
-    double sum = 0;
-    for(i=0; i<10; i++)
-    printf("final result: %f\n",h_c[i]);
-
-   // printf("final result: %f\n", sum/n);
+                                bytes, pDst, 0, NULL, NULL );
 
     // release OpenCL resources
     clReleaseMemObject(d_a);
-   // clReleaseMemObject(d_b);
     clReleaseMemObject(d_c);
     clReleaseProgram(program);
     clReleaseKernel(kernel);
     clReleaseCommandQueue(queue);
     clReleaseContext(context);
-
-    //release host memory
-    free(h_a);
-    //free(h_b);
-    free(h_c);
 
     return RPP_SUCCESS;
 }
