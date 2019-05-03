@@ -27,6 +27,7 @@ const char *kernelSource =                                      "\n" \
 "}                                                               \n" \
 ;
 
+//Remove all the unnecessary Memory creating and destroying objects
 
 RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int width,
                                   Rpp8u* pDst, Rpp32f alpha, Rpp32f beta)
