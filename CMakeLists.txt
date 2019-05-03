@@ -5,16 +5,25 @@ if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(FATAL_ERROR "In-source builds are not allowed. Invoke cmake from build directory")
 endif ()
 
-add_library(${PROJECT_NAME} SHARED )
+add_library(${PROJECT_NAME} SHARED /home/neel/jgeob/rpp-workspace/AMD-RPP/include/rppi.h)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/imgaug)
-target_link_libraries(${PROJECT_NAME} imgaug )
+set( MODULES_LIST "imgaug" "arithmetic")
+
+foreach (MOD_NAME ${MODULES_LIST})
+    add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+endforeach(MOD_NAME)
+
+if( "${BACKEND}" STREQUAL "HIP")
+    set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc)
+endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(${PROJECT_NAME} ${MODULES_LIST})
 
 
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 )
