@@ -19,14 +19,14 @@ rppi_brighten_1C8U_pln(Rpp8u *pSrc, RppiSize size, Rpp8u *pDst, Rpp32f alpha = 1
 
 #ifdef HIP_COMPILE
     // temporay part
-    Rpp8u devPtrS; Rpp8u devPtrD;
+    void* devPtrS; void* devPtrD;
     hipMalloc((void**)&devPtrS, sizeof(Rpp8u)*size.height*size.width );
     hipMalloc((void**)&devPtrD, sizeof(Rpp8u)*size.height*size.width );
     hipMemcpy(devPtrS, pSrc, sizeof(Rpp8u)*size.height*size.width , hipMemcpyHostToDevice);
-    hip_brightness_contrast<Rpp8u>(devPtrS, size, devPtrD, alpha, beta, RPPI_CHN_PLANAR );
+    hip_brightness_contrast<Rpp8u>((Rpp8u*)devPtrS, size, (Rpp8u*)devPtrD, alpha, beta, RPPI_CHN_PLANAR );
     hipMemcpy(devPtrD, pDst, sizeof(Rpp8u)*size.height*size.width , hipMemcpyHostToDevice);
-    hipfree((void*)devPtrS);
-    hipfree((void*)devPtrD);
+    hipFree(devPtrS);
+    hipFree(devPtrD);
 
 #elif defined (OCL_COMPILE)
     cl_brightness_contrast( pSrc, size.height, size.width, pDst, alpha, beta);
