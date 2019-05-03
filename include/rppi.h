@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-#include "rppi_brightness_illumination_functions.h"
+#include "rppi_image_augumentation_functions.h"
 #include "rppi_arithmatic_and_logical_functions.h"
 #include "rppi_morphological_operations.h"
 #include "rppi_statistics_functions.h"

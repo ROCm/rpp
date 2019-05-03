@@ -1,5 +1,5 @@
-#ifndef RPPI_BRIGHTNESS_ILLUMINATION_FUNCTIONS_H
-#define RPPI_BRIGHTNESS_ILLUMINATION_FUNCTIONS_H
+#ifndef RPPI_IMAGE_AUGUMENTATION_FUNCTIONS_H
+#define RPPI_IMAGE_AUGUMENTATION_FUNCTIONS_H
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
@@ -15,4 +15,4 @@ rppi_brighten_1C8U_pln_host(Rpp8u *pSrc, RppiSize size, Rpp8u *pDst, Rpp32f alph
 }
 #endif
 
-#endif /* RPPI_BRIGHTNESS_ILLUMINATION_FUNCTIONS_H */
+#endif /* RPPI_IMAGE_AUGUMENTATION_FUNCTIONS_H */

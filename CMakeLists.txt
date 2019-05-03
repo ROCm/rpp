@@ -5,8 +5,9 @@ if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(FATAL_ERROR "In-source builds are not allowed. Invoke cmake from build directory")
 endif ()
 
-add_library(${PROJECT_NAME} SHARED /home/neel/jgeob/rpp-workspace/AMD-RPP/include/rppi.h)
+add_library(${PROJECT_NAME} SHARED include/rppi.h)
 
+#Future Work: Build list can be set from CLI ; CACHED and to be used
 set( MODULES_LIST "imgaug" "arithmetic")
 
 foreach (MOD_NAME ${MODULES_LIST})
@@ -26,4 +27,11 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+)
+
+install (TARGETS brightness_contrast
+         LIBRARY DESTINATION /opt/rocm/rpp/lib
+)
+install (DIRECTORY include
+         DESTINATION /opt/rocm/rpp/include
 )
