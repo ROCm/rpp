@@ -26,8 +26,8 @@ const char *kernelSource =                                       "\n" \
 "}                                                               \n" \
                                                                 "\n" ;
 
-RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int width,
-                                  Rpp8u* pDst, Rpp32f alpha, Rpp32f beta)
+RppStatus cl_brightness_contrast( Rpp8u* srcPtr, unsigned int height, unsigned int width,
+                                  Rpp8u* dstPtr, Rpp32f alpha, Rpp32f beta)
 {
     // Length of vectors
     unsigned int n = height * width;
@@ -85,7 +85,7 @@ RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int
 
     // Write our data set into the input array in device memory
     err = clEnqueueWriteBuffer(queue, d_a, CL_TRUE, 0,
-                                   bytes, pSrc, 0, NULL, NULL);
+                                   bytes, srcPtr, 0, NULL, NULL);
     //err |= clEnqueueWriteBuffer(queue, d_b, CL_TRUE, 0,
                                   // bytes, h_b, 0, NULL, NULL);
 
@@ -106,7 +106,7 @@ RppStatus cl_brightness_contrast( Rpp8u* pSrc, unsigned int height, unsigned int
 
     // Read the results from the device
     clEnqueueReadBuffer(queue, d_c, CL_TRUE, 0,
-                                bytes, pDst, 0, NULL, NULL );
+                                bytes, dstPtr, 0, NULL, NULL );
 
     // release OpenCL resources
     clReleaseMemObject(d_a);

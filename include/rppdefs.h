@@ -50,7 +50,6 @@ typedef enum
 typedef struct {
     unsigned int width;
     unsigned int height;
-    unsigned int channel;
     } RppiSize;
 
 typedef struct
