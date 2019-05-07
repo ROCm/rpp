@@ -5,15 +5,15 @@
 extern "C" {
 #endif
 RppStatus
-Rppi_median_8u_pkd1_host(const Rpp8u * srcPtr, int rSrcStep,Rpp8u * dstPtr, int rDstStep,
+Rppi_median_8u_pkd1_host(const RppPtr_t  srcPtr, int rSrcStep,RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_median_8u_pkd1(const Rpp8u * srcPtr, int rSrcStep,Rpp8u * dstPtr, int rDstStep,
+Rppi_median_8u_pkd1(const RppPtr_t  srcPtr, int rSrcStep,RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_gaussian_8u_pkd1_host(const Rpp8u * srcPtr, Rpp8u * dstPtr, RppiSize oROI, RppiAxis flip);
+Rppi_gaussian_8u_pkd1_host(const RppPtr_t  srcPtr, RppPtr_t  dstPtr, RppiSize oROI, RppiAxis flip);
 #ifdef __cplusplus
 }
 #endif

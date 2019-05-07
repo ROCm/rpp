@@ -25,43 +25,43 @@ extern "C" {
  * \return \ref image_data_error_codes, \ref roi_error_codes, \ref mirror_error_codes
  */
 RppStatus
-Rppi_Flip_8u_pkd1_host(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Flip_8u_pkd1_host(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_Flip_8u_pln1(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Flip_8u_pln1(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_Flip_8u_pkd3(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Flip_8u_pkd3(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_Flip_8u_pln3(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Flip_8u_pln3(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_Flip_8u_pkd1_host(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Flip_8u_pkd1_host(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_Flip_8u_pln1_host(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Flip_8u_pln1_host(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_Flip_8u_pkd3_host(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Flip_8u_pkd3_host(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 RppStatus
-Rppi_Flip_8u_pln3_host(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Flip_8u_pln3_host(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiSize oROI, RppiAxis flip);
 
 

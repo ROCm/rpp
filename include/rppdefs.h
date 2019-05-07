@@ -21,6 +21,10 @@ typedef long long           Rpp64s;
 typedef float               Rpp32f;
 typedef double              Rpp64f;
 
+typedef void*              RppPtr_t;
+
+
+
 typedef enum
 {
     RPP_SUCCESS = 0,

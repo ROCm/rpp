@@ -6,23 +6,23 @@ extern "C" {
 #endif
 
 RppStatus
-Rppi_Foggy_8u_pkd1(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Foggy_8u_pkd1(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiFuzzyLevel rlevel);
 
 RppStatus
-Rppi_Foggy_8u_pkd3(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Foggy_8u_pkd3(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiFuzzyLevel rlevel);
 
 RppStatus
-Rppi_Foggy_8u_pln1(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Foggy_8u_pln1(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiFuzzyLevel rlevel);
 
 RppStatus
-Rppi_Foggy_8u_pln3(const Rpp8u * srcPtr, int rSrcStep,
-                        Rpp8u * dstPtr, int rDstStep,
+Rppi_Foggy_8u_pln3(const RppPtr_t  srcPtr, int rSrcStep,
+                        RppPtr_t  dstPtr, int rDstStep,
                   RppiFuzzyLevel rlevel);
 #ifdef __cplusplus
 }
