@@ -10,12 +10,12 @@
 
 // OpenCL kernel. Each work item takes care of one element of c
 const char *kernelSource =                                      "\n" \
-"#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
+"#pragma OPENCL EXTENSION cl_khr_fp64 : enable                   \n" \
 "__kernel void vecAdd(  __global Rpp8u *a,                       \n" \
 "                       __global Rpp8u *b,                       \n" \
 "                       const unsigned int n)                    \n" \
 "                       const Rpp32f alpha,                      \n" \
-"                       const Rpp32f beta,                      \n" \
+"                       const Rpp32f beta,                       \n" \
 
 "{                                                               \n" \
 "    //Get our global thread ID                                  \n" \
@@ -23,7 +23,7 @@ const char *kernelSource =                                      "\n" \
 "                                                                \n" \
 "    //Make sure we do not go out of bounds                      \n" \
 "    if (id < n)                                                 \n" \
-"        b[id] = a[id] * alpha + beta;                                  \n" \
+"        b[id] = a[id] * alpha + beta;                           \n" \
 "}                                                               \n" \
 ;
 

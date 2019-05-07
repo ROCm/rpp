@@ -1,4 +1,4 @@
-#include <hip/rpp_hip_comman.hpp>
+#include <hip/rpp_hip_common.hpp>
 
 
 template <typename T>
