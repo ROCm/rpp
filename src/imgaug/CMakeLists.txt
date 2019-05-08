@@ -4,14 +4,14 @@ project(imgaug) #Rename the Project name
 file( GLOB MOD_CPP "*.cpp" )
 add_library( ${PROJECT_NAME} STATIC ${MOD_CPP})
 
+# TODO; CPU src code building
+
 if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc)
     add_definitions(-DHIP_COMPILE)
 elseif( "${BACKEND}" STREQUAL "OCL")
     set(CMAKE_CXX_COMPILER /usr/bin/gcc)
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -lOpenCL -lm")
-    add_library(brightness_contrast SHARED src/imgaug/cl/cl_brightness_contrast.cpp
-                                       src/imgaug/rppi_brightness_contrast.cpp)
     link_directories(/opt/rocm/opencl/lib/)
     include_directories(/opt/rocm/opencl/include/)
     add_definitions(-DOCL_COMPILE)

@@ -22,7 +22,7 @@ rppi_brighten_1C8U_pln( RppHandle_t rppHandle, RppPtr_t srcPtr, RppiSize srcSize
 #elif defined (OCL_COMPILE)
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer("brightness_contrast", theProgram, theKernel, rppHandle); // .cl will get be added internally
+    cl_kernel_initializer(rppHandle, "brightness_contrast", theProgram, theKernel); // .cl will get be added internally
 
     //---- Args Setter
     unsigned int n = srcSize.height * srcSize.width * 1 /*channel*/ ;
@@ -33,7 +33,7 @@ rppi_brighten_1C8U_pln( RppHandle_t rppHandle, RppPtr_t srcPtr, RppiSize srcSize
     clSetKernelArg(theKernel, 3, sizeof(Rpp32s), &beta);
     //----
 
-    cl_kernel_implementer (rppHandle, srcSize, theKernel )
+    cl_kernel_implementer (rppHandle, srcSize, theProgram, theKernel);
 
 #endif //backend
 

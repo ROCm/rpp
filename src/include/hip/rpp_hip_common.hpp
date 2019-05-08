@@ -1,6 +1,6 @@
 /*To be used by the library alone*/
-#ifndef HIP_RPP_COMMAN_H
-#define HIP_RPP_COMMAN_H
+#ifndef RPP_HIP_COMMON_H
+#define RPP_HIP_COMMON_H
 
 
 
@@ -8,4 +8,4 @@
 
 
 
-#endif //HIP_RPP_COMMAN_H
+#endif //RPP_HIP_COMMON_H

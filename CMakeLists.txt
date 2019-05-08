@@ -7,8 +7,8 @@ endif ()
 
 add_library(${PROJECT_NAME} SHARED include/rppi.h)
 
-#Future Work: Build list can be set from CLI ; CACHED and to be used
-set( MODULES_LIST "imgaug" "arithmetic")
+#TODO: Future Work Build list can be set from CLI ; CACHED and to be used
+set( MODULES_LIST "imgaug")
 
 foreach (MOD_NAME ${MODULES_LIST})
     add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
@@ -16,7 +16,10 @@ endforeach(MOD_NAME)
 
 if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc)
+elseif( "${BACKEND}" STREQUAL "OCL")
+    set(CMAKE_CXX_COMPILER /usr/bin/gcc)
 endif()
+
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(${PROJECT_NAME} ${MODULES_LIST})
@@ -29,7 +32,7 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 )
 
-install (TARGETS brightness_contrast
+install (TARGETS amd_rpp
          LIBRARY DESTINATION /opt/rocm/rpp/lib
 )
 install (DIRECTORY include
