@@ -10,8 +10,8 @@
 #endif //backend
 
 RppStatus
-rppi_brighten_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                        Rpp32f alpha = 1, Rpp32f beta = 0)
+rppi_brighten_1C8U_pln( RppHandle_t rppHandle, RppPtr_t srcPtr, RppiSize srcSize,
+                        RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta)
 {
 
 #ifdef HIP_COMPILE
@@ -21,21 +21,19 @@ rppi_brighten_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 #elif defined (OCL_COMPILE)
     cl_kernel theKernel;
-    cl_kernel_initializer("brightness_contrast",theKernel); // .cl will get be added internally
+    cl_program theProgram;
+    cl_kernel_initializer("brightness_contrast", theProgram, theKernel, rppHandle); // .cl will get be added internally
 
     //---- Args Setter
+    unsigned int n = srcSize.height * srcSize.width * 1 /*channel*/ ;
+    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, 2, sizeof(unsigned int), &n);
+    clSetKernelArg(theKernel, 3, sizeof(Rpp32f), &alpha);
+    clSetKernelArg(theKernel, 3, sizeof(Rpp32s), &beta);
+    //----
 
-    clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&a_mem_obj);
-    clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&b_mem_obj);
-    clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&c_mem_obj);
-
-    //---- kernel caller
-    cl::Event event;
-    size_t global_item_size = srcSize.height * srcSize.width;
-    size_t local_item_size = 64;
-    clEnqueueNDRangeKernel( command_queue, theKernel, 1, NULL, &global_item_size,
-                            &local_item_size, 0, NULL, event );
-    event.wait();
+    cl_kernel_implementer (rppHandle, srcSize, theKernel )
 
 #endif //backend
 

@@ -2,7 +2,7 @@ __kernel void brightness_contrast(  __global RppPtr_t a,
                                     __global RppPtr_t b,
                                     const unsigned int n,
                                     const Rpp32f alpha,
-                                    const Rpp32f beta)
+                                    const Rpp32s beta)
 {
     //Get our global thread ID
     int id = get_global_id(0);

@@ -6,10 +6,12 @@ extern "C" {
 #endif
 
 RppStatus
-rppi_brighten_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f alpha, Rpp32f beta);
+rppi_brighten_1C8U_pln( RppHandle_t handle, RppPtr_t srcPtr, RppiSize srcSize,
+                        RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta );
 
 RppStatus
-rppi_brighten_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f alpha, Rpp32f beta);
+rppi_brighten_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
+                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta);
 
 #ifdef __cplusplus
 }
