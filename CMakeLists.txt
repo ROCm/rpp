@@ -5,7 +5,7 @@ if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(FATAL_ERROR "In-source builds are not allowed. Invoke cmake from build directory")
 endif ()
 
-add_library(${PROJECT_NAME} SHARED include/rppi.h)
+add_library(${PROJECT_NAME} SHARED include/rpp.h)
 
 #TODO: Future Work Build list can be set from CLI ; CACHED and to be used
 set( MODULES_LIST "imgaug")
@@ -17,7 +17,7 @@ endforeach(MOD_NAME)
 if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc)
 elseif( "${BACKEND}" STREQUAL "OCL")
-    set(CMAKE_CXX_COMPILER /usr/bin/gcc)
+    set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc) # GCC and G++ donst work for creating .so file
 endif()
 
 

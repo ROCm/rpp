@@ -6,7 +6,7 @@
 #define __CL_ENABLE_EXCEPTIONS
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 
-#define __forceinline // __attribute__((always_inline))
+#define __forceinline __attribute__((always_inline)) inline
 
 __forceinline cl_int
 cl_kernel_initializer (RppHandle_t rppHandle, const std::string kernelFile, cl_program& theProgram, cl_kernel& theKernel)
@@ -65,4 +65,4 @@ cl_kernel_implementer (RppHandle_t rppHandle, RppiSize srcSize,cl_program& thePr
     return ret;
 }
 
-#endif RPP_CL_COMMON_H
+#endif //RPP_CL_COMMON_H

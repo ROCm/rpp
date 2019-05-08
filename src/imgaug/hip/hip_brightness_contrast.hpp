@@ -22,7 +22,7 @@ __global__ void brightness_contrast_kernel( T* inDevPtr, T* outDevPtr,
 
 template <typename T>
 RppStatus hip_brightness_contrast ( T* inputPtr, RppiSize srcSize, T* outputPtr,
-                                    Rpp32f alpha, Rpp32f beta, RppiChnFormat chnFormat )
+                                    Rpp32f alpha, Rpp32f beta, RppiChnFormat chnFormat, int channel)
 {
 
     if (1)
@@ -30,14 +30,14 @@ RppStatus hip_brightness_contrast ( T* inputPtr, RppiSize srcSize, T* outputPtr,
 
         dim3 grid;
         dim3 block;
-        if (srcSize.channel == 1) { block = dim3(32,32,1); grid = dim3(srcSize.width/32 +1, srcSize.height/32 +1 ,1);}
-        else if(srcSize.channel == 3) { block = dim3(16,16,3); grid = dim3(srcSize.width/16 +1, srcSize.height/16 +1 ,1);}
-        else if(srcSize.channel == 4) { block = dim3(16,16,4); grid = dim3(srcSize.width/16 +1, srcSize.height/16+1 ,1);}
+        if (channel == 1) { block = dim3(32,32,1); grid = dim3(srcSize.width/32 +1, srcSize.height/32 +1 ,1);}
+        else if(channel == 3) { block = dim3(16,16,3); grid = dim3(srcSize.width/16 +1, srcSize.height/16 +1 ,1);}
+        else if(channel == 4) { block = dim3(16,16,4); grid = dim3(srcSize.width/16 +1, srcSize.height/16+1 ,1);}
 
         hipLaunchKernelGGL( (brightness_contrast_kernel<T>),
                             grid, block, 0, /*Stream*/0,
                             inputPtr, outputPtr,
-                            srcSize.height, srcSize.width, srcSize.channel,
+                            srcSize.height, srcSize.width, channel,
                             alpha, beta );
     }
     else if (0)
