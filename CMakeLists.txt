@@ -36,5 +36,5 @@ install (TARGETS amd_rpp
          LIBRARY DESTINATION /opt/rocm/rpp/lib
 )
 install (DIRECTORY include
-         DESTINATION /opt/rocm/rpp/include
+         DESTINATION /opt/rocm/rpp/
 )
