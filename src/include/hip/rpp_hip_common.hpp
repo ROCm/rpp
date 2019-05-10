@@ -6,6 +6,6 @@
 
 #include <hip/hip_runtime.h>
 
-
+#include <rppdefs.h>
 
 #endif //RPP_HIP_COMMON_H

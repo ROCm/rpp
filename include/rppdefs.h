@@ -8,8 +8,6 @@
 extern "C" {
 #endif
 
-#include <stdlib.h>
-
 typedef unsigned char       Rpp8u;
 typedef signed char         Rpp8s;
 typedef unsigned short      Rpp16u;

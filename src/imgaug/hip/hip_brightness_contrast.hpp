@@ -21,8 +21,11 @@ __global__ void brightness_contrast_kernel( T* inDevPtr, T* outDevPtr,
 
 
 template <typename T>
-RppStatus hip_brightness_contrast ( T* inputPtr, RppiSize srcSize, T* outputPtr,
-                                    Rpp32f alpha, Rpp32f beta, RppiChnFormat chnFormat, int channel)
+RppStatus hip_brightness_contrast ( T* inputPtr, RppiSize srcSize,
+                                    T* outputPtr,
+                                    Rpp32f alpha, Rpp32f beta,
+                                    RppiChnFormat chnFormat, int channel
+                                    hipStream_t stream)
 {
 
     if (1)

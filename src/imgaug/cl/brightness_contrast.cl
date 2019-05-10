@@ -1,6 +1,6 @@
-__kernel void brightness_contrast(  __global RppPtr_t a,
-                                    __global RppPtr_t b,
-                                    const unsigned int n,
+__kernel void brightness_contrast(  __global unsigned char a,
+                                    __global unsigned char b,
+                                    const size_t n,
                                     const Rpp32f alpha,
                                     const Rpp32s beta)
 {
