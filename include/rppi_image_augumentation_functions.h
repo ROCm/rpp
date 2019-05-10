@@ -9,6 +9,9 @@ extern "C" {
 RppStatus
 rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
+// HSV2RGB host function declaration
+RppStatus
+rppi_hsv2rgb_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_brighten_1C8U_pln( RppHandle_t handle, RppPtr_t srcPtr, RppiSize srcSize,
