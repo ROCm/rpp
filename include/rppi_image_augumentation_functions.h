@@ -29,8 +29,8 @@ rppi_brighten_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
 
 //blur host function declaration for single channel
 RppStatus
-rppi_blur3x3_1C8U_pln_host(RppPtr_t *srcPtr, RppiSize srcSize,
-                            RppPtr_t *dstPtr);
+rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
+                            RppPtr_t dstPtr);
 
 //contrast host function declaration for single channel
 RppStatus
