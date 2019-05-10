@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <math.h>
 
 template <typename T>
 RppStatus host_blur(T* srcPtr, RppiSize srcSize, T* dstPtr)
