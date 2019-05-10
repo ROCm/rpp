@@ -5,16 +5,21 @@
 extern "C" {
 #endif
 
+// RGB2HSV host function declaration
+RppStatus
+rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
 
 RppStatus
 rppi_brighten_1C8U_pln( RppHandle_t handle, RppPtr_t srcPtr, RppiSize srcSize,
                         RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta );
-// brightness host function calls for single channel
+
+// brightness host function declaration  for single channel
 RppStatus
 rppi_brighten_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta);
 
-// brightness host function calls for three channel
+// brightness host function declaration for three channel
 RppStatus
 rppi_brighten_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta);
