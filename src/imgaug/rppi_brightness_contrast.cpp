@@ -11,8 +11,10 @@
 #endif //backend
 
 RppStatus
-rppi_brighten_1C8U_pln( RppHandle_t rppHandle, RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta)
+rppi_brighten_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
+                        RppPtr_t dstPtr,
+                        Rpp32f alpha, Rpp32s beta,
+                        RppHandle_t rppHandle )
 {
 
 #ifdef HIP_COMPILE
@@ -23,11 +25,13 @@ rppi_brighten_1C8U_pln( RppHandle_t rppHandle, RppPtr_t srcPtr, RppiSize srcSize
                                     (hipStream_t)rppHandle);
 
 #elif defined (OCL_COMPILE)
+
     cl_brightness_contrast (    static_cast<cl_mem>(srcPtr), srcSize,
                                 static_cast<cl_mem>(dstPtr),
                                 alpha, beta,
                                 RPPI_CHN_PLANAR, 1 /*Channel*/,
                                 static_cast<cl_command_queue>(rppHandle) );
+
 
 #endif //backend
 

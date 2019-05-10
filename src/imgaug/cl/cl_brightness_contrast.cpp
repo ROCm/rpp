@@ -17,8 +17,8 @@ cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
     clSetKernelArg(theKernel, 2, sizeof(size_t), &n);
-    clSetKernelArg(theKernel, 3, sizeof(Rpp32f), &alpha);
-    clSetKernelArg(theKernel, 3, sizeof(Rpp32s), &beta);
+    clSetKernelArg(theKernel, 3, sizeof(float), &alpha);
+    clSetKernelArg(theKernel, 4, sizeof(int), &beta);
     //----
 
     cl_kernel_implementer (theQueue, srcSize.height*srcSize.height*channel, theProgram, theKernel);

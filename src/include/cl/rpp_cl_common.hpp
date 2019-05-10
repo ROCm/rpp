@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <iostream>
 #include <math.h>
 #include <CL/cl.hpp>

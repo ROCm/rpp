@@ -12,7 +12,7 @@ if( "${BACKEND}" STREQUAL "HIP")
 elseif( "${BACKEND}" STREQUAL "OCL")
     add_subdirectory( cl )
     set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lOpenCL -lm")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -lOpenCL -lm")
     link_directories(/opt/rocm/opencl/lib/x86_64/)
     target_link_libraries (${PROJECT_NAME} OpenCL  ${PROJECT_NAME}-opencl)
     target_include_directories(${PROJECT_NAME} PUBLIC /opt/rocm/opencl/include/)

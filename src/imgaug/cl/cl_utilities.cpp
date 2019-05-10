@@ -1,14 +1,18 @@
 #include <cl/rpp_cl_common.hpp>
 
+#ifndef MOD_CL_PATH
+#   error Kernel files' base path not defined; undefined `MOD_CL_PATH`
+#endif //MOD_CL_PATH
+
 cl_int
-cl_kernel_initializer (cl_command_queue theHandle, std::string kernelFile,
+cl_kernel_initializer (cl_command_queue theQueue, std::string kernelFile,
                         cl_program& theProgram, cl_kernel& theKernel)
 {
     cl_int err;
     // File Handling
     char *sourceStr;
     size_t sourceSize;
-    std::string kernelFile_cl = kernelFile + ".cl" ;
+    std::string kernelFile_cl = MOD_CL_PATH + kernelFile +".cl";
     std::cout << kernelFile_cl;
     FILE *filePtr = fopen( kernelFile_cl.c_str(), "rb");
     if (!filePtr) {
@@ -24,11 +28,11 @@ cl_kernel_initializer (cl_command_queue theHandle, std::string kernelFile,
     fclose(filePtr);
 
     cl_context theContext;
-    clGetCommandQueueInfo(  theHandle,
+    clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_CONTEXT,
                             sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
-    clGetCommandQueueInfo(  theHandle,
+    clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
 
 
@@ -41,7 +45,7 @@ cl_kernel_initializer (cl_command_queue theHandle, std::string kernelFile,
 }
 
 cl_int
-cl_kernel_implementer (cl_command_queue theHandle, size_t n, cl_program& theProgram,
+cl_kernel_implementer (cl_command_queue theQueue, size_t n, cl_program& theProgram,
                         cl_kernel& theKernel  )
 {
     cl_int err;
@@ -49,9 +53,9 @@ cl_kernel_implementer (cl_command_queue theHandle, size_t n, cl_program& theProg
     // Number of total work items - localSize must be devisor
     size_t globalSize = ceil(n/(float)localSize)*localSize;
 
-    err = clEnqueueNDRangeKernel(theHandle, theKernel, 1, NULL, &globalSize, &localSize,
+    err = clEnqueueNDRangeKernel(theQueue, theKernel, 1, NULL, &globalSize, &localSize,
                                                               0, NULL, NULL);
-    clFinish(theHandle);
+    clFinish(theQueue);
     clReleaseProgram(theProgram);
     clReleaseKernel(theKernel);
     return err;
