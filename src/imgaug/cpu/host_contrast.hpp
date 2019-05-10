@@ -3,7 +3,7 @@
 
 template <typename T>
 RppStatus host_contrast(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-                        Rpp32u new_min = 225, Rpp32u new_max = 0)
+                        Rpp32u new_min, Rpp32u new_max)
 {
     Rpp32f Min = (Rpp32f) *std::min_element(srcPtr,srcPtr + (srcSize.width * srcSize.height));
     Rpp32f Max = (Rpp32f) *std::max_element(srcPtr,srcPtr + (srcSize.width * srcSize.height));

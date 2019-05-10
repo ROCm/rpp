@@ -32,10 +32,16 @@ RppStatus
 rppi_blur3x3_1C8U_pln_host(RppPtr_t *srcPtr, RppiSize srcSize,
                             RppPtr_t *dstPtr);
 
-//contrast function declaration for single channel
+//contrast host function declaration for single channel
 RppStatus
-rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
-                            RppPtr_t dstPtr,Rpp32u new_min, Rpp32u new_max);
+rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
+                            Rpp32u new_min = 0, Rpp32u new_max =  225);
+
+//Hue host function declaration
+RppStatus
+rppi_hue_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                       Rpp32f hueShift = 0);
+
 
 #ifdef __cplusplus
 }
