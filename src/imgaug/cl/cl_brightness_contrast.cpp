@@ -21,7 +21,7 @@ cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 4, sizeof(int), &beta);
     //----
 
-    cl_kernel_implementer (theQueue, srcSize.height*srcSize.height*channel, theProgram, theKernel);
+    cl_kernel_implementer (theQueue, srcSize.width*srcSize.height*channel, theProgram, theKernel);
 
     return RPP_SUCCESS;
 
