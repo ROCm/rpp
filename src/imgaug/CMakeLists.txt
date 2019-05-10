@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(imgaug) #Rename the Project name
 
 file( GLOB MOD_CPP "*.cpp" )
-add_library( ${PROJECT_NAME} STATIC ${MOD_CPP} /home/neel/jgeob/rpp-workspace/AMD-RPP/include/rpp.h)
+add_library( ${PROJECT_NAME} STATIC ${MOD_CPP} /opt/rocm/rpp/include/rpp.h)
 
 # TODO; CPU src code building
 
