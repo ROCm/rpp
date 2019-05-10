@@ -45,7 +45,14 @@ rppi_hue_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 //Saturation host function declaration
 RppStatus
 rppi_saturation_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                       Rpp32f saturationFactor = 1);
+                              Rpp32f saturationFactor = 1);
+
+//Rotate host function declaration for single channel
+RppStatus
+rppi_rotate_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          RppiSize sizeDst, Rpp32f angleRad = 0);
+
+
 #ifdef __cplusplus
 }
 #endif
