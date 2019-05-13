@@ -19,14 +19,14 @@ cl_contrast_streach (    cl_mem srcPtr, RppiSize srcSize,
 
     
     //----- Args Setter
-    clSetKernelArg(kernel, 0, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(kernel, 1, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(kernel, 2, sizeof(int), &min);
-    clSetKernelArg(kernel, 3, sizeof(int), &max);
-    clSetKernelArg(kernel, 4, sizeof(unsigned int), &new_min);
-    clSetKernelArg(kernel, 5, sizeof(unsigned int), &new_max);
-    clSetKernelArg(kernel, 6, sizeof(unsigned int), &height);
-    clSetKernelArg(kernel, 7, sizeof(unsigned int), &width);
+    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, 2, sizeof(int), &min);
+    clSetKernelArg(theKernel, 3, sizeof(int), &max);
+    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &newMin);
+    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &newMax);
+    clSetKernelArg(theKernel, 6, sizeof(unsigned int), &(srcSize.height));
+    clSetKernelArg(theKernel, 7, sizeof(unsigned int), &(srcSize.width));
     //-----
 
     size_t dim3[3];

@@ -5,6 +5,15 @@
 extern "C" {
 #endif
 
+// RGB2HSV device function declaration
+/*Parameters
+srcPtr is of type Rpp8u * 
+dstPtr is of type Rpp32f *
+srcSize is the size of both source and destination images (Rpp32u height, Rpp32u width)
+*/
+RppStatus
+rppi_rgb2hsv_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
 // RGB2HSV host function declaration
 RppStatus
 rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
