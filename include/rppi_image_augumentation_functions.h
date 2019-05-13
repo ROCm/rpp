@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /*Parameters
-srcPtr is of type Rpp8u * 
+srcPtr is of type Rpp8u *
 dstPtr is of type Rpp32f *
 srcSize is the size of both source and destination images (Rpp32u height, Rpp32u width)
 */
@@ -21,7 +21,7 @@ rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 RppStatus
 rppi_hsv2rgb_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
-                
+
 
 // brightness host function declaration  for single channel
 RppStatus
@@ -33,6 +33,13 @@ rppi_brighten_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
 RppStatus
 rppi_brighten_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta);
+
+
+RppStatus
+rppi_brighten_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
+                        RppPtr_t dstPtr,
+                        Rpp32f alpha, Rpp32s beta,
+                        RppHandle_t rppHandle );
 
 //-------------------------- Smoothening ---------------------------------------
 RppStatus

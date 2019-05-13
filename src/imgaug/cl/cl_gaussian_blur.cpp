@@ -47,8 +47,8 @@ cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
     err |= clSetKernelArg(theKernel, 6, sizeof(size_t), &filterSize);
 
     size_t dim3[3];
-    dim3[0] = srcSize.height;
-    dim3[1] = srcSize.width;
+    dim3[0] = srcSize.width;
+    dim3[1] = srcSize.height;
     dim3[2] = channel;
     cl_kernel_implementer (theQueue, dim3, theProgram, theKernel);
 
