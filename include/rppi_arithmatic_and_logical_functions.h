@@ -9,23 +9,23 @@ extern "C" {
 
 
 RppStatus
-Rppi_Add_Constant_8u_pkd1(const Rpp8u * pSrc, int rSrcStep,
-                        Rpp8u * pDst, int rDstStep,
+Rppi_Add_Constant_8u_pkd1(const RppPtr_t srcPtr, int rSrcStep,
+                        RppPtr_t dstPtr, int rDstStep,
                   const Rpp8u rConstant, RppiSize oSizeROI, int rScaleFactor);
 
 RppStatus
-Rppi_Add_Constant_8u_pln1(const Rpp8u * pSrc, int rSrcStep,
-                        Rpp8u * pDst, int rDstStep,
+Rppi_Add_Constant_8u_pln1(const RppPtr_t srcPtr, int rSrcStep,
+                        RppPtr_t dstPtr, int rDstStep,
                   const Rpp8u rConstant, RppiSize oSizeROI, int rScaleFactor);
 
 RppStatus
-Rppi_Add_Constant_8u_pkd3(const Rpp8u * pSrc, int rSrcStep,
-                        Rpp8u * pDst, int rDstStep,
+Rppi_Add_Constant_8u_pkd3(const RppPtr_t srcPtr, int rSrcStep,
+                        RppPtr_t dstPtr, int rDstStep,
                   const Rpp8u rConstant, RppiSize oSizeROI, int rScaleFactor);
 
 RppStatus
-Rppi_Add_Constant_8u_pln3(const Rpp8u * pSrc, int rSrcStep,
-                        Rpp8u * pDst, int rDstStep,
+Rppi_Add_Constant_8u_pln3(const RppPtr_t srcPtr, int rSrcStep,
+                        RppPtr_t dstPtr, int rDstStep,
                   const Rpp8u rConstant, RppiSize oSizeROI, int rScaleFactor);
 #ifdef __cplusplus
 }

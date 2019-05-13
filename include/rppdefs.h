@@ -8,8 +8,6 @@
 extern "C" {
 #endif
 
-#include <stdlib.h>
-
 typedef unsigned char       Rpp8u;
 typedef signed char         Rpp8s;
 typedef unsigned short      Rpp16u;
@@ -20,6 +18,11 @@ typedef unsigned long long  Rpp64u;
 typedef long long           Rpp64s;
 typedef float               Rpp32f;
 typedef double              Rpp64f;
+
+typedef void*              RppPtr_t;
+
+typedef void*              RppHandle_t;
+
 
 typedef enum
 {
@@ -50,7 +53,6 @@ typedef enum
 typedef struct {
     unsigned int width;
     unsigned int height;
-    unsigned int channel;
     } RppiSize;
 
 typedef struct

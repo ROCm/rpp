@@ -1,40 +1,41 @@
 cmake_minimum_required(VERSION 3.5)
 project(amd_rpp VERSION 0.1)
 
+if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+  message(FATAL_ERROR "In-source builds are not allowed. Invoke cmake from build directory")
+endif ()
 
-if (BACKEND_OCL)
-    set(CMAKE_CXX_COMPILER /usr/bin/gcc)
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -lOpenCL -lm")
-    add_library(brightness_contrast SHARED src/imgaug/cl/cl_brightness_contrast.cpp
-                                           src/imgaug/rppi_brightness_contrast.cpp)
-    link_directories(/opt/rocm/opencl/lib/)
-    include_directories(/opt/rocm/opencl/include/)
-    add_definitions(-DOCL_COMPILE)
-elseif(BACKEND_HIP)
+add_library(${PROJECT_NAME} SHARED include/rpp.h)
+
+#TODO: Future Work Build list can be set from CLI ; CACHED and to be used
+set( MODULES_LIST "imgaug")
+
+foreach (MOD_NAME ${MODULES_LIST})
+    add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+endforeach(MOD_NAME)
+
+if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc)
-    link_directories(opt/rocm/hip/lib)
-    add_library(brightness_contrast SHARED src/imgaug/rppi_brightness_contrast.cpp)
-    add_definitions(-DHIP_COMPILE)
-endif()
-
-if(BACKEND_CPU_ALONE)
-    set(CMAKE_CXX_COMPILER /usr/bin/gcc)
-    add_library(brightness_contrast SHARED src/imgaug/cpu/host_brightness_contrast.hpp
-                                           src/imgaug/rppi_brightness_contrast.cpp)
+elseif( "${BACKEND}" STREQUAL "OCL")
+    set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc) # GCC and G++ donst work for creating .so file
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -lOpenCL -lm")
 endif()
 
 
-target_include_directories(brightness_contrast
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(${PROJECT_NAME} ${MODULES_LIST})
+
+
+
+target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 )
 
-install (TARGETS brightness_contrast
+install (TARGETS amd_rpp
          LIBRARY DESTINATION /opt/rocm/rpp/lib
 )
 install (DIRECTORY include
-         DESTINATION /opt/rocm/rpp/include
+         DESTINATION /opt/rocm/rpp/
 )
