@@ -20,6 +20,12 @@ cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
                             RppiChnFormat chnFormat, size_t channel,
                             cl_command_queue theQueue);
 
+RppStatus
+cl_contrast_streach (    cl_mem srcPtr, RppiSize srcSize,
+                            cl_mem dstPtr,
+                            Rpp8u newMin, Rpp8u newMax,
+                            RppiChnFormat chnFormat, size_t channel,
+                            cl_command_queue theQueue);
 
 
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
