@@ -3,11 +3,12 @@
 
 //===== Utils
 cl_int
-cl_kernel_initializer (cl_command_queue theHandle, std::string kernelFile,
+cl_kernel_initializer ( cl_command_queue theQueue,
+                        std::string kernelFile, std::string kernelName,
                         cl_program& theProgram, cl_kernel& theKernel);
 
 cl_int
-cl_kernel_implementer (cl_command_queue theHandle, size_t n, cl_program& theProgram,
+cl_kernel_implementer (cl_command_queue theHandle, size_t* dim3, cl_program& theProgram,
                         cl_kernel& theKernel  );
 
 //===== Internal CL functions
