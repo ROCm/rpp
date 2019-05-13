@@ -1,13 +1,14 @@
 __kernel void brightness_contrast(  __global unsigned char* a,
                                     __global unsigned char* b,
-                                    const size_t n,
                                     const float alpha,
-                                    const int beta)
+                                    const int beta,
+                                    const size_t height,
+                                    const size_t width,
+                                    const size_t channel
+)
 {
-    //Get our global thread ID
-    int id = get_global_id(0);
+    int pixIdx = get_global_id(0) + get_global_id(1)* width +
+                 get_global_id(2)* width * height;
 
-    //Make sure we do not go out of bounds
-    if (id < n)
-        b[id] = a[id] * alpha + beta;
+    b[pixIdx] = a[pixIdx] * alpha + beta;
 }
