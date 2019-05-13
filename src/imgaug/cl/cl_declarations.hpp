@@ -20,6 +20,12 @@ cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
                             RppiChnFormat chnFormat, size_t channel,
                             cl_command_queue theQueue);
 
+cl_int
+cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr,
+                RppiChnFormat chnFormat, size_t channel,
+                size_t filterSize,
+                cl_command_queue theQueue);
 
 
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
