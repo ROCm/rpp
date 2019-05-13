@@ -28,9 +28,13 @@ cl_contrast_streach (    cl_mem srcPtr, RppiSize srcSize,
                             cl_command_queue theQueue);
 cl_int
 cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr,
+                cl_mem dstPtr, size_t filterSize,
                 RppiChnFormat chnFormat, size_t channel,
-                size_t filterSize,
+                cl_command_queue theQueue);
+cl_int
+cl_flip(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, RppiAxis flipAxis,
+                RppiChnFormat chnFormat, size_t channel,
                 cl_command_queue theQueue);
 
 
