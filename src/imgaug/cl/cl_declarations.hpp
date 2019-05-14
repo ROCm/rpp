@@ -17,24 +17,24 @@ RppStatus
 cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32f alpha, Rpp32s beta,
-                            RppiChnFormat chnFormat, size_t channel,
+                            RppiChnFormat chnFormat, unsigned short channel,
                             cl_command_queue theQueue);
 
 RppStatus
 cl_contrast_stretch (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32u newMin, Rpp32u newMax,
-                            RppiChnFormat chnFormat, size_t channel,
+                            RppiChnFormat chnFormat, unsigned short channel,
                             cl_command_queue theQueue);
 cl_int
 cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, size_t filterSize,
-                RppiChnFormat chnFormat, size_t channel,
+                cl_mem dstPtr, unsigned short filterSize,
+                RppiChnFormat chnFormat, unsigned short channel,
                 cl_command_queue theQueue);
 cl_int
 cl_flip(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiAxis flipAxis,
-                RppiChnFormat chnFormat, size_t channel,
+                RppiChnFormat chnFormat, unsigned short channel,
                 cl_command_queue theQueue);
 
 RppStatus 

@@ -1,14 +1,21 @@
+#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
+
 __kernel void brightness_contrast(  __global unsigned char* a,
                                     __global unsigned char* b,
                                     const float alpha,
                                     const int beta,
-                                    const size_t height,
-                                    const size_t width,
-                                    const size_t channel
+                                    const unsigned short height,
+                                    const unsigned short width,
+                                    const unsigned short channel
 )
 {
-    int pixIdx = get_global_id(0) + get_global_id(1)* width +
-                 get_global_id(2)* width * height;
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
+    if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    b[pixIdx] = a[pixIdx] * alpha + beta;
+    int pixIdx = id_x + id_y * width + id_z * width * height;
+
+    int res = a[pixIdx] * alpha + beta;
+    b[pixIdx] = saturate_8u(res);
 }

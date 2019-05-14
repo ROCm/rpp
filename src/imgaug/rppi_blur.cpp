@@ -21,6 +21,7 @@ rppi_blur3x3_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
                         RPPI_CHN_PLANAR, 1 /*Channel*/,
                         static_cast<cl_command_queue>(rppHandle) );
 
+
 #endif //backend
 
     return RPP_SUCCESS;
