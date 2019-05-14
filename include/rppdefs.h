@@ -63,10 +63,25 @@ typedef struct
        int height;
    } RppiRect;
 
+typedef enum{
+    GAUSS3,
+    GAUSS5,
+    GAUSS3x1,
+    GAUSS1x3,
+    AVG3 = 10,
+    AVG5
+} RppiBlur;
+
+typedef enum{
+    ZEROPAD,
+    NOPAD
+} RppiPad;
+
 typedef struct {
        Rpp32f rho;
        Rpp32f theta;
    } RppPointPolar;
+
 
 #define RPP_MIN_8U      ( 0 )
 #define RPP_MAX_8U      ( 255 )

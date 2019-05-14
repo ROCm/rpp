@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+////////////////////////// rgbtohsv conversion//////////////////////
 /*Parameters
 srcPtr is of type Rpp8u *
 dstPtr is of type Rpp32f *
@@ -16,7 +17,6 @@ rppi_rgb2hsv_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 // RGB2HSV host function declaration
 RppStatus
 rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-
 
 
 // brightness host function declaration  for single channel
@@ -48,15 +48,9 @@ RppStatus
 rppi_blur3x3_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize,
                         RppPtr_t dstPtr, RppHandle_t rppHandle);
 
-//------------------------- Colors space HSV ----------------------------------
 
-// RGB2HSV host function declaration
-RppStatus
-rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
-// HSV2RGB host function declaration
-RppStatus
-rppi_hsv2rgb_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+//----------------------Contrast Stretch function--------------------------------
 
 //contrast host function declaration for single channel
 RppStatus
@@ -85,6 +79,11 @@ rppi_saturation_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr
 RppStatus
 rppi_rotate_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                           RppiSize sizeDst, Rpp32f angleRad = 0);
+
+//Flip host function declaration for single channel input
+RppStatus rppi_flip_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                                   RppiAxis flipAxis);
+
 
 RppStatus
 rppi_flip_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
