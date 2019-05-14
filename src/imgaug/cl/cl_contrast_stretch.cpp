@@ -2,22 +2,22 @@
 #include "cl_declarations.hpp"
 
 RppStatus
-cl_contrast_streach (    cl_mem srcPtr, RppiSize srcSize,
+cl_contrast_stretch (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
-                            Rpp8u newMin, Rpp8u newMax,
+                            Rpp32u newMin, Rpp32u newMax,
                             RppiChnFormat chnFormat, size_t channel,
                             cl_command_queue theQueue)
 {
-    Rpp8u min = 0; /* Kernel has to be called */
-    Rpp8u max = 255; /* Kernel has to be called */
+    Rpp32u min = 0; /* Kernel has to be called */
+    Rpp32u max = 255; /* Kernel has to be called */
     cl_kernel theKernel;
     cl_program theProgram;
     cl_kernel_initializer(theQueue,
-                          "contrast_streach.cl",
-                          "contrast_streach",
+                          "contrast_stretch.cl",
+                          "contrast_stretch",
                           theProgram, theKernel);
 
-    
+
     //----- Args Setter
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
@@ -30,8 +30,8 @@ cl_contrast_streach (    cl_mem srcPtr, RppiSize srcSize,
     //-----
 
     size_t dim3[3];
-    dim3[0] = srcSize.height;
-    dim3[1] = srcSize.width;
+    dim3[0] = srcSize.width;
+    dim3[1] = srcSize.height;
     dim3[2] = channel;
     cl_kernel_implementer (theQueue, dim3, theProgram, theKernel);
 

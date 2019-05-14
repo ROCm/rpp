@@ -4,7 +4,7 @@
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
-#include "hip/hip_brightness_contrast.hpp"
+
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
@@ -17,8 +17,8 @@ rppi_blur3x3_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
 
     cl_gaussian_blur(static_cast<cl_mem>(srcPtr), srcSize,
                         static_cast<cl_mem>(dstPtr),
-                        RPPI_CHN_PLANAR, 1 /*Channel*/,
                         3 /*Filter width*/,
+                        RPPI_CHN_PLANAR, 1 /*Channel*/,
                         static_cast<cl_command_queue>(rppHandle) );
 
 #endif //backend
@@ -34,8 +34,8 @@ rppi_blur3x3_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
 
     cl_gaussian_blur(static_cast<cl_mem>(srcPtr), srcSize,
                         static_cast<cl_mem>(dstPtr),
-                        RPPI_CHN_PLANAR, 3 /*Channel*/,
                         3 /*Filter width*/,
+                        RPPI_CHN_PLANAR, 3 /*Channel*/,
                         static_cast<cl_command_queue>(rppHandle) );
 
 #endif //backend
