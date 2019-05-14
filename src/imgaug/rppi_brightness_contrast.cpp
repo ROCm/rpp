@@ -40,7 +40,7 @@ rppi_brighten_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
 
 RppStatus
 rppi_brighten_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                            Rpp32f alpha = 1, Rpp32f beta = 0, RppHandle_t rppHandle = 0 )
+                            Rpp32f alpha, Rpp32s beta, RppHandle_t rppHandle)
 {
     int channel = 1;
     host_brightness_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
@@ -51,7 +51,7 @@ rppi_brighten_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_brighten_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f alpha = 1, Rpp32s beta = 0)
+rppi_brighten_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta)
 {
     int channel = 3;
     host_brightness_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
