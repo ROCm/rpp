@@ -25,7 +25,7 @@ rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_contrast_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+rppi_contrast_u8_pln1(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u new_min, Rpp32u new_max, RppHandle_t rppHandle)
 {
 
