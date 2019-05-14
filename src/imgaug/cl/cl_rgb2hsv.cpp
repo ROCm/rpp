@@ -2,10 +2,9 @@
 #include "cl_declarations.hpp"
 
 
-
 RppStatus 
 cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, size_t chanel,
+                cl_mem dstPtr, RppiChnFormat chnFormat, size_t channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
     cl_program theProgram;
@@ -13,23 +12,21 @@ cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
                           "rgbtohsv.cl",
                           "rgb2hsv",
                           theProgram, theKernel);
-    /*
+    
     //---- Args Setter
     size_t n = srcSize.height * srcSize.width * channel ;
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, 2, sizeof(float), &alpha);
-    clSetKernelArg(theKernel, 3, sizeof(int), &beta);
     clSetKernelArg(theKernel, 4, sizeof(size_t), &srcSize.height);
     clSetKernelArg(theKernel, 5, sizeof(size_t), &srcSize.width);
     clSetKernelArg(theKernel, 6, sizeof(size_t), &channel);
-    //----
+    
 
     size_t dim3[3];
     dim3[0] = srcSize.width;
     dim3[1] = srcSize.height;
     dim3[2] = channel;
-    cl_kernel_implementer (theQueue, dim3, theProgram, theKernel);*/
+    cl_kernel_implementer (theQueue, dim3, theProgram, theKernel);
 
     return RPP_SUCCESS;
 

@@ -23,18 +23,18 @@ rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 }*/
 
 RppStatus
-rppi_rgb2hsv_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_rgb2hsv_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
 {
     #ifdef HIP_COMPILE
    /*Still needs to be implemented*/
 
     #elif defined (OCL_COMPILE)
 
-    //cl_convert_rgb2hsv(   static_cast<cl_mem>(srcPtr), srcSize,
-    //                        static_cast<cl_mem>(dstPtr),
-    //                        RPPI_CHN_PLANAR, 3 /*Channel*/,
-    //                        static_cast<cl_command_queue>(rppHandle));
-//
+    cl_convert_rgb2hsv(   static_cast<cl_mem>(srcPtr), srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            RPPI_CHN_PLANAR, 3 /*Channel*/,
+                            static_cast<cl_command_queue>(rppHandle));
+
     #endif //backend
     
     return RPP_SUCCESS;
