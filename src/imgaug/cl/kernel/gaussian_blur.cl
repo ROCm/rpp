@@ -1,3 +1,5 @@
+#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
+
 __kernel void gaussian_blur_planar(
 	const __global unsigned char* input,
 	__global  unsigned char* output,
@@ -31,6 +33,6 @@ __kernel void gaussian_blur_planar(
         }
     } //for (int r = 0...
 
-	output[pixIdx] = sum;
+    output[pixIdx] = saturate_8u(sum);
 
 }
