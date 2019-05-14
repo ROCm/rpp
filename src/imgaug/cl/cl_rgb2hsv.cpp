@@ -7,13 +7,13 @@ RppStatus
 cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, size_t chanel,
                 cl_command_queue theQueue){
-    /*cl_kernel theKernel;
+    cl_kernel theKernel;
     cl_program theProgram;
     cl_kernel_initializer(theQueue,
-                          "brightness_contrast.cl",
-                          "brightness_contrast",
+                          "rgbtohsv.cl",
+                          "rgb2hsv",
                           theProgram, theKernel);
-
+    /*
     //---- Args Setter
     size_t n = srcSize.height * srcSize.width * channel ;
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
