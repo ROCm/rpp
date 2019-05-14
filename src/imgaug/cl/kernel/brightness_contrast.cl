@@ -4,9 +4,9 @@ __kernel void brightness_contrast(  __global unsigned char* a,
                                     __global unsigned char* b,
                                     const float alpha,
                                     const int beta,
-                                    const size_t height,
-                                    const size_t width,
-                                    const size_t channel
+                                    const unsigned short height,
+                                    const unsigned short width,
+                                    const unsigned short channel
 )
 {
     int id_x = get_global_id(0);
@@ -14,7 +14,7 @@ __kernel void brightness_contrast(  __global unsigned char* a,
     int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    int pixIdx = id_x + id_y* width + id_z * width * height;
+    int pixIdx = id_x + id_y * width + id_z * width * height;
 
     int res = a[pixIdx] * alpha + beta;
     b[pixIdx] = saturate_8u(res);

@@ -5,7 +5,7 @@ RppStatus
 cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32f alpha, Rpp32s beta,
-                            RppiChnFormat chnFormat, size_t channel,
+                            RppiChnFormat chnFormat, unsigned short channel,
                             cl_command_queue theQueue)
 {
     cl_kernel theKernel;
@@ -16,14 +16,14 @@ cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
                           theProgram, theKernel);
 
     //---- Args Setter
-    size_t n = srcSize.height * srcSize.width * channel ;
+    unsigned short n = srcSize.height * srcSize.width * channel ;
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
     clSetKernelArg(theKernel, 2, sizeof(float), &alpha);
     clSetKernelArg(theKernel, 3, sizeof(int), &beta);
-    clSetKernelArg(theKernel, 4, sizeof(size_t), &srcSize.height);
-    clSetKernelArg(theKernel, 5, sizeof(size_t), &srcSize.width);
-    clSetKernelArg(theKernel, 6, sizeof(size_t), &channel);
+    clSetKernelArg(theKernel, 4, sizeof(unsigned short), &srcSize.height);
+    clSetKernelArg(theKernel, 5, sizeof(unsigned short), &srcSize.width);
+    clSetKernelArg(theKernel, 6, sizeof(unsigned short), &channel);
     //----
 
     size_t dim3[3];

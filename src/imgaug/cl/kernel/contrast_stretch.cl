@@ -6,9 +6,9 @@ __kernel void contrast_stretch(  __global unsigned char *a,
                                    const unsigned int max,
                                const unsigned int new_min,
                                const unsigned int new_max,
-                               const size_t height,
-                               const size_t width,
-                               const size_t channel
+                               const unsigned short height,
+                               const unsigned short width,
+                               const unsigned short channel
 )
 {
     int id_x = get_global_id(0);

@@ -5,7 +5,7 @@ RppStatus
 cl_contrast_stretch (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32u newMin, Rpp32u newMax,
-                            RppiChnFormat chnFormat, size_t channel,
+                            RppiChnFormat chnFormat, unsigned short channel,
                             cl_command_queue theQueue)
 {
     Rpp32u min = 0; /* Kernel has to be called */

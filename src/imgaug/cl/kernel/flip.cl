@@ -1,9 +1,9 @@
 __kernel void flip_horizontal_planar(
 	const __global unsigned char* input,
 	__global  unsigned char* output,
-    const size_t height,
-    const size_t width,
-    const size_t channel
+    const unsigned short height,
+    const unsigned short width,
+    const unsigned short channel
 )
 {
 
@@ -23,9 +23,9 @@ __kernel void flip_horizontal_planar(
 __kernel void flip_vertical_planar(
 	const __global unsigned char* input,
 	__global  unsigned char* output,
-    const size_t height,
-    const size_t width,
-    const size_t channel
+    const unsigned short height,
+    const unsigned short width,
+    const unsigned short channel
 )
 {
     int id_x = get_global_id(0);
@@ -44,9 +44,9 @@ __kernel void flip_vertical_planar(
 __kernel void flip_bothaxis_planar(
 	const __global unsigned char* input,
 	__global  unsigned char* output,
-    const size_t height,
-    const size_t width,
-    const size_t channel
+    const unsigned short height,
+    const unsigned short width,
+    const unsigned short channel
 )
 {
 
