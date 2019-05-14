@@ -9,13 +9,13 @@ __kernel void brightness_contrast(  __global unsigned char* a,
                                     const unsigned short channel
 )
 {
-    unsigned short id_x = get_global_id(0);
-    unsigned short id_y = get_global_id(1);
-    unsigned short id_z = get_global_id(2);
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    unsigned short pixIdx = id_x + id_y * width + id_z * width * height;
+    int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    unsigned short res = a[pixIdx] * alpha + beta;
+    int res = a[pixIdx] * alpha + beta;
     b[pixIdx] = saturate_8u(res);
 }

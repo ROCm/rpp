@@ -11,14 +11,14 @@ __kernel void naive_convolution_planar(
 )
 {
 
-    unsigned short id_x = get_global_id(0);
-    unsigned short id_y = get_global_id(1);
-    unsigned short id_z = get_global_id(2);
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    unsigned short hfFiltSz = filterSize/2;
+    int hfFiltSz = filterSize/2;
     if ( (id_x < hfFiltSz) || (id_y < hfFiltSz) ||
             (id_y >= ((int) height-hfFiltSz)) || (id_x >= (width-hfFiltSz)) )
     {
