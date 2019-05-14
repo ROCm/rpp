@@ -1,4 +1,4 @@
-__kernel void contrast_streach(  __global unsigned char *a,
+__kernel void contrast_stretch(  __global unsigned char *a,
                                 __global unsigned char *c,
                                    const unsigned int min,
                                    const unsigned int max,
