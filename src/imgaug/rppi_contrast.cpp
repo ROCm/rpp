@@ -13,18 +13,18 @@
 
 RppStatus
 rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                            Rpp32u new_min, Rpp32u new_max)
+                            Rpp32u newMin, Rpp32u newMax)
 {
 
     host_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), new_min ,new_max );
+                                    static_cast<Rpp8u*>(dstPtr), newMin ,newMax );
     return RPP_SUCCESS;
 
 }
 
 RppStatus
 rppi_contrast_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                            Rpp32u new_min, Rpp32u new_max)
+                            Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
 {
 
     #ifdef HIP_COMPILE
@@ -32,7 +32,7 @@ rppi_contrast_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     #elif defined (OCL_COMPILE)
 
-    cl_contrast_streach (   static_cast<cl_mem>(srcPtr), srcSize,
+    cl_contrast_stretch (   static_cast<cl_mem>(srcPtr), srcSize,
                             static_cast<cl_mem>(dstPtr),
                             newMin, newMax,
                             RPPI_CHN_PLANAR, 1 /*Channel*/,

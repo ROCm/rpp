@@ -2,7 +2,7 @@
 #include "cl_declarations.hpp"
 
 RppStatus
-cl_contrast_streach (    cl_mem srcPtr, RppiSize srcSize,
+cl_contrast_stretch (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp8u newMin, Rpp8u newMax,
                             RppiChnFormat chnFormat, size_t channel,
@@ -13,11 +13,11 @@ cl_contrast_streach (    cl_mem srcPtr, RppiSize srcSize,
     cl_kernel theKernel;
     cl_program theProgram;
     cl_kernel_initializer(theQueue,
-                          "contrast_streach.cl",
-                          "contrast_streach",
+                          "contrast_stretch.cl",
+                          "contrast_stretch",
                           theProgram, theKernel);
 
-    
+
     //----- Args Setter
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
