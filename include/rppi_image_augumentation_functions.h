@@ -40,6 +40,7 @@ rppi_brighten_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
                         Rpp32f alpha, Rpp32s beta,
                         RppHandle_t rppHandle );
 
+
 //-------------------------- Smoothening ---------------------------------------
 RppStatus
 rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
@@ -66,6 +67,11 @@ RppStatus
 rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
                             Rpp32u new_min = 0, Rpp32u new_max =  225);
 
+RppStatus
+rppi_contrast_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
+                        RppPtr_t dstPtr,
+                        Rpp32u min, Rpp32u max,
+                        RppHandle_t rppHandle );
 //Hue host function declaration
 RppStatus
 rppi_hue_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
