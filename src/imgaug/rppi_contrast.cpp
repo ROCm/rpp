@@ -10,33 +10,6 @@
 #include "cl/cl_declarations.hpp"
 #endif //backend
 
-RppStatus
-rppi_contrast_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr,
-                        Rpp32u min, Rpp32u max,
-                        RppHandle_t rppHandle )
-{
-
-#ifdef HIP_COMPILE
-    /*hip_brightness_contrast<Rpp8u>( static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr),
-                                    alpha, beta,
-                                    RPPI_CHN_PLANAR,
-                                    (hipStream_t)rppHandle);*/
-
-#elif defined (OCL_COMPILE)
-
-    cl_contrast_streach (   static_cast<cl_mem>(srcPtr), srcSize,
-                            static_cast<cl_mem>(dstPtr),
-                            min, max,
-                            RPPI_CHN_PLANAR, 1 /*Channel*/,
-                            static_cast<cl_command_queue>(rppHandle) );
-
-
-#endif //backend
-
-    return RPP_SUCCESS;
-}
 
 RppStatus
 rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
@@ -45,6 +18,29 @@ rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     host_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                                     static_cast<Rpp8u*>(dstPtr), new_min ,new_max );
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_contrast_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                            Rpp32u new_min, Rpp32u new_max)
+{
+
+    #ifdef HIP_COMPILE
+   /*Still needs to be implemented*/
+
+    #elif defined (OCL_COMPILE)
+
+    cl_contrast_streach (   static_cast<cl_mem>(srcPtr), srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            newMin, newMax,
+                            RPPI_CHN_PLANAR, 1 /*Channel*/,
+                            static_cast<cl_command_queue>(rppHandle));
+
+
+    #endif //backend
+
     return RPP_SUCCESS;
 
 }
