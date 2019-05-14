@@ -42,4 +42,8 @@ cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr,RppiChnFormat chnFormat, size_t chanel,
                 cl_command_queue theQueue);
 
+RppStatus 
+cl_convert_hsv2rgb(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr,RppiChnFormat chnFormat, size_t chanel,
+                cl_command_queue theQueue);
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

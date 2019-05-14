@@ -18,6 +18,8 @@ rppi_rgb2hsv_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 RppStatus
 rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
+RppStatus
+rppi_hsv2rgb_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
 // brightness host function declaration  for single channel
 RppStatus
