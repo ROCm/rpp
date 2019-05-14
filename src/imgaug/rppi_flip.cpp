@@ -1,6 +1,6 @@
 #include <rppdefs.h>
 #include <rppi_image_augumentation_functions.h>
-
+#include "cpu/host_flip.hpp"
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
@@ -45,4 +45,14 @@ rppi_flip_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     return RPP_SUCCESS;
 
+}
+
+ // host function call for single channel input
+RppStatus rppi_flip_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                                   RppiAxis flipAxis)
+{
+    host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                     static_cast<Rpp8u*>(dstPtr),
+                     flipAxis, 3);
+    return RPP_SUCCESS;
 }
