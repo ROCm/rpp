@@ -41,6 +41,6 @@ __kernel void naive_convolution_planar(
         }
     }
 
-    output[pixIdx] = 1;//saturate_8u(sum);
+    output[pixIdx] = saturate_8u(sum);
 
 }
