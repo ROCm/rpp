@@ -4,10 +4,10 @@ __kernel void naive_convolution_planar(
 	const __global unsigned char* input,
 	__global  unsigned char* output,
 	__global  float* filter,
-    const unsigned short height,
-    const unsigned short width,
-    const unsigned short channel,
-    const unsigned short filterSize
+    const unsigned int height,
+    const unsigned int width,
+    const unsigned int channel,
+    const unsigned int filterSize
 )
 {
 
@@ -20,27 +20,30 @@ __kernel void naive_convolution_planar(
 
     int hfFiltSz = filterSize/2;
     if ( (id_x < hfFiltSz) || (id_y < hfFiltSz) ||
-            (id_y >= ((int) height-hfFiltSz)) || (id_x >= (width-hfFiltSz)) )
+            (id_y >= (height-hfFiltSz)) || (id_x >= (width-hfFiltSz)) )
     {
         output[pixIdx] = input[pixIdx];
         return;
     }
 
+    int res;
+
     float sum = 0.0;
-    for (int ri = -hfFiltSz , rf = 0;
-            (ri < hfFiltSz) && (rf < filterSize);
+    for (int ri = (-1 * hfFiltSz) , rf = 0;
+            (ri <= hfFiltSz) && (rf < filterSize);
                 ri++, rf++)
     {
-        for (int ci = -hfFiltSz , cf = 0;
-                (ci < hfFiltSz) && (cf < filterSize);
+        for (int ci = (-1 * hfFiltSz) , cf = 0;
+                (ci <= hfFiltSz) && (cf < filterSize);
                     ci++, cf++)
         {
             const int idxF = rf + cf * filterSize ;
             const int idxI = pixIdx + ri + ci * width;
             sum += filter[idxF]*input[idxI];
+            //res = idxF;
         }
     }
-
-    output[pixIdx] = saturate_8u(sum);
+    res = (int)sum;
+    output[pixIdx] = res ;
 
 }

@@ -4,9 +4,9 @@ __kernel void brightness_contrast(  __global unsigned char* a,
                                     __global unsigned char* b,
                                     const float alpha,
                                     const int beta,
-                                    const unsigned short height,
-                                    const unsigned short width,
-                                    const unsigned short channel
+                                    const unsigned int height,
+                                    const unsigned int width,
+                                    const unsigned int channel
 )
 {
     int id_x = get_global_id(0);

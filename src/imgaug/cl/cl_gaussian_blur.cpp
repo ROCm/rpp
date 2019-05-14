@@ -11,8 +11,8 @@ float gauss_3x3[] = {
 
 cl_int
 cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, unsigned short filterSize,
-                RppiChnFormat chnFormat, unsigned short channel,
+                cl_mem dstPtr, unsigned int filterSize,
+                RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)
 {
     cl_int err;
@@ -43,10 +43,10 @@ cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
     err  = clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
     err |= clSetKernelArg(theKernel, 2, sizeof(cl_mem), &filtPtr);
-    err |= clSetKernelArg(theKernel, 3, sizeof(unsigned short), &srcSize.height);
-    err |= clSetKernelArg(theKernel, 4, sizeof(unsigned short), &srcSize.width);
-    err |= clSetKernelArg(theKernel, 5, sizeof(unsigned short), &channel);
-    err |= clSetKernelArg(theKernel, 6, sizeof(unsigned short), &filterSize);
+    err |= clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
+    err |= clSetKernelArg(theKernel, 6, sizeof(unsigned int), &filterSize);
 
     size_t dim3[3];
     dim3[0] = srcSize.width;

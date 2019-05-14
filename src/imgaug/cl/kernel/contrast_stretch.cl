@@ -6,9 +6,9 @@ __kernel void contrast_stretch(  __global unsigned char *a,
                                    const unsigned int max,
                                const unsigned int new_min,
                                const unsigned int new_max,
-                               const unsigned short height,
-                               const unsigned short width,
-                               const unsigned short channel
+                               const unsigned int height,
+                               const unsigned int width,
+                               const unsigned int channel
 )
 {
     int id_x = get_global_id(0);
@@ -18,7 +18,8 @@ __kernel void contrast_stretch(  __global unsigned char *a,
 
     int pixIdx = id_x + id_y* width + id_z * width * height;
 
-    int res = a[pixIdx] - min) * (new_max - new_min)/((max - min) * 1.0) + new_min ;
+    int res;
+    res = (a[pixIdx] - min) * (new_max - new_min)/((max - min) * 1.0) + new_min ;
 
-    c[pixIdx] = saturate_8u(res);
+    c[pixIdx] = res;
 }

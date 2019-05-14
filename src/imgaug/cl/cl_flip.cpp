@@ -4,7 +4,7 @@
 cl_int
 cl_flip(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiAxis flipAxis,
-                RppiChnFormat chnFormat, unsigned short channel,
+                RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)
 
 {
@@ -33,9 +33,9 @@ cl_flip(cl_mem srcPtr, RppiSize srcSize,
 
     err  = clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
-    err |= clSetKernelArg(theKernel, 2, sizeof(unsigned short), &srcSize.height);
-    err |= clSetKernelArg(theKernel, 3, sizeof(unsigned short), &srcSize.width);
-    err |= clSetKernelArg(theKernel, 4, sizeof(unsigned short), &channel);
+    err |= clSetKernelArg(theKernel, 2, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, 4, sizeof(unsigned int), &channel);
 
     size_t dim3[3];
     dim3[0] = srcSize.width;
