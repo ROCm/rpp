@@ -5,24 +5,6 @@
 extern "C" {
 #endif
 
-/*Parameters
-srcPtr is of type Rpp8u * 
-dstPtr is of type Rpp32f *
-srcSize is the size of both source and destination images (Rpp32u height, Rpp32u width)
-*/
-RppStatus
-rppi_rgb2hsv_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-
-// RGB2HSV host function declaration
-RppStatus
-rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-
-// HSV2RGB host function declaration
-RppStatus
-rppi_hsv2rgb_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-
-                
-
 // brightness host function declaration  for single channel
 RppStatus
 rppi_brighten_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
@@ -49,19 +31,36 @@ rppi_blur3x3_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize,
 
 //------------------------- Colors space HSV ----------------------------------
 
+/*Parameters
+srcPtr is of type Rpp8u * 
+dstPtr is of type Rpp32f *
+srcSize is the size of both source and destination images (Rpp32u height, Rpp32u width)
+*/
+RppStatus
+rppi_rgb2hsv_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                      RppHandle_t handle );
+
 // RGB2HSV host function declaration
 RppStatus
 rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
+
 // HSV2RGB host function declaration
 RppStatus
 rppi_hsv2rgb_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+//----------------------Contrast Stretch function--------------------------------
 
 //contrast host function declaration for single channel
 RppStatus
 rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
                             Rpp32u new_min = 0, Rpp32u new_max =  225);
 
+RppStatus
+rppi_contrast_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
+                          Rpp32u new_min = 0, Rpp32u new_max =  225);
+
+//------------------------Hue modificaton----------------------------------
 //Hue host function declaration
 RppStatus
 rppi_hue_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
