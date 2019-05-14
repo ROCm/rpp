@@ -37,5 +37,9 @@ cl_flip(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, size_t channel,
                 cl_command_queue theQueue);
 
+RppStatus 
+cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, size_t chanel,
+                cl_command_queue theQueue);
 
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
