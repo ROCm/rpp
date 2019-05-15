@@ -44,3 +44,26 @@ rppi_contrast_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
     return RPP_SUCCESS;
 
 }
+
+RppStatus
+rppi_contrast_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                            Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
+{
+
+    #ifdef HIP_COMPILE
+   /*Still needs to be implemented*/
+
+    #elif defined (OCL_COMPILE)
+
+    cl_contrast_stretch (   static_cast<cl_mem>(srcPtr), srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            newMin, newMax,
+                            RPPI_CHN_PLANAR, 3 /*Channel*/,
+                            static_cast<cl_command_queue>(rppHandle));
+
+
+    #endif //backend
+
+    return RPP_SUCCESS;
+
+}
