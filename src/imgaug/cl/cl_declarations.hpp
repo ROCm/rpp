@@ -8,7 +8,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
                         cl_program& theProgram, cl_kernel& theKernel);
 
 cl_int
-cl_kernel_implementer (cl_command_queue theHandle, size_t* dim3, cl_program& theProgram,
+cl_kernel_implementer (cl_command_queue theHandle, size_t* gDim3, size_t* lDim3, cl_program& theProgram,
                         cl_kernel& theKernel  );
 
 //===== Internal CL functions
@@ -17,24 +17,24 @@ RppStatus
 cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32f alpha, Rpp32s beta,
-                            RppiChnFormat chnFormat, unsigned short channel,
+                            RppiChnFormat chnFormat, unsigned int channel,
                             cl_command_queue theQueue);
 
 RppStatus
 cl_contrast_stretch (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32u newMin, Rpp32u newMax,
-                            RppiChnFormat chnFormat, unsigned short channel,
+                            RppiChnFormat chnFormat, unsigned int channel,
                             cl_command_queue theQueue);
 cl_int
 cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, unsigned short filterSize,
-                RppiChnFormat chnFormat, unsigned short channel,
+                cl_mem dstPtr, unsigned int filterSize,
+                RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 cl_int
 cl_flip(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiAxis flipAxis,
-                RppiChnFormat chnFormat, unsigned short channel,
+                RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
 RppStatus 
