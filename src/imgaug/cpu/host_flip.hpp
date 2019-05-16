@@ -3,7 +3,7 @@
 using namespace std;
 
 template <typename T>
-RppStatus host_flip(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+RppStatus host_flip_pln(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                         RppiAxis flipAxis, unsigned channel)
 {
     if (flipAxis == RPPI_HORIZONTAL_AXIS)
@@ -72,6 +72,81 @@ RppStatus host_flip(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     dstPtr[dstLoc + (2 * srcSize.width * srcSize.height)] = pInter[interLoc + (2 * srcSize.width * srcSize.height)];
                 }
                 dstLoc += srcSize.width;
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+
+}
+
+template <typename T>
+RppStatus host_flip_pkd(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiAxis flipAxis, unsigned channel)
+{
+    if (flipAxis == RPPI_HORIZONTAL_AXIS)
+    {
+        int srcLoc = 0, dstLoc = 0;
+        for (int i = (srcSize.height - 1); i >= 0; i--)
+        {
+            for (int j = 0; j < srcSize.width; j++)
+            {
+                srcLoc = (i * 3 * srcSize.width) + (3 * j);
+                dstPtr[dstLoc] = srcPtr[srcLoc];
+                dstPtr[dstLoc + 1] = srcPtr[srcLoc + 1];
+                dstPtr[dstLoc + 2] = srcPtr[srcLoc + 2];
+                srcLoc += 3;
+                dstLoc += 3;
+            }
+        }
+    }
+    else if (flipAxis == RPPI_VERTICAL_AXIS)
+    {
+        int srcLoc = 0, dstLoc = 0;
+        for (int i = (srcSize.width - 1); i >= 0; i--)
+        {
+            dstLoc = 3 * (srcSize.width - 1 - i);
+            for (int j = 0; j < srcSize.height; j++)
+            {
+                srcLoc = (j * 3 * srcSize.width) + (i * 3);
+                dstPtr[dstLoc] = srcPtr[srcLoc];
+                dstPtr[dstLoc + 1] = srcPtr[srcLoc + 1];
+                dstPtr[dstLoc + 2] = srcPtr[srcLoc + 2];
+                dstLoc += (srcSize.width * 3);
+            }
+        }
+    }
+    else if (flipAxis == RPPI_BOTH_AXIS)
+    {
+        Rpp8u *pInter = (Rpp8u *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp8u));
+        int srcLoc = 0, interLoc = 0;
+
+        for (int i = (srcSize.height - 1); i >= 0; i--)
+        {
+            for (int j = 0; j < srcSize.width; j++)
+            {
+                srcLoc = (i * 3 * srcSize.width) + (3 * j);
+                pInter[interLoc] = srcPtr[srcLoc];
+                pInter[interLoc + 1] = srcPtr[srcLoc + 1];
+                pInter[interLoc + 2] = srcPtr[srcLoc + 2];
+                srcLoc += 3;
+                interLoc += 3;
+            }
+        }
+
+        int dstLoc = 0;
+        interLoc = 0;
+
+
+        for (int i = (srcSize.width - 1); i >= 0; i--)
+        {
+            dstLoc = 3 * (srcSize.width - 1 - i);
+            for (int j = 0; j < srcSize.height; j++)
+            {
+                interLoc = (j * 3 * srcSize.width) + (i * 3);
+                dstPtr[dstLoc] = pInter[interLoc];
+                dstPtr[dstLoc + 1] = pInter[interLoc + 1];
+                dstPtr[dstLoc + 2] = pInter[interLoc + 2];
+                dstLoc += (srcSize.width * 3);
             }
         }
     }
