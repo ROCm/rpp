@@ -82,10 +82,10 @@ __kernel void flip_horizontal_packed(
     int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    int oPixIdx =   id_x +  id_y * width *channel + id_z ;
-    /*             |Row(width mem)|Column(height mem)|Channel | */
+    int oPixIdx =   id_x*channel +  id_y*width*channel + id_z ;
+    /*             |size element | size Row |Channel | */
 
-    int nPixIdx =   id_x + (height-1 - id_y) * width * channel + id_z ;
+    int nPixIdx =   id_x*channel + (height-1 - id_y)*width*channel + id_z ;
 
 	output[nPixIdx] = input[oPixIdx];
 

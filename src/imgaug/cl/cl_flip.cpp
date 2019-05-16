@@ -8,7 +8,7 @@ cl_flip(cl_mem srcPtr, RppiSize srcSize,
                 cl_command_queue theQueue)
 
 {
-        cl_int err;
+    cl_int err;
 
     cl_kernel theKernel;
     cl_program theProgram;
