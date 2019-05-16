@@ -26,7 +26,7 @@ cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
     dim3[0] = srcSize.width;
     dim3[1] = srcSize.height;
     dim3[2] = channel;
-    cl_kernel_implementer (theQueue, dim3, theProgram, theKernel);
+    cl_kernel_implementer (theQueue, dim3, NULL, theProgram, theKernel);
 
     return RPP_SUCCESS;
 

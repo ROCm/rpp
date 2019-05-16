@@ -10,9 +10,8 @@
 #include "cl/cl_declarations.hpp"
 #endif //backend
 
-
 RppStatus
-rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+rppi_contrast_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax)
 {
     host_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
@@ -22,7 +21,7 @@ rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_contrast_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
+rppi_contrast_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax)
 {
     host_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
@@ -31,7 +30,7 @@ rppi_contrast_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_contrast_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+rppi_contrast_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
 {
 
@@ -54,7 +53,7 @@ rppi_contrast_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_contrast_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+rppi_contrast_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
 {
 
@@ -79,7 +78,7 @@ rppi_contrast_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 
 RppStatus
-rppi_contrast_3C8U_pkd(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
 {
 

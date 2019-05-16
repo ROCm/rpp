@@ -12,8 +12,9 @@
 #include <stdio.h>
 #include <iostream>
 
+
 RppStatus
-rppi_blur3x3_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+rppi_blur3x3_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
 #ifdef OCL_COMPILE
 
@@ -31,7 +32,7 @@ rppi_blur3x3_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
 }
 
 RppStatus
-rppi_blur3x3_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+rppi_blur3x3_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
 #ifdef OCL_COMPILE
 
@@ -49,7 +50,7 @@ rppi_blur3x3_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
 
 
 RppStatus
-rppi_blur3x3_3C8U_pkd(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
 #ifdef OCL_COMPILE
 
@@ -66,7 +67,7 @@ rppi_blur3x3_3C8U_pkd(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
 }
 
 RppStatus
-rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_blur3x3_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
     host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
@@ -76,7 +77,7 @@ rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 }
 
 RppStatus
-rppi_blur3x3_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
     host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,

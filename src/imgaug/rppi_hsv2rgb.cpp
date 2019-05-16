@@ -12,8 +12,10 @@
 #include "cl/cl_declarations.hpp"
 #endif //backend
 
-/*RppStatus
-rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+
+/*
+RppStatus
+rppi_hue_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
     host_rgb2hsv<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
@@ -23,7 +25,7 @@ rppi_rgb2hsv_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 }*/
 
 RppStatus
-rppi_hsv2rgb_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
+rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
 {
     #ifdef HIP_COMPILE
    /*Still needs to be implemented*/
