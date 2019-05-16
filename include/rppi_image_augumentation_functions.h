@@ -56,6 +56,10 @@ rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
                             Rpp32u new_min = 0, Rpp32u new_max =  225);
 
 RppStatus
+rppi_contrast_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
+                            Rpp32u new_min = 0, Rpp32u new_max =  225);
+
+RppStatus
 rppi_contrast_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
                         RppPtr_t dstPtr,
                         Rpp32u min, Rpp32u max,

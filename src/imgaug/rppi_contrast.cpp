@@ -15,11 +15,19 @@ RppStatus
 rppi_contrast_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax)
 {
-
     host_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), newMin ,newMax );
+                                    static_cast<Rpp8u*>(dstPtr), newMin , newMax, 1 );
     return RPP_SUCCESS;
 
+}
+
+RppStatus
+rppi_contrast_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
+                            Rpp32u newMin, Rpp32u newMax)
+{
+    host_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr), newMin ,newMax, 3 );
+    return RPP_SUCCESS;
 }
 
 RppStatus

@@ -52,7 +52,7 @@ rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
     host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr));
+                                    static_cast<Rpp8u*>(dstPtr), 1);
     return RPP_SUCCESS;
 
 }
@@ -61,10 +61,8 @@ RppStatus
 rppi_blur3x3_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    int channel = 3;
-    std::cout<<"\n Inside rppi_blur3x3_3C8U_pln_host";
-    host_blur_3C<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr));
+    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr), 3);
     return RPP_SUCCESS;
 
 }
