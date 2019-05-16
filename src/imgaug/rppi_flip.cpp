@@ -11,7 +11,7 @@
 #endif //backend
 
 RppStatus
-rppi_flip_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                     RppiAxis flipAxis, RppHandle_t rppHandle)
 {
 
@@ -29,7 +29,7 @@ rppi_flip_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_flip_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+rppi_flip_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                     RppiAxis flipAxis, RppHandle_t rppHandle)
 {
 
@@ -48,7 +48,7 @@ rppi_flip_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_flip_u8_pkd3(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                     RppiAxis flipAxis, RppHandle_t rppHandle)
 {
 
@@ -66,7 +66,8 @@ rppi_flip_u8_pkd3(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
  // host function call for single channel input
-RppStatus rppi_flip_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+RppStatus 
+rppi_flip_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis)
 {
     host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
@@ -75,7 +76,8 @@ RppStatus rppi_flip_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t ds
     return RPP_SUCCESS;
 }
 
-RppStatus rppi_flip_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+RppStatus
+rppi_flip_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis)
 {
     host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
