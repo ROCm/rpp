@@ -100,6 +100,9 @@ rppi_rotate_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus rppi_flip_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis);
 
+//Flip host function declaration for single channel input
+RppStatus rppi_flip_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                                   RppiAxis flipAxis);
 
 RppStatus
 rppi_flip_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
