@@ -9,6 +9,8 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
 #endif //backend
+#include <stdio.h>
+#include <iostream>
 
 RppStatus
 rppi_blur3x3_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
@@ -50,6 +52,18 @@ rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
     host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr));
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_blur3x3_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+
+    int channel = 3;
+    std::cout<<"\n Inside rppi_blur3x3_3C8U_pln_host";
+    host_blur_3C<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                                     static_cast<Rpp8u*>(dstPtr));
     return RPP_SUCCESS;
 

@@ -34,6 +34,11 @@ rppi_saturation_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr
 RppStatus
 rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr);
+
+RppStatus
+rppi_blur3x3_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize,
+                            RppPtr_t dstPtr);
+
 RppStatus
 rppi_blur3x3_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize,
                         RppPtr_t dstPtr, RppHandle_t rppHandle);
