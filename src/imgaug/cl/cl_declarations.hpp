@@ -8,7 +8,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
                         cl_program& theProgram, cl_kernel& theKernel);
 
 cl_int
-cl_kernel_implementer (cl_command_queue theHandle, size_t* dim3, cl_program& theProgram,
+cl_kernel_implementer (cl_command_queue theHandle, size_t* gDim3, size_t* lDim3, cl_program& theProgram,
                         cl_kernel& theKernel  );
 
 //===== Internal CL functions
