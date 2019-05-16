@@ -24,9 +24,9 @@ RppStatus
 rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr);
 
-//RppStatus
-//rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
-//                        RppPtr_t dstPtr, RppHandle_t rppHandle);
+RppStatus
+rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
+                        RppPtr_t dstPtr, RppHandle_t rppHandle);
 
 // Gpu function declarations
 
@@ -61,9 +61,9 @@ RppStatus
 rppi_contrast_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
                             Rpp32u new_min = 0, Rpp32u new_max =  225);
 
-//RppStatus
-//rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
-//                            Rpp32u new_min = 0, Rpp32u new_max =  225);
+RppStatus
+rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
+                            Rpp32u new_min = 0, Rpp32u new_max =  225);
 
 // Gpu function declarations
 
@@ -97,9 +97,9 @@ RppStatus
 rppi_brightness_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta);
 
-//RppStatus
-//rppi_brightness_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
-//                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta);
+RppStatus
+rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
+                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta);
 
 // Gpu function declarations
 
