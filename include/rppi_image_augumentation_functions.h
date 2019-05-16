@@ -100,6 +100,10 @@ RppStatus
 rppi_flip_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                     RppiAxis flipAxis, RppHandle_t rppHandle);
 
+RppStatus
+rppi_flip_u8_pkd3(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                    RppiAxis flipAxis, RppHandle_t rppHandle);
+
 
 #ifdef __cplusplus
 }

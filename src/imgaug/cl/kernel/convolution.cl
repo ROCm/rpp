@@ -19,12 +19,12 @@ __kernel void naive_convolution_planar(
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
     int hfFiltSz = filterSize/2;
-    if ( (id_x < hfFiltSz) || (id_y < hfFiltSz) ||
-            (id_y >= (height-hfFiltSz)) || (id_x >= (width-hfFiltSz)) )
-    {
-        output[pixIdx] = input[pixIdx];
-        return;
-    }
+    // if ( (id_x < hfFiltSz) || (id_y < hfFiltSz) ||
+    //         (id_y >= (height-hfFiltSz)) || (id_x >= (width-hfFiltSz)) )
+    // {
+    //     output[pixIdx] = input[pixIdx];
+    //     return;
+    // }
 
     int res;
 
@@ -40,10 +40,9 @@ __kernel void naive_convolution_planar(
             const int idxF = rf + cf * filterSize ;
             const int idxI = pixIdx + ri + ci * width;
             sum += filter[idxF]*input[idxI];
-            //res = idxF;
         }
     }
     res = (int)sum;
-    output[pixIdx] = res ;
+    output[pixIdx] = res;
 
 }
