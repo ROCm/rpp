@@ -38,6 +38,30 @@ rppi_brighten_1C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
     return RPP_SUCCESS;
 }
 
+
+RppStatus
+rppi_brighten_3C8U_pln( RppPtr_t srcPtr, RppiSize srcSize,
+                        RppPtr_t dstPtr,
+                        Rpp32f alpha, Rpp32s beta,
+                        RppHandle_t rppHandle )
+{
+
+
+#ifdef OCL_COMPILE
+
+    cl_brightness_contrast (    static_cast<cl_mem>(srcPtr), srcSize,
+                                static_cast<cl_mem>(dstPtr),
+                                alpha, beta,
+                                RPPI_CHN_PLANAR, 3 /*Channel*/,
+                                static_cast<cl_command_queue>(rppHandle) );
+
+
+#endif //backend
+
+    return RPP_SUCCESS;
+}
+
+
 RppStatus
 rppi_brighten_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32f alpha, Rpp32s beta, RppHandle_t rppHandle)
