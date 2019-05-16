@@ -53,6 +53,15 @@ RppStatus rppi_flip_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t ds
 {
     host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                      static_cast<Rpp8u*>(dstPtr),
+                     flipAxis, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus rppi_flip_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                                   RppiAxis flipAxis)
+{
+    host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                     static_cast<Rpp8u*>(dstPtr),
                      flipAxis, 3);
     return RPP_SUCCESS;
 }
