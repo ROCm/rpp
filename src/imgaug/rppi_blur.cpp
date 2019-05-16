@@ -48,6 +48,23 @@ rppi_blur3x3_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
 }
 
 RppStatus
+rppi_blur3x3_3C8U_pkd(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+
+    cl_gaussian_blur(static_cast<cl_mem>(srcPtr), srcSize,
+                        static_cast<cl_mem>(dstPtr),
+                        3 /*Filter width*/,
+                        RPPI_CHN_PACKED, 3 /*Channel*/,
+                        static_cast<cl_command_queue>(rppHandle) );
+
+#endif //backend
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
 rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 

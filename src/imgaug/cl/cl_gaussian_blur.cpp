@@ -34,10 +34,23 @@ cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
 
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(  theQueue,
-                            "convolution.cl",
-                            "naive_convolution_planar",
-                            theProgram, theKernel);
+
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        cl_kernel_initializer(  theQueue, "convolution.cl",
+                                "naive_convolution_planar", theProgram, theKernel);
+
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        cl_kernel_initializer(  theQueue, "convolution.cl",
+                                "naive_convolution_packed", theProgram, theKernel);
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+
+
 
 
     err  = clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
