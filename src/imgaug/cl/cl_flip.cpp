@@ -8,7 +8,7 @@ cl_flip(cl_mem srcPtr, RppiSize srcSize,
                 cl_command_queue theQueue)
 
 {
-        cl_int err;
+    cl_int err;
 
     cl_kernel theKernel;
     cl_program theProgram;
@@ -28,8 +28,23 @@ cl_flip(cl_mem srcPtr, RppiSize srcSize,
                                 theProgram, theKernel);
         }
     }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        if (flipAxis == RPPI_VERTICAL_AXIS)
+        {   cl_kernel_initializer(  theQueue, "flip.cl", "flip_vertical_packed",
+                                theProgram, theKernel);
+        }
+        else if (flipAxis == RPPI_HORIZONTAL_AXIS)
+        {   cl_kernel_initializer(  theQueue, "flip.cl", "flip_horizontal_packed",
+                                theProgram, theKernel);
+        }
+        else if (flipAxis == RPPI_BOTH_AXIS)
+        {   cl_kernel_initializer(  theQueue, "flip.cl", "flip_bothaxis_packed",
+                                theProgram, theKernel);
+        }
+    }
     else
-    {std::cerr << "Unimplemented Functionality";}
+    {std::cerr << "Internal error: Unknown Channel format";}
 
     err  = clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
