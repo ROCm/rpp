@@ -26,8 +26,6 @@ __kernel void naive_convolution_planar(
         return;
     }
 
-    int res;
-
     float sum = 0.0;
     for (int ri = (-1 * hfFiltSz) , rf = 0;
             (ri <= hfFiltSz) && (rf < filterSize);
@@ -42,8 +40,8 @@ __kernel void naive_convolution_planar(
             sum += filter[idxF]*input[idxI];
         }
     }
-    res = (int)sum;
-    output[pixIdx] = res;
+    int res = (int)sum;
+    output[pixIdx] = saturate_8u(res);
 
 }
 
@@ -90,6 +88,6 @@ __kernel void naive_convolution_packed(
         }
     }
     res = (int)sum;
-    output[pixIdx] = res;
+    output[pixIdx] = saturate_8u(res);
 
 }
