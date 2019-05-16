@@ -30,6 +30,15 @@ rppi_contrast_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
 }
 
 RppStatus
+rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
+                            Rpp32u newMin, Rpp32u newMax)
+{
+    host_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr), newMin ,newMax, 3 );
+    return RPP_SUCCESS;
+}
+
+RppStatus
 rppi_contrast_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
 {
