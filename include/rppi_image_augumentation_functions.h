@@ -26,7 +26,7 @@ rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
 
 RppStatus
 rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr, RppHandle_t rppHandle);
+                        RppPtr_t dstPtr);
 
 // Gpu function declarations
 
