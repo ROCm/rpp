@@ -12,8 +12,10 @@
 #include "cl/cl_declarations.hpp"
 #endif //backend
 
-/*RppStatus
-rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+
+/*
+RppStatus
+rppi_hue_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
     host_rgb2hsv<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
@@ -23,14 +25,14 @@ rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 }*/
 
 RppStatus
-rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
+rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
 {
     #ifdef HIP_COMPILE
    /*Still needs to be implemented*/
 
     #elif defined (OCL_COMPILE)
 
-    cl_convert_rgb2hsv(   static_cast<cl_mem>(srcPtr), srcSize,
+    cl_convert_hsv2rgb(   static_cast<cl_mem>(srcPtr), srcSize,
                             static_cast<cl_mem>(dstPtr),
                             RPPI_CHN_PLANAR, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));

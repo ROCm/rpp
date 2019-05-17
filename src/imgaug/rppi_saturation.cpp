@@ -6,7 +6,7 @@
 #include <iostream>
 
 RppStatus
-rppi_saturation_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+rppi_saturation_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
 {
 
     host_saturation<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,

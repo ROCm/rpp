@@ -67,3 +67,72 @@ __kernel void flip_bothaxis_planar(
     output[nPixIdx] = input[oPixIdx];
 
 }
+
+__kernel void flip_horizontal_packed(
+	const __global unsigned char* input,
+	__global  unsigned char* output,
+    const unsigned int height,
+    const unsigned int width,
+    const unsigned int channel
+)
+{
+
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
+    if (id_x >= width || id_y >= height || id_z >= channel) return;
+
+    int oPixIdx =   id_x*channel +  id_y*width*channel + id_z ;
+    /*             |size element | size Row |Channel | */
+
+    int nPixIdx =   id_x*channel + (height-1 - id_y)*width*channel + id_z ;
+
+	output[nPixIdx] = input[oPixIdx];
+
+}
+
+__kernel void flip_vertical_packed(
+	const __global unsigned char* input,
+	__global  unsigned char* output,
+    const unsigned int height,
+    const unsigned int width,
+    const unsigned int channel
+)
+{
+
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
+    if (id_x >= width || id_y >= height || id_z >= channel) return;
+
+    int oPixIdx =   id_x*channel +  id_y*width*channel + id_z ;
+    /*             |size element | size Row |Channel | */
+
+    int nPixIdx =   (width-1 - id_x)*channel + id_y*width*channel + id_z ;
+
+	output[nPixIdx] = input[oPixIdx];
+
+}
+
+__kernel void flip_bothaxis_packed(
+	const __global unsigned char* input,
+	__global  unsigned char* output,
+    const unsigned int height,
+    const unsigned int width,
+    const unsigned int channel
+)
+{
+
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
+    if (id_x >= width || id_y >= height || id_z >= channel) return;
+
+    int oPixIdx =   id_x*channel +  id_y*width*channel + id_z ;
+    /*             |size element | size Row |Channel | */
+
+    int nPixIdx =   (width-1 - id_x)*channel + (height-1 - id_y)*width*channel + id_z ;
+
+	output[nPixIdx] = input[oPixIdx];
+
+}
