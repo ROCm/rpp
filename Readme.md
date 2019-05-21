@@ -21,9 +21,10 @@ RPP is developed for __Linux__ operating system.
 * Contrast
 * Flip(Horizontal, Vertical and Both)
 * Blur (Gaussian 3x3)
-* Hue and Saturation modification
 * HSV2RGB
 * RGB2HSV
+* Hue and Saturation modification(In progress)
+
 
 ## Variations
 * Support for 3C(RGB) and 1C(Grayscale) images
@@ -51,9 +52,9 @@ $ git  clone https://github.com/mythreyi22/MIVisionX.git
 $ cd MIVisionX
 $ git  checkout gdf_test
 $ mkdir build
-$ cd build ; cmake .. ; make -j4 //For GPU support
+$ cd build ; cmake .. ;//For GPU support
         or
-$ cd build ; cmake -DCMAKE_DISABLE_FIND_PACKAGE_OpenCL=TRUE;  //For CPU support
+$ cd build ; cmake -DCMAKE_DISABLE_FIND_PACKAGE_OpenCL=TRUE ..;  //For CPU support
 $ make -j4
 $ sudo make install
 ```
