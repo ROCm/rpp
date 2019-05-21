@@ -2,7 +2,7 @@
 #include <math.h>
 
 template <typename T>
-RppStatus host_saturation_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
+RppStatus host_saturationRGB_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
 {
     Rpp32u channel = 3;
     Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
@@ -115,7 +115,7 @@ RppStatus host_saturation_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f sat
 }
 
 template <typename T>
-RppStatus host_saturation_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
+RppStatus host_saturationRGB_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
 {
     Rpp32u channel = 3;
     Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));

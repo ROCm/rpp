@@ -2,7 +2,7 @@
 #include <math.h>
 
 template <typename T>
-RppStatus host_hue_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
+RppStatus host_hueRGB_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
 {
     Rpp32u channel = 3;
     Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
@@ -121,7 +121,7 @@ RppStatus host_hue_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
 }
 
 template <typename T>
-RppStatus host_hue_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
+RppStatus host_hueRGB_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
 {
     Rpp32u channel = 3;
     Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
