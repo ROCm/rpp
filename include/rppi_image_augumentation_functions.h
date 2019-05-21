@@ -132,6 +132,10 @@ RppStatus
 rppi_hue_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                        Rpp32f hueShift = 0);
 
+RppStatus
+rppi_hue_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                       Rpp32f hueShift = 0);
+
 
 // --------------------
 // Saturation
@@ -141,6 +145,10 @@ rppi_hue_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 RppStatus
 rppi_saturation_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                              Rpp32f saturationFactor = 1);
+
+RppStatus
+rppi_saturation_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                               Rpp32f saturationFactor = 1);
 
 
