@@ -11,7 +11,7 @@ Radeon performance primitives(RPP) libaray is  a comprehensive high performance 
 
 
 RPP is developed for __Linux__ operating system.
-##### Prerequisites
+## Prerequisites
 1. Ubuntu `16.04`/`18.04`
 2. [ROCm supported hardware](https://rocm.github.io/hardware.html)
 3. [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
