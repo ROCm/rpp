@@ -24,3 +24,23 @@ rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
     return RPP_SUCCESS;
 
 }
+
+RppStatus
+rppi_saturationHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+{
+
+    host_saturationHSV_pln<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                            static_cast<Rpp32f*>(dstPtr), saturationFactor);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+{
+
+    host_saturationHSV_pkd<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                            static_cast<Rpp32f*>(dstPtr), saturationFactor);
+    return RPP_SUCCESS;
+
+}

@@ -226,3 +226,43 @@ RppStatus host_saturationRGB_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f 
 
     return RPP_SUCCESS;
 }
+
+template <typename T>
+RppStatus host_saturationHSV_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
+{
+    Rpp32u channel = 3;
+    
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        dstPtr[i] = srcPtr[i];
+    }
+    
+    for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+    {
+        dstPtr[i + (srcSize.width * srcSize.height)] *= saturationFactor;
+        dstPtr[i + (srcSize.width * srcSize.height)] = std::min(dstPtr[i + (srcSize.width * srcSize.height)], (float) 1);
+        dstPtr[i + (srcSize.width * srcSize.height)] = std::max(dstPtr[i + (srcSize.width * srcSize.height)], (float) 0);
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T>
+RppStatus host_saturationHSV_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
+{
+    Rpp32u channel = 3;
+    
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        dstPtr[i] = srcPtr[i];
+    }
+
+    for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
+    {
+        dstPtr[i + 1] *= saturationFactor;
+        dstPtr[i + 1] = std::min(dstPtr[i + 1], (float) 1);
+        dstPtr[i + 1] = std::max(dstPtr[i + 1], (float) 0);
+    }
+
+    return RPP_SUCCESS;
+}

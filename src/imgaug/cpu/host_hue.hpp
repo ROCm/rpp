@@ -238,3 +238,55 @@ RppStatus host_hueRGB_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShif
 
     return RPP_SUCCESS;
 }
+
+template <typename T>
+RppStatus host_hueHSV_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
+{
+    Rpp32u channel = 3;
+    
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        dstPtr[i] = srcPtr[i];
+    }
+    
+    for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+    {
+        dstPtr[i] += hueShift;
+        while (dstPtr[i] > 360)
+        {
+            dstPtr[i] = dstPtr[i] - 360;
+        }
+        while (dstPtr[i] < 0)
+        {
+            dstPtr[i] = 360 + dstPtr[i];
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T>
+RppStatus host_hueHSV_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
+{
+    Rpp32u channel = 3;
+    
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        dstPtr[i] = srcPtr[i];
+    }
+
+    for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
+    {
+        dstPtr[i] += hueShift;
+        while (dstPtr[i] > 360)
+        {
+            dstPtr[i] = dstPtr[i] - 360;
+        }
+        while (dstPtr[i] < 0)
+        {
+            dstPtr[i] = 360 + dstPtr[i];
+        }
+    }
+
+    return RPP_SUCCESS;
+}
