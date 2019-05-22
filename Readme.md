@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger) 
-
+[![Build Status](https://github.com/LokeshBonta/AMD-RPP/tree/master)](https://github.com/LokeshBonta/AMD-RPP/) 
+https://github.com/LokeshBonta/AMD-RPP/blob/master/
 # Radeon Performance Primitives Library
 
 Radeon performance primitives(RPP) libaray is  a comprehensive high performance computer vision library for AMD(CPU and GPU) with HIP and OpenCL backend on the device side.
