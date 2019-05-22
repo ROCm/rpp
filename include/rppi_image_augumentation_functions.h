@@ -141,6 +141,19 @@ rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 RppStatus
 rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
+RppStatus
+rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        Rpp32f hueShift);
+RppStatus
+rppi_hueHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        Rpp32f hueShift);
+RppStatus
+rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        Rpp32f hueShift);
+RppStatus
+rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        Rpp32f hueShift);
+
 // brightness host function declaration  for single channel
 //Hue host function declaration
 RppStatus
@@ -151,6 +164,7 @@ rppi_hue_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_saturation_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                               Rpp32f saturationFactor = 1);
+
 
 
 #ifdef __cplusplus
