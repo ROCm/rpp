@@ -44,7 +44,7 @@ cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
     */
     cl_mem temp; //for intermediate purpose
     unsigined int bytes = srcSize.height * srcSize.width* channel * sizeof(double);
-    temp = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, NULL);
+    temp = clCreateBuffer(context,  CL_MEM_READ_WRITE , bytes, NULL, NULL);
     
     if (chnFormat = RPPI_CHN_PLANAR)
        cl_kernel_initializer(theQueue,
