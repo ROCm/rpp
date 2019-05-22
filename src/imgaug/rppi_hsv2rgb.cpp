@@ -1,9 +1,10 @@
 #include <rppdefs.h>
 #include <rppi_image_augumentation_functions.h>
 
-//#include "cpu/host_rgb2hsv.hpp"
+#include "cpu/host_hsv2rgb.hpp"
 
 #include <iostream>
+
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
 #include "hip/hip_brightness_contrast.hpp"
@@ -13,16 +14,28 @@
 #endif //backend
 
 
-/*
 RppStatus
-rppi_hue_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_hsv2rgb_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    host_rgb2hsv<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr));
+    host_hsv2rgb_pln<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                                    static_cast<Rpp32f*>(dstPtr));
     return RPP_SUCCESS;
 
-}*/
+}
+
+RppStatus
+rppi_hsv2rgb_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+
+    host_hsv2rgb_pkd<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                                    static_cast<Rpp32f*>(dstPtr));
+    return RPP_SUCCESS;
+
+}
+
+
+
 
 RppStatus
 rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
