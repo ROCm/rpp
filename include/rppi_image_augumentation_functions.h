@@ -132,27 +132,29 @@ dstPtr is of type Rpp32f *
 srcSize is the size of both source and destination images (Rpp32u height, Rpp32u width)
 */
 RppStatus
-rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  
+                            RppHandle_t rppHandle);
 
 // RGB2HSV host function declaration
 RppStatus
 rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
-rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        RppHandle_t rppHandle);
 
 RppStatus
 rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                        Rpp32f hueShift);
+                        Rpp32f hueShift,  RppHandle_t rppHandle);
 RppStatus
 rppi_hueHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                        Rpp32f hueShift);
+                        Rpp32f hueShift,  RppHandle_t rppHandle);
 RppStatus
 rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                        Rpp32f hueShift);
+                        Rpp32f hueShift,  RppHandle_t rppHandle);
 RppStatus
 rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                        Rpp32f hueShift);
+                        Rpp32f hueShift,  RppHandle_t rppHandle);
 
 // brightness host function declaration  for single channel
 //Hue host function declaration

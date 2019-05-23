@@ -45,7 +45,7 @@ rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  Rp
 ///////////////HUE RELATED//////////////////////////
 RppStatus
 rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                        Rpp32f hueShift){
+                        Rpp32f hueShift,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
 
@@ -61,55 +61,3 @@ rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
     
 }
 
-RppStatus
-rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                        Rpp32f hueShift){
-    #ifdef HIP_COMPILE
-    /*Still needs to be implemented*/
-
-    #elif defined (OCL_COMPILE)
-    cl_hue_saturation_rgb  (    static_cast<cl_mem>(srcPtr), srcSize,
-                            static_cast<cl_mem>(dstPtr), hueShift, 0.0 /*Saturation*/,
-                            RPPI_CHN_PACKED, 3 /*Channel*/,
-                            static_cast<cl_command_queue>(rppHandle));
-    
-    #endif //backend
-
-    return RPP_SUCCESS;
-    
-}
-
-RppStatus
-rppi_hueHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                        Rpp32f hueShift){
-    #ifdef HIP_COMPILE
-    /*Still needs to be implemented*/
-
-    #elif defined (OCL_COMPILE)
-    cl_hue_saturation_hsv (    static_cast<cl_mem>(srcPtr), srcSize,
-                            static_cast<cl_mem>(dstPtr), hueShift, 0.0 /*Saturation*/,
-                            RPPI_CHN_PLANAR, 3 /*Channel*/,
-                            static_cast<cl_command_queue>(rppHandle));
-    
-    #endif //backend
-
-    return RPP_SUCCESS;    
-}
-
-RppStatus
-rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                        Rpp32f hueShift){
-    #ifdef HIP_COMPILE
-    /*Still needs to be implemented*/
-
-    #elif defined (OCL_COMPILE)
-    cl_hue_saturation_hsv(    static_cast<cl_mem>(srcPtr), srcSize,
-                            static_cast<cl_mem>(dstPtr), hueShift, 0.0 /*Saturation*/,
-                            RPPI_CHN_PACKED, 3 /*Channel*/,
-                            static_cast<cl_command_queue>(rppHandle));
-    
-    #endif //backend
-
-    return RPP_SUCCESS;
-    
-}
