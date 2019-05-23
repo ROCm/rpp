@@ -31,17 +31,18 @@ cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
     
 
     unsigned int dim3[3];
-    dim3[0] = srcSize.width;
-    dim3[1] = srcSize.height;
-    dim3[2] = channel;
+    dim3[0]= srcSize.height * srcSize.width;
+    dim3[1] = 1;
+    dim3[2] = 1;
     cl_kernel_implementer (theQueue, dim3, NULL, theProgram, theKernel);
+     
 
     return RPP_SUCCESS;
 
 }
 
 //////////////////////HUE CODE////////////////////////////////
-RppStaus
+RppStatus
 cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue){
@@ -51,10 +52,14 @@ cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
     Intermediate Buffer Should be Allocated for use.
     */
     cl_mem temp; //for intermediate purpose
-    unsigined int bytes = srcSize.height * srcSize.width* channel * sizeof(double);
-    temp = clCreateBuffer(context,  CL_MEM_READ_WRITE , bytes, NULL, NULL);
+    unsigned int bytes = srcSize.height * srcSize.width* channel * sizeof(double);
+    cl_context theContext;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_CONTEXT,
+                            sizeof(cl_context), &theContext, NULL);
+    temp = clCreateBuffer(theContext,  CL_MEM_READ_WRITE , bytes, NULL, NULL);
     
-    if (chnFormat = RPPI_CHN_PLANAR)
+    if (chnFormat = RPPI_CHN_PLANAR)    
        cl_kernel_initializer(theQueue,
                           "rgbtohsv.cl",
                           "huergb_pln",
@@ -70,14 +75,15 @@ cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 2, sizeof(cl_mem), &temp);
     clSetKernelArg(theKernel, 3, sizeof(double), &hue);
-    clSetKernelArg(theKernel, 4, sizeof(double), &sat);
+    clSetKernelArg(theKernel, 4, sizeof(double), &saturation);
     clSetKernelArg(theKernel, 5, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, 6, sizeof(unsigned int), &srcSize.width);
     
-    unsigned int dim3 = srcSize.height * srcSize*width;
+    unsigned int dim3[3];
+    dim3[0]= srcSize.height * srcSize.width;
+    dim3[1] = 1;
+    dim3[2] = 1;
     cl_kernel_implementer (theQueue, dim3, NULL, theProgram, theKernel);
-     
-
 }
 
 /*RppStaus

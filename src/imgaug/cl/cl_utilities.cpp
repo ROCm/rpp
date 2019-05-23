@@ -12,7 +12,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
     cl_int err;
     // File Handling
     char *sourceStr;
-    unsigned int sourceSize;
+    size_t sourceSize;
     std::string kernelFile_cl = MOD_CL_PATH + kernelFile;
     std::cout << kernelFile_cl;
     FILE *filePtr = fopen( kernelFile_cl.c_str(), "rb");
@@ -21,7 +21,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
         return 1;
     }
     fseek(filePtr, 0, SEEK_END);
-    unsigned int fileSize = ftell(filePtr);
+    size_t fileSize = ftell(filePtr);
     rewind(filePtr);
     sourceStr = (char*)malloc(fileSize + 1);
     sourceStr[fileSize] = '\0';
@@ -46,7 +46,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
 }
 
 cl_int
-cl_kernel_implementer (cl_command_queue theQueue, unsigned int* globalDim3, unsigned int* localDim3,
+cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* localDim3,
                         cl_program& theProgram, cl_kernel& theKernel  )
 {
     cl_int err;
