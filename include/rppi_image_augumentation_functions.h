@@ -155,6 +155,19 @@ rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                         Rpp32f hueShift,  RppHandle_t rppHandle);
+RppStatus
+rppi_saturationRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        Rpp32f saturationFactor,  RppHandle_t rppHandle);
+RppStatus
+rppi_saturationHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        Rpp32f saturationFactor,  RppHandle_t rppHandle);
+RppStatus
+rppi_saturationRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        Rpp32f saturationFactor,  RppHandle_t rppHandle);
+RppStatus
+rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                        Rpp32f saturationFactor,  RppHandle_t rppHandle);
+
 
 // brightness host function declaration  for single channel
 //Hue host function declaration
