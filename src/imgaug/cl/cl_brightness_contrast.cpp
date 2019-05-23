@@ -25,7 +25,7 @@ cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 6, sizeof(unsigned int), &channel);
     //----
 
-    size_t gDim3[3];
+    unsigned int gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;
