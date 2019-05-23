@@ -62,7 +62,7 @@ rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                         Rpp32f hueShift,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
