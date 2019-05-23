@@ -215,21 +215,15 @@ rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 //------------------------- Color Space Conversions -------------------------
 
 
-// --------------------
-// RGB to HSV
-// --------------------
-
-/*NOTE: Parameters:
+////////////////////////// rgbtohsv conversion//////////////////////
+/*Parameters
 srcPtr is of type Rppu8 *
 dstPtr is of type Rpp32f *
 srcSize is the size of both source and destination images (Rpp32u height, Rpp32u width)
 */
-<<<<<<< HEAD
-=======
 RppStatus
 rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  
                             RppHandle_t rppHandle);
->>>>>>> lok-hipcl-dev
 
 // Host function declarations
 
@@ -237,11 +231,6 @@ RppStatus
 rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
-<<<<<<< HEAD
-rppi_rgb2hsv_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-
-// Gpu function declarations
-=======
 rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                         RppHandle_t rppHandle);
 
@@ -270,7 +259,6 @@ RppStatus
 rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                         Rpp32f saturationFactor,  RppHandle_t rppHandle);
 
->>>>>>> lok-hipcl-dev
 
 RppStatus
 rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
