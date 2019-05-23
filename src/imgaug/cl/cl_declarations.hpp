@@ -50,12 +50,12 @@ cl_convert_hsv2rgb(cl_mem srcPtr, RppiSize srcSize,
 RppStaus
 cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f Saturation,
-                RppiChnFormat chnFormat, size_t chanel, cl_command_queue theQueue);
+                RppiChnFormat chnFormat, size_t channel, cl_command_queue theQueue);
 
 RppStaus
 cl_hue_saturation_hsv( cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f Saturation,
-                RppiChnFormat chnFormat, size_t chanel, cl_command_queue theQueue);
+                RppiChnFormat chnFormat, size_t channel, cl_command_queue theQueue);
                 
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
 
