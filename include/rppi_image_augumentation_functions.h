@@ -264,6 +264,11 @@ RppStatus
 rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             RppHandle_t rppHandle);
 
+RppStatus
+rppi_rgb2hsv_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                            RppHandle_t rppHandle);
+
+
 // --------------------
 // HSV to RGB
 // --------------------
@@ -282,12 +287,9 @@ RppStatus
 rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         RppHandle_t rppHandle);
 
-
-
-
-
-
-
+RppStatus
+rppi_hsv2rgb_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                        RppHandle_t rppHandle);
 
 
 #ifdef __cplusplus
