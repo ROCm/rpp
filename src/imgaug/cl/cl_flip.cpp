@@ -54,7 +54,7 @@ cl_flip(cl_mem srcPtr, RppiSize srcSize,
 
 //-----
 
-    unsigned int gDim3[3];
+    size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;

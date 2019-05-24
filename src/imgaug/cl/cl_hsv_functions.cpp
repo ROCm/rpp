@@ -2,25 +2,25 @@
 #include "cl_declarations.hpp"
 
 
-RppStatus 
+RppStatus
 cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
     cl_program theProgram;
 
-    if (chnFormat = RPPI_CHN_PLANAR)
+    if (chnFormat == RPPI_CHN_PLANAR)
     cl_kernel_initializer(theQueue,
                           "rgbtohsv.cl",
                           "rgb2hsv_pln",
                           theProgram, theKernel);
-    else 
+    else
     cl_kernel_initializer(theQueue,
                           "rgbtohsv.cl",
                           "rgb2hsv_pkd",
                           theProgram, theKernel);
-    
-    
+
+
     //---- Args Setter
     unsigned int n = srcSize.height * srcSize.width * channel ;
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
@@ -28,38 +28,38 @@ cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, 5, sizeof(unsigned int), &srcSize.width);
     clSetKernelArg(theKernel, 6, sizeof(unsigned int), &channel);
-    
 
-    unsigned int dim3[3];
-    dim3[0]= srcSize.height * srcSize.width;
-    dim3[1] = 1;
-    dim3[2] = 1;
-    cl_kernel_implementer (theQueue, dim3, NULL, theProgram, theKernel);
-     
+
+    size_t gDim3[3];
+    gDim3[0]= srcSize.height * srcSize.width;
+    gDim3[1] = 1;
+    gDim3[2] = 1;
+    cl_kernel_implementer (theQueue, gDim3, NULL, theProgram, theKernel);
+
 
     return RPP_SUCCESS;
 
 }
 
-RppStatus 
+RppStatus
 cl_convert_hsv2rgb(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
     cl_program theProgram;
 
-    if (chnFormat = RPPI_CHN_PLANAR)
+    if (chnFormat == RPPI_CHN_PLANAR)
     cl_kernel_initializer(theQueue,
                           "rgbtohsv.cl",
                           "hsv2rgb_pln",
                           theProgram, theKernel);
-    else 
+    else
     cl_kernel_initializer(theQueue,
                           "rgbtohsv.cl",
                           "hsv2rgb_pkd",
                           theProgram, theKernel);
-    
-    
+
+
     //---- Args Setter
     unsigned int n = srcSize.height * srcSize.width * channel ;
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
@@ -67,14 +67,14 @@ cl_convert_hsv2rgb(cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, 5, sizeof(unsigned int), &srcSize.width);
     clSetKernelArg(theKernel, 6, sizeof(unsigned int), &channel);
-    
 
-    unsigned int dim3[3];
-    dim3[0]= srcSize.height * srcSize.width;
-    dim3[1] = 1;
-    dim3[2] = 1;
-    cl_kernel_implementer (theQueue, dim3, NULL, theProgram, theKernel);
-     
+
+    size_t gDim3[3][3];
+    gDim3[3][0]= srcSize.height * srcSize.width;
+    gDim3[3][1] = 1;
+    gDim3[3][2] = 1;
+    cl_kernel_implementer (theQueue, gDim3[3], NULL, theProgram, theKernel);
+
 
     return RPP_SUCCESS;
 
@@ -97,8 +97,8 @@ cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
                             CL_QUEUE_CONTEXT,
                             sizeof(cl_context), &theContext, NULL);
     temp = clCreateBuffer(theContext,  CL_MEM_READ_WRITE , bytes, NULL, NULL);
-    
-    if (chnFormat = RPPI_CHN_PLANAR)    
+
+    if (chnFormat == RPPI_CHN_PLANAR)
        cl_kernel_initializer(theQueue,
                           "rgbtohsv.cl",
                           "huergb_pln",
@@ -117,12 +117,12 @@ cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 4, sizeof(double), &saturation);
     clSetKernelArg(theKernel, 5, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, 6, sizeof(unsigned int), &srcSize.width);
-    
-    unsigned int dim3[3];
-    dim3[0]= srcSize.height * srcSize.width;
-    dim3[1] = 1;
-    dim3[2] = 1;
-    cl_kernel_implementer (theQueue, dim3, NULL, theProgram, theKernel);
+
+    size_t gDim3[3];
+    gDim3[0]= srcSize.height * srcSize.width;
+    gDim3[1] = 1;
+    gDim3[2] = 1;
+    cl_kernel_implementer (theQueue, gDim3, NULL, theProgram, theKernel);
 }
 
 RppStatus
@@ -132,17 +132,17 @@ cl_hue_saturation_hsv (cl_mem srcPtr, RppiSize srcSize,
     cl_kernel theKernel;
     cl_program theProgram;
 
-    if (chnFormat = RPPI_CHN_PLANAR)
+    if (chnFormat == RPPI_CHN_PLANAR)
     cl_kernel_initializer(theQueue,
                           "rgbtohsv.cl",
                           "hsvhsv_pln",
                           theProgram, theKernel);
-    else 
+    else
     cl_kernel_initializer(theQueue,
                           "rgbtohsv.cl",
                           "huehsv_pkd",
                           theProgram, theKernel);
-    
+
     //---- Args Setter
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr);
@@ -150,7 +150,12 @@ cl_hue_saturation_hsv (cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 3, sizeof(double), &saturation);
     clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, 5, sizeof(unsigned int), &srcSize.width);
-                    
+
+
+    size_t gDim3[3];
+    gDim3[0]= srcSize.height * srcSize.width;
+    gDim3[1] = 1;
+    gDim3[2] = 1;
+    cl_kernel_implementer (theQueue, gDim3, NULL, theProgram, theKernel);
+
 }
-
-
