@@ -41,6 +41,64 @@ rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  Rp
 
 }
 
+RppStatus
+rppi_rgb2hsv_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+   /*Still needs to be implemented*/
+
+    #elif defined (OCL_COMPILE)
+
+    cl_convert_rgb2hsv(   static_cast<cl_mem>(srcPtr), srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            RPPI_CHN_PACKED, 3 /*Channel*/,
+                            static_cast<cl_command_queue>(rppHandle));
+
+    #endif //backend
+    
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+   /*Still needs to be implemented*/
+
+    #elif defined (OCL_COMPILE)
+
+    cl_convert_hsv2rgb(   static_cast<cl_mem>(srcPtr), srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            RPPI_CHN_PLANAR, 3 /*Channel*/,
+                            static_cast<cl_command_queue>(rppHandle));
+
+    #endif //backend
+    
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_hsv2rgb_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+   /*Still needs to be implemented*/
+
+    #elif defined (OCL_COMPILE)
+
+    cl_convert_hsv2rgb(   static_cast<cl_mem>(srcPtr), srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            RPPI_CHN_PACKED, 3 /*Channel*/,
+                            static_cast<cl_command_queue>(rppHandle));
+
+    #endif //backend
+    
+    return RPP_SUCCESS;
+
+}
+
+
 
 ///////////////HUE RELATED//////////////////////////
 RppStatus
