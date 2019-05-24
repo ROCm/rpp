@@ -156,7 +156,7 @@ rppi_saturationRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
 }
 
 RppStatus
-rppi_saturationRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_saturationRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                         Rpp32f saturationFactor,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -229,7 +229,7 @@ rppi_saturationHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
 }
 
 RppStatus
-rppi_saturationHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                         Rpp32f saturationFactor,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -245,4 +245,5 @@ rppi_saturationHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
     return RPP_SUCCESS;
     
 }
+
 
