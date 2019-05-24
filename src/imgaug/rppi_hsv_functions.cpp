@@ -247,3 +247,122 @@ rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
 }
 
 
+RppStatus
+rppi_saturationRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+{
+
+    host_saturationRGB_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                            static_cast<Rpp8u*>(dstPtr), saturationFactor);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+{
+
+    host_saturationRGB_pkd<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                            static_cast<Rpp8u*>(dstPtr), saturationFactor);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_saturationHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+{
+
+    host_saturationHSV_pln<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                            static_cast<Rpp32f*>(dstPtr), saturationFactor);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+{
+
+    host_saturationHSV_pkd<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                            static_cast<Rpp32f*>(dstPtr), saturationFactor);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+
+    host_rgb2hsv_pln<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                                    static_cast<Rpp32f*>(dstPtr));
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_rgb2hsv_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+
+    host_rgb2hsv_pkd<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                                    static_cast<Rpp32f*>(dstPtr));
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_hueRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f hueShift)
+{
+
+    host_hueRGB_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                            static_cast<Rpp8u*>(dstPtr), hueShift);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_hueRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f hueShift)
+{
+
+    host_hueRGB_pkd<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                            static_cast<Rpp8u*>(dstPtr), hueShift);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_hueHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f hueShift)
+{
+
+    host_hueHSV_pln<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                            static_cast<Rpp32f*>(dstPtr), hueShift);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_hueHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f hueShift)
+{
+
+    host_hueHSV_pkd<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                            static_cast<Rpp32f*>(dstPtr), hueShift);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_hsv2rgb_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+
+    host_hsv2rgb_pln<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                                    static_cast<Rpp32f*>(dstPtr));
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_hsv2rgb_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+
+    host_hsv2rgb_pkd<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
+                                    static_cast<Rpp32f*>(dstPtr));
+    return RPP_SUCCESS;
+
+}
