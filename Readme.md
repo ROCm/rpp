@@ -5,12 +5,12 @@ Radeon performance primitives(RPP) libaray is  a comprehensive high performance 
 
 
 ## Top level design
-<p align="center"><img width="60%" src="docs/rpp_new.png" /></p>
+<p align="center"><img width="60%" src="rpp_new.png" /></p>
 
 
 
 RPP is developed for __Linux__ operating system.
-## Prerequisites
+##### Prerequisites
 1. Ubuntu `16.04`/`18.04`
 2. [ROCm supported hardware](https://rocm.github.io/hardware.html)
 3. [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
@@ -20,10 +20,9 @@ RPP is developed for __Linux__ operating system.
 * Contrast
 * Flip(Horizontal, Vertical and Both)
 * Blur (Gaussian 3x3)
+* Hue and Saturation modification
 * HSV2RGB
 * RGB2HSV
-* Hue and Saturation modification(In progress)
-
 
 ## Variations
 * Support for 3C(RGB) and 1C(Grayscale) images
@@ -51,9 +50,9 @@ $ git  clone https://github.com/mythreyi22/MIVisionX.git
 $ cd MIVisionX
 $ git  checkout gdf_test
 $ mkdir build
-$ cd build ; cmake .. ;//For GPU support
+$ cd build ; cmake .. ; make -j4 //For GPU support
         or
-$ cd build ; cmake -DCMAKE_DISABLE_FIND_PACKAGE_OpenCL=TRUE ..;  //For CPU support
+$ cd build ; cmake -DCMAKE_DISABLE_FIND_PACKAGE_OpenCL=TRUE;  //For CPU support
 $ make -j4
 $ sudo make install
 ```
@@ -114,4 +113,3 @@ node org.rpp.Brightness luma output alpha beta
 
 
 ```
-
