@@ -1,7 +1,7 @@
 #include <rppdefs.h>
 #include <rppi_image_augumentation_functions.h>
 
-//#include "cpu/host_rgb2hsv.hpp"
+#include "cpu/host_hsv_functions.hpp"
 
 #include <iostream>
 #ifdef HIP_COMPILE
@@ -11,16 +11,6 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
 #endif //backend
-
-/*RppStatus
-rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
-{
-
-    host_rgb2hsv<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr));
-    return RPP_SUCCESS;
-
-}*/
 
 RppStatus
 rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
