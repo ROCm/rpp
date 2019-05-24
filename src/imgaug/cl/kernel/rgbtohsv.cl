@@ -460,6 +460,28 @@ __kernel void huergb_pkd(   __global  unsigned char *a,
            
 }  
 
+__kernel void huehsv_pln(   __global  double *a,         
+                            __global  double *c,
+                            const  double hue,
+                            const  double sat,         
+                            const unsigned int height,       
+                            const unsigned int width)       
+{
+    int id = get_global_id(0);
+    c[id] += hue;
+    c[id + height * width] += sat;
+}       
 
-
+__kernel void huehsv_pkd(   __global  double *a,         
+                            __global  double *c,
+                            const  double hue,
+                            const  double sat,         
+                            const unsigned int height,       
+                            const unsigned int width)       
+{
+    int id = get_global_id(0);
+    id = id * 3;
+    c[id] += hue;
+    c[id + 1] += sat;
+}  
 ////////////////////////////////////////////

@@ -58,6 +58,3 @@ cl_hue_saturation_hsv( cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
                 
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
-
-
-//Hi Hello How are you?

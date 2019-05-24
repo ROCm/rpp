@@ -125,10 +125,32 @@ cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
     cl_kernel_implementer (theQueue, dim3, NULL, theProgram, theKernel);
 }
 
-/*RppStaus
-cl_hue_saturation_hsv( cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, Rpp32f hue, Rpp32f Saturation,
-                RppiChnFormat chnFormat, unsigned int chanel, cl_command_queue theQueue){
+RppStatus
+cl_hue_saturation_hsv (cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, Rpp32f hue, Rpp32f saturation,
+                RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue){
+    cl_kernel theKernel;
+    cl_program theProgram;
 
-}*/
+    if (chnFormat = RPPI_CHN_PLANAR)
+    cl_kernel_initializer(theQueue,
+                          "rgbtohsv.cl",
+                          "hsvhsv_pln",
+                          theProgram, theKernel);
+    else 
+    cl_kernel_initializer(theQueue,
+                          "rgbtohsv.cl",
+                          "huehsv_pkd",
+                          theProgram, theKernel);
+    
+    //---- Args Setter
+    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, 2, sizeof(double), &hue);
+    clSetKernelArg(theKernel, 3, sizeof(double), &saturation);
+    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &srcSize.width);
+                    
+}
+
 
