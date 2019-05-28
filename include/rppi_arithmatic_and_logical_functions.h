@@ -7,7 +7,93 @@
 extern "C" {
 #endif
 
+// --------------------
+// Bitwise AND
+// --------------------
 
+// Gpu function declarations
+
+RppStatus
+rppi_bitwise_AND_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_bitwise_AND_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_bitwise_AND_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+
+// --------------------
+// Bitwise NOT
+// --------------------
+
+// Gpu function declarations
+
+RppStatus
+rppi_bitwise_NOT_u8_pln1_gpu( RppPtr_t srcPtr1,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_bitwise_NOT_u8_pln3_gpu( RppPtr_t srcPtr1,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_bitwise_NOT_u8_pkd3_gpu( RppPtr_t srcPtr1,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+// --------------------
+// Exclusive OR
+// --------------------
+
+// Gpu function declarations
+
+RppStatus
+rppi_exclusive_OR_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_exclusive_OR_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_exclusive_OR_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+// --------------------
+// Inclusive OR
+// --------------------
+
+// Gpu function declarations
+
+RppStatus
+rppi_inclusive_OR_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_inclusive_OR_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_inclusive_OR_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+
+// Dummy
 RppStatus
 Rppi_Add_Constant_8u_pkd1(const RppPtr_t srcPtr, int rSrcStep,
                         RppPtr_t dstPtr, int rDstStep,
