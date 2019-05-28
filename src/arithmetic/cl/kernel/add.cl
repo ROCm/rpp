@@ -1,4 +1,5 @@
-__kernel void bitwise_AND(  __global unsigned char* a,
+#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) )
+__kernel void add(  __global unsigned char* a,
                             __global unsigned char* b,
                             __global unsigned char* c,
                             const unsigned int height,
@@ -13,5 +14,6 @@ __kernel void bitwise_AND(  __global unsigned char* a,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    c[pixIdx] = a[pixIdx] & b[pixIdx];
+    int res = a[pixIdx] + b[pixIdx];
+    c[pixIdx] = saturate_8u(res);
 }

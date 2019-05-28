@@ -36,4 +36,10 @@ cl_inclusive_OR ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
+RppStatus
+cl_add ( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

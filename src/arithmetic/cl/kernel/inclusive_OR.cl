@@ -1,5 +1,3 @@
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
-
 __kernel void inclusive_OR( __global unsigned char* a,
                             __global unsigned char* b,
                             __global unsigned char* c,
@@ -15,6 +13,5 @@ __kernel void inclusive_OR( __global unsigned char* a,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    int res = a[pixIdx] | b[pixIdx];
-    c[pixIdx] = saturate_8u(res);
+    c[pixIdx] = a[pixIdx] | b[pixIdx];
 }
