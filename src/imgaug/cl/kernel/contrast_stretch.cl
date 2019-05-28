@@ -21,5 +21,5 @@ __kernel void contrast_stretch(  __global unsigned char *a,
     int res;
     res = (a[pixIdx] - min) * (new_max - new_min)/((max - min) * 1.0) + new_min ;
 
-    c[pixIdx] = res;
+    c[pixIdx] = saturate_8u(res);
 }

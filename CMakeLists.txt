@@ -18,7 +18,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc)
 elseif( "${BACKEND}" STREQUAL "OCL")
     set(CMAKE_CXX_COMPILER /opt/rocm/bin/hipcc) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -lOpenCL -lm")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -L/opt/rocm/opencl/lib/x86_64/ -lOpenCL -lm")
 endif()
 
 

@@ -12,8 +12,9 @@
 #include <stdio.h>
 #include <iostream>
 
+
 RppStatus
-rppi_blur3x3_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+rppi_blur3x3_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
 #ifdef OCL_COMPILE
 
@@ -31,7 +32,7 @@ rppi_blur3x3_1C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
 }
 
 RppStatus
-rppi_blur3x3_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+rppi_blur3x3_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
 #ifdef OCL_COMPILE
 
@@ -47,21 +48,49 @@ rppi_blur3x3_3C8U_pln(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHan
 
 }
 
+
 RppStatus
-rppi_blur3x3_1C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+
+    cl_gaussian_blur(static_cast<cl_mem>(srcPtr), srcSize,
+                        static_cast<cl_mem>(dstPtr),
+                        3 /*Filter width*/,
+                        RPPI_CHN_PACKED, 3 /*Channel*/,
+                        static_cast<cl_command_queue>(rppHandle) );
+
+#endif //backend
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_blur3x3_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    host_blur_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                                     static_cast<Rpp8u*>(dstPtr), 1);
     return RPP_SUCCESS;
 
 }
 
 RppStatus
-rppi_blur3x3_3C8U_pln_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    host_blur_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr), 3);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+
+    host_blur_pkd<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                                     static_cast<Rpp8u*>(dstPtr), 3);
     return RPP_SUCCESS;
 

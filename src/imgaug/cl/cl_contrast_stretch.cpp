@@ -30,11 +30,12 @@ cl_contrast_stretch (    cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, 8, sizeof(unsigned int), &channel);
     //-----
 
-    size_t dim3[3];
-    dim3[0] = srcSize.width;
-    dim3[1] = srcSize.height;
-    dim3[2] = channel;
-    cl_kernel_implementer (theQueue, dim3, theProgram, theKernel);
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+
+    cl_kernel_implementer(theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
     return RPP_SUCCESS;
 

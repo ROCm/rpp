@@ -14,7 +14,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
     char *sourceStr;
     size_t sourceSize;
     std::string kernelFile_cl = MOD_CL_PATH + kernelFile;
-    std::cout << kernelFile_cl;
+    std::cout << kernelFile_cl << std::endl;
     FILE *filePtr = fopen( kernelFile_cl.c_str(), "rb");
     if (!filePtr) {
         fprintf(stderr, "Failed to load kernel.\n");
@@ -46,12 +46,12 @@ cl_kernel_initializer ( cl_command_queue theQueue,
 }
 
 cl_int
-cl_kernel_implementer (cl_command_queue theQueue, size_t* dim3, cl_program& theProgram,
-                        cl_kernel& theKernel  )
+cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* localDim3,
+                        cl_program& theProgram, cl_kernel& theKernel  )
 {
     cl_int err;
 
-    err = clEnqueueNDRangeKernel(theQueue, theKernel, 3, NULL, dim3, NULL/*localSize*/,
+    err = clEnqueueNDRangeKernel(theQueue, theKernel, 3, NULL, globalDim3, localDim3,
                                                               0, NULL, NULL);
     clFinish(theQueue);
     clReleaseProgram(theProgram);
