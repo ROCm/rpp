@@ -114,6 +114,28 @@ rppi_add_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
 
+// --------------------
+// Subtraction
+// --------------------
+
+// Gpu function declarations
+
+RppStatus
+rppi_add_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_add_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_add_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+
 // Dummy
 RppStatus
 Rppi_Add_Constant_8u_pkd1(const RppPtr_t srcPtr, int rSrcStep,
