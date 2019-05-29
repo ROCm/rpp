@@ -70,7 +70,7 @@ RppStatus
 rppi_flip_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis)
 {
-    host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    host_flip_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                      static_cast<Rpp8u*>(dstPtr),
                      flipAxis, 1);
     return RPP_SUCCESS;
@@ -80,7 +80,17 @@ RppStatus
 rppi_flip_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis)
 {
-    host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    host_flip_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                     static_cast<Rpp8u*>(dstPtr),
+                     flipAxis, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_flip_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                                   RppiAxis flipAxis)
+{
+    host_flip_pkd<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                      static_cast<Rpp8u*>(dstPtr),
                      flipAxis, 3);
     return RPP_SUCCESS;

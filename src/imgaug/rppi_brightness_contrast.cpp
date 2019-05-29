@@ -109,3 +109,14 @@ rppi_brightness_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
     return RPP_SUCCESS;
 
 }
+
+RppStatus
+rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
+                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta)
+{
+    host_brightness_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr), alpha, beta, 3, RPPI_CHN_PLANAR );
+
+    return RPP_SUCCESS;
+
+}
