@@ -2,6 +2,8 @@
 #define RPP_CL_ARITHMETIC_DECLATAIONS_H
 
 //===== Utils
+
+namespace arithmetic {
 cl_int
 cl_kernel_initializer ( cl_command_queue theQueue,
                         std::string kernelFile, std::string kernelName,
@@ -10,6 +12,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
 cl_int
 cl_kernel_implementer (cl_command_queue theHandle, size_t* gDim3, size_t* lDim3, cl_program& theProgram,
                         cl_kernel& theKernel  );
+}
 
 //===== Internal CL functions
 RppStatus

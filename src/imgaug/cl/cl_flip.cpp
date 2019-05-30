@@ -1,6 +1,8 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
 
+using namespace imgaug;
+
 cl_int
 cl_flip(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiAxis flipAxis,

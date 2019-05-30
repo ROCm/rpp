@@ -1,11 +1,13 @@
 #include <cl/rpp_cl_common.hpp>
+#include "cl_declarations.hpp"
+
 
 #ifndef MOD_CL_PATH
-#   error Kernel files' base path not defined; undefined `MOD_CL_PATH`
+#   error Kernel files base path not defined; undefined `MOD_CL_PATH`
 #endif //MOD_CL_PATH
 
 cl_int
-cl_kernel_initializer ( cl_command_queue theQueue,
+imgaug::cl_kernel_initializer ( cl_command_queue theQueue,
                         std::string kernelFile, std::string kernelName,
                         cl_program& theProgram, cl_kernel& theKernel)
 {
@@ -46,7 +48,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
 }
 
 cl_int
-cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* localDim3,
+imgaug::cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* localDim3,
                         cl_program& theProgram, cl_kernel& theKernel  )
 {
     cl_int err;
