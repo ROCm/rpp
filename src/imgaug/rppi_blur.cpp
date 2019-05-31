@@ -67,91 +67,31 @@ rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp
 }
 
 RppStatus
-rppi_blur3x3_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
+rppi_blur3x3_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 3,
-                     RPPI_CHN_PLANAR, 1);
+
+    host_blur_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr), 1);
     return RPP_SUCCESS;
+
 }
 
 RppStatus
-rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
+rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 3,
-                     RPPI_CHN_PLANAR, 3);
+
+    host_blur_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr), 3);
     return RPP_SUCCESS;
+
 }
 
 RppStatus
-rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
+rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 3,
-                     RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
-}
 
-RppStatus
-rppi_blur5x5_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
-{
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 5,
-                     RPPI_CHN_PLANAR, 1);
+    host_blur_pkd<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    static_cast<Rpp8u*>(dstPtr), 3);
     return RPP_SUCCESS;
-}
 
-RppStatus
-rppi_blur5x5_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
-{
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 5,
-                     RPPI_CHN_PLANAR, 3);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_blur5x5_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
-{
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 5,
-                     RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_blur7x7_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
-{
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 7,
-                     RPPI_CHN_PLANAR, 1);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_blur7x7_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
-{
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 7,
-                     RPPI_CHN_PLANAR, 3);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_blur7x7_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev)
-{
-    host_blur<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, 7,
-                     RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
 }
