@@ -10,6 +10,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # Set Compilers
 set(COMPILER_FOR_OPENCL /opt/rocm/bin/hipcc)
+#set(COMPILER_FOR_OPENCL /usr/bin/g++)
 set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
 
 add_library(${PROJECT_NAME} SHARED include/rpp.h)
@@ -18,8 +19,7 @@ add_library(${PROJECT_NAME} SHARED include/rpp.h)
 find_package(OpenCL REQUIRED) # OpenCL_INCLUDE_DIRS, OpenCL_LIBRARIES
 
 #TODO: Future Work Build list can be set from CLI ; CACHED and to be used
-set( MODULES_LIST "imgaug")
-set( MODULES_LIST "arithmetic")
+set( MODULES_LIST "imgaug" "arithmetic")
 
 foreach (MOD_NAME ${MODULES_LIST})
     add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
