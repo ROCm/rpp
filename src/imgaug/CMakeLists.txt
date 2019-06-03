@@ -7,7 +7,9 @@ add_library( ${PROJECT_NAME} STATIC ${MOD_CPP})
 # Backend Specific Settings
 
 if( "${BACKEND}" STREQUAL "HIP")
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+    set(BACKEND_HIPOC 1)
+    add_subdirectory( cl )
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIPOC})
     add_definitions(-DHIP_COMPILE)
 elseif( "${BACKEND}" STREQUAL "OCL")
     add_subdirectory( cl )

@@ -9,8 +9,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 
 # Set Compilers
+# set(COMPILER_FOR_OPENCL /usr/bin/g++)
 set(COMPILER_FOR_OPENCL /opt/rocm/bin/hipcc)
 set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
+set(COMPILER_FOR_HIPOC /opt/rocm/bin/hipcc)
 
 add_library(${PROJECT_NAME} SHARED include/rpp.h)
 
@@ -28,6 +30,7 @@ endforeach(MOD_NAME)
 
 if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+    link_libraries(-amdgpu-target=gfx803 -amdgpu-target=gfx900 -Wno-unused-command-line-argument)
 elseif( "${BACKEND}" STREQUAL "OCL")
     set(CMAKE_CXX_COMPILER  ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -lm")
