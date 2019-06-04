@@ -9,4 +9,5 @@
 
 #include <rppdefs.h>
 
+#include <vector>
 #endif //RPP_HIP_COMMON_H

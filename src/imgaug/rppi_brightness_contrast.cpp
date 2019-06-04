@@ -4,7 +4,7 @@
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
-
+#include "hipoc/hipoc_declarations.hpp"
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
@@ -19,6 +19,11 @@ rppi_brightness_u8_pln1_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 
 #ifdef HIP_COMPILE
 
+    hipoc_brightness_contrast(  srcPtr, srcSize,
+                                dstPtr,
+                                alpha, beta,
+                                RPPI_CHN_PLANAR, 1 /*Channel*/,
+                                static_cast<hipStream_t>(rppHandle) );
 
 #elif defined (OCL_COMPILE)
 

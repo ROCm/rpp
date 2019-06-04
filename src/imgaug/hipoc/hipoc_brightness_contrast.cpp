@@ -1,9 +1,32 @@
+#include <hip/rpp_hip_common.hpp>
+#include "hipoc_declarations.hpp"
 
 hipError_t
-hip_brightness_contrast_cl_back()
+hipoc_brightness_contrast( void* srcPtr, RppiSize srcSize,
+                                void* dstPtr,
+                                Rpp32f alpha, Rpp32s beta,
+                                RppiChnFormat chnFormat, unsigned int channel,
+                                hipStream_t theQueue )
 {
+
+    unsigned int height = srcSize.height;
+    unsigned int width = srcSize.width;
+
+    std::vector<void*>argBuffer(7);
+    memcpy(&argBuffer[0], srcPtr, sizeof(void*));
+    memcpy(&argBuffer[1], dstPtr, sizeof(void*));
+    memcpy(&argBuffer[2], &alpha, sizeof(void*));
+    memcpy(&argBuffer[3], &beta, sizeof(void*));
+    memcpy(&argBuffer[4], &height, sizeof(void*));
+    memcpy(&argBuffer[5], &width, sizeof(void*));
+    memcpy(&argBuffer[6], &channel, sizeof(void*));
+
+    size_t argSize = argBuffer.size()*sizeof(void*);
+
+    // Note if not working try similar one to cl args setting
+
     hipModule_t module;
-    hipModuleLoad(&module, "brightness_contrast.cl.o");
+    hipModuleLoad(&module, "/home/neel/jgeob/rpp-workspace/AMD-RPP/build/src/imgaug/cl/libbrightness_contrast.cl.a");
     hipFunction_t function;
     hipModuleGetFunction(&function, module, "brightness_contrast");
 
@@ -14,19 +37,32 @@ hip_brightness_contrast_cl_back()
     hipEvent_t stop  = nullptr;
 
     void* config[] = {  HIP_LAUNCH_PARAM_BUFFER_POINTER, &argBuffer[0],
-                        HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
-                        HIP_LAUNCH_PARAM_END};
+                        HIP_LAUNCH_PARAM_BUFFER_SIZE, &argSize,
+                        HIP_LAUNCH_PARAM_END };
 
-    hipHccModuleLaunchKernel(function, gdims[0],
-                                       gdims[1], gdims[2],
-                                       ldims[0], ldims[1],
-                                       ldims[2], 0,
-                                       0,
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    size_t lDim3[3];
+    lDim3[0] = 32;
+    lDim3[1] = 32;
+    lDim3[2] = channel;
+
+    hipHccModuleLaunchKernel(function, gDim3[0],
+                                       gDim3[1],
+                                       gDim3[2],
+                                       lDim3[0],
+                                       lDim3[1],
+                                       lDim3[2],
+                                       0, 0,
                                        nullptr,
                                       (void**)&config,
                                        start,
                                        stop);
 
     hipDeviceSynchronize();
+
+    return hipSuccess;
 
 }
