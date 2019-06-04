@@ -5,6 +5,7 @@
 #   error Kernel files base path not defined; undefined `MOD_CL_PATH`
 #endif //MOD_CL_PATH
 
+#define TO_STRING(x) #x
 
 cl_int
 arithmetic::cl_kernel_initializer ( cl_command_queue theQueue,
@@ -15,7 +16,7 @@ arithmetic::cl_kernel_initializer ( cl_command_queue theQueue,
     // File Handling
     char *sourceStr;
     size_t sourceSize;
-    std::string kernelFile_cl = MOD_CL_PATH + kernelFile;
+    std::string kernelFile_cl = TO_STRING(MOD_CL_PATH) + kernelFile;
     std::cout << kernelFile_cl << std::endl;
     FILE *filePtr = fopen( kernelFile_cl.c_str(), "rb");
     if (!filePtr) {
