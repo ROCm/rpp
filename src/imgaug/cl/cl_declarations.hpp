@@ -57,4 +57,46 @@ cl_hue_saturation_hsv( cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f Saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
+RppStatus
+cl_bitwise_AND ( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
+RppStatus
+cl_bitwise_NOT ( cl_mem srcPtr1,
+                 RppiSize srcSize, cl_mem dstPtr,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
+RppStatus
+cl_exclusive_OR ( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
+RppStatus
+cl_inclusive_OR ( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
+RppStatus
+cl_add ( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
+RppStatus
+cl_subtract ( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
+RppStatus
+cl_absolute_difference ( cl_mem srcPtr1,cl_mem srcPtr2,
+                         RppiSize srcSize, cl_mem dstPtr,
+                         RppiChnFormat chnFormat, unsigned int channel,
+                         cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

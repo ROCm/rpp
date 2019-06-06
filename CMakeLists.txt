@@ -9,7 +9,6 @@ add_library(${PROJECT_NAME} SHARED include/rpp.h)
 
 #TODO: Future Work Build list can be set from CLI ; CACHED and to be used
 set( MODULES_LIST "imgaug")
-set( MODULES_LIST "arithmetic")
 
 foreach (MOD_NAME ${MODULES_LIST})
     add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
