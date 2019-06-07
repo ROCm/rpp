@@ -27,7 +27,7 @@ cl_contrast_stretch (    cl_mem srcPtr, RppiSize srcSize,
                             RppiChnFormat chnFormat, unsigned int channel,
                             cl_command_queue theQueue);
 cl_int
-cl_gaussian_blur(cl_mem srcPtr, RppiSize srcSize,
+gaussian_blur_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, unsigned int filterSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
