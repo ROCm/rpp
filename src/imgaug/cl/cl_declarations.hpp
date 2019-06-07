@@ -14,7 +14,7 @@ cl_kernel_implementer (cl_command_queue theHandle, size_t* gDim3, size_t* lDim3,
 //===== Internal CL functions
 
 RppStatus
-cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
+brightness_contrast_cl (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32f alpha, Rpp32s beta,
                             RppiChnFormat chnFormat, unsigned int channel,
