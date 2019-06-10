@@ -12,16 +12,16 @@ hipoc_brightness_contrast( void* srcPtr, RppiSize srcSize,
     unsigned int height = srcSize.height;
     unsigned int width = srcSize.width;
 
-    std::vector<void*>argBuffer(7);
-    memcpy(&argBuffer[0], srcPtr, sizeof(void*));
-    memcpy(&argBuffer[1], dstPtr, sizeof(void*));
-    memcpy(&argBuffer[2], &alpha, sizeof(void*));
-    memcpy(&argBuffer[3], &beta, sizeof(void*));
-    memcpy(&argBuffer[4], &height, sizeof(void*));
-    memcpy(&argBuffer[5], &width, sizeof(void*));
-    memcpy(&argBuffer[6], &channel, sizeof(void*));
+    void* argBuffer[7];
+    argBuffer[0] = &srcPtr;
+    argBuffer[1] = &dstPtr;
+    argBuffer[2] = &alpha;
+    argBuffer[3] = &beta;
+    argBuffer[4] = &height;
+    argBuffer[5] = &width;
+    argBuffer[6] = &channel;
 
-    size_t argSize = argBuffer.size()*sizeof(void*);
+    size_t argSize = 7*sizeof(void*);
 
     // Note if not working try similar one to cl args setting
 

@@ -47,8 +47,15 @@ rppi_brightness_u8_pln3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
                         RppHandle_t rppHandle )
 {
 
+#ifdef HIP_COMPILE
 
-#ifdef OCL_COMPILE
+    hipoc_brightness_contrast(  srcPtr, srcSize,
+                                dstPtr,
+                                alpha, beta,
+                                RPPI_CHN_PLANAR, 3 /*Channel*/,
+                                static_cast<hipStream_t>(rppHandle) );
+
+#elif defined (OCL_COMPILE)
 
     cl_brightness_contrast (    static_cast<cl_mem>(srcPtr), srcSize,
                                 static_cast<cl_mem>(dstPtr),
@@ -72,7 +79,15 @@ rppi_brightness_u8_pkd3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 {
 
 
-#ifdef OCL_COMPILE
+#ifdef HIP_COMPILE
+
+    hipoc_brightness_contrast(  srcPtr, srcSize,
+                                dstPtr,
+                                alpha, beta,
+                                RPPI_CHN_PLANAR, 3 /*Channel*/,
+                                static_cast<hipStream_t>(rppHandle) );
+
+#elif defined (OCL_COMPILE)
 
     cl_brightness_contrast (    static_cast<cl_mem>(srcPtr), srcSize,
                                 static_cast<cl_mem>(dstPtr),

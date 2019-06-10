@@ -19,3 +19,31 @@ __kernel void brightness_contrast(  __global unsigned char* a,
     int res = a[pixIdx] * alpha + beta;
     b[pixIdx] = saturate_8u(res);
 }
+
+// TODO: Remove kernel below after testing
+__kernel void brightness_contrast_hipoc_kern(  __global unsigned char* a,
+                                    __global unsigned char* b,
+                                    const float* alphaPtr,
+                                    const int* betaPtr,
+                                    const unsigned int* heightPtr,
+                                    const unsigned int* widthPtr,
+                                    const unsigned int* channelPtr
+)
+{
+    const float alpha = *alphaPtr;
+    const int beta = *betaPtr;
+    const unsigned int height = *heightPtr;
+    const unsigned int width = *widthPtr;
+    const unsigned int channel = *channelPtr;
+
+
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
+    if (id_x >= width || id_y >= height || id_z >= channel) return;
+
+    int pixIdx = id_x + id_y * width + id_z * width * height;
+
+    int res = a[pixIdx] * alpha + beta;
+    b[pixIdx] = saturate_8u(res);
+}
