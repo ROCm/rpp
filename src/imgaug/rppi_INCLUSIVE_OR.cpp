@@ -20,7 +20,7 @@ rppi_inclusive_OR_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 #elif defined (OCL_COMPILE)
 
-    cl_inclusive_OR ( static_cast<cl_mem>(srcPtr1),
+    inclusive_OR_cl ( static_cast<cl_mem>(srcPtr1),
                      static_cast<cl_mem>(srcPtr2),
                      srcSize,
                      static_cast<cl_mem>(dstPtr),
@@ -46,7 +46,7 @@ rppi_inclusive_OR_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 // Yet to be implemented
 
 #elif defined (OCL_COMPILE)
-    cl_inclusive_OR ( static_cast<cl_mem>(srcPtr1),
+    inclusive_OR_cl ( static_cast<cl_mem>(srcPtr1),
                      static_cast<cl_mem>(srcPtr2),
                      srcSize,
                      static_cast<cl_mem>(dstPtr),
@@ -70,7 +70,7 @@ rppi_inclusive_OR_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 #ifdef OCL_COMPILE
 
-    cl_inclusive_OR ( static_cast<cl_mem>(srcPtr1),
+    inclusive_OR_cl ( static_cast<cl_mem>(srcPtr1),
                      static_cast<cl_mem>(srcPtr2),
                      srcSize,
                      static_cast<cl_mem>(dstPtr),

@@ -20,7 +20,7 @@ rppi_bitwise_NOT_u8_pln1_gpu( RppPtr_t srcPtr1,
 
 #elif defined (OCL_COMPILE)
 
-    cl_bitwise_NOT ( static_cast<cl_mem>(srcPtr1),
+    bitwise_NOT_cl ( static_cast<cl_mem>(srcPtr1),
                      srcSize,
                      static_cast<cl_mem>(dstPtr),
                      RPPI_CHN_PLANAR, 1 /*Channel*/,
@@ -45,7 +45,7 @@ rppi_bitwise_NOT_u8_pln3_gpu( RppPtr_t srcPtr1,
 // Yet to be implemented
 
 #elif defined (OCL_COMPILE)
-    cl_bitwise_NOT ( static_cast<cl_mem>(srcPtr1),
+    bitwise_NOT_cl ( static_cast<cl_mem>(srcPtr1),
                      srcSize,
                      static_cast<cl_mem>(dstPtr),
                      RPPI_CHN_PLANAR, 3 /*Channel*/,
@@ -68,7 +68,7 @@ rppi_bitwise_NOT_u8_pkd3_gpu( RppPtr_t srcPtr1,
 
 #ifdef OCL_COMPILE
 
-    cl_bitwise_NOT ( static_cast<cl_mem>(srcPtr1),
+    bitwise_NOT_cl ( static_cast<cl_mem>(srcPtr1),
                      srcSize,
                      static_cast<cl_mem>(dstPtr),
                      RPPI_CHN_PACKED, 3 /*Channel*/,

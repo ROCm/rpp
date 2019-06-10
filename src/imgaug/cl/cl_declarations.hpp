@@ -58,25 +58,25 @@ hue_saturation_hsv_cl( cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
-cl_bitwise_AND ( cl_mem srcPtr1,cl_mem srcPtr2,
+bitwise_AND_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
 RppStatus
-cl_bitwise_NOT ( cl_mem srcPtr1,
+bitwise_NOT_cl ( cl_mem srcPtr1,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
 RppStatus
-cl_exclusive_OR ( cl_mem srcPtr1,cl_mem srcPtr2,
+exclusive_OR_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
 RppStatus
-cl_inclusive_OR ( cl_mem srcPtr1,cl_mem srcPtr2,
+inclusive_OR_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);

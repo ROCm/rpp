@@ -2,7 +2,7 @@
 #include "cl_declarations.hpp"
 
 RppStatus
-cl_bitwise_NOT ( cl_mem srcPtr1,
+bitwise_NOT_cl ( cl_mem srcPtr1,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
