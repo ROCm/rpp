@@ -4,7 +4,7 @@
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
-#include "hip/hip_brightness_contrast.hpp"
+
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"

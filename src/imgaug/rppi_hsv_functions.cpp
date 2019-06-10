@@ -6,7 +6,7 @@
 #include <iostream>
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
-#include "hip/hip_brightness_contrast.hpp"
+
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
@@ -26,7 +26,7 @@ rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  Rp
                             static_cast<cl_command_queue>(rppHandle));
 
     #endif //backend
-    
+
     return RPP_SUCCESS;
 
 }
@@ -45,7 +45,7 @@ rppi_rgb2hsv_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  Rp
                             static_cast<cl_command_queue>(rppHandle));
 
     #endif //backend
-    
+
     return RPP_SUCCESS;
 
 }
@@ -64,7 +64,7 @@ rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  Rp
                             static_cast<cl_command_queue>(rppHandle));
 
     #endif //backend
-    
+
     return RPP_SUCCESS;
 
 }
@@ -83,7 +83,7 @@ rppi_hsv2rgb_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  Rp
                             static_cast<cl_command_queue>(rppHandle));
 
     #endif //backend
-    
+
     return RPP_SUCCESS;
 
 }
@@ -92,7 +92,7 @@ rppi_hsv2rgb_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  Rp
 
 ///////////////HUE RELATED//////////////////////////
 RppStatus
-rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f hueShift,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -102,15 +102,15 @@ rppi_hueRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
                             RPPI_CHN_PLANAR, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));
-    
+
     #endif //backend
 
     return RPP_SUCCESS;
-    
+
 }
 
 RppStatus
-rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f hueShift,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -120,7 +120,7 @@ rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
                             RPPI_CHN_PACKED, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));
-    
+
     #endif //backend
 
     return RPP_SUCCESS;
@@ -128,7 +128,7 @@ rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
  }
 
 RppStatus
-rppi_saturationRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_saturationRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f saturationFactor,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -138,15 +138,15 @@ rppi_saturationRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                             static_cast<cl_mem>(dstPtr), 0.0/*hue*/, saturationFactor,
                             RPPI_CHN_PLANAR, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));
-    
+
     #endif //backend
 
     return RPP_SUCCESS;
-    
+
 }
 
 RppStatus
-rppi_saturationRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_saturationRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f saturationFactor,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -156,16 +156,16 @@ rppi_saturationRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                             static_cast<cl_mem>(dstPtr), 0.0/*hue*/, saturationFactor,
                             RPPI_CHN_PACKED, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));
-    
+
     #endif //backend
 
     return RPP_SUCCESS;
-    
+
 }
 
 ///////////////
 RppStatus
-rppi_hueHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_hueHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f hueShift,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -175,15 +175,15 @@ rppi_hueHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
                             RPPI_CHN_PLANAR, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));
-    
+
     #endif //backend
 
     return RPP_SUCCESS;
-    
+
 }
 
 RppStatus
-rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f hueShift,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -193,7 +193,7 @@ rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
                             RPPI_CHN_PACKED, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));
-    
+
     #endif //backend
 
     return RPP_SUCCESS;
@@ -201,7 +201,7 @@ rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
  }
 
 RppStatus
-rppi_saturationHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_saturationHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f saturationFactor,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -211,15 +211,15 @@ rppi_saturationHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                             static_cast<cl_mem>(dstPtr), 0.0/*hue*/, saturationFactor,
                             RPPI_CHN_PLANAR, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));
-    
+
     #endif //backend
 
     return RPP_SUCCESS;
-    
+
 }
 
 RppStatus
-rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f saturationFactor,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
     /*Still needs to be implemented*/
@@ -229,11 +229,11 @@ rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                             static_cast<cl_mem>(dstPtr), 0.0/*hue*/, saturationFactor,
                             RPPI_CHN_PACKED, 3 /*Channel*/,
                             static_cast<cl_command_queue>(rppHandle));
-    
+
     #endif //backend
 
     return RPP_SUCCESS;
-    
+
 }
 
 

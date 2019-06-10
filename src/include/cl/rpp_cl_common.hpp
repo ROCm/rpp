@@ -1,3 +1,4 @@
+/*To be used by the library alone*/
 #ifndef RPP_CL_COMMON_H
 #define RPP_CL_COMMON_H
 

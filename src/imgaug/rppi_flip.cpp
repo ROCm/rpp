@@ -66,7 +66,7 @@ rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 }
 
  // host function call for single channel input
-RppStatus 
+RppStatus
 rppi_flip_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis)
 {

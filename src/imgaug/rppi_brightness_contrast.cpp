@@ -4,7 +4,7 @@
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
-#include "hip/hip_brightness_contrast.hpp"
+#include "hipoc/hipoc_declarations.hpp"
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
@@ -18,11 +18,12 @@ rppi_brightness_u8_pln1_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 {
 
 #ifdef HIP_COMPILE
-    hip_brightness_contrast<Rpp8u>( static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr),
-                                    alpha, beta,
-                                    RPPI_CHN_PLANAR,
-                                    (hipStream_t)rppHandle);
+
+    hipoc_brightness_contrast(  srcPtr, srcSize,
+                                dstPtr,
+                                alpha, beta,
+                                RPPI_CHN_PLANAR, 1 /*Channel*/,
+                                static_cast<hipStream_t>(rppHandle) );
 
 #elif defined (OCL_COMPILE)
 
@@ -46,8 +47,15 @@ rppi_brightness_u8_pln3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
                         RppHandle_t rppHandle )
 {
 
+#ifdef HIP_COMPILE
 
-#ifdef OCL_COMPILE
+    hipoc_brightness_contrast(  srcPtr, srcSize,
+                                dstPtr,
+                                alpha, beta,
+                                RPPI_CHN_PLANAR, 3 /*Channel*/,
+                                static_cast<hipStream_t>(rppHandle) );
+
+#elif defined (OCL_COMPILE)
 
     brightness_contrast_cl (    static_cast<cl_mem>(srcPtr), srcSize,
                                 static_cast<cl_mem>(dstPtr),
@@ -71,7 +79,15 @@ rppi_brightness_u8_pkd3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 {
 
 
-#ifdef OCL_COMPILE
+#ifdef HIP_COMPILE
+
+    hipoc_brightness_contrast(  srcPtr, srcSize,
+                                dstPtr,
+                                alpha, beta,
+                                RPPI_CHN_PLANAR, 3 /*Channel*/,
+                                static_cast<hipStream_t>(rppHandle) );
+
+#elif defined (OCL_COMPILE)
 
     brightness_contrast_cl (    static_cast<cl_mem>(srcPtr), srcSize,
                                 static_cast<cl_mem>(dstPtr),
