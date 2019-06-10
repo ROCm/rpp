@@ -1,6 +1,6 @@
-__kernel void inclusive_OR( __global unsigned char* a,
-                            __global unsigned char* b,
-                            __global unsigned char* c,
+__kernel void inclusive_OR( __global unsigned char* input1,
+                            __global unsigned char* input2,
+                            __global unsigned char* output,
                             const unsigned int height,
                             const unsigned int width,
                             const unsigned int channel
@@ -13,5 +13,5 @@ __kernel void inclusive_OR( __global unsigned char* a,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    c[pixIdx] = a[pixIdx] | b[pixIdx];
+    output[pixIdx] = input1[pixIdx] | input2[pixIdx];
 }

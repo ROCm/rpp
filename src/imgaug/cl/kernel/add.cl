@@ -1,10 +1,10 @@
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) )
-__kernel void add(  __global unsigned char* a,
-                            __global unsigned char* b,
-                            __global unsigned char* c,
-                            const unsigned int height,
-                            const unsigned int width,
-                            const unsigned int channel
+__kernel void add(  __global unsigned char* input1,
+                    __global unsigned char* input2,
+                    __global unsigned char* output,
+                    const unsigned int height,
+                    const unsigned int width,
+                    const unsigned int channel
 )
 {
     int id_x = get_global_id(0);
@@ -14,6 +14,6 @@ __kernel void add(  __global unsigned char* a,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    int res = a[pixIdx] + b[pixIdx];
-    c[pixIdx] = saturate_8u(res);
+    int res = input1[pixIdx] + input2[pixIdx];
+    output[pixIdx] = saturate_8u(res);
 }

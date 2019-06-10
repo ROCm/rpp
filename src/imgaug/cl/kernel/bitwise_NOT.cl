@@ -1,5 +1,5 @@
-__kernel void bitwise_NOT(  __global unsigned char* a,
-                            __global unsigned char* b,
+__kernel void bitwise_NOT(  __global unsigned char* input,
+                            __global unsigned char* output,
                             const unsigned int height,
                             const unsigned int width,
                             const unsigned int channel
@@ -12,5 +12,5 @@ __kernel void bitwise_NOT(  __global unsigned char* a,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    b[pixIdx] = ~a[pixIdx];
+    output[pixIdx] = ~input[pixIdx];
 }
