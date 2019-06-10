@@ -64,8 +64,7 @@ bitwise_AND_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  cl_command_queue theQueue);
 
 RppStatus
-bitwise_NOT_cl ( cl_mem srcPtr1,
-                 RppiSize srcSize, cl_mem dstPtr,
+bitwise_NOT_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
@@ -83,9 +82,9 @@ inclusive_OR_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
 
 RppStatus
 add_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
-                 RppiSize srcSize, cl_mem dstPtr,
-                 RppiChnFormat chnFormat, unsigned int channel,
-                 cl_command_queue theQueue);
+         RppiSize srcSize, cl_mem dstPtr,
+         RppiChnFormat chnFormat, unsigned int channel,
+         cl_command_queue theQueue);
 
 RppStatus
 subtract_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
@@ -98,5 +97,11 @@ absolute_difference_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                          RppiSize srcSize, cl_mem dstPtr,
                          RppiChnFormat chnFormat, unsigned int channel,
                          cl_command_queue theQueue);
+
+RppStatus
+bilateral_filter_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
+                      unsigned int filterSize, double sigmaI, double sigmaS,
+                      RppiChnFormat chnFormat, unsigned int channel,
+                      cl_command_queue theQueue);
 
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
