@@ -32,28 +32,28 @@ gaussian_blur_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 cl_int
-cl_flip(cl_mem srcPtr, RppiSize srcSize,
+flip_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiAxis flipAxis,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
 RppStatus
-cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
+convert_rgb2hsv_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr,RppiChnFormat chnFormat, unsigned int chanel,
                 cl_command_queue theQueue);
 
 RppStatus
-cl_convert_hsv2rgb(cl_mem srcPtr, RppiSize srcSize,
+convert_hsv2rgb_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr,RppiChnFormat chnFormat, unsigned int chanel,
                 cl_command_queue theQueue);
 
 RppStatus
-cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
+hue_saturation_rgb_cl (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f Saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
-cl_hue_saturation_hsv( cl_mem srcPtr, RppiSize srcSize,
+hue_saturation_hsv_cl( cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f Saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
