@@ -82,19 +82,19 @@ inclusive_OR_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  cl_command_queue theQueue);
 
 RppStatus
-cl_add ( cl_mem srcPtr1,cl_mem srcPtr2,
+add_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
 RppStatus
-cl_subtract ( cl_mem srcPtr1,cl_mem srcPtr2,
+subtract_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
 RppStatus
-cl_absolute_difference ( cl_mem srcPtr1,cl_mem srcPtr2,
+absolute_difference_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                          RppiSize srcSize, cl_mem dstPtr,
                          RppiChnFormat chnFormat, unsigned int channel,
                          cl_command_queue theQueue);

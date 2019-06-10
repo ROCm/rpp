@@ -2,7 +2,7 @@
 #include "cl_declarations.hpp"
 
 RppStatus
-cl_absolute_difference ( cl_mem srcPtr1,cl_mem srcPtr2,
+absolute_difference_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)

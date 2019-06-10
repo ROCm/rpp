@@ -2,7 +2,7 @@
 #include "cl_declarations.hpp"
 
 RppStatus
-cl_add ( cl_mem srcPtr1,cl_mem srcPtr2,
+add_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
