@@ -2,7 +2,7 @@
 #include <math.h>
 
 template <typename T>
-RppStatus host_hsv2rgb_pln(T *srcPtr, RppiSize srcSize, T *dstPtr)
+RppStatus hsv2rgb_pln_host(T *srcPtr, RppiSize srcSize, T *dstPtr)
 {
     for (int i = 0; i < (srcSize.width * srcSize.height); i++)
     {
@@ -57,7 +57,7 @@ RppStatus host_hsv2rgb_pln(T *srcPtr, RppiSize srcSize, T *dstPtr)
 }
 
 template <typename T>
-RppStatus host_hsv2rgb_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr)
+RppStatus hsv2rgb_pkd_host(T *srcPtr, RppiSize srcSize, T *dstPtr)
 {
     for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
     {
@@ -113,7 +113,7 @@ RppStatus host_hsv2rgb_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr)
 
 
 template <typename T>
-RppStatus host_hueRGB_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
+RppStatus hueRGB_pln_host(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
 {
     Rpp32u channel = 3;
     Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
@@ -232,7 +232,7 @@ RppStatus host_hueRGB_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShif
 }
 
 template <typename T>
-RppStatus host_hueRGB_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
+RppStatus hueRGB_pkd_host(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
 {
     Rpp32u channel = 3;
     Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
@@ -351,7 +351,7 @@ RppStatus host_hueRGB_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShif
 }
 
 template <typename T>
-RppStatus host_hueHSV_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
+RppStatus hueHSV_pln_host(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
 {
     Rpp32u channel = 3;
     
@@ -377,7 +377,7 @@ RppStatus host_hueHSV_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShif
 }
 
 template <typename T>
-RppStatus host_hueHSV_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
+RppStatus hueHSV_pkd_host(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShift)
 {
     Rpp32u channel = 3;
     
@@ -405,7 +405,7 @@ RppStatus host_hueHSV_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f hueShif
 
 template <typename T>
 RppStatus 
-host_rgb2hsv_pln(T *srcPtr, RppiSize srcSize, T *dstPtr)
+rgb2hsv_pln_host(T *srcPtr, RppiSize srcSize, T *dstPtr)
 {
     for (int i = 0; i < (srcSize.width * srcSize.height); i++)
     {
@@ -461,7 +461,7 @@ host_rgb2hsv_pln(T *srcPtr, RppiSize srcSize, T *dstPtr)
 
 template <typename T>
 RppStatus 
-host_rgb2hsv_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr)
+rgb2hsv_pkd_host(T *srcPtr, RppiSize srcSize, T *dstPtr)
 {
     for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
     {
@@ -516,7 +516,7 @@ host_rgb2hsv_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr)
 }
 
 template <typename T>
-RppStatus host_saturationRGB_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
+RppStatus saturationRGB_pln_host(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
 {
     Rpp32u channel = 3;
     Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
@@ -629,7 +629,7 @@ RppStatus host_saturationRGB_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f 
 }
 
 template <typename T>
-RppStatus host_saturationRGB_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
+RppStatus saturationRGB_pkd_host(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
 {
     Rpp32u channel = 3;
     Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
@@ -742,7 +742,7 @@ RppStatus host_saturationRGB_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f 
 }
 
 template <typename T>
-RppStatus host_saturationHSV_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
+RppStatus saturationHSV_pln_host(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
 {
     Rpp32u channel = 3;
     
@@ -762,7 +762,7 @@ RppStatus host_saturationHSV_pln(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f 
 }
 
 template <typename T>
-RppStatus host_saturationHSV_pkd(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
+RppStatus saturationHSV_pkd_host(T *srcPtr, RppiSize srcSize, T *dstPtr, Rpp32f saturationFactor)
 {
     Rpp32u channel = 3;
     

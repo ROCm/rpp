@@ -17,7 +17,7 @@ rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 #ifdef OCL_COMPILE
 
-    cl_flip(static_cast<cl_mem>(srcPtr), srcSize,
+    flip_cl(static_cast<cl_mem>(srcPtr), srcSize,
             static_cast<cl_mem>(dstPtr),
             flipAxis,
             RPPI_CHN_PLANAR, 1 /*Channel*/,
@@ -35,7 +35,7 @@ rppi_flip_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 #ifdef OCL_COMPILE
 
-    cl_flip(static_cast<cl_mem>(srcPtr), srcSize,
+    flip_cl(static_cast<cl_mem>(srcPtr), srcSize,
             static_cast<cl_mem>(dstPtr),
             flipAxis,
             RPPI_CHN_PLANAR, 3 /*Channel*/,
@@ -54,7 +54,7 @@ rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 #ifdef OCL_COMPILE
 
-    cl_flip(static_cast<cl_mem>(srcPtr), srcSize,
+    flip_cl(static_cast<cl_mem>(srcPtr), srcSize,
             static_cast<cl_mem>(dstPtr),
             flipAxis,
             RPPI_CHN_PACKED, 3 /*Channel*/,
@@ -70,7 +70,7 @@ RppStatus
 rppi_flip_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis)
 {
-    host_flip_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    flip_pln_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                      static_cast<Rpp8u*>(dstPtr),
                      flipAxis, 1);
     return RPP_SUCCESS;
@@ -80,7 +80,7 @@ RppStatus
 rppi_flip_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis)
 {
-    host_flip_pln<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    flip_pln_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                      static_cast<Rpp8u*>(dstPtr),
                      flipAxis, 3);
     return RPP_SUCCESS;
@@ -90,7 +90,7 @@ RppStatus
 rppi_flip_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                                    RppiAxis flipAxis)
 {
-    host_flip_pkd<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    flip_pkd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                      static_cast<Rpp8u*>(dstPtr),
                      flipAxis, 3);
     return RPP_SUCCESS;

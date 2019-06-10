@@ -1,7 +1,8 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
+
 RppStatus
-cl_absolute_difference ( cl_mem srcPtr1,cl_mem srcPtr2,
+exclusive_OR_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
@@ -9,8 +10,8 @@ cl_absolute_difference ( cl_mem srcPtr1,cl_mem srcPtr2,
     cl_kernel theKernel;
     cl_program theProgram;
     cl_kernel_initializer(theQueue,
-                          "absolute_difference.cl",
-                          "absolute_difference",
+                          "exclusive_OR.cl",
+                          "exclusive_OR",
                           theProgram, theKernel);
 
     //---- Args Setter

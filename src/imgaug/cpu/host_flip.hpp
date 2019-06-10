@@ -3,7 +3,7 @@
 using namespace std;
 
 template <typename T>
-RppStatus host_flip_pln(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+RppStatus flip_pln_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                         RppiAxis flipAxis, unsigned channel)
 {
     if (flipAxis == RPPI_HORIZONTAL_AXIS)
@@ -81,7 +81,7 @@ RppStatus host_flip_pln(T* srcPtr, RppiSize srcSize, T* dstPtr,
 }
 
 template <typename T>
-RppStatus host_flip_pkd(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiAxis flipAxis, unsigned channel)
+RppStatus flip_pkd_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiAxis flipAxis, unsigned channel)
 {
     if (flipAxis == RPPI_HORIZONTAL_AXIS)
     {

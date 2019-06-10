@@ -4,7 +4,7 @@
 using namespace imgaug;
 
 RppStatus
-cl_contrast_stretch (    cl_mem srcPtr, RppiSize srcSize,
+contrast_stretch_cl (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32u newMin, Rpp32u newMax,
                             RppiChnFormat chnFormat, unsigned int channel,

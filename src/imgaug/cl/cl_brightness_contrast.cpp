@@ -4,7 +4,7 @@
 using namespace imgaug;
 
 RppStatus
-cl_brightness_contrast (    cl_mem srcPtr, RppiSize srcSize,
+brightness_contrast_cl (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32f alpha, Rpp32s beta,
                             RppiChnFormat chnFormat, unsigned int channel,

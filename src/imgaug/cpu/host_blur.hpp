@@ -3,7 +3,7 @@
 
 
 template <typename T>
-RppStatus host_blur_pln(T* srcPtr, RppiSize srcSize, T* dstPtr, unsigned int channel)
+RppStatus blur_pln_host(T* srcPtr, RppiSize srcSize, T* dstPtr, unsigned int channel)
 {
     float kernel_3x3[9] = {1,2,1,2,4,2,1,2,1};
     for (int i = 0; i < 9; i++)
@@ -82,7 +82,7 @@ RppStatus host_blur_pln(T* srcPtr, RppiSize srcSize, T* dstPtr, unsigned int cha
 }
 
 template <typename T>
-RppStatus host_blur_pkd(T* srcPtr, RppiSize srcSize, T* dstPtr, unsigned int channel)
+RppStatus blur_pkd_host(T* srcPtr, RppiSize srcSize, T* dstPtr, unsigned int channel)
 {
     float kernel_3x3[9] = {1,2,1,2,4,2,1,2,1};
     for (int i = 0; i < 9; i++)

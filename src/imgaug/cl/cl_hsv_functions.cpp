@@ -4,7 +4,7 @@
 using namespace imgaug;
 
 RppStatus
-cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
+convert_rgb2hsv_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -42,7 +42,7 @@ cl_convert_rgb2hsv(cl_mem srcPtr, RppiSize srcSize,
 }
 
 RppStatus
-cl_convert_hsv2rgb(cl_mem srcPtr, RppiSize srcSize,
+convert_hsv2rgb_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -81,7 +81,7 @@ cl_convert_hsv2rgb(cl_mem srcPtr, RppiSize srcSize,
 
 //////////////////////HUE CODE////////////////////////////////
 RppStatus
-cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
+hue_saturation_rgb_cl (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -127,7 +127,7 @@ cl_hue_saturation_rgb (cl_mem srcPtr, RppiSize srcSize,
 }
 
 RppStatus
-cl_hue_saturation_hsv (cl_mem srcPtr, RppiSize srcSize,
+hue_saturation_hsv_cl (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue){
     cl_kernel theKernel;

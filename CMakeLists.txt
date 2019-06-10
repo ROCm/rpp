@@ -19,7 +19,7 @@ add_library(${PROJECT_NAME} SHARED include/rpp.h)
 find_package(OpenCL REQUIRED) # OpenCL_INCLUDE_DIRS, OpenCL_LIBRARIES
 
 #TODO: Future Work Build list can be set from CLI ; CACHED and to be used
-set( MODULES_LIST "imgaug" "arithmetic")
+set( MODULES_LIST "imgaug")
 
 foreach (MOD_NAME ${MODULES_LIST})
     add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})

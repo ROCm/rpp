@@ -4,7 +4,7 @@
 using namespace imgaug;
 
 cl_int
-cl_flip(cl_mem srcPtr, RppiSize srcSize,
+flip_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiAxis flipAxis,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)

@@ -26,7 +26,7 @@ rppi_brightness_u8_pln1_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 
 #elif defined (OCL_COMPILE)
 
-    cl_brightness_contrast (    static_cast<cl_mem>(srcPtr), srcSize,
+    brightness_contrast_cl (    static_cast<cl_mem>(srcPtr), srcSize,
                                 static_cast<cl_mem>(dstPtr),
                                 alpha, beta,
                                 RPPI_CHN_PLANAR, 1 /*Channel*/,
@@ -49,7 +49,7 @@ rppi_brightness_u8_pln3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 
 #ifdef OCL_COMPILE
 
-    cl_brightness_contrast (    static_cast<cl_mem>(srcPtr), srcSize,
+    brightness_contrast_cl (    static_cast<cl_mem>(srcPtr), srcSize,
                                 static_cast<cl_mem>(dstPtr),
                                 alpha, beta,
                                 RPPI_CHN_PLANAR, 3 /*Channel*/,
@@ -73,7 +73,7 @@ rppi_brightness_u8_pkd3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 
 #ifdef OCL_COMPILE
 
-    cl_brightness_contrast (    static_cast<cl_mem>(srcPtr), srcSize,
+    brightness_contrast_cl (    static_cast<cl_mem>(srcPtr), srcSize,
                                 static_cast<cl_mem>(dstPtr),
                                 alpha, beta,
                                 RPPI_CHN_PACKED, 3 /*Channel*/,
@@ -92,7 +92,7 @@ rppi_brightness_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta,
                             RppHandle_t handle )
 {
-    host_brightness_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                                     static_cast<Rpp8u*>(dstPtr), alpha, beta, 1, RPPI_CHN_PLANAR );
 
     return RPP_SUCCESS;
@@ -103,7 +103,7 @@ RppStatus
 rppi_brightness_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta)
 {
-    host_brightness_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                                     static_cast<Rpp8u*>(dstPtr), alpha, beta, 3, RPPI_CHN_PLANAR );
 
     return RPP_SUCCESS;
@@ -114,7 +114,7 @@ RppStatus
 rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
                             RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta)
 {
-    host_brightness_contrast<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
                                     static_cast<Rpp8u*>(dstPtr), alpha, beta, 3, RPPI_CHN_PLANAR );
 
     return RPP_SUCCESS;

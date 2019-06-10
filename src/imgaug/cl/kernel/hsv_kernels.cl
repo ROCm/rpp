@@ -1,6 +1,6 @@
 //////////////////Conversion Functions ////////////////////////////_
-__kernel void rgb2hsv_pln(__global unsigned char *a,
-                         __global double *c,
+__kernel void rgb2hsv_pln(__global unsigned char *input,
+                         __global double *output,
                          const unsigned int height,
                          const unsigned int width)
 {
@@ -11,37 +11,37 @@ __kernel void rgb2hsv_pln(__global unsigned char *a,
     //Make sure we do not go out of bounds
 
     if (id < height * width ){
-        r = a[id] / 255.0;
-        g = a[id + height * width] / 255.0;
-        b = a[id + 2* height * width]/ 255.0;
+        r = input[id] / 255.0;
+        g = input[id + height * width] / 255.0;
+        b = input[id + 2* height * width]/ 255.0;
 
         min = (r < g && r< b)? r : ((g < b)? g: b);
         max = (r > g && r > b)? r : ((g > b)? g: b);
 
         delta = max - min;
 
-        if (delta == 0) c[id] = 0;
+        if (delta == 0) output[id] = 0;
         else {
             if (max == r)
-                c[id] = 60 * ((g - b)/delta);
+                output[id] = 60 * ((g - b)/delta);
             else if (max == g)
-                c[id] = 60 * ((b - r)/delta + 2);
+                output[id] = 60 * ((b - r)/delta + 2);
             else
-                c[id] = 60 * ((r - g)/delta + 4);
+                output[id] = 60 * ((r - g)/delta + 4);
         }
 
 
-        if ( c[id] < 0) c[id] = c[id] +360;
-        if (max == 0) c[id +  height * width] = 0;
-        else c[id + height * width] = delta / max;
-        c[id + 2* height * width] = max;
+        if ( output[id] < 0) output[id] = output[id] +360;
+        if (max == 0) output[id +  height * width] = 0;
+        else output[id + height * width] = delta / max;
+        output[id + 2* height * width] = max;
 
     }
 
 }
 
-__kernel void rgb2hsv_pkd(  __global unsigned char *a,
-                            __global double *c,
+__kernel void rgb2hsv_pkd(  __global unsigned char *input,
+                            __global double *output,
                               const unsigned int height,
                               const unsigned int width)
 {
@@ -52,37 +52,37 @@ __kernel void rgb2hsv_pkd(  __global unsigned char *a,
     //Make sure we do not go out of bounds
     id = id * 3;
     if (id < 3 *height * width ){
-        r = a[id] / 255.0;
-        g = a[id + 1] / 255.0;
-        b = a[id + 2]/ 255.0;
+        r = input[id] / 255.0;
+        g = input[id + 1] / 255.0;
+        b = input[id + 2]/ 255.0;
 
         min = (r < g && r< b)? r : ((g < b)? g: b);
         max = (r > g && r > b)? r : ((g > b)? g: b);
 
         delta = max - min;
 
-        if (delta == 0) c[id] = 0;
+        if (delta == 0) output[id] = 0;
         else {
             if (max == r)
-                c[id] = 60 * ((g - b)/delta);
+                output[id] = 60 * ((g - b)/delta);
             else if (max == g)
-                c[id] = 60 * ((b - r)/delta + 2);
+                output[id] = 60 * ((b - r)/delta + 2);
             else
-                c[id] = 60 * ((r - g)/delta + 4);
+                output[id] = 60 * ((r - g)/delta + 4);
         }
 
 
-        if ( c[id] < 0)  c[id] = c[id] +360;
-        if (max == 0) c[id +  1] = 0;
-        else c[id + 1] = delta / max;
-        c[id + 2] = max;
+        if ( output[id] < 0)  output[id] = output[id] +360;
+        if (max == 0) output[id +  1] = 0;
+        else output[id + 1] = delta / max;
+        output[id + 2] = max;
 
     }
 
 }
 
-__kernel void hsv2rgb_pln(   __global const double *a,
-                         __global  unsigned char *c,
+__kernel void hsv2rgb_pln(   __global const double *input,
+                         __global  unsigned char *output,
                          const unsigned int height,
                         const unsigned int width)
 {
@@ -99,14 +99,14 @@ __kernel void hsv2rgb_pln(   __global const double *a,
 
     if (pixIdx < height*width ){
 
-        h = a[pixIdx];
-        s = a[pixIdx + height * width ] ;
-        v = a[pixIdx + 2* height * width] ;
+        h = input[pixIdx];
+        s = input[pixIdx + height * width ] ;
+        v = input[pixIdx + 2* height * width] ;
 
         if (s <= 0){
-            c[pixIdx] = 0;
-            c[pixIdx +  height * width] = 0;
-            c[pixIdx + 2* height * width] = 0;
+            output[pixIdx] = 0;
+            output[pixIdx +  height * width] = 0;
+            output[pixIdx + 2* height * width] = 0;
         }
 
         hh = h;
@@ -120,37 +120,37 @@ __kernel void hsv2rgb_pln(   __global const double *a,
 
     switch(i){
     case 0:
-        c[pixIdx] = v * 255;
-        c[pixIdx +  height * width] = t * 255  ;
-        c[pixIdx + 2* height * width] = p * 255;
+        output[pixIdx] = v * 255;
+        output[pixIdx +  height * width] = t * 255  ;
+        output[pixIdx + 2* height * width] = p * 255;
         break;
     case 1:
-        c[pixIdx] = q * 255;
-        c[pixIdx +  height * width] = v * 255  ;
-        c[pixIdx + 2* height * width] = p * 255 ;
+        output[pixIdx] = q * 255;
+        output[pixIdx +  height * width] = v * 255  ;
+        output[pixIdx + 2* height * width] = p * 255 ;
         break;
     case 2:
-        c[pixIdx] = p * 255 ;
-        c[pixIdx +  height * width] = v * 255;
-        c[pixIdx + 2* height * width] = t * 255;
+        output[pixIdx] = p * 255 ;
+        output[pixIdx +  height * width] = v * 255;
+        output[pixIdx + 2* height * width] = t * 255;
         break;
 
     case 3:
-        c[pixIdx] = p * 255;
-        c[pixIdx +  height * width] = q * 255;
-        c[pixIdx + 2* height * width] = v * 255;
+        output[pixIdx] = p * 255;
+        output[pixIdx +  height * width] = q * 255;
+        output[pixIdx + 2* height * width] = v * 255;
         break;
 
     case 4:
-        c[pixIdx] = t * 255;
-        c[pixIdx +  height * width] = p * 255 ;
-        c[pixIdx + 2* height * width] = v * 255;
+        output[pixIdx] = t * 255;
+        output[pixIdx +  height * width] = p * 255 ;
+        output[pixIdx + 2* height * width] = v * 255;
         break;
     case 5:
     default:
-        c[pixIdx] = v * 255;
-        c[pixIdx +  height * width] = p * 255 ;
-        c[pixIdx + 2* height * width] = q * 255;
+        output[pixIdx] = v * 255;
+        output[pixIdx +  height * width] = p * 255 ;
+        output[pixIdx + 2* height * width] = q * 255;
         break;
      }
 
@@ -158,8 +158,8 @@ __kernel void hsv2rgb_pln(   __global const double *a,
 
 }
 
-__kernel void hsv2rgb_pkd(__global const double *a,
-                          __global  unsigned char *c,
+__kernel void hsv2rgb_pkd(__global const double *input,
+                          __global  unsigned char *output,
                           const unsigned int height,
                           const unsigned int width)
 {
@@ -175,14 +175,14 @@ __kernel void hsv2rgb_pkd(__global const double *a,
 
     if (pixIdx < height*width*3 ){
 
-        h = a[pixIdx];
-        s = a[pixIdx + 1 ] ;
-        v = a[pixIdx + 2] ;
+        h = input[pixIdx];
+        s = input[pixIdx + 1 ] ;
+        v = input[pixIdx + 2] ;
 
         if (s <= 0){
-            c[pixIdx] = 0;
-            c[pixIdx + 1] = 0;
-            c[pixIdx + 2] = 0;
+            output[pixIdx] = 0;
+            output[pixIdx + 1] = 0;
+            output[pixIdx + 2] = 0;
         }
 
         hh = h;
@@ -197,37 +197,37 @@ __kernel void hsv2rgb_pkd(__global const double *a,
     switch(i)
     {
     case 0:
-        c[pixIdx] = v * 255;
-        c[pixIdx + 1] = t * 255 ;
-        c[pixIdx + 2] = p * 255;
+        output[pixIdx] = v * 255;
+        output[pixIdx + 1] = t * 255 ;
+        output[pixIdx + 2] = p * 255;
         break;
     case 1:
-        c[pixIdx] = q * 255;
-        c[pixIdx + 1] = v * 255  ;
-        c[pixIdx + 2] = p * 255 ;
+        output[pixIdx] = q * 255;
+        output[pixIdx + 1] = v * 255  ;
+        output[pixIdx + 2] = p * 255 ;
         break;
     case 2:
-        c[pixIdx] = p * 255;
-        c[pixIdx + 1] = v * 255;
-        c[pixIdx + 2] = t * 255;
+        output[pixIdx] = p * 255;
+        output[pixIdx + 1] = v * 255;
+        output[pixIdx + 2] = t * 255;
         break;
 
     case 3:
-        c[pixIdx] = p * 255;
-        c[pixIdx +  1] = q * 255;
-        c[pixIdx + 2] = v * 255;
+        output[pixIdx] = p * 255;
+        output[pixIdx +  1] = q * 255;
+        output[pixIdx + 2] = v * 255;
         break;
 
     case 4:
-        c[pixIdx] = t * 255;
-        c[pixIdx +  1] = p * 255 ;
-        c[pixIdx + 2] = v * 255;
+        output[pixIdx] = t * 255;
+        output[pixIdx +  1] = p * 255 ;
+        output[pixIdx + 2] = v * 255;
         break;
     case 5:
     default:
-        c[pixIdx] = v * 255;
-        c[pixIdx +  1] = p * 255 ;
-        c[pixIdx + 2] = q * 255;
+        output[pixIdx] = v * 255;
+        output[pixIdx +  1] = p * 255 ;
+        output[pixIdx + 2] = q * 255;
         break;
      }
 
@@ -238,8 +238,8 @@ __kernel void hsv2rgb_pkd(__global const double *a,
 
 // Hue and Satutation Modification /////////////////////////////
 
-__kernel void huergb_pln(   __global  unsigned char *a,
-                            __global  unsigned char *c,
+__kernel void huergb_pln(   __global  unsigned char *input,
+                            __global  unsigned char *output,
                             __global  double *temp,
                             const  double hue,
                             const  double sat,
@@ -253,16 +253,16 @@ __kernel void huergb_pln(   __global  unsigned char *a,
     //Make sure we do not go out of bounds
     id = id ;
     if (id < 3 *height * width ){
-        r = a[id] / 255.0;
-        g = a[id + height * width] / 255.0;
-        b = a[id + 2 *height * width]/ 255.0;
+        r = input[id] / 255.0;
+        g = input[id + height * width] / 255.0;
+        b = input[id + 2 *height * width]/ 255.0;
 
         min = (r < g && r< b)? r : ((g < b)? g: b);
         max = (r > g && r > b)? r : ((g > b)? g: b);
 
         delta = max - min;
 
-        if (delta == 0) c[id] = 0;
+        if (delta == 0) output[id] = 0;
         else {
             if (max == r)
                 temp[id] = 60 * ((g - b)/delta);
@@ -294,9 +294,9 @@ __kernel void huergb_pln(   __global  unsigned char *a,
         v = temp[pixIdx + 2*height * width] ;
 
         if (s <= 0){
-            c[pixIdx] = 0;
-            c[pixIdx + height * width] = 0;
-            c[pixIdx + 2*height * width] = 0;
+            output[pixIdx] = 0;
+            output[pixIdx + height * width] = 0;
+            output[pixIdx + 2*height * width] = 0;
         }
 
         hh = h;
@@ -311,37 +311,37 @@ __kernel void huergb_pln(   __global  unsigned char *a,
     switch(i)
     {
     case 0:
-        c[pixIdx] = v * 255;
-        c[pixIdx + height * width] = t * 255 ;
-        c[pixIdx + 2*height * width] = p * 255;
+        output[pixIdx] = v * 255;
+        output[pixIdx + height * width] = t * 255 ;
+        output[pixIdx + 2*height * width] = p * 255;
         break;
     case 1:
-        c[pixIdx] = q * 255;
-        c[pixIdx + height * width] = v * 255  ;
-        c[pixIdx + 2*height * width] = p * 255 ;
+        output[pixIdx] = q * 255;
+        output[pixIdx + height * width] = v * 255  ;
+        output[pixIdx + 2*height * width] = p * 255 ;
         break;
     case 2:
-        c[pixIdx] = p * 255;
-        c[pixIdx + height * width] = v * 255;
-        c[pixIdx + 2*height * width] = t * 255;
+        output[pixIdx] = p * 255;
+        output[pixIdx + height * width] = v * 255;
+        output[pixIdx + 2*height * width] = t * 255;
         break;
 
     case 3:
-        c[pixIdx] = p * 255;
-        c[pixIdx + height * width] = q * 255;
-        c[pixIdx + 2* height * width] = v * 255;
+        output[pixIdx] = p * 255;
+        output[pixIdx + height * width] = q * 255;
+        output[pixIdx + 2* height * width] = v * 255;
         break;
 
     case 4:
-        c[pixIdx] = t * 255;
-        c[pixIdx +  height * width] = p * 255 ;
-        c[pixIdx + 2*height * width] = v * 255;
+        output[pixIdx] = t * 255;
+        output[pixIdx +  height * width] = p * 255 ;
+        output[pixIdx + 2*height * width] = v * 255;
         break;
     case 5:
     default:
-        c[pixIdx] = v * 255;
-        c[pixIdx +  height * width] = p * 255 ;
-        c[pixIdx + 2*height * width] = q * 255;
+        output[pixIdx] = v * 255;
+        output[pixIdx +  height * width] = p * 255 ;
+        output[pixIdx + 2*height * width] = q * 255;
         break;
      }
 
@@ -350,8 +350,8 @@ __kernel void huergb_pln(   __global  unsigned char *a,
 }
 
 
-__kernel void huergb_pkd(   __global  unsigned char *a,
-                            __global  unsigned char *c,
+__kernel void huergb_pkd(   __global  unsigned char *input,
+                            __global  unsigned char *output,
                             __global  double *temp,
                             const  double hue,
                             const  double sat,
@@ -365,16 +365,16 @@ __kernel void huergb_pkd(   __global  unsigned char *a,
     //Make sure we do not go out of bounds
     id = id * 3;
     if (id < 3 *height * width ){
-        r = a[id] / 255.0;
-        g = a[id + 1] / 255.0;
-        b = a[id + 2]/ 255.0;
+        r = input[id] / 255.0;
+        g = input[id + 1] / 255.0;
+        b = input[id + 2]/ 255.0;
 
         min = (r < g && r< b)? r : ((g < b)? g: b);
         max = (r > g && r > b)? r : ((g > b)? g: b);
 
         delta = max - min;
 
-        if (delta == 0) c[id] = 0;
+        if (delta == 0) output[id] = 0;
         else {
             if (max == r)
                 temp[id] = 60 * ((g - b)/delta);
@@ -406,9 +406,9 @@ __kernel void huergb_pkd(   __global  unsigned char *a,
         v = temp[pixIdx + 2] ;
 
         if (s <= 0){
-            c[pixIdx] = 0;
-            c[pixIdx + 1] = 0;
-            c[pixIdx + 2] = 0;
+            output[pixIdx] = 0;
+            output[pixIdx + 1] = 0;
+            output[pixIdx + 2] = 0;
         }
 
         hh = h;
@@ -423,37 +423,37 @@ __kernel void huergb_pkd(   __global  unsigned char *a,
     switch(i)
     {
     case 0:
-        c[pixIdx] = v * 255;
-        c[pixIdx + 1] = t * 255 ;
-        c[pixIdx + 2] = p * 255;
+        output[pixIdx] = v * 255;
+        output[pixIdx + 1] = t * 255 ;
+        output[pixIdx + 2] = p * 255;
         break;
     case 1:
-        c[pixIdx] = q * 255;
-        c[pixIdx + 1] = v * 255  ;
-        c[pixIdx + 2] = p * 255 ;
+        output[pixIdx] = q * 255;
+        output[pixIdx + 1] = v * 255  ;
+        output[pixIdx + 2] = p * 255 ;
         break;
     case 2:
-        c[pixIdx] = p * 255;
-        c[pixIdx + 1] = v * 255;
-        c[pixIdx + 2] = t * 255;
+        output[pixIdx] = p * 255;
+        output[pixIdx + 1] = v * 255;
+        output[pixIdx + 2] = t * 255;
         break;
 
     case 3:
-        c[pixIdx] = p * 255;
-        c[pixIdx +  1] = q * 255;
-        c[pixIdx + 2] = v * 255;
+        output[pixIdx] = p * 255;
+        output[pixIdx +  1] = q * 255;
+        output[pixIdx + 2] = v * 255;
         break;
 
     case 4:
-        c[pixIdx] = t * 255;
-        c[pixIdx +  1] = p * 255 ;
-        c[pixIdx + 2] = v * 255;
+        output[pixIdx] = t * 255;
+        output[pixIdx +  1] = p * 255 ;
+        output[pixIdx + 2] = v * 255;
         break;
     case 5:
     default:
-        c[pixIdx] = v * 255;
-        c[pixIdx +  1] = p * 255 ;
-        c[pixIdx + 2] = q * 255;
+        output[pixIdx] = v * 255;
+        output[pixIdx +  1] = p * 255 ;
+        output[pixIdx + 2] = q * 255;
         break;
      }
 
@@ -461,20 +461,20 @@ __kernel void huergb_pkd(   __global  unsigned char *a,
 
 }
 
-__kernel void huehsv_pln(   __global  double *a,
-                            __global  double *c,
+__kernel void huehsv_pln(   __global  double *input,
+                            __global  double *output,
                             const  double hue,
                             const  double sat,
                             const unsigned int height,
                             const unsigned int width)
 {
     int id = get_global_id(0);
-    c[id] += hue;
-    c[id + height * width] += sat;
+    output[id] = input[id] + hue;
+    output[id + height * width] = input[id + height * width]+ sat;
 }
 
-__kernel void huehsv_pkd(   __global  double *a,
-                            __global  double *c,
+__kernel void huehsv_pkd(   __global  double *input,
+                            __global  double *output,
                             const  double hue,
                             const  double sat,
                             const unsigned int height,
@@ -482,7 +482,7 @@ __kernel void huehsv_pkd(   __global  double *a,
 {
     int id = get_global_id(0);
     id = id * 3;
-    c[id] += hue;
-    c[id + 1] += sat;
+    output[id] = input[id] + hue;
+    output[id + 1] = input[id + 1] + sat;
 }
 ////////////////////////////////////////////
