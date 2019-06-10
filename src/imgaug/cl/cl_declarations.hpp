@@ -3,7 +3,6 @@
 
 // ===== Utils
 
-namespace imgaug {
 cl_int
 cl_kernel_initializer ( cl_command_queue theQueue,
                         std::string kernelFile, std::string kernelName,
@@ -13,7 +12,6 @@ cl_int
 cl_kernel_implementer (cl_command_queue theHandle, size_t* gDim3, size_t* lDim3, cl_program& theProgram,
                         cl_kernel& theKernel  );
 
-} // namespace imgaug
 
 //===== Internal CL functions
 

@@ -1,8 +1,6 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
 
-using namespace imgaug;
-
 RppStatus
 convert_rgb2hsv_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,

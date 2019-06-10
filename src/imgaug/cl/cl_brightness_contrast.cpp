@@ -1,7 +1,6 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
 
-using namespace imgaug;
 
 RppStatus
 brightness_contrast_cl (    cl_mem srcPtr, RppiSize srcSize,

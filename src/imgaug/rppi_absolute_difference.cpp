@@ -1,5 +1,5 @@
 #include <rppdefs.h>
-#include <rppi_arithmatic_and_logical_functions.h>
+#include <rppi_arithmetic_and_logical_functions.h>
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>

@@ -1,9 +1,6 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
 
-using namespace imgaug;
-
-
 float gauss_3x3[] = {
 0.0625, 0.125, 0.0625,
 0.125 , 0.25 , 0.125,

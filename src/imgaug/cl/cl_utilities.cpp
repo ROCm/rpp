@@ -9,7 +9,7 @@
 #define TO_STRING(x) #x
 
 cl_int
-imgaug::cl_kernel_initializer ( cl_command_queue theQueue,
+cl_kernel_initializer ( cl_command_queue theQueue,
                         std::string kernelFile, std::string kernelName,
                         cl_program& theProgram, cl_kernel& theKernel)
 {
@@ -50,7 +50,7 @@ imgaug::cl_kernel_initializer ( cl_command_queue theQueue,
 }
 
 cl_int
-imgaug::cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* localDim3,
+cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* localDim3,
                         cl_program& theProgram, cl_kernel& theKernel  )
 {
     cl_int err;
