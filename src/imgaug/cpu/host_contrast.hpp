@@ -3,7 +3,7 @@
 using namespace std;
 
 template <typename T>
-RppStatus host_contrast(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                         Rpp32u new_min, Rpp32u new_max, unsigned int channel)
 {
     for(int c = 0; c < channel; c++)
