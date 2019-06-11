@@ -10,7 +10,9 @@
 #endif //backend
 #include <stdio.h>
 #include <iostream>
+/******* Bilateral Filter ********/
 
+// GPU calls for Bilateral Filter function
 
 RppStatus
 rppi_bilateral_filter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize,

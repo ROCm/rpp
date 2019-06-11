@@ -1,6 +1,6 @@
 #include <rppdefs.h>
 #include <rppi_image_augumentation_functions.h>
-#include "cpu/host_flip.hpp"
+#include "cpu/host_geometry_transforms.hpp"
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
@@ -9,7 +9,9 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
 #endif //backend
+/******* Flip ********/
 
+// GPU calls for Flip function
 RppStatus
 rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                     RppiAxis flipAxis, RppHandle_t rppHandle)
