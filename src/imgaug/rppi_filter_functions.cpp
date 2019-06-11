@@ -1,6 +1,8 @@
 #include <rppdefs.h>
 #include <rppi_arithmetic_and_logical_functions.h>
 
+#include "cpu/host_filter_functions.hpp"
+
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
 

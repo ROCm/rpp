@@ -1,5 +1,6 @@
 #include <rppdefs.h>
 #include <rppi_image_augumentation_functions.h>
+
 #include "cpu/host_geometry_transforms.hpp"
 
 #ifdef HIP_COMPILE
