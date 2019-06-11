@@ -10,6 +10,10 @@
 #endif //backend
 #include <stdio.h>
 #include <iostream>
+
+
+
+
 /******* Bilateral Filter ********/
 
 // GPU calls for Bilateral Filter function
@@ -55,7 +59,6 @@ rppi_bilateral_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
 
 }
 
-
 RppStatus
 rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
                                   RppPtr_t dstPtr, Rpp32u filterSize,
@@ -71,6 +74,44 @@ rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
                         static_cast<cl_command_queue>(rppHandle) );
 
 #endif //backend
+
+    return RPP_SUCCESS;
+
+}
+
+// Host calls for Bilateral Filter function
+
+RppStatus
+rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+{
+    host_bilateral_filter<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    diameter, sigmaI, sigmaS,
+                                    RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+{
+    host_bilateral_filter<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    diameter, sigmaI, sigmaS,
+                                    RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+{
+    host_bilateral_filter<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    diameter, sigmaI, sigmaS,
+                                    RPPI_CHN_PACKED, 3);
 
     return RPP_SUCCESS;
 
