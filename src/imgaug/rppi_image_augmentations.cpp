@@ -1,5 +1,6 @@
 #include <rppdefs.h>
 #include <rppi_image_augumentation_functions.h>
+
 #include "cpu/host_image_augmentations.hpp"
 
 #ifdef HIP_COMPILE
@@ -11,6 +12,9 @@
 #endif //backend
 #include <stdio.h>
 #include <iostream>
+
+
+
 
 /******* Blur ********/
 
@@ -51,7 +55,6 @@ rppi_blur3x3_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp
 
 }
 
-
 RppStatus
 rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
@@ -72,38 +75,42 @@ rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp
 // Host calls for Blur function
 
 RppStatus
-rppi_blur3x3_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_blur3x3_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev)
 {
-
-    blur_pln_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), 1);
+    blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     stdDev, 3,
+                     RPPI_CHN_PLANAR, 1);
     return RPP_SUCCESS;
-
 }
 
 RppStatus
-rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev)
 {
-
-    blur_pln_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), 3);
+    blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     stdDev, 3,
+                     RPPI_CHN_PLANAR, 3);
     return RPP_SUCCESS;
-
 }
 
 RppStatus
-rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev)
 {
-
-    blur_pkd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), 3);
+    blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     stdDev, 3,
+                     RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
-
 }
+
+
+
 
 /******* Brightness ********/
 
 // GPU calls for Brightness function
+
 RppStatus
 rppi_brightness_u8_pln1_gpu( RppPtr_t srcPtr, RppiSize srcSize,
                         RppPtr_t dstPtr,
@@ -133,7 +140,6 @@ rppi_brightness_u8_pln1_gpu( RppPtr_t srcPtr, RppiSize srcSize,
     return RPP_SUCCESS;
 }
 
-
 RppStatus
 rppi_brightness_u8_pln3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
                         RppPtr_t dstPtr,
@@ -162,8 +168,6 @@ rppi_brightness_u8_pln3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 
     return RPP_SUCCESS;
 }
-
-
 
 RppStatus
 rppi_brightness_u8_pkd3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
@@ -198,43 +202,48 @@ rppi_brightness_u8_pkd3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 // Host calls for Brightness function
 
 RppStatus
-rppi_brightness_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize,
-                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta,
-                            RppHandle_t handle )
+rppi_brightness_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f alpha, Rpp32s beta)
 {
-    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), alpha, beta, 1, RPPI_CHN_PLANAR );
+    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    alpha, beta,
+                                    1);
 
     return RPP_SUCCESS;
 
 }
 
 RppStatus
-rppi_brightness_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
-                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta)
+rppi_brightness_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f alpha, Rpp32s beta)
 {
-    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), alpha, beta, 3, RPPI_CHN_PLANAR );
+    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    alpha, beta,
+                                    3);
 
     return RPP_SUCCESS;
 
 }
 
 RppStatus
-rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
-                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta)
+rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f alpha, Rpp32s beta)
 {
-    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), alpha, beta, 3, RPPI_CHN_PLANAR );
+    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    alpha, beta,
+                                    3);
 
     return RPP_SUCCESS;
 
 }
+
+
+
 
 /******* Contrast ********/
 
-
 // GPU calls for Contrast function
+
 RppStatus
 rppi_contrast_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
@@ -281,8 +290,6 @@ rppi_contrast_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 }
 
-
-
 RppStatus
 rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                             Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
@@ -305,33 +312,36 @@ rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
     return RPP_SUCCESS;
 
 }
+
 // Host calls for Contrast function
 
 RppStatus
 rppi_contrast_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                            Rpp32u newMin, Rpp32u newMax)
+                           Rpp32u newMin, Rpp32u newMax)
 {
-    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), newMin , newMax, 1 );
+    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                         newMin, newMax,
+                         RPPI_CHN_PLANAR, 1);
     return RPP_SUCCESS;
 
 }
 
 RppStatus
 rppi_contrast_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
-                            Rpp32u newMin, Rpp32u newMax)
+                           Rpp32u newMin, Rpp32u newMax)
 {
-    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), newMin ,newMax, 3 );
+    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                         newMin, newMax,
+                         RPPI_CHN_PLANAR, 3);
     return RPP_SUCCESS;
 }
 
 RppStatus
 rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
-                            Rpp32u newMin, Rpp32u newMax)
+                           Rpp32u newMin, Rpp32u newMax)
 {
-    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    static_cast<Rpp8u*>(dstPtr), newMin ,newMax, 3 );
+    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                         newMin, newMax,
+                         RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 }
-

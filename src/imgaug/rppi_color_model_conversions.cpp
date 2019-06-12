@@ -12,9 +12,13 @@
 #include "cl/cl_declarations.hpp"
 #endif //backend
 
+
+
+
 /******* RGB 2 HSV ********/
 
 // GPU calls for RGB 2 HSV function
+
 RppStatus
 rppi_rgb2hsv_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
 {
@@ -59,8 +63,8 @@ RppStatus
 rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    rgb2hsv_pln_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
-                                    static_cast<Rpp32f*>(dstPtr));
+    rgb2hsv_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                         RPPI_CHN_PLANAR, 3);
     return RPP_SUCCESS;
 
 }
@@ -69,16 +73,19 @@ RppStatus
 rppi_rgb2hsv_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    rgb2hsv_pkd_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
-                                    static_cast<Rpp32f*>(dstPtr));
+    rgb2hsv_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                         RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 
 }
 
 
+
+
 /******* HSV 2 RGB ********/
 
 // GPU calls for HSV 2 RGB function
+
 RppStatus
 rppi_hsv2rgb_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  RppHandle_t rppHandle)
 {
@@ -118,12 +125,13 @@ rppi_hsv2rgb_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,  Rp
 }
 
 // Host calls for HSV 2 RGB function
+
 RppStatus
 rppi_hsv2rgb_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    hsv2rgb_pln_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
-                                    static_cast<Rpp32f*>(dstPtr));
+    hsv2rgb_host<Rpp32f, Rpp8u>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                         RPPI_CHN_PLANAR, 3);
     return RPP_SUCCESS;
 
 }
@@ -132,11 +140,14 @@ RppStatus
 rppi_hsv2rgb_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    hsv2rgb_pkd_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
-                                    static_cast<Rpp32f*>(dstPtr));
+    hsv2rgb_host<Rpp32f, Rpp8u>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                         RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 
 }
+
+
+
 
 /******* HUE ********/
 
@@ -176,9 +187,9 @@ rppi_hueRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     return RPP_SUCCESS;
 
- }
+}
 
- RppStatus
+RppStatus
 rppi_hueHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f hueShift,  RppHandle_t rppHandle){
     #ifdef HIP_COMPILE
@@ -212,54 +223,61 @@ rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     return RPP_SUCCESS;
 
- }
+}
 
 // Host calls for HUE function
 
 RppStatus
-rppi_hueRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f hueShift)
+rppi_hueRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f hueShift)
 {
 
-    hueRGB_pln_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                            static_cast<Rpp8u*>(dstPtr), hueShift);
+    hue_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           hueShift,
+                           RPPI_CHN_PLANAR, 3, RGB);
     return RPP_SUCCESS;
-
 }
 
 RppStatus
-rppi_hueRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f hueShift)
+rppi_hueRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f hueShift)
 {
 
-    hueRGB_pkd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                            static_cast<Rpp8u*>(dstPtr), hueShift);
+    hue_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           hueShift,
+                           RPPI_CHN_PACKED, 3, RGB);
     return RPP_SUCCESS;
-
 }
 
 RppStatus
-rppi_hueHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f hueShift)
+rppi_hueHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f hueShift)
 {
 
-    hueHSV_pln_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
-                            static_cast<Rpp32f*>(dstPtr), hueShift);
+    hue_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                           hueShift,
+                           RPPI_CHN_PLANAR, 3, HSV);
     return RPP_SUCCESS;
-
 }
 
 RppStatus
-rppi_hueHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f hueShift)
+rppi_hueHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f hueShift)
 {
 
-    hueHSV_pkd_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
-                            static_cast<Rpp32f*>(dstPtr), hueShift);
+    hue_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                           hueShift,
+                           RPPI_CHN_PACKED, 3, HSV);
     return RPP_SUCCESS;
-
 }
+
+
 
 
 /******* Saturation ********/
 
 // GPU calls for Saturation function
+
 RppStatus
 rppi_saturationRGB_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f saturationFactor,  RppHandle_t rppHandle){
@@ -295,7 +313,6 @@ rppi_saturationRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
     return RPP_SUCCESS;
 
 }
-
 
 RppStatus
 rppi_saturationHSV_u8_pln3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
@@ -336,44 +353,90 @@ rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
 // Host calls for Saturation function
 
 RppStatus
-rppi_saturationRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+rppi_saturationRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f saturationFactor)
 {
 
-    saturationRGB_pln_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                            static_cast<Rpp8u*>(dstPtr), saturationFactor);
+    saturation_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           saturationFactor,
+                           RPPI_CHN_PLANAR, 3, RGB);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f saturationFactor)
+{
+
+    saturation_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           saturationFactor,
+                           RPPI_CHN_PACKED, 3, RGB);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_saturationHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f saturationFactor)
+{
+
+    saturation_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                           saturationFactor,
+                           RPPI_CHN_PLANAR, 3, HSV);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f saturationFactor)
+{
+
+    saturation_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                           saturationFactor,
+                           RPPI_CHN_PACKED, 3, HSV);
+    return RPP_SUCCESS;
+}
+
+
+
+
+/******* Gamma Correction ********/
+
+// GPU calls for Gamma Correction function
+
+// Host calls for Gamma Correction function
+
+RppStatus
+rppi_gamma_correction_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma)
+{
+    gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    gamma,
+                                    1);
+
     return RPP_SUCCESS;
 
 }
 
 RppStatus
-rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+rppi_gamma_correction_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma)
 {
+    gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    gamma,
+                                    3);
 
-    saturationRGB_pkd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                            static_cast<Rpp8u*>(dstPtr), saturationFactor);
     return RPP_SUCCESS;
 
 }
 
 RppStatus
-rppi_saturationHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
+rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma)
 {
+    gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    gamma,
+                                    3);
 
-    saturationHSV_pln_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
-                            static_cast<Rpp32f*>(dstPtr), saturationFactor);
     return RPP_SUCCESS;
 
 }
-
-RppStatus
-rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f saturationFactor)
-{
-
-    saturationHSV_pkd_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize,
-                            static_cast<Rpp32f*>(dstPtr), saturationFactor);
-    return RPP_SUCCESS;
-
-}
-
-
-
