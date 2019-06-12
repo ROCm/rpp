@@ -68,18 +68,15 @@ rppi_bitwise_NOT_u8_pkd3_gpu( RppPtr_t srcPtr1,
 // Host function declarations.
 RppStatus
 rppi_bitwise_NOT_u8_pln1_host( RppPtr_t srcPtr1,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_bitwise_NOT_u8_pln3_host( RppPtr_t srcPtr1,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_bitwise_NOT_u8_pkd3_host( RppPtr_t srcPtr1,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 // --------------------
 // Exclusive OR
@@ -106,18 +103,15 @@ rppi_exclusive_OR_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 RppStatus
 rppi_exclusive_OR_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_exclusive_OR_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_exclusive_OR_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 // --------------------
 // Inclusive OR
@@ -143,18 +137,15 @@ rppi_inclusive_OR_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 // Host function declarations.
 RppStatus
 rppi_inclusive_OR_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_inclusive_OR_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_inclusive_OR_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 // --------------------
 // Addition
@@ -181,18 +172,15 @@ rppi_add_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 RppStatus
 rppi_add_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_add_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_add_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 // --------------------
 // Subtraction
@@ -218,18 +206,15 @@ rppi_subtract_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 // Host function declarations.
 RppStatus
 rppi_subtract_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_subtract_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
 rppi_subtract_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, RppPtr_t dstPtr,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, RppPtr_t dstPtr);
 // --------------------
 // Absolute difference
 // --------------------
@@ -294,20 +279,17 @@ rppi_bilateral_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
 RppStatus
 rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize,
                                   RppPtr_t dstPtr, Rpp32u filterSize,
-                                  Rpp64f sigmaI, Rpp64f sigmaS,
-                                  RppHandle_t rppHandle);
+                                  Rpp64f sigmaI, Rpp64f sigmaS);
 
 RppStatus
 rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
                                   RppPtr_t dstPtr, Rpp32u filterSize,
-                                  Rpp64f sigmaI, Rpp64f sigmaS,
-                                  RppHandle_t rppHandle);
+                                  Rpp64f sigmaI, Rpp64f sigmaS);
 
 RppStatus
 rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
                                   RppPtr_t dstPtr, Rpp32u filterSize,
-                                  Rpp64f sigmaI, Rpp64f sigmaS,
-                                  RppHandle_t rppHandle);
+                                  Rpp64f sigmaI, Rpp64f sigmaS);
 // --------------------
 // Accumulation
 // --------------------
@@ -332,18 +314,15 @@ rppi_accumulate_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 // Host function declarations.
 RppStatus
 rppi_accumulate_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize);
 
 RppStatus
 rppi_accumulate_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize);
 
 RppStatus
 rppi_accumulate_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize);
 
 // --------------------
 // Accumulate Weighted
@@ -352,35 +331,32 @@ rppi_accumulate_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 //Parameters : alpha should be [0 <= alpha <=1]
 RppStatus
 rppi_accumulate_weighted_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
+                              RppiSize srcSize, Rpp64f alpha,
                               RppHandle_t rppHandle );
 
 RppStatus
 rppi_accumulate_weighted_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
+                              RppiSize srcSize, Rpp64f alpha,
                               RppHandle_t rppHandle );
 
 RppStatus
 rppi_accumulate_weighted_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
+                              RppiSize srcSize, Rpp64f alpha,
                               RppHandle_t rppHandle );
 
 
 // Host function declarations.
 RppStatus
-rppi_accumulate_weighted_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
-                              RppHandle_t rppHandle );
+rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                                       RppiSize srcSize, Rpp64f alpha);
 
 RppStatus
-rppi_accumulate_weighted_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
-                              RppHandle_t rppHandle );
+rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, 
+                                        RppiSize srcSize, Rpp64f alpha);
 
 RppStatus
 rppi_accumulate_weighted_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
-                              RppHandle_t rppHandle );
+                              RppiSize srcSize, Rpp64f alpha);
 
 #ifdef __cplusplus
 }

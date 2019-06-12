@@ -248,7 +248,7 @@ rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSiz
 
 RppStatus
 rppi_accumulate_weighted_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
+                              RppiSize srcSize, Rpp64f alpha,
                               RppHandle_t rppHandle )
 {
 
@@ -272,7 +272,7 @@ rppi_accumulate_weighted_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 RppStatus
 rppi_accumulate_weighted_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
+                              RppiSize srcSize, Rpp64f alpha,
                               RppHandle_t rppHandle )
 {
 
@@ -296,7 +296,7 @@ rppi_accumulate_weighted_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 RppStatus
 rppi_accumulate_weighted_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
-                              RppiSize srcSize, double alpha,
+                              RppiSize srcSize, Rpp64f alpha,
                               RppHandle_t rppHandle )
 {
 
@@ -322,7 +322,7 @@ rppi_accumulate_weighted_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 // Host calls for Accumulate Weighted function
 
 RppStatus
-rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32f alpha)
+rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp64f alpha)
 {
     accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
                                     alpha,
@@ -331,7 +331,7 @@ rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSi
 }
 
 RppStatus
-rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32f alpha)
+rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp64f alpha)
 {
     accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
                                     alpha,
@@ -340,7 +340,7 @@ rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSi
 }
 
 RppStatus
-rppi_accumulate_weighted_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32f alpha)
+rppi_accumulate_weighted_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp64f alpha)
 {
     accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
                                     alpha,
