@@ -126,6 +126,77 @@ rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSi
 /******* Accumulate ********/
 
 // GPU calls for Accumulate function
+RppStatus
+rppi_accumulate_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize,
+                              RppHandle_t rppHandle )
+{
+
+#ifdef HIP_COMPILE
+
+// Yet  to be implemented
+
+#elif defined (OCL_COMPILE)
+
+    accumulate_cl ( static_cast<cl_mem>(srcPtr1),
+             static_cast<cl_mem>(srcPtr2),
+             srcSize,
+             RPPI_CHN_PLANAR, 1 /*Channel*/,
+             static_cast<cl_command_queue>(rppHandle) );
+
+
+#endif //backend
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize,
+                              RppHandle_t rppHandle )
+{
+
+#ifdef HIP_COMPILE
+
+// Yet  to be implemented
+
+#elif defined (OCL_COMPILE)
+
+    accumulate_cl ( static_cast<cl_mem>(srcPtr1),
+             static_cast<cl_mem>(srcPtr2),
+             srcSize,
+             RPPI_CHN_PLANAR, 3 /*Channel*/,
+             static_cast<cl_command_queue>(rppHandle) );
+
+
+#endif //backend
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize,
+                              RppHandle_t rppHandle )
+{
+
+#ifdef HIP_COMPILE
+
+// Yet  to be implemented
+
+#elif defined (OCL_COMPILE)
+
+    accumulate_cl ( static_cast<cl_mem>(srcPtr1),
+             static_cast<cl_mem>(srcPtr2),
+             srcSize,
+             RPPI_CHN_PLANAR, 3 /*Channel*/,
+             static_cast<cl_command_queue>(rppHandle) );
+
+
+#endif //backend
+
+    return RPP_SUCCESS;
+}
 
 // Host calls for Accumulate function
 
@@ -174,6 +245,79 @@ rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSiz
 /******* Accumulate Weighted ********/
 
 // GPU calls for Accumulate Weighted function
+
+RppStatus
+rppi_accumulate_weighted_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, double alpha,
+                              RppHandle_t rppHandle )
+{
+
+#ifdef HIP_COMPILE
+
+// Yet  to be implemented
+
+#elif defined (OCL_COMPILE)
+
+    accumulate_weighted_cl ( static_cast<cl_mem>(srcPtr1),
+             static_cast<cl_mem>(srcPtr2),
+             srcSize, alpha,
+             RPPI_CHN_PLANAR, 1 /*Channel*/,
+             static_cast<cl_command_queue>(rppHandle) );
+
+
+#endif //backend
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_weighted_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, double alpha,
+                              RppHandle_t rppHandle )
+{
+
+#ifdef HIP_COMPILE
+
+// Yet  to be implemented
+
+#elif defined (OCL_COMPILE)
+
+    accumulate_weighted_cl ( static_cast<cl_mem>(srcPtr1),
+             static_cast<cl_mem>(srcPtr2),
+             srcSize, alpha,
+             RPPI_CHN_PLANAR, 3 /*Channel*/,
+             static_cast<cl_command_queue>(rppHandle) );
+
+
+#endif //backend
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_weighted_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, double alpha,
+                              RppHandle_t rppHandle )
+{
+
+#ifdef HIP_COMPILE
+
+// Yet  to be implemented
+
+#elif defined (OCL_COMPILE)
+
+    accumulate_weighted_cl ( static_cast<cl_mem>(srcPtr1),
+             static_cast<cl_mem>(srcPtr2),
+             srcSize, alpha,
+             RPPI_CHN_PLANAR, 3 /*Channel*/,
+             static_cast<cl_command_queue>(rppHandle) );
+
+
+#endif //backend
+
+    return RPP_SUCCESS;
+}
+
 
 // Host calls for Accumulate Weighted function
 
