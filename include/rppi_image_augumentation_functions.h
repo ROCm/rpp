@@ -291,6 +291,23 @@ RppStatus
 rppi_hsv2rgb_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         RppHandle_t rppHandle);
 
+// --------------------
+// Gamma correction
+// --------------------
+
+// Host function declarations
+
+// Gpu function declarations
+RppStatus
+rppi_gamma_correction_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma, RppHandle_t rppHandle);
+RppStatus
+rppi_gamma_correction_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma, RppHandle_t rppHandle);
+RppStatus
+rppi_gamma_correction_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma, RppHandle_t rppHandle);
+
 
 #ifdef __cplusplus
 }

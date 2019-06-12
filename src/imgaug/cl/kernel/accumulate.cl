@@ -1,6 +1,6 @@
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) )
-__kernel void accumulate(  __global unsigned char* a,
-                            __global unsigned char* b,
+__kernel void accumulate(  __global unsigned char* input1,
+                            __global unsigned char* input2,
                             const unsigned int height,
                             const unsigned int width,
                             const unsigned int channel
@@ -13,12 +13,12 @@ __kernel void accumulate(  __global unsigned char* a,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    int res = a[pixIdx] + b[pixIdx];
-    a[pixIdx] = saturate_8u(res);
+    int res = input1[pixIdx] + input2[pixIdx];
+    input1[pixIdx] = saturate_8u(res);
 }
 
-__kernel void accumulate_weighted(  __global unsigned char* a,
-                            __global unsigned char* b,
+__kernel void accumulate_weighted(  __global unsigned char* input1,
+                            __global unsigned char* input2,
                             constant double alpha,
                             const unsigned int height,
                             const unsigned int width,
@@ -32,6 +32,6 @@ __kernel void accumulate_weighted(  __global unsigned char* a,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    int res = (1 - alpha) * a[pixIdx] + alpha * b[pixIdx];
-    a[pixIdx] = saturate_8u(res);
+    int res = (1 - alpha) * input1[pixIdx] + alpha * input2[pixIdx];
+    input1[pixIdx] = saturate_8u(res);
 }

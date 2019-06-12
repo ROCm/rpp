@@ -402,6 +402,57 @@ rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
 /******* Gamma Correction ********/
 
 // GPU calls for Gamma Correction function
+RppStatus
+rppi_gamma_correction_u8_pln1_gpu(RppPtr_t srcPtr1, RppiSize srcSize, RppPtr_t srcPtr2,
+                             Rpp32f gamma, RppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+    /*Still needs to be implemented*/
+
+    #elif defined (OCL_COMPILE)
+    gamma_correction_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2),
+                        srcSize, gamma,
+                        RPPI_CHN_PACKED, 1 /*Channel*/,
+                        static_cast<cl_command_queue>(rppHandle));
+    #endif//backend
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_gamma_correction_u8_pln3_gpu(RppPtr_t srcPtr1, RppiSize srcSize, RppPtr_t srcPtr2,
+                             Rpp32f gamma, RppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+    /*Still needs to be implemented*/
+
+    #elif defined (OCL_COMPILE)
+    gamma_correction_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2),
+                               srcSize, gamma,
+                               RPPI_CHN_PACKED, 3 /*Channel*/,
+                               static_cast<cl_command_queue>(rppHandle));
+    #endif//backend
+
+    return RPP_SUCCESS;
+
+}
+RppStatus
+rppi_gamma_correction_u8_pkd3_gpu(RppPtr_t srcPtr1, RppiSize srcSize, RppPtr_t srcPtr2,
+                             Rpp32f gamma, RppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+    /*Still needs to be implemented*/
+
+    #elif defined (OCL_COMPILE)
+    gamma_correction_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2),
+                               srcSize, gamma,
+                               RPPI_CHN_PACKED, 3 /*Channel*/,
+                               static_cast<cl_command_queue>(rppHandle));
+    #endif//backend
+
+    return RPP_SUCCESS;
+
+}
 
 // Host calls for Gamma Correction function
 
