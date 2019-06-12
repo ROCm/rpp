@@ -77,7 +77,7 @@ RppStatus add_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** Subtract ***************/
 
 template <typename T>
-RppStatus sub_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+RppStatus subtract_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
