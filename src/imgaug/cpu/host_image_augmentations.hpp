@@ -3,7 +3,7 @@
 /************ Blur************/
 
 template <typename T>
-RppStatus host_blur(T* srcPtr, RppiSize srcSize, T* dstPtr,
+RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     Rpp32f stdDev, unsigned int kernelSize,
                     RppiChnFormat chnFormat, unsigned int channel)
 {
@@ -197,7 +197,7 @@ RppStatus host_blur(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 // Brightness host implementation
 
-RppStatus host_brightness_contrast(T* srcPtr, RppiSize srcSize, T* dstPtr,
+RppStatus brightness_contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                    Rpp32f alpha, Rpp32f beta,
                                    unsigned int channel)
 {
@@ -216,7 +216,7 @@ RppStatus host_brightness_contrast(T* srcPtr, RppiSize srcSize, T* dstPtr,
 // Contrast host implementation
 
 template <typename T>
-RppStatus host_contrast(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                         Rpp32u new_min, Rpp32u new_max,
                         RppiChnFormat chnFormat, unsigned int channel)
 {

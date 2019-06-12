@@ -1,7 +1,7 @@
 #include <cpu/rpp_cpu_common.hpp>
 
 template <typename T, typename U>
-RppStatus host_rgb2hsv(T* srcPtr, RppiSize srcSize, U* dstPtr,
+RppStatus rgb2hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     RppiChnFormat chnFormat, unsigned channel)
 {
     if (chnFormat == RPPI_CHN_PLANAR)
@@ -111,7 +111,7 @@ RppStatus host_rgb2hsv(T* srcPtr, RppiSize srcSize, U* dstPtr,
 }
 
 template <typename T, typename U>
-RppStatus host_hsv2rgb(T* srcPtr, RppiSize srcSize, U* dstPtr,
+RppStatus hsv2rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     RppiChnFormat chnFormat, unsigned channel)
 {
     if (chnFormat == RPPI_CHN_PLANAR)
@@ -222,7 +222,7 @@ RppStatus host_hsv2rgb(T* srcPtr, RppiSize srcSize, U* dstPtr,
 }
 
 template <typename T, typename U>
-RppStatus host_hue(T* srcPtr, RppiSize srcSize, U* dstPtr,
+RppStatus hue_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f hueShift,
                     RppiChnFormat chnFormat, unsigned channel, RppiFormat imageFormat)
 {
@@ -503,7 +503,7 @@ RppStatus host_hue(T* srcPtr, RppiSize srcSize, U* dstPtr,
 }
 
 template <typename T, typename U>
-RppStatus host_saturation(T* srcPtr, RppiSize srcSize, U* dstPtr,
+RppStatus saturation_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f saturationFactor,
                     RppiChnFormat chnFormat, unsigned channel, RppiFormat imageFormat)
 {
@@ -760,7 +760,7 @@ RppStatus host_saturation(T* srcPtr, RppiSize srcSize, U* dstPtr,
 }
 
 template <typename T>
-RppStatus host_gamma_correction(T* srcPtr, RppiSize srcSize, T* dstPtr,
+RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                    Rpp32f gamma,
                                    unsigned int channel)
 {

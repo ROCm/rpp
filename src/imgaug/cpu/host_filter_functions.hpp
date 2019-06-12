@@ -1,7 +1,7 @@
 #include <cpu/rpp_cpu_common.hpp>
 
 template <typename T>
-RppStatus host_bilateral_filter(T* srcPtr, RppiSize srcSize, T* dstPtr,
+RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                 Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS,
                                 RppiChnFormat chnFormat, unsigned int channel)
 {

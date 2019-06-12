@@ -3,7 +3,7 @@
 /**************** Flip ***************/
 
 template <typename T>
-RppStatus host_flip(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                     RppiAxis flipAxis,
                     RppiChnFormat chnFormat, unsigned channel)
 {
@@ -159,7 +159,7 @@ RppStatus host_flip(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** Warp Affine ***************/
 
 template <typename T>
-RppStatus host_warp_affine_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
+RppStatus warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
                                        T* affine)
 {
     float minX = 0, minY = 0, maxX = 0, maxY = 0;
@@ -195,7 +195,7 @@ RppStatus host_warp_affine_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 }
 
 template <typename T, typename U>
-RppStatus host_warp_affine(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            U* affine,
                            RppiChnFormat chnFormat, unsigned int channel)
 {
@@ -299,7 +299,7 @@ RppStatus host_warp_affine(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
 
 /**************** Rotate ***************/
 
-RppStatus host_rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
+RppStatus rotate_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
                                   Rpp32f angleDeg)
 {
     Rpp32f angleRad = RAD(angleDeg);
@@ -344,7 +344,7 @@ RppStatus host_rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 }
 
 template <typename T>
-RppStatus host_rotate(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            Rpp32f angleDeg,
                            RppiChnFormat chnFormat, unsigned int channel)
 {
@@ -457,7 +457,7 @@ RppStatus host_rotate(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 
 /**************** Resize ***************/
 
-RppStatus host_resize_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
+RppStatus resize_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
                                   Rpp32f percentage)
 {
     if (percentage < 0)
@@ -506,7 +506,7 @@ RppStatus host_resize_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 }
 
 template <typename T>
-RppStatus host_resize(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+RppStatus resize_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            Rpp32f percentage,
                            RppiChnFormat chnFormat, unsigned int channel)
 {

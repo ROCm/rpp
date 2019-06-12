@@ -63,7 +63,7 @@ RppStatus
 rppi_rgb2hsv_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    host_rgb2hsv<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+    rgb2hsv_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
                          RPPI_CHN_PLANAR, 3);
     return RPP_SUCCESS;
 
@@ -73,7 +73,7 @@ RppStatus
 rppi_rgb2hsv_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    host_rgb2hsv<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+    rgb2hsv_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
                          RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 
@@ -130,7 +130,7 @@ RppStatus
 rppi_hsv2rgb_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    host_hsv2rgb<Rpp32f, Rpp8u>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    hsv2rgb_host<Rpp32f, Rpp8u>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                          RPPI_CHN_PLANAR, 3);
     return RPP_SUCCESS;
 
@@ -140,7 +140,7 @@ RppStatus
 rppi_hsv2rgb_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
 
-    host_hsv2rgb<Rpp32f, Rpp8u>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    hsv2rgb_host<Rpp32f, Rpp8u>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                          RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 
@@ -232,7 +232,7 @@ rppi_hueRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                          Rpp32f hueShift)
 {
 
-    host_hue<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    hue_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                            hueShift,
                            RPPI_CHN_PLANAR, 3, RGB);
     return RPP_SUCCESS;
@@ -243,7 +243,7 @@ rppi_hueRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                          Rpp32f hueShift)
 {
 
-    host_hue<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    hue_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                            hueShift,
                            RPPI_CHN_PACKED, 3, RGB);
     return RPP_SUCCESS;
@@ -254,7 +254,7 @@ rppi_hueHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                          Rpp32f hueShift)
 {
 
-    host_hue<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+    hue_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
                            hueShift,
                            RPPI_CHN_PLANAR, 3, HSV);
     return RPP_SUCCESS;
@@ -265,7 +265,7 @@ rppi_hueHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                          Rpp32f hueShift)
 {
 
-    host_hue<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+    hue_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
                            hueShift,
                            RPPI_CHN_PACKED, 3, HSV);
     return RPP_SUCCESS;
@@ -357,7 +357,7 @@ rppi_saturationRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                          Rpp32f saturationFactor)
 {
 
-    host_saturation<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    saturation_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                            saturationFactor,
                            RPPI_CHN_PLANAR, 3, RGB);
     return RPP_SUCCESS;
@@ -368,7 +368,7 @@ rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                          Rpp32f saturationFactor)
 {
 
-    host_saturation<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    saturation_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                            saturationFactor,
                            RPPI_CHN_PACKED, 3, RGB);
     return RPP_SUCCESS;
@@ -379,7 +379,7 @@ rppi_saturationHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                          Rpp32f saturationFactor)
 {
 
-    host_saturation<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+    saturation_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
                            saturationFactor,
                            RPPI_CHN_PLANAR, 3, HSV);
     return RPP_SUCCESS;
@@ -390,7 +390,7 @@ rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                          Rpp32f saturationFactor)
 {
 
-    host_saturation<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+    saturation_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
                            saturationFactor,
                            RPPI_CHN_PACKED, 3, HSV);
     return RPP_SUCCESS;
@@ -409,7 +409,7 @@ RppStatus
 rppi_gamma_correction_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                              Rpp32f gamma)
 {
-    host_gamma_correction<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     gamma,
                                     1);
 
@@ -421,7 +421,7 @@ RppStatus
 rppi_gamma_correction_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                              Rpp32f gamma)
 {
-    host_gamma_correction<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     gamma,
                                     3);
 
@@ -433,7 +433,7 @@ RppStatus
 rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                              Rpp32f gamma)
 {
-    host_gamma_correction<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+    gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     gamma,
                                     3);
 

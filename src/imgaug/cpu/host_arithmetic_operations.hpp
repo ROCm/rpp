@@ -1,7 +1,7 @@
 #include <cpu/rpp_cpu_common.hpp>
 
 template <typename T>
-RppStatus host_absolute_difference(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+RppStatus absolute_difference_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
@@ -18,7 +18,7 @@ RppStatus host_absolute_difference(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* 
 }
 
 template <typename T>
-RppStatus host_accumulate(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
+RppStatus accumulate_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
@@ -34,7 +34,7 @@ RppStatus host_accumulate(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
 }
 
 template <typename T>
-RppStatus host_accumulate_weighted(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
+RppStatus accumulate_weighted_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
                                    Rpp32f alpha,
                                    unsigned int channel)
 {
@@ -51,7 +51,7 @@ RppStatus host_accumulate_weighted(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
 }
 
 template <typename T>
-RppStatus host_add(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+RppStatus add_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
@@ -67,7 +67,7 @@ RppStatus host_add(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 }
 
 template <typename T>
-RppStatus host_sub(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+RppStatus sub_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
