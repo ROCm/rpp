@@ -3,7 +3,7 @@
 /**************** Bitwise And ***************/
 
 template <typename T>
-RppStatus and_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+RppStatus bitwise_AND_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
@@ -21,7 +21,7 @@ RppStatus and_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** Bitwise Not ***************/
 
 template <typename T>
-RppStatus not_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+RppStatus bitwise_NOT_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
@@ -39,7 +39,7 @@ RppStatus not_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** Bitwise Exclusive Or ***************/
 
 template <typename T>
-RppStatus xor_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+RppStatus exclusive_OR_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
@@ -57,7 +57,7 @@ RppStatus xor_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** Bitwise Inclusive Or ***************/
 
 template <typename T>
-RppStatus or_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+RppStatus inclusive_OR_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
