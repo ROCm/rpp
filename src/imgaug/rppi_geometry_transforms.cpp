@@ -10,9 +10,14 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
 #endif //backend
+
+
+
+
 /******* Flip ********/
 
 // GPU calls for Flip function
+
 RppStatus
 rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                     RppiAxis flipAxis, RppHandle_t rppHandle)
@@ -68,33 +73,203 @@ rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
     return RPP_SUCCESS;
 }
 
- // host function call for single channel input
-RppStatus
+// Host calls for Flip function
+
+RppStatus 
 rppi_flip_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                                   RppiAxis flipAxis)
+                       RppiAxis flipAxis)
 {
-    flip_pln_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                     static_cast<Rpp8u*>(dstPtr),
-                     flipAxis, 1);
+    host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     flipAxis,
+                     RPPI_CHN_PLANAR, 1);
     return RPP_SUCCESS;
 }
 
 RppStatus
 rppi_flip_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                                   RppiAxis flipAxis)
+                       RppiAxis flipAxis)
 {
-    flip_pln_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                     static_cast<Rpp8u*>(dstPtr),
-                     flipAxis, 3);
+    host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     flipAxis,
+                     RPPI_CHN_PLANAR, 3);
     return RPP_SUCCESS;
 }
 
 RppStatus
 rppi_flip_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                                   RppiAxis flipAxis)
+                       RppiAxis flipAxis)
 {
-    flip_pkd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                     static_cast<Rpp8u*>(dstPtr),
-                     flipAxis, 3);
+    host_flip<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     flipAxis,
+                     RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
+}
+
+
+
+
+/******* Warp Affine ********/
+
+// GPU calls for Warp Affine function
+
+// Host calls for Warp Affine function
+
+RppStatus
+rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                                  RppPtr_t affine)
+{
+    host_warp_affine_output_size<Rpp32f>(srcSize, dstSizePtr,
+                                         static_cast<Rpp32f*>(affine));
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    host_warp_affine<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    host_warp_affine<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    host_warp_affine<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+
+
+
+
+/******* Rotate ********/
+
+// GPU calls for Rotate function
+
+// Host calls for Rotate function
+
+RppStatus
+rppi_rotate_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                             Rpp32f angleDeg)
+{
+    host_rotate_output_size(srcSize, dstSizePtr,
+                            angleDeg);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg)
+{
+    host_rotate<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            angleDeg,
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_rotate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg)
+{
+    host_rotate<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            angleDeg,
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg)
+{
+    host_rotate<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            angleDeg,
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+
+
+
+/******* Resize ********/
+
+// GPU calls for Resize function
+
+// Host calls for Resize function
+
+RppStatus
+rppi_resize_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                             Rpp32f percentage)
+{
+    host_resize_output_size(srcSize, dstSizePtr,
+                            percentage);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_resize_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage)
+{
+    host_resize<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            percentage,
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_resize_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage)
+{
+    host_resize<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            percentage,
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_resize_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage)
+{
+    host_resize<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            percentage,
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
 }
