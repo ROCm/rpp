@@ -1,5 +1,7 @@
 #include <cpu/rpp_cpu_common.hpp>
 
+/**************** Bilateral Filter ***************/
+
 template <typename T>
 RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                 Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS,

@@ -1,5 +1,7 @@
 #include <cpu/rpp_cpu_common.hpp>
 
+/**************** RGB2HSV ***************/
+
 template <typename T, typename U>
 RppStatus rgb2hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     RppiChnFormat chnFormat, unsigned channel)
@@ -109,6 +111,8 @@ RppStatus rgb2hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     return RPP_SUCCESS;
 }
+
+/**************** HSV2RGB ***************/
 
 template <typename T, typename U>
 RppStatus hsv2rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
@@ -220,6 +224,8 @@ RppStatus hsv2rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     return RPP_SUCCESS;
 }
+
+/**************** Hue Modification ***************/
 
 template <typename T, typename U>
 RppStatus hue_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
@@ -502,6 +508,8 @@ RppStatus hue_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     return RPP_SUCCESS;
 }
 
+/**************** Saturation Modification ***************/
+
 template <typename T, typename U>
 RppStatus saturation_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f saturationFactor,
@@ -758,6 +766,8 @@ RppStatus saturation_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     return RPP_SUCCESS;
 }
+
+/**************** Gamma Correction ***************/
 
 template <typename T>
 RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,

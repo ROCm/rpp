@@ -1,5 +1,7 @@
 #include <cpu/rpp_cpu_common.hpp>
 
+/**************** Absolute Difference ***************/
+
 template <typename T>
 RppStatus absolute_difference_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
@@ -17,6 +19,8 @@ RppStatus absolute_difference_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* 
 
 }
 
+/**************** Accumulate ***************/
+
 template <typename T>
 RppStatus accumulate_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
                                    unsigned int channel)
@@ -32,6 +36,8 @@ RppStatus accumulate_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
     return RPP_SUCCESS;
 
 }
+
+/**************** Accumulate Weighted ***************/
 
 template <typename T>
 RppStatus accumulate_weighted_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
@@ -50,6 +56,8 @@ RppStatus accumulate_weighted_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
 
 }
 
+/**************** Add ***************/
+
 template <typename T>
 RppStatus add_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
@@ -65,6 +73,8 @@ RppStatus add_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 
 }
+
+/**************** Subtract ***************/
 
 template <typename T>
 RppStatus sub_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,

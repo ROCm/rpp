@@ -1,5 +1,7 @@
 #include <cpu/rpp_cpu_common.hpp>
 
+/**************** Bitwise And ***************/
+
 template <typename T>
 RppStatus and_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
@@ -15,6 +17,8 @@ RppStatus and_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 
 }
+
+/**************** Bitwise Not ***************/
 
 template <typename T>
 RppStatus not_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
@@ -32,6 +36,8 @@ RppStatus not_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 }
 
+/**************** Bitwise Exclusive Or ***************/
+
 template <typename T>
 RppStatus xor_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel)
@@ -47,6 +53,8 @@ RppStatus xor_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 
 }
+
+/**************** Bitwise Inclusive Or ***************/
 
 template <typename T>
 RppStatus or_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
