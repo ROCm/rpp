@@ -1,4 +1,4 @@
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) )
+#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 __kernel void accumulate(  __global unsigned char* input1,
                             __global unsigned char* input2,
                             const unsigned int height,
@@ -19,7 +19,7 @@ __kernel void accumulate(  __global unsigned char* input1,
 
 __kernel void accumulate_weighted(  __global unsigned char* input1,
                             __global unsigned char* input2,
-                            constant double alpha,
+                            const double alpha,
                             const unsigned int height,
                             const unsigned int width,
                             const unsigned int channel
