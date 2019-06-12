@@ -29,6 +29,21 @@ rppi_bitwise_AND_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppHandle_t rppHandle );
 
 
+// Host function declarations.
+RppStatus
+rppi_bitwise_AND_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_bitwise_AND_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_bitwise_AND_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                                 RppiSize srcSize, RppPtr_t dstPtr);
+
+
+
 // --------------------
 // Bitwise NOT
 // --------------------
@@ -155,26 +170,44 @@ rppi_absolute_difference_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
 
-// Dummy
-RppStatus
-Rppi_Add_Constant_8u_pkd1(const RppPtr_t srcPtr, int rSrcStep,
-                        RppPtr_t dstPtr, int rDstStep,
-                  const Rpp8u rConstant, RppiSize oSizeROI, int rScaleFactor);
+// Host function declarations.
 
 RppStatus
-Rppi_Add_Constant_8u_pln1(const RppPtr_t srcPtr, int rSrcStep,
-                        RppPtr_t dstPtr, int rDstStep,
-                  const Rpp8u rConstant, RppiSize oSizeROI, int rScaleFactor);
+rppi_absolute_difference_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, 
+                                      RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
-Rppi_Add_Constant_8u_pkd3(const RppPtr_t srcPtr, int rSrcStep,
-                        RppPtr_t dstPtr, int rDstStep,
-                  const Rpp8u rConstant, RppiSize oSizeROI, int rScaleFactor);
+rppi_absolute_difference_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                                      RppiSize srcSize, RppPtr_t dstPtr);
 
 RppStatus
-Rppi_Add_Constant_8u_pln3(const RppPtr_t srcPtr, int rSrcStep,
-                        RppPtr_t dstPtr, int rDstStep,
-                  const Rpp8u rConstant, RppiSize oSizeROI, int rScaleFactor);
+rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                                       RppiSize srcSize, RppPtr_t dstPtr);
+
+
+// --------------------
+// Bilateral filter
+// --------------------
+
+// Gpu function declarations
+
+RppStatus
+rppi_bilateral_filter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize,
+                                  RppPtr_t dstPtr, Rpp32u filterSize,
+                                  Rpp64f sigmaI, Rpp64f sigmaS,
+                                  RppHandle_t rppHandle);
+
+RppStatus
+rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
+                                  RppPtr_t dstPtr, Rpp32u filterSize,
+                                  Rpp64f sigmaI, Rpp64f sigmaS,
+                                  RppHandle_t rppHandle);
+
+RppStatus
+rppi_bilateral_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
+                                  RppPtr_t dstPtr, Rpp32u filterSize,
+                                  Rpp64f sigmaI, Rpp64f sigmaS,
+                                  RppHandle_t rppHandle);
 
 // --------------------
 // Accumulation
@@ -216,8 +249,6 @@ RppStatus
 rppi_accumulate_weighted_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, double alpha,
                               RppHandle_t rppHandle );
-
-// Gpu function declarations
 
 
 #ifdef __cplusplus

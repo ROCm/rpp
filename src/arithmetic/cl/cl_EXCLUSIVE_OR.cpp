@@ -1,5 +1,6 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
+using namespace arithmetic;
 
 RppStatus
 cl_exclusive_OR ( cl_mem srcPtr1,cl_mem srcPtr2,

@@ -21,8 +21,8 @@ typedef double              Rpp64f;
 
 typedef void*              RppPtr_t;
 
-typedef void*              RppHandle_t;
 
+typedef void*          RppHandle_t;
 
 typedef enum
 {
@@ -76,6 +76,11 @@ typedef enum{
     ZEROPAD,
     NOPAD
 } RppiPad;
+
+typedef enum{
+    RGB,
+    HSV
+} RppiFormat;
 
 typedef struct {
        Rpp32f rho;

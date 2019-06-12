@@ -1,11 +1,14 @@
 #include <cl/rpp_cl_common.hpp>
+#include "cl_declarations.hpp"
 
 #ifndef MOD_CL_PATH
-#   error Kernel files' base path not defined; undefined `MOD_CL_PATH`
+#   error Kernel files base path not defined; undefined `MOD_CL_PATH`
 #endif //MOD_CL_PATH
 
+#define TO_STRING(x) #x
+
 cl_int
-cl_kernel_initializer ( cl_command_queue theQueue,
+arithmetic::cl_kernel_initializer ( cl_command_queue theQueue,
                         std::string kernelFile, std::string kernelName,
                         cl_program& theProgram, cl_kernel& theKernel)
 {
@@ -13,7 +16,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
     // File Handling
     char *sourceStr;
     size_t sourceSize;
-    std::string kernelFile_cl = MOD_CL_PATH + kernelFile;
+    std::string kernelFile_cl = TO_STRING(MOD_CL_PATH) + kernelFile;
     std::cout << kernelFile_cl << std::endl;
     FILE *filePtr = fopen( kernelFile_cl.c_str(), "rb");
     if (!filePtr) {
@@ -46,8 +49,8 @@ cl_kernel_initializer ( cl_command_queue theQueue,
 }
 
 cl_int
-cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* localDim3,
-                        cl_program& theProgram, cl_kernel& theKernel  )
+arithmetic::cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* localDim3,
+                        cl_program& theProgram, cl_kernel& theKernel )
 {
     cl_int err;
 

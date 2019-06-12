@@ -1,8 +1,14 @@
 #include <cl/rpp_cl_common.hpp>
+#include "cl_declarations.hpp"
+
 
 #ifndef MOD_CL_PATH
-#   error Kernel files' base path not defined; undefined `MOD_CL_PATH`
+# error Kernel files base path not defined; undefined `MOD_CL_PATH`
 #endif //MOD_CL_PATH
+
+// Note: gcc throws stray issue without this preprocessor derivative being used
+//       for reading MOD_CL_PATH used for reading kernel file
+//#define TO_STRING(x) #x
 
 cl_int
 cl_kernel_initializer ( cl_command_queue theQueue,

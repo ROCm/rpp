@@ -1,6 +1,5 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
-
 RppStatus
 cl_absolute_difference ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr,

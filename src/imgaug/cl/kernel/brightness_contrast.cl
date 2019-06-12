@@ -1,7 +1,7 @@
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 
-__kernel void brightness_contrast(  __global unsigned char* a,
-                                    __global unsigned char* b,
+__kernel void brightness_contrast(  __global unsigned char* input,
+                                    __global unsigned char* output,
                                     const float alpha,
                                     const int beta,
                                     const unsigned int height,
@@ -16,6 +16,6 @@ __kernel void brightness_contrast(  __global unsigned char* a,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    int res = a[pixIdx] * alpha + beta;
-    b[pixIdx] = saturate_8u(res);
+    int res = input[pixIdx] * alpha + beta;
+    output[pixIdx] = saturate_8u(res);
 }
