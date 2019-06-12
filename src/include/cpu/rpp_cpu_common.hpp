@@ -2,6 +2,7 @@
 #define RPP_CPU_COMMON_H
 
 #include <math.h>
+#include <algorithm>
 
 #include <rppdefs.h>
 

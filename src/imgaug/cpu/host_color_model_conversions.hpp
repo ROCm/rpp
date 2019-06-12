@@ -176,7 +176,7 @@ RppStatus hsv2rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         {
             float c, x, m, rf, gf, bf;
             c = srcPtr[i + 2] * srcPtr[i + 1];
-            x = c * (1 - abs((fmod((srcPtr[i] / 60), 2)) - 1));
+            x = c * (1 - RPPABS((fmod((srcPtr[i] / 60), 2)) - 1));
             m = srcPtr[i + 2] - c;
             
             if ((0 <= srcPtr[i]) && (srcPtr[i] < 60))

@@ -29,6 +29,21 @@ rppi_bitwise_AND_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppHandle_t rppHandle );
 
 
+// Host function declarations.
+RppStatus
+rppi_bitwise_AND_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_bitwise_AND_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_bitwise_AND_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                                 RppiSize srcSize, RppPtr_t dstPtr);
+
+
+
 // --------------------
 // Bitwise NOT
 // --------------------
@@ -154,6 +169,20 @@ RppStatus
 rppi_absolute_difference_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
+
+// Host function declarations.
+
+RppStatus
+rppi_absolute_difference_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, 
+                                      RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_absolute_difference_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                                      RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                                       RppiSize srcSize, RppPtr_t dstPtr);
 
 
 // --------------------

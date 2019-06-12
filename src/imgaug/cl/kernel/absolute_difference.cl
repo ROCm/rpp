@@ -1,4 +1,4 @@
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) )
+#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 #define abs(value) ( (value) < 0 ? (-1 * value)  : value )
 __kernel void absolute_difference(  __global unsigned char* input1,
                                     __global unsigned char* input2,

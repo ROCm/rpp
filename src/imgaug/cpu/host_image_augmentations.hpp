@@ -195,6 +195,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 /************ Brightness ************/
 
+template <typename T>
 RppStatus brightness_contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                    Rpp32f alpha, Rpp32f beta,
                                    unsigned int channel)

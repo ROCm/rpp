@@ -1,4 +1,4 @@
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) )
+#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 __kernel void subtract(  __global unsigned char* a,
                             __global unsigned char* b,
                             __global unsigned char* c,
