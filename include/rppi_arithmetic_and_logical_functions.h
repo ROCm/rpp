@@ -28,8 +28,8 @@ rppi_bitwise_AND_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
 
-
 // Host function declarations.
+
 RppStatus
 rppi_bitwise_AND_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr);
@@ -65,6 +65,22 @@ rppi_bitwise_NOT_u8_pkd3_gpu( RppPtr_t srcPtr1,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
 
+// Host function declarations.
+RppStatus
+rppi_bitwise_NOT_u8_pln1_host( RppPtr_t srcPtr1,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_bitwise_NOT_u8_pln3_host( RppPtr_t srcPtr1,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_bitwise_NOT_u8_pkd3_host( RppPtr_t srcPtr1,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
 // --------------------
 // Exclusive OR
 // --------------------
@@ -83,6 +99,23 @@ rppi_exclusive_OR_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 RppStatus
 rppi_exclusive_OR_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+// Host function declarations.
+
+RppStatus
+rppi_exclusive_OR_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_exclusive_OR_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_exclusive_OR_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
 
@@ -107,6 +140,21 @@ rppi_inclusive_OR_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
 
+// Host function declarations.
+RppStatus
+rppi_inclusive_OR_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_inclusive_OR_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_inclusive_OR_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
 
 // --------------------
 // Addition
@@ -129,6 +177,23 @@ rppi_add_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
 
+// Host function declarations.
+
+RppStatus
+rppi_add_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_add_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_add_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
 // --------------------
 // Subtraction
 // --------------------
@@ -147,6 +212,22 @@ rppi_subtract_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 RppStatus
 rppi_subtract_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+// Host function declarations.
+RppStatus
+rppi_subtract_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_subtract_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, RppPtr_t dstPtr,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_subtract_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, RppPtr_t dstPtr,
                               RppHandle_t rppHandle );
 // --------------------
@@ -209,6 +290,24 @@ rppi_bilateral_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
                                   Rpp64f sigmaI, Rpp64f sigmaS,
                                   RppHandle_t rppHandle);
 
+// Host function declarations.
+RppStatus
+rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize,
+                                  RppPtr_t dstPtr, Rpp32u filterSize,
+                                  Rpp64f sigmaI, Rpp64f sigmaS,
+                                  RppHandle_t rppHandle);
+
+RppStatus
+rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
+                                  RppPtr_t dstPtr, Rpp32u filterSize,
+                                  Rpp64f sigmaI, Rpp64f sigmaS,
+                                  RppHandle_t rppHandle);
+
+RppStatus
+rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
+                                  RppPtr_t dstPtr, Rpp32u filterSize,
+                                  Rpp64f sigmaI, Rpp64f sigmaS,
+                                  RppHandle_t rppHandle);
 // --------------------
 // Accumulation
 // --------------------
@@ -227,6 +326,22 @@ rppi_accumulate_u8_pln3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 RppStatus
 rppi_accumulate_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize,
+                              RppHandle_t rppHandle );
+
+// Host function declarations.
+RppStatus
+rppi_accumulate_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_accumulate_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_accumulate_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize,
                               RppHandle_t rppHandle );
 
@@ -250,6 +365,22 @@ rppi_accumulate_weighted_u8_pkd3_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, double alpha,
                               RppHandle_t rppHandle );
 
+
+// Host function declarations.
+RppStatus
+rppi_accumulate_weighted_u8_pln1_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, double alpha,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_accumulate_weighted_u8_pln3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, double alpha,
+                              RppHandle_t rppHandle );
+
+RppStatus
+rppi_accumulate_weighted_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
+                              RppiSize srcSize, double alpha,
+                              RppHandle_t rppHandle );
 
 #ifdef __cplusplus
 }

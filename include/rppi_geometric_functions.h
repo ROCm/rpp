@@ -24,45 +24,51 @@ extern "C" {
  * \param flip Specifies the axis about which the image is to be mirrored.
  * \return \ref image_data_error_codes, \ref roi_error_codes, \ref mirror_error_codes
  */
-RppStatus
-Rppi_Flip_8u_pkd1_host(const RppPtr_t  srcPtr, int rSrcStep,
-                        RppPtr_t  dstPtr, int rDstStep,
-                  RppiSize oROI, RppiAxis flip);
+
+
+
+// --------------------
+// Flip
+// --------------------
+
+// Host function declarations
+
+RppStatus 
+rppi_flip_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                       RppiAxis flipAxis);
 
 RppStatus
-Rppi_Flip_8u_pln1(const RppPtr_t  srcPtr, int rSrcStep,
-                        RppPtr_t  dstPtr, int rDstStep,
-                  RppiSize oROI, RppiAxis flip);
+rppi_flip_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                       RppiAxis flipAxis);
 
 RppStatus
-Rppi_Flip_8u_pkd3(const RppPtr_t  srcPtr, int rSrcStep,
-                        RppPtr_t  dstPtr, int rDstStep,
-                  RppiSize oROI, RppiAxis flip);
+rppi_flip_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                       RppiAxis flipAxis);
+
+// Gpu function declarations
 
 RppStatus
-Rppi_Flip_8u_pln3(const RppPtr_t  srcPtr, int rSrcStep,
-                        RppPtr_t  dstPtr, int rDstStep,
-                  RppiSize oROI, RppiAxis flip);
+rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                    RppiAxis flipAxis, RppHandle_t rppHandle);
 
 RppStatus
-Rppi_Flip_8u_pkd1_host(const RppPtr_t  srcPtr, int rSrcStep,
-                        RppPtr_t  dstPtr, int rDstStep,
-                  RppiSize oROI, RppiAxis flip);
+rppi_flip_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                    RppiAxis flipAxis, RppHandle_t rppHandle);
 
 RppStatus
-Rppi_Flip_8u_pln1_host(const RppPtr_t  srcPtr, int rSrcStep,
-                        RppPtr_t  dstPtr, int rDstStep,
-                  RppiSize oROI, RppiAxis flip);
+rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                    RppiAxis flipAxis, RppHandle_t rppHandle);
+
+
+// --------------------
+// Rotate
+// --------------------
+
+// Host function declarations
 
 RppStatus
-Rppi_Flip_8u_pkd3_host(const RppPtr_t  srcPtr, int rSrcStep,
-                        RppPtr_t  dstPtr, int rDstStep,
-                  RppiSize oROI, RppiAxis flip);
-
-RppStatus
-Rppi_Flip_8u_pln3_host(const RppPtr_t  srcPtr, int rSrcStep,
-                        RppPtr_t  dstPtr, int rDstStep,
-                  RppiSize oROI, RppiAxis flip);
+rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          RppiSize sizeDst, Rpp32f angleRad );
 
 
 
