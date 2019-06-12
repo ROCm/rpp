@@ -77,6 +77,11 @@ typedef enum{
     NOPAD
 } RppiPad;
 
+typedef enum{
+    RGB,
+    HSV
+} RppiFormat;
+
 typedef struct {
        Rpp32f rho;
        Rpp32f theta;
