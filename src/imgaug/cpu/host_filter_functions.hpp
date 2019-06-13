@@ -4,7 +4,7 @@
 
 template <typename T>
 RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                                Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS,
+                                Rpp32u diameter, Rpp64f sigmaI, Rpp64f sigmaS,
                                 RppiChnFormat chnFormat, unsigned int channel)
 {
     if (chnFormat == RPPI_CHN_PLANAR)

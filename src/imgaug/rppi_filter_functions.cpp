@@ -85,7 +85,7 @@ rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
 
 RppStatus
 rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+                             Rpp32u diameter, Rpp64f sigmaI, Rpp64f sigmaS)
 {
     bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     diameter, sigmaI, sigmaS,
@@ -97,7 +97,7 @@ rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
 
 RppStatus
 rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+                             Rpp32u diameter, Rpp64f sigmaI, Rpp64f sigmaS)
 {
     bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     diameter, sigmaI, sigmaS,
@@ -109,7 +109,7 @@ rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
 
 RppStatus
 rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+                             Rpp32u diameter, Rpp64f sigmaI, Rpp64f sigmaS)
 {
     bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     diameter, sigmaI, sigmaS,
