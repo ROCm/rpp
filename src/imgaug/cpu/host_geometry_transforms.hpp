@@ -561,18 +561,27 @@ RppStatus resize_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 
         for (int c = 0; c < channel; c++)
         {
-            for (int i = 1; i < dstSize.height - 1; i++)
+            for (int i = 0; i < srcSize.height - 1; i++)
             {
-                for (int j = 1; j < dstSize.width - 1; j++)
-                {
-                    if (dstPtr[(c * dstSize.height * dstSize.width) + (i * dstSize.width) + j] == 0)
+                for (int j = 0; j < srcSize.width - 1; j++)
+                {                    
+                    int pixel1 = (int) srcPtr[(c * srcSize.height * srcSize.width) + (i * srcSize.width) + j];
+                    int pixel2 = (int) srcPtr[(c * srcSize.height * srcSize.width) + (i * srcSize.width) + (j + 1)];
+                    int pixel3 = (int) srcPtr[(c * srcSize.height * srcSize.width) + ((i + 1) * srcSize.width) + j];
+                    int pixel4 = (int) srcPtr[(c * srcSize.height * srcSize.width) + ((i + 1) * srcSize.width) + (j + 1)];
+                    
+                    int w = (int) ((dstSize.width - srcSize.width) / (srcSize.width - 1));
+                    int h = (int) ((dstSize.height - srcSize.height) / (srcSize.height - 1));
+                    for (int m = 0; m < h + 2; m++)
                     {
-                        Rpp32f pixel;
-                        pixel = 0.25 * (dstPtr[(c * dstSize.height * dstSize.width) + ((i - 1) * dstSize.width) + (j - 1)] +
-                                        dstPtr[(c * dstSize.height * dstSize.width) + ((i - 1) * dstSize.width) + (j + 1)] +
-                                        dstPtr[(c * dstSize.height * dstSize.width) + ((i + 1) * dstSize.width) + (j - 1)] +
-                                        dstPtr[(c * dstSize.height * dstSize.width) + ((i + 1) * dstSize.width) + (j + 1)]);
-                        dstPtr[(c * dstSize.height * dstSize.width) + (i * dstSize.width) + j] = (Rpp8u) pixel;
+                        for (int n = 0; n < w + 2; n++)
+                        {
+                            Rpp32f pixel;
+                            pixel = ((pixel1) * (1 - n) * (1 - m)) + ((pixel2) * (n) * (1 - m)) + ((pixel3) * (m) * (1 - n)) + ((pixel4) * (m) * (n));
+                            pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
+                            pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
+                            dstPtr[(c * dstSize.height * dstSize.width) + ((i * (h + 1) + m) * dstSize.width) + (j * (w + 1) + n)] = (Rpp8u) round(pixel);
+                        }
                     }
                 }
             }
@@ -597,18 +606,27 @@ RppStatus resize_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 
         for (int c = 0; c < channel; c++)
         {
-            for (int i = 1; i < dstSize.height - 1; i++)
+            for (int i = 0; i < srcSize.height - 1; i++)
             {
-                for (int j = 1; j < dstSize.width - 1; j++)
-                {
-                    if (dstPtr[c + (channel * i * dstSize.width) + (channel * j)] == 0)
+                for (int j = 0; j < srcSize.width - 1; j++)
+                {                    
+                    int pixel1 = (int) srcPtr[c + (channel * i * srcSize.width) + (channel * j)];
+                    int pixel2 = (int) srcPtr[c + (channel * i * srcSize.width) + (channel * (j + 1))];
+                    int pixel3 = (int) srcPtr[c + (channel * (i + 1) * srcSize.width) + (channel * j)];
+                    int pixel4 = (int) srcPtr[c + (channel * (i + 1) * srcSize.width) + (channel * (j + 1))];
+                    
+                    int w = (int) ((dstSize.width - srcSize.width) / (srcSize.width - 1));
+                    int h = (int) ((dstSize.height - srcSize.height) / (srcSize.height - 1));
+                    for (int m = 0; m < h + 2; m++)
                     {
-                        Rpp32f pixel;
-                        pixel = 0.25 * (dstPtr[c + (channel * (i - 1) * dstSize.width) + (channel * (j - 1))] +
-                                        dstPtr[c + (channel * (i - 1) * dstSize.width) + (channel * (j + 1))] +
-                                        dstPtr[c + (channel * (i + 1) * dstSize.width) + (channel * (j - 1))] +
-                                        dstPtr[c + (channel * (i + 1) * dstSize.width) + (channel * (j + 1))]);
-                        dstPtr[c + (channel * i * dstSize.width) + (channel * j)] = (Rpp8u) pixel;
+                        for (int n = 0; n < w + 2; n++)
+                        {
+                            Rpp32f pixel;
+                            pixel = ((pixel1) * (1 - n) * (1 - m)) + ((pixel2) * (n) * (1 - m)) + ((pixel3) * (m) * (1 - n)) + ((pixel4) * (m) * (n));
+                            pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
+                            pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
+                            dstPtr[c + (channel * (i * (h + 1) + m) * dstSize.width) + (channel * (j * (w + 1) + n))] = (Rpp8u) round(pixel);
+                        }
                     }
                 }
             }
