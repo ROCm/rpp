@@ -1,29 +1,16 @@
-
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
-#define PI 3.14159265
-#define RAD(deg) (deg * PI / 180)
-
-__kernel void rotate_pln (  __global unsigned char* srcPtr,
+__kernel void warp_affine_pln (  __global unsigned char* srcPtr,
                             __global unsigned char* dstPtr,
                             const float angleDeg;
                             const unsigned int source_height,
                             const unsigned int source_width,
                             const unsigned int dest_height,
                             const unsigned int dest_width,
+                            __global  float* affine,
                             const unsigned int minX,
                             const unsigned int minY,
                             const unsigned int channel
 )
 {
-    float angleRad = RAD(angleDeg);
-    float rotate[6] = {0};
-    rotate[0] = cos(angleRad);
-    rotate[1] = sin(angleRad);
-    rotate[2] = 0;
-    rotate[3] = -1 * sin(angleRad);
-    rotate[4] = cos(angleRad);
-    rotate[5] = 0;
-
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int id_z = get_global_id(2);
@@ -37,26 +24,19 @@ __kernel void rotate_pln (  __global unsigned char* srcPtr,
 
 }
 
-__kernel void rotate_pkd (  __global unsigned char* srcPtr,
+__kernel void warp_affine_pkd (  __global unsigned char* srcPtr,
                             __global unsigned char* dstPtr,
                             const float angleDeg;
                             const unsigned int source_height,
                             const unsigned int source_width,
                             const unsigned int dest_height,
                             const unsigned int dest_width,
+                            __global  float* affine,
                             const unsigned int minX,
                             const unsigned int minY,
                             const unsigned int channel
 )
 {
-    float angleRad = RAD(angleDeg);
-    float rotate[6] = {0};
-    rotate[0] = cos(angleRad);
-    rotate[1] = sin(angleRad);
-    rotate[2] = 0;
-    rotate[3] = -1 * sin(angleRad);
-    rotate[4] = cos(angleRad);
-    rotate[5] = 0;
 
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
@@ -71,9 +51,3 @@ __kernel void rotate_pkd (  __global unsigned char* srcPtr,
                              srcPtr[id_z + (channel * id_y * srcSize.width) + (channel * id_x)];
 
 }
-
-
-/*__kernel void smoothen_pln()
-{
-
-}*/
