@@ -1,6 +1,6 @@
 #include <rppdefs.h>
 #include <math.h>
-#include "rppi_geometric_functions.h"
+#include "rppi_support_functions.h"
 #define RAD(deg) (deg * PI / 180)
 #define PI 3.14159265
 
