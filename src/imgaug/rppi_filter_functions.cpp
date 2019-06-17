@@ -127,7 +127,7 @@ rppi_box_filter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 {
 #ifdef OCL_COMPILE
 
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
+    box_filter_cl(static_cast<cl_mem>(srcPtr), srcSize,
                         static_cast<cl_mem>(dstPtr),
                         3 /*Filter width*/,
                         RPPI_CHN_PLANAR, 1 /*Channel*/,
@@ -145,7 +145,7 @@ rppi_box_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 {
 #ifdef OCL_COMPILE
 
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
+    box_filter_cl(static_cast<cl_mem>(srcPtr), srcSize,
                         static_cast<cl_mem>(dstPtr),
                         3 /*Filter width*/,
                         RPPI_CHN_PLANAR, 3 /*Channel*/,
@@ -162,7 +162,7 @@ rppi_box_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 {
 #ifdef OCL_COMPILE
 
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
+    box_filter_cl(static_cast<cl_mem>(srcPtr), srcSize,
                         static_cast<cl_mem>(dstPtr),
                         3 /*Filter width*/,
                         RPPI_CHN_PACKED, 3 /*Channel*/,
