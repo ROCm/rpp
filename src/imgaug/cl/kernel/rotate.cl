@@ -16,7 +16,7 @@ __kernel void rotate_pln (  __global unsigned char* srcPtr,
 )
 {
     float angleRad = RAD(angleDeg);
-    float rotate[6] = {0};
+    float rotate[6];
     rotate[0] = cos(angleRad);
     rotate[1] = sin(angleRad);
     rotate[2] = 0;

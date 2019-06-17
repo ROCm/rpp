@@ -6,8 +6,6 @@
  * \file rppi_geometry_functions.h
  * Image Geometry Transform Primitives.
  */
-
-#include "rppdefs.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
