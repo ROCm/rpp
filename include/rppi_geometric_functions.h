@@ -68,6 +68,9 @@ rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
                                   RppPtr_t affine);
+                                  RppStatus
+rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine);
 RppStatus
 rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                               RppPtr_t affine);
@@ -85,6 +88,9 @@ rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr
 RppStatus
 rppi_rotate_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
                              Rpp32f angleDeg);
+                             RppStatus
+rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg);
 RppStatus
 rppi_rotate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                          Rpp32f angleDeg);
