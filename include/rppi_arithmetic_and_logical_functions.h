@@ -358,6 +358,25 @@ RppStatus
 rppi_accumulate_weighted_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, Rpp64f alpha);
 
+
+// --------------------
+// Box Filter
+// --------------------
+
+// Gpu function declarations
+
+RppStatus
+rppi_box_filter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                            RppHandle_t rppHandle);
+
+RppStatus
+rppi_box_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                            RppHandle_t rppHandle);
+
+RppStatus
+rppi_box_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                            RppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
