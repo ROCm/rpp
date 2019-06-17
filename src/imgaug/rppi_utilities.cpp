@@ -1,5 +1,8 @@
 #include <rppdefs.h>
 #include <math.h>
+#include "rppi_geometric_functions.h"
+#define RAD(deg) (deg * PI / 180)
+#define PI 3.14159265
 
 /* All the rpp utilities functions comes here 
    Like Getting output sizes of Rotate and Warp Affine  etc 
@@ -10,8 +13,6 @@
 /*Get Offset Function for Warp Affine */
 /*Get Output Size Function for Rotate */
 /*Get Output Size Funtion for Warp Affine */
-#define PI 3.14159265
-#define RAD(deg) (deg * PI / 180)
 
 RppStatus warp_affine_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
                                        float* affine)
