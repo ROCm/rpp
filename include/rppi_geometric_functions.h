@@ -63,6 +63,17 @@ Rppi_Flip_8u_pln3_host(const RppPtr_t  srcPtr, int rSrcStep,
                   RppiSize oROI, RppiAxis flip);
 
 
+RppStatus
+rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle);
+
+RppStatus
+rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle);
+
+RppStatus
+rppi_rotate_u8_pkd1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }

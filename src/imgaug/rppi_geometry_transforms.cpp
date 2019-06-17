@@ -1,5 +1,7 @@
 #include <rppdefs.h>
 #include <rppi_image_augumentation_functions.h>
+#include <rppi_geometric_functions.h>
+
 
 #include "cpu/host_geometry_transforms.hpp"
 
@@ -218,7 +220,85 @@ rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp
 
 }
 
+RppStatus
+rppi_rotate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg)
+{
+    rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            angleDeg,
+                            RPPI_CHN_PLANAR, 1);
 
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg)
+{
+    rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            angleDeg,
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PLANAR, 1 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
+
+RppStatus
+rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PLANAR, 3 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PACKED, 3 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
 
 
 /******* Resize ********/
