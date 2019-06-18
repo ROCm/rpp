@@ -138,4 +138,11 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiPoint offset,
                 cl_command_queue theQueue);
 
+cl_int
+warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, RppiSize dstSize, float *affine, 
+                RppiChnFormat chnFormat, unsigned int channel,
+                RppiPoint offset,
+                cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

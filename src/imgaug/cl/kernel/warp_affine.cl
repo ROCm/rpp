@@ -1,11 +1,10 @@
 __kernel void warp_affine_pln (  __global unsigned char* srcPtr,
                             __global unsigned char* dstPtr,
-                            const float angleDeg;
+                            __global  float* affine,
                             const unsigned int source_height,
                             const unsigned int source_width,
                             const unsigned int dest_height,
                             const unsigned int dest_width,
-                            __global  float* affine,
                             const unsigned int minX,
                             const unsigned int minY,
                             const unsigned int channel
@@ -26,12 +25,11 @@ __kernel void warp_affine_pln (  __global unsigned char* srcPtr,
 
 __kernel void warp_affine_pkd (  __global unsigned char* srcPtr,
                             __global unsigned char* dstPtr,
-                            const float angleDeg;
+                            __global  float* affine,
                             const unsigned int source_height,
                             const unsigned int source_width,
                             const unsigned int dest_height,
                             const unsigned int dest_width,
-                            __global  float* affine,
                             const unsigned int minX,
                             const unsigned int minY,
                             const unsigned int channel
