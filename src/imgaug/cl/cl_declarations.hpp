@@ -145,4 +145,10 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiPoint offset,
                 cl_command_queue theQueue);
 
+cl_int
+resize_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, RppiSize dstSize, 
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

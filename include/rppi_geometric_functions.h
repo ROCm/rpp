@@ -87,6 +87,18 @@ RppStatus
 rppi_warp_affine_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                          Rpp32f *affine, RppHandle_t rppHandle);
 
+RppStatus
+rppi_resize_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle);
+
+RppStatus
+rppi_resize_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle);
+
+RppStatus
+rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
