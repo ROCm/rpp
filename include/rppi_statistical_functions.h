@@ -7,5 +7,8 @@
 extern "C" {
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* RPPI_STATISTICAL_FUNCTIONS_H */
