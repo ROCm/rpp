@@ -1,7 +1,7 @@
 #include <rppdefs.h>
 #include <rppi_image_augumentation_functions.h>
 #include <rppi_geometric_functions.h>
-
+#include<rppi_support_functions.h>
 
 #include "cpu/host_geometry_transforms.hpp"
 
@@ -196,29 +196,7 @@ rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp
 
 }
 
-RppStatus
-rppi_rotate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                         Rpp32f angleDeg)
-{
-    rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            angleDeg,
-                            RPPI_CHN_PLANAR, 3);
 
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                         Rpp32f angleDeg)
-{
-    rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            angleDeg,
-                            RPPI_CHN_PACKED, 3);
-
-    return RPP_SUCCESS;
-
-}
 
 RppStatus
 rppi_rotate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
@@ -250,6 +228,7 @@ rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rppi
 {
     /* calculate MinX and MinY */
     RppiPoint offset;
+    rotate_output_offset(srcSize, &offset, angleDeg);
     /*call that offset function */
     #ifdef OCL_COMPILE
 
@@ -269,6 +248,8 @@ rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rppi
 {
     /* calculate MinX and MinY */
     RppiPoint offset;
+    rotate_output_offset(srcSize, &offset, angleDeg);
+
     /*call that offset function */
     #ifdef OCL_COMPILE
 
@@ -287,6 +268,8 @@ rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rppi
 {
     /* calculate MinX and MinY */
     RppiPoint offset;
+    rotate_output_offset(srcSize, &offset, angleDeg);
+
     /*call that offset function */
     #ifdef OCL_COMPILE
 
@@ -301,11 +284,13 @@ rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rppi
 }
 
 RppStatus
-rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+rppi_warp_affine_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                          Rpp32f *affine, RppHandle_t rppHandle)
 {
     /* calculate MinX and MinY */
     RppiPoint offset;
+    warp_affine_output_offset(srcSize, &offset, affine);
+
     /*call that offset function */
     #ifdef OCL_COMPILE
 
@@ -320,11 +305,13 @@ rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rppi
 }
 
 RppStatus
-rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+rppi_warp_affine_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                          Rpp32f *affine, RppHandle_t rppHandle)
 {
     /* calculate MinX and MinY */
     RppiPoint offset;
+    warp_affine_output_offset(srcSize, &offset, affine);
+
     /*call that offset function */
     #ifdef OCL_COMPILE
 
@@ -339,11 +326,13 @@ rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rppi
 }
 
 RppStatus
-rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+rppi_warp_affine_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                          Rpp32f *affine, RppHandle_t rppHandle)
 {
     /* calculate MinX and MinY */
     RppiPoint offset;
+    warp_affine_output_offset(srcSize, &offset, affine);
+
     /*call that offset function */
     #ifdef OCL_COMPILE
 
