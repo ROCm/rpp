@@ -1,5 +1,6 @@
 #include <rppdefs.h>
 #include <rppi_geometric_functions.h>
+#include<rppi_support_functions.h>
 
 #include "cpu/host_geometry_transforms.hpp"
 
@@ -194,13 +195,15 @@ rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp
 
 }
 
+
+
 RppStatus
 rppi_rotate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                          Rpp32f angleDeg)
 {
     rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
                             angleDeg,
-                            RPPI_CHN_PLANAR, 3);
+                            RPPI_CHN_PLANAR, 1);
 
     return RPP_SUCCESS;
 
@@ -212,13 +215,135 @@ rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp
 {
     rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
                             angleDeg,
-                            RPPI_CHN_PACKED, 3);
+                            RPPI_CHN_PLANAR, 1);
 
     return RPP_SUCCESS;
 
 }
 
+RppStatus
+rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    rotate_output_offset(srcSize, &offset, angleDeg);
+    /*call that offset function */
+    #ifdef OCL_COMPILE
 
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PLANAR, 1 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
+
+RppStatus
+rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    rotate_output_offset(srcSize, &offset, angleDeg);
+
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PLANAR, 3 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    rotate_output_offset(srcSize, &offset, angleDeg);
+
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PACKED, 3 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f *affine, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    warp_affine_output_offset(srcSize, &offset, affine);
+
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PLANAR, 1 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f *affine, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    warp_affine_output_offset(srcSize, &offset, affine);
+
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PLANAR, 3 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f *affine, RppHandle_t rppHandle)
+{
+    /* calculate MinX and MinY */
+    RppiPoint offset;
+    warp_affine_output_offset(srcSize, &offset, affine);
+
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PACKED, 3 /* Channel */,
+            offset,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
 
 
 /******* Scale ********/
@@ -353,4 +478,93 @@ rppi_resizeCrop_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     return RPP_SUCCESS;
 
+}
+RppStatus
+rppi_resize_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+
+    resize_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize,  RPPI_CHN_PLANAR, 1 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_resize_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+
+    resize_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize,  RPPI_CHN_PLANAR, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+
+    resize_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, RPPI_CHN_PACKED, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_resize_crop_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+
+    resize_crop_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, x1, y1, x2, y2, RPPI_CHN_PLANAR, 1 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+
+    resize_crop_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, x1, y1, x2, y2, RPPI_CHN_PLANAR, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+
+    resize_crop_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, x1, y1, x2, y2, RPPI_CHN_PACKED, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
 }
