@@ -99,6 +99,17 @@ RppStatus
 rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                          RppHandle_t rppHandle);
 
+RppStatus
+rppi_resize_crop_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  RppHandle_t rppHandle);
+
+RppStatus
+rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  RppHandle_t rppHandle);
+
+RppStatus
+rppi_resize_crop_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  RppHandle_t rppHandle);
 #ifdef __cplusplus
 }
 #endif
