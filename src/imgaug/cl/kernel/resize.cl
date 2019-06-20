@@ -1,4 +1,4 @@
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
+#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value)   ))
 
 __kernel void resize_pln (  __global unsigned char* srcPtr,
                             __global unsigned char* dstPtr,
@@ -27,7 +27,6 @@ __kernel void resize_pln (  __global unsigned char* srcPtr,
 
     unsigned int pixId;
     pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height;
-
     A = srcPtr[x + y * source_width + id_z * source_height * source_width];
     B = srcPtr[x + 1  + y * source_width + id_z * source_height * source_width];
     C = srcPtr[x + (y + 1) * source_width + id_z * source_height * source_width];
@@ -89,14 +88,13 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
                             const unsigned int dest_height,
                             const unsigned int dest_width,
                             const unsigned int x1,
-                            const unsigned int y1;
+                            const unsigned int y1,
                             const unsigned int x2,
-                            const unsigned int y2;
+                            const unsigned int y2,
                             const unsigned int channel
 )
 {
     int A, B, C, D, x, y, index, pixVal ;
-    const unsigned int source_
     float x_ratio = ((float)(x2 - x1 ))/dest_width ;
     float y_ratio = ((float)(y2 - y1 ))/dest_height;
     float x_diff, y_diff, ya, yb ;
@@ -128,21 +126,20 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
 
 }
 
-__kernel void resize_crop_pln (  __global unsigned char* srcPtr,
+__kernel void resize_crop_pkd (  __global unsigned char* srcPtr,
                             __global unsigned char* dstPtr,
                             const unsigned int source_height,
                             const unsigned int source_width,
                             const unsigned int dest_height,
                             const unsigned int dest_width,
                             const unsigned int x1,
-                            const unsigned int y1;
+                            const unsigned int y1,
                             const unsigned int x2,
-                            const unsigned int y2;
+                            const unsigned int y2,
                             const unsigned int channel
 )
 {
     int A, B, C, D, x, y, index, pixVal ;
-    const unsigned int source_
     float x_ratio = ((float)(x2 - x1 ))/dest_width ;
     float y_ratio = ((float)(y2 - y1 ))/dest_height;
     float x_diff, y_diff, ya, yb ;
