@@ -8,14 +8,13 @@
    Like Getting output sizes of Rotate and Warp Affine  etc 
    The coordinate offset for the same functions*/
 
-
 /*Get Offset Function for Rotate*/
 /*Get Offset Function for Warp Affine */
 /*Get Output Size Function for Rotate */
 /*Get Output Size Funtion for Warp Affine */
 
 RppStatus warp_affine_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
-                                       float* affine)
+                                  float *affine)
 {
     float minX = 0, minY = 0, maxX = 0, maxY = 0;
     for (int i = 0; i < srcSize.height; i++)
@@ -49,7 +48,7 @@ RppStatus warp_affine_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 }
 
 RppStatus warp_affine_output_offset(RppiSize srcSize, RppiPoint *offset,
-                                       float* affine)
+                                    float *affine)
 {
     float minX = 0, minY = 0, maxX = 0, maxY = 0;
     for (int i = 0; i < srcSize.height; i++)
@@ -84,7 +83,7 @@ RppStatus warp_affine_output_offset(RppiSize srcSize, RppiPoint *offset,
 }
 
 RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
-                                  Rpp32f angleDeg)
+                             Rpp32f angleDeg)
 {
     Rpp32f angleRad = RAD(angleDeg);
     Rpp32f rotate[6] = {0};
@@ -128,7 +127,7 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 }
 
 RppStatus rotate_output_offset(RppiSize srcSize, RppiPoint *offset,
-                                  Rpp32f angleDeg)
+                               Rpp32f angleDeg)
 {
     Rpp32f angleRad = RAD(angleDeg);
     Rpp32f rotate[6] = {0};
