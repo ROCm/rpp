@@ -19,11 +19,11 @@ __kernel void resize_pln (  __global unsigned char* srcPtr,
     int id_z = get_global_id(2);
     if (id_x >= dest_width || id_y >= dest_height || id_z >= channel) return;
 
-    x = (int)(x_ratio * id_y) ;
-    y = (int)(y_ratio * id_x) ;
+    x = (int)(x_ratio * id_x) ;
+    y = (int)(y_ratio * id_y) ;
 
-    x_diff = (x_ratio * id_y) - x ;
-    y_diff = (y_ratio * id_x) - y ;
+    x_diff = (x_ratio * id_x) - x ;
+    y_diff = (y_ratio * id_y) - y ;
 
     unsigned int pixId;
     pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height;
@@ -106,11 +106,11 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
     int id_z = get_global_id(2);
     if (id_x >= dest_width || id_y >= dest_height || id_z >= channel) return;
 
-    x = x1 + (int)(x_ratio * id_y) ;
-    y = y1 + (int)(y_ratio * id_x) ;
+    x = x1 + (int)(x_ratio * id_x) ;
+    y = y1 + (int)(y_ratio * id_y) ;
 
-    x_diff = (x_ratio * id_y) - x ;
-    y_diff = (y_ratio * id_x) - y ;
+    x_diff = (x_ratio * id_x) - x ;
+    y_diff = (y_ratio * id_y) - y ;
 
     unsigned int pixId;
     pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height;
@@ -155,8 +155,8 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
     x = x1 + (int)(x_ratio * id_y) ;
     y = y1 + (int)(y_ratio * id_x) ;
 
-    x_diff = (x_ratio * id_y) - x ;
-    y_diff = (y_ratio * id_x) - y ;
+    x_diff = (x_ratio * id_x) - x ;
+    y_diff = (y_ratio * id_y) - y ;
 
     unsigned int pixId;
     pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height;
