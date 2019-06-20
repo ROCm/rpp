@@ -480,69 +480,89 @@ RppStatus scale_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
     {
         return RPP_ERROR;
     }
+    percentage = round(percentage * 100.0) / 100.0;
     percentage /= 100;
-    Rpp32f srcLocI, srcLocJ;
+
+    Rpp32f srcLocationRow, srcLocationColumn, pixel;
+    T *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+    dstPtrTemp = dstPtr;
     
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for (int c = 0; c < channel; c++)
         {
-            for (unsigned int i = 0; i < dstSize.height; i++)
-            {
-                for (unsigned int j = 0; j < dstSize.width; j++)
+            for (int i = 0; i < dstSize.height; i++)
+            {   
+                srcLocationRow = ((Rpp32f) i) / percentage;
+                Rpp32f weightedHeight = srcLocationRow - RPPFLOOR(srcLocationRow);
+                
+                for (int j = 0; j < dstSize.width; j++)
                 {
-                    srcLocI = ((Rpp32f) i) / percentage;
-                    srcLocJ = ((Rpp32f) j) / percentage;
-                    Rpp32s p = (Rpp32s) floor(srcLocI);
-                    Rpp32s q = (Rpp32s) ceil(srcLocI);
-                    Rpp32s r = (Rpp32s) floor(srcLocJ);
-                    Rpp32s s = (Rpp32s) ceil(srcLocJ);
+                    srcLocationColumn = ((Rpp32f) j) / percentage;
+                    Rpp32f weightedWidth = srcLocationColumn - RPPFLOOR(srcLocationColumn);
 
-                    Rpp32f h = srcLocI - (Rpp32f) p;
-                    Rpp32f w = srcLocJ - (Rpp32f) r;
+                    if ((Rpp32s) RPPFLOOR(srcLocationRow) > (srcSize.height - 2))
+                    {
+                        srcLocationRow = srcSize.height - 2;
+                    }
+                    if ((Rpp32s) RPPFLOOR(srcLocationColumn) > (srcSize.width - 2))
+                    {
+                        srcLocationColumn = srcSize.width - 2;
+                    }
 
-                    Rpp32f pixel1 = (Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (p * srcSize.width) + r];
-                    Rpp32f pixel2 = (Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (p * srcSize.width) + s];
-                    Rpp32f pixel3 = (Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (q * srcSize.width) + r];
-                    Rpp32f pixel4 = (Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (q * srcSize.width) + s];
+                    srcPtrTopRow = srcPtr + (c * srcSize.height * srcSize.width) 
+                                            + ((Rpp32s) RPPFLOOR(srcLocationRow) * srcSize.width) 
+                                            + (Rpp32s) RPPFLOOR(srcLocationColumn);
+                    srcPtrBottomRow = srcPtr + (c * srcSize.height * srcSize.width) 
+                                                + ((Rpp32s) RPPFLOOR(srcLocationRow + 1) * srcSize.width) 
+                                                + (Rpp32s) RPPFLOOR(srcLocationColumn);
+
+                    pixel = ((*srcPtrTopRow) * (1 - weightedWidth) * (1 - weightedHeight)) 
+                            + ((*(srcPtrTopRow + 1)) * (weightedWidth) * (1 - weightedHeight)) 
+                            + ((*srcPtrBottomRow) * (weightedHeight) * (1 - weightedWidth)) 
+                            + ((*(srcPtrBottomRow + 1)) * (weightedWidth) * (weightedHeight));
                     
-                    Rpp32f pixel;
-                    pixel = ((pixel1) * (1 - w) * (1 - h)) + ((pixel2) * (w) * (1 - h)) + ((pixel3) * (h) * (1 - w)) + ((pixel4) * (w) * (h));
-                    pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-                    pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                    dstPtr[(c * dstSize.height * dstSize.width) + (i * dstSize.width) + j] = (Rpp8u) round(pixel);
+                    *dstPtrTemp = (Rpp8u) round(pixel);
+                    dstPtrTemp ++;
                 }
             }
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        for (int c = 0; c < channel; c++)
+        for (int i = 0; i < dstSize.height; i++)
         {
-            for (unsigned int i = 0; i < dstSize.height; i++)
-            {
-                for (unsigned int j = 0; j < dstSize.width; j++)
+            srcLocationRow = ((Rpp32f) i) / percentage;
+            Rpp32f weightedHeight = srcLocationRow - RPPFLOOR(srcLocationRow);
+
+            for (int j = 0; j < dstSize.width; j++)
+            {   
+                for (int c = 0; c < channel; c++)
                 {
-                    srcLocI = ((Rpp32f) i) / percentage;
-                    srcLocJ = ((Rpp32f) j) / percentage;
-                    Rpp32s p = (Rpp32s) floor(srcLocI);
-                    Rpp32s q = (Rpp32s) ceil(srcLocI);
-                    Rpp32s r = (Rpp32s) floor(srcLocJ);
-                    Rpp32s s = (Rpp32s) ceil(srcLocJ);
+                    srcLocationColumn = ((Rpp32f) j) / percentage;
+                    Rpp32f weightedWidth = srcLocationColumn - RPPFLOOR(srcLocationColumn);
 
-                    Rpp32f h = srcLocI - (Rpp32f) p;
-                    Rpp32f w = srcLocJ - (Rpp32f) r;
-
-                    Rpp32f pixel1 = (Rpp32f) srcPtr[c + (channel * p * srcSize.width) + (channel * r)];
-                    Rpp32f pixel2 = (Rpp32f) srcPtr[c + (channel * p * srcSize.width) + (channel * s)];
-                    Rpp32f pixel3 = (Rpp32f) srcPtr[c + (channel * q * srcSize.width) + (channel * r)];
-                    Rpp32f pixel4 = (Rpp32f) srcPtr[c + (channel * q * srcSize.width) + (channel * s)];
+                    if ((Rpp32s) RPPFLOOR(srcLocationRow) > (srcSize.height - 2))
+                    {
+                        srcLocationRow = srcSize.height - 2;
+                    }
+                    if ((Rpp32s) RPPFLOOR(srcLocationColumn) > (srcSize.width - 2))
+                    {
+                        srcLocationColumn = srcSize.width - 2;
+                    }
                     
-                    Rpp32f pixel;
-                    pixel = ((pixel1) * (1 - w) * (1 - h)) + ((pixel2) * (w) * (1 - h)) + ((pixel3) * (h) * (1 - w)) + ((pixel4) * (w) * (h));
-                    pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-                    pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                    dstPtr[c + (channel * i * dstSize.width) + (channel * j)] = (Rpp8u) round(pixel);
+                    srcPtrTopRow = srcPtr + c + channel * (((Rpp32s) RPPFLOOR(srcLocationRow) * srcSize.width) 
+                                                                    + (Rpp32s) RPPFLOOR(srcLocationColumn));
+                    srcPtrBottomRow = srcPtr + c + channel * (((Rpp32s) RPPFLOOR(srcLocationRow + 1) * srcSize.width) 
+                                                                        + (Rpp32s) RPPFLOOR(srcLocationColumn));
+                    
+                    pixel = ((*srcPtrTopRow) * (1 - weightedWidth) * (1 - weightedHeight)) 
+                            + ((*(srcPtrTopRow + channel)) * (weightedWidth) * (1 - weightedHeight)) 
+                            + ((*srcPtrBottomRow) * (weightedHeight) * (1 - weightedWidth)) 
+                            + ((*(srcPtrBottomRow + channel)) * (weightedWidth) * (weightedHeight));
+                    
+                    *dstPtrTemp = (Rpp8u) round(pixel);
+                    dstPtrTemp ++;
                 }
             }
         }
@@ -566,68 +586,86 @@ RppStatus resize_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
     }
     Rpp32f hRatio = (((Rpp32f) dstSize.height) / ((Rpp32f) srcSize.height));
     Rpp32f wRatio = (((Rpp32f) dstSize.width) / ((Rpp32f) srcSize.width));
-    Rpp32f srcLocI, srcLocJ;
+    Rpp32f srcLocationRow, srcLocationColumn, pixel;
+    T *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+    dstPtrTemp = dstPtr;
     
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for (int c = 0; c < channel; c++)
         {
-            for (unsigned int i = 0; i < dstSize.height; i++)
-            {
-                for (unsigned int j = 0; j < dstSize.width; j++)
+            for (int i = 0; i < dstSize.height; i++)
+            {   
+                srcLocationRow = ((Rpp32f) i) / hRatio;
+                Rpp32f weightedHeight = srcLocationRow - RPPFLOOR(srcLocationRow);
+                
+                for (int j = 0; j < dstSize.width; j++)
                 {
-                    srcLocI = ((Rpp32f) i) / hRatio;
-                    srcLocJ = ((Rpp32f) j) / wRatio;
-                    Rpp32s p = (Rpp32s) RPPFLOOR(srcLocI);
-                    Rpp32s q = (Rpp32s) RPPCEIL(srcLocI);
-                    Rpp32s r = (Rpp32s) RPPFLOOR(srcLocJ);
-                    Rpp32s s = (Rpp32s) RPPCEIL(srcLocJ);
+                    srcLocationColumn = ((Rpp32f) j) / wRatio;
+                    Rpp32f weightedWidth = srcLocationColumn - RPPFLOOR(srcLocationColumn);
 
-                    Rpp32f h = srcLocI - (Rpp32f) p;
-                    Rpp32f w = srcLocJ - (Rpp32f) r;
+                    if ((Rpp32s) RPPFLOOR(srcLocationRow) > (srcSize.height - 2))
+                    {
+                        srcLocationRow = srcSize.height - 2;
+                    }
+                    if ((Rpp32s) RPPFLOOR(srcLocationColumn) > (srcSize.width - 2))
+                    {
+                        srcLocationColumn = srcSize.width - 2;
+                    }
 
-                    Rpp32f pixel1 = (Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (p * srcSize.width) + r];
-                    Rpp32f pixel2 = (Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (p * srcSize.width) + s];
-                    Rpp32f pixel3 = (Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (q * srcSize.width) + r];
-                    Rpp32f pixel4 = (Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (q * srcSize.width) + s];
+                    srcPtrTopRow = srcPtr + (c * srcSize.height * srcSize.width) 
+                                            + ((Rpp32s) RPPFLOOR(srcLocationRow) * srcSize.width) 
+                                            + (Rpp32s) RPPFLOOR(srcLocationColumn);
+                    srcPtrBottomRow = srcPtr + (c * srcSize.height * srcSize.width) 
+                                                + ((Rpp32s) RPPFLOOR(srcLocationRow + 1) * srcSize.width) 
+                                                + (Rpp32s) RPPFLOOR(srcLocationColumn);
+
+                    pixel = ((*srcPtrTopRow) * (1 - weightedWidth) * (1 - weightedHeight)) 
+                            + ((*(srcPtrTopRow + 1)) * (weightedWidth) * (1 - weightedHeight)) 
+                            + ((*srcPtrBottomRow) * (weightedHeight) * (1 - weightedWidth)) 
+                            + ((*(srcPtrBottomRow + 1)) * (weightedWidth) * (weightedHeight));
                     
-                    Rpp32f pixel;
-                    pixel = ((pixel1) * (1 - w) * (1 - h)) + ((pixel2) * (w) * (1 - h)) + ((pixel3) * (h) * (1 - w)) + ((pixel4) * (w) * (h));
-                    pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-                    pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                    dstPtr[(c * dstSize.height * dstSize.width) + (i * dstSize.width) + j] = (Rpp8u) round(pixel);
+                    *dstPtrTemp = (Rpp8u) round(pixel);
+                    dstPtrTemp ++;
                 }
             }
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        for (int c = 0; c < channel; c++)
+        for (int i = 0; i < dstSize.height; i++)
         {
-            for (unsigned int i = 0; i < dstSize.height; i++)
-            {
-                for (unsigned int j = 0; j < dstSize.width; j++)
+            srcLocationRow = ((Rpp32f) i) / hRatio;
+            Rpp32f weightedHeight = srcLocationRow - RPPFLOOR(srcLocationRow);
+
+            for (int j = 0; j < dstSize.width; j++)
+            {   
+                for (int c = 0; c < channel; c++)
                 {
-                    srcLocI = ((Rpp32f) i) / hRatio;
-                    srcLocJ = ((Rpp32f) j) / wRatio;
-                    Rpp32s p = (Rpp32s) RPPFLOOR(srcLocI);
-                    Rpp32s q = (Rpp32s) RPPCEIL(srcLocI);
-                    Rpp32s r = (Rpp32s) RPPFLOOR(srcLocJ);
-                    Rpp32s s = (Rpp32s) RPPCEIL(srcLocJ);
+                    srcLocationColumn = ((Rpp32f) j) / wRatio;
+                    Rpp32f weightedWidth = srcLocationColumn - RPPFLOOR(srcLocationColumn);
 
-                    Rpp32f h = srcLocI - (Rpp32f) p;
-                    Rpp32f w = srcLocJ - (Rpp32f) r;
+                    if ((Rpp32s) RPPFLOOR(srcLocationRow) > (srcSize.height - 2))
+                    {
+                        srcLocationRow = srcSize.height - 2;
+                    }
+                    if ((Rpp32s) RPPFLOOR(srcLocationColumn) > (srcSize.width - 2))
+                    {
+                        srcLocationColumn = srcSize.width - 2;
+                    }
 
-                    Rpp32f pixel1 = (Rpp32f) srcPtr[c + (channel * p * srcSize.width) + (channel * r)];
-                    Rpp32f pixel2 = (Rpp32f) srcPtr[c + (channel * p * srcSize.width) + (channel * s)];
-                    Rpp32f pixel3 = (Rpp32f) srcPtr[c + (channel * q * srcSize.width) + (channel * r)];
-                    Rpp32f pixel4 = (Rpp32f) srcPtr[c + (channel * q * srcSize.width) + (channel * s)];
+                    srcPtrTopRow = srcPtr + c + channel * (((Rpp32s) RPPFLOOR(srcLocationRow) * srcSize.width) 
+                                                                    + (Rpp32s) RPPFLOOR(srcLocationColumn));
+                    srcPtrBottomRow = srcPtr + c + channel * (((Rpp32s) RPPFLOOR(srcLocationRow + 1) * srcSize.width) 
+                                                                        + (Rpp32s) RPPFLOOR(srcLocationColumn));
                     
-                    Rpp32f pixel;
-                    pixel = ((pixel1) * (1 - w) * (1 - h)) + ((pixel2) * (w) * (1 - h)) + ((pixel3) * (h) * (1 - w)) + ((pixel4) * (w) * (h));
-                    pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-                    pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                    dstPtr[c + (channel * i * dstSize.width) + (channel * j)] = (Rpp8u) round(pixel);
+                    pixel = ((*srcPtrTopRow) * (1 - weightedWidth) * (1 - weightedHeight)) 
+                            + ((*(srcPtrTopRow + channel)) * (weightedWidth) * (1 - weightedHeight)) 
+                            + ((*srcPtrBottomRow) * (weightedHeight) * (1 - weightedWidth)) 
+                            + ((*(srcPtrBottomRow + channel)) * (weightedWidth) * (weightedHeight));
+                    
+                    *dstPtrTemp = (Rpp8u) round(pixel);
+                    dstPtrTemp ++;
                 }
             }
         }
@@ -650,7 +688,10 @@ RppStatus resizeCrop_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSi
     {
         return RPP_ERROR;
     }
-    if ((RPPINRANGE(x1, 0, srcSize.width - 1) == 0) || (RPPINRANGE(x2, 0, srcSize.width - 1) == 0) || (RPPINRANGE(y1, 0, srcSize.height - 1) == 0) || (RPPINRANGE(y2, 0, srcSize.height - 1) == 0))
+    if ((RPPINRANGE(x1, 0, srcSize.width - 1) == 0) 
+        || (RPPINRANGE(x2, 0, srcSize.width - 1) == 0) 
+        || (RPPINRANGE(y1, 0, srcSize.height - 1) == 0) 
+        || (RPPINRANGE(y2, 0, srcSize.height - 1) == 0))
     {
         return RPP_ERROR;
     }
@@ -671,166 +712,109 @@ RppStatus resizeCrop_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSi
             {
                 for (int j = RPPMIN2(x1, x2), n = 0; j < RPPMAX2(x1, x2); j++, n++)
                 {
-                    srcNewPtr[(c * srcNewSize.height * srcNewSize.width) + (m * srcNewSize.width) + n] = srcPtr[(c * srcSize.height * srcSize.width) + (i * srcSize.width) + j];
+                    *(srcNewPtr + (c * srcNewSize.height * srcNewSize.width) + (m * srcNewSize.width) + n) 
+                        = *(srcPtr + (c * srcSize.height * srcSize.width) + (i * srcSize.width) + j);
                 }
             }
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        for (int c = 0; c < channel; c++)
+        for (int i = RPPMIN2(y1, y2), m = 0; i < RPPMAX2(y1, y2); i++, m++)
         {
-            for (int i = RPPMIN2(y1, y2), m = 0; i < RPPMAX2(y1, y2); i++, m++)
+            for (int j = RPPMIN2(x1, x2), n = 0; j < RPPMAX2(x1, x2); j++, n++)
             {
-                for (int j = RPPMIN2(x1, x2), n = 0; j < RPPMAX2(x1, x2); j++, n++)
+                for (int c = 0; c < channel; c++)
                 {
-                    srcNewPtr[c + (channel * m * srcNewSize.width) + (channel * n)] = srcPtr[c + (channel * i * srcSize.width) + (channel * j)];
+                    *(srcNewPtr + c + (channel * m * srcNewSize.width) + (channel * n)) 
+                        = *(srcPtr + c + (channel * i * srcSize.width) + (channel * j));
                 }
             }
         }
     }
 
-    Rpp32f resize[6] = {0};
-    resize[0] = (((Rpp32f) dstSize.height) / ((Rpp32f) srcNewSize.height));
-    resize[1] = 0;
-    resize[2] = 0;
-    resize[3] = 0;
-    resize[4] = (((Rpp32f) dstSize.width) / ((Rpp32f) srcNewSize.width));
-    resize[5] = 0;
-
-    float minX = 0, minY = 0;
-    for (int i = 0; i < srcNewSize.height; i++)
-    {
-        for (int j = 0; j < srcNewSize.width; j++)
-        {
-            Rpp32f newi = 0, newj = 0;
-            newi = (resize[0] * i) + (resize[1] * j) + (resize[2] * 1);
-            newj = (resize[3] * i) + (resize[4] * j) + (resize[5] * 1);
-            if (newi < minX)
-            {
-                minX = newi;
-            }
-            if (newj < minY)
-            {
-                minY = newj;
-            }
-        }
-    }
-
+    Rpp32f hRatio = (((Rpp32f) dstSize.height) / ((Rpp32f) srcNewSize.height));
+    Rpp32f wRatio = (((Rpp32f) dstSize.width) / ((Rpp32f) srcNewSize.width));
+    Rpp32f srcLocationRow, srcLocationColumn, pixel;
+    T *dstPtrTemp, *srcNewPtrTopRow, *srcNewPtrBottomRow;
+    dstPtrTemp = dstPtr;
+    
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for (int c = 0; c < channel; c++)
         {
-            for (int i = 0; i < srcNewSize.height; i++)
-            {
-                for (int j = 0; j < srcNewSize.width; j++)
+            for (int i = 0; i < dstSize.height; i++)
+            {   
+                srcLocationRow = ((Rpp32f) i) / hRatio;
+                Rpp32f weightedHeight = srcLocationRow - RPPFLOOR(srcLocationRow);
+                
+                for (int j = 0; j < dstSize.width; j++)
                 {
-                    int k = (Rpp32s)((resize[0] * i) + (resize[1] * j) + (resize[2] * 1));
-                    int l = (Rpp32s)((resize[3] * i) + (resize[4] * j) + (resize[5] * 1));
-                    k -= (Rpp32s)minX;
-                    l -= (Rpp32s)minY;
-                    dstPtr[(c * dstSize.height * dstSize.width) + (k * dstSize.width) + l] = srcNewPtr[(c * srcNewSize.height * srcNewSize.width) + (i * srcNewSize.width) + j];
-                }
-            }
-        }
+                    srcLocationColumn = ((Rpp32f) j) / wRatio;
+                    Rpp32f weightedWidth = srcLocationColumn - RPPFLOOR(srcLocationColumn);
 
-        float w = ((float)dstSize.width - (float)srcNewSize.width) / ((float) (srcNewSize.width - 1));
-        float h = ((float)dstSize.height - (float)srcNewSize.height) / ((float) (srcNewSize.height - 1));
-        if (w <= 0)
-        {
-            w = -1;
-        }
-        if (h <= 0)
-        {
-            h = -1;
-        }
-
-        for (int c = 0; c < channel; c++)
-        {
-            for (int i = 0; i < srcNewSize.height - 1; i++)
-            {
-                for (int j = 0; j < srcNewSize.width - 1; j++)
-                {                    
-                    int k = (Rpp32s)((resize[0] * i) + (resize[1] * j) + (resize[2] * 1));
-                    int l = (Rpp32s)((resize[3] * i) + (resize[4] * j) + (resize[5] * 1));
-                    k -= (Rpp32s)minX;
-                    l -= (Rpp32s)minY;
-                    
-                    int pixel1 = (int) srcNewPtr[(c * srcNewSize.height * srcNewSize.width) + (i * srcNewSize.width) + j];
-                    int pixel2 = (int) srcNewPtr[(c * srcNewSize.height * srcNewSize.width) + (i * srcNewSize.width) + (j + 1)];
-                    int pixel3 = (int) srcNewPtr[(c * srcNewSize.height * srcNewSize.width) + ((i + 1) * srcNewSize.width) + j];
-                    int pixel4 = (int) srcNewPtr[(c * srcNewSize.height * srcNewSize.width) + ((i + 1) * srcNewSize.width) + (j + 1)];
-                    
-                    for (float m = 0; m < h + 2; m++)
+                    if ((Rpp32s) RPPFLOOR(srcLocationRow) > (srcNewSize.height - 2))
                     {
-                        for (float n = 0; n < w + 2; n++)
-                        {
-                            Rpp32f pixel;
-                            pixel = ((pixel1) * (1 - n) * (1 - m)) + ((pixel2) * (n) * (1 - m)) + ((pixel3) * (m) * (1 - n)) + ((pixel4) * (m) * (n));
-                            pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-                            pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                            dstPtr[(c * dstSize.height * dstSize.width) + ((int)(k + m) * dstSize.width) + (int)(l + n)] = (Rpp8u) round(pixel);
-                        }
+                        srcLocationRow = srcNewSize.height - 2;
                     }
+                    if ((Rpp32s) RPPFLOOR(srcLocationColumn) > (srcNewSize.width - 2))
+                    {
+                        srcLocationColumn = srcNewSize.width - 2;
+                    }
+
+                    srcNewPtrTopRow = srcNewPtr + (c * srcNewSize.height * srcNewSize.width) 
+                                            + ((Rpp32s) RPPFLOOR(srcLocationRow) * srcNewSize.width) 
+                                            + (Rpp32s) RPPFLOOR(srcLocationColumn);
+                    srcNewPtrBottomRow = srcNewPtr + (c * srcNewSize.height * srcNewSize.width) 
+                                                + ((Rpp32s) RPPFLOOR(srcLocationRow + 1) * srcNewSize.width) 
+                                                + (Rpp32s) RPPFLOOR(srcLocationColumn);
+
+                    pixel = ((*srcNewPtrTopRow) * (1 - weightedWidth) * (1 - weightedHeight)) 
+                            + ((*(srcNewPtrTopRow + 1)) * (weightedWidth) * (1 - weightedHeight)) 
+                            + ((*srcNewPtrBottomRow) * (weightedHeight) * (1 - weightedWidth)) 
+                            + ((*(srcNewPtrBottomRow + 1)) * (weightedWidth) * (weightedHeight));
+                    
+                    *dstPtrTemp = (Rpp8u) round(pixel);
+                    dstPtrTemp ++;
                 }
             }
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        for (int c = 0; c < channel; c++)
+        for (int i = 0; i < dstSize.height; i++)
         {
-            for (int i = 0; i < srcNewSize.height; i++)
-            {
-                for (int j = 0; j < srcNewSize.width; j++)
+            srcLocationRow = ((Rpp32f) i) / hRatio;
+            Rpp32f weightedHeight = srcLocationRow - RPPFLOOR(srcLocationRow);
+
+            for (int j = 0; j < dstSize.width; j++)
+            {   
+                for (int c = 0; c < channel; c++)
                 {
-                    int k = (Rpp32s)((resize[0] * i) + (resize[1] * j) + (resize[2] * 1));
-                    int l = (Rpp32s)((resize[3] * i) + (resize[4] * j) + (resize[5] * 1));
-                    k -= (Rpp32s)minX;
-                    l -= (Rpp32s)minY;
-                    dstPtr[c + (channel * k * dstSize.width) + (channel * l)] = srcNewPtr[c + (channel * i * srcNewSize.width) + (channel * j)];
-                }
-            }
-        }
+                    srcLocationColumn = ((Rpp32f) j) / wRatio;
+                    Rpp32f weightedWidth = srcLocationColumn - RPPFLOOR(srcLocationColumn);
 
-        float w = ((float)dstSize.width - (float)srcNewSize.width) / ((float) (srcNewSize.width - 1));
-        float h = ((float)dstSize.height - (float)srcNewSize.height) / ((float) (srcNewSize.height - 1));
-        if (w <= 0)
-        {
-            w = -1;
-        }
-        if (h <= 0)
-        {
-            h = -1;
-        }
-
-        for (int c = 0; c < channel; c++)
-        {
-            for (int i = 0; i < srcNewSize.height - 1; i++)
-            {
-                for (int j = 0; j < srcNewSize.width - 1; j++)
-                {                    
-                    int k = (Rpp32s)((resize[0] * i) + (resize[1] * j) + (resize[2] * 1));
-                    int l = (Rpp32s)((resize[3] * i) + (resize[4] * j) + (resize[5] * 1));
-                    k -= (Rpp32s)minX;
-                    l -= (Rpp32s)minY;
-
-                    int pixel1 = (int) srcNewPtr[c + (channel * i * srcNewSize.width) + (channel * j)];
-                    int pixel2 = (int) srcNewPtr[c + (channel * i * srcNewSize.width) + (channel * (j + 1))];
-                    int pixel3 = (int) srcNewPtr[c + (channel * (i + 1) * srcNewSize.width) + (channel * j)];
-                    int pixel4 = (int) srcNewPtr[c + (channel * (i + 1) * srcNewSize.width) + (channel * (j + 1))];
-                    
-                    for (float m = 0; m <= h + 1; m++)
+                    if ((Rpp32s) RPPFLOOR(srcLocationRow) > (srcNewSize.height - 2))
                     {
-                        for (float n = 0; n <= w + 1; n++)
-                        {
-                            Rpp32f pixel;
-                            pixel = ((pixel1) * (1 - n) * (1 - m)) + ((pixel2) * (n) * (1 - m)) + ((pixel3) * (m) * (1 - n)) + ((pixel4) * (m) * (n));
-                            pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-                            pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                            dstPtr[c + (channel * (int)(k + m) * dstSize.width) + (channel * (int)(l + n))] = (Rpp8u) round(pixel);
-                        }
+                        srcLocationRow = srcNewSize.height - 2;
                     }
+                    if ((Rpp32s) RPPFLOOR(srcLocationColumn) > (srcNewSize.width - 2))
+                    {
+                        srcLocationColumn = srcNewSize.width - 2;
+                    }
+                    
+                    srcNewPtrTopRow = srcNewPtr + c + channel * (((Rpp32s) RPPFLOOR(srcLocationRow) * srcNewSize.width) 
+                                                                    + (Rpp32s) RPPFLOOR(srcLocationColumn));
+                    srcNewPtrBottomRow = srcNewPtr + c + channel * (((Rpp32s) RPPFLOOR(srcLocationRow + 1) * srcNewSize.width) 
+                                                                        + (Rpp32s) RPPFLOOR(srcLocationColumn));
+                    
+                    pixel = ((*srcNewPtrTopRow) * (1 - weightedWidth) * (1 - weightedHeight)) 
+                            + ((*(srcNewPtrTopRow + channel)) * (weightedWidth) * (1 - weightedHeight)) 
+                            + ((*srcNewPtrBottomRow) * (weightedHeight) * (1 - weightedWidth)) 
+                            + ((*(srcNewPtrBottomRow + channel)) * (weightedWidth) * (weightedHeight));
+                    
+                    *dstPtrTemp = (Rpp8u) round(pixel);
+                    dstPtrTemp ++;
                 }
             }
         }
