@@ -19,11 +19,11 @@ __kernel void resize_pln (  __global unsigned char* srcPtr,
     int id_z = get_global_id(2);
     if (id_x >= dest_width || id_y >= dest_height || id_z >= channel) return;
 
-    x = (int)(x_ratio * id_y) ;
-    y = (int)(y_ratio * id_x) ;
+    x = (int)(x_ratio * id_x) ;
+    y = (int)(y_ratio * id_y) ;
 
-    x_diff = (x_ratio * id_y) - x ;
-    y_diff = (y_ratio * id_x) - y ;
+    x_diff = (x_ratio * id_x) - x ;
+    y_diff = (y_ratio * id_y) - y ;
 
     unsigned int pixId;
     pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height;
@@ -50,8 +50,8 @@ __kernel void resize_pkd (  __global unsigned char* srcPtr,
 )
 {
     int A, B, C, D, x, y, index, pixVal ;
-    float x_ratio = ((float)(source_width -1 ))/dest_width ;
-    float y_ratio = ((float)(source_height -1 ))/dest_height;
+    float x_ratio = ((float)(source_width  ))/dest_width ;
+    float y_ratio = ((float)(source_height ))/dest_height;
     float x_diff, y_diff, ya, yb ;
 
     int id_x = get_global_id(0);
@@ -65,7 +65,7 @@ __kernel void resize_pkd (  __global unsigned char* srcPtr,
     y_diff = (y_ratio * id_y) - y ;
 
     unsigned int pixId;
-    pixId = id_x * channel + id_y * dest_width * channel + id_z;
+    pixId = id_y * channel + id_x * dest_width * channel + id_z;
 
     A = srcPtr[x * channel + y * source_width * channel + id_z];
     B = srcPtr[(x +1) * channel + y * source_width * channel + id_z];
