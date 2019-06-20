@@ -1,5 +1,6 @@
 #include <rppdefs.h>
 #include <math.h>
+#include <iostream>
 #include "rppi_support_functions.h"
 #define RAD(deg) (deg * PI / 180)
 #define PI 3.14159265
@@ -78,13 +79,15 @@ RppStatus warp_affine_output_offset(RppiSize srcSize, RppiPoint *offset,
 RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
                              Rpp32f angleDeg)
 {
-    Rpp32f angleRad = RAD(angleDeg);
+    Rpp32f angleRad = angleDeg;
+    //std::cout<<" angleRad ::"<<angleRad;
     Rpp32f rotate[4] = {0};
     rotate[0] = cos(angleRad);
     rotate[1] = sin(angleRad);
     rotate[2] = -sin(angleRad);
     rotate[3] = cos(angleRad);
-
+    for (int i =0; i < 4; i++)
+    std::cout << rotate[i] << std::endl;
     float minX = 0, minY = 0, maxX = 0, maxY = 0;
     
     RppiPoint corner[4];
@@ -108,7 +111,10 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 
     dstSizePtr->height = ((Rpp32s)maxX - (Rpp32s)minX) + 1;
     dstSizePtr->width = ((Rpp32s)maxY - (Rpp32s)minY) + 1;
-
+    std::cout<<" Source height "<<srcSize.height<<std::endl;
+    std::cout<<" Source width "<<srcSize.width<<std::endl;
+    std::cout<<"dstSizePtr->height "<<dstSizePtr->height<<std::endl;
+    std::cout<<"dstSizePtr->width "<<dstSizePtr->width<<std::endl;
     return RPP_SUCCESS;
 }
 

@@ -56,8 +56,8 @@ typedef struct {
     } RppiSize;
 
 typedef struct{
-    unsigned int x;
-    unsigned int y;
+     int x;
+     int y;
 } RppiPoint;
 
 typedef struct

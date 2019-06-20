@@ -1,7 +1,7 @@
 #include <rppdefs.h>
 #include <rppi_geometric_functions.h>
 #include<rppi_support_functions.h>
-
+#include<iostream>
 #include "cpu/host_geometry_transforms.hpp"
 
 #ifdef HIP_COMPILE
@@ -485,6 +485,7 @@ rppi_resize_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rppi
 {
    
     #ifdef OCL_COMPILE
+        std::cout << dstSize.height << dstSize.width << std::endl;
 
     resize_cl(static_cast<cl_mem>(srcPtr), srcSize,
             static_cast<cl_mem>(dstPtr), dstSize,  RPPI_CHN_PLANAR, 1 /* Channel */,
