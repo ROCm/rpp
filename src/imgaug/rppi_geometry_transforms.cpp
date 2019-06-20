@@ -565,6 +565,6 @@ rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
             static_cast<cl_mem>(dstPtr), dstSize, x1, y1, x2, y2, RPPI_CHN_PACKED, 3 /* Channel */,
             static_cast<cl_command_queue>(rppHandle) );
 
-    return RPP_SUCCESS;
+    return RPP_SUCCESS; 
     #endif
 }
