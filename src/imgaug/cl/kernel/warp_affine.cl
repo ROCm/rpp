@@ -13,16 +13,7 @@ __kernel void warp_affine_pln (  __global unsigned char* srcPtr,
    int id_x = get_global_id(0);
    int id_y = get_global_id(1);
    int id_z = get_global_id(2);
-   float affine_inv[6];
-   float det; //for Deteminent
-   det = (affine[0] * affine [4])  - (affine[1] * affine[3]);
-   affine_inv[0] = affine[4]/ det;
-   affine_inv[1] = (- 1 * affine[1])/ det;
-   affine_inv[2] = -1 * affine[2];
-   affine_inv[3] = (-1 * affine[3]) /det ;
-   affine_inv[4] = affine[0]/det;
-   affine_inv[5] = -1 * affine[5];
-
+   
    int xc = id_x - dest_width/2;
    int yc = id_y - dest_height/2;
 

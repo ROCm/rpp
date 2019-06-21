@@ -119,6 +119,15 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_command_queue theQueue)
 {
     cl_int err;
+    float affine_inv[6];
+    float det; //for Deteminent
+    det = (affine[0] * affine [4])  - (affine[1] * affine[3]);
+    affine_inv[0] = affine[4]/ det;
+    affine_inv[1] = (- 1 * affine[1])/ det;
+    affine_inv[2] = -1 * affine[2];
+    affine_inv[3] = (-1 * affine[3]) /det ;
+    affine_inv[4] = affine[0]/det;
+    affine_inv[5] = -1 * affine[5];
 
     cl_kernel theKernel;
     cl_program theProgram;
@@ -131,7 +140,7 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
                                     sizeof(float)*6, NULL, NULL);
     err = clEnqueueWriteBuffer(theQueue, affine_array, CL_TRUE, 0,
                                    sizeof(float)*6,
-                                   affine, 0, NULL, NULL);
+                                   affine_inv, 0, NULL, NULL);
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
