@@ -162,7 +162,7 @@ __kernel void resize_crop_pkd (  __global unsigned char* srcPtr,
 
     A = srcPtr[(x+x1) * channel + y * source_width * channel + id_z];
     B = srcPtr[(x +x1 +1) * channel + (y+y1) * source_width * channel + id_z];
-    C = srcPtr[(x+x1) * channel + (y+1) * source_width * channel + id_z];
+    C = srcPtr[(x+x1) * channel + (y+ y1+ 1) * source_width * channel + id_z];
     D = srcPtr[(x+x1+1) * channel + (y+y1+1) * source_width * channel + id_z];
 
     pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +

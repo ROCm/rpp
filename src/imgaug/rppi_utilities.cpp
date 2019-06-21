@@ -79,7 +79,7 @@ RppStatus warp_affine_output_offset(RppiSize srcSize, RppiPoint *offset,
 RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
                              Rpp32f angleDeg)
 {
-    Rpp32f angleRad = angleDeg;
+    Rpp32f angleRad = (angleDeg);
     //std::cout<<" angleRad ::"<<angleRad;
     Rpp32f rotate[4] = {0};
     rotate[0] = cos(angleRad);
@@ -92,12 +92,12 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
     
     RppiPoint corner[4];
 
-    corner[0].x = (rotate[0] * 0) + (rotate[1] * 0);
-    corner[0].y = (rotate[2] * 0) + (rotate[3] * 0);
-    corner[1].x = (rotate[0] * 0) + rotate[1] * (srcSize.width-1);
-    corner[1].y = (rotate[2] * 0) + rotate[3] * (srcSize.width-1);
-    corner[2].x = (rotate[0] * (srcSize.height-1)) + (rotate[1] * 0);
-    corner[2].y = (rotate[2] * (srcSize.height-1)) + (rotate[3] * 0);
+    corner[0].x = 0;
+    corner[0].y = 0;
+    corner[1].x =  rotate[1] * (srcSize.width-1);
+    corner[1].y =  rotate[3] * (srcSize.width-1);
+    corner[2].x = (rotate[0] * (srcSize.height-1)); 
+    corner[2].y = (rotate[2] * (srcSize.height-1)) ;
     corner[3].x = (rotate[0] * (srcSize.height-1)) + (rotate[1] * (srcSize.width-1));
     corner[3].y = (rotate[2] * (srcSize.height-1)) + (rotate[3] * (srcSize.width-1));
 
@@ -121,7 +121,7 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 RppStatus rotate_output_offset(RppiSize srcSize, RppiPoint *offset,
                                Rpp32f angleDeg)
 {
-    Rpp32f angleRad = RAD(angleDeg);
+    Rpp32f angleRad = angleDeg;
     Rpp32f rotate[4] = {0};
     rotate[0] = cos(angleRad);
     rotate[1] = sin(angleRad);
