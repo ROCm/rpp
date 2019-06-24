@@ -66,7 +66,7 @@ __kernel void resize_pkd (  __global unsigned char* srcPtr,
     y_diff = (y_ratio * id_y) - y ;
 
     unsigned int pixId;
-    pixId = id_y * channel + id_x * dest_width * channel + id_z;
+    pixId = id_x * channel + id_y * dest_width * channel + id_z;
 
     A = srcPtr[x * channel + y * source_width * channel + id_z];
     B = srcPtr[(x +1) * channel + y * source_width * channel + id_z];
@@ -74,9 +74,7 @@ __kernel void resize_pkd (  __global unsigned char* srcPtr,
     D = srcPtr[(x+1) * channel + (y+1) * source_width * channel + id_z];
 
     pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
-                    C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)
-                    ) ;
-
+                  C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)) ;
     dstPtr[pixId] =  saturate_8u(pixVal);
 
 }

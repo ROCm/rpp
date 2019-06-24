@@ -108,6 +108,59 @@ rppi_flip_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 
 
+//Resize -------------------------------
+//GPU----------
+RppStatus
+rppi_resize_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+        #if DEBUG
+        std::cout << "Inside rppi_resize_u8_pln1_gpu function\n " <<endl;
+        std::cout << dstSize.height << dstSize.width << std::endl;
+        #endif //For DEBUG
+    resize_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize,  RPPI_CHN_PLANAR, 1 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
 
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_resize_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+
+    resize_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize,  RPPI_CHN_PLANAR, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle)
+{
+   
+    #ifdef OCL_COMPILE
+
+    resize_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, RPPI_CHN_PACKED, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+//----------GPU
+//CPU----------
+
+//----------CPU
+//--------------------------------Resize
 
 

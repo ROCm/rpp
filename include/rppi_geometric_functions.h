@@ -57,6 +57,33 @@ RppStatus
 rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                     RppiAxis flipAxis, RppHandle_t rppHandle);
 
+//Resize--------------------------
+//GPU--------
+RppStatus
+rppi_resize_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle);
+
+RppStatus
+rppi_resize_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle);
+
+RppStatus
+rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         RppHandle_t rppHandle);
+//--------GPU
+
+//CPU--------
+RppStatus
+rppi_resize_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize);
+
+RppStatus
+rppi_resize_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize);
+
+RppStatus
+rppi_resize_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize);
+//--------CPU
+//-----------------------------Resize
+
 #ifdef __cplusplus
 }
 #endif

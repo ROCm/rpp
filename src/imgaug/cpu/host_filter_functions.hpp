@@ -87,7 +87,7 @@ RppStatus box_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
    
     for (int i = 0; i < (kernelSize * kernelSize); i++)
     {
-        kernel[i] /= sum;
+        kernel[i] = kernel[i]/sum;
     }
     
     RppiSize sizeMod;
