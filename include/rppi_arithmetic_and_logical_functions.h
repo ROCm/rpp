@@ -44,6 +44,17 @@ rppi_bitwise_AND_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 
 
+// Host function declarations
+
+RppStatus
+rppi_bitwise_AND_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_bitwise_AND_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_bitwise_AND_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
 // --------------------
 // Bitwise NOT
 // --------------------
@@ -329,6 +340,9 @@ rppi_accumulate_u8_pkd3_host( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 // --------------------
 
 //Parameters : alpha should be [0 <= alpha <=1]
+
+// Gpu function declarations
+
 RppStatus
 rppi_accumulate_weighted_u8_pln1_gpu( RppPtr_t srcPtr1, RppPtr_t srcPtr2,
                               RppiSize srcSize, Rpp64f alpha,

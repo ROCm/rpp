@@ -171,7 +171,6 @@ RppStatus hsv2rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        printf("\nInside\n");
         for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
         {
             float c, x, m, rf, gf, bf;
