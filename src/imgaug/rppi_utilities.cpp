@@ -79,7 +79,7 @@ RppStatus warp_affine_output_offset(RppiSize srcSize, RppiPoint *offset,
 RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
                              Rpp32f angleDeg)
 {
-    Rpp32f angleRad = (angleDeg);
+    Rpp32f angleRad = RAD(angleDeg);
     //std::cout<<" angleRad ::"<<angleRad;
     Rpp32f rotate[4] = {0};
     rotate[0] = cos(angleRad);
@@ -109,8 +109,8 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
         if(corner[i].y > maxY)  maxY = corner[i].y;
     }
 
-    dstSizePtr->height = ((Rpp32s)maxX - (Rpp32s)minX) + 1;
-    dstSizePtr->width = ((Rpp32s)maxY - (Rpp32s)minY) + 1;
+    dstSizePtr->width = ((Rpp32s)maxX - (Rpp32s)minX) + 20;
+    dstSizePtr->height = ((Rpp32s)maxY - (Rpp32s)minY) + 20;
     std::cout<<" Source height "<<srcSize.height<<std::endl;
     std::cout<<" Source width "<<srcSize.width<<std::endl;
     std::cout<<"dstSizePtr->height "<<dstSizePtr->height<<std::endl;

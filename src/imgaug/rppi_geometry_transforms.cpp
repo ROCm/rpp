@@ -158,9 +158,6 @@ rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rppi
     #endif
 }
 //----------GPU
-//CPU----------
-
-//----------CPU
 //--------------------------------Resize
 
 
@@ -213,3 +210,55 @@ rppi_resize_crop_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 //----------GPU
 //-------------------------------------------------Resize-crop
+
+//Rotate----------------
+//GPU------
+RppStatus
+rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    
+    #ifdef OCL_COMPILE
+
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PLANAR, 1 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
+
+RppStatus
+rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    
+    #ifdef OCL_COMPILE
+
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PLANAR, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+RppStatus
+rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg, RppHandle_t rppHandle)
+{
+    
+    #ifdef OCL_COMPILE
+
+    rotate_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, angleDeg, RPPI_CHN_PACKED, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+}
+
+
+//------GPU
+//----------------Rotate
