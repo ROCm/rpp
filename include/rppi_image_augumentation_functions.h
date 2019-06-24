@@ -229,7 +229,6 @@ RppStatus
 rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                     RppiAxis flipAxis, RppHandle_t rppHandle);
 
-
 // --------------------
 // Rotate
 // --------------------
@@ -237,8 +236,100 @@ rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 // Host function declarations
 
 RppStatus
-rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          RppiSize sizeDst, Rpp32f angleRad );
+rppi_rotate_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                             Rpp32f angleDeg);
+
+RppStatus
+rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg);
+
+RppStatus
+rppi_rotate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg);
+
+RppStatus
+rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f angleDeg);
+
+
+// --------------------
+// Warp Affine
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                                  RppPtr_t affine);
+
+RppStatus
+rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine);
+
+RppStatus
+rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine);
+
+RppStatus
+rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine);
+
+
+// --------------------
+// Scale
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_scale_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                             Rpp32f percentage);
+
+RppStatus
+rppi_scale_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage);
+
+RppStatus
+rppi_scale_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage);
+
+RppStatus
+rppi_scale_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage);
+
+
+// --------------------
+// Resize
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_resize_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize);
+
+RppStatus
+rppi_resize_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize);
+
+RppStatus
+rppi_resize_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize);
+
+
+
+// --------------------
+// Resize Crop
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_resizeCrop_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2);
+
+RppStatus
+rppi_resizeCrop_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2);
+
+RppStatus
+rppi_resizeCrop_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2);
+
 
 
 //------------------------- Color Space Conversions -------------------------
