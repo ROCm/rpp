@@ -1,7 +1,7 @@
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 
-__kernel void contrast_stretch(  __global unsigned char *a,
-                                __global unsigned char *c,
+__kernel void contrast_stretch(  __global unsigned char *input,
+                                __global unsigned char *output,
                                    const unsigned int min,
                                    const unsigned int max,
                                const unsigned int new_min,
@@ -19,7 +19,7 @@ __kernel void contrast_stretch(  __global unsigned char *a,
     int pixIdx = id_x + id_y* width + id_z * width * height;
 
     int res;
-    res = (a[pixIdx] - min) * (new_max - new_min)/((max - min) * 1.0) + new_min ;
+    res = (input[pixIdx] - min) * (new_max - new_min)/((max - min) * 1.0) + new_min ;
 
-    c[pixIdx] = saturate_8u(res);
+    output[pixIdx] = saturate_8u(res);
 }

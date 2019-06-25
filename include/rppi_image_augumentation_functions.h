@@ -18,29 +18,29 @@ extern "C" {
 
 RppStatus
 rppi_blur3x3_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize,
-                            RppPtr_t dstPtr);
+                          RppPtr_t dstPtr, Rpp32f stdDev);
 
 RppStatus
 rppi_blur3x3_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
-                            RppPtr_t dstPtr);
+                            RppPtr_t dstPtr, Rpp32f stdDev);
 
 RppStatus
 rppi_blur3x3_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr);
+                        RppPtr_t dstPtr, Rpp32f stdDev);
 
 // Gpu function declarations
 
 RppStatus
 rppi_blur3x3_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr, RppHandle_t rppHandle);
+                        RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle);
 
 RppStatus
 rppi_blur3x3_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr, RppHandle_t rppHandle);
+                        RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle);
 
 RppStatus
 rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr, RppHandle_t rppHandle);
+                        RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle);
 
 
 
@@ -55,15 +55,15 @@ rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
 
 RppStatus
 rppi_contrast_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
-                            Rpp32u new_min = 0, Rpp32u new_max =  225);
+                            Rpp32u new_min , Rpp32u new_max);
 
 RppStatus
 rppi_contrast_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
-                            Rpp32u new_min = 0, Rpp32u new_max =  225);
+                            Rpp32u new_min , Rpp32u new_max);
 
 RppStatus
 rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
-                            Rpp32u new_min = 0, Rpp32u new_max =  225);
+                            Rpp32u new_min , Rpp32u new_max);
 
 // Gpu function declarations
 
@@ -90,8 +90,7 @@ rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 RppStatus
 rppi_brightness_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize,
-                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta,
-                            RppHandle_t handle );
+                            RppPtr_t dstPtr, Rpp32f alpha, Rpp32s beta);
 
 RppStatus
 rppi_brightness_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,
@@ -130,19 +129,19 @@ rppi_brightness_u8_pkd3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
 
 RppStatus
 rppi_hueRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                       Rpp32f hueShift = 0);
+                       Rpp32f hueShift);
 
 RppStatus
 rppi_hueRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                       Rpp32f hueShift = 0);
+                       Rpp32f hueShift);
 
 RppStatus
 rppi_hueHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                       Rpp32f hueShift = 0);
+                       Rpp32f hueShift);
 
 RppStatus
 rppi_hueHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                       Rpp32f hueShift = 0);
+                       Rpp32f hueShift);
 
 // Device function declarations
 
@@ -167,19 +166,19 @@ rppi_hueHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 RppStatus
 rppi_saturationRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                              Rpp32f saturationFactor = 1);
+                              Rpp32f saturationFactor );
 
 RppStatus
 rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                              Rpp32f saturationFactor = 1);
+                              Rpp32f saturationFactor );
 
 RppStatus
 rppi_saturationHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                              Rpp32f saturationFactor = 1);
+                              Rpp32f saturationFactor );
 
 RppStatus
 rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                              Rpp32f saturationFactor = 1);
+                              Rpp32f saturationFactor );
 
 // Device function declarations
 
@@ -195,50 +194,6 @@ rppi_saturationRGB_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
 RppStatus
 rppi_saturationHSV_u8_pkd3_gpu (RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         Rpp32f saturationFactor,  RppHandle_t rppHandle);
-
-
-//------------------------- Geometric Transformations -------------------------
-
-
-// --------------------
-// Flip
-// --------------------
-
-// Host function declarations
-
-RppStatus rppi_flip_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                                   RppiAxis flipAxis);
-
-RppStatus rppi_flip_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                                   RppiAxis flipAxis);
-
-RppStatus rppi_flip_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                                   RppiAxis flipAxis);
-
-// Gpu function declarations
-
-RppStatus
-rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                    RppiAxis flipAxis, RppHandle_t rppHandle);
-
-RppStatus
-rppi_flip_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                    RppiAxis flipAxis, RppHandle_t rppHandle);
-
-RppStatus
-rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                    RppiAxis flipAxis, RppHandle_t rppHandle);
-
-
-// --------------------
-// Rotate
-// --------------------
-
-// Host function declarations
-
-RppStatus
-rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          RppiSize sizeDst, Rpp32f angleRad = 0);
 
 
 //------------------------- Color Space Conversions -------------------------
@@ -291,7 +246,32 @@ RppStatus
 rppi_hsv2rgb_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                         RppHandle_t rppHandle);
 
+// --------------------
+// Gamma correction
+// --------------------
 
+// Gpu function declarations
+RppStatus
+rppi_gamma_correction_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma, RppHandle_t rppHandle);
+RppStatus
+rppi_gamma_correction_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma, RppHandle_t rppHandle);
+RppStatus
+rppi_gamma_correction_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma, RppHandle_t rppHandle);
+
+
+// Host function declarations
+RppStatus
+rppi_gamma_correction_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma);
+RppStatus
+rppi_gamma_correction_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma);
+RppStatus
+rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                             Rpp32f gamma);
 #ifdef __cplusplus
 }
 #endif

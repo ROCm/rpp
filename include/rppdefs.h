@@ -21,8 +21,8 @@ typedef double              Rpp64f;
 
 typedef void*              RppPtr_t;
 
-typedef void*              RppHandle_t;
 
+typedef void*          RppHandle_t;
 
 typedef enum
 {
@@ -55,6 +55,11 @@ typedef struct {
     unsigned int height;
     } RppiSize;
 
+typedef struct{
+     int x;
+     int y;
+} RppiPoint;
+
 typedef struct
    {
        int x;
@@ -77,11 +82,52 @@ typedef enum{
     NOPAD
 } RppiPad;
 
+typedef enum{
+    RGB,
+    HSV
+} RppiFormat;
+
 typedef struct {
        Rpp32f rho;
        Rpp32f theta;
    } RppPointPolar;
 
+
+// void validate_float_range(Rpp32f max, Rpp32f min, Rpp32f value) {
+//     if( !(value <= max) || !(value >= min))
+//         std::cerr<<"\nOut of Bounds: "<<value;
+//         exit(0);
+// }
+
+// void validate_int_range(Rpp32s max, Rpp32s min, Rpp32s value) {
+//     if( !(value <= max) || !(value >= min))
+//         std::cerr<<"\nOut of Bounds: "<<value;
+//         exit(0);
+// }
+
+// void validate_int_max(Rpp32s max, Rpp32s value) {
+//     if( !(value <=max) )
+//        std::cerr<<"\nOut of Bounds: "<<value;
+//        exit(0);
+// }
+
+// void validate_int_min(Rpp32s min, Rpp32s value) {
+//     if( !(value >= min) )
+//        std::cerr<<"\nOut of Bounds: "<<value;
+//        exit(0);
+// }
+
+// void validate_float_max(Rpp32f max, Rpp32f value) {
+//     if( !(value <=max) )
+//        std::cerr<<"\nOut of Bounds: "<<value;
+//        exit(0);
+// }
+
+// void validate_float_min(Rpp32f min, Rpp32f value) {
+//     if( !(value >= min) )
+//        std::cerr<<"\nOut of Bounds: "<<value;
+//        exit(0);
+// }
 
 #define RPP_MIN_8U      ( 0 )
 #define RPP_MAX_8U      ( 255 )
