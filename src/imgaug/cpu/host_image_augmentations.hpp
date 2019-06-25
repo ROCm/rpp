@@ -278,3 +278,19 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     return RPP_SUCCESS;
 }
+
+/**************** Blend ***************/
+
+template <typename T>
+RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr, 
+                        Rpp32f alpha, RppiChnFormat chnFormat, 
+                        unsigned int channel)
+{
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        Rpp32f pixel = ((1 - alpha) * ((Rpp32f) srcPtr1[i])) + (alpha * ((Rpp32f) srcPtr2[i]));
+        dstPtr[i] = RPPPIXELCHECK(pixel);
+    }  
+
+    return RPP_SUCCESS;  
+}

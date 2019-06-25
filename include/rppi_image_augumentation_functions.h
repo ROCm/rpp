@@ -272,6 +272,24 @@ rppi_gamma_correction_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
 RppStatus
 rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                              Rpp32f gamma);
+
+// ----------------------------------------
+// Host blend functions  declaration
+// ----------------------------------------
+
+
+RppStatus
+rppi_blend_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
+                        RppPtr_t dstPtr, Rpp32f alpha) ;
+
+RppStatus
+rppi_blend_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
+                        RppPtr_t dstPtr, Rpp32f alpha) ;
+
+RppStatus
+rppi_blend_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
+                        RppPtr_t dstPtr, Rpp32f alpha) ;
+
 #ifdef __cplusplus
 }
 #endif
