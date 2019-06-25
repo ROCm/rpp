@@ -130,20 +130,6 @@ box_filter_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
-// Rotate 
-cl_int
-rotate_cl(cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, RppiSize dstSize, float angleDeg, 
-                RppiChnFormat chnFormat, unsigned int channel,
-                RppiPoint offset,
-                cl_command_queue theQueue);
-
-cl_int
-warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, RppiSize dstSize, float *affine, 
-                RppiChnFormat chnFormat, unsigned int channel,
-                RppiPoint offset,
-                cl_command_queue theQueue);
 
 cl_int
 resize_cl(cl_mem srcPtr, RppiSize srcSize,
@@ -155,6 +141,12 @@ cl_int
 resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiSize dstSize,
                 Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
+cl_int
+rotate_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, RppiSize dstSize, float angleDeg, 
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 

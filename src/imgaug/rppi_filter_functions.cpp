@@ -1,5 +1,6 @@
 #include <rppdefs.h>
 #include <rppi_arithmetic_and_logical_functions.h>
+#include <rppi_computer_vision.h>
 
 #include "cpu/host_filter_functions.hpp"
 
@@ -85,7 +86,7 @@ rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
 
 RppStatus
 rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+                             Rpp32u diameter, Rpp64f sigmaI, Rpp64f sigmaS)
 {
     bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     diameter, sigmaI, sigmaS,
@@ -97,7 +98,7 @@ rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
 
 RppStatus
 rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+                             Rpp32u diameter, Rpp64f sigmaI, Rpp64f sigmaS)
 {
     bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     diameter, sigmaI, sigmaS,
@@ -109,7 +110,7 @@ rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
 
 RppStatus
 rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32s diameter, Rpp64f sigmaI, Rpp64f sigmaS)
+                             Rpp32u diameter, Rpp64f sigmaI, Rpp64f sigmaS)
 {
     bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                                     diameter, sigmaI, sigmaS,
@@ -120,6 +121,29 @@ rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
 }
 
 // Box Filter Related Functions
+RppStatus
+rppi_box_filter_u8_pln1_cpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    box_filter_host<Rpp8u>( static_cast<Rpp8u*>(srcPtr),  srcSize, static_cast<Rpp8u*>(dstPtr), RPPI_CHN_PLANAR, 1 /*# ofchannels*/);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_box_filter_u8_pln3_cpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    box_filter_host<Rpp8u>( static_cast<Rpp8u*>(srcPtr),  srcSize,  static_cast<Rpp8u*>(dstPtr), RPPI_CHN_PACKED, 3 /*# ofchannels*/);
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_box_filter_u8_pkd3_cpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    box_filter_host<Rpp8u>( static_cast<Rpp8u*>(srcPtr),  srcSize,  static_cast<Rpp8u*>(dstPtr), RPPI_CHN_PLANAR, 3 /*# ofchannels*/);
+    return RPP_SUCCESS;
+
+}
 
 
 RppStatus
@@ -127,7 +151,7 @@ rppi_box_filter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 {
 #ifdef OCL_COMPILE
 
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
+    box_filter_cl(static_cast<cl_mem>(srcPtr), srcSize,
                         static_cast<cl_mem>(dstPtr),
                         3 /*Filter width*/,
                         RPPI_CHN_PLANAR, 1 /*Channel*/,
@@ -145,7 +169,7 @@ rppi_box_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 {
 #ifdef OCL_COMPILE
 
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
+    box_filter_cl(static_cast<cl_mem>(srcPtr), srcSize,
                         static_cast<cl_mem>(dstPtr),
                         3 /*Filter width*/,
                         RPPI_CHN_PLANAR, 3 /*Channel*/,
@@ -162,7 +186,7 @@ rppi_box_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 {
 #ifdef OCL_COMPILE
 
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
+    box_filter_cl(static_cast<cl_mem>(srcPtr), srcSize,
                         static_cast<cl_mem>(dstPtr),
                         3 /*Filter width*/,
                         RPPI_CHN_PACKED, 3 /*Channel*/,

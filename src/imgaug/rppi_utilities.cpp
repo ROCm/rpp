@@ -1,5 +1,6 @@
 #include <rppdefs.h>
 #include <math.h>
+#include <iostream>
 #include "rppi_support_functions.h"
 #define RAD(deg) (deg * PI / 180)
 #define PI 3.14159265
@@ -79,22 +80,24 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
                              Rpp32f angleDeg)
 {
     Rpp32f angleRad = RAD(angleDeg);
+    //std::cout<<" angleRad ::"<<angleRad;
     Rpp32f rotate[4] = {0};
     rotate[0] = cos(angleRad);
     rotate[1] = sin(angleRad);
     rotate[2] = -sin(angleRad);
     rotate[3] = cos(angleRad);
-
+    for (int i =0; i < 4; i++)
+    std::cout << rotate[i] << std::endl;
     float minX = 0, minY = 0, maxX = 0, maxY = 0;
     
     RppiPoint corner[4];
 
-    corner[0].x = (rotate[0] * 0) + (rotate[1] * 0);
-    corner[0].y = (rotate[2] * 0) + (rotate[3] * 0);
-    corner[1].x = (rotate[0] * 0) + rotate[1] * (srcSize.width-1);
-    corner[1].y = (rotate[2] * 0) + rotate[3] * (srcSize.width-1);
-    corner[2].x = (rotate[0] * (srcSize.height-1)) + (rotate[1] * 0);
-    corner[2].y = (rotate[2] * (srcSize.height-1)) + (rotate[3] * 0);
+    corner[0].x = 0;
+    corner[0].y = 0;
+    corner[1].x =  rotate[1] * (srcSize.width-1);
+    corner[1].y =  rotate[3] * (srcSize.width-1);
+    corner[2].x = (rotate[0] * (srcSize.height-1)); 
+    corner[2].y = (rotate[2] * (srcSize.height-1)) ;
     corner[3].x = (rotate[0] * (srcSize.height-1)) + (rotate[1] * (srcSize.width-1));
     corner[3].y = (rotate[2] * (srcSize.height-1)) + (rotate[3] * (srcSize.width-1));
 
@@ -106,16 +109,19 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
         if(corner[i].y > maxY)  maxY = corner[i].y;
     }
 
-    dstSizePtr->height = ((Rpp32s)maxX - (Rpp32s)minX) + 1;
-    dstSizePtr->width = ((Rpp32s)maxY - (Rpp32s)minY) + 1;
-
+    dstSizePtr->width = ((Rpp32s)maxX - (Rpp32s)minX) + 20;
+    dstSizePtr->height = ((Rpp32s)maxY - (Rpp32s)minY) + 20;
+    std::cout<<" Source height "<<srcSize.height<<std::endl;
+    std::cout<<" Source width "<<srcSize.width<<std::endl;
+    std::cout<<"dstSizePtr->height "<<dstSizePtr->height<<std::endl;
+    std::cout<<"dstSizePtr->width "<<dstSizePtr->width<<std::endl;
     return RPP_SUCCESS;
 }
 
 RppStatus rotate_output_offset(RppiSize srcSize, RppiPoint *offset,
                                Rpp32f angleDeg)
 {
-    Rpp32f angleRad = RAD(angleDeg);
+    Rpp32f angleRad = angleDeg;
     Rpp32f rotate[4] = {0};
     rotate[0] = cos(angleRad);
     rotate[1] = sin(angleRad);
