@@ -1,4 +1,4 @@
-#include <rppi_Color_model_convertions.h>
+#include <rppi_color_model_conversions.h>
 #include <rppdefs.h>
 #include "rppi_validate.hpp"
 
@@ -15,7 +15,7 @@
 #include <chrono>
 using namespace std::chrono; 
 
-#include "cpu/host_Color_model_convertions.hpp" 
+#include "cpu/host_color_model_conversions.hpp" 
  
 // ----------------------------------------
 // Host rgb_to_hsv functions calls 
@@ -33,7 +33,7 @@ rppi_rgb_to_hsv_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 rgb_to_hsv_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			 RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -61,7 +61,7 @@ rppi_rgb_to_hsv_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 rgb_to_hsv_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			 RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -89,7 +89,7 @@ rppi_rgb_to_hsv_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 rgb_to_hsv_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			 RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -122,7 +122,7 @@ rppi_hsv_to_rgb_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 hsv_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			 RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -150,7 +150,7 @@ rppi_hsv_to_rgb_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 hsv_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			 RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -178,7 +178,7 @@ rppi_hsv_to_rgb_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 hsv_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			 RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -211,8 +211,8 @@ rppi_hueRGB_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f
 #endif //TIME_INFO 
 
 	 hueRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), hueShift,
+			 RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -240,8 +240,8 @@ rppi_hueRGB_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f
 #endif //TIME_INFO 
 
 	 hueRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), hueShift,
+			 RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -269,8 +269,8 @@ rppi_hueRGB_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f
 #endif //TIME_INFO 
 
 	 hueRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), hueShift,
+			 RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -303,8 +303,8 @@ rppi_hueHSV_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f
 #endif //TIME_INFO 
 
 	 hueHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), hueShift,
+			 RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -332,8 +332,8 @@ rppi_hueHSV_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f
 #endif //TIME_INFO 
 
 	 hueHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), hueShift,
+			 RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -361,8 +361,8 @@ rppi_hueHSV_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f
 #endif //TIME_INFO 
 
 	 hueHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), hueShift, 
+			 RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -395,8 +395,8 @@ rppi_saturationRGB_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 #endif //TIME_INFO 
 
 	 saturationRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), saturationFactor,
+			 RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -424,8 +424,8 @@ rppi_saturationRGB_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 #endif //TIME_INFO 
 
 	 saturationRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), saturationFactor,
+			 RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -453,8 +453,8 @@ rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 #endif //TIME_INFO 
 
 	 saturationRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), saturationFactor,
+			 RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -487,8 +487,8 @@ rppi_saturationHSV_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 #endif //TIME_INFO 
 
 	 saturationHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), saturationFactor,
+			 RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -516,8 +516,8 @@ rppi_saturationHSV_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 #endif //TIME_INFO 
 
 	 saturationHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), saturationFactor,
+			 RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -545,8 +545,8 @@ rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 #endif //TIME_INFO 
 
 	 saturationHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), saturationFactor,
+			 RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -802,7 +802,7 @@ rppi_hueRGB_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f 
 #endif //TIME_INFO  
  	 	 	
  	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -838,7 +838,7 @@ rppi_hueRGB_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f 
 #endif //TIME_INFO  
  	 	 	
  	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -874,7 +874,7 @@ rppi_hueRGB_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f 
 #endif //TIME_INFO  
  	 	 	
  	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -915,7 +915,7 @@ rppi_hueHSV_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f 
 #endif //TIME_INFO  
  	 	 	
  	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -951,7 +951,7 @@ rppi_hueHSV_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f 
 #endif //TIME_INFO  
  	 	 	
  	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -987,7 +987,7 @@ rppi_hueHSV_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f 
 #endif //TIME_INFO  
  	 	 	
  	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), hueShift, 0.0/*Saturation*/,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -1027,8 +1027,8 @@ rppi_saturationRGB_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 saturationRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+ 	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr), 0.0/*hue*/, saturationFactor,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -1063,8 +1063,8 @@ rppi_saturationRGB_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 saturationRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+ 	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr), 0.0/*hue*/, saturationFactor,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -1099,8 +1099,8 @@ rppi_saturationRGB_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 saturationRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+ 	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr), 0.0/*hue*/, saturationFactor,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -1140,8 +1140,8 @@ rppi_saturationHSV_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 saturationHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+ 	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr),  0.0/*hue*/, saturationFactor,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -1176,8 +1176,8 @@ rppi_saturationHSV_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 saturationHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+ 	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr),  0.0/*hue*/, saturationFactor,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -1212,8 +1212,8 @@ rppi_saturationHSV_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 saturationHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+ 	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr),  0.0/*hue*/, saturationFactor,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  

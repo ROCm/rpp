@@ -2,7 +2,7 @@
 #include "cl_declarations.hpp"
 
 RppStatus
-convert_rgb2hsv_cl(cl_mem srcPtr, RppiSize srcSize,
+rgb_to_hsv_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -40,7 +40,7 @@ convert_rgb2hsv_cl(cl_mem srcPtr, RppiSize srcSize,
 }
 
 RppStatus
-convert_hsv2rgb_cl(cl_mem srcPtr, RppiSize srcSize,
+hsv_to_rgb_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -79,7 +79,7 @@ convert_hsv2rgb_cl(cl_mem srcPtr, RppiSize srcSize,
 
 //////////////////////HUE CODE////////////////////////////////
 RppStatus
-hue_saturation_rgb_cl (cl_mem srcPtr, RppiSize srcSize,
+hueRGB_cl (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -112,7 +112,7 @@ hue_saturation_rgb_cl (cl_mem srcPtr, RppiSize srcSize,
 }
 
 RppStatus
-hue_saturation_hsv_cl (cl_mem srcPtr, RppiSize srcSize,
+hueHSV_cl (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue){
     cl_kernel theKernel;
