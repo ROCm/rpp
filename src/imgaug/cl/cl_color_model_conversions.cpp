@@ -149,8 +149,8 @@ hueHSV_cl (cl_mem srcPtr, RppiSize srcSize,
 /****************  Gamma correction *******************/
 
 RppStatus
-gamma_correction_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
-                 RppiSize srcSize, float gamma,
+gamma_correction_cl ( cl_mem srcPtr1,RppiSize srcSize,
+                 cl_mem dstPtr, float gamma,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
@@ -163,7 +163,7 @@ gamma_correction_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
 
     //---- Args Setter
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
     clSetKernelArg(theKernel, 2, sizeof(float), &gamma);
     clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);

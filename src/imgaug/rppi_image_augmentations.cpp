@@ -27,7 +27,7 @@ rppi_blur_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, stdDev);
+ 	 validate_float_min(0, stdDev);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -38,12 +38,12 @@ rppi_blur_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_blur_u8_pln1_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_blur_u8_pln1_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -56,7 +56,7 @@ rppi_blur_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, stdDev);
+ 	 validate_float_min(0, stdDev);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -67,12 +67,12 @@ rppi_blur_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_blur_u8_pln3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	 std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_blur_u8_pln3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -85,7 +85,7 @@ rppi_blur_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, stdDev);
+ 	 validate_float_min(0, stdDev);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -96,12 +96,12 @@ rppi_blur_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_blur_u8_pkd3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_blur_u8_pkd3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -130,12 +130,12 @@ rppi_contrast_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_contrast_u8_pln1_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_contrast_u8_pln1_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -159,12 +159,12 @@ rppi_contrast_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_contrast_u8_pln3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_contrast_u8_pln3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -188,12 +188,12 @@ rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_contrast_u8_pkd3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_contrast_u8_pkd3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -223,12 +223,12 @@ rppi_brightness_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_brightness_u8_pln1_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_brightness_u8_pln1_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -253,12 +253,12 @@ rppi_brightness_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_brightness_u8_pln3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_brightness_u8_pln3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -283,12 +283,12 @@ rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_brightness_u8_pkd3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_brightness_u8_pkd3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -306,7 +306,7 @@ rppi_gamma_correction_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, gamma);
+ 	 validate_float_min(0, gamma);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -317,12 +317,12 @@ rppi_gamma_correction_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_gamma_correction_u8_pln1_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_gamma_correction_u8_pln1_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -335,7 +335,7 @@ rppi_gamma_correction_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, gamma);
+ 	 validate_float_min(0, gamma);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -346,12 +346,12 @@ rppi_gamma_correction_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_gamma_correction_u8_pln3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_gamma_correction_u8_pln3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -364,7 +364,7 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, gamma);
+ 	 validate_float_min(0, gamma);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -375,12 +375,12 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_gamma_correction_u8_pkd3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_gamma_correction_u8_pkd3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -398,7 +398,7 @@ rppi_blur_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f st
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, stdDev);
+ 	 validate_float_min(0, stdDev);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -407,21 +407,21 @@ rppi_blur_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f st
 #endif //TIME_INFO  
  	 	 	
  	 blur_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), 3,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_blur_u8_pln1_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_blur_u8_pln1_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -434,7 +434,7 @@ rppi_blur_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f st
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, stdDev);
+ 	 validate_float_min(0, stdDev);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -443,21 +443,21 @@ rppi_blur_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f st
 #endif //TIME_INFO  
  	 	 	
  	 blur_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  3,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_blur_u8_pln3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_blur_u8_pln3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -470,7 +470,7 @@ rppi_blur_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f st
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, stdDev);
+ 	 validate_float_min(0, stdDev);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -479,21 +479,21 @@ rppi_blur_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f st
 #endif //TIME_INFO  
  	 	 	
  	 blur_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), 3, 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_blur_u8_pkd3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_blur_u8_pkd3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -526,15 +526,15 @@ rppi_contrast_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_contrast_u8_pln1_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_contrast_u8_pln1_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -562,15 +562,15 @@ rppi_contrast_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_contrast_u8_pln3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	 std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_contrast_u8_pln3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -598,15 +598,15 @@ rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_contrast_u8_pkd3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	 std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_contrast_u8_pkd3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -640,15 +640,15 @@ rppi_brightness_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_brightness_u8_pln1_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_brightness_u8_pln1_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -677,15 +677,15 @@ rppi_brightness_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_brightness_u8_pln3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_brightness_u8_pln3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -714,15 +714,15 @@ rppi_brightness_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_brightness_u8_pkd3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_brightness_u8_pkd3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -740,7 +740,7 @@ rppi_gamma_correction_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, gamma);
+ 	 validate_float_min(0, gamma);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -755,15 +755,15 @@ rppi_gamma_correction_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_gamma_correction_u8_pln1_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_gamma_correction_u8_pln1_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -776,7 +776,7 @@ rppi_gamma_correction_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, gamma);
+ 	 validate_float_min(0, gamma);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -791,15 +791,15 @@ rppi_gamma_correction_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_gamma_correction_u8_pln3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_gamma_correction_u8_pln3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -812,7 +812,7 @@ rppi_gamma_correction_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, gamma);
+ 	 validate_float_min(0, gamma);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -827,15 +827,15 @@ rppi_gamma_correction_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_gamma_correction_u8_pkd3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+ 	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_gamma_correction_u8_pkd3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 

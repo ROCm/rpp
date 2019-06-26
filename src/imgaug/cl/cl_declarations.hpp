@@ -107,8 +107,8 @@ bilateral_filter_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                       cl_command_queue theQueue);
 
 RppStatus
-gamma_correction_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
-                 RppiSize srcSize, float gamma,
+gamma_correction_cl ( cl_mem srcPtr1, RppiSize srcSize, 
+                 cl_mem dstPtr,float gamma,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 

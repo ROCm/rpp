@@ -28,8 +28,8 @@ rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 
  	 validate_image_size(srcSize);
  	 validate_int_min(0, filterSize);
- 	 validate_int_min(0, sigmaI);
- 	 validate_int_min(0, sigmaS);
+ 	 validate_float_min(0, sigmaI);
+ 	 validate_float_min(0, sigmaS );
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -40,12 +40,12 @@ rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_bilateral_filter_u8_pln1_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_bilateral_filter_u8_pln1_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -59,8 +59,8 @@ rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 
  	 validate_image_size(srcSize);
  	 validate_int_min(0, filterSize);
- 	 validate_int_min(0, sigmaI);
- 	 validate_int_min(0, sigmaS);
+ 	 validate_float_min(0, sigmaI);
+ 	 validate_float_min(0, sigmaS );
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -71,12 +71,12 @@ rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_bilateral_filter_u8_pln3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_bilateral_filter_u8_pln3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -90,8 +90,8 @@ rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 
  	 validate_image_size(srcSize);
  	 validate_int_min(0, filterSize);
- 	 validate_int_min(0, sigmaI);
- 	 validate_int_min(0, sigmaS);
+ 	 validate_float_min(0, sigmaI);
+ 	 validate_float_min(0, sigmaS );
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
@@ -102,12 +102,12 @@ rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl;
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_bilateral_filter_u8_pkd3_host,'; 
- 	 time_file<<duration.count() << endl; 
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl;
+	  std::fstream time_file;
+time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app);
+ 	 time_file<<"rppi_bilateral_filter_u8_pkd3_host,"; 
+ 	 time_file<<duration.count() << std::endl; 
  	 time_file.close();
 
 #endif //TIME_INFO  
@@ -126,8 +126,8 @@ rppi_bilateral_filter_u8_pln1_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 
  	 validate_image_size(srcSize);
  	 validate_int_min(0, filterSize);
- 	 validate_int_min(0, sigmaI);
- 	 validate_int_min(0, sigmaS);
+ 	 validate_float_min(0, sigmaI);
+ 	 validate_float_min(0, sigmaS );
 
 #ifdef OCL_COMPILE 
  	 {
@@ -142,15 +142,15 @@ rppi_bilateral_filter_u8_pln1_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_bilateral_filter_u8_pln1_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_bilateral_filter_u8_pln1_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -164,8 +164,8 @@ rppi_bilateral_filter_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 
  	 validate_image_size(srcSize);
  	 validate_int_min(0, filterSize);
- 	 validate_int_min(0, sigmaI);
- 	 validate_int_min(0, sigmaS);
+ 	 validate_float_min(0, sigmaI);
+ 	 validate_float_min(0, sigmaS );
 
 #ifdef OCL_COMPILE 
  	 {
@@ -180,15 +180,15 @@ rppi_bilateral_filter_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_bilateral_filter_u8_pln3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	 std::fstream time_file;
+	 time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_bilateral_filter_u8_pln3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
@@ -202,8 +202,8 @@ rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 
  	 validate_image_size(srcSize);
  	 validate_int_min(0, filterSize);
- 	 validate_int_min(0, sigmaI);
- 	 validate_int_min(0, sigmaS);
+ 	 validate_float_min(0, sigmaI);
+ 	 validate_float_min(0, sigmaS );
 
 #ifdef OCL_COMPILE 
  	 {
@@ -218,15 +218,15 @@ rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
  
 #ifdef TIME_INFO  
  	  auto stop = high_resolution_clock::now();  
- 	 auto duration = duration_cast<microseconds>(stop - start); 
- 	 cout << duration.count() << endl; 
-	 std::ofstream time_file;
- 	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_bilateral_filter_u8_pkd3_gpu,';
- 	 time_file<<duration.count() << endl;  
+ 	 auto duration = duration_cast<milliseconds>(stop - start); 
+ 	 std::cout << duration.count() << std::endl; 
+	  std::fstream time_file;
+time_file.open ("rpp_time.csv",std::fstream::in | std::fstream::out |std::fstream::app); 
+ 	 time_file<<"rppi_bilateral_filter_u8_pkd3_gpu,";
+ 	 time_file<<duration.count() << std::endl;  
  	 time_file.close();
- 	 }
 #endif //TIME_INFO  
+ 	 }
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
