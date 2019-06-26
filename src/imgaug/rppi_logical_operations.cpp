@@ -33,7 +33,7 @@ rppi_bitwise_AND_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize
 
 	 bitwise_AND_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -61,7 +61,7 @@ rppi_bitwise_AND_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize
 
 	 bitwise_AND_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -89,7 +89,7 @@ rppi_bitwise_AND_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize
 
 	 bitwise_AND_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -122,7 +122,7 @@ rppi_bitwise_NOT_u8_pln1_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 bitwise_NOT_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -150,7 +150,7 @@ rppi_bitwise_NOT_u8_pln3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 bitwise_NOT_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -178,7 +178,7 @@ rppi_bitwise_NOT_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dstPtr)
 
 	 bitwise_NOT_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -211,7 +211,7 @@ rppi_exclusive_OR_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSiz
 
 	 exclusive_OR_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -239,7 +239,7 @@ rppi_exclusive_OR_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSiz
 
 	 exclusive_OR_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -267,7 +267,7 @@ rppi_exclusive_OR_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSiz
 
 	 exclusive_OR_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -300,7 +300,7 @@ rppi_inclusive_OR_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSiz
 
 	 inclusive_OR_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -328,7 +328,7 @@ rppi_inclusive_OR_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSiz
 
 	 inclusive_OR_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -356,7 +356,7 @@ rppi_inclusive_OR_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSiz
 
 	 inclusive_OR_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
