@@ -31,9 +31,8 @@ rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
-
 	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
+			alpha, 
 			1, RPPI_CHN_PLANAR); 
  
 #ifdef TIME_INFO  
@@ -62,7 +61,7 @@ rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 #endif //TIME_INFO 
 
 	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
+			alpha, 
 			3, RPPI_CHN_PLANAR); 
  
 #ifdef TIME_INFO  
@@ -91,7 +90,7 @@ rppi_accumulate_weighted_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 #endif //TIME_INFO 
 
 	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
+			alpha, 
 			3, RPPI_CHN_PACKED); 
  
 #ifdef TIME_INFO  
@@ -391,7 +390,6 @@ rppi_accumulate_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 #endif //TIME_INFO 
 
 	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
 			1, RPPI_CHN_PLANAR); 
  
 #ifdef TIME_INFO  
@@ -419,7 +417,6 @@ rppi_accumulate_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 #endif //TIME_INFO 
 
 	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PLANAR); 
  
 #ifdef TIME_INFO  
@@ -447,7 +444,6 @@ rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 #endif //TIME_INFO 
 
 	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PACKED); 
  
 #ifdef TIME_INFO  
@@ -484,7 +480,7 @@ rppi_accumulate_weighted_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 #endif //TIME_INFO  
  	 	 	
  	 accumulate_weighted_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			alpha, 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -520,7 +516,7 @@ rppi_accumulate_weighted_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 #endif //TIME_INFO  
  	 	 	
  	 accumulate_weighted_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			alpha, 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -556,7 +552,7 @@ rppi_accumulate_weighted_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 #endif //TIME_INFO  
  	 	 	
  	 accumulate_weighted_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			alpha, 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -926,7 +922,6 @@ rppi_accumulate_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
 #endif //TIME_INFO  
  	 	 	
  	 accumulate_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -961,7 +956,6 @@ rppi_accumulate_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
 #endif //TIME_INFO  
  	 	 	
  	 accumulate_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -996,7 +990,6 @@ rppi_accumulate_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
 #endif //TIME_INFO  
  	 	 	
  	 accumulate_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
