@@ -35,8 +35,8 @@ rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 #endif //TIME_INFO 
 
 	 bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), filterSize, sigmaI, sigmaS,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -66,8 +66,8 @@ rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 #endif //TIME_INFO 
 
 	 bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), filterSize, sigmaI, sigmaS,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -97,8 +97,8 @@ rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 #endif //TIME_INFO 
 
 	 bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), filterSize, sigmaI, sigmaS,
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -136,7 +136,7 @@ rppi_bilateral_filter_u8_pln1_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 #endif //TIME_INFO  
  	 	 	
  	 bilateral_filter_cl(static_cast<cl_mem>(srcPtr1),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), filterSize, sigmaI, sigmaS,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -174,7 +174,7 @@ rppi_bilateral_filter_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 #endif //TIME_INFO  
  	 	 	
  	 bilateral_filter_cl(static_cast<cl_mem>(srcPtr1),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  filterSize, sigmaI, sigmaS,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -212,7 +212,7 @@ rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 #endif //TIME_INFO  
  	 	 	
  	 bilateral_filter_cl(static_cast<cl_mem>(srcPtr1),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  filterSize, sigmaI, sigmaS,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
