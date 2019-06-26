@@ -33,8 +33,8 @@ rppi_blur_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 #endif //TIME_INFO 
 
 	 blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), stdDev, 3,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -62,8 +62,8 @@ rppi_blur_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 #endif //TIME_INFO 
 
 	 blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), stdDev, 3,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -91,8 +91,8 @@ rppi_blur_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 #endif //TIME_INFO 
 
 	 blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), stdDev, 3,
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -125,8 +125,8 @@ rppi_contrast_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 #endif //TIME_INFO 
 
 	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), newMin, newMax,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -154,8 +154,8 @@ rppi_contrast_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 #endif //TIME_INFO 
 
 	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), newMin, newMax,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -183,8 +183,8 @@ rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 #endif //TIME_INFO 
 
 	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr),  newMin, newMax,
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -218,8 +218,8 @@ rppi_brightness_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 #endif //TIME_INFO 
 
 	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), alpha, beta,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -248,8 +248,8 @@ rppi_brightness_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 #endif //TIME_INFO 
 
 	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), alpha, beta,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -278,8 +278,8 @@ rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 #endif //TIME_INFO 
 
 	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), alpha, beta, 
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -312,8 +312,8 @@ rppi_gamma_correction_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 #endif //TIME_INFO 
 
 	 gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), gamma,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -341,8 +341,8 @@ rppi_gamma_correction_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 #endif //TIME_INFO 
 
 	 gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr),  gamma,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -370,8 +370,8 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 #endif //TIME_INFO 
 
 	 gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr),  gamma,
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -520,7 +520,7 @@ rppi_contrast_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 #endif //TIME_INFO  
  	 	 	
  	 contrast_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), newMin, newMax,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -556,7 +556,7 @@ rppi_contrast_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 #endif //TIME_INFO  
  	 	 	
  	 contrast_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  newMin, newMax,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -592,7 +592,7 @@ rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 #endif //TIME_INFO  
  	 	 	
  	 contrast_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  newMin, newMax,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -634,7 +634,7 @@ rppi_brightness_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp
 #endif //TIME_INFO  
  	 	 	
  	 brightness_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), alpha, beta,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -671,7 +671,7 @@ rppi_brightness_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp
 #endif //TIME_INFO  
  	 	 	
  	 brightness_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  alpha, beta, 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -708,7 +708,7 @@ rppi_brightness_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp
 #endif //TIME_INFO  
  	 	 	
  	 brightness_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  alpha, beta, 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -749,7 +749,7 @@ rppi_gamma_correction_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 #endif //TIME_INFO  
  	 	 	
  	 gamma_correction_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), gamma,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -785,7 +785,7 @@ rppi_gamma_correction_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 #endif //TIME_INFO  
  	 	 	
  	 gamma_correction_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  gamma,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -821,7 +821,7 @@ rppi_gamma_correction_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 #endif //TIME_INFO  
  	 	 	
  	 gamma_correction_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), gamma,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
