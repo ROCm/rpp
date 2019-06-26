@@ -33,8 +33,8 @@ rppi_flip_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis
 #endif //TIME_INFO 
 
 	 flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), flipAxis,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -62,8 +62,8 @@ rppi_flip_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis
 #endif //TIME_INFO 
 
 	 flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), flipAxis,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -91,8 +91,8 @@ rppi_flip_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis
 #endif //TIME_INFO 
 
 	 flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), flipAxis,
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -125,8 +125,8 @@ rppi_resize_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 #endif //TIME_INFO 
 
 	 resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), dstSize,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -154,8 +154,8 @@ rppi_resize_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 #endif //TIME_INFO 
 
 	 resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), dstSize,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -183,8 +183,8 @@ rppi_resize_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 #endif //TIME_INFO 
 
 	 resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), dstSize,
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -221,8 +221,8 @@ rppi_resize_crop_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 #endif //TIME_INFO 
 
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), dstSize, x1, y1, x2, y2,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -254,8 +254,8 @@ rppi_resize_crop_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 #endif //TIME_INFO 
 
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), dstSize, x1, y1, x2, y2,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -287,8 +287,8 @@ rppi_resize_crop_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 #endif //TIME_INFO 
 
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), dstSize, x1, y1, x2, y2,
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -320,8 +320,8 @@ rppi_rotate_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 #endif //TIME_INFO 
 
 	 rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			1, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), dstSize, angleDeg,
+			RPPI_CHN_PLANAR, 1); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -348,8 +348,8 @@ rppi_rotate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 #endif //TIME_INFO 
 
 	 rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PLANAR); 
+			static_cast<Rpp8u*>(dstPtr), dstSize, angleDeg,
+			RPPI_CHN_PLANAR, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -376,8 +376,8 @@ rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 #endif //TIME_INFO 
 
 	 rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			3, RPPI_CHN_PACKED); 
+			static_cast<Rpp8u*>(dstPtr), dstSize, angleDeg,
+			RPPI_CHN_PACKED, 3); 
  
 #ifdef TIME_INFO  
  	 auto stop = high_resolution_clock::now();
@@ -413,7 +413,7 @@ rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis 
 #endif //TIME_INFO  
  	 	 	
  	 flip_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), flipAxis, 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -449,7 +449,7 @@ rppi_flip_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis 
 #endif //TIME_INFO  
  	 	 	
  	 flip_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), flipAxis,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -485,7 +485,7 @@ rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis 
 #endif //TIME_INFO  
  	 	 	
  	 flip_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), flipAxis,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -526,7 +526,7 @@ rppi_resize_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 #endif //TIME_INFO  
  	 	 	
  	 resize_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), dstSize,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -562,7 +562,7 @@ rppi_resize_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 #endif //TIME_INFO  
  	 	 	
  	 resize_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), dstSize,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -598,7 +598,7 @@ rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 #endif //TIME_INFO  
  	 	 	
  	 resize_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), dstSize,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -643,7 +643,7 @@ rppi_resize_crop_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 #endif //TIME_INFO  
  	 	 	
  	 resize_crop_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), dstSize, x1, y1, x2, y2,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -683,7 +683,7 @@ rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 #endif //TIME_INFO  
  	 	 	
  	 resize_crop_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), dstSize, x1, y1, x2, y2,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -723,7 +723,7 @@ rppi_resize_crop_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 #endif //TIME_INFO  
  	 	 	
  	 resize_crop_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), dstSize, x1, y1, x2, y2,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -763,7 +763,7 @@ rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 #endif //TIME_INFO  
  	 	 	
  	 rotate_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr), dstSize, angleDeg,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -798,7 +798,7 @@ rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 #endif //TIME_INFO  
  	 	 	
  	 rotate_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  dstSize, angleDeg,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
@@ -833,7 +833,7 @@ rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 #endif //TIME_INFO  
  	 	 	
  	 rotate_cl(static_cast<cl_mem>(srcPtr),srcSize, 
-			static_cast<cl_mem>(dstPtr), 
+			static_cast<cl_mem>(dstPtr),  dstSize, angleDeg,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
  
