@@ -1,4 +1,4 @@
-#include <rppi_arithmetic_operations.h>
+#include <rppi_Color_model_convertions.h>
 #include <rppdefs.h>
 #include "rppi_validate.hpp"
 
@@ -15,24 +15,23 @@
 #include <chrono>
 using namespace std::chrono; 
 
-#include "cpu/host_arithmetic_operations.hpp" 
+#include "cpu/host_Color_model_convertions.hpp" 
  
 // ----------------------------------------
-// Host accumulate_weighted functions calls 
+// Host rgb_to_hsv functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp64f alpha)
+rppi_rgb_to_hsv_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 rgb_to_hsv_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			1, RPPI_CHN_PLANAR); 
  
@@ -42,7 +41,7 @@ rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_accumulate_weighted_u8_pln1_host,'; 
+ 	 time_file<<'rppi_rgb_to_hsv_u8_pln1_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -52,16 +51,15 @@ rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 }
 
 RppStatus
-rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp64f alpha)
+rppi_rgb_to_hsv_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 rgb_to_hsv_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PLANAR); 
  
@@ -71,7 +69,7 @@ rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_accumulate_weighted_u8_pln3_host,'; 
+ 	 time_file<<'rppi_rgb_to_hsv_u8_pln3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -81,16 +79,15 @@ rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 }
 
 RppStatus
-rppi_accumulate_weighted_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp64f alpha)
+rppi_rgb_to_hsv_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 rgb_to_hsv_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PACKED); 
  
@@ -100,7 +97,7 @@ rppi_accumulate_weighted_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_accumulate_weighted_u8_pkd3_host,'; 
+ 	 time_file<<'rppi_rgb_to_hsv_u8_pkd3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -110,12 +107,12 @@ rppi_accumulate_weighted_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 }
  
 // ----------------------------------------
-// Host absolute_difference functions calls 
+// Host hsv_to_rgb functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_absolute_difference_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hsv_to_rgb_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
@@ -123,7 +120,7 @@ rppi_absolute_difference_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hsv_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			1, RPPI_CHN_PLANAR); 
  
@@ -133,7 +130,7 @@ rppi_absolute_difference_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_absolute_difference_u8_pln1_host,'; 
+ 	 time_file<<'rppi_hsv_to_rgb_u8_pln1_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -143,7 +140,7 @@ rppi_absolute_difference_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 }
 
 RppStatus
-rppi_absolute_difference_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hsv_to_rgb_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
@@ -151,7 +148,7 @@ rppi_absolute_difference_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hsv_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PLANAR); 
  
@@ -161,7 +158,7 @@ rppi_absolute_difference_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_absolute_difference_u8_pln3_host,'; 
+ 	 time_file<<'rppi_hsv_to_rgb_u8_pln3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -171,7 +168,7 @@ rppi_absolute_difference_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 }
 
 RppStatus
-rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hsv_to_rgb_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
@@ -179,7 +176,7 @@ rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hsv_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PACKED); 
  
@@ -189,7 +186,7 @@ rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_absolute_difference_u8_pkd3_host,'; 
+ 	 time_file<<'rppi_hsv_to_rgb_u8_pkd3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -199,20 +196,21 @@ rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 }
  
 // ----------------------------------------
-// Host add functions calls 
+// Host hueRGB functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_add_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hueRGB_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 add_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hueRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			1, RPPI_CHN_PLANAR); 
  
@@ -222,7 +220,7 @@ rppi_add_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_add_u8_pln1_host,'; 
+ 	 time_file<<'rppi_hueRGB_u8_pln1_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -232,15 +230,16 @@ rppi_add_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_
 }
 
 RppStatus
-rppi_add_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hueRGB_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 add_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hueRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PLANAR); 
  
@@ -250,7 +249,7 @@ rppi_add_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_add_u8_pln3_host,'; 
+ 	 time_file<<'rppi_hueRGB_u8_pln3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -260,15 +259,16 @@ rppi_add_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_
 }
 
 RppStatus
-rppi_add_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hueRGB_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 add_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hueRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PACKED); 
  
@@ -278,7 +278,7 @@ rppi_add_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_add_u8_pkd3_host,'; 
+ 	 time_file<<'rppi_hueRGB_u8_pkd3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -288,20 +288,21 @@ rppi_add_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_
 }
  
 // ----------------------------------------
-// Host subtract functions calls 
+// Host hueHSV functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_subtract_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hueHSV_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 subtract_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hueHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			1, RPPI_CHN_PLANAR); 
  
@@ -311,7 +312,7 @@ rppi_subtract_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rp
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_subtract_u8_pln1_host,'; 
+ 	 time_file<<'rppi_hueHSV_u8_pln1_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -321,15 +322,16 @@ rppi_subtract_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rp
 }
 
 RppStatus
-rppi_subtract_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hueHSV_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 subtract_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hueHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PLANAR); 
  
@@ -339,7 +341,7 @@ rppi_subtract_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rp
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_subtract_u8_pln3_host,'; 
+ 	 time_file<<'rppi_hueHSV_u8_pln3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -349,15 +351,16 @@ rppi_subtract_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rp
 }
 
 RppStatus
-rppi_subtract_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_hueHSV_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 subtract_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 hueHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PACKED); 
  
@@ -367,7 +370,7 @@ rppi_subtract_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rp
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_subtract_u8_pkd3_host,'; 
+ 	 time_file<<'rppi_hueHSV_u8_pkd3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -377,20 +380,21 @@ rppi_subtract_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rp
 }
  
 // ----------------------------------------
-// Host accumulate functions calls 
+// Host saturationRGB functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_accumulate_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
+rppi_saturationRGB_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 saturationRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			1, RPPI_CHN_PLANAR); 
  
@@ -400,7 +404,7 @@ rppi_accumulate_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_accumulate_u8_pln1_host,'; 
+ 	 time_file<<'rppi_saturationRGB_u8_pln1_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -410,15 +414,16 @@ rppi_accumulate_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 }
 
 RppStatus
-rppi_accumulate_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
+rppi_saturationRGB_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 saturationRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PLANAR); 
  
@@ -428,7 +433,7 @@ rppi_accumulate_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_accumulate_u8_pln3_host,'; 
+ 	 time_file<<'rppi_saturationRGB_u8_pln3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -438,15 +443,16 @@ rppi_accumulate_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 }
 
 RppStatus
-rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
+rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor)
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
 #ifdef TIME_INFO
  	  auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO 
 
-	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize,
+	 saturationRGB_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			3, RPPI_CHN_PACKED); 
  
@@ -456,7 +462,7 @@ rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
  	 cout << duration.count() << endl;
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv');
- 	 time_file<<'rppi_accumulate_u8_pkd3_host,'; 
+ 	 time_file<<'rppi_saturationRGB_u8_pkd3_host,'; 
  	 time_file<<duration.count() << endl; 
  	 time_file.close();
 
@@ -466,16 +472,107 @@ rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 }
  
 // ----------------------------------------
-// GPU accumulate_weighted functions  calls 
+// Host saturationHSV functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_accumulate_weighted_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp64f alpha, RppHandle_t rppHandle) 
+rppi_saturationHSV_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
+ 	 validate_int_min(0, saturationFactor);
+#ifdef TIME_INFO
+ 	  auto start = high_resolution_clock::now(); 
+#endif //TIME_INFO 
+
+	 saturationHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			1, RPPI_CHN_PLANAR); 
+ 
+#ifdef TIME_INFO  
+ 	 auto stop = high_resolution_clock::now();
+ 	 auto duration = duration_cast<microseconds>(stop - start); 
+ 	 cout << duration.count() << endl;
+	 std::ofstream time_file;
+ 	 time_file.open ('rpp_time.csv');
+ 	 time_file<<'rppi_saturationHSV_u8_pln1_host,'; 
+ 	 time_file<<duration.count() << endl; 
+ 	 time_file.close();
+
+#endif //TIME_INFO  
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_saturationHSV_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
+#ifdef TIME_INFO
+ 	  auto start = high_resolution_clock::now(); 
+#endif //TIME_INFO 
+
+	 saturationHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			3, RPPI_CHN_PLANAR); 
+ 
+#ifdef TIME_INFO  
+ 	 auto stop = high_resolution_clock::now();
+ 	 auto duration = duration_cast<microseconds>(stop - start); 
+ 	 cout << duration.count() << endl;
+	 std::ofstream time_file;
+ 	 time_file.open ('rpp_time.csv');
+ 	 time_file<<'rppi_saturationHSV_u8_pln3_host,'; 
+ 	 time_file<<duration.count() << endl; 
+ 	 time_file.close();
+
+#endif //TIME_INFO  
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
+#ifdef TIME_INFO
+ 	  auto start = high_resolution_clock::now(); 
+#endif //TIME_INFO 
+
+	 saturationHSV_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			3, RPPI_CHN_PACKED); 
+ 
+#ifdef TIME_INFO  
+ 	 auto stop = high_resolution_clock::now();
+ 	 auto duration = duration_cast<microseconds>(stop - start); 
+ 	 cout << duration.count() << endl;
+	 std::ofstream time_file;
+ 	 time_file.open ('rpp_time.csv');
+ 	 time_file<<'rppi_saturationHSV_u8_pkd3_host,'; 
+ 	 time_file<<duration.count() << endl; 
+ 	 time_file.close();
+
+#endif //TIME_INFO  
+
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU rgb_to_hsv functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_rgb_to_hsv_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -483,7 +580,7 @@ rppi_accumulate_weighted_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 accumulate_weighted_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 rgb_to_hsv_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -494,7 +591,7 @@ rppi_accumulate_weighted_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_accumulate_weighted_u8_pln1_gpu,';
+ 	 time_file<<'rppi_rgb_to_hsv_u8_pln1_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -507,11 +604,10 @@ rppi_accumulate_weighted_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
 
 RppStatus
-rppi_accumulate_weighted_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp64f alpha, RppHandle_t rppHandle) 
+rppi_rgb_to_hsv_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -519,7 +615,7 @@ rppi_accumulate_weighted_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 accumulate_weighted_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 rgb_to_hsv_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -530,7 +626,7 @@ rppi_accumulate_weighted_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_accumulate_weighted_u8_pln3_gpu,';
+ 	 time_file<<'rppi_rgb_to_hsv_u8_pln3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -543,11 +639,10 @@ rppi_accumulate_weighted_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
 
 RppStatus
-rppi_accumulate_weighted_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp64f alpha, RppHandle_t rppHandle) 
+rppi_rgb_to_hsv_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -555,7 +650,7 @@ rppi_accumulate_weighted_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 accumulate_weighted_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 rgb_to_hsv_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -566,7 +661,7 @@ rppi_accumulate_weighted_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_accumulate_weighted_u8_pkd3_gpu,';
+ 	 time_file<<'rppi_rgb_to_hsv_u8_pkd3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -579,12 +674,12 @@ rppi_accumulate_weighted_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
  
 // ----------------------------------------
-// GPU absolute_difference functions  calls 
+// GPU hsv_to_rgb functions  calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_absolute_difference_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hsv_to_rgb_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
@@ -595,7 +690,7 @@ rppi_absolute_difference_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hsv_to_rgb_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -606,7 +701,7 @@ rppi_absolute_difference_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_absolute_difference_u8_pln1_gpu,';
+ 	 time_file<<'rppi_hsv_to_rgb_u8_pln1_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -619,7 +714,7 @@ rppi_absolute_difference_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
 
 RppStatus
-rppi_absolute_difference_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hsv_to_rgb_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
@@ -630,7 +725,7 @@ rppi_absolute_difference_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hsv_to_rgb_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -641,7 +736,7 @@ rppi_absolute_difference_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_absolute_difference_u8_pln3_gpu,';
+ 	 time_file<<'rppi_hsv_to_rgb_u8_pln3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -654,7 +749,7 @@ rppi_absolute_difference_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
 
 RppStatus
-rppi_absolute_difference_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hsv_to_rgb_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
@@ -665,7 +760,7 @@ rppi_absolute_difference_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hsv_to_rgb_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -676,7 +771,7 @@ rppi_absolute_difference_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_absolute_difference_u8_pkd3_gpu,';
+ 	 time_file<<'rppi_hsv_to_rgb_u8_pkd3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -689,15 +784,16 @@ rppi_absolute_difference_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
  
 // ----------------------------------------
-// GPU add functions  calls 
+// GPU hueRGB functions  calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_add_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hueRGB_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -705,7 +801,7 @@ rppi_add_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 add_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -716,7 +812,7 @@ rppi_add_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_add_u8_pln1_gpu,';
+ 	 time_file<<'rppi_hueRGB_u8_pln1_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -729,10 +825,11 @@ rppi_add_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
 }
 
 RppStatus
-rppi_add_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hueRGB_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -740,7 +837,7 @@ rppi_add_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 add_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -751,7 +848,7 @@ rppi_add_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_add_u8_pln3_gpu,';
+ 	 time_file<<'rppi_hueRGB_u8_pln3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -764,10 +861,11 @@ rppi_add_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
 }
 
 RppStatus
-rppi_add_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hueRGB_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -775,7 +873,7 @@ rppi_add_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 add_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hueRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -786,7 +884,7 @@ rppi_add_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_add_u8_pkd3_gpu,';
+ 	 time_file<<'rppi_hueRGB_u8_pkd3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -799,15 +897,16 @@ rppi_add_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
 }
  
 // ----------------------------------------
-// GPU subtract functions  calls 
+// GPU hueHSV functions  calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_subtract_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hueHSV_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -815,7 +914,7 @@ rppi_subtract_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 subtract_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -826,7 +925,7 @@ rppi_subtract_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_subtract_u8_pln1_gpu,';
+ 	 time_file<<'rppi_hueHSV_u8_pln1_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -839,10 +938,11 @@ rppi_subtract_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
 }
 
 RppStatus
-rppi_subtract_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hueHSV_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -850,7 +950,7 @@ rppi_subtract_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 subtract_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -861,7 +961,7 @@ rppi_subtract_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_subtract_u8_pln3_gpu,';
+ 	 time_file<<'rppi_hueHSV_u8_pln3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -874,10 +974,11 @@ rppi_subtract_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
 }
 
 RppStatus
-rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_hueHSV_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f hueShift, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, hueShift);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -885,7 +986,7 @@ rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 subtract_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 hueHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -896,7 +997,7 @@ rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_subtract_u8_pkd3_gpu,';
+ 	 time_file<<'rppi_hueHSV_u8_pkd3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -909,15 +1010,16 @@ rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
 }
  
 // ----------------------------------------
-// GPU accumulate functions  calls 
+// GPU saturationRGB functions  calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_accumulate_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
+rppi_saturationRGB_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -925,7 +1027,7 @@ rppi_accumulate_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 accumulate_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 saturationRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -936,7 +1038,7 @@ rppi_accumulate_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_accumulate_u8_pln1_gpu,';
+ 	 time_file<<'rppi_saturationRGB_u8_pln1_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -949,10 +1051,11 @@ rppi_accumulate_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
 }
 
 RppStatus
-rppi_accumulate_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
+rppi_saturationRGB_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -960,7 +1063,7 @@ rppi_accumulate_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 accumulate_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 saturationRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -971,7 +1074,7 @@ rppi_accumulate_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_accumulate_u8_pln3_gpu,';
+ 	 time_file<<'rppi_saturationRGB_u8_pln3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
@@ -984,10 +1087,11 @@ rppi_accumulate_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
 }
 
 RppStatus
-rppi_accumulate_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
+rppi_saturationRGB_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
 
 #ifdef OCL_COMPILE 
  	 {
@@ -995,7 +1099,7 @@ rppi_accumulate_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
  	 auto start = high_resolution_clock::now(); 
 #endif //TIME_INFO  
  	 	 	
- 	 accumulate_cl(static_cast<cl_mem>(srcPtr1),static_cast<cl_mem>(srcPtr2),srcSize, 
+ 	 saturationRGB_cl(static_cast<cl_mem>(srcPtr),srcSize, 
 			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle)); 
@@ -1006,7 +1110,120 @@ rppi_accumulate_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, 
  	 cout << duration.count() << endl; 
 	 std::ofstream time_file;
  	 time_file.open ('rpp_time.csv'); 
- 	 time_file<<'rppi_accumulate_u8_pkd3_gpu,';
+ 	 time_file<<'rppi_saturationRGB_u8_pkd3_gpu,';
+ 	 time_file<<duration.count() << endl;  
+ 	 time_file.close();
+ 	 }
+#endif //TIME_INFO  
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU saturationHSV functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_saturationHSV_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
+
+#ifdef OCL_COMPILE 
+ 	 {
+#ifdef TIME_INFO 
+ 	 auto start = high_resolution_clock::now(); 
+#endif //TIME_INFO  
+ 	 	 	
+ 	 saturationHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle)); 
+ 
+#ifdef TIME_INFO  
+ 	  auto stop = high_resolution_clock::now();  
+ 	 auto duration = duration_cast<microseconds>(stop - start); 
+ 	 cout << duration.count() << endl; 
+	 std::ofstream time_file;
+ 	 time_file.open ('rpp_time.csv'); 
+ 	 time_file<<'rppi_saturationHSV_u8_pln1_gpu,';
+ 	 time_file<<duration.count() << endl;  
+ 	 time_file.close();
+ 	 }
+#endif //TIME_INFO  
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_saturationHSV_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
+
+#ifdef OCL_COMPILE 
+ 	 {
+#ifdef TIME_INFO 
+ 	 auto start = high_resolution_clock::now(); 
+#endif //TIME_INFO  
+ 	 	 	
+ 	 saturationHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle)); 
+ 
+#ifdef TIME_INFO  
+ 	  auto stop = high_resolution_clock::now();  
+ 	 auto duration = duration_cast<microseconds>(stop - start); 
+ 	 cout << duration.count() << endl; 
+	 std::ofstream time_file;
+ 	 time_file.open ('rpp_time.csv'); 
+ 	 time_file<<'rppi_saturationHSV_u8_pln3_gpu,';
+ 	 time_file<<duration.count() << endl;  
+ 	 time_file.close();
+ 	 }
+#endif //TIME_INFO  
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_saturationHSV_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_min(0, saturationFactor);
+
+#ifdef OCL_COMPILE 
+ 	 {
+#ifdef TIME_INFO 
+ 	 auto start = high_resolution_clock::now(); 
+#endif //TIME_INFO  
+ 	 	 	
+ 	 saturationHSV_cl(static_cast<cl_mem>(srcPtr),srcSize, 
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle)); 
+ 
+#ifdef TIME_INFO  
+ 	  auto stop = high_resolution_clock::now();  
+ 	 auto duration = duration_cast<microseconds>(stop - start); 
+ 	 cout << duration.count() << endl; 
+	 std::ofstream time_file;
+ 	 time_file.open ('rpp_time.csv'); 
+ 	 time_file<<'rppi_saturationHSV_u8_pkd3_gpu,';
  	 time_file<<duration.count() << endl;  
  	 time_file.close();
  	 }
