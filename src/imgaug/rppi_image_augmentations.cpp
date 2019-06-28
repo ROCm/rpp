@@ -345,3 +345,42 @@ rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
                          RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 }
+
+
+
+
+/******* Pixelate ********/
+
+// GPU calls for Pixelate function
+
+// Host calls for Pixelate function
+
+RppStatus
+rppi_pixelate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                             Rpp32u kernelSize, unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2)
+{
+    pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     kernelSize, x1, y1, x2, y2, 
+                     RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_pixelate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                             Rpp32u kernelSize, unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2)
+{
+    pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     kernelSize, x1, y1, x2, y2, 
+                     RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                             Rpp32u kernelSize, unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2)
+{
+    pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     kernelSize, x1, y1, x2, y2, 
+                     RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
