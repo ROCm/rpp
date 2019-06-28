@@ -92,6 +92,15 @@ typedef struct {
        Rpp32f theta;
    } RppPointPolar;
 
+typedef enum{
+    GAUSSIAN,
+    SNP
+} RppiNoise;
+
+typedef struct {
+    Rpp32f mean;
+    Rpp32f sigma;
+    } RppiGaussParameter;
 
 // void validate_float_range(Rpp32f max, Rpp32f min, Rpp32f value) {
 //     if( !(value <= max) || !(value >= min))

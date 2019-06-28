@@ -385,3 +385,61 @@ rppi_blend_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rp
 
     return RPP_SUCCESS;
 }
+
+/******* Blend ********/
+
+// Host calls for Add Noise function
+
+RppStatus
+rppi_noiseAdd_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                            RppiNoise noiseType, void* noiseParameter)
+{
+    if(noiseType==GAUSSIAN)
+    {
+        noiseAdd_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                    noiseType, (RppiGaussParameter *)noiseParameter,
+                                    RPPI_CHN_PLANAR, 1);
+    }
+    else if(noiseType==SNP)
+    {
+        noiseAdd_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                    noiseType, (Rpp32f *)noiseParameter,
+                                    RPPI_CHN_PLANAR, 1);
+    }
+}
+
+RppStatus
+rppi_noiseAdd_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                            RppiNoise noiseType, void* noiseParameter)
+{
+    if(noiseType==GAUSSIAN)
+    {
+        noiseAdd_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                            noiseType, (RppiGaussParameter *)noiseParameter,
+                            RPPI_CHN_PLANAR, 3);
+    }
+    else if(noiseType==SNP)
+    {
+        noiseAdd_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                    noiseType, (Rpp32f *)noiseParameter,
+                                    RPPI_CHN_PLANAR, 3);        
+    }
+}
+
+RppStatus
+rppi_noiseAdd_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                            RppiNoise noiseType, void* noiseParameter)
+{
+    if(noiseType==GAUSSIAN)
+    {
+        noiseAdd_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                            noiseType, (RppiGaussParameter *)noiseParameter,
+                            RPPI_CHN_PACKED, 3);
+    }
+    else if(noiseType==SNP)
+    {
+        noiseAdd_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                    noiseType, (Rpp32f *)noiseParameter,
+                                    RPPI_CHN_PACKED, 3);        
+    }
+}

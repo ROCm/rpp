@@ -290,6 +290,21 @@ RppStatus
 rppi_blend_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
                         RppPtr_t dstPtr, Rpp32f alpha) ;
 
+// ----------------------------------------
+// Host add noise functions  declaration
+// ----------------------------------------
+
+//Host function declaration
+RppStatus
+rppi_noiseAdd_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                            RppiNoise noiseType, void * noiseParameter);
+RppStatus
+rppi_noiseAdd_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                            RppiNoise noiseType, void * noiseParameter);
+RppStatus
+rppi_noiseAdd_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                            RppiNoise noiseType, void * noiseParameter);
+
 #ifdef __cplusplus
 }
 #endif
