@@ -53,8 +53,6 @@ RppStatus generate_evenly_padded_image_host(T* srcPtr, RppiSize srcSize, T* srcP
         || srcSizeMod.height < srcSize.height
         || srcSizeMod.width < srcSize.width)
     {
-        printf("\nCannot generate evenly padded image!\n");
-
         return RPP_ERROR;
     }
     T *srcPtrTemp, *srcPtrModTemp;
