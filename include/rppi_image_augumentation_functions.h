@@ -406,6 +406,7 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
 //------------------------- Other Augmentations -------------------------
 
 
+
 // --------------------
 // Pixelate
 // --------------------
@@ -423,6 +424,26 @@ rppi_pixelate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                              Rpp32u kernelSize, unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2);
+
+
+
+// --------------------
+// Jitter Add
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_jitterAdd_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                             unsigned int maxJitterX, unsigned int maxJitterY);
+
+RppStatus
+rppi_jitterAdd_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                             unsigned int maxJitterX, unsigned int maxJitterY);
+
+RppStatus
+rppi_jitterAdd_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                             unsigned int maxJitterX, unsigned int maxJitterY);
 
 
 #ifdef __cplusplus
