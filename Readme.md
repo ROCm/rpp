@@ -42,7 +42,7 @@ $ sudo make install
 ```
 ## MIVisionX(OpenVX) Support
 Extended RPP support as a functionality through OpenVX
- [MIVisionX](https://github.com/mythreyi22/MIVisionX) (Clone the repository from the link)
+ [MIVisionX](https://github.com/shobana-mcw/MIVisionX) (Clone the repository from the link)
 ### To build OpenVX with RPP extension
 * RPP should be installed, follow [Instructions to build the library](#rpp-installation)
 ```sh
