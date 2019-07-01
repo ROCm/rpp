@@ -156,28 +156,21 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     generate_box_kernel_host(kernel, kernelSize);
 
-
-
     RppiSize srcSizeMod, srcSizeSubImage;
-    T *srcPtrMod, *dstPtrSubImage;
+    T *srcPtrMod, *srcPtrSubImage, *dstPtrSubImage;
 
-    int yDiff = (int) y2 - (int) y1;
-    int xDiff = (int) x2 - (int) x1;
+    compute_subimage_location_host(srcPtr, &srcPtrSubImage, dstPtr, &dstPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
 
-    srcSizeSubImage.height = (Rpp32u) RPPABS(yDiff) + 1;
-    srcSizeSubImage.width = (Rpp32u) RPPABS(xDiff) + 1;
     srcSizeMod.height = srcSizeSubImage.height + (2 * bound);
     srcSizeMod.width = srcSizeSubImage.width + (2* bound);
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        srcPtrMod = srcPtr + ((RPPMIN2(y1, y2) - bound) * srcSize.width) + (RPPMIN2(x1, x2) - bound);
-        dstPtrSubImage = dstPtr + (RPPMIN2(y1, y2) * srcSize.width) + RPPMIN2(x1, x2);
+        srcPtrMod = srcPtrSubImage - (bound * srcSize.width) - bound;
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        srcPtrMod = srcPtr + ((RPPMIN2(y1, y2) - bound) * srcSize.width * channel) + ((RPPMIN2(x1, x2) - bound) * channel);
-        dstPtrSubImage = dstPtr + (RPPMIN2(y1, y2) * srcSize.width * channel) + (RPPMIN2(x1, x2) * channel);
+        srcPtrMod = srcPtrSubImage - (bound * srcSize.width * channel) - (bound * channel);
     }
 
     convolve_subimage_host(srcPtrMod, srcSizeMod, dstPtrSubImage, srcSizeSubImage, srcSize, kernel, kernelSize, chnFormat, channel);
