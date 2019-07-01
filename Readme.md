@@ -46,7 +46,7 @@ Extended RPP support as a functionality through OpenVX
 ### To build OpenVX with RPP extension
 * RPP should be installed, follow [Instructions to build the library](#rpp-installation)
 ```sh
-$ git  clone https://github.com/mythreyi22/MIVisionX.git
+$ git  clone https://github.com/shobana-mcw/MIVisionX.git
 $ cd MIVisionX
 $ git  checkout gdf_test
 $ mkdir build
