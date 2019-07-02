@@ -48,7 +48,7 @@ Extended RPP support as a functionality through OpenVX
 ```sh
 $ git  clone https://github.com/shobana-mcw/MIVisionX.git
 $ cd MIVisionX
-$ git  checkout gdf_test
+$ git  checkout main-dev
 $ mkdir build
 $ cd build ; cmake .. ; make -j4 //For GPU support
         or

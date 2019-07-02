@@ -4,7 +4,7 @@
 
 template <typename T>
 RppStatus bitwise_AND_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                           RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -19,7 +19,7 @@ RppStatus bitwise_AND_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus bitwise_NOT_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                           RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -34,7 +34,7 @@ RppStatus bitwise_NOT_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus exclusive_OR_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                            RppiChnFormat chnFormat,  unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -49,7 +49,7 @@ RppStatus exclusive_OR_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus inclusive_OR_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                            RppiChnFormat chnFormat,  unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
