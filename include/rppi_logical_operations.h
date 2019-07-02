@@ -102,7 +102,7 @@ rppi_inclusive_OR_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSiz
 *param[in] srcPtr2 input image2 
 *param[in] srcSize dimensions of the images
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -124,7 +124,7 @@ rppi_bitwise_AND_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the images
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -147,7 +147,7 @@ rppi_bitwise_NOT_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, R
 *param[in] srcPtr2 input image2 
 *param[in] srcSize dimensions of the images
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -170,7 +170,7 @@ rppi_exclusive_OR_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize
 *param[in] srcPtr2 input image2 
 *param[in] srcSize dimensions of the images
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 

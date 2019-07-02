@@ -41,7 +41,7 @@ param[in] srcPtr1 input image
 *param[in] filterSize size of filter which uses the neighbouring pixels value  for filtering.
 *param[in] sigmaI filter sigma value in color space and value should be between 0 and 20
 *param[in] sigmaS filter sigma value in coordinate space and value should be between 0 and 20
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 

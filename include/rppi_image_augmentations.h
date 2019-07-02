@@ -105,7 +105,7 @@ param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
 *param[in] stdDev standard deviation value to populate gaussian kernels
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -129,7 +129,7 @@ param[in] srcPtr input image
 *param[out] dstPtr output image
 *param[in] newMin minimum pixel value for contrast stretch
 *param[in] newMax maxium pixel value for contrast stretch
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -153,7 +153,7 @@ param[in] srcPtr input image
 *param[out] dstPtr output image
 *param[in] alpha alpha for brightness calculation and value should be between 0 and 20
 *param[in] beta beta value for brightness calculation and value should be between 0 and 255
-param[in] rppHandle OpenCL handle 
+*param[in] rppHandle OpenCL handle 
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -176,7 +176,7 @@ param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
 param[in] gamma gamma value used in gamma correction
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 

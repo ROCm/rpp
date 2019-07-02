@@ -124,7 +124,7 @@ rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 *param[in] srcPtr2 input image
 *param[in] srcSize dimensions of the images
 *param[in] alpha weight float value which should range between 0 - 1
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -147,7 +147,7 @@ rppi_accumulate_weighted_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 *param[in] srcPtr2 input image2 
 *param[in] srcSize dimensions of the images
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -170,7 +170,7 @@ rppi_absolute_difference_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 *param[in] srcPtr2 input image2 
 *param[in] srcSize dimensions of the images
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -193,7 +193,7 @@ rppi_add_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t
 *param[in] srcPtr2 input image2 
 *param[in] srcSize dimensions of the images
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -215,7 +215,7 @@ rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
 *param[in/out] srcPtr1 input image1
 *param[in] srcPtr2 input image2 
 *param[in] srcSize dimensions of the images
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 

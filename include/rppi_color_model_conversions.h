@@ -144,7 +144,7 @@ rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -166,7 +166,7 @@ rppi_rgb_to_hsv_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rp
 param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -189,7 +189,7 @@ param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
 *param[in] hueShift hue shift for hue calculation
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -212,7 +212,7 @@ param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
 *param[in] hueShift hue shift for hue calculation
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -235,7 +235,7 @@ param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
 *param[in] saturationFactor saturationFactor for saturation calculation
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -258,7 +258,7 @@ param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
 *param[in] saturationFactor saturationFactor for saturation calculation
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 

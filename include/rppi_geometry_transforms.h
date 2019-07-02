@@ -111,10 +111,10 @@ param[in] srcPtr input image
 *param[in] srcSize dimensions of the image
 *param[out] dstPtr output image
 *param[in] flipAxis flip axis and value should range beetween 0 and 2
- rppHandle 0 ---> horizontal flip
+ 0 ---> horizontal flip
  1 ---> vertical flip
-  2 ---> horizontal + vertical flip
-param[in] OpenCL handle
+ 2 ---> horizontal + vertical flip
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -137,7 +137,7 @@ rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis 
 *param[in] srcSize dimensions of the images
 *param[out] dstPtr output image where resized image is stored
 *param[in] dstSize dimensions of the output images
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -162,9 +162,9 @@ rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 *param[in] dstSize dimensions of the output images
 *param[in] x1 x1 value of roi
 *param[in] y1 y1 value of roi
- x2 *param[in] x2 value of roi
- y2 *param[in]y2 value of roi
- rppHandle param[in] OpenCL handle
+*param[in] x2 x2 value of roi
+*param[in] y2 y2 value of roi
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -188,7 +188,7 @@ rppi_resize_crop_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 *param[out] dstPtr output image where rotated image is stored
 *param[in] dstSize dimensions of the output images
 *param[in] angleDeg angle for rotation
- rppHandle param[in] OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
