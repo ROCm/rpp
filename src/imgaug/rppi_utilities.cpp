@@ -108,7 +108,6 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 
     dstSizePtr->width = ((Rpp32s)maxX - (Rpp32s)minX) + 20;
     dstSizePtr->height = ((Rpp32s)maxY - (Rpp32s)minY) + 20;
-    
     return RPP_SUCCESS;
 }
 
