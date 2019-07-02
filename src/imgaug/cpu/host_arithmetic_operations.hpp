@@ -4,7 +4,7 @@
 
 template <typename T>
 RppStatus absolute_difference_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel, RppiChnFormat chnFormat)
+                                   RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -23,7 +23,7 @@ RppStatus absolute_difference_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* 
 
 template <typename T>
 RppStatus accumulate_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
-                                   unsigned int channel, RppiChnFormat chnFormat)
+                                RppiChnFormat chnFormat,unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -42,7 +42,7 @@ RppStatus accumulate_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
 template <typename T>
 RppStatus accumulate_weighted_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
                                    Rpp32f alpha,
-                                   unsigned int channel, RppiChnFormat chnFormat)
+                                    RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -60,7 +60,7 @@ RppStatus accumulate_weighted_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
 
 template <typename T>
 RppStatus add_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel, RppiChnFormat chnFormat)
+                                    RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -78,7 +78,7 @@ RppStatus add_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus subtract_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel, RppiChnFormat chnFormat)
+                                    RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
