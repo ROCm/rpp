@@ -4,7 +4,7 @@
 /****************** Brightness ******************/
 
 RppStatus
-brightness_contrast_cl (    cl_mem srcPtr, RppiSize srcSize,
+brightness_cl (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32f alpha, Rpp32s beta,
                             RppiChnFormat chnFormat, unsigned int channel,
@@ -40,7 +40,7 @@ brightness_contrast_cl (    cl_mem srcPtr, RppiSize srcSize,
 /***************** Contrast *********************/
 
 RppStatus
-contrast_stretch_cl (    cl_mem srcPtr, RppiSize srcSize,
+contrast_cl (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32u newMin, Rpp32u newMax,
                             RppiChnFormat chnFormat, unsigned int channel,
@@ -88,7 +88,7 @@ float gauss_3x3[] = {
 
 
 cl_int
-gaussian_blur_cl(cl_mem srcPtr, RppiSize srcSize,
+blur_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, unsigned int filterSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)

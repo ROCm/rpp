@@ -21,20 +21,20 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
 //===== Internal CL functions
 
 RppStatus
-brightness_contrast_cl (    cl_mem srcPtr, RppiSize srcSize,
+brightness_cl (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32f alpha, Rpp32s beta,
                             RppiChnFormat chnFormat, unsigned int channel,
                             cl_command_queue theQueue);
 
 RppStatus
-contrast_stretch_cl (    cl_mem srcPtr, RppiSize srcSize,
+contrast_cl (    cl_mem srcPtr, RppiSize srcSize,
                             cl_mem dstPtr,
                             Rpp32u newMin, Rpp32u newMax,
                             RppiChnFormat chnFormat, unsigned int channel,
                             cl_command_queue theQueue);
 cl_int
-gaussian_blur_cl(cl_mem srcPtr, RppiSize srcSize,
+blur_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, unsigned int filterSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
@@ -45,22 +45,22 @@ flip_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_command_queue theQueue);
 
 RppStatus
-convert_rgb2hsv_cl(cl_mem srcPtr, RppiSize srcSize,
+rgb_to_hsv_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr,RppiChnFormat chnFormat, unsigned int chanel,
                 cl_command_queue theQueue);
 
 RppStatus
-convert_hsv2rgb_cl(cl_mem srcPtr, RppiSize srcSize,
+hsv_to_rgb_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr,RppiChnFormat chnFormat, unsigned int chanel,
                 cl_command_queue theQueue);
 
 RppStatus
-hue_saturation_rgb_cl (cl_mem srcPtr, RppiSize srcSize,
+hueRGB_cl (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f Saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
-hue_saturation_hsv_cl( cl_mem srcPtr, RppiSize srcSize,
+hueHSV_cl( cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f Saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
@@ -112,8 +112,8 @@ bilateral_filter_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                       cl_command_queue theQueue);
 
 RppStatus
-gamma_correction_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
-                 RppiSize srcSize, float gamma,
+gamma_correction_cl ( cl_mem srcPtr1, RppiSize srcSize, 
+                 cl_mem dstPtr,float gamma,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
