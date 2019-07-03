@@ -45,10 +45,18 @@ add_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
 {
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "add.cl",
-                          "add",
-                          theProgram, theKernel);
+    cl_device_id theDevice;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
+    CreateProgramFromBinary(theQueue,"add.cl","add.cl.bin","add",theProgram,theKernel);
+
+    if(theProgram == NULL){
+
+    }
+    // cl_kernel_initializer(theQueue,
+    //                       "add.cl",
+    //                       "add",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);

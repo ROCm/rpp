@@ -12,6 +12,11 @@ cl_int
 cl_kernel_implementer (cl_command_queue theHandle, size_t* gDim3, size_t* lDim3, cl_program& theProgram,
                         cl_kernel& theKernel  );
 
+bool SaveProgramBinary(cl_program program, cl_device_id device, const std::string fileName);
+
+cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kernelFile, 
+                                const std::string binaryFile, std::string kernelName,
+                                cl_program theProgram, cl_kernel theKernel);
 
 //===== Internal CL functions
 
