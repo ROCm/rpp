@@ -288,8 +288,10 @@ RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        Rpp32f pixel = ((1 - alpha) * ((Rpp32f) srcPtr1[i])) + (alpha * ((Rpp32f) srcPtr2[i]));
-        dstPtr[i] = RPPPIXELCHECK(pixel);
+        *dstPtr = ((1 - alpha) * (*srcPtr1)) + (alpha * (*srcPtr2));
+        srcPtr1++;
+        srcPtr2++;
+        dstPtr++;
     }  
 
     return RPP_SUCCESS;  
@@ -306,16 +308,12 @@ RppStatus noiseAdd_gaussian_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 {
     std::default_random_engine generator;
     std::normal_distribution<>  distribution{noiseParameter->mean, noiseParameter->sigma}; 
-    for(int i = 0; i < srcSize.height ; i++)
+    for(int i = 0; i < (srcSize.height * srcSize.width * channel) ; i++)
     {
-        for (int j = 0; j < srcSize.width ; j++)
-		{
-			for (int c = 0; c < channel; c++)
-			{
-				Rpp32f pixel = ((Rpp32f) srcPtr[(c * srcSize.height * srcSize.width) + (i * srcSize.width) + j]) + ((Rpp32f) distribution(generator));
-				dstPtr[(c * srcSize.height * srcSize.width) + (i * srcSize.width) + j] = RPPPIXELCHECK(pixel);
-			}
-		}        
+        Rpp32f pixel = ((Rpp32f) *srcPtr) + ((Rpp32f) distribution(generator));
+		*dstPtr = RPPPIXELCHECK(pixel); 
+        dstPtr++;
+        srcPtr++;       
     }
     return RPP_SUCCESS;
 }
@@ -341,14 +339,10 @@ RppStatus noiseAdd_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         {
             Rpp32u row = rand() % srcSize.height;
             Rpp32u column = rand() % srcSize.width;
-            Rpp32f newValue = rand()%2 ? 255 : 0;
-            int c=0;
+            Rpp8u newValue = rand()%2 ? 255 : 0;
             for (int c = 0; c < channel; c++)
             {
-                Rpp32f pixel = newValue;
-                dstPtr[((c * srcSize.height * srcSize.width) +(row * srcSize.width) + column)] = RPPPIXELCHECK(pixel);
-                dstPtr[((c * srcSize.height * srcSize.width) +(row * srcSize.width) + column)*(c+1)] = RPPPIXELCHECK(pixel);
-                dstPtr[((c * srcSize.height * srcSize.width) +(row * srcSize.width) + column)*(c+2)] = RPPPIXELCHECK(pixel);
+                dstPtr[(row * srcSize.width) + (column) + (c * srcSize.width * srcSize.height) ] = newValue;
             }
         }        
     }
@@ -358,14 +352,10 @@ RppStatus noiseAdd_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         {
             Rpp32u row = rand() % srcSize.height;
             Rpp32u column = rand() % srcSize.width;
-            Rpp32f newValue = rand()%2 ? 255 : 0;
-            int c=0;
+            Rpp8u newValue = rand()%2 ? 255 : 0;
             for (int c = 0; c < channel; c++)
             {
-                Rpp32f pixel = newValue;
-                dstPtr[(c * srcSize.height * srcSize.width) +(row * srcSize.width) + column] = RPPPIXELCHECK(pixel);
-                dstPtr[(c * srcSize.height * srcSize.width) +(row * srcSize.width) + column+1] = RPPPIXELCHECK(pixel);
-                dstPtr[(c * srcSize.height * srcSize.width) +(row * srcSize.width) + column+2] = RPPPIXELCHECK(pixel);
+                dstPtr[(channel * row * srcSize.width) + (column * channel) + c] = newValue;
             }
         }
     }
