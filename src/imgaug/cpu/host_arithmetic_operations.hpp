@@ -91,3 +91,30 @@ RppStatus subtract_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 
 }
+
+/**************** Mean & Standard Deviation ***************/
+
+template <typename T>
+RppStatus mean_stddev_host(T* srcPtr, RppiSize srcSize,
+                            Rpp32f *mean, Rpp32f *stddev, 
+                            RppiChnFormat chnFormat, unsigned int channel)
+{
+    int i;
+    *mean = 0;
+    *stddev = 0;
+    T* srcPtrTemp=srcPtr;
+    for(i = 0; i < (srcSize.height * srcSize.width * channel); i++)
+    {
+        *mean += *srcPtr;
+        srcPtr++;
+    }
+    *mean = (*mean)/(srcSize.height * srcSize.width * channel);
+
+    for(i = 0; i < (srcSize.height * srcSize.width * channel); i++)
+    {
+        *stddev += (((*mean)-(*srcPtrTemp)) * ((*mean)-(*srcPtrTemp)));
+        srcPtrTemp++;
+    }
+    *stddev = sqrt((*stddev)/(srcSize.height * srcSize.width * channel));
+    return RPP_SUCCESS;
+}
