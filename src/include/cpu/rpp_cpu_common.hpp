@@ -334,26 +334,86 @@ RppStatus generate_box_kernel_host(Rpp32f* kernel, unsigned int kernelSize)
 }
 
 template<typename T>
-RppStatus compute_subimage_location_host(T* srcPtr, T** srcPtrSubImage, T* dstPtr, T** dstPtrSubImage, 
-                                         RppiSize srcSize, RppiSize *srcSizeSubImage, 
+RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage, 
+                                         RppiSize size, RppiSize *sizeSubImage, 
                                          unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, 
                                          RppiChnFormat chnFormat, unsigned int channel)
 {
+    if ((RPPINRANGE(x1, 0, size.width - 1) == 0) 
+        || (RPPINRANGE(x2, 0, size.width - 1) == 0) 
+        || (RPPINRANGE(y1, 0, size.height - 1) == 0) 
+        || (RPPINRANGE(y2, 0, size.height - 1) == 0))
+    {
+        return RPP_ERROR;
+    }
+    
     int yDiff = (int) y2 - (int) y1;
     int xDiff = (int) x2 - (int) x1;
 
-    srcSizeSubImage->height = (Rpp32u) RPPABS(yDiff) + 1;
-    srcSizeSubImage->width = (Rpp32u) RPPABS(xDiff) + 1;
+    sizeSubImage->height = (Rpp32u) RPPABS(yDiff) + 1;
+    sizeSubImage->width = (Rpp32u) RPPABS(xDiff) + 1;
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        *srcPtrSubImage = srcPtr + (RPPMIN2(y1, y2) * srcSize.width) + RPPMIN2(x1, x2);
-        *dstPtrSubImage = dstPtr + (RPPMIN2(y1, y2) * srcSize.width) + RPPMIN2(x1, x2);
+        *ptrSubImage = ptr + (RPPMIN2(y1, y2) * size.width) + RPPMIN2(x1, x2);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        *srcPtrSubImage = srcPtr + (RPPMIN2(y1, y2) * srcSize.width * channel) + (RPPMIN2(x1, x2) * channel);
-        *dstPtrSubImage = dstPtr + (RPPMIN2(y1, y2) * srcSize.width * channel) + (RPPMIN2(x1, x2) * channel);
+        *ptrSubImage = ptr + (RPPMIN2(y1, y2) * size.width * channel) + (RPPMIN2(x1, x2) * channel);
+    }
+
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+RppStatus histogram_kernel_host(T* srcPtr, RppiSize srcSize, Rpp32u* histogram, 
+                                Rpp32u bins, Rpp32u increment, 
+                                RppiChnFormat chnFormat, unsigned int channel)
+{
+    Rpp32u packedIncrement = channel * increment;
+    T *srcPtrTemp;
+    srcPtrTemp = srcPtr;
+    Rpp32u *histogramTemp;
+    histogramTemp = histogram;
+    int flag = 0;
+
+    Rpp32u elementsInBin = ((Rpp32u)(std::numeric_limits<T>::max()) + 1) / bins;
+
+    for (int i = 0; i < srcSize.height; i++)
+    {
+        for (int j = 0; j < srcSize.width; j++)
+        {
+            flag = 0;
+            for (int binCheck = 0; binCheck < bins - 1; binCheck++)
+            {
+                if (*srcPtrTemp >= binCheck * elementsInBin && *srcPtrTemp <= ((binCheck + 1) * elementsInBin) - 1)
+                {
+                    *(histogramTemp + binCheck) += 1;
+                    flag = 1;
+                    break;
+                }
+            }
+            if (flag == 0)
+            {
+                *(histogramTemp + bins - 1) += 1;
+            }
+            if (chnFormat == RPPI_CHN_PLANAR)
+            {
+                srcPtrTemp++;
+            }
+            else if (chnFormat == RPPI_CHN_PACKED)
+            {
+                srcPtrTemp += channel;
+            }
+        }
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            srcPtrTemp += increment;
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            srcPtrTemp += packedIncrement;
+        }
     }
 
     return RPP_SUCCESS;

@@ -159,7 +159,8 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     RppiSize srcSizeMod, srcSizeSubImage;
     T *srcPtrMod, *srcPtrSubImage, *dstPtrSubImage;
 
-    compute_subimage_location_host(srcPtr, &srcPtrSubImage, dstPtr, &dstPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
+    compute_subimage_location_host(srcPtr, &srcPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
+    compute_subimage_location_host(dstPtr, &dstPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
 
     srcSizeMod.height = srcSizeSubImage.height + (2 * bound);
     srcSizeMod.width = srcSizeSubImage.width + (2* bound);
