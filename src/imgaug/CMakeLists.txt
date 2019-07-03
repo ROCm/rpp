@@ -5,7 +5,9 @@ file( GLOB MOD_CPP "*.cpp" )
 add_library( ${PROJECT_NAME} STATIC ${MOD_CPP})
 
 # Backend Specific Settings
-
+if( "${TIME_INFO}" STREQUAL "1")
+    add_definitions(-DTIME_INFO)
+endif()
 if( "${BACKEND}" STREQUAL "HIP")
     set(BACKEND_HIPOC 1)
     add_subdirectory( cl )
