@@ -149,3 +149,35 @@ blur_cl(cl_mem srcPtr, RppiSize srcSize,
     clReleaseMemObject(filtPtr);
 
 }
+
+RppStatus
+blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr, float alpha,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue)
+{
+    cl_kernel theKernel;
+    cl_program theProgram;
+    cl_kernel_initializer(theQueue,
+                          "blend.cl",
+                          "blend",
+                          theProgram, theKernel);
+
+    //---- Args Setter
+    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, 2, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, 5, sizeof(float), &alpha);
+    clSetKernelArg(theKernel, 6, sizeof(unsigned int), &channel);
+    //----
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;
+}
