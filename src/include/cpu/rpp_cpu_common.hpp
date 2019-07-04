@@ -45,6 +45,71 @@ RppStatus generate_gaussian_kernel_host(Rpp32f stdDev, Rpp32f* kernel, unsigned 
 }
 
 template <typename T>
+RppStatus generate_bilateral_kernel_host(Rpp32f sigmaI, Rpp32f sigmaS, Rpp32f* kernel, unsigned int kernelSize, 
+                                         T* srcPtrWindow, RppiSize srcSizeMod, Rpp32u rowEndIncrement, 
+                                         RppiChnFormat chnFormat, unsigned int channel)
+{
+    Rpp32f sum = 0.0, multiplierI, multiplierS;
+    unsigned int count = 0;
+
+    int bound = ((kernelSize - 1) / 2);
+
+    multiplierI = -1 / (2 * sigmaI * sigmaI);
+    multiplierS = -1 / (2 * sigmaS * sigmaS);
+    
+    T *srcPtrWindowTemp, *srcPtr;
+    srcPtrWindowTemp = srcPtrWindow;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        srcPtr = srcPtrWindow + (bound * srcSizeMod.width) + bound;
+        for (int i = -bound; i <= bound; i++)
+        {
+            for (int j = -bound; j <= bound; j++)
+            {
+                Rpp8u pixel = *srcPtr - *srcPtrWindowTemp;
+                pixel = RPPABS(pixel);
+                //pixel = pixel * pixel;
+                pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
+                pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
+                kernel[count] = exp((multiplierS * (i*i + j*j)) + (multiplierI * pixel));
+                sum += kernel[count];
+                count += 1;
+                srcPtrWindowTemp++;
+            }
+            srcPtrWindowTemp += rowEndIncrement;
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        srcPtr = srcPtrWindow + channel * ((bound * srcSizeMod.width) + bound);
+        for (int i = -bound; i <= bound; i++)
+        {
+            for (int j = -bound; j <= bound; j++)
+            {
+                Rpp8u pixel = *srcPtr - *srcPtrWindowTemp;
+                pixel = RPPABS(pixel);
+                //pixel = pixel * pixel;
+                pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
+                pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
+                kernel[count] = exp((multiplierS * (i*i + j*j)) + (multiplierI * pixel));
+                sum += kernel[count];
+                count += 1;
+                srcPtrWindowTemp += channel;
+            }
+            srcPtrWindowTemp += rowEndIncrement;
+        }
+    }
+
+    for (int i = 0; i < (kernelSize * kernelSize); i++)
+    {
+        kernel[i] /= sum;
+    }
+    
+    return RPP_SUCCESS;
+}
+
+template <typename T>
 RppStatus generate_evenly_padded_image_host(T* srcPtr, RppiSize srcSize, T* srcPtrMod, RppiSize srcSizeMod, 
                                      RppiChnFormat chnFormat, unsigned int channel)
 {
