@@ -432,53 +432,34 @@ RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage,
 
 template<typename T>
 RppStatus histogram_kernel_host(T* srcPtr, RppiSize srcSize, Rpp32u* histogram, 
-                                Rpp32u bins, Rpp32u increment, 
-                                RppiChnFormat chnFormat, unsigned int channel)
+                                Rpp32u bins, 
+                                unsigned int channel)
 {
-    Rpp32u packedIncrement = channel * increment;
+    Rpp32u elementsInBin = ((Rpp32u)(std::numeric_limits<T>::max()) + 1) / bins;
+    int flag = 0;
+
     T *srcPtrTemp;
     srcPtrTemp = srcPtr;
     Rpp32u *histogramTemp;
     histogramTemp = histogram;
-    int flag = 0;
 
-    Rpp32u elementsInBin = ((Rpp32u)(std::numeric_limits<T>::max()) + 1) / bins;
-
-    for (int i = 0; i < srcSize.height; i++)
+    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        for (int j = 0; j < srcSize.width; j++)
+        flag = 0;
+        for (int binCheck = 0; binCheck < bins - 1; binCheck++)
         {
-            flag = 0;
-            for (int binCheck = 0; binCheck < bins - 1; binCheck++)
+            if (*srcPtrTemp >= binCheck * elementsInBin && *srcPtrTemp <= ((binCheck + 1) * elementsInBin) - 1)
             {
-                if (*srcPtrTemp >= binCheck * elementsInBin && *srcPtrTemp <= ((binCheck + 1) * elementsInBin) - 1)
-                {
-                    *(histogramTemp + binCheck) += 1;
-                    flag = 1;
-                    break;
-                }
-            }
-            if (flag == 0)
-            {
-                *(histogramTemp + bins - 1) += 1;
-            }
-            if (chnFormat == RPPI_CHN_PLANAR)
-            {
-                srcPtrTemp++;
-            }
-            else if (chnFormat == RPPI_CHN_PACKED)
-            {
-                srcPtrTemp += channel;
+                *(histogramTemp + binCheck) += 1;
+                flag = 1;
+                break;
             }
         }
-        if (chnFormat == RPPI_CHN_PLANAR)
+        if (flag == 0)
         {
-            srcPtrTemp += increment;
+            *(histogramTemp + bins - 1) += 1;
         }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            srcPtrTemp += packedIncrement;
-        }
+        srcPtrTemp++;
     }
 
     return RPP_SUCCESS;
