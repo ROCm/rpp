@@ -166,7 +166,6 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
                                 const std::string binaryFile, std::string kernelName,
                                 cl_program& theProgram, cl_kernel& theKernel)
 {
-    std::cerr << "Entering CreateProgramFromBinary." << std::endl;
     cl_int err;
     cl_context theContext;
     clGetCommandQueueInfo(  theQueue,
@@ -175,7 +174,6 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
     cl_device_id theDevice;
     clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
-    std::cerr<<"\n binaryFile.c_str() @ "<<binaryFile.c_str() << " @ binaryFile.c_str() end";
     FILE *fp = fopen(binaryFile.c_str(), "rb");
     if (fp == NULL)
     {
@@ -231,13 +229,13 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
     }
     if (theProgram == NULL)
     {
-        std::cout << "Binary not loaded, create from source..." << kernelFile << " "  << kernelName << std::endl;
+        //std::cout << "Binary not loaded, create from source..." << kernelFile << " "  << kernelName << std::endl;
         err = cl_kernel_initializer(theQueue,
                            kernelFile,
                            kernelName,
                            theProgram, theKernel);
 
-        std::cout << "Save program binary for future run..." << std::endl;
+        //std::cout << "Save program binary for future run..." << std::endl;
         if (SaveProgramBinary(theProgram, theDevice, binaryFile) == false)
         {
             std::cerr << "Failed to write program binary" << std::endl;
@@ -249,7 +247,7 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
     }
     else
     {
-        std::cout << "Read program from binary." << std::endl;
+        //std::cout << "Read program from binary." << std::endl;
     }
     theKernel = clCreateKernel(theProgram, kernelName.c_str(), &err);
     return err;
