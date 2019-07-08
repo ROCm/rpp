@@ -46,7 +46,9 @@ cl_kernel_initializer ( cl_command_queue theQueue,
                             (const char **)& sourceStr, NULL, &err);
 
     clBuildProgram(theProgram, 0, NULL, NULL, NULL, NULL);
+    // theKernel = clCreateKernel(theProgram, kernelName.c_str(), &err);
 
+    return err;
 }
 
 cl_int
@@ -162,8 +164,9 @@ bool SaveProgramBinary(cl_program program, cl_device_id device, const std::strin
 //
 cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kernelFile, 
                                 const std::string binaryFile, std::string kernelName,
-                                cl_program theProgram, cl_kernel theKernel)
+                                cl_program& theProgram, cl_kernel& theKernel)
 {
+    std::cerr << "Entering CreateProgramFromBinary." << std::endl;
     cl_int err;
     cl_context theContext;
     clGetCommandQueueInfo(  theQueue,
@@ -172,63 +175,64 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
     cl_device_id theDevice;
     clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
-
+    std::cerr<<"\n binaryFile.c_str() @ "<<binaryFile.c_str() << " @ binaryFile.c_str() end";
     FILE *fp = fopen(binaryFile.c_str(), "rb");
     if (fp == NULL)
     {
-        return NULL;
+        theProgram = NULL;
     }
+    else {
+        // Determine the size of the binary
+        size_t binarySize;
+        fseek(fp, 0, SEEK_END);
+        binarySize = ftell(fp);
+        rewind(fp);
 
-    // Determine the size of the binary
-    size_t binarySize;
-    fseek(fp, 0, SEEK_END);
-    binarySize = ftell(fp);
-    rewind(fp);
+        unsigned char *programBinary = new unsigned char[binarySize];
+        fread(programBinary, 1, binarySize, fp);
+        fclose(fp);
 
-    unsigned char *programBinary = new unsigned char[binarySize];
-    fread(programBinary, 1, binarySize, fp);
-    fclose(fp);
+        cl_int errNum = 0;
+        cl_int binaryStatus;
+        theProgram = clCreateProgramWithBinary(theContext,
+                                            1,
+                                            &theDevice,
+                                            &binarySize,
+                                            (const unsigned char**)&programBinary,
+                                            &binaryStatus,
+                                            &errNum);
+        delete [] programBinary;
+        if (errNum != CL_SUCCESS)
+        {
+            std::cerr << "Error loading program binary." << std::endl;
+            return NULL;
+        }
 
-    cl_int errNum = 0;
-    cl_int binaryStatus;
+        if (binaryStatus != CL_SUCCESS)
+        {
+            std::cerr << "Invalid binary for device" << std::endl;
+            return NULL;
+        }
 
-    theProgram = clCreateProgramWithBinary(theContext,
-                                        1,
-                                        &theDevice,
-                                        &binarySize,
-                                        (const unsigned char**)&programBinary,
-                                        &binaryStatus,
-                                        &errNum);
-    delete [] programBinary;
-    if (errNum != CL_SUCCESS)
-    {
-        std::cerr << "Error loading program binary." << std::endl;
-        return NULL;
-    }
+        errNum = clBuildProgram(theProgram, 0, NULL, NULL, NULL, NULL);
+        if (errNum != CL_SUCCESS)
+        {
+            // Determine the reason for the error
+            char buildLog[16384];
+            clGetProgramBuildInfo(theProgram, theDevice, CL_PROGRAM_BUILD_LOG,
+                                sizeof(buildLog), buildLog, NULL);
 
-    if (binaryStatus != CL_SUCCESS)
-    {
-        std::cerr << "Invalid binary for device" << std::endl;
-        return NULL;
-    }
-
-    errNum = clBuildProgram(theProgram, 0, NULL, NULL, NULL, NULL);
-    if (errNum != CL_SUCCESS)
-    {
-        // Determine the reason for the error
-        char buildLog[16384];
-        clGetProgramBuildInfo(theProgram, theDevice, CL_PROGRAM_BUILD_LOG,
-                              sizeof(buildLog), buildLog, NULL);
-
-        std::cerr << "Error in program: " << std::endl;
-        std::cerr << buildLog << std::endl;
-        clReleaseProgram(theProgram);
-        return NULL;
+            std::cerr << "Error in program: " << std::endl;
+            std::cerr << buildLog << std::endl;
+            clReleaseProgram(theProgram);
+            return NULL;
+        }
+        
     }
     if (theProgram == NULL)
     {
-        std::cout << "Binary not loaded, create from source..." << std::endl;
-        cl_kernel_initializer(theQueue,
+        std::cout << "Binary not loaded, create from source..." << kernelFile << " "  << kernelName << std::endl;
+        err = cl_kernel_initializer(theQueue,
                            kernelFile,
                            kernelName,
                            theProgram, theKernel);

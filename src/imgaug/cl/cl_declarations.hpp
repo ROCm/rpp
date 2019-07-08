@@ -16,7 +16,7 @@ bool SaveProgramBinary(cl_program program, cl_device_id device, const std::strin
 
 cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kernelFile, 
                                 const std::string binaryFile, std::string kernelName,
-                                cl_program theProgram, cl_kernel theKernel);
+                                cl_program& theProgram, cl_kernel& theKernel);
 
 //===== Internal CL functions
 

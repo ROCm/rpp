@@ -9,20 +9,23 @@ absolute_difference_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "absolute_difference.cl",
-                          "absolute_difference",
-                          theProgram, theKernel);
+    CreateProgramFromBinary(theQueue,"absolute_difference.cl","absolute_difference.cl.bin","absolute_difference",theProgram,theKernel);
+    // cl_kernel_initializer(theQueue,
+    //                       "absolute_difference.cl",
+    //                       "absolute_difference",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, 2, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
+    clRetainKernel(theKernel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     //----
 
     size_t gDim3[3];
@@ -43,30 +46,27 @@ add_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
+    cl_int err;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_device_id theDevice;
-    clGetCommandQueueInfo(  theQueue,
-                            CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
-    CreateProgramFromBinary(theQueue,"add.cl","add.cl.bin","add",theProgram,theKernel);
-
-    if(theProgram == NULL){
-
-    }
+    // clGetCommandQueueInfo(  theQueue,
+    //                         CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
+    err = CreateProgramFromBinary(theQueue,"add.cl","add.cl.bin","add",theProgram,theKernel);
     // cl_kernel_initializer(theQueue,
     //                       "add.cl",
     //                       "add",
     //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, 2, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
+    err = clRetainKernel(theKernel);
+    err = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &(srcSize.height));
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &(srcSize.width));
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &(channel));
     //----
-
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
@@ -85,20 +85,25 @@ subtract_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "subtract.cl",
-                          "subtract",
-                          theProgram, theKernel);
+
+    CreateProgramFromBinary(theQueue,"subtract.cl","subtract.cl.bin","subtract",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    // cl_kernel_initializer(theQueue,
+    //                       "subtract.cl",
+    //                       "subtract",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, 2, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     //----
 
     size_t gDim3[3];
@@ -118,19 +123,24 @@ accumulate_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "accumulate.cl",
-                          "accumulate",
-                          theProgram, theKernel);
+
+    CreateProgramFromBinary(theQueue,"accumulate.cl","accumulate.cl.bin","accumulate",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    // cl_kernel_initializer(theQueue,
+    //                       "accumulate.cl",
+    //                       "accumulate",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, 2, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     //----
 
     size_t gDim3[3];
@@ -151,20 +161,25 @@ accumulate_weighted_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "accumulate.cl",
-                          "accumulate_weighted",
-                          theProgram, theKernel);
+
+    CreateProgramFromBinary(theQueue,"accumulate.cl","accumulate.cl.bin","accumulate_weighted",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    // cl_kernel_initializer(theQueue,
+    //                       "accumulate.cl",
+    //                       "accumulate_weighted",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, 2, sizeof(Rpp64f), &alpha);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(Rpp64f), &alpha);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     //----
 
     size_t gDim3[3];
