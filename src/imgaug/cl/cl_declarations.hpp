@@ -150,4 +150,10 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
+RppStatus
+blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr, float alpha,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
