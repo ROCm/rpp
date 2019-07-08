@@ -339,7 +339,7 @@ RppStatus noiseAdd_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         {
             Rpp32u row = rand() % srcSize.height;
             Rpp32u column = rand() % srcSize.width;
-            Rpp8u newValue = rand()%2 ? 255 : 0;
+            Rpp8u newValue = rand()%2 ? 255 : 1;
             for (int c = 0; c < channel; c++)
             {
                 dstPtr[(row * srcSize.width) + (column) + (c * srcSize.width * srcSize.height) ] = newValue;
@@ -352,7 +352,7 @@ RppStatus noiseAdd_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         {
             Rpp32u row = rand() % srcSize.height;
             Rpp32u column = rand() % srcSize.width;
-            Rpp8u newValue = rand()%2 ? 255 : 0;
+            Rpp8u newValue = rand()%2 ? 1 : 255;
             for (int c = 0; c < channel; c++)
             {
                 dstPtr[(channel * row * srcSize.width) + (column * channel) + c] = newValue;

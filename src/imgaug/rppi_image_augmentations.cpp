@@ -689,3 +689,94 @@ rppi_blend_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+// ----------------------------------------
+// GPU ADD NOISE functions  calls 
+// ----------------------------------------
+
+RppStatus
+rppi_noiseAdd_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+ 	    if(noiseType==GAUSSIAN)
+            noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+                srcSize,
+                static_cast<cl_mem>(dstPtr), 
+                noiseType,(RppiGaussParameter *)noiseParameter,
+                RPPI_CHN_PLANAR, 1,
+                static_cast<cl_command_queue>(rppHandle));
+        else if(noiseType==SNP)
+            noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
+                srcSize,
+                static_cast<cl_mem>(dstPtr), 
+                noiseType,(Rpp32f *)noiseParameter,
+                RPPI_CHN_PLANAR, 1,
+                static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_noiseAdd_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+ 	    if(noiseType==GAUSSIAN)
+            noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+                srcSize,
+                static_cast<cl_mem>(dstPtr), 
+                noiseType,(RppiGaussParameter *)noiseParameter,
+                RPPI_CHN_PLANAR, 3,
+                static_cast<cl_command_queue>(rppHandle));
+        else if(noiseType==SNP)
+            noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
+                srcSize,
+                static_cast<cl_mem>(dstPtr), 
+                noiseType,(Rpp32f *)noiseParameter,
+                RPPI_CHN_PLANAR, 3,
+                static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_noiseAdd_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+ 	    if(noiseType==GAUSSIAN)
+            noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+                srcSize,
+                static_cast<cl_mem>(dstPtr), 
+                noiseType,(RppiGaussParameter *)noiseParameter,
+                RPPI_CHN_PACKED, 3,
+                static_cast<cl_command_queue>(rppHandle));
+        else if(noiseType==SNP)
+            noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
+                srcSize,
+                static_cast<cl_mem>(dstPtr), 
+                noiseType,(Rpp32f *)noiseParameter,
+                RPPI_CHN_PACKED, 3,
+                static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}

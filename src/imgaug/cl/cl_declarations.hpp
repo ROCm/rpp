@@ -156,4 +156,20 @@ blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
+RppStatus  
+noise_add_gaussian_cl(cl_mem srcPtr,
+                RppiSize srcSize,
+                cl_mem dstPtr, 
+                RppiNoise noiseType,RppiGaussParameter *noiseParameter,
+                RppiChnFormat chnFormat, unsigned int channel, 
+                cl_command_queue theQueue);
+
+RppStatus
+noise_add_snp_cl(cl_mem srcPtr, 
+                RppiSize srcSize,
+                cl_mem dstPtr, 
+                RppiNoise noiseType,Rpp32f *noiseParameter,
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
