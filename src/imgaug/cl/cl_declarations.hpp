@@ -172,4 +172,10 @@ noise_add_snp_cl(cl_mem srcPtr,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
+RppStatus
+temprature_cl( cl_mem srcPtr1,
+                 RppiSize srcSize, cl_mem dstPtr, float adjustmentValue,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
