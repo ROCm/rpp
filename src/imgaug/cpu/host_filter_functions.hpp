@@ -4,7 +4,7 @@
 
 template <typename T>
 RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                                Rpp32u kernelSize, Rpp64f sigmaI, Rpp64f sigmaS,
+                                Rpp32u kernelSize, Rpp32f sigmaI, Rpp32f sigmaS,
                                 RppiChnFormat chnFormat, unsigned int channel)
 {
     if (kernelSize % 2 == 0)
@@ -16,14 +16,20 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     int bound = ((kernelSize - 1) / 2);
 
     RppiSize srcSizeMod;
-    srcSizeMod.width = srcSize.width + (2 * bound);
     srcSizeMod.height = srcSize.height + (2 * bound);
+    srcSizeMod.width = srcSize.width + (2 * bound);
     Rpp8u *srcPtrMod = (Rpp8u *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(Rpp8u));
-
+    
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
 
-    int remainingElementsInRowPlanar = srcSizeMod.width - kernelSize;
-    int remainingElementsInRowPacked = (srcSizeMod.width - kernelSize) * channel;
+    Rpp32u remainingElementsInRowPlanar = srcSizeMod.width - kernelSize;
+    Rpp32u remainingElementsInRowPacked = (srcSizeMod.width - kernelSize) * channel;
+    Rpp32u incrementToWindowCenterPlanar = (bound * srcSizeMod.width) + bound;
+    Rpp32u incrementToWindowCenterPacked = ((bound * srcSizeMod.width) + bound) * channel;
+    Rpp32f multiplierI, multiplierS, multiplier;
+    multiplierI = -1 / (2 * sigmaI * sigmaI);
+    multiplierS = -1 / (2 * sigmaS * sigmaS);
+    multiplier = 1 / (4 * M_PI * M_PI * sigmaI * sigmaI * sigmaS * sigmaS);
     
     T *srcPtrWindow, *dstPtrTemp;
     srcPtrWindow = srcPtrMod;
@@ -31,17 +37,18 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        Rpp32u rowEndIncrement = srcSizeMod.width - kernelSize;
         for (int c = 0; c < channel; c++)
         {
             for (int i = 0; i < srcSize.height; i++)
             {
                 for (int j = 0; j < srcSize.width; j++)
                 {
-                    generate_bilateral_kernel_host<T>(sigmaI, sigmaS, kernel, kernelSize, srcPtrWindow, srcSizeMod, rowEndIncrement, chnFormat, channel);
+                    generate_bilateral_kernel_host<T>(multiplierI, multiplierS, multiplier, kernel, kernelSize, bound, 
+                                                      srcPtrWindow, srcSizeMod, remainingElementsInRowPlanar, incrementToWindowCenterPlanar, 
+                                                      chnFormat, channel);
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPlanar, remainingElementsInRowPacked, 
-                                                 chnFormat, channel);
+                                            kernel, kernelSize, remainingElementsInRowPlanar, 
+                                            chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
                 }
@@ -52,17 +59,18 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        Rpp32u rowEndIncrement = channel * (srcSizeMod.width - kernelSize);
         for (int i = 0; i < srcSize.height; i++)
         {
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
                 {   
-                    generate_bilateral_kernel_host<T>(sigmaI, sigmaS, kernel, kernelSize, srcPtrWindow, srcSizeMod, rowEndIncrement, chnFormat, channel);
+                    generate_bilateral_kernel_host<T>(multiplierI, multiplierS, multiplier, kernel, kernelSize, bound, 
+                                                      srcPtrWindow, srcSizeMod, remainingElementsInRowPacked, incrementToWindowCenterPacked, 
+                                                      chnFormat, channel);
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPlanar, remainingElementsInRowPacked, 
-                                                 chnFormat, channel);
+                                            kernel, kernelSize, remainingElementsInRowPacked, 
+                                            chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
                 }
@@ -70,3 +78,7 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             srcPtrWindow += ((kernelSize - 1) * channel);
         }
     }
+
+    return RPP_SUCCESS;
+
+}
