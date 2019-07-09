@@ -199,7 +199,6 @@ temprature_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float adjustmentV
                           "temprature_packed",
                           theProgram, theKernel);
     //---- Args Setter
-    unsigned int n = srcSize.height * srcSize.width * channel ;
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
     clSetKernelArg(theKernel, 2, sizeof(unsigned int), &srcSize.height);
