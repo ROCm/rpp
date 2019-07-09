@@ -440,3 +440,56 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
     return RPP_SUCCESS;
 
 }
+
+
+
+
+/******* Exposure Modification ********/
+
+// GPU calls for Exposure Modification function
+
+// Host calls for Exposure Modification function
+
+RppStatus
+rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor)
+{
+
+    exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           exposureFactor,
+                           RPPI_CHN_PLANAR, 3, RGB);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor)
+{
+
+    exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           exposureFactor,
+                           RPPI_CHN_PACKED, 3, RGB);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor)
+{
+
+    exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                           exposureFactor,
+                           RPPI_CHN_PLANAR, 3, HSV);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor)
+{
+
+    exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                           exposureFactor,
+                           RPPI_CHN_PACKED, 3, HSV);
+    return RPP_SUCCESS;
+}
