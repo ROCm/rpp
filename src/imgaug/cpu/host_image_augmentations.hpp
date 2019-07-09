@@ -1,4 +1,5 @@
 #include <cpu/rpp_cpu_common.hpp>
+#include "cpu/host_geometry_transforms.hpp"
 #include <stdlib.h>
 #include <time.h>
 
