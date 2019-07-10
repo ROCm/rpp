@@ -44,6 +44,39 @@ RppStatus generate_gaussian_kernel_host(Rpp32f stdDev, Rpp32f* kernel, unsigned 
     return RPP_SUCCESS;
 }
 
+RppStatus generate_gaussian_kernel_asymmetric_host(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSizeX, Rpp32u kernelSizeY)
+{
+    Rpp32f s, sum = 0.0, multiplier;
+    if (kernelSizeX % 2 == 0)
+    {
+        return RPP_ERROR;
+    }
+    if (kernelSizeY % 2 == 0)
+    {
+        return RPP_ERROR;
+    }
+    int boundX = ((kernelSizeX - 1) / 2);
+    int boundY = ((kernelSizeY - 1) / 2);
+    unsigned int c = 0;
+    s = 1 / (2 * stdDev * stdDev);
+    multiplier = (1 / M_PI) * (s);
+    for (int i = -boundY; i <= boundY; i++)
+    {
+        for (int j = -boundX; j <= boundX; j++)
+        {
+            kernel[c] = multiplier * exp((-1) * (s) * (i*i + j*j));
+            sum += kernel[c];
+            c += 1;
+        }
+    }
+    for (int i = 0; i < (kernelSizeX * kernelSizeY); i++)
+    {
+        kernel[i] /= sum;
+    }
+
+    return RPP_SUCCESS;
+}
+
 template <typename T>
 RppStatus generate_bilateral_kernel_host(Rpp32f multiplierI, Rpp32f multiplierS, Rpp32f multiplier, Rpp32f* kernel, unsigned int kernelSize, int bound, 
                                          T* srcPtrWindow, RppiSize srcSizeMod, Rpp32u remainingElementsInRow, Rpp32u incrementToWindowCenter, 
@@ -417,6 +450,64 @@ RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage,
     else if (chnFormat == RPPI_CHN_PACKED)
     {
         *ptrSubImage = ptr + (RPPMIN2(y1, y2) * size.width * channel) + (RPPMIN2(x1, x2) * channel);
+    }
+
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize, 
+                                 RppiChnFormat chnFormat, unsigned int channel)
+{
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int c = 0; c < channel; c++)
+        {
+            srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
+            for (int i = 0; i < dstSize.height; i++)
+            {
+                for (int j = 0; j < dstSize.width; j++)
+                {
+                    *dstPtrTemp = *(srcPtrTemp + (j * srcSize.width) + i);
+                    dstPtrTemp++;
+                }
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        for (int i = 0; i < dstSize.height; i++)
+        {
+            for (int j = 0; j < dstSize.width; j++)
+            {
+                srcPtrTemp = srcPtr + (channel * ((j * srcSize.width) + i));
+                for (int c = 0; c < channel; c++)
+                {
+                    *dstPtrTemp = *(srcPtrTemp + c);
+                    dstPtrTemp++;
+                }
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T, typename U>
+RppStatus compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+                                   unsigned int channel)
+{
+    U pixel;
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        pixel = ((U) srcPtr1[i]) * ((U) srcPtr2[i]);
+        pixel = (pixel < (U) 255) ? pixel : ((U) 255);
+        pixel = (pixel > (U) 0) ? pixel : ((U) 0);
+        dstPtr[i] =(T) pixel;
     }
 
     return RPP_SUCCESS;

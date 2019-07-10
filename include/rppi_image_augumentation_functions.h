@@ -219,6 +219,23 @@ RppStatus
 rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                          Rpp32f exposureFactor);
 
+// --------------------
+// Vignette Effect
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_vignette_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev);
+
+RppStatus
+rppi_vignette_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev);
+
+RppStatus
+rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev);
 
 //------------------------- Geometric Transformations -------------------------
 

@@ -390,9 +390,9 @@ rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
 /******* Jitter Add ********/
 
-// GPU calls for Pixelate function
+// GPU calls for JitterAdd function
 
-// Host calls for Pixelate function
+// Host calls for JitterAdd function
 
 RppStatus
 rppi_jitterAdd_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
@@ -420,6 +420,45 @@ rppi_jitterAdd_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 {
     jitterAdd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                      maxJitterX, maxJitterY, 
+                     RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
+
+
+
+
+/******* Vignette ********/
+
+// GPU calls for Vignette function
+
+// Host calls for Vignette function
+
+RppStatus
+rppi_vignette_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev)
+{
+    vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     stdDev,
+                     RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_vignette_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev)
+{
+    vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     stdDev,
+                     RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev)
+{
+    vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     stdDev,
                      RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 }
