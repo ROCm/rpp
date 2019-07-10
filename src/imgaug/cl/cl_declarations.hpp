@@ -162,4 +162,10 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
             unsigned int x2, unsigned int y2,RppiChnFormat chnFormat,
             unsigned int channel,cl_command_queue theQueue);
 
+cl_int
+jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           unsigned int minJitter,unsigned int maxJitter,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

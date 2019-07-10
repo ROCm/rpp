@@ -224,18 +224,16 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
     else
     {std::cerr << "Internal error: Unknown Channel format";}
 
-
-
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &filtPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x1);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y1);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x2);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y2);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &filterSize);
 
 //----
@@ -247,4 +245,38 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
 
     clReleaseMemObject(filtPtr);
 
+}
+
+cl_int
+jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           unsigned int minJitter,unsigned int maxJitter,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    cl_int err;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    cl_kernel_initializer(theQueue,
+                          "jitter.cl",
+                          "jitter",
+                          theProgram, theKernel);
+
+    //---- Args Setter
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &minJitter);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &maxJitter);
+    //----
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;
 }

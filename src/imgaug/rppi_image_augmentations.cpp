@@ -782,3 +782,72 @@ rppi_pixelate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+// ----------------------------------------
+// GPU jitter functions  calls 
+// ----------------------------------------
+RppStatus
+rppi_jitter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u minJitter, Rpp32u maxJitter, RppHandle_t rppHandle)
+{
+   	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 jitter_cl(static_cast<cl_mem>(srcPtr),
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			minJitter,
+			maxJitter,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_jitter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u minJitter, Rpp32u maxJitter, RppHandle_t rppHandle)
+{
+   	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 jitter_cl(static_cast<cl_mem>(srcPtr),
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			minJitter,
+			maxJitter,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_jitter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u minJitter, Rpp32u maxJitter, RppHandle_t rppHandle)
+{
+   	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 jitter_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			minJitter,
+			maxJitter,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
