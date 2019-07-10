@@ -196,9 +196,9 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /************ Brightness ************/
 
 template <typename T>
-RppStatus brightness_contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                                   Rpp32f alpha, Rpp32f beta,
-                                   unsigned int channel)
+RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                            Rpp32f alpha, Rpp32f beta,
+                            RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -277,4 +277,106 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
 
     return RPP_SUCCESS;
+}
+
+/**************** Blend ***************/
+
+template <typename T>
+RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr, 
+                        Rpp32f alpha, RppiChnFormat chnFormat, 
+                        unsigned int channel)
+{
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        *dstPtr = ((1 - alpha) * (*srcPtr1)) + (alpha * (*srcPtr2));
+        srcPtr1++;
+        srcPtr2++;
+        dstPtr++;
+    }  
+
+    return RPP_SUCCESS;  
+}
+
+/**************** Add Noise ***************/
+
+//Gaussian host function
+
+template <typename T>
+RppStatus noiseAdd_gaussian_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                        RppiNoise noiseType,  RppiGaussParameter *noiseParameter, 
+                        RppiChnFormat chnFormat, unsigned int channel)
+{
+    std::default_random_engine generator;
+    std::normal_distribution<>  distribution{noiseParameter->mean, noiseParameter->sigma}; 
+    for(int i = 0; i < (srcSize.height * srcSize.width * channel) ; i++)
+    {
+        Rpp32f pixel = ((Rpp32f) *srcPtr) + ((Rpp32f) distribution(generator));
+		*dstPtr = RPPPIXELCHECK(pixel); 
+        dstPtr++;
+        srcPtr++;       
+    }
+    return RPP_SUCCESS;
+}
+
+//Salt and Pepper Host function
+
+template <typename T>
+RppStatus noiseAdd_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                        RppiNoise noiseType,  Rpp32f *noiseParameter, 
+                        RppiChnFormat chnFormat, unsigned int channel)
+{
+    int i;
+    for (i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        Rpp32f pixel = ((Rpp32f) srcPtr[i]);
+        dstPtr[i] = RPPPIXELCHECK(pixel);
+    }
+
+    Rpp32u noiseProbability= (Rpp32u)(*noiseParameter * srcSize.width * srcSize.height * channel );
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for(i = 0 ; i < noiseProbability ; i++)
+        {
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp8u newValue = rand()%2 ? 255 : 1;
+            for (int c = 0; c < channel; c++)
+            {
+                dstPtr[(row * srcSize.width) + (column) + (c * srcSize.width * srcSize.height) ] = newValue;
+            }
+        }        
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        for(i = 0 ; i < noiseProbability ; i++)
+        {
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp8u newValue = rand()%2 ? 1 : 255;
+            for (int c = 0; c < channel; c++)
+            {
+                dstPtr[(channel * row * srcSize.width) + (column * channel) + c] = newValue;
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+/**************** Gamma Correction ***************/
+
+template <typename T>
+RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                                Rpp32f gamma,
+                                RppiChnFormat chnFormat,   unsigned int channel)
+{
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        Rpp32f pixel = ((Rpp32f) srcPtr[i]) / 255;
+        pixel = pow(pixel, gamma);
+        pixel *= 255;
+        dstPtr[i] =(Rpp8u) pixel;
+    }
+
+    return RPP_SUCCESS;
+
 }

@@ -8,7 +8,7 @@
 #include <iostream>
 #include <math.h>
 #include <CL/cl.hpp>
-
+#include <algorithm>
 #include <rppdefs.h>
 
 #define __CL_ENABLE_EXCEPTIONS
