@@ -237,6 +237,20 @@ RppStatus
 rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                           Rpp32f stdDev);
 
+// --------------------
+// Color Temperature
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_color_temperature_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp8s adjustmentValue);
+
+RppStatus
+rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp8s adjustmentValue);
+
 //------------------------- Geometric Transformations -------------------------
 
 
