@@ -149,6 +149,8 @@ blur_cl(cl_mem srcPtr, RppiSize srcSize,
 
 }
 
+/********************** Blend ************************/
+
 RppStatus
 blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiSize srcSize, cl_mem dstPtr, float alpha,
@@ -180,6 +182,8 @@ blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
 
     return RPP_SUCCESS;
 }
+
+/********************** ADDING NOISE ************************/
 
 RppStatus  
 noise_add_gaussian_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, 
@@ -299,4 +303,34 @@ noise_add_snp_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     clReleaseMemObject(d_b);
 
     return RPP_SUCCESS;
+}
+
+/********************** Exposure mocification ************************/
+
+RppStatus
+exposure_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f exposureValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    int ctr=0;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    cl_kernel_initializer(theQueue,
+                          "exposure.cl",
+                          "exposure",
+                          theProgram, theKernel);
+
+    //---- Args Setter
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, ctr++, sizeof(float), &exposureValue);
+        
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    
+    return RPP_SUCCESS;    
 }

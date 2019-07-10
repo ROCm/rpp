@@ -185,4 +185,10 @@ Random_Crop_Letter_Box_cl(  cl_mem srcPtr, RppiSize srcSize,
                             RppiChnFormat chnFormat, unsigned int channel,
                             cl_command_queue theQueue);
 
+RppStatus
+exposure_cl(    cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, Rpp32f exposureValue,
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
