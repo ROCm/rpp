@@ -80,13 +80,19 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
                              Rpp32f angleDeg)
 {
     Rpp32f angleRad = RAD(angleDeg);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8a145cb530cf2a7e73f02694c6cacf3c8612ec56
     Rpp32f rotate[4] = {0};
     rotate[0] = cos(angleRad);
     rotate[1] = sin(angleRad);
     rotate[2] = -sin(angleRad);
     rotate[3] = cos(angleRad);
+<<<<<<< HEAD
    
+=======
+>>>>>>> 8a145cb530cf2a7e73f02694c6cacf3c8612ec56
     float minX = 0, minY = 0, maxX = 0, maxY = 0;
     
     RppiPoint corner[4];

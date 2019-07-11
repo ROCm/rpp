@@ -2,7 +2,7 @@
 #include "cl_declarations.hpp"
 
 RppStatus
-convert_rgb2hsv_cl(cl_mem srcPtr, RppiSize srcSize,
+rgb_to_hsv_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -40,7 +40,7 @@ convert_rgb2hsv_cl(cl_mem srcPtr, RppiSize srcSize,
 }
 
 RppStatus
-convert_hsv2rgb_cl(cl_mem srcPtr, RppiSize srcSize,
+hsv_to_rgb_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -79,7 +79,7 @@ convert_hsv2rgb_cl(cl_mem srcPtr, RppiSize srcSize,
 
 //////////////////////HUE CODE////////////////////////////////
 RppStatus
-hue_saturation_rgb_cl (cl_mem srcPtr, RppiSize srcSize,
+hueRGB_cl (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -112,7 +112,7 @@ hue_saturation_rgb_cl (cl_mem srcPtr, RppiSize srcSize,
 }
 
 RppStatus
-hue_saturation_hsv_cl (cl_mem srcPtr, RppiSize srcSize,
+hueHSV_cl (cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f hue, Rpp32f saturation,
                 RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue){
     cl_kernel theKernel;
@@ -149,8 +149,8 @@ hue_saturation_hsv_cl (cl_mem srcPtr, RppiSize srcSize,
 /****************  Gamma correction *******************/
 
 RppStatus
-gamma_correction_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
-                 RppiSize srcSize, float gamma,
+gamma_correction_cl ( cl_mem srcPtr1,RppiSize srcSize,
+                 cl_mem dstPtr, float gamma,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
@@ -163,7 +163,7 @@ gamma_correction_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
 
     //---- Args Setter
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
     clSetKernelArg(theKernel, 2, sizeof(float), &gamma);
     clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
@@ -178,4 +178,39 @@ gamma_correction_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
 
     return RPP_SUCCESS;
 
+}
+
+/****************  Temprature modification *******************/
+
+RppStatus
+temprature_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float adjustmentValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    cl_kernel theKernel;
+    cl_program theProgram;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    cl_kernel_initializer(theQueue,
+                          "temprature.cl",
+                          "temprature_planar",
+                          theProgram, theKernel);
+    else
+    cl_kernel_initializer(theQueue,
+                          "temprature.cl",
+                          "temprature_packed",
+                          theProgram, theKernel);
+    //---- Args Setter
+    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, 2, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, 5, sizeof(float), &adjustmentValue);
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    
+    return RPP_SUCCESS;
 }

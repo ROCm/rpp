@@ -54,7 +54,10 @@ __kernel void warp_affine_pkd (  __global unsigned char* srcPtr,
     k -= (Rpp32s)minX;
     l -= (Rpp32s)minY;
 
-    dstPtr[id_z + (channel * k * dstSize.width) + (channel * l)] =
-                             srcPtr[id_z + (channel * id_y * srcSize.width) + (channel * id_x)];
+    if (l < source_height && l >=0 && k < source_width && k >=0 )
+    dstPtr[(id_z) + (id_y * dest_width * channel) + id_x*channel] =
+                           srcPtr[id_z + l * source_width * channel + k * channel];
+   else
+   dstPtr[(id_z) + (id_y * dest_width * channel) + id_x*channel] = 0;
 
 }

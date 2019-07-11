@@ -4,7 +4,7 @@
 
 template <typename T>
 RppStatus absolute_difference_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                                   RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -23,7 +23,7 @@ RppStatus absolute_difference_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* 
 
 template <typename T>
 RppStatus accumulate_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
-                                   unsigned int channel)
+                                RppiChnFormat chnFormat,unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -42,7 +42,7 @@ RppStatus accumulate_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
 template <typename T>
 RppStatus accumulate_weighted_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
                                    Rpp32f alpha,
-                                   unsigned int channel)
+                                    RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -60,7 +60,7 @@ RppStatus accumulate_weighted_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
 
 template <typename T>
 RppStatus add_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                                    RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -78,7 +78,7 @@ RppStatus add_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus subtract_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                                    RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
@@ -90,4 +90,31 @@ RppStatus subtract_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
     return RPP_SUCCESS;
 
+}
+
+/**************** Mean & Standard Deviation ***************/
+
+template <typename T>
+RppStatus mean_stddev_host(T* srcPtr, RppiSize srcSize,
+                            Rpp32f *mean, Rpp32f *stddev, 
+                            RppiChnFormat chnFormat, unsigned int channel)
+{
+    int i;
+    *mean = 0;
+    *stddev = 0;
+    T* srcPtrTemp=srcPtr;
+    for(i = 0; i < (srcSize.height * srcSize.width * channel); i++)
+    {
+        *mean += *srcPtr;
+        srcPtr++;
+    }
+    *mean = (*mean)/(srcSize.height * srcSize.width * channel);
+
+    for(i = 0; i < (srcSize.height * srcSize.width * channel); i++)
+    {
+        *stddev += (((*mean)-(*srcPtrTemp)) * ((*mean)-(*srcPtrTemp)));
+        srcPtrTemp++;
+    }
+    *stddev = sqrt((*stddev)/(srcSize.height * srcSize.width * channel));
+    return RPP_SUCCESS;
 }
