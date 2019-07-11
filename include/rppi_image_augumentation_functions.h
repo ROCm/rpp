@@ -44,6 +44,17 @@ rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 //------------------------- Image adjustments -------------------------
 
 
@@ -220,24 +231,6 @@ rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr
                          Rpp32f exposureFactor);
 
 // --------------------
-// Vignette Effect
-// --------------------
-
-// Host function declarations
-
-RppStatus
-rppi_vignette_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev);
-
-RppStatus
-rppi_vignette_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev);
-
-RppStatus
-rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev);
-
-// --------------------
 // Color Temperature
 // --------------------
 
@@ -250,6 +243,16 @@ rppi_color_temperature_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 RppStatus
 rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                           Rpp8s adjustmentValue);
+
+
+
+
+
+
+
+
+
+
 
 //------------------------- Geometric Transformations -------------------------
 
@@ -404,6 +407,16 @@ RppStatus
 rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, 
                                         Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2);
 
+
+
+
+
+
+
+
+
+
+
 //------------------------- Color Space Conversions -------------------------
 
 
@@ -475,6 +488,16 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
                              Rpp32f gamma);
 
 
+
+
+
+
+
+
+
+
+
+
 //------------------------- Other Augmentations -------------------------
 
 
@@ -516,6 +539,45 @@ rppi_jitterAdd_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_jitterAdd_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                              unsigned int maxJitterX, unsigned int maxJitterY);
+
+
+
+// --------------------
+// Vignette Effect
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_vignette_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev);
+
+RppStatus
+rppi_vignette_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev);
+
+RppStatus
+rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev);
+
+
+
+// --------------------
+// Fish Eye Effect
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_fish_eye_effect_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_fish_eye_effect_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_fish_eye_effect_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+
 
 
 #ifdef __cplusplus

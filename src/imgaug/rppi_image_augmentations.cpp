@@ -491,3 +491,36 @@ rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
                      RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 }
+
+
+
+
+/******* Fish Eye Effect ********/
+
+// GPU calls for Fish Eye Effect function
+
+// Host calls for Fish Eye Effect function
+
+RppStatus
+rppi_fish_eye_effect_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    fish_eye_effect_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_fish_eye_effect_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    fish_eye_effect_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_fish_eye_effect_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    fish_eye_effect_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
