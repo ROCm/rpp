@@ -524,3 +524,39 @@ rppi_fish_eye_effect_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t ds
                                 RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 }
+
+
+
+
+/******* Lens Correction ********/
+
+// GPU calls for Lens Correction function
+
+// Host calls for Lens Correction function
+
+RppStatus
+rppi_lens_correction_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom)
+{
+    lens_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                strength, zoom, 
+                                RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_lens_correction_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom)
+{
+    lens_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                strength, zoom, 
+                                RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_lens_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom)
+{
+    lens_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                strength, zoom, 
+                                RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
