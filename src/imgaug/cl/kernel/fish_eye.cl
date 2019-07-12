@@ -13,11 +13,9 @@ __kernel void fisheye_planar(
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
     int dstpixIdx = id_x + id_y * width  + id_z  * channel;
-    float normY = ((float)(2*id_y)/(float) (height))-1; 
-    float normYSquare = normY*normY;
+    float normY = ((float)(2*id_y)/(float) (height))-1;
     float normX = ((float)(2*id_x)/(float) (width))-1;
-    float normXSquare = normX*normX;
-    float dist = sqrt(normXSquare+normYSquare);
+    float dist = sqrt((normX*normX)+(normY*normY));
     if ((0.0 <= dist) && (dist <= 1.0)) {
         float newDist = sqrt(1.0-dist*dist);
         newDist = (dist + (1.0-newDist)) / 2.0;
@@ -49,11 +47,9 @@ __kernel void fisheye_packed(
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
     int dstpixIdx = id_x * channel + id_y * width * channel + id_z;
-    float normY = ((float)(2*id_y)/(float) (height))-1; 
-    float normYSquare = normY*normY;
+    float normY = ((float)(2*id_y)/(float) (height))-1;
     float normX = ((float)(2*id_x)/(float) (width))-1;
-    float normXSquare = normX*normX;
-    float dist = sqrt(normXSquare+normYSquare);
+    float dist = sqrt((normX*normX)+(normY*normY));
     if ((0.0 <= dist) && (dist <= 1.0)) {
         float newDist = sqrt(1.0-dist*dist);
         newDist = (dist + (1.0-newDist)) / 2.0;

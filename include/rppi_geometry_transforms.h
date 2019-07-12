@@ -204,7 +204,7 @@ RppStatus
 rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg, RppHandle_t rppHandle) ;
 
 // ----------------------------------------
-// GPU rotate functions declaration 
+// GPU fisheye functions declaration 
 // ----------------------------------------
 RppStatus
 rppi_fisheye_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
@@ -212,6 +212,17 @@ RppStatus
 rppi_fisheye_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
 RppStatus
 rppi_fisheye_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
+// ----------------------------------------
+// GPU lens correction functions declaration 
+// ----------------------------------------
+RppStatus
+rppi_lenscorrection_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
+RppStatus
+rppi_lenscorrection_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
+RppStatus
+rppi_lenscorrection_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
+
 #ifdef __cplusplus
 }
 #endif

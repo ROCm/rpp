@@ -174,4 +174,10 @@ fisheye_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
+cl_int
+lenscorrection_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           float strength,float zoom,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
