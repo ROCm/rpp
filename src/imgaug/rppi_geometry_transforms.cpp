@@ -548,3 +548,71 @@ rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+// ----------------------------------------
+// GPU fisheye functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_fisheye_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 fisheye_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_fisheye_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 fisheye_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_fisheye_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 fisheye_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
