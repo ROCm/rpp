@@ -122,10 +122,12 @@ rppi_resize_crop_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -144,10 +146,12 @@ rppi_resize_crop_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -166,10 +170,12 @@ rppi_resize_crop_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -388,10 +394,12 @@ rppi_resize_crop_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -419,10 +427,12 @@ rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -450,10 +460,12 @@ rppi_resize_crop_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
 #ifdef OCL_COMPILE
  	 {
