@@ -194,7 +194,7 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
     
 
     if (chnFormat == RPPI_CHN_PLANAR)
-    {   
+    {
         CreateProgramFromBinary(theQueue,"rotate.cl","rotate.cl.bin","rotate_pln",theProgram,theKernel);
         clRetainKernel(theKernel);
         // cl_kernel_initializer(  theQueue, "rotate.cl", "rotate_pln",
@@ -241,13 +241,17 @@ fisheye_cl(cl_mem srcPtr, RppiSize srcSize,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        cl_kernel_initializer(  theQueue, "fish_eye.cl", "fisheye_planar",
-                                theProgram, theKernel); 
+        CreateProgramFromBinary(theQueue,"fish_eye.cl","fish_eye.bin","fisheye_planar",theProgram,theKernel);
+        clRetainKernel(theKernel);
+        // cl_kernel_initializer(  theQueue, "fish_eye.cl", "fisheye_planar",
+        //                         theProgram, theKernel); 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        cl_kernel_initializer(  theQueue, "fish_eye.cl", "fisheye_packed",
-                                theProgram, theKernel); 
+        CreateProgramFromBinary(theQueue,"fish_eye.cl","fish_eye.bin","fisheye_packed",theProgram,theKernel);
+        clRetainKernel(theKernel);
+        // cl_kernel_initializer(  theQueue, "fish_eye.cl", "fisheye_packed",
+        //                         theProgram, theKernel); 
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
@@ -276,18 +280,22 @@ lenscorrection_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     cl_kernel theKernel;
     cl_program theProgram;
     if (chnFormat == RPPI_CHN_PLANAR)
-    {   
-        cl_kernel_initializer(theQueue,
-                          "lens_correction.cl",
-                          "lenscorrection_pln",
-                          theProgram, theKernel);
+    {
+        CreateProgramFromBinary(theQueue,"lens_correction.cl","lens_correction.bin","lenscorrection_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+        // cl_kernel_initializer(theQueue,
+        //                   "lens_correction.cl",
+        //                   "lenscorrection_pln",
+        //                   theProgram, theKernel);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        cl_kernel_initializer(theQueue,
-                          "lens_correction.cl",
-                          "lenscorrection_pkd",
-                          theProgram, theKernel);
+        CreateProgramFromBinary(theQueue,"lens_correction.cl","lens_correction.bin","lenscorrection_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+        // cl_kernel_initializer(theQueue,
+        //                   "lens_correction.cl",
+        //                   "lenscorrection_pkd",
+        //                   theProgram, theKernel);
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}

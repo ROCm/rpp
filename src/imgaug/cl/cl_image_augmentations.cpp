@@ -229,14 +229,17 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        cl_kernel_initializer(  theQueue, "pixelate.cl",
+        CreateProgramFromBinary(theQueue, "pixelate.cl","pixelate.bin",
                                 "pixelate_planar", theProgram, theKernel);
+        clRetainKernel(theKernel); 
 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        cl_kernel_initializer(  theQueue, "pixelate.cl",
+
+        CreateProgramFromBinary(theQueue, "pixelate.cl","pixelate.bin",
                                 "pixelate_packed", theProgram, theKernel);
+        clRetainKernel(theKernel); 
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
@@ -274,10 +277,10 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     cl_int err;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "jitter.cl",
-                          "jitter",
-                          theProgram, theKernel);
+    
+    CreateProgramFromBinary(theQueue, "jitter.cl","jitter.bin",
+                                "jitter", theProgram, theKernel);
+    clRetainKernel(theKernel); 
 
     //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
@@ -308,10 +311,22 @@ snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     cl_int err;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "snow.cl",
-                          "snow_pkd",
-                          theProgram, theKernel);
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue, "snow.cl","snow.bin",
+                                "snow_pln", theProgram, theKernel);
+        clRetainKernel(theKernel); 
+
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+
+        CreateProgramFromBinary(theQueue, "snow.cl","snow.bin",
+                                "snow_pkd", theProgram, theKernel);
+        clRetainKernel(theKernel); 
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
 
     //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
@@ -320,7 +335,6 @@ snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     err |= clSetKernelArg(theKernel, counter++, sizeof(float), &snowCoefficient);
-    std::cerr<<" snowcoeff "<<snowCoefficient<<std::endl;
     //----
 
     size_t gDim3[3];
