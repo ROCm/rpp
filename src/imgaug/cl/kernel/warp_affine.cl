@@ -10,16 +10,25 @@ __kernel void warp_affine_pln (  __global unsigned char* srcPtr,
                             const unsigned int channel
 )
 {
-    int id_x = get_global_id(0);
-    int id_y = get_global_id(1);
-    int id_z = get_global_id(2);
-    
-    int k = (Rpp32s)((affine[0] * id_y) + (affine[1] * id_x) + (affine[2] * 1));
-    int l = (Rpp32s)((affine[3] * id_y) + (affine[4] * id_x) + (affine[5] * 1));
-    k -= (Rpp32s)minX;
-    l -= (Rpp32s)minY;
-    dstPtr[(id_z * dist_height * dest_width) + (k * dest_width) + l] =
-                            srcPtr[(id_z * source_height * source_width) + (id_y * source_width) + id_x];
+   int id_x = get_global_id(0);
+   int id_y = get_global_id(1);
+   int id_z = get_global_id(2);
+   
+   int xc = id_x - dest_width/2;
+   int yc = id_y - dest_height/2;
+
+   int k ;
+   int l ;
+
+   k = (int)((affine[0] * xc )+ (affine[1] * yc)) + affine[2];
+   l = (int)((affine[3] * xc) + (affine[4] * yc)) + affine[5];
+   k = k + source_width/2;
+   l = l + source_height/2;
+   if (l < source_height && l >=0 && k < source_width && k >=0 )
+   dstPtr[(id_z * dest_height * dest_width) + (id_y * dest_width) + id_x] =
+                           srcPtr[(id_z * source_height * source_width) + (l * source_width) + k];
+   else
+   dstPtr[(id_z * dest_height * dest_width) + (id_y * dest_width) + id_x] = 0;
 
 }
 
@@ -45,7 +54,10 @@ __kernel void warp_affine_pkd (  __global unsigned char* srcPtr,
     k -= (Rpp32s)minX;
     l -= (Rpp32s)minY;
 
-    dstPtr[id_z + (channel * k * dstSize.width) + (channel * l)] =
-                             srcPtr[id_z + (channel * id_y * srcSize.width) + (channel * id_x)];
+    if (l < source_height && l >=0 && k < source_width && k >=0 )
+    dstPtr[(id_z) + (id_y * dest_width * channel) + id_x*channel] =
+                           srcPtr[id_z + l * source_width * channel + k * channel];
+   else
+   dstPtr[(id_z) + (id_y * dest_width * channel) + id_x*channel] = 0;
 
 }
