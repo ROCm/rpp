@@ -17,7 +17,7 @@ param[in] srcPtr input image
 *param[in] flipAxis flip axis and value should range beetween 0 and 2
  0 ---> horizontal flip
  1 ---> vertical flip
-  2 ---> horizontal + vertical flip
+ 2 ---> horizontal + vertical flip
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 

@@ -14,6 +14,7 @@ box_filter_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_int err;
 
     float* filterBuffer;
@@ -37,14 +38,20 @@ box_filter_cl(cl_mem srcPtr, RppiSize srcSize,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        cl_kernel_initializer(  theQueue, "convolution.cl",
-                                "naive_convolution_planar", theProgram, theKernel);
+        CreateProgramFromBinary(theQueue,"convolution.cl","convolution.cl.bin","naive_convolution_planar",theProgram,theKernel);
+        clRetainKernel(theKernel); 
+
+        // cl_kernel_initializer(  theQueue, "convolution.cl",
+        //                         "naive_convolution_planar", theProgram, theKernel);
 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        cl_kernel_initializer(  theQueue, "convolution.cl",
-                                "naive_convolution_packed", theProgram, theKernel);
+        CreateProgramFromBinary(theQueue,"convolution.cl","convolution.cl.bin","naive_convolution_packed",theProgram,theKernel);
+        clRetainKernel(theKernel); 
+
+        // cl_kernel_initializer(  theQueue, "convolution.cl",
+        //                         "naive_convolution_packed", theProgram, theKernel);
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
@@ -52,13 +59,13 @@ box_filter_cl(cl_mem srcPtr, RppiSize srcSize,
 
 
 
-    err  = clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
-    err |= clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
-    err |= clSetKernelArg(theKernel, 2, sizeof(cl_mem), &filtPtr);
-    err |= clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
-    err |= clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
-    err |= clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
-    err |= clSetKernelArg(theKernel, 6, sizeof(unsigned int), &filterSize);
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &filtPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &filterSize);
 
 //----
     size_t gDim3[3];
