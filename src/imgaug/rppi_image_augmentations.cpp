@@ -639,3 +639,45 @@ rppi_snowyRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                            RPPI_CHN_PACKED, 3, RGB);
     return RPP_SUCCESS;
 }
+
+
+
+
+/******* Random Shadow ********/
+
+// GPU calls for Random Shadow function
+
+// Host calls for Random Shadow function
+
+RppStatus
+rppi_random_shadow_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
+                                Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY)
+{
+    random_shadow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                              x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY, 
+                              RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_random_shadow_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
+                                Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY)
+{
+    random_shadow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                              x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY, 
+                              RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_random_shadow_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
+                                Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY)
+{
+    random_shadow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                              x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY, 
+                              RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}

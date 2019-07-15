@@ -633,41 +633,58 @@ rppi_lens_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t ds
 RppStatus
 rppi_occlusionAdd_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize1, RppiSize srcSize2, RppPtr_t dstPtr, 
                                Rpp32u src1x1, Rpp32u src1y1, Rpp32u src1x2, Rpp32u src1y2, 
-                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2)
-{
-    occlusionAdd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize1, srcSize2, static_cast<Rpp8u*>(dstPtr), 
-                             src1x1, src1y1, src1x2, src1y2, src2x1, src2y1, src2x2, src2y2, 
-                             RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
-
-}
+                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2);
 
 RppStatus
 rppi_occlusionAdd_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize1, RppiSize srcSize2, RppPtr_t dstPtr, 
                                Rpp32u src1x1, Rpp32u src1y1, Rpp32u src1x2, Rpp32u src1y2, 
-                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2)
-{
-    occlusionAdd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize1, srcSize2, static_cast<Rpp8u*>(dstPtr), 
-                             src1x1, src1y1, src1x2, src1y2, src2x1, src2y1, src2x2, src2y2, 
-                             RPPI_CHN_PLANAR, 3);
-
-    return RPP_SUCCESS;
-
-}
+                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2);
 
 RppStatus
 rppi_occlusionAdd_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize1, RppiSize srcSize2, RppPtr_t dstPtr, 
                                Rpp32u src1x1, Rpp32u src1y1, Rpp32u src1x2, Rpp32u src1y2, 
-                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2)
-{
-    occlusionAdd_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize1, srcSize2, static_cast<Rpp8u*>(dstPtr), 
-                             src1x1, src1y1, src1x2, src1y2, src2x1, src2y1, src2x2, src2y2, 
-                             RPPI_CHN_PACKED, 3);
+                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2);
 
-    return RPP_SUCCESS;
 
-}
+
+// --------------------
+// Snowy
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_snowyRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f strength);
+
+RppStatus
+rppi_snowyRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f strength);
+
+
+
+// --------------------
+// Random Shadow
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_random_shadow_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
+                                Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY);
+
+RppStatus
+rppi_random_shadow_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
+                                Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY);
+
+RppStatus
+rppi_random_shadow_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
+                                Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY);
+
+
 
 #ifdef __cplusplus
 }
