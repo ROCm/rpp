@@ -471,3 +471,79 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
     return RPP_SUCCESS;
 
 }
+
+/**************** Rain ***************/
+template <typename T>
+RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
+                    Rpp32f rainValue, Rpp32f rainWidth, Rpp32f rainHeight,
+                    RppiChnFormat chnFormat,   unsigned int channel)
+{ 
+    rainValue=rainValue/10;
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        Rpp32f pixel = ((Rpp32f) srcPtr[i]);
+        dstPtr[i] = RPPPIXELCHECK(pixel);
+    }
+
+    Rpp32u rainProbability= (Rpp32u)(rainValue * srcSize.width * srcSize.height * channel );
+    
+    
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for(int i = 0 ; i < rainProbability ; i++)
+        {
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp32f pixel;
+            for(int k=0;k<channel;k++)
+            {
+                pixel=(Rpp32f)dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] + 5;
+                dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] = RPPPIXELCHECK(pixel) ;
+            }
+            if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
+            {
+                for(int j=1;j<rainHeight;j++)
+                {
+                    for(int k=0;k<channel;k++)
+                    {
+                        for(int m=0;m<rainWidth;m++)
+                        {
+                            pixel=(Rpp32f)dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m]+5;
+                            dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m] = RPPPIXELCHECK(pixel) ;
+                        }
+                    }            
+                }
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        for(int i = 0 ; i < rainProbability ; i++)
+        {
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp32f pixel;
+            for(int k=0;k<channel;k++)
+            {
+                pixel=(Rpp32f)dstPtr[(channel * row * srcSize.width) + (column * channel) + k] + 5;
+                dstPtr[(channel * row * srcSize.width) + (column * channel) + k] = RPPPIXELCHECK(pixel) ;
+            }
+            if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
+            {
+                for(int j=1;j<rainHeight;j++)
+                {
+                    for(int k=0;k<channel;k++)
+                    {
+                        for(int m=0;m<rainWidth;m++)
+                        {
+                            pixel=(Rpp32f)dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)]+5;
+                            dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)] = RPPPIXELCHECK(pixel) ;
+                        } 
+                    }            
+                }
+            }
+        }
+    }
+    
+    return RPP_SUCCESS;
+}

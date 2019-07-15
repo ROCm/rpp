@@ -392,6 +392,45 @@ rppi_fog_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f f
     return RPP_SUCCESS;
 }
 
+// ----------------------------------------
+// Rain fog functions call 
+// ----------------------------------------
+
+RppStatus
+rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight)
+{
+    validate_image_size(srcSize);
+    rain_host(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			rainValue, rainWidth, rainHeight,
+			RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight)
+{
+    validate_image_size(srcSize);
+    rain_host(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			rainValue, rainWidth, rainHeight,
+			RPPI_CHN_PLANAR, 3);
+        return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight)
+{
+    validate_image_size(srcSize);
+    rain_host(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			rainValue, rainWidth, rainHeight,
+			RPPI_CHN_PACKED, 3);
+        return RPP_SUCCESS;
+}
  
 // ----------------------------------------
 // GPU blur functions  calls 

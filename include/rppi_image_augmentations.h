@@ -138,6 +138,19 @@ RppStatus
 rppi_fog_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue);
 
 // ----------------------------------------
+// Host fog functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+
+RppStatus
+rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+
+RppStatus
+rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+
+// ----------------------------------------
 // GPU blur functions declaration 
 // ----------------------------------------
 /* Uses Gaussian for blurring the image.
