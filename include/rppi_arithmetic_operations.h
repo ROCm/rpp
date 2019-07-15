@@ -117,6 +117,19 @@ RppStatus
 rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize);
 
 // ----------------------------------------
+// Host mean and standard deviation functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_mean_stddev_u8_pln1_host(RppPtr_t srcPtr1,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev);
+
+RppStatus
+rppi_mean_stddev_u8_pln3_host(RppPtr_t srcPtr1,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev);
+
+RppStatus
+rppi_mean_stddev_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev);
+
+// ----------------------------------------
 // GPU accumulate_weighted functions declaration 
 // ----------------------------------------
 /* Accumulates a weighted value from  input images and stores it in the first input image.

@@ -155,4 +155,40 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
+RppStatus
+blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize, cl_mem dstPtr, float alpha,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 cl_command_queue theQueue);
+
+cl_int
+pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, 
+            unsigned int filterSize, unsigned int x1, unsigned int y1,
+            unsigned int x2, unsigned int y2,RppiChnFormat chnFormat,
+            unsigned int channel,cl_command_queue theQueue);
+
+cl_int
+jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           unsigned int minJitter,unsigned int maxJitter,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
+
+cl_int
+fisheye_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, 
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
+cl_int
+lenscorrection_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           float strength,float zoom,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
+
+cl_int
+snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           float snowCoefficient,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

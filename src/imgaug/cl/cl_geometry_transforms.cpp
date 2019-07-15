@@ -179,8 +179,6 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 }
 
-//-----------Resize Crop
-
 //Rotate---------------------------
 cl_int
 rotate_cl(cl_mem srcPtr, RppiSize srcSize,
@@ -229,4 +227,87 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
 }
-//--------------------------------Rotate
+//Fish eye
+cl_int
+fisheye_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, 
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue)
+{
+    cl_int err;
+    short counter;
+    cl_kernel theKernel;
+    cl_program theProgram;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        cl_kernel_initializer(  theQueue, "fish_eye.cl", "fisheye_planar",
+                                theProgram, theKernel); 
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        cl_kernel_initializer(  theQueue, "fish_eye.cl", "fisheye_packed",
+                                theProgram, theKernel); 
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+}
+
+cl_int
+lenscorrection_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           float strength,float zoom,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    cl_int err;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {   
+        cl_kernel_initializer(theQueue,
+                          "lens_correction.cl",
+                          "lenscorrection_pln",
+                          theProgram, theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        cl_kernel_initializer(theQueue,
+                          "lens_correction.cl",
+                          "lenscorrection_pkd",
+                          theProgram, theKernel);
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+    if (strength == 0)
+        strength = 0.000001;
+    //---- Args Setter
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &strength);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &zoom);
+    //----
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;
+}
