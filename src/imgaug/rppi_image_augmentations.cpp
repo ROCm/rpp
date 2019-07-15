@@ -608,3 +608,34 @@ rppi_occlusionAdd_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcS
     return RPP_SUCCESS;
 
 }
+
+
+
+
+/******* Snowy ********/
+
+// GPU calls for Snowy function
+
+// Host calls for Snowy function
+
+RppStatus
+rppi_snowyRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f strength)
+{
+
+    snowy_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           strength,
+                           RPPI_CHN_PLANAR, 3, RGB);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_snowyRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f strength)
+{
+
+    snowy_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           strength,
+                           RPPI_CHN_PACKED, 3, RGB);
+    return RPP_SUCCESS;
+}

@@ -1,5 +1,6 @@
 #include <cpu/rpp_cpu_common.hpp>
 #include "cpu/host_geometry_transforms.hpp"
+#include "cpu/host_color_model_conversions.hpp"
 #include <stdlib.h>
 #include <time.h>
 
@@ -806,5 +807,73 @@ RppStatus occlusionAdd_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize1, RppiSize 
         }
     }
   
+    return RPP_SUCCESS;
+}
+}
+
+/**************** Snowy ***************/
+
+template <typename T, typename U>
+RppStatus snowy_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    Rpp32f strength,
+                    RppiChnFormat chnFormat, unsigned channel, RppiFormat imageFormat)
+{
+    if (strength < 0 || strength > 1)
+    {
+        return RPP_ERROR;
+    }
+
+    if (imageFormat == RGB)
+    {
+        Rpp32f *srcPtrHSL = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            rgb2hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
+
+            Rpp32f *srcPtrHSLTemp;
+            srcPtrHSLTemp = srcPtrHSL + (2 * srcSize.height * srcSize.width);
+
+            for (int i = 0; i < srcSize.height * srcSize.width; i++)
+            {
+                if (*srcPtrHSLTemp < strength)
+                {
+                    *srcPtrHSLTemp *= 4;
+                }
+                if (*srcPtrHSLTemp > 1)
+                {
+                    *srcPtrHSLTemp = 1;
+                }
+                srcPtrHSLTemp++;
+            }
+
+            hsl2rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PLANAR, 3);
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            rgb2hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
+
+            Rpp32f *srcPtrHSLTemp;
+            srcPtrHSLTemp = srcPtrHSL + 2;
+
+            for (int i = 0; i < srcSize.height * srcSize.width; i++)
+            {
+                if (*srcPtrHSLTemp < strength)
+                {
+                    *srcPtrHSLTemp *= 4;
+                }
+                if (*srcPtrHSLTemp > 1)
+                {
+                    *srcPtrHSLTemp = 1;
+                }
+                srcPtrHSLTemp = srcPtrHSLTemp + channel;
+            }
+
+            hsl2rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PACKED, 3);
+        }
+    }
+    else
+    {
+        return RPP_ERROR;
+    }
     return RPP_SUCCESS;
 }

@@ -489,6 +489,34 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t d
 
 
 
+// --------------------
+// RGB to HSL
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_rgb2hsl_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_rgb2hsl_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+
+
+// --------------------
+// HSL to RGB
+// --------------------
+
+// Host function declarations
+
+RppStatus
+rppi_hsl2rgb_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_hsl2rgb_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+
+
 
 
 
