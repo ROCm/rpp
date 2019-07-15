@@ -249,7 +249,15 @@ RppStatus
 rppi_jitter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u minJitter, Rpp32u maxJitter, RppHandle_t rppHandle);
 RppStatus
 rppi_jitter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u minJitter, Rpp32u maxJitter, RppHandle_t rppHandle);
-
+// ----------------------------------------
+// GPU snow functions declaration 
+// ----------------------------------------
+RppStatus
+rppi_snow_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f snowCoefficient, RppHandle_t rppHandle);
+RppStatus
+rppi_snow_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f snowCoefficient, RppHandle_t rppHandle);
+RppStatus
+rppi_snow_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f snowCoefficient, RppHandle_t rppHandle);
 #ifdef __cplusplus
 }
 #endif

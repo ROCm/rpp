@@ -180,4 +180,10 @@ lenscorrection_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
            RppiChnFormat chnFormat, unsigned int channel,
            cl_command_queue theQueue);
 
+cl_int
+snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           float snowCoefficient,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

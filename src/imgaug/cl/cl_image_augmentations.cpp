@@ -280,3 +280,37 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
 
     return RPP_SUCCESS;
 }
+
+cl_int
+snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           float snowCoefficient,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    cl_int err;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    cl_kernel_initializer(theQueue,
+                          "snow.cl",
+                          "snow_pkd",
+                          theProgram, theKernel);
+
+    //---- Args Setter
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &snowCoefficient);
+    std::cerr<<" snowcoeff "<<snowCoefficient<<std::endl;
+    //----
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.height * srcSize.width;
+    gDim3[1] = 1;
+    gDim3[2] = 1;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;
+}
