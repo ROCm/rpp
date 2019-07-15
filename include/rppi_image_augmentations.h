@@ -125,6 +125,32 @@ RppStatus
 rppi_noiseAdd_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter);
 
 // ----------------------------------------
+// Host fog functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_fog_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue);
+
+RppStatus
+rppi_fog_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue);
+
+RppStatus
+rppi_fog_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue);
+
+// ----------------------------------------
+// Host fog functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+
+RppStatus
+rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+
+RppStatus
+rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+
+// ----------------------------------------
 // GPU blur functions declaration 
 // ----------------------------------------
 /* Uses Gaussian for blurring the image.
@@ -258,6 +284,32 @@ RppStatus
 rppi_snow_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f snowCoefficient, RppHandle_t rppHandle);
 RppStatus
 rppi_snow_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f snowCoefficient, RppHandle_t rppHandle);
+// GPU add noise functions  declaration
+// ----------------------------------------
+
+RppStatus
+rppi_noiseAdd_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle);
+
+RppStatus
+rppi_noiseAdd_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle);
+
+RppStatus
+rppi_noiseAdd_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle);
+
+// ----------------------------------------
+// Exposure modification functions  declaration
+// ----------------------------------------
+
+RppStatus
+rppi_exposure_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f exposureValue, RppHandle_t rppHandle);
+
+RppStatus
+rppi_exposure_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f exposureValue, RppHandle_t rppHandle);
+
+RppStatus
+rppi_exposure_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f exposureValue, RppHandle_t rppHandle);
+
+
 #ifdef __cplusplus
 }
 #endif
