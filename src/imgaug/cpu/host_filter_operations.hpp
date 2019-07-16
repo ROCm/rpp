@@ -79,6 +79,9 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         }
     }
 
+    return RPP_SUCCESS;
+}
+
 
 /**************** Box Filter ***************/
 

@@ -770,7 +770,7 @@ RppStatus saturationHSV_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 /**************** RGB2HSL ***************/
 
 template <typename T, typename U>
-RppStatus rgb2hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+RppStatus rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     RppiChnFormat chnFormat, unsigned channel)
 {
     if (chnFormat == RPPI_CHN_PLANAR)
@@ -884,7 +884,7 @@ RppStatus rgb2hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 /**************** HSL2RGB ***************/
 
 template <typename T, typename U>
-RppStatus hsl2rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+RppStatus hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     RppiChnFormat chnFormat, unsigned channel)
 {
     if (chnFormat == RPPI_CHN_PLANAR)
