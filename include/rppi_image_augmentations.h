@@ -142,13 +142,17 @@ rppi_fog_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f f
 // ----------------------------------------
 
 RppStatus
-rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, 
+                                            Rpp32u rainWidth, Rpp32u rainHeight);
 
 RppStatus
-rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue,
+                                             Rpp32u rainWidth, Rpp32u rainHeight);
 
 RppStatus
-rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight);
+rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, 
+                                                Rpp32u rainWidth, Rpp32u rainHeight);
+
 
 // ----------------------------------------
 // GPU blur functions declaration 
@@ -283,7 +287,35 @@ rppi_exposure_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rp
 RppStatus
 rppi_exposure_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f exposureValue, RppHandle_t rppHandle);
 
+// ----------------------------------------
+// Rainy functions  declaration
+// ----------------------------------------
+RppStatus
+rppi_rain_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, 
+                                        Rpp32u rainWidth, Rpp32u rainHeight, RppHandle_t rppHandle);
 
+RppStatus
+rppi_rain_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue,
+                                        Rpp32u rainWidth, Rpp32u rainHeight,RppHandle_t rppHandle);
+
+RppStatus
+rppi_rain_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f rainValue, 
+                                        Rpp32u rainWidth, Rpp32u rainHeight,RppHandle_t rppHandle);
+
+// ----------------------------------------
+// Foggy functions  declaration
+// ----------------------------------------
+RppStatus
+rppi_fog_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, 
+                                Rpp32f fogValue,RppHandle_t rppHandle);
+
+RppStatus
+rppi_fog_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, 
+                        Rpp32f fogValue, RppHandle_t rppHandle);
+
+RppStatus
+rppi_fog_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, 
+                        Rpp32f fogValue, RppHandle_t rppHandle);
 #ifdef __cplusplus
 }
 #endif
