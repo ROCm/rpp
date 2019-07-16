@@ -1,351 +1,529 @@
+#include <rppi_image_augmentations.h>
 #include <rppdefs.h>
-#include <rppi_image_augumentation_functions.h>
-
-#include "cpu/host_image_augmentations.hpp"
+#include "rppi_validate.hpp"
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
-#include "hipoc/hipoc_declarations.hpp"
+
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
 #endif //backend
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
+#include <chrono>
+using namespace std::chrono; 
 
+#include "cpu/host_image_augmentations.hpp" 
+ 
+// ----------------------------------------
+// Host blur functions calls 
+// ----------------------------------------
 
-
-
-/******* Blur ********/
-
-// GPU calls for Blur function
 
 RppStatus
-rppi_blur3x3_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+rppi_blur_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev)
 {
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, stdDev);
+	 unsigned int kernelSize = 3;
+	 blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			stdDev,
+			kernelSize,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_blur_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, stdDev);
+	 unsigned int kernelSize = 3;
+	 blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			stdDev,
+			kernelSize,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_blur_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, stdDev);
+	 unsigned int kernelSize = 3;
+	 blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			stdDev,
+			kernelSize,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host contrast functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_contrast_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u newMin,Rpp32u newMax)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_max(newMax, newMin);
+	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			newMin,
+			newMax,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_contrast_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u newMin,Rpp32u newMax)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_max(newMax, newMin);
+	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			newMin,
+			newMax,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u newMin,Rpp32u newMax)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_max(newMax, newMin);
+	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			newMin,
+			newMax,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host brightness functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_brightness_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 2, alpha);
+ 	 validate_float_range( 0, 255, beta);
+	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			alpha,
+			beta,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_brightness_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 2, alpha);
+ 	 validate_float_range( 0, 255, beta);
+	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			alpha,
+			beta,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 2, alpha);
+ 	 validate_float_range( 0, 255, beta);
+	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			alpha,
+			beta,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host gamma_correction functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_gamma_correction_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f gamma)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, gamma);
+	 gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			gamma,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_gamma_correction_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f gamma)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, gamma);
+	 gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			gamma,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f gamma)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, gamma);
+	 gamma_correction_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			gamma,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU blur functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_blur_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, stdDev);
+	 unsigned int kernelSize = 3;
 #ifdef OCL_COMPILE
-
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
-                        static_cast<cl_mem>(dstPtr),
-                        3 /*Filter width*/,
-                        RPPI_CHN_PLANAR, 1 /*Channel*/,
-                        static_cast<cl_command_queue>(rppHandle) );
-
-
-#endif //backend
-
-    return RPP_SUCCESS;
-
+ 	 {
+ 	 blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			kernelSize,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_blur3x3_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+rppi_blur_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) 
 {
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, stdDev);
+	 unsigned int kernelSize = 3;
 #ifdef OCL_COMPILE
-
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
-                        static_cast<cl_mem>(dstPtr),
-                        3 /*Filter width*/,
-                        RPPI_CHN_PLANAR, 3 /*Channel*/,
-                        static_cast<cl_command_queue>(rppHandle) );
-
-#endif //backend
-
-    return RPP_SUCCESS;
-
+ 	 {
+ 	 blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			kernelSize,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_blur3x3_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
+rppi_blur_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) 
 {
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, stdDev);
+	 unsigned int kernelSize = 3;
+
 #ifdef OCL_COMPILE
-
-    gaussian_blur_cl(static_cast<cl_mem>(srcPtr), srcSize,
-                        static_cast<cl_mem>(dstPtr),
-                        3 /*Filter width*/,
-                        RPPI_CHN_PACKED, 3 /*Channel*/,
-                        static_cast<cl_command_queue>(rppHandle) );
-
-#endif //backend
-
-    return RPP_SUCCESS;
-
+ 	 {
+ 	 blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			kernelSize,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
+ 
+// ----------------------------------------
+// GPU contrast functions  calls 
+// ----------------------------------------
 
-// Host calls for Blur function
 
 RppStatus
-rppi_blur_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev, Rpp32u kernelSize)
-{
-    blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, kernelSize,
-                     RPPI_CHN_PLANAR, 1);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_blur_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev, Rpp32u kernelSize)
-{
-    blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, kernelSize,
-                     RPPI_CHN_PLANAR, 3);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_blur_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                          Rpp32f stdDev, Rpp32u kernelSize)
-{
-    blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     stdDev, kernelSize,
-                     RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
-}
-
-
-
-
-/******* Brightness ********/
-
-// GPU calls for Brightness function
-
-RppStatus
-rppi_brightness_u8_pln1_gpu( RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr,
-                        Rpp32f alpha, Rpp32s beta,
-                        RppHandle_t rppHandle )
+rppi_contrast_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u newMin,Rpp32u newMax, RppHandle_t rppHandle) 
 {
 
-#ifdef HIP_COMPILE
+ 	 validate_image_size(srcSize);
+ 	 validate_int_max(newMax, newMin);
 
-    hipoc_brightness_contrast(  srcPtr, srcSize,
-                                dstPtr,
-                                alpha, beta,
-                                RPPI_CHN_PLANAR, 1 /*Channel*/,
-                                static_cast<hipStream_t>(rppHandle) );
-
-#elif defined (OCL_COMPILE)
-
-    brightness_contrast_cl (    static_cast<cl_mem>(srcPtr), srcSize,
-                                static_cast<cl_mem>(dstPtr),
-                                alpha, beta,
-                                RPPI_CHN_PLANAR, 1 /*Channel*/,
-                                static_cast<cl_command_queue>(rppHandle) );
-
-
-#endif //backend
-
-    return RPP_SUCCESS;
+#ifdef OCL_COMPILE
+ 	 {
+ 	 contrast_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			newMin,
+			newMax,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_brightness_u8_pln3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr,
-                        Rpp32f alpha, Rpp32s beta,
-                        RppHandle_t rppHandle )
+rppi_contrast_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u newMin,Rpp32u newMax, RppHandle_t rppHandle) 
 {
 
-#ifdef HIP_COMPILE
+ 	 validate_image_size(srcSize);
+ 	 validate_int_max(newMax, newMin);
 
-    hipoc_brightness_contrast(  srcPtr, srcSize,
-                                dstPtr,
-                                alpha, beta,
-                                RPPI_CHN_PLANAR, 3 /*Channel*/,
-                                static_cast<hipStream_t>(rppHandle) );
-
-#elif defined (OCL_COMPILE)
-
-    brightness_contrast_cl (    static_cast<cl_mem>(srcPtr), srcSize,
-                                static_cast<cl_mem>(dstPtr),
-                                alpha, beta,
-                                RPPI_CHN_PLANAR, 3 /*Channel*/,
-                                static_cast<cl_command_queue>(rppHandle) );
-
-
-#endif //backend
-
-    return RPP_SUCCESS;
+#ifdef OCL_COMPILE
+ 	 {
+ 	 contrast_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			newMin,
+			newMax,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_brightness_u8_pkd3_gpu( RppPtr_t srcPtr, RppiSize srcSize,
-                        RppPtr_t dstPtr,
-                        Rpp32f alpha, Rpp32s beta,
-                        RppHandle_t rppHandle )
+rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u newMin,Rpp32u newMax, RppHandle_t rppHandle) 
 {
 
+ 	 validate_image_size(srcSize);
+ 	 validate_int_max(newMax, newMin);
 
-#ifdef HIP_COMPILE
-
-    hipoc_brightness_contrast(  srcPtr, srcSize,
-                                dstPtr,
-                                alpha, beta,
-                                RPPI_CHN_PLANAR, 3 /*Channel*/,
-                                static_cast<hipStream_t>(rppHandle) );
-
-#elif defined (OCL_COMPILE)
-
-    brightness_contrast_cl (    static_cast<cl_mem>(srcPtr), srcSize,
-                                static_cast<cl_mem>(dstPtr),
-                                alpha, beta,
-                                RPPI_CHN_PACKED, 3 /*Channel*/,
-                                static_cast<cl_command_queue>(rppHandle) );
-
-
-#endif //backend
-
-    return RPP_SUCCESS;
+#ifdef OCL_COMPILE
+ 	 {
+ 	 contrast_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			newMin,
+			newMax,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
+ 
+// ----------------------------------------
+// GPU brightness functions  calls 
+// ----------------------------------------
 
-// Host calls for Brightness function
 
 RppStatus
-rppi_brightness_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32f alpha, Rpp32s beta)
+rppi_brightness_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta, RppHandle_t rppHandle) 
 {
-    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    alpha, beta,
-                                    1);
 
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 2, alpha);
+ 	 validate_float_range( 0, 255, beta);
 
-}
-
-RppStatus
-rppi_brightness_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32f alpha, Rpp32s beta)
-{
-    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    alpha, beta,
-                                    3);
-
-    return RPP_SUCCESS;
-
+#ifdef OCL_COMPILE
+ 	 {
+ 	 brightness_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			alpha,
+			beta,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             Rpp32f alpha, Rpp32s beta)
-{
-    brightness_contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    alpha, beta,
-                                    3);
-
-    return RPP_SUCCESS;
-
-}
-
-
-
-
-/******* Contrast ********/
-
-// GPU calls for Contrast function
-
-RppStatus
-rppi_contrast_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                            Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
+rppi_brightness_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta, RppHandle_t rppHandle) 
 {
 
-    #ifdef HIP_COMPILE
-   /*Still needs to be implemented*/
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 2, alpha);
+ 	 validate_float_range( 0, 255, beta);
 
-    #elif defined (OCL_COMPILE)
-
-    contrast_stretch_cl (   static_cast<cl_mem>(srcPtr), srcSize,
-                            static_cast<cl_mem>(dstPtr),
-                            newMin, newMax,
-                            RPPI_CHN_PLANAR, 1 /*Channel*/,
-                            static_cast<cl_command_queue>(rppHandle));
-
-
-    #endif //backend
-
-    return RPP_SUCCESS;
-
+#ifdef OCL_COMPILE
+ 	 {
+ 	 brightness_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			alpha,
+			beta,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_contrast_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                            Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
+rppi_brightness_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta, RppHandle_t rppHandle) 
 {
 
-    #ifdef HIP_COMPILE
-   /*Still needs to be implemented*/
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 2, alpha);
+ 	 validate_float_range( 0, 255, beta);
 
-    #elif defined (OCL_COMPILE)
+#ifdef OCL_COMPILE
+ 	 {
+ 	 brightness_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			alpha,
+			beta,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU gamma_correction functions  calls 
+// ----------------------------------------
 
-    contrast_stretch_cl (   static_cast<cl_mem>(srcPtr), srcSize,
-                            static_cast<cl_mem>(dstPtr),
-                            newMin, newMax,
-                            RPPI_CHN_PLANAR, 3 /*Channel*/,
-                            static_cast<cl_command_queue>(rppHandle));
 
+RppStatus
+rppi_gamma_correction_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f gamma, RppHandle_t rppHandle) 
+{
 
-    #endif //backend
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, gamma);
 
-    return RPP_SUCCESS;
-
+#ifdef OCL_COMPILE
+ 	 {
+ 	 gamma_correction_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			gamma,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                            Rpp32u newMin, Rpp32u newMax, RppHandle_t rppHandle)
+rppi_gamma_correction_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f gamma, RppHandle_t rppHandle) 
 {
 
-    #ifdef HIP_COMPILE
-   /*Still needs to be implemented*/
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, gamma);
 
-    #elif defined (OCL_COMPILE)
-
-    contrast_stretch_cl (   static_cast<cl_mem>(srcPtr), srcSize,
-                            static_cast<cl_mem>(dstPtr),
-                            newMin, newMax,
-                            RPPI_CHN_PACKED, 3 /*Channel*/,
-                            static_cast<cl_command_queue>(rppHandle));
-
-
-    #endif //backend
-
-    return RPP_SUCCESS;
-
-}
-
-// Host calls for Contrast function
-
-RppStatus
-rppi_contrast_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                           Rpp32u newMin, Rpp32u newMax)
-{
-    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                         newMin, newMax,
-                         RPPI_CHN_PLANAR, 1);
-    return RPP_SUCCESS;
-
+#ifdef OCL_COMPILE
+ 	 {
+ 	 gamma_correction_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			gamma,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_contrast_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
-                           Rpp32u newMin, Rpp32u newMax)
+rppi_gamma_correction_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f gamma, RppHandle_t rppHandle) 
 {
-    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                         newMin, newMax,
-                         RPPI_CHN_PLANAR, 3);
-    return RPP_SUCCESS;
-}
+ 	 validate_image_size(srcSize);
+ 	 validate_float_min(0, gamma);
 
-RppStatus
-rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize,RppPtr_t dstPtr,
-                           Rpp32u newMin, Rpp32u newMax)
-{
-    contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                         newMin, newMax,
-                         RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
+#ifdef OCL_COMPILE
+ 	 {
+ 	 gamma_correction_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			gamma,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
-
 
 
 

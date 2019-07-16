@@ -8,20 +8,25 @@ bitwise_AND_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "bitwise_AND.cl",
-                          "bitwise_AND",
-                          theProgram, theKernel);
+
+    CreateProgramFromBinary(theQueue,"bitwise_AND.cl","bitwise_AND.cl.bin","bitwise_AND",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    // cl_kernel_initializer(theQueue,
+    //                       "bitwise_AND.cl",
+    //                       "bitwise_AND",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, 2, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     //----
 
     size_t gDim3[3];
@@ -42,19 +47,24 @@ bitwise_NOT_cl ( cl_mem srcPtr1,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "bitwise_NOT.cl",
-                          "bitwise_NOT",
-                          theProgram, theKernel);
+
+    CreateProgramFromBinary(theQueue,"bitwise_NOT.cl","bitwise_NOT.cl.bin","bitwise_NOT",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    // cl_kernel_initializer(theQueue,
+    //                       "bitwise_NOT.cl",
+    //                       "bitwise_NOT",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, 2, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     //----
 
     size_t gDim3[3];
@@ -75,20 +85,25 @@ exclusive_OR_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "exclusive_OR.cl",
-                          "exclusive_OR",
-                          theProgram, theKernel);
+
+    CreateProgramFromBinary(theQueue,"exclusive_OR.cl","exclusive_OR.cl.bin","exclusive_OR",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    // cl_kernel_initializer(theQueue,
+    //                       "exclusive_OR.cl",
+    //                       "exclusive_OR",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, 2, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     //----
 
     size_t gDim3[3];
@@ -109,20 +124,25 @@ inclusive_OR_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "inclusive_OR.cl",
-                          "inclusive_OR",
-                          theProgram, theKernel);
+
+    CreateProgramFromBinary(theQueue,"inclusive_OR.cl","inclusive_OR.cl.bin","inclusive_OR",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    // cl_kernel_initializer(theQueue,
+    //                       "inclusive_OR.cl",
+    //                       "inclusive_OR",
+    //                       theProgram, theKernel);
 
     //---- Args Setter
-    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, 2, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, 4, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, 5, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     //----
 
     size_t gDim3[3];

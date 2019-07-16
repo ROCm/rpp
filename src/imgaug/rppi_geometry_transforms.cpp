@@ -1,7 +1,6 @@
+#include <rppi_geometry_transforms.h>
 #include <rppdefs.h>
-#include <rppi_image_augumentation_functions.h>
-
-#include "cpu/host_geometry_transforms.hpp"
+#include "rppi_validate.hpp"
 
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
@@ -10,349 +9,555 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl/cl_declarations.hpp"
 #endif //backend
+#include <stdio.h>
+#include <iostream>
+#include <fstream>
+#include <chrono>
+using namespace std::chrono; 
 
+#include "cpu/host_geometry_transforms.hpp" 
+ 
+// ----------------------------------------
+// Host flip functions calls 
+// ----------------------------------------
 
-
-
-/******* Flip ********/
-
-// GPU calls for Flip function
 
 RppStatus
-rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                    RppiAxis flipAxis, RppHandle_t rppHandle)
+rppi_flip_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis flipAxis)
 {
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( 0, 2, flipAxis);
+	 flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			flipAxis,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_flip_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis flipAxis)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( 0, 2, flipAxis);
+	 flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			flipAxis,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_flip_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis flipAxis)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( 0, 2, flipAxis);
+	 flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			flipAxis,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host resize functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_resize_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+	 resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_resize_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+	 resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_resize_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+	 resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host resize_crop functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_resize_crop_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
+	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			x1,
+			y1,
+			x2,
+			y2,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_resize_crop_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
+	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			x1,
+			y1,
+			x2,
+			y2,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_resize_crop_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
+	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			x1,
+			y1,
+			x2,
+			y2,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host rotate functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_rotate_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg)
+{
+
+ 	 validate_image_size(srcSize);
+	 rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			angleDeg,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_rotate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg)
+{
+
+ 	 validate_image_size(srcSize);
+	 rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			angleDeg,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg)
+{
+
+ 	 validate_image_size(srcSize);
+	 rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			dstSize,
+			angleDeg,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU flip functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_flip_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis flipAxis, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( 0, 2, flipAxis);
 
 #ifdef OCL_COMPILE
-
-    flip_cl(static_cast<cl_mem>(srcPtr), srcSize,
-            static_cast<cl_mem>(dstPtr),
-            flipAxis,
-            RPPI_CHN_PLANAR, 1 /*Channel*/,
-            static_cast<cl_command_queue>(rppHandle) );
-
-#endif //backend
-
-    return RPP_SUCCESS;
+ 	 {
+ 	 flip_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			flipAxis,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_flip_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                    RppiAxis flipAxis, RppHandle_t rppHandle)
+rppi_flip_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis flipAxis, RppHandle_t rppHandle) 
 {
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( 0, 2, flipAxis);
 
 #ifdef OCL_COMPILE
-
-    flip_cl(static_cast<cl_mem>(srcPtr), srcSize,
-            static_cast<cl_mem>(dstPtr),
-            flipAxis,
-            RPPI_CHN_PLANAR, 3 /*Channel*/,
-            static_cast<cl_command_queue>(rppHandle) );
-
-#endif //backend
-
-    return RPP_SUCCESS;
-
+ 	 {
+ 	 flip_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			flipAxis,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                    RppiAxis flipAxis, RppHandle_t rppHandle)
+rppi_flip_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis flipAxis, RppHandle_t rppHandle) 
 {
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( 0, 2, flipAxis);
 
 #ifdef OCL_COMPILE
-
-    flip_cl(static_cast<cl_mem>(srcPtr), srcSize,
-            static_cast<cl_mem>(dstPtr),
-            flipAxis,
-            RPPI_CHN_PACKED, 3 /*Channel*/,
-            static_cast<cl_command_queue>(rppHandle) );
-
-#endif //backend
-
-    return RPP_SUCCESS;
+ 	 {
+ 	 flip_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			flipAxis,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
+ 
+// ----------------------------------------
+// GPU resize functions  calls 
+// ----------------------------------------
 
-// Host calls for Flip function
 
-RppStatus 
-rppi_flip_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                       RppiAxis flipAxis)
+RppStatus
+rppi_resize_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize, RppHandle_t rppHandle) 
 {
-    flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     flipAxis,
-                     RPPI_CHN_PLANAR, 1);
-    return RPP_SUCCESS;
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 resize_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_flip_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                       RppiAxis flipAxis)
+rppi_resize_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize, RppHandle_t rppHandle) 
 {
-    flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     flipAxis,
-                     RPPI_CHN_PLANAR, 3);
-    return RPP_SUCCESS;
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 resize_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_flip_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                       RppiAxis flipAxis)
+rppi_resize_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize, RppHandle_t rppHandle) 
 {
-    flip_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     flipAxis,
-                     RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
+
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 resize_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
+ 
+// ----------------------------------------
+// GPU resize_crop functions  calls 
+// ----------------------------------------
 
-
-
-
-/******* Warp Affine ********/
-
-// GPU calls for Warp Affine function
-
-// Host calls for Warp Affine function
 
 RppStatus
-rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
-                                  RppPtr_t affine)
+rppi_resize_crop_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) 
 {
-    warp_affine_output_size_host<Rpp32f>(srcSize, dstSizePtr,
-                                         static_cast<Rpp32f*>(affine));
 
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
-}
-
-RppStatus
-rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine)
-{
-    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            static_cast<Rpp32f*>(affine),
-                            RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine)
-{
-    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            static_cast<Rpp32f*>(affine),
-                            RPPI_CHN_PLANAR, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine)
-{
-    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            static_cast<Rpp32f*>(affine),
-                            RPPI_CHN_PACKED, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-
-
-
-
-/******* Rotate ********/
-
-// GPU calls for Rotate function
-
-// Host calls for Rotate function
-
-RppStatus
-rppi_rotate_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
-                             Rpp32f angleDeg)
-{
-    rotate_output_size_host(srcSize, dstSizePtr,
-                            angleDeg);
-
-    return RPP_SUCCESS;
-
+#ifdef OCL_COMPILE
+ 	 {
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			x1,
+			y1,
+			x2,
+			y2,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_rotate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                         Rpp32f angleDeg)
+rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) 
 {
-    rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            angleDeg,
-                            RPPI_CHN_PLANAR, 1);
 
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
+#ifdef OCL_COMPILE
+ 	 {
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			x1,
+			y1,
+			x2,
+			y2,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_rotate_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                         Rpp32f angleDeg)
+rppi_resize_crop_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) 
 {
-    rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            angleDeg,
-                            RPPI_CHN_PLANAR, 3);
 
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
+ 	 validate_image_size(dstSize);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
+#ifdef OCL_COMPILE
+ 	 {
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			x1,
+			y1,
+			x2,
+			y2,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU rotate functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_rotate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 rotate_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			angleDeg,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                         Rpp32f angleDeg)
+rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg, RppHandle_t rppHandle) 
 {
-    rotate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            angleDeg,
-                            RPPI_CHN_PACKED, 3);
 
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
 
-}
-
-
-
-
-/******* Scale ********/
-
-// GPU calls for Scale function
-
-// Host calls for Scale function
-
-RppStatus
-rppi_scale_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
-                             Rpp32f percentage)
-{
-    scale_output_size_host(srcSize, dstSizePtr,
-                            percentage);
-
-    return RPP_SUCCESS;
-
+#ifdef OCL_COMPILE
+ 	 {
+ 	 rotate_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			angleDeg,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_scale_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                         Rpp32f percentage)
+rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg, RppHandle_t rppHandle) 
 {
-    scale_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            percentage,
-                            RPPI_CHN_PLANAR, 1);
 
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_scale_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                         Rpp32f percentage)
-{
-    scale_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            percentage,
-                            RPPI_CHN_PLANAR, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_scale_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                         Rpp32f percentage)
-{
-    scale_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            percentage,
-                            RPPI_CHN_PACKED, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-
-
-
-/******* Resize ********/
-
-// GPU calls for Resize function
-
-// Host calls for Resize function
-
-RppStatus
-rppi_resize_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize)
-{
-    resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_resize_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize)
-{
-    resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            RPPI_CHN_PLANAR, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_resize_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize)
-{
-    resize_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            RPPI_CHN_PACKED, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-
-
-
-/******* Resize Crop ********/
-
-// GPU calls for Resize Crop function
-
-// Host calls for Resize Crop function
-
-RppStatus
-rppi_resizeCrop_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
-{
-    resizeCrop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            x1, y1, x2, y2,
-                            RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_resizeCrop_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
-{
-    resizeCrop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            x1, y1, x2, y2,
-                            RPPI_CHN_PLANAR, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_resizeCrop_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
-{
-    resizeCrop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
-                            x1, y1, x2, y2,
-                            RPPI_CHN_PACKED, 3);
-
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+#ifdef OCL_COMPILE
+ 	 {
+ 	 rotate_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			dstSize,
+			angleDeg,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 
@@ -394,5 +599,4 @@ rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPt
                             RPPI_CHN_PACKED, 3);
 
     return RPP_SUCCESS;
-
 }

@@ -11,7 +11,7 @@ __kernel void gamma_correction(  __global unsigned char* a,
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int id_z = get_global_id(2);
-    double temp; // for storing intermediate float converted value
+    float temp; // for storing intermediate float converted value
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
     int pixIdx = id_x + id_y * width + id_z * width * height;

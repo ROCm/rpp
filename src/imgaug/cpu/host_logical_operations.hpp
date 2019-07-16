@@ -4,14 +4,11 @@
 
 template <typename T>
 RppStatus bitwise_AND_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                           RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        Rpp32s pixel = ((Rpp32s) srcPtr1[i]) & ((Rpp32s) srcPtr2[i]);
-        pixel = (pixel < (Rpp32s) 255) ? pixel : ((Rpp32s) 255);
-        pixel = (pixel > (Rpp32s) 0) ? pixel : ((Rpp32s) 0);
-        dstPtr[i] =(Rpp8u) pixel;
+        dstPtr[i] = srcPtr1[i] & srcPtr2[i];
     }
 
     return RPP_SUCCESS;
@@ -22,14 +19,11 @@ RppStatus bitwise_AND_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus bitwise_NOT_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                           RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        Rpp32s pixel = ~((Rpp32s) srcPtr[i]);
-        pixel = (pixel < (Rpp32s) 255) ? pixel : ((Rpp32s) 255);
-        pixel = (pixel > (Rpp32s) 0) ? pixel : ((Rpp32s) 0);
-        dstPtr[i] =(Rpp8u) pixel;
+        dstPtr[i] = ~srcPtr[i];
     }
 
     return RPP_SUCCESS;
@@ -40,14 +34,11 @@ RppStatus bitwise_NOT_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus exclusive_OR_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                            RppiChnFormat chnFormat,  unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        Rpp32s pixel = ((Rpp32s) srcPtr1[i]) ^ ((Rpp32s) srcPtr2[i]);
-        pixel = (pixel < (Rpp32s) 255) ? pixel : ((Rpp32s) 255);
-        pixel = (pixel > (Rpp32s) 0) ? pixel : ((Rpp32s) 0);
-        dstPtr[i] =(Rpp8u) pixel;
+        dstPtr[i] = srcPtr1[i] ^ srcPtr2[i];
     }
 
     return RPP_SUCCESS;
@@ -58,14 +49,11 @@ RppStatus exclusive_OR_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus inclusive_OR_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   unsigned int channel)
+                            RppiChnFormat chnFormat,  unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        Rpp32s pixel = ((Rpp32s) srcPtr1[i]) | ((Rpp32s) srcPtr2[i]);
-        pixel = (pixel < (Rpp32s) 255) ? pixel : ((Rpp32s) 255);
-        pixel = (pixel > (Rpp32s) 0) ? pixel : ((Rpp32s) 0);
-        dstPtr[i] =(Rpp8u) pixel;
+        dstPtr[i] =srcPtr1[i] | srcPtr2[i] ;
     }
 
     return RPP_SUCCESS;

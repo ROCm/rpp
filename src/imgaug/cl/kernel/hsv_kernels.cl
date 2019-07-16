@@ -240,7 +240,6 @@ __kernel void hsv2rgb_pkd(__global const double *input,
 
 __kernel void huergb_pln(   __global  unsigned char *input,
                             __global  unsigned char *output,
-                            __global  double *temp,
                             const  double hue,
                             const  double sat,
                             const unsigned int height,
@@ -249,9 +248,11 @@ __kernel void huergb_pln(   __global  unsigned char *input,
     //Get our global thread ID
     int id = get_global_id(0);
     double r,g,b, min, max, delta;
+    double temp1, temp2, temp3;
+
 
     //Make sure we do not go out of bounds
-    id = id ;
+    //id = id ;
     if (id < 3 *height * width ){
         r = input[id] / 255.0;
         g = input[id + height * width] / 255.0;
@@ -265,22 +266,21 @@ __kernel void huergb_pln(   __global  unsigned char *input,
         if (delta == 0) output[id] = 0;
         else {
             if (max == r)
-                temp[id] = 60 * ((g - b)/delta);
+                temp1 = 60 * ((g - b)/delta);
             else if (max == g)
-                temp[id] = 60 * ((b - r)/delta + 2);
+                temp1 = 60 * ((b - r)/delta + 2);
             else
-                temp[id] = 60 * ((r - g)/delta + 4);
+                temp1 = 60 * ((r - g)/delta + 4);
         }
 
-        temp[id] += hue;
-        if ( temp[id] < 0)  temp[id] = temp[id] +360;
-        if (max == 0) temp[id +  1] = 0;
-        else temp[id + height * width] = delta / max;
-        temp[id + height * width] += sat;
-        temp[id + 2*height * width] = max;
+        temp1 += hue;
+        if ( temp1 < 0)  temp1 = temp1 +360;
+        if (max == 0) temp2 = 0;
+        else temp2 = delta / max;
+        temp2 += sat;
+        temp3 = max;
 
-    barrier(CLK_GLOBAL_MEM_FENCE);
-
+    //barrier(CLK_GLOBAL_MEM_FENCE);
     double     hh, p, q, t, ff;
     int        i;
     double     h,s,v;
@@ -289,9 +289,9 @@ __kernel void huergb_pln(   __global  unsigned char *input,
     //Make sure we do not go out of bounds
 
 
-        h = temp[pixIdx];
-        s = temp[pixIdx + height * width] ;
-        v = temp[pixIdx + 2*height * width] ;
+        h = temp1;
+        s = temp2 ;
+        v = temp3 ;
 
         if (s <= 0){
             output[pixIdx] = 0;
@@ -352,7 +352,6 @@ __kernel void huergb_pln(   __global  unsigned char *input,
 
 __kernel void huergb_pkd(   __global  unsigned char *input,
                             __global  unsigned char *output,
-                            __global  double *temp,
                             const  double hue,
                             const  double sat,
                             const unsigned int height,
@@ -361,6 +360,7 @@ __kernel void huergb_pkd(   __global  unsigned char *input,
     //Get our global thread ID
     int id = get_global_id(0);
     double r,g,b, min, max, delta;
+    double temp1, temp2, temp3;
 
     //Make sure we do not go out of bounds
     id = id * 3;
@@ -377,21 +377,21 @@ __kernel void huergb_pkd(   __global  unsigned char *input,
         if (delta == 0) output[id] = 0;
         else {
             if (max == r)
-                temp[id] = 60 * ((g - b)/delta);
+                temp1 = 60 * ((g - b)/delta);
             else if (max == g)
-                temp[id] = 60 * ((b - r)/delta + 2);
+                temp1 = 60 * ((b - r)/delta + 2);
             else
-                temp[id] = 60 * ((r - g)/delta + 4);
+                temp1 = 60 * ((r - g)/delta + 4);
         }
 
-        temp[id] += hue;
-        if ( temp[id] < 0)  temp[id] = temp[id] +360;
-        if (max == 0) temp[id +  1] = 0;
-        else temp[id + 1] = delta / max;
-        temp[id + 1] += sat;
-        temp[id + 2] = max;
+        temp1 += hue;
+        if ( temp1 < 0)  temp1 = temp1 +360;
+        if (max == 0) temp2 = 0;
+        else temp2= delta / max;
+        temp2 += sat;
+        temp3 = max;
 
-    barrier(CLK_GLOBAL_MEM_FENCE);
+   // barrier(CLK_GLOBAL_MEM_FENCE);
 
     double     hh, p, q, t, ff;
     int        i;
@@ -401,9 +401,9 @@ __kernel void huergb_pkd(   __global  unsigned char *input,
     //Make sure we do not go out of bounds
 
 
-        h = temp[pixIdx];
-        s = temp[pixIdx + 1] ;
-        v = temp[pixIdx + 2] ;
+        h = temp1;
+        s = temp2;
+        v = temp3;
 
         if (s <= 0){
             output[pixIdx] = 0;
@@ -471,6 +471,7 @@ __kernel void huehsv_pln(   __global  double *input,
     int id = get_global_id(0);
     output[id] = input[id] + hue;
     output[id + height * width] = input[id + height * width]+ sat;
+    /*Boundary Conditions needs to be taken care of */
 }
 
 __kernel void huehsv_pkd(   __global  double *input,

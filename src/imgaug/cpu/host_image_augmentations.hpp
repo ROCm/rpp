@@ -35,8 +35,8 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /************ Brightness ************/
 
 template <typename T>
-RppStatus brightness_contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                                   Rpp32f alpha, Rpp32f beta,
+RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                            Rpp32f alpha, Rpp32f beta,
                                    unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
@@ -955,4 +955,24 @@ RppStatus random_shadow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
  
     return RPP_SUCCESS;
+}
+
+
+/**************** Gamma Correction ***************/
+
+template <typename T>
+RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                                Rpp32f gamma,
+                                RppiChnFormat chnFormat,   unsigned int channel)
+{
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        Rpp32f pixel = ((Rpp32f) srcPtr[i]) / 255;
+        pixel = pow(pixel, gamma);
+        pixel *= 255;
+        dstPtr[i] =(Rpp8u) pixel;
+    }
+
+    return RPP_SUCCESS;
+
 }
