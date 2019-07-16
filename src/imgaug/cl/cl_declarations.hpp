@@ -197,4 +197,10 @@ vignette_cl( cl_mem srcPtr1, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
+RppStatus
+random_shadow_cl(    cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY,
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

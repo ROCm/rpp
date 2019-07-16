@@ -334,3 +334,73 @@ exposure_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f exposureValue
     
     return RPP_SUCCESS;    
 }
+
+/********************** Random Shadow ************************/
+
+RppStatus
+random_shadow_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    
+    Rpp32u row1,row2,column2,column1;
+    int i,j,ctr=0;
+    
+    cl_kernel theKernel;
+    cl_program theProgram;   
+    
+    cl_kernel_initializer(theQueue, "random_shadow.cl", "random_shadow", theProgram, theKernel);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    for(i = 0 ; i < numberOfShadows ; i++)
+    {
+        ctr=0;
+        do
+        {
+            row1 = rand() % srcSize.height;
+            column1 = rand() % srcSize.width;
+        }while (column1<=x1 || column1>=x2 || row1<=y1 || row1>=y2);
+        do
+        {
+            row2 = rand() % srcSize.height;
+            column2 = rand() % srcSize.width;
+        } while ((row2<row1 || column2<column1) || (column2<=x1 || column2>=x2 || row2<=y1 || row2>=y2) || (row2-row1>=maxSizeY || column2-column1>=maxSizeX));
+
+        if(RPPI_CHN_PACKED==chnFormat)
+        {    
+            cl_kernel_initializer(theQueue,
+                                "random_shadow.cl",
+                                "random_shadow_packed",
+                                theProgram, theKernel);
+        }
+        else
+        {
+            cl_kernel_initializer(theQueue,
+                                "random_shadow.cl",
+                                "random_shadow_planar",
+                                theProgram, theKernel);
+        }
+        //---- Args Setter
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &column1);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &row1);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &column2);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &row2);
+        size_t gDim3[3];
+        gDim3[0] = srcSize.width;
+        gDim3[1] = srcSize.height;
+        gDim3[2] = channel;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    }
+}

@@ -303,19 +303,18 @@ rppi_rain_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f r
                                         Rpp32u rainWidth, Rpp32u rainHeight,RppHandle_t rppHandle);
 
 // ----------------------------------------
-// Foggy functions  declaration
+// Random Shadow functions  declaration
 // ----------------------------------------
-RppStatus
-rppi_fog_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, 
-                                Rpp32f fogValue,RppHandle_t rppHandle);
 
 RppStatus
-rppi_fog_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, 
-                        Rpp32f fogValue, RppHandle_t rppHandle);
+rppi_random_shadow_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppHandle_t rppHandle);
 
 RppStatus
-rppi_fog_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, 
-                        Rpp32f fogValue, RppHandle_t rppHandle);
+rppi_random_shadow_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppHandle_t rppHandle);
+
+RppStatus
+rppi_random_shadow_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
