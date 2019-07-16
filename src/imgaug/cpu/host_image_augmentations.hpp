@@ -1,6 +1,6 @@
 #include <cpu/rpp_cpu_common.hpp>
 #include "host_geometry_transforms.hpp"
-#include "cpu/host_color_model_conversions.hpp"
+#include "host_color_model_conversions.hpp"
 #include <stdlib.h>
 #include <time.h>
 
