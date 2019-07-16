@@ -100,6 +100,15 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 // ----------------------------------------
 // Host exposure functions declaration 
 // ----------------------------------------
+/* Changes exposure of an image.
+param[in] srcPtr input image
+*param[in] srcSize dimensions of the image
+*param[out] dstPtr output image
+param[in] exposureFactor factor used in exposure correction
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
@@ -120,6 +129,15 @@ rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr
 // ----------------------------------------
 // Host color_temperature functions declaration 
 // ----------------------------------------
+/* Changes color temperature of an image.
+param[in] srcPtr input image
+*param[in] srcSize dimensions of the image
+*param[out] dstPtr output image
+param[in] adjustmentValue adjustment value used in color temperature correction
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_color_temperature_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
@@ -132,6 +150,19 @@ rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 // ----------------------------------------
 // Host pixelate functions declaration 
 // ----------------------------------------
+/* Pixelates a region of an image
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the input images
+*param[out] dstPtr output image
+*param[in] dstSize dimensions of the output images
+*param[in] x1 x1 value of roi
+*param[in] y1 y1 value of roi
+*param[in] x2 x2 value of roi
+*param[in] y2 y2 value of roi
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_pixelate_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
@@ -148,6 +179,17 @@ rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 // ----------------------------------------
 // Host jitterAdd functions declaration 
 // ----------------------------------------
+/* Introduces jitter in the entire image
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the input images
+*param[out] dstPtr output image
+*param[in] dstSize dimensions of the output images
+*param[in] maxJitterX maximum jitter range in the x direction (number of pixels)
+*param[in] maxJitterY maximum jitter range in the y direction (number of pixels)
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_jitterAdd_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
@@ -164,6 +206,15 @@ rppi_jitterAdd_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 // ----------------------------------------
 // Host vignette functions declaration 
 // ----------------------------------------
+/* Introduces vignette effect in the entire image
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the input images
+*param[out] dstPtr output image
+*param[in] stdDev standard deviation for the gaussian function used in the vignette (decides amount of vignette)
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_vignette_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
@@ -180,6 +231,14 @@ rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 // ----------------------------------------
 // Host fish_eye_effect functions declaration 
 // ----------------------------------------
+/* Introduces fish eye effect in the entire image
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the input images
+*param[out] dstPtr output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_fish_eye_effect_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
@@ -193,6 +252,16 @@ rppi_fish_eye_effect_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t ds
 // ----------------------------------------
 // Host lens_correction functions declaration 
 // ----------------------------------------
+/* Introduces lens correction in the lens distorted images
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the input images
+*param[out] dstPtr output image
+*param[in] strength strength of lens correction needed
+*param[in] zoom extent to which zoom-out is needed
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_lens_correction_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom);
@@ -206,6 +275,24 @@ rppi_lens_correction_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t ds
 // ----------------------------------------
 // Host occlusionAdd functions declaration 
 // ----------------------------------------
+/* Introduces occlusion in a region of the first image by taking a crop from a region in the second image
+*param[in] srcPtr1 input image 1
+*param[in] srcPtr2 input image 2
+*param[in] srcSize1 dimensions of the input image 1
+*param[in] srcSize2 dimensions of the input image 2
+*param[out] dstPtr output image
+*param[in] src1x1 x1 value of roi in image 1
+*param[in] src1y1 y1 value of roi in image 1
+*param[in] src1x2 x2 value of roi in image 1
+*param[in] src1y2 y2 value of roi in image 1
+*param[in] src2x1 x1 value of roi in image 2
+*param[in] src2y1 y1 value of roi in image 2
+*param[in] src2x2 x2 value of roi in image 2
+*param[in] src2y2 y2 value of roi in image 2
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_occlusionAdd_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize1, RppiSize srcSize2, RppPtr_t dstPtr, 
@@ -225,6 +312,15 @@ rppi_occlusionAdd_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcS
 // ----------------------------------------
 // Host snowy functions declaration 
 // ----------------------------------------
+/* Introduces vignette effect in the entire image
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the input images
+*param[out] dstPtr output image
+*param[in] strength strength of snowy effect desired
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
 rppi_snowyRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
@@ -233,20 +329,6 @@ rppi_snowyRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_snowyRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                          Rpp32f strength);
-
-// ----------------------------------------
-// Host random_shadow functions declaration 
-// ----------------------------------------
-
-RppStatus
-rppi_random_shadow_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
-                                Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY);
-
-RppStatus
-rppi_random_shadow_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
-                                Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY);
 
 RppStatus
 rppi_random_shadow_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
