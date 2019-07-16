@@ -335,72 +335,71 @@ exposure_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f exposureValue
     return RPP_SUCCESS;    
 }
 
-/********************** Random Shadow ************************/
-
 RppStatus
-random_shadow_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+rain_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
+    int ctr=0;
+    rainValue=rainValue/10;
+    const unsigned int size = (srcSize.height * srcSize.width * channel);
+    unsigned char output[size];
+    Rpp32u rainProbability= (Rpp32u)(rainValue * srcSize.width * srcSize.height * channel );
+    if(chnFormat==RPPI_CHN_PLANAR)
+        for(int i = 0 ; i < rainProbability ; i++)
+        {
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp32f pixel;
+            for(int k=0;k<channel;k++)
+                output[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] += 5 ;
+            if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
+                for(int j=1;j<rainHeight;j++)
+                    for(int k=0;k<channel;k++)
+                        for(int m=0;m<rainWidth;m++)
+                            output[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m] += 5 ;
+        }
+    else
+        for(int i = 0 ; i < rainProbability ; i++)
+        {
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp32f pixel;
+            for(int k=0;k<channel;k++)
+                output[(channel * row * srcSize.width) + (column * channel) + k] += 5 ;
+            if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
+                for(int j=1;j<rainHeight;j++)
+                    for(int k=0;k<channel;k++)
+                        for(int m=0;m<rainWidth;m++)
+                            output[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)] += 5 ;
+        }
     
-    Rpp32u row1,row2,column2,column1;
-    int i,j,ctr=0;
+    cl_mem d_b;  
+    cl_context context;
+    clGetCommandQueueInfo(  theQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &context, NULL); 
+    d_b = clCreateBuffer(context, CL_MEM_READ_ONLY, srcSize.height * srcSize.width * channel , NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, d_b, CL_TRUE, 0, srcSize.height * srcSize.width * channel, output, 0, NULL, NULL); 
     
     cl_kernel theKernel;
-    cl_program theProgram;   
-    
-    cl_kernel_initializer(theQueue, "random_shadow.cl", "random_shadow", theProgram, theKernel);
+    cl_program theProgram;
+    cl_kernel_initializer(theQueue,
+                          "rain.cl",
+                          "rain",
+                          theProgram, theKernel);
+
+    //---- Args Setter
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &d_b);
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    //----
+
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    clReleaseMemObject(d_b);
 
-    for(i = 0 ; i < numberOfShadows ; i++)
-    {
-        ctr=0;
-        do
-        {
-            row1 = rand() % srcSize.height;
-            column1 = rand() % srcSize.width;
-        }while (column1<=x1 || column1>=x2 || row1<=y1 || row1>=y2);
-        do
-        {
-            row2 = rand() % srcSize.height;
-            column2 = rand() % srcSize.width;
-        } while ((row2<row1 || column2<column1) || (column2<=x1 || column2>=x2 || row2<=y1 || row2>=y2) || (row2-row1>=maxSizeY || column2-column1>=maxSizeX));
-
-        if(RPPI_CHN_PACKED==chnFormat)
-        {    
-            cl_kernel_initializer(theQueue,
-                                "random_shadow.cl",
-                                "random_shadow_packed",
-                                theProgram, theKernel);
-        }
-        else
-        {
-            cl_kernel_initializer(theQueue,
-                                "random_shadow.cl",
-                                "random_shadow_planar",
-                                theProgram, theKernel);
-        }
-        //---- Args Setter
-        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &column1);
-        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &row1);
-        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &column2);
-        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &row2);
-        size_t gDim3[3];
-        gDim3[0] = srcSize.width;
-        gDim3[1] = srcSize.height;
-        gDim3[2] = channel;
-        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-    }
+    return RPP_SUCCESS;   
 }
