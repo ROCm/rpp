@@ -847,7 +847,7 @@ RppStatus snowy_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         Rpp32f *srcPtrHSL = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
         if (chnFormat == RPPI_CHN_PLANAR)
         {
-            rgb2hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
+            rgb_to_hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
 
             Rpp32f *srcPtrHSLTemp;
             srcPtrHSLTemp = srcPtrHSL + (2 * srcSize.height * srcSize.width);
@@ -865,11 +865,11 @@ RppStatus snowy_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                 srcPtrHSLTemp++;
             }
 
-            hsl2rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PLANAR, 3);
+            hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PLANAR, 3);
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
-            rgb2hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
+            rgb_to_hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
 
             Rpp32f *srcPtrHSLTemp;
             srcPtrHSLTemp = srcPtrHSL + 2;
@@ -887,7 +887,7 @@ RppStatus snowy_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                 srcPtrHSLTemp = srcPtrHSLTemp + channel;
             }
 
-            hsl2rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PACKED, 3);
+            hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PACKED, 3);
         }
     }
     else
