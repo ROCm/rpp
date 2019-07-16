@@ -122,10 +122,12 @@ rppi_resize_crop_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -144,10 +146,12 @@ rppi_resize_crop_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -166,10 +170,12 @@ rppi_resize_crop_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 	 resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -227,6 +233,96 @@ rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 			angleDeg,
 			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host random_crop_letterbox functions calls
+// ----------------------------------------
+
+
+RppStatus
+rppi_random_crop_letterbox_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_random_crop_letterbox_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
+ 
+// ----------------------------------------
+// Host warp_affine functions calls
+// ----------------------------------------
+
+
+RppStatus
+rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                                  RppPtr_t affine)
+{
+    warp_affine_output_size_host<Rpp32f>(srcSize, dstSizePtr,
+                                         static_cast<Rpp32f*>(affine));
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
 }
  
 // ----------------------------------------
@@ -388,10 +484,12 @@ rppi_resize_crop_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -419,10 +517,12 @@ rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -450,10 +550,12 @@ rppi_resize_crop_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
 
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
- 	 validate_int_range( 0, srcSize.height, x1);
- 	 validate_int_range( 0, srcSize.width, y1);
- 	 validate_int_range( 0, srcSize.height, x2);
- 	 validate_int_range( 0, srcSize.width, y2);
+ 	 validate_int_range( 0, srcSize.width - 1, x1);
+ 	 validate_int_range( 0, srcSize.height - 1, y1);
+ 	 validate_int_range( 0, srcSize.width - 1, x2);
+ 	 validate_int_range( 0, srcSize.height - 1, y2);
+	 validate_int_max(x2,x1);
+	 validate_int_max(y2,y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -531,7 +633,6 @@ rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 {
 
  	 validate_image_size(srcSize);
-
 #ifdef OCL_COMPILE
  	 {
  	 rotate_cl(static_cast<cl_mem>(srcPtr), 
@@ -761,3 +862,42 @@ rppi_lenscorrection_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 }
 
 
+
+
+/******* Random Crop Letterbox ********/
+
+// GPU calls for Random Crop Letterbox function
+
+// Host calls for Random Crop Letterbox function
+
+RppStatus
+rppi_random_crop_letterbox_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_random_crop_letterbox_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+}

@@ -38,7 +38,7 @@ rppi_flip_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiAxis
 /* Resizes the input image to the destination dimension.
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the images
-*param[out] dstPtr output image where resized image is stored
+*param[out] dstPtr output image
 *param[in] dstSize dimensions of the output images
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
@@ -60,12 +60,12 @@ rppi_resize_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 /* Crops the image to the roi area and resizes to the destination size
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the images
-*param[out] dstPtr output image where resized image is stored
+*param[out] dstPtr output image
 *param[in] dstSize dimensions of the output images
 *param[in] x1 x1 value of roi
 *param[in] y1 y1 value of roi
- x2 *param[in] x2 value of roi
- y2 *param[in]y2 value of roi
+*param[in] x2 x2 value of roi
+*param[in] y2 y2 value of roi
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -102,6 +102,65 @@ rppi_rotate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 
 RppStatus
 rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg);
+
+// ----------------------------------------
+// Host random_crop_letterbox functions declaration 
+// ----------------------------------------
+/* Rotates the input image according to the angle specified
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the input images
+*param[out] dstPtr output image
+*param[in] dstSize dimensions of the output images
+*param[in] x1 x1 value of roi
+*param[in] y1 y1 value of roi
+*param[in] x2 x2 value of roi
+*param[in] y2 y2 value of roi
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_random_crop_letterbox_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, 
+                                        Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2);
+
+RppStatus
+rppi_random_crop_letterbox_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, 
+                                        Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2);
+
+RppStatus
+rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, 
+                                        Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2);
+
+// ----------------------------------------
+// Host warp_affine functions declaration 
+// ----------------------------------------
+/* Resizes the input image to the destination dimension.
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the images
+*param[out] dstPtr output image
+*param[in] dstSize dimensions of the output images
+*param[in] affine affine transformation matrix
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                                  RppPtr_t affine);
+
+RppStatus
+rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine);
+
+RppStatus
+rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine);
+
+RppStatus
+rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine);
 
 // ----------------------------------------
 // GPU flip functions declaration 

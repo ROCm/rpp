@@ -23,4 +23,98 @@
 #endif //RPP_CPU_COMMON_H
 
 
+#define RPPISEVEN(a)            ((a % 2 == 0) ? 1 : 0)
+
+
+
+
+// Generate Functions
+
+RppStatus generate_gaussian_kernel_host(Rpp32f stdDev, Rpp32f* kernel, unsigned int kernelSize);
+
+RppStatus generate_gaussian_kernel_asymmetric_host(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSizeX, Rpp32u kernelSizeY);
+
+template <typename T>
+RppStatus generate_bilateral_kernel_host(Rpp32f multiplierI, Rpp32f multiplierS, Rpp32f multiplier, Rpp32f* kernel, unsigned int kernelSize, int bound, 
+                                         T* srcPtrWindow, RppiSize srcSizeMod, Rpp32u remainingElementsInRow, Rpp32u incrementToWindowCenter, 
+                                         RppiChnFormat chnFormat, unsigned int channel);
+
+template <typename T>
+RppStatus generate_evenly_padded_image_host(T* srcPtr, RppiSize srcSize, T* srcPtrMod, RppiSize srcSizeMod, 
+                                     RppiChnFormat chnFormat, unsigned int channel);
+
+RppStatus generate_box_kernel_host(Rpp32f* kernel, unsigned int kernelSize);
+
+template <typename T>
+RppStatus generate_crop_host(T* srcPtr, RppiSize srcSize, T* srcPtrSubImage, RppiSize srcSizeSubImage, T* dstPtr, 
+                             RppiChnFormat chnFormat, unsigned int channel);
+
+
+
+
+
+// Kernels for functions
+
+template<typename T>
+RppStatus convolution_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize, 
+                                       Rpp32f* kernel, unsigned int kernelSize, Rpp32u remainingElementsInRow, 
+                                       RppiChnFormat chnFormat, unsigned int channel);
+
+template<typename T>
+RppStatus histogram_kernel_host(T* srcPtr, RppiSize srcSize, Rpp32u* histogram, 
+                                Rpp32u bins, 
+                                unsigned int channel);
+
+template <typename T>
+RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+                           RppiChnFormat chnFormat, unsigned int channel);
+
+template <typename T>
+RppStatus resize_crop_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+                           Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
+                           RppiChnFormat chnFormat, unsigned int channel);
+
+
+
+
+
+// Convolution Functions
+
+template<typename T>
+RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, T* dstPtr, RppiSize srcSize, 
+                        Rpp32f* kernel, unsigned int kernelSize, 
+                        RppiChnFormat chnFormat, unsigned int channel);
+
+template<typename T>
+RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* dstPtr, RppiSize srcSizeSubImage, RppiSize srcSize, 
+                        Rpp32f* kernel, unsigned int kernelSize, 
+                        RppiChnFormat chnFormat, unsigned int channel);
+
+
+
+
+
+// Compute Functions
+
+template<typename T>
+RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage, 
+                                         RppiSize size, RppiSize *sizeSubImage, 
+                                         unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, 
+                                         RppiChnFormat chnFormat, unsigned int channel);
+
+template<typename T>
+RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize, 
+                                 RppiChnFormat chnFormat, unsigned int channel);
+
+template <typename T, typename U>
+RppStatus compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+                                   unsigned int channel);
+
+template <typename T, typename U>
+RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    RppiChnFormat chnFormat, unsigned channel);
+
+template <typename T, typename U>
+RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    RppiChnFormat chnFormat, unsigned channel);
 

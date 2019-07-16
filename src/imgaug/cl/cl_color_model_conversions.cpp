@@ -2,7 +2,7 @@
 #include <cpu/rpp_cpu_common.hpp>
 #include "cl_declarations.hpp"
 
-int generate_gaussian_kernel_asymmetric_host(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSizeX, Rpp32u kernelSizeY)
+int generate_gaussian_kernel_asymmetric(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSizeX, Rpp32u kernelSizeY)
 {
     Rpp32f s, sum = 0.0, multiplier;
     if (kernelSizeX % 2 == 0)
@@ -321,22 +321,22 @@ vignette_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float stdDev, RppiCh
 
     if (kernelRowsSize.height % 2 == 0)
     {
-        generate_gaussian_kernel_asymmetric_host(stdDev, kernelRows, kernelRowsSize.height - 1, kernelRowsSize.width);
+        generate_gaussian_kernel_asymmetric(stdDev, kernelRows, kernelRowsSize.height - 1, kernelRowsSize.width);
         kernelRows[kernelRowsSize.height - 1] = kernelRows[kernelRowsSize.height - 2];
     }
     else
     {
-        generate_gaussian_kernel_asymmetric_host(stdDev, kernelRows, kernelRowsSize.height, kernelRowsSize.width);
+        generate_gaussian_kernel_asymmetric(stdDev, kernelRows, kernelRowsSize.height, kernelRowsSize.width);
     }
     
     if (kernelColumnsSize.height % 2 == 0)
     {
-        generate_gaussian_kernel_asymmetric_host(stdDev, kernelColumns, kernelColumnsSize.height - 1, kernelColumnsSize.width);
+        generate_gaussian_kernel_asymmetric(stdDev, kernelColumns, kernelColumnsSize.height - 1, kernelColumnsSize.width);
         kernelColumns[kernelColumnsSize.height - 1] = kernelColumns[kernelColumnsSize.height - 2];
     }
     else
     {
-        generate_gaussian_kernel_asymmetric_host(stdDev, kernelColumns, kernelColumnsSize.height, kernelColumnsSize.width);
+        generate_gaussian_kernel_asymmetric(stdDev, kernelColumns, kernelColumnsSize.height, kernelColumnsSize.width);
     }
 
     Rpp32f *kernelRowsTemp, *kernelColumnsTemp;
