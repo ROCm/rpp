@@ -1,6 +1,4 @@
 #include <cpu/rpp_cpu_common.hpp>
-#include "host_geometry_transforms.hpp"
-#include "host_color_model_conversions.hpp"
 #include <stdlib.h>
 #include <time.h>
 
@@ -332,7 +330,8 @@ RppStatus jitterAdd_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             }
         }
 
-        resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(dstPtrForJitter), srcSize, static_cast<Rpp8u*>(dstPtr), srcSize,
+        
+        resize_crop_kernel_host<Rpp8u>(static_cast<Rpp8u*>(dstPtrForJitter), srcSize, static_cast<Rpp8u*>(dstPtr), srcSize,
                             maxJitterX, maxJitterY, srcSize.width - maxJitterX - 1, srcSize.height - maxJitterY - 1,
                             RPPI_CHN_PLANAR, channel);
     }
@@ -363,7 +362,7 @@ RppStatus jitterAdd_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             srcPtrTemp += channeledJitterRangeX;
             dstPtrTemp += channeledJitterRangeX;
         }
-        resize_crop_host<Rpp8u>(static_cast<Rpp8u*>(dstPtrForJitter), srcSize, static_cast<Rpp8u*>(dstPtr), srcSize,
+        resize_crop_kernel_host<Rpp8u>(static_cast<Rpp8u*>(dstPtrForJitter), srcSize, static_cast<Rpp8u*>(dstPtr), srcSize,
                             maxJitterX, maxJitterY, srcSize.width - maxJitterX - 1, srcSize.height - maxJitterY - 1,
                             RPPI_CHN_PACKED, channel);
     }
@@ -847,7 +846,7 @@ RppStatus snowy_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         Rpp32f *srcPtrHSL = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
         if (chnFormat == RPPI_CHN_PLANAR)
         {
-            rgb_to_hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
+            compute_rgb_to_hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
 
             Rpp32f *srcPtrHSLTemp;
             srcPtrHSLTemp = srcPtrHSL + (2 * srcSize.height * srcSize.width);
@@ -865,11 +864,11 @@ RppStatus snowy_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                 srcPtrHSLTemp++;
             }
 
-            hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PLANAR, 3);
+            compute_hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PLANAR, 3);
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
-            rgb_to_hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
+            compute_rgb_to_hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
 
             Rpp32f *srcPtrHSLTemp;
             srcPtrHSLTemp = srcPtrHSL + 2;
@@ -887,7 +886,7 @@ RppStatus snowy_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                 srcPtrHSLTemp = srcPtrHSLTemp + channel;
             }
 
-            hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PACKED, 3);
+            compute_hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PACKED, 3);
         }
     }
     else

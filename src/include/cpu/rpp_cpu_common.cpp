@@ -501,6 +501,26 @@ RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize ds
     return RPP_SUCCESS;
 }
 
+template <typename T>
+RppStatus resize_crop_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+                           Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
+                           RppiChnFormat chnFormat, unsigned int channel)
+{
+    RppiSize srcSizeSubImage;
+    T *srcPtrSubImage;
+
+    compute_subimage_location_host(srcPtr, &srcPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
+
+    T *srcPtrResize = (T*) calloc(channel * srcSizeSubImage.height * srcSizeSubImage.width, sizeof(T));
+
+    generate_crop_host(srcPtr, srcSize, srcPtrSubImage, srcSizeSubImage, srcPtrResize, chnFormat, channel);
+
+    resize_kernel_host(srcPtrResize, srcSizeSubImage, dstPtr, dstSize, chnFormat, channel);
+
+    return RPP_SUCCESS;
+    
+}
+
 
 
 
@@ -736,6 +756,231 @@ RppStatus compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dst
         pixel = (pixel < (U) 255) ? pixel : ((U) 255);
         pixel = (pixel > (U) 0) ? pixel : ((U) 0);
         dstPtr[i] =(T) pixel;
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T, typename U>
+RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    RppiChnFormat chnFormat, unsigned channel)
+{
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+        {
+            float rf, gf, bf, cmax, cmin, delta, divisor;
+            rf = ((float) srcPtr[i]) / 255;
+            gf = ((float) srcPtr[i + (srcSize.width * srcSize.height)]) / 255;
+            bf = ((float) srcPtr[i + (2 * srcSize.width * srcSize.height)]) / 255;
+            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
+            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
+            divisor = cmax + cmin - 1;
+            delta = cmax - cmin;
+
+            if (delta == 0)
+            {
+                dstPtr[i] = 0;
+            }
+            else if (cmax == rf)
+            {
+                dstPtr[i] = round(60 * fmod(((gf - bf) / delta),6));
+            }
+            else if (cmax == gf)
+            {
+                dstPtr[i] = round(60 * (((bf - rf) / delta) + 2));
+            }
+            else if (cmax == bf)
+            {
+                dstPtr[i] = round(60 * (((rf - gf) / delta) + 4));
+            }
+            
+            while (dstPtr[i] > 360)
+            {
+                dstPtr[i] = dstPtr[i] - 360;
+            }
+            while (dstPtr[i] < 0)
+            {
+                dstPtr[i] = 360 + dstPtr[i];
+            }
+
+            if (delta == 0)
+            {
+                dstPtr[i + (srcSize.width * srcSize.height)] = 0;
+            }
+            else
+            {
+                dstPtr[i + (srcSize.width * srcSize.height)] = delta / (1 - RPPABS(divisor));
+            }
+
+            dstPtr[i + (2 * srcSize.width * srcSize.height)] = (cmax + cmin) / 2;
+
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
+        {
+            float rf, gf, bf, cmax, cmin, delta, divisor;
+            rf = ((float) srcPtr[i]) / 255;
+            gf = ((float) srcPtr[i + 1]) / 255;
+            bf = ((float) srcPtr[i + 2]) / 255;
+            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
+            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
+            divisor = cmax + cmin - 1;
+            delta = cmax - cmin;
+
+            if (delta == 0)
+            {
+                dstPtr[i] = 0;
+            }
+            else if (cmax == rf)
+            {
+                dstPtr[i] = round(60 * fmod(((gf - bf) / delta),6));
+            }
+            else if (cmax == gf)
+            {
+                dstPtr[i] = round(60 * (((bf - rf) / delta) + 2));
+            }
+            else if (cmax == bf)
+            {
+                dstPtr[i] = round(60 * (((rf - gf) / delta) + 4));
+            }
+            
+            while (dstPtr[i] > 360)
+            {
+                dstPtr[i] = dstPtr[i] - 360;
+            }
+            while (dstPtr[i] < 0)
+            {
+                dstPtr[i] = 360 + dstPtr[i];
+            }
+
+            if (delta == 0)
+            {
+                dstPtr[i + 1] = 0;
+            }
+            else
+            {
+                dstPtr[i + 1] = delta / (1 - RPPABS(divisor));
+            }
+
+            dstPtr[i + 2] = (cmax + cmin) / 2;
+
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T, typename U>
+RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    RppiChnFormat chnFormat, unsigned channel)
+{
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+        {
+            float c, x, m, rf, gf, bf;
+            c = (2 * srcPtr[i + (2 * srcSize.width * srcSize.height)]) - 1;
+            c = (1 - RPPABS(c)) * srcPtr[i + (srcSize.width * srcSize.height)];
+            x = c * (1 - abs((fmod((srcPtr[i] / 60), 2)) - 1));
+            m = srcPtr[i + (2 * srcSize.width * srcSize.height)] - c / 2;
+            
+            if ((0 <= srcPtr[i]) && (srcPtr[i] < 60))
+            {
+                rf = c;
+                gf = x;
+                bf = 0;
+            }
+            else if ((60 <= srcPtr[i]) && (srcPtr[i] < 120))
+            {
+                rf = x;
+                gf = c;
+                bf = 0;
+            }
+            else if ((120 <= srcPtr[i]) && (srcPtr[i] < 180))
+            {
+                rf = 0;
+                gf = c;
+                bf = x;
+            }
+            else if ((180 <= srcPtr[i]) && (srcPtr[i] < 240))
+            {
+                rf = 0;
+                gf = x;
+                bf = c;
+            }
+            else if ((240 <= srcPtr[i]) && (srcPtr[i] < 300))
+            {
+                rf = x;
+                gf = 0;
+                bf = c;
+            }
+            else if ((300 <= srcPtr[i]) && (srcPtr[i] < 360))
+            {
+                rf = c;
+                gf = 0;
+                bf = x;
+            }
+
+            dstPtr[i] = (Rpp8u) round((rf + m) * 255);
+            dstPtr[i + (srcSize.width * srcSize.height)] = (Rpp8u) round((gf + m) * 255);
+            dstPtr[i + (2 * srcSize.width * srcSize.height)] = (Rpp8u) round((bf + m) * 255);
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        printf("\nInside\n");
+        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
+        {
+            float c, x, m, rf, gf, bf;
+            c = (2 * srcPtr[i + 2]) - 1;
+            c = (1 - RPPABS(c)) * srcPtr[i + 1];
+            x = c * (1 - abs((fmod((srcPtr[i] / 60), 2)) - 1));
+            m = srcPtr[i + 2] - c / 2;
+            
+            if ((0 <= srcPtr[i]) && (srcPtr[i] < 60))
+            {
+                rf = c;
+                gf = x;
+                bf = 0;
+            }
+            else if ((60 <= srcPtr[i]) && (srcPtr[i] < 120))
+            {
+                rf = x;
+                gf = c;
+                bf = 0;
+            }
+            else if ((120 <= srcPtr[i]) && (srcPtr[i] < 180))
+            {
+                rf = 0;
+                gf = c;
+                bf = x;
+            }
+            else if ((180 <= srcPtr[i]) && (srcPtr[i] < 240))
+            {
+                rf = 0;
+                gf = x;
+                bf = c;
+            }
+            else if ((240 <= srcPtr[i]) && (srcPtr[i] < 300))
+            {
+                rf = x;
+                gf = 0;
+                bf = c;
+            }
+            else if ((300 <= srcPtr[i]) && (srcPtr[i] < 360))
+            {
+                rf = c;
+                gf = 0;
+                bf = x;
+            }
+
+            dstPtr[i] = (Rpp8u) round((rf + m) * 255);
+            dstPtr[i + 1] = (Rpp8u) round((gf + m) * 255);
+            dstPtr[i + 2] = (Rpp8u) round((bf + m) * 255);
+        }
     }
 
     return RPP_SUCCESS;

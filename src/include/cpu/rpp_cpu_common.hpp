@@ -64,6 +64,11 @@ template <typename T>
 RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            RppiChnFormat chnFormat, unsigned int channel);
 
+template <typename T>
+RppStatus resize_crop_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+                           Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
+                           RppiChnFormat chnFormat, unsigned int channel);
+
 
 
 
@@ -99,5 +104,13 @@ RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSiz
 template <typename T, typename U>
 RppStatus compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    unsigned int channel);
+
+template <typename T, typename U>
+RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    RppiChnFormat chnFormat, unsigned channel);
+
+template <typename T, typename U>
+RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    RppiChnFormat chnFormat, unsigned channel);
 
 #endif //RPP_CPU_COMMON_H
