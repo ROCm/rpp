@@ -102,9 +102,9 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /************ Brightness ************/
 
 template <typename T>
-RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                            Rpp32f alpha, Rpp32f beta,
-                                   unsigned int channel)
+RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+                          Rpp32f alpha, Rpp32f beta, 
+                          RppiChnFormat chnFormat, unsigned int channel)
 {
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
