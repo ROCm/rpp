@@ -276,6 +276,137 @@ rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 }
  
 // ----------------------------------------
+// Host rgb_to_hsl functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_rgb_to_hsl_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 rgb_to_hsl_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_rgb_to_hsl_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 rgb_to_hsl_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_rgb_to_hsl_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 rgb_to_hsl_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host hsl_to_rgb functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_hsl_to_rgb_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 hsl_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_hsl_to_rgb_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 hsl_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_hsl_to_rgb_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 hsl_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host exposure functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor)
+{
+
+    exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           exposureFactor,
+                           RPPI_CHN_PLANAR, 3, RGB);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor)
+{
+
+    exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           exposureFactor,
+                           RPPI_CHN_PACKED, 3, RGB);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor)
+{
+
+    exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                           exposureFactor,
+                           RPPI_CHN_PLANAR, 3, HSV);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor)
+{
+
+    exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+                           exposureFactor,
+                           RPPI_CHN_PACKED, 3, HSV);
+    return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
 // GPU rgb_to_hsv functions  calls 
 // ----------------------------------------
 

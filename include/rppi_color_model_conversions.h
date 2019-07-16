@@ -180,6 +180,35 @@ RppStatus
 rppi_hsl_to_rgb_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
 
 // ----------------------------------------
+// Host exposure functions declaration 
+// ----------------------------------------
+/* Changes exposure of an image.
+param[in] srcPtr input image
+*param[in] srcSize dimensions of the image
+*param[out] dstPtr output image
+param[in] exposureFactor factor used in exposure correction
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor);
+
+RppStatus
+rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor);
+
+RppStatus
+rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor);
+
+RppStatus
+rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32f exposureFactor);
+
+// ----------------------------------------
 // GPU rgb_to_hsv functions declaration 
 // ----------------------------------------
 /* Converts RGB image to HSV image.

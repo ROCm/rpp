@@ -18,6 +18,50 @@ using namespace std::chrono;
 #include "cpu/host_arithmetic_operations.hpp" 
  
 // ----------------------------------------
+// Host absolute_difference functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_absolute_difference_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_absolute_difference_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+
+// ----------------------------------------
 // Host accumulate_weighted functions calls 
 // ----------------------------------------
 
@@ -65,45 +109,42 @@ rppi_accumulate_weighted_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 }
  
 // ----------------------------------------
-// Host absolute_difference functions calls 
+// Host accumulate functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_absolute_difference_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_accumulate_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 {
 
  	 validate_image_size(srcSize);
-	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			static_cast<Rpp8u*>(srcPtr2), 
 			srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
 			RPPI_CHN_PLANAR, 1);
 	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_absolute_difference_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_accumulate_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 {
 
  	 validate_image_size(srcSize);
-	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			static_cast<Rpp8u*>(srcPtr2), 
 			srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
 			RPPI_CHN_PLANAR, 3);
 	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_absolute_difference_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
+rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
 {
 
  	 validate_image_size(srcSize);
-	 absolute_difference_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			static_cast<Rpp8u*>(srcPtr2), 
 			srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
 			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }
@@ -197,44 +238,74 @@ rppi_subtract_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rp
 }
  
 // ----------------------------------------
-// Host accumulate functions calls 
+// GPU absolute_difference functions  calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_accumulate_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
+rppi_absolute_difference_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
-	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
-			static_cast<Rpp8u*>(srcPtr2), 
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
 			srcSize,
-			RPPI_CHN_PLANAR, 1);
-	return RPP_SUCCESS;
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_accumulate_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
+rppi_absolute_difference_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
-	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
-			static_cast<Rpp8u*>(srcPtr2), 
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
 			srcSize,
-			RPPI_CHN_PLANAR, 3);
-	return RPP_SUCCESS;
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_accumulate_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize)
+rppi_absolute_difference_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
-	 accumulate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
-			static_cast<Rpp8u*>(srcPtr2), 
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
 			srcSize,
-			RPPI_CHN_PACKED, 3);
-	return RPP_SUCCESS;
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
  
 // ----------------------------------------
@@ -312,22 +383,21 @@ rppi_accumulate_weighted_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
  
 // ----------------------------------------
-// GPU absolute_difference functions  calls 
+// GPU accumulate functions  calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_absolute_difference_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_accumulate_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
 
 #ifdef OCL_COMPILE
  	 {
- 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1), 
+ 	 accumulate_cl(static_cast<cl_mem>(srcPtr1), 
 			static_cast<cl_mem>(srcPtr2), 
 			srcSize,
-			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -339,17 +409,16 @@ rppi_absolute_difference_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
 
 RppStatus
-rppi_absolute_difference_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_accumulate_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
 
 #ifdef OCL_COMPILE
  	 {
- 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1), 
+ 	 accumulate_cl(static_cast<cl_mem>(srcPtr1), 
 			static_cast<cl_mem>(srcPtr2), 
 			srcSize,
-			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -361,17 +430,16 @@ rppi_absolute_difference_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 }
 
 RppStatus
-rppi_absolute_difference_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+rppi_accumulate_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
 
 #ifdef OCL_COMPILE
  	 {
- 	 absolute_difference_cl(static_cast<cl_mem>(srcPtr1), 
+ 	 accumulate_cl(static_cast<cl_mem>(srcPtr1), 
 			static_cast<cl_mem>(srcPtr2), 
 			srcSize,
-			static_cast<cl_mem>(dstPtr), 
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -514,74 +582,6 @@ rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
 			static_cast<cl_mem>(srcPtr2), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PACKED, 3,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
- 
-// ----------------------------------------
-// GPU accumulate functions  calls 
-// ----------------------------------------
-
-
-RppStatus
-rppi_accumulate_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
-{
-
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 accumulate_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			RPPI_CHN_PLANAR, 1,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
-{
-
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 accumulate_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			RPPI_CHN_PLANAR, 3,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize, RppHandle_t rppHandle) 
-{
-
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 accumulate_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 

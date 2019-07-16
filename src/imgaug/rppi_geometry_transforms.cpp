@@ -236,6 +236,96 @@ rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 }
  
 // ----------------------------------------
+// Host random_crop_letterbox functions calls
+// ----------------------------------------
+
+
+RppStatus
+rppi_random_crop_letterbox_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_random_crop_letterbox_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2)
+{
+    random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            x1, y1, x2, y2,
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
+ 
+// ----------------------------------------
+// Host warp_affine functions calls
+// ----------------------------------------
+
+
+RppStatus
+rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                                  RppPtr_t affine)
+{
+    warp_affine_output_size_host<Rpp32f>(srcSize, dstSizePtr,
+                                         static_cast<Rpp32f*>(affine));
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                              RppPtr_t affine)
+{
+    warp_affine_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            static_cast<Rpp32f*>(affine),
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
+ 
+// ----------------------------------------
 // GPU flip functions  calls 
 // ----------------------------------------
 
