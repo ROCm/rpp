@@ -1816,3 +1816,69 @@ rppi_random_shadow_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
                               RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 }
+// ----------------------------------------
+// Random Shadow functions  calls 
+// ----------------------------------------
+
+RppStatus
+rppi_random_shadow_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+        random_shadow_cl(static_cast<cl_mem>(srcPtr),
+            srcSize,
+            static_cast<cl_mem>(dstPtr), 
+            x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY,
+            RPPI_CHN_PLANAR, 1,
+            static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_random_shadow_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+        random_shadow_cl(static_cast<cl_mem>(srcPtr),
+            srcSize,
+            static_cast<cl_mem>(dstPtr), 
+            x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY,
+            RPPI_CHN_PLANAR, 3,
+            static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_random_shadow_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+        random_shadow_cl(static_cast<cl_mem>(srcPtr),
+            srcSize,
+            static_cast<cl_mem>(dstPtr), 
+            x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY,
+            RPPI_CHN_PACKED, 3,
+            static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
