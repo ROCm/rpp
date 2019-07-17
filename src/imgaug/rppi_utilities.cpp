@@ -80,6 +80,7 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
                              Rpp32f angleDeg)
 {
     Rpp32f angleRad = RAD(angleDeg);
+
     Rpp32f rotate[4] = {0};
     rotate[0] = cos(angleRad);
     rotate[1] = sin(angleRad);
