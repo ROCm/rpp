@@ -1028,3 +1028,96 @@ rppi_rain_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f r
 #endif //BACKEND 
 	return RPP_SUCCESS;
 }
+
+RppStatus
+rppi_fog_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue,RppHandle_t rppHandle)
+{
+ 	Rpp32f stdDev=fogValue*50;
+    validate_float_min(0, stdDev);
+    validate_image_size(srcSize);
+ 	validate_float_min(0, stdDev);
+	unsigned int kernelSize = 3;
+#ifdef OCL_COMPILE
+ 	{
+
+    if(fogValue!=0)
+ 	blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			kernelSize,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+    fog_cl(static_cast<cl_mem>(dstPtr), 
+			srcSize, 
+			fogValue,
+			RPPI_CHN_PLANAR, 1, 
+            static_cast<cl_command_queue>(rppHandle) );
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_fog_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue, RppHandle_t rppHandle)
+{
+ 	Rpp32f stdDev=fogValue*50;
+    validate_float_min(0, stdDev);
+    validate_image_size(srcSize);
+ 	validate_float_min(0, stdDev);
+	unsigned int kernelSize = 3;
+#ifdef OCL_COMPILE
+ 	{
+
+    if(fogValue!=0)
+ 	blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			kernelSize,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+    fog_cl(static_cast<cl_mem>(dstPtr), 
+			srcSize, 
+			fogValue,
+			RPPI_CHN_PLANAR, 3, 
+            static_cast<cl_command_queue>(rppHandle) );
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_fog_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue, RppHandle_t rppHandle)
+{
+ 	Rpp32f stdDev=fogValue*50;
+    validate_float_min(0, stdDev);
+    validate_image_size(srcSize);
+ 	validate_float_min(0, stdDev);
+	unsigned int kernelSize = 3;
+#ifdef OCL_COMPILE
+ 	{
+
+    if(fogValue!=0)
+ 	blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			kernelSize,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+    fog_cl(static_cast<cl_mem>(dstPtr), 
+			srcSize, 
+			fogValue,
+			RPPI_CHN_PACKED, 3, 
+            static_cast<cl_command_queue>(rppHandle) );
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}

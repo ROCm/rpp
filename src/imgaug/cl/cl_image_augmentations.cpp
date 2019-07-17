@@ -335,6 +335,9 @@ exposure_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f exposureValue
     return RPP_SUCCESS;    
 }
 
+
+/********************** Rain ************************/
+
 RppStatus
 rain_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
@@ -402,4 +405,41 @@ rain_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f rainValue, Rpp32u
     clReleaseMemObject(d_b);
 
     return RPP_SUCCESS;   
+}
+
+
+/********************** Fog ************************/
+
+RppStatus
+fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    int ctr=0;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if(chnFormat==RPPI_CHN_PLANAR)
+    cl_kernel_initializer(theQueue,
+                          "fog.cl",
+                          "fog_planar",
+                          theProgram, theKernel);
+    else
+    cl_kernel_initializer(theQueue,
+                          "fog.cl",
+                          "fog_packed",
+                          theProgram, theKernel);
+
+    //---- Args Setter
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, ctr++, sizeof(float), &fogValue);
+    //----
+
+    size_t gDim3[2];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[1] = 1;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;      
 }

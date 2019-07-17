@@ -203,4 +203,10 @@ vignette_cl( cl_mem srcPtr1, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
+RppStatus
+fog_cl( cl_mem srcPtr, RppiSize srcSize, 
+                Rpp32f fogValue,
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
