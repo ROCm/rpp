@@ -20,7 +20,6 @@
 #define RPPCEIL(a)              ((int) (a + 1.0))
 #define RPPPIXELCHECK(pixel)    (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
 
-#endif //RPP_CPU_COMMON_H
 
 
 #define RPPISEVEN(a)            ((a % 2 == 0) ? 1 : 0)
@@ -118,3 +117,5 @@ template <typename T, typename U>
 RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     RppiChnFormat chnFormat, unsigned channel);
 
+
+#endif //RPP_CPU_COMMON_H
