@@ -1,24 +1,18 @@
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
-__kernel void random_shadow_pkd(
+__kernel void random_shadow(
     const __global unsigned char* input,
     __global  unsigned char* output,
         const unsigned int height,
         const unsigned int width,
         const unsigned int channel
-){
-__kernel void random_shadow(  __global unsigned char* input,
-                    __global unsigned char* output,
-                    const unsigned int srcheight,
-                    const unsigned int srcwidth,
-                    const unsigned int channel
 )
 {
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int id_z = get_global_id(2);
-    if (id_x >= srcwidth || id_y >= srcheight || id_z >= channel) 
+    if (id_x >= width || id_y >= height || id_z >= channel) 
         return;
-    int pixIdx=(srcwidth*srcheight*id_z) + (srcwidth * id_y) + id_x;
+     int pixIdx=(width*height*id_z) + (width * id_y) + id_x;
     output[pixIdx] = input[pixIdx];
 }
 __kernel void random_shadow_planar(  __global unsigned char* input,
