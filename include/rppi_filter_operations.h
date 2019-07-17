@@ -1,5 +1,5 @@
-#ifndef RPPI_FILTER_OPERATIONS.H
-#define RPPI_FILTER_OPERATIONS.H
+#ifndef RPPI_FILTER_OPERATIONS
+#define RPPI_FILTER_OPERATIONS
  
 #include "rppdefs.h"
 #ifdef __cplusplus

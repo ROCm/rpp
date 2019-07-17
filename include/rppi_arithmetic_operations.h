@@ -1,5 +1,5 @@
-#ifndef RPPI_ARITHMETIC_OPERATIONS.H
-#define RPPI_ARITHMETIC_OPERATIONS.H
+#ifndef RPPI_ARITHMETIC_OPERATIONS
+#define RPPI_ARITHMETIC_OPERATIONS
  
 #include "rppdefs.h"
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
-#ifndef RPPI_SUPPORT_FUNCTIONS_H
-#define RPPI_SUPPORT_FUNCTIONS_H
+#ifndef RPPI_SUPPORT_FUNCTIONS
+#define RPPI_SUPPORT_FUNCTIONS
 
 #ifdef __cplusplus
 extern "C" {
