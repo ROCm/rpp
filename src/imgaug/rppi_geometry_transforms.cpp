@@ -621,3 +621,56 @@ rppi_Random_Crop_Letter_Box_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_
 		return RPP_SUCCESS;
 
 }
+
+RppStatus
+rppi_warp_affine_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f *affine, RppHandle_t rppHandle)
+{
+    
+
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PLANAR, 1 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f *affine, RppHandle_t rppHandle)
+{
+
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PLANAR, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}
+
+RppStatus
+rppi_warp_affine_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f *affine, RppHandle_t rppHandle)
+{
+    
+
+    /*call that offset function */
+    #ifdef OCL_COMPILE
+
+    warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
+            static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PACKED, 3 /* Channel */,
+            static_cast<cl_command_queue>(rppHandle) );
+
+    return RPP_SUCCESS;
+    #endif
+
+}

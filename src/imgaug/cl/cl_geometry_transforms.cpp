@@ -242,3 +242,64 @@ Random_Crop_Letter_Box_cl(  cl_mem srcPtr, RppiSize srcSize,
     
     return RPP_SUCCESS;
 }
+
+//Warp -Affine
+cl_int
+warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, RppiSize dstSize, float *affine, 
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue)
+{
+    cl_int err;
+    float affine_inv[6];
+    float det; //for Deteminent
+    det = (affine[0] * affine [4])  - (affine[1] * affine[3]);
+    affine_inv[0] = affine[4]/ det;
+    affine_inv[1] = (- 1 * affine[1])/ det;
+    affine_inv[2] = -1 * affine[2];
+    affine_inv[3] = (-1 * affine[3]) /det ;
+    affine_inv[4] = affine[0]/det;
+    affine_inv[5] = -1 * affine[5];
+
+    cl_kernel theKernel;
+    cl_program theProgram;
+    float *affine_matrix;
+    cl_context theContext;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_CONTEXT,
+                            sizeof(cl_context), &theContext, NULL);
+    cl_mem affine_array = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                    sizeof(float)*6, NULL, NULL);
+    err = clEnqueueWriteBuffer(theQueue, affine_array, CL_TRUE, 0,
+                                   sizeof(float)*6,
+                                   affine_inv, 0, NULL, NULL);
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        cl_kernel_initializer(  theQueue, "warp_affine.cl", "warp_affine_pln",
+                                theProgram, theKernel); 
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        cl_kernel_initializer(  theQueue, "warp_affine.cl", "warp_affine_pkd",
+                                theProgram, theKernel); 
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+    int ctr =0;
+    err  = clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &affine_matrix);
+    err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.height);
+    err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.width);
+    err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+
+
+    size_t gDim3[3];
+    gDim3[0] = dstSize.width;
+    gDim3[1] = dstSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+}
