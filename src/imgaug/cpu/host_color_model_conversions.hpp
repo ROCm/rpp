@@ -789,76 +789,199 @@ RppStatus hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     return RPP_SUCCESS;
 }
 
-/**************** Exposure Modification ***************/
 
-template <typename T, typename U>
-RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
-                    Rpp32f exposureFactor,
-                    RppiChnFormat chnFormat, unsigned channel, RppiFormat imageFormat)
+/**************** Color Temperature ***************/
+
+template <typename T>
+RppStatus color_temperature_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                    Rpp8s adjustmentValue,
+                    RppiChnFormat chnFormat, unsigned int channel)
 {
-    Rpp32f pixel;
+    if (channel != 3)
+    {
+        return RPP_ERROR;
+    }
+    if (adjustmentValue < -100 || adjustmentValue > 100)
+    {
+        return RPP_ERROR;
+    }   
+
+    Rpp32s pixel;
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    if (imageFormat == RGB)
+    if (chnFormat == RPPI_CHN_PLANAR)
     {
-        for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            pixel = *srcPtrTemp * (pow(2, exposureFactor));
-            pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-            pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-            *dstPtrTemp = (T) round(pixel);
+            pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+            pixel = (pixel < (Rpp32s) 255) ? pixel : ((Rpp32s) 255);
+            pixel = (pixel > (Rpp32s) 0) ? pixel : ((Rpp32s) 0);
+            *dstPtrTemp = (T) pixel;
+            dstPtrTemp++;
+            srcPtrTemp++;
+        }
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+        {
+            *dstPtrTemp = *srcPtrTemp;
+            dstPtrTemp++;
+            srcPtrTemp++;
+        }
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+        {
+            pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+            pixel = (pixel < (Rpp32s) 255) ? pixel : ((Rpp32s) 255);
+            pixel = (pixel > (Rpp32s) 0) ? pixel : ((Rpp32s) 0);
+            *dstPtrTemp = (T) pixel;
             dstPtrTemp++;
             srcPtrTemp++;
         }
     }
-    else if (imageFormat == HSV)
+    else if (chnFormat == RPPI_CHN_PACKED)
     {
-        exposureFactor = RPPABS(exposureFactor);
-        if (chnFormat == RPPI_CHN_PLANAR)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            for (int i = 0; i < ((channel - 1) * (srcSize.width * srcSize.height)); i++)
-            {
-                *dstPtrTemp = *srcPtrTemp;
-                srcPtrTemp++;
-                dstPtrTemp++;
-            }
-            for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-            {
-                pixel = *srcPtrTemp * exposureFactor;
-                pixel = (pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1);
-                pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                *dstPtrTemp = pixel;
-                dstPtrTemp++;
-                srcPtrTemp++;
-            }
+            pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+            pixel = (pixel < (Rpp32s) 255) ? pixel : ((Rpp32s) 255);
+            pixel = (pixel > (Rpp32s) 0) ? pixel : ((Rpp32s) 0);
+            *dstPtrTemp = (T) pixel;
+            dstPtrTemp++;
+            srcPtrTemp++;
+
+            *dstPtrTemp = *srcPtrTemp;
+            dstPtrTemp++;
+            srcPtrTemp++;
+
+            pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+            pixel = (pixel < (Rpp32s) 255) ? pixel : ((Rpp32s) 255);
+            pixel = (pixel > (Rpp32s) 0) ? pixel : ((Rpp32s) 0);
+            *dstPtrTemp = (T) pixel;
+            dstPtrTemp++;
+            srcPtrTemp++;
         }
-        else if (chnFormat == RPPI_CHN_PACKED)
+    }
+     
+    return RPP_SUCCESS;
+}
+
+
+/**************** Vignette ***************/
+
+template <typename T>
+RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                    Rpp32f stdDev,
+                    RppiChnFormat chnFormat, unsigned int channel)
+{
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp32f *mask = (Rpp32f *)calloc(srcSize.height * srcSize.width, sizeof(Rpp32f));
+    Rpp32f *maskTemp;
+    maskTemp = mask;
+
+    RppiSize kernelRowsSize, kernelColumnsSize;
+    kernelRowsSize.height = srcSize.height;
+    kernelRowsSize.width = 1;
+    kernelColumnsSize.height = srcSize.width;
+    kernelColumnsSize.width = 1;
+
+    Rpp32f *kernelRows = (Rpp32f *)calloc(kernelRowsSize.height * kernelRowsSize.width, sizeof(Rpp32f));
+    Rpp32f *kernelColumns = (Rpp32f *)calloc(kernelColumnsSize.height * kernelColumnsSize.width, sizeof(Rpp32f));
+
+    if (kernelRowsSize.height % 2 == 0)
+    {
+        generate_gaussian_kernel_asymmetric_host(stdDev, kernelRows, kernelRowsSize.height - 1, kernelRowsSize.width);
+        kernelRows[kernelRowsSize.height - 1] = kernelRows[kernelRowsSize.height - 2];
+    }
+    else
+    {
+        generate_gaussian_kernel_asymmetric_host(stdDev, kernelRows, kernelRowsSize.height, kernelRowsSize.width);
+    }
+    
+    if (kernelColumnsSize.height % 2 == 0)
+    {
+        generate_gaussian_kernel_asymmetric_host(stdDev, kernelColumns, kernelColumnsSize.height - 1, kernelColumnsSize.width);
+        kernelColumns[kernelColumnsSize.height - 1] = kernelColumns[kernelColumnsSize.height - 2];
+    }
+    else
+    {
+        generate_gaussian_kernel_asymmetric_host(stdDev, kernelColumns, kernelColumnsSize.height, kernelColumnsSize.width);
+    }
+
+    Rpp32f *kernelRowsTemp, *kernelColumnsTemp;
+    kernelRowsTemp = kernelRows;
+    kernelColumnsTemp = kernelColumns;
+    
+    for (int i = 0; i < srcSize.height; i++)
+    {
+        kernelColumnsTemp = kernelColumns;
+        for (int j = 0; j < srcSize.width; j++)
         {
-            int count = 0;
-            for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+            *maskTemp = *kernelRowsTemp * *kernelColumnsTemp;
+            maskTemp++;
+            kernelColumnsTemp++;
+        }
+        kernelRowsTemp++;
+    }
+
+    Rpp32f max = 0;
+    maskTemp = mask;
+    for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+    {
+        if (*maskTemp > max)
+        {
+            max = *maskTemp;
+        }
+        maskTemp++;
+    }
+
+    maskTemp = mask;
+    for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+    {
+        *maskTemp = *maskTemp / max;
+        maskTemp++;
+    }
+
+    Rpp32f *maskFinal = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
+    Rpp32f *maskFinalTemp;
+    maskFinalTemp = maskFinal;
+    maskTemp = mask;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int c = 0; c < channel; c++)
+        {
+            maskTemp = mask;
+            for (int i = 0; i < srcSize.height; i++)
             {
-                if (count == 2)
+                for (int j = 0; j < srcSize.width; j++)
                 {
-                    pixel = *srcPtrTemp * exposureFactor;
-                    pixel = (pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1);
-                    pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                    *dstPtrTemp = pixel;
-                    dstPtrTemp++;
-                    srcPtrTemp++;
-                    count = 0;
-                }
-                else
-                {
-                    *dstPtrTemp = *srcPtrTemp;
-                    dstPtrTemp++;
-                    srcPtrTemp++;
-                    count++;
+                    *maskFinalTemp = *maskTemp;
+                    maskFinalTemp++;
+                    maskTemp++;
                 }
             }
         }
     }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        for (int i = 0; i < srcSize.height; i++)
+        {
+            for (int j = 0; j < srcSize.width; j++)
+            {
+                for (int c = 0; c < channel; c++)
+                {
+                    *maskFinalTemp = *maskTemp;
+                    maskFinalTemp++;
+                }
+                maskTemp++;
+            }
+        }
+    }
 
+    compute_multiply_host(srcPtr, maskFinal, srcSize, dstPtr, channel);
+    
     return RPP_SUCCESS;
 }

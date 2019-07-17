@@ -180,7 +180,7 @@ fisheye_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_command_queue theQueue);
 
 cl_int
-lenscorrection_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+lens_correction_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
            float strength,float zoom,
            RppiChnFormat chnFormat, unsigned int channel,
            cl_command_queue theQueue);
@@ -207,13 +207,13 @@ noise_add_snp_cl(cl_mem srcPtr,
                 cl_command_queue theQueue);
 
 RppStatus
-temprature_cl( cl_mem srcPtr1,
+color_temperature_cl( cl_mem srcPtr1,
                  RppiSize srcSize, cl_mem dstPtr, float adjustmentValue,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
 RppStatus
-Random_Crop_Letter_Box_cl(  cl_mem srcPtr, RppiSize srcSize, 
+random_crop_letterbox_cl(  cl_mem srcPtr, RppiSize srcSize, 
                             cl_mem dstPtr, RppiSize dstSize, 
                             Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
                             RppiChnFormat chnFormat, unsigned int channel,

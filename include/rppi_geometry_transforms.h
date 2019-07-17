@@ -1,5 +1,5 @@
-#ifndef RPPI_GEOMETRY_TRANSFORMS.H
-#define RPPI_GEOMETRY_TRANSFORMS.H
+#ifndef RPPI_GEOMETRY_TRANSFORMS
+#define RPPI_GEOMETRY_TRANSFORMS
  
 #include "rppdefs.h"
 #ifdef __cplusplus
@@ -162,6 +162,54 @@ RppStatus
 rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                               RppPtr_t affine);
 
+
+
+
+// ----------------------------------------
+// Host fisheye functions declaration 
+// ----------------------------------------
+/* Add fish eye effect in the entire image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_fisheye_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_fisheye_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_fisheye_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+// ----------------------------------------
+// Host lens_correction functions declaration 
+// ----------------------------------------
+/* Does lens correction in the lens distorted images.
+*param srcPtr [in/out] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] strength strength strength of lens correction needed which should be greater than 0
+*param[in] zoom zoom extent to which zoom-out is needed which should be greater than 1
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_lens_correction_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom);
+
+RppStatus
+rppi_lens_correction_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom);
+
+RppStatus
+rppi_lens_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom);
+
+
 // ----------------------------------------
 // GPU flip functions declaration 
 // ----------------------------------------
@@ -262,37 +310,84 @@ rppi_rotate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSiz
 RppStatus
 rppi_rotate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f angleDeg, RppHandle_t rppHandle) ;
 
+
 // ----------------------------------------
 // GPU fisheye functions declaration 
 // ----------------------------------------
+/* Add fish eye effect in the entire image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] rppHandle OpenCL handle
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
 RppStatus
 rppi_fisheye_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
 RppStatus
 rppi_fisheye_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
 RppStatus
 rppi_fisheye_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
 
 // ----------------------------------------
-// GPU lens correction functions declaration 
+// GPU lens_correction functions declaration 
 // ----------------------------------------
-RppStatus
-rppi_lenscorrection_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-RppStatus
-rppi_lenscorrection_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-RppStatus
-rppi_lenscorrection_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-
-// GPU RandomCropLetterBox declaration 
-// ----------------------------------------
-
-RppStatus
-rppi_Random_Crop_Letter_Box_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
-
-RppStatus
-rppi_Random_Crop_Letter_Box_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
+/* Does lens correction in the lens distorted images.
+*param srcPtr [in/out] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] strength strength strength of lens correction needed which should be greater than 0
+*param[in] zoom zoom extent to which zoom-out is needed which should be greater than 1
+*param[in] rppHandle OpenCL handle
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
-rppi_Random_Crop_Letter_Box_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
+rppi_lens_correction_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_lens_correction_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_lens_correction_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom, RppHandle_t rppHandle) ;
+
+// // ----------------------------------------
+// // GPU fisheye functions declaration 
+// // ----------------------------------------
+// RppStatus
+// rppi_fisheye_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+// RppStatus
+// rppi_fisheye_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+// RppStatus
+// rppi_fisheye_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
+// // ----------------------------------------
+// // GPU lens correction functions declaration 
+// // ----------------------------------------
+// RppStatus
+// rppi_lenscorrection_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
+// RppStatus
+// rppi_lenscorrection_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
+// RppStatus
+// rppi_lenscorrection_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
+
+// // GPU RandomCropLetterBox declaration 
+// // ----------------------------------------
+
+// RppStatus
+// rppi_Random_Crop_Letter_Box_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
+
+// RppStatus
+// rppi_Random_Crop_Letter_Box_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
+
+// RppStatus
+// rppi_Random_Crop_Letter_Box_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
  
 #ifdef __cplusplus
 }

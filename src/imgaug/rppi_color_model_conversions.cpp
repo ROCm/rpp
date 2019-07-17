@@ -15,7 +15,7 @@
 #include <chrono>
 using namespace std::chrono; 
 
-#include "cpu/host_color_model_conversions.hpp" 
+#include "cpu/host_color_model_conversions.hpp"
  
 // ----------------------------------------
 // Host rgb_to_hsv functions calls 
@@ -279,19 +279,6 @@ rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
 // Host rgb_to_hsl functions calls 
 // ----------------------------------------
 
-
-RppStatus
-rppi_rgb_to_hsl_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
-{
-
- 	 validate_image_size(srcSize);
-	 rgb_to_hsl_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			RPPI_CHN_PLANAR, 1);
-	return RPP_SUCCESS;
-}
-
 RppStatus
 rppi_rgb_to_hsl_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
@@ -320,19 +307,6 @@ rppi_rgb_to_hsl_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 // Host hsl_to_rgb functions calls 
 // ----------------------------------------
 
-
-RppStatus
-rppi_hsl_to_rgb_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
-{
-
- 	 validate_image_size(srcSize);
-	 hsl_to_rgb_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr), 
-			RPPI_CHN_PLANAR, 1);
-	return RPP_SUCCESS;
-}
-
 RppStatus
 rppi_hsl_to_rgb_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
@@ -357,55 +331,149 @@ rppi_hsl_to_rgb_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 	return RPP_SUCCESS;
 }
  
+// // ----------------------------------------
+// // Host exposure functions calls 
+// // ----------------------------------------
+
+
+// RppStatus
+// rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+//                          Rpp32f exposureFactor)
+// {
+
+//     exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+//                            exposureFactor,
+//                            RPPI_CHN_PLANAR, 3, RGB);
+//     return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+//                          Rpp32f exposureFactor)
+// {
+
+//     exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+//                            exposureFactor,
+//                            RPPI_CHN_PACKED, 3, RGB);
+//     return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+//                          Rpp32f exposureFactor)
+// {
+
+//     exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+//                            exposureFactor,
+//                            RPPI_CHN_PLANAR, 3, HSV);
+//     return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+//                          Rpp32f exposureFactor)
+// {
+
+//     exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+//                            exposureFactor,
+//                            RPPI_CHN_PACKED, 3, HSV);
+//     return RPP_SUCCESS;
+// }
+ 
 // ----------------------------------------
-// Host exposure functions calls 
+// Host color_temperature functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                         Rpp32f exposureFactor)
+rppi_color_temperature_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue)
 {
 
-    exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                           exposureFactor,
-                           RPPI_CHN_PLANAR, 3, RGB);
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( -100, 100, adjustmentValue);
+	 color_temperature_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			adjustmentValue,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                         Rpp32f exposureFactor)
+rppi_color_temperature_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue)
 {
 
-    exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                           exposureFactor,
-                           RPPI_CHN_PACKED, 3, RGB);
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( -100, 100, adjustmentValue);
+	 color_temperature_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			adjustmentValue,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                         Rpp32f exposureFactor)
+rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue)
 {
 
-    exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-                           exposureFactor,
-                           RPPI_CHN_PLANAR, 3, HSV);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                         Rpp32f exposureFactor)
-{
-
-    exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-                           exposureFactor,
-                           RPPI_CHN_PACKED, 3, HSV);
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( -100, 100, adjustmentValue);
+	 color_temperature_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			adjustmentValue,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
 }
  
+// ----------------------------------------
+// Host vignette functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_vignette_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 100, stdDev);
+	 vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			stdDev,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_vignette_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 100, stdDev);
+	 vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			stdDev,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev)
+{
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 100, stdDev);
+	 vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			stdDev,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+
 // ----------------------------------------
 // GPU rgb_to_hsv functions  calls 
 // ----------------------------------------
@@ -826,17 +894,20 @@ rppi_saturationHSV_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
 }
 
 // ----------------------------------------
-// GPU Color Temprature Modification function calls
+// GPU color_temperature functions  calls 
 // ----------------------------------------
 
+
 RppStatus
-rppi_temprature_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle)
+rppi_color_temperature_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue, RppHandle_t rppHandle) 
 {
-   	 validate_image_size(srcSize);
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( -100, 100, adjustmentValue);
 
 #ifdef OCL_COMPILE
  	 {
- 	 temprature_cl(static_cast<cl_mem>(srcPtr), 
+ 	 color_temperature_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			adjustmentValue,
@@ -851,13 +922,15 @@ rppi_temprature_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 }
 
 RppStatus
-rppi_temprature_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle)
+rppi_color_temperature_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue, RppHandle_t rppHandle) 
 {
-   	 validate_image_size(srcSize);
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( -100, 100, adjustmentValue);
 
 #ifdef OCL_COMPILE
  	 {
- 	 temprature_cl(static_cast<cl_mem>(srcPtr), 
+ 	 color_temperature_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			adjustmentValue,
@@ -872,13 +945,15 @@ rppi_temprature_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 }
 
 RppStatus
-rppi_temprature_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle)
+rppi_color_temperature_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue, RppHandle_t rppHandle) 
 {
-   	 validate_image_size(srcSize);
+
+ 	 validate_image_size(srcSize);
+ 	 validate_int_range( -100, 100, adjustmentValue);
 
 #ifdef OCL_COMPILE
  	 {
- 	 temprature_cl(static_cast<cl_mem>(srcPtr), 
+ 	 color_temperature_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			adjustmentValue,
@@ -891,18 +966,18 @@ rppi_temprature_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+ 
+// ----------------------------------------
+// GPU vignette functions  calls 
+// ----------------------------------------
 
-// ----------------------------------------
-// GPU vignette function calls
-// ----------------------------------------
-// value should always be greater than 0
-//0-> full vignette effect
-//100-> no vignette effect
 
 RppStatus
-rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle)
+rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) 
 {
-   	 validate_image_size(srcSize);
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 100, stdDev);
 
 #ifdef OCL_COMPILE
  	 {
@@ -921,9 +996,11 @@ rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rp
 }
 
 RppStatus
-rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle)
+rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) 
 {
-   	 validate_image_size(srcSize);
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 100, stdDev);
 
 #ifdef OCL_COMPILE
  	 {
@@ -942,9 +1019,11 @@ rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rp
 }
 
 RppStatus
-rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle)
+rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) 
 {
-   	 validate_image_size(srcSize);
+
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 100, stdDev);
 
 #ifdef OCL_COMPILE
  	 {
@@ -960,112 +1039,194 @@ rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rp
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
-
-}
-
-/******* Exposure Modification ********/
-
-// GPU calls for Exposure Modification function
-
-// Host calls for Exposure Modification function
-
-RppStatus
-rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                         Rpp32f exposureFactor)
-{
-
-    exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                           exposureFactor,
-                           RPPI_CHN_PLANAR, 3, RGB);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                         Rpp32f exposureFactor)
-{
-
-    exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                           exposureFactor,
-                           RPPI_CHN_PACKED, 3, RGB);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                         Rpp32f exposureFactor)
-{
-
-    exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-                           exposureFactor,
-                           RPPI_CHN_PLANAR, 3, HSV);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                         Rpp32f exposureFactor)
-{
-
-    exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-                           exposureFactor,
-                           RPPI_CHN_PACKED, 3, HSV);
-    return RPP_SUCCESS;
 }
 
 
+// // ----------------------------------------
+// // GPU Color Temprature Modification function calls
+// // ----------------------------------------
 
+// RppStatus
+// rppi_temprature_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle)
+// {
+//    	 validate_image_size(srcSize);
 
-/******* RGB 2 HSL ********/
+// #ifdef OCL_COMPILE
+//  	 {
+//  	 temprature_cl(static_cast<cl_mem>(srcPtr), 
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr), 
+// 			adjustmentValue,
+// 			RPPI_CHN_PLANAR, 1,
+// 			static_cast<cl_command_queue>(rppHandle));
+//  	 } 
+// #elif defined (HIP_COMPILE) 
+//  	 { 
+//  	 } 
+// #endif //BACKEND 
+// 		return RPP_SUCCESS;
+// }
 
-// GPU calls for RGB 2 HSL function
+// RppStatus
+// rppi_temprature_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle)
+// {
+//    	 validate_image_size(srcSize);
 
-// Host calls for RGB 2 HSL function
+// #ifdef OCL_COMPILE
+//  	 {
+//  	 temprature_cl(static_cast<cl_mem>(srcPtr), 
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr), 
+// 			adjustmentValue,
+// 			RPPI_CHN_PLANAR, 3,
+// 			static_cast<cl_command_queue>(rppHandle));
+//  	 } 
+// #elif defined (HIP_COMPILE) 
+//  	 { 
+//  	 } 
+// #endif //BACKEND 
+// 		return RPP_SUCCESS;
+// }
 
-RppStatus
-rppi_rgb_to_hsl_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
-{
+// RppStatus
+// rppi_temprature_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle)
+// {
+//    	 validate_image_size(srcSize);
 
-    rgb_to_hsl_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-                         RPPI_CHN_PLANAR, 3);
-    return RPP_SUCCESS;
+// #ifdef OCL_COMPILE
+//  	 {
+//  	 temprature_cl(static_cast<cl_mem>(srcPtr), 
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr), 
+// 			adjustmentValue,
+// 			RPPI_CHN_PACKED, 3,
+// 			static_cast<cl_command_queue>(rppHandle));
+//  	 } 
+// #elif defined (HIP_COMPILE) 
+//  	 { 
+//  	 } 
+// #endif //BACKEND 
+// 		return RPP_SUCCESS;
+// }
 
-}
+// // ----------------------------------------
+// // GPU vignette function calls
+// // ----------------------------------------
+// // value should always be greater than 0
+// //0-> full vignette effect
+// //100-> no vignette effect
 
-RppStatus
-rppi_rgb_to_hsl_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
-{
+// RppStatus
+// rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle)
+// {
+//    	 validate_image_size(srcSize);
 
-    rgb_to_hsl_host<Rpp8u, Rpp32f>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-                         RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
+// #ifdef OCL_COMPILE
+//  	 {
+//  	 vignette_cl(static_cast<cl_mem>(srcPtr), 
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr), 
+// 			stdDev,
+// 			RPPI_CHN_PLANAR, 1,
+// 			static_cast<cl_command_queue>(rppHandle));
+//  	 } 
+// #elif defined (HIP_COMPILE) 
+//  	 { 
+//  	 } 
+// #endif //BACKEND 
+// 		return RPP_SUCCESS;
+// }
 
-}
+// RppStatus
+// rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle)
+// {
+//    	 validate_image_size(srcSize);
 
+// #ifdef OCL_COMPILE
+//  	 {
+//  	 vignette_cl(static_cast<cl_mem>(srcPtr), 
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr), 
+// 			stdDev,
+// 			RPPI_CHN_PLANAR, 3,
+// 			static_cast<cl_command_queue>(rppHandle));
+//  	 } 
+// #elif defined (HIP_COMPILE) 
+//  	 { 
+//  	 } 
+// #endif //BACKEND 
+// 		return RPP_SUCCESS;
+// }
 
+// RppStatus
+// rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle)
+// {
+//    	 validate_image_size(srcSize);
 
+// #ifdef OCL_COMPILE
+//  	 {
+//  	 vignette_cl(static_cast<cl_mem>(srcPtr), 
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr), 
+// 			stdDev,
+// 			RPPI_CHN_PACKED, 3,
+// 			static_cast<cl_command_queue>(rppHandle));
+//  	 } 
+// #elif defined (HIP_COMPILE) 
+//  	 { 
+//  	 } 
+// #endif //BACKEND 
+// 		return RPP_SUCCESS;
 
-/******* HSL 2 RGB ********/
+// }
 
-// GPU calls for HSL 2 RGB function
+// /******* Exposure Modification ********/
 
-// Host calls for HSL 2 RGB function
+// // GPU calls for Exposure Modification function
 
-RppStatus
-rppi_hsl_to_rgb_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
-{
+// // Host calls for Exposure Modification function
 
-    hsl_to_rgb_host<Rpp32f, Rpp8u>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                         RPPI_CHN_PLANAR, 3);
-    return RPP_SUCCESS;
+// RppStatus
+// rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+//                          Rpp32f exposureFactor)
+// {
 
-}
+//     exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+//                            exposureFactor,
+//                            RPPI_CHN_PLANAR, 3, RGB);
+//     return RPP_SUCCESS;
+// }
 
-RppStatus
-rppi_hsl_to_rgb_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
-{
+// RppStatus
+// rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+//                          Rpp32f exposureFactor)
+// {
 
-    hsl_to_rgb_host<Rpp32f, Rpp8u>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                         RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
-}
+//     exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+//                            exposureFactor,
+//                            RPPI_CHN_PACKED, 3, RGB);
+//     return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+//                          Rpp32f exposureFactor)
+// {
+
+//     exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+//                            exposureFactor,
+//                            RPPI_CHN_PLANAR, 3, HSV);
+//     return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+//                          Rpp32f exposureFactor)
+// {
+
+//     exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
+//                            exposureFactor,
+//                            RPPI_CHN_PACKED, 3, HSV);
+//     return RPP_SUCCESS;
+// }
+

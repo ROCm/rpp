@@ -255,7 +255,7 @@ gamma_correction_cl ( cl_mem srcPtr1,RppiSize srcSize,
 /****************  Temprature modification *******************/
 
 RppStatus
-temprature_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float adjustmentValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+color_temperature_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float adjustmentValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
     cl_kernel theKernel;
     cl_program theProgram;
