@@ -350,7 +350,13 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &minJitter);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &maxJitter);
-    return RPP_SUCCESS;
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return err;
 }
 
 RppStatus
