@@ -57,7 +57,7 @@ __kernel void occlusion_pln (  __global unsigned char* srcPtr1,
   
 }
 
-__kernel void occlusion_pln (  __global unsigned char* srcPtr1,
+__kernel void occlusion_pkd (  __global unsigned char* srcPtr1,
                             __global unsigned char* srcPtr2,
                             __global unsigned char* dstPtr,
                             const unsigned int source_height1,
