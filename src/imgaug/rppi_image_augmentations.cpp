@@ -1053,7 +1053,7 @@ rppi_blend_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPt
 
 
 RppStatus
-rppi_pixelate_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2,Rpp32u )
+rppi_pixelate_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2 )
 {
 
  	 validate_image_size(srcSize);
@@ -1075,7 +1075,7 @@ rppi_pixelate_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp
 }
 
 RppStatus
-rppi_pixelate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2,Rpp32u )
+rppi_pixelate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2 )
 {
 
  	 validate_image_size(srcSize);
@@ -1097,7 +1097,7 @@ rppi_pixelate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 }
 
 RppStatus
-rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2,Rpp32u )
+rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2 )
 {
 
  	 validate_image_size(srcSize);
@@ -2054,7 +2054,7 @@ rppi_blend_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr
 
 
 RppStatus
-rppi_pixelate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2,Rpp32u , RppHandle_t rppHandle) 
+rppi_pixelate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2 , RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
@@ -2084,7 +2084,7 @@ rppi_pixelate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 }
 
 RppStatus
-rppi_pixelate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2,Rpp32u , RppHandle_t rppHandle) 
+rppi_pixelate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
@@ -2115,7 +2115,7 @@ rppi_pixelate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 }
 
 RppStatus
-rppi_pixelate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2,Rpp32u , RppHandle_t rppHandle) 
+rppi_pixelate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) 
 {
 
  	 validate_image_size(srcSize);
