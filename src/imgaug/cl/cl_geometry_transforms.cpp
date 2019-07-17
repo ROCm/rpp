@@ -335,15 +335,23 @@ Random_Crop_Letter_Box_cl(  cl_mem srcPtr, RppiSize srcSize,
     cl_program theProgram;
 
     if (chnFormat == RPPI_CHN_PLANAR)
-    cl_kernel_initializer(theQueue,
-                          "randomcropletterbox.cl",
-                          "trandomcropletterbox_planar",
-                          theProgram, theKernel);
+    {
+        CreateProgramFromBinary(theQueue,"randomcropletterbox.cl","randomcropletterbox.bin","randomcropletterbox_planar",theProgram,theKernel);
+        clRetainKernel(theKernel);    
+    }
+    // cl_kernel_initializer(theQueue,
+    //                       "randomcropletterbox.cl",
+    //                       "trandomcropletterbox_planar",
+    //                       theProgram, theKernel);
     else
-    cl_kernel_initializer(theQueue,
-                          "randomcropletterbox.cl",
-                          "randomcropletterbox_packed",
-                          theProgram, theKernel);
+    {
+        CreateProgramFromBinary(theQueue,"randomcropletterbox.cl","randomcropletterbox.bin","randomcropletterbox_packed",theProgram,theKernel);
+        clRetainKernel(theKernel);    
+    }
+    // cl_kernel_initializer(theQueue,
+    //                       "randomcropletterbox.cl",
+    //                       "randomcropletterbox_packed",
+    //                       theProgram, theKernel);
     
     //---- Args Setter
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);

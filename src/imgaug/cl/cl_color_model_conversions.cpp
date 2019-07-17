@@ -261,15 +261,15 @@ temprature_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float adjustmentV
     cl_program theProgram;
 
     if (chnFormat == RPPI_CHN_PLANAR)
-    cl_kernel_initializer(theQueue,
-                          "temprature.cl",
-                          "temprature_planar",
-                          theProgram, theKernel);
+    {
+        CreateProgramFromBinary(theQueue,"temprature.cl","temprature.cl.bin","temprature_planar",theProgram,theKernel);
+        clRetainKernel(theKernel);    
+    }
     else
-    cl_kernel_initializer(theQueue,
-                          "temprature.cl",
-                          "temprature_packed",
-                          theProgram, theKernel);
+    {
+        CreateProgramFromBinary(theQueue,"temprature.cl","temprature.cl.bin","temprature_packed",theProgram,theKernel);
+        clRetainKernel(theKernel);    
+    }
     //---- Args Setter
     clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
@@ -299,10 +299,8 @@ vignette_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float stdDev, RppiCh
     int ctr=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    cl_kernel_initializer(theQueue,
-                          "vignette.cl",
-                          "vignette",
-                          theProgram, theKernel); 
+    CreateProgramFromBinary(theQueue,"vignette.cl","vignette.cl.bin","vignette",theProgram,theKernel);
+    clRetainKernel(theKernel);  
     
     stdDev=(stdDev/100)*( sqrt(srcSize.width*srcSize.height*channel) * 2);
 
