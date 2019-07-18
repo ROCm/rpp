@@ -587,17 +587,20 @@ fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnForma
     int ctr=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    if(chnFormat==RPPI_CHN_PLANAR)
-    cl_kernel_initializer(theQueue,
-                          "fog.cl",
-                          "fog_planar",
-                          theProgram, theKernel);
-    else
-    cl_kernel_initializer(theQueue,
-                          "fog.cl",
-                          "fog_packed",
-                          theProgram, theKernel);
 
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        
+        CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_planar",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
     //---- Args Setter
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
@@ -631,16 +634,19 @@ occlusion_cl( cl_mem srcPtr1,cl_mem srcPtr2,
 {
     cl_kernel theKernel;
     cl_program theProgram;
+    
+    
+    clRetainKernel(theKernel);
      if (chnFormat == RPPI_CHN_PLANAR)
     {
-        cl_kernel_initializer(  theQueue, "occlusion.cl",
-                                "occlusion_pln", theProgram, theKernel);
-
+        
+        CreateProgramFromBinary(theQueue,"occlusion.cl","occlusion.cl.bin","occlusion_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        cl_kernel_initializer(  theQueue, "occlusion.cl",
-                                "occlusion_pkd", theProgram, theKernel);
+        CreateProgramFromBinary(theQueue,"occlusion.cl","occlusion.cl.bin","occlusion_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}

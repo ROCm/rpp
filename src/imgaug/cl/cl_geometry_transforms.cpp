@@ -408,16 +408,22 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        cl_kernel_initializer(  theQueue, "warp_affine.cl", "warp_affine_pln",
-                                theProgram, theKernel); 
+        CreateProgramFromBinary(theQueue,"warp_affine.cl","warp_affine.cl.bin","waro_affine_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+        // cl_kernel_initializer(  theQueue, "rotate.cl", "rotate_pln",
+        //                         theProgram, theKernel); 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        cl_kernel_initializer(  theQueue, "warp_affine.cl", "warp_affine_pkd",
-                                theProgram, theKernel); 
+    {   
+        CreateProgramFromBinary(theQueue,"warp_affine.cl","warp_affine.cl.bin","warp_affine_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+        // cl_kernel_initializer(  theQueue, "rotate.cl", "rotate_pkd",
+        //                         theProgram, theKernel); 
     }
+
     else
     {std::cerr << "Internal error: Unknown Channel format";}
+
     int ctr =0;
     err  = clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
