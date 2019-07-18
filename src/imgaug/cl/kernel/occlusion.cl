@@ -26,7 +26,7 @@ __kernel void occlusion_pln (  __global unsigned char* srcPtr1,
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int id_z = get_global_id(2);
-    
+    unsigned int pixId;
     if (id_x >= dest_width || id_y >= dest_height || id_z >= channel) return;
     
     if ((id_x >= x21) && (id_x <= x22) && (id_y>= y21) && (id_y >= y22))
@@ -41,10 +41,10 @@ __kernel void occlusion_pln (  __global unsigned char* srcPtr1,
         pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height;
     
     
-        A = srcPtr1[(x + x11) + (y+y11) * source_width + id_z * source_height * source_width];
-        B = srcPtr1[(x + x11 + 1)  + (y+y11) * source_width + id_z * source_height * source_width];
-        C = srcPtr1[(x + x11)+ (y + y11 + 1) * source_width + id_z * source_height * source_width];
-        D = srcPtr1[(x+ x11 + 1) + (y+ y11 +1) * source_width + id_z * source_height * source_width];
+        A = srcPtr1[(x + x11) + (y+y11) * source_width1 + id_z * source_height1 * source_width1];
+        B = srcPtr1[(x + x11 + 1)  + (y+y11) * source_width1 + id_z * source_height1 * source_width1];
+        C = srcPtr1[(x + x11)+ (y + y11 + 1) * source_width1 + id_z * source_height1 * source_width1];
+        D = srcPtr1[(x+ x11 + 1) + (y+ y11 +1) * source_width1 + id_z * source_height1 * source_width1];
         
         pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
                         C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)
@@ -83,7 +83,7 @@ __kernel void occlusion_pkd (  __global unsigned char* srcPtr1,
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int id_z = get_global_id(2);
-    
+    unsigned int pixId;
     if (id_x >= dest_width || id_y >= dest_height || id_z >= channel) return;
     
     if ((id_x >= x21) && (id_x <= x22) && (id_y>= y21) && (id_y >= y22))
@@ -98,10 +98,10 @@ __kernel void occlusion_pkd (  __global unsigned char* srcPtr1,
         pixId = id_x * channel + id_y * dest_width * channel + id_z;
     
     
-        A = srcPtr1[(x + x11) + (y+y11) * source_width + id_z * source_height * source_width];
-        B = srcPtr1[(x + x11 + 1)  + (y+y11) * source_width + id_z * source_height * source_width];
-        C = srcPtr1[(x + x11)+ (y + y11 + 1) * source_width + id_z * source_height * source_width];
-        D = srcPtr1[(x+ x11 + 1) + (y+ y11 +1) * source_width + id_z * source_height * source_width];
+        A = srcPtr1[(x + x11) + (y+y11) * source_width1 + id_z * source_height1 * source_width1];
+        B = srcPtr1[(x + x11 + 1)  + (y+y11) * source_width1 + id_z * source_height1 * source_width1];
+        C = srcPtr1[(x + x11)+ (y + y11 + 1) * source_width1 + id_z * source_height1 * source_width1];
+        D = srcPtr1[(x+ x11 + 1) + (y+ y11 +1) * source_width1 + id_z * source_height1 * source_width1];
         
         pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
                         C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)
