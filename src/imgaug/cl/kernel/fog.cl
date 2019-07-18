@@ -8,6 +8,7 @@ __kernel void fog_planar(  __global unsigned char* input,
 {
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height) return;
     int pixId= width * id_y  + id_x;
     int c=width*height;
@@ -53,6 +54,7 @@ __kernel void fog_pkd(  __global unsigned char* input,
 {
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height) return;
     int i= width * id_y * channel + id_x * channel;
     float check=input[i]+input[i+1]+input[i+2];

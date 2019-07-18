@@ -43,7 +43,7 @@ int main( int argc, char* argv[] )
     RppiNoise noiseType=SNP;
 
     Rpp32f temp=-40;
-    Rpp32f exposureValue=0;
+    Rpp32f exposureValue=1;
 
     h_a = stbi_load( "/home/mcw/Desktop/AMDRPP/sample_test/images/Image2.jpg",
                         &width, &height, &channel, 0);
@@ -112,7 +112,7 @@ int main( int argc, char* argv[] )
     clEnqueueReadBuffer(theQueue, d_c, CL_TRUE, 0,
                                dest_bytes, h_c, 0, NULL, NULL );
 
-    stbi_write_png("/home/mcw/Desktop/AMDRPP/sample_test/images/FOG_GPU.png",
+    stbi_write_png("/home/mcw/Desktop/AMDRPP/sample_test/images/FOG_GPU1.png",
                            dstSize.width,dstSize.height, channel, h_c, dstSize.width *channel);
 
     //std::cout<<"\n\nSAVED IMAGE \n\n";
