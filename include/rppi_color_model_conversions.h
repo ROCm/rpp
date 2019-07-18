@@ -406,33 +406,6 @@ rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 
 RppStatus
 rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) ;
-
-// // ----------------------------------------
-// // GPU Color Temprature Modification 
-// // ----------------------------------------
-
-// RppStatus
-// rppi_temprature_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_temprature_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_temprature_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle) ;
-
-// // ----------------------------------------
-// // GPU vignette 
-// // ----------------------------------------
-
-// // value should always be greater than 0
-// //0-> full vignette effect
-// //100-> no vignette effect
-
-// RppStatus
-// rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle) ;
-
  
 #ifdef __cplusplus
 }

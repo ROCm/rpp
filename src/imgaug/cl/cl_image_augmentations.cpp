@@ -620,17 +620,18 @@ fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnForma
 ////////////////////////////////////////////////////
 
 RppStatus
-occlusion_cl( cl_mem srcPtr1,cl_mem srcPtr2,
-                 RppiSize srcSize1, RppiSize srcSize2, cl_mem dstPtr, 
-                 RppiChnFormat chnFormat,const unsigned int x11,
-                            const unsigned int y11,
-                            const unsigned int x12,
-                            const unsigned int y12,
-                            const unsigned int x21,
-                            const unsigned int y21,
-                            const unsigned int x22,
-                            const unsigned int y22, unsigned int channel,
-                 cl_command_queue theQueue)
+occlusion_cl(   cl_mem srcPtr1,RppiSize srcSize1, 
+                cl_mem srcPtr2,RppiSize srcSize2, cl_mem dstPtr,
+                const unsigned int x11,
+                const unsigned int y11,
+                const unsigned int x12,
+                const unsigned int y12,
+                const unsigned int x21,
+                const unsigned int y21,
+                const unsigned int x22,
+                const unsigned int y22, 
+                RppiChnFormat chnFormat,unsigned int channel,
+                cl_command_queue theQueue)
 {
     cl_kernel theKernel;
     cl_program theProgram;

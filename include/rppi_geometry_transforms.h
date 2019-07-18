@@ -106,7 +106,7 @@ rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 // ----------------------------------------
 // Host random_crop_letterbox functions declaration 
 // ----------------------------------------
-/* Rotates the input image according to the angle specified
+/* Crops the roi region, adds border and stores it in destination
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the input images
 *param[out] dstPtr output image
@@ -357,37 +357,6 @@ rppi_lens_correction_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPt
 RppStatus
 rppi_lens_correction_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom, RppHandle_t rppHandle) ;
 
-// // ----------------------------------------
-// // GPU fisheye functions declaration 
-// // ----------------------------------------
-// RppStatus
-// rppi_fisheye_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_fisheye_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_fisheye_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
-
-// // ----------------------------------------
-// // GPU lens correction functions declaration 
-// // ----------------------------------------
-// RppStatus
-// rppi_lenscorrection_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_lenscorrection_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_lenscorrection_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-
-// // GPU RandomCropLetterBox declaration 
-// // ----------------------------------------
-
-// RppStatus
-// rppi_Random_Crop_Letter_Box_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
-
-// RppStatus
-// rppi_Random_Crop_Letter_Box_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
-
-// RppStatus
-// rppi_Random_Crop_Letter_Box_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
  
  //-----------------------------
  //Warp Affine -----------
