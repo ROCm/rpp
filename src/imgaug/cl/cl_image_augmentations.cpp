@@ -612,7 +612,7 @@ fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnForma
     size_t gDim3[2];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
-    gDim3[1] = 1;
+    gDim3[2] = 1;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
     return RPP_SUCCESS;   
