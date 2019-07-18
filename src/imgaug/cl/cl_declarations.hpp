@@ -12,6 +12,11 @@ cl_int
 cl_kernel_implementer (cl_command_queue theHandle, size_t* gDim3, size_t* lDim3, cl_program& theProgram,
                         cl_kernel& theKernel  );
 
+bool SaveProgramBinary(cl_program program, cl_device_id device, const std::string fileName);
+
+cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kernelFile, 
+                                const std::string binaryFile, std::string kernelName,
+                                cl_program& theProgram, cl_kernel& theKernel);
 
 //===== Internal CL functions
 
@@ -156,6 +161,35 @@ blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
+cl_int
+pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, 
+            unsigned int filterSize, unsigned int x1, unsigned int y1,
+            unsigned int x2, unsigned int y2,RppiChnFormat chnFormat,
+            unsigned int channel,cl_command_queue theQueue);
+
+cl_int
+jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           unsigned int minJitter,unsigned int maxJitter,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
+
+cl_int
+fisheye_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, 
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
+cl_int
+lens_correction_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           float strength,float zoom,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
+
+cl_int
+snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
+           float snowCoefficient,
+           RppiChnFormat chnFormat, unsigned int channel,
+           cl_command_queue theQueue);
 RppStatus  
 noise_add_gaussian_cl(cl_mem srcPtr,
                 RppiSize srcSize,
@@ -173,13 +207,13 @@ noise_add_snp_cl(cl_mem srcPtr,
                 cl_command_queue theQueue);
 
 RppStatus
-temprature_cl( cl_mem srcPtr1,
+color_temperature_cl( cl_mem srcPtr1,
                  RppiSize srcSize, cl_mem dstPtr, float adjustmentValue,
                  RppiChnFormat chnFormat, unsigned int channel,
                  cl_command_queue theQueue);
 
 RppStatus
-Random_Crop_Letter_Box_cl(  cl_mem srcPtr, RppiSize srcSize, 
+random_crop_letterbox_cl(  cl_mem srcPtr, RppiSize srcSize, 
                             cl_mem dstPtr, RppiSize dstSize, 
                             Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
                             RppiChnFormat chnFormat, unsigned int channel,
