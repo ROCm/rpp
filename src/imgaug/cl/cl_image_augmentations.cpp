@@ -504,6 +504,9 @@ exposure_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f exposureValue
     return RPP_SUCCESS;    
 }
 
+
+/********************** Rain ************************/
+
 RppStatus
 rain_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
@@ -573,6 +576,108 @@ rain_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f rainValue, Rpp32u
     clReleaseMemObject(d_b);
 
     return RPP_SUCCESS;   
+}
+
+
+/********************** Fog ************************/
+
+RppStatus
+fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    int ctr=0;
+    cl_kernel theKernel;
+    cl_program theProgram;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        
+        CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_planar",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+    //---- Args Setter
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, ctr++, sizeof(float), &fogValue);
+    //----
+
+    size_t gDim3[2];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[1] = 1;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;   
+}   
+////////////////////////////////////////////////////
+
+RppStatus
+occlusion_cl( cl_mem srcPtr1,cl_mem srcPtr2,
+                 RppiSize srcSize1, RppiSize srcSize2, cl_mem dstPtr, 
+                 RppiChnFormat chnFormat,const unsigned int x11,
+                            const unsigned int y11,
+                            const unsigned int x12,
+                            const unsigned int y12,
+                            const unsigned int x21,
+                            const unsigned int y21,
+                            const unsigned int x22,
+                            const unsigned int y22, unsigned int channel,
+                 cl_command_queue theQueue)
+{
+    cl_kernel theKernel;
+    cl_program theProgram;
+    
+    
+    clRetainKernel(theKernel);
+     if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        
+        CreateProgramFromBinary(theQueue,"occlusion.cl","occlusion.cl.bin","occlusion_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"occlusion.cl","occlusion.cl.bin","occlusion_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+
+    //---- Args Setter
+    int ctr =0;
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize1.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize1.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize2.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize2.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &x11);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &y11);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &x12);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &y12);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &x21);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &y21);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &x22);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &y22);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    //----
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize2.width;
+    gDim3[1] = srcSize2.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;
 }
 /********************** Random Shadow ************************/
 

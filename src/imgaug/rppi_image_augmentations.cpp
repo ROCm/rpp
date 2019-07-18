@@ -3088,7 +3088,197 @@ rppi_noiseAdd_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rp
 
 
 // /******* Color Temperature ********/
+RppStatus
+rppi_occlusionAdd_u8_pln1_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize1, RppiSize srcSize2, RppPtr_t dstPtr, 
+                               Rpp32u src1x1, Rpp32u src1y1, Rpp32u src1x2, Rpp32u src1y2, 
+                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2, RppHandle_t rppHandle){
 
+#ifdef OCL_COMPILE
+ 	{
+        occlusion_cl( static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2),
+                  srcSize1,  srcSize2, static_cast<cl_mem>(dstPtr), 
+                 RPPI_CHN_PLANAR,src1x1, src1y1,
+                src1x2, src1y2, src2x1, src2y1, src2x2, src2y2,
+                 1,
+                 static_cast<cl_command_queue>(rppHandle));
+       
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+}
+
+RppStatus
+rppi_occlusionAdd_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize1, RppiSize srcSize2, RppPtr_t dstPtr, 
+                               Rpp32u src1x1, Rpp32u src1y1, Rpp32u src1x2, Rpp32u src1y2, 
+                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2, RppHandle_t rppHandle){
+#ifdef OCL_COMPILE
+ 	{
+        occlusion_cl( static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2),
+                  srcSize1,  srcSize2, static_cast<cl_mem>(dstPtr),  
+                 RPPI_CHN_PLANAR,src1x1, src1y1,
+                src1x2, src1y2, src2x1, src2y1, src2x2, src2y2,
+                 3,
+                 static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+}
+
+RppStatus
+rppi_occlusionAdd_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize1, RppiSize srcSize2, RppPtr_t dstPtr, 
+                               Rpp32u src1x1, Rpp32u src1y1, Rpp32u src1x2, Rpp32u src1y2, 
+                               Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2, RppHandle_t rppHandle){
+#ifdef OCL_COMPILE
+ 	{
+       occlusion_cl( static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2),
+                  srcSize1,  srcSize2, static_cast<cl_mem>(dstPtr), 
+                 RPPI_CHN_PACKED,src1x1, src1y1,
+                src1x2, src1y2, src2x1, src2y1, src2x2, src2y2,
+                 3,
+                 static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+/*RppStatus
+rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, 
+                                    RppiSize srcSize, RppHandle_t rppHandle){
+#ifdef OCL_COMPILE
+ 	{
+       
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+}
+
+RppStatus
+rppi_histogram_balance_u8_pln3_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, 
+                                    RppiSize srcSize, RppHandle_t rppHandle){
+#ifdef OCL_COMPILE
+ 	{
+       
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+}
+
+RppStatus
+rppi_histogram_balance_u8_pkd3_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, 
+                                    RppiSize srcSize, RppHandle_t rppHandle){
+#ifdef OCL_COMPILE
+ 	{
+       
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+}*/
+
+RppStatus
+rppi_fog_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue,RppHandle_t rppHandle)
+{
+ 	Rpp32f stdDev=fogValue*50;
+    validate_float_min(0, stdDev);
+    validate_image_size(srcSize);
+ 	validate_float_min(0, stdDev);
+	unsigned int kernelSize = 3;
+#ifdef OCL_COMPILE
+ 	{
+
+ 	blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			kernelSize,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+    fog_cl(static_cast<cl_mem>(dstPtr), 
+			srcSize, 
+			fogValue,
+			RPPI_CHN_PLANAR, 1, 
+            static_cast<cl_command_queue>(rppHandle) );
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_fog_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue, RppHandle_t rppHandle)
+{
+ 	Rpp32f stdDev=fogValue*50;
+    validate_float_min(0, stdDev);
+    validate_image_size(srcSize);
+ 	validate_float_min(0, stdDev);
+	unsigned int kernelSize = 3;
+#ifdef OCL_COMPILE
+ 	{
+
+ 	blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			kernelSize,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+    fog_cl(static_cast<cl_mem>(dstPtr), 
+			srcSize, 
+			fogValue,
+			RPPI_CHN_PLANAR, 3, 
+            static_cast<cl_command_queue>(rppHandle) );
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_fog_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue, RppHandle_t rppHandle)
+{
+ 	Rpp32f stdDev=fogValue*50;
+    validate_float_min(0, stdDev);
+    validate_image_size(srcSize);
+ 	validate_float_min(0, stdDev);
+	unsigned int kernelSize = 3;
+#ifdef OCL_COMPILE
+ 	{
+
+ 	blur_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			kernelSize,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+    fog_cl(static_cast<cl_mem>(dstPtr), 
+			srcSize, 
+			fogValue,
+			RPPI_CHN_PACKED, 3, 
+            static_cast<cl_command_queue>(rppHandle) );
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
 // // GPU calls for Color Temperature function
 
 // // Host calls for Color Temperature function

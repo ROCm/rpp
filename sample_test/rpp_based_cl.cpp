@@ -43,11 +43,11 @@ int main( int argc, char* argv[] )
     RppiNoise noiseType=SNP;
 
     Rpp32f temp=-40;
-    Rpp32f exposureValue=-1;
+    Rpp32f exposureValue=0;
 
     h_a = stbi_load( "/home/mcw/Desktop/AMDRPP/sample_test/images/Image2.jpg",
                         &width, &height, &channel, 0);
-    h_b = stbi_load( "/home/mcw/Desktop/AMDRPP/sample_test/images/violet_3c.png",
+    h_b = stbi_load( "/home/mcw/Desktop/AMDRPP/sample_test/images/Image2.jpg",
                         &width, &height, &channel, 0);
     size_t n = height * width * channel;
     size_t bytes = n*sizeof(TYPE_t);
@@ -103,17 +103,17 @@ int main( int argc, char* argv[] )
     srcSize.height=height;
     srcSize.width=width;
 
-    std::cout<<"\n\nINTO PROGRAM \n\n";
+    // std::cout<<"\n\nINTO PROGRAM \n\n";
     
-    rppi_vignette_u8_pln3_gpu(d_b, srcSize, d_c, exposureValue, theQueue);
+    rppi_fog_u8_pkd3_gpu(d_b, srcSize, d_c, exposureValue, theQueue);
 
-    std::cout<<"\n\nOUT OF PROGRAM SAVING IMAGE \n\n";
+    // std::cout<<"\n\nOUT OF PROGRAM SAVING IMAGE \n\n";
 
-    //clEnqueueReadBuffer(theQueue, d_c, CL_TRUE, 0,
-    //                            dest_bytes, h_c, 0, NULL, NULL );
+    clEnqueueReadBuffer(theQueue, d_c, CL_TRUE, 0,
+                               dest_bytes, h_c, 0, NULL, NULL );
 
-    //stbi_write_png("/home/mcw/Desktop/AMDRPP/sample_test/images/EXPOSURE_GPU.png",
-    //                        dstSize.width,dstSize.height, channel, h_c, dstSize.width *channel);
+    stbi_write_png("/home/mcw/Desktop/AMDRPP/sample_test/images/FOG_GPU.png",
+                           dstSize.width,dstSize.height, channel, h_c, dstSize.width *channel);
 
     //std::cout<<"\n\nSAVED IMAGE \n\n";
 

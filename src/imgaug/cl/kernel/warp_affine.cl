@@ -44,7 +44,7 @@ __kernel void warp_affine_pkd (  __global unsigned char* srcPtr,
 )
 {
 
-    iint id_x = get_global_id(0);
+   int id_x = get_global_id(0);
    int id_y = get_global_id(1);
    int id_z = get_global_id(2);
    
