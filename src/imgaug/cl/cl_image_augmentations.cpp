@@ -672,6 +672,7 @@ occlusion_cl( cl_mem srcPtr1,cl_mem srcPtr2,
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
     return RPP_SUCCESS;
+}
 /********************** Random Shadow ************************/
 
 RppStatus

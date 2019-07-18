@@ -1049,6 +1049,7 @@ rppi_random_shadow_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
                 Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, 
                         Rpp32u maxSizeX, Rpp32u maxSizeY, RppHandle_t rppHandle);
 //---------------------------------------
+RppStatus
 rppi_noiseAdd_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle);
 
 RppStatus
