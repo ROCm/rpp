@@ -662,19 +662,20 @@ rppi_random_crop_letterbox_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 // GPU occlusion functions declaration 
 // ----------------------------------------
 /* Adds occlusion in a region of the first image by taking a crop from a region in the second image 
+* destination size should be of same size as input1
 *param srcPtr1 [in] srcPtr1 input image1
 *param[in] srcSize  srcSize1 dimensions of the first input image
 *param srcPtr2 [in] srcPtr2 input image2
-*param[in] srcSize2  srcSize2 dimensions of the secong input image
+*param[in] srcSize2  srcSize2 dimensions of the second input image
 *param[out] dstPtr dstPtr output image
-*param[in] src1x1 src1x1 value of roi in image1
-*param[in] src1y1 src1y1 value of roi in image1
- src1x2 *param[in] src1x2 value of roi in image1
- src1y2 *param[in] src1y2 value of roi in image1
-*param[in] src2x1 src2x1 value of roi in image2
-*param[in] src2y1 src2y1 value of roi in image2
- src2x2 *param[in] src2x2 value of roi in image2
- src2y2 *param[in] src2y2 value of roi in image2
+*param[in] src1x1 value of roi in image1
+*param[in] src1y1 value of roi in image1
+*param[in] src1x2 value of roi in image1
+*param[in] src1y2 value of roi in image1
+*param[in] src2x1 value of roi in image2
+*param[in] src2y1 value of roi in image2
+*param[in] src2x2 value of roi in image2
+*param[in] src2y2 value of roi in image2
 *param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
