@@ -427,7 +427,7 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
     int ctr =0;
     err  = clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-    err |= clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &affine_matrix);
+    err |= clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &affine_array);
     err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
     err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.height);
