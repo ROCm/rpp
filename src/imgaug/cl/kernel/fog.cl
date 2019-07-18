@@ -16,33 +16,34 @@ __kernel void fog_planar(  __global unsigned char* input,
     {}
     else if(check>=(170*3))
     {
-        float pixel = ((float) srcPtr[pixId])  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
-        srcPtr[i] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[pixId+c]) * (1.5 + fogValue) + (7*fogValue);
-        srcPtr[pixId+c] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[pixId+c*2]) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
-        srcPtr[pixId+c*2] = RPPPIXELCHECK(pixel);
+        float pixel = ((float) input[pixId])  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
+        input[pixId] = saturate_8u(pixel);
+        pixel = ((float) input[pixId+c]) * (1.5 + fogValue) + (7*fogValue);
+        input[pixId+c] = saturate_8u(pixel);
+        pixel = ((float) input[pixId+c*2]) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
+        input[pixId+c*2] = saturate_8u(pixel);
     }
 
     else if(check<=(85*3))
     {
-        float pixel = ((float) srcPtr[pixId]) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
-        srcPtr[pixId] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[pixId+c]) * (1.5 + pow(fogValue,2)) + (130*fogValue);
-        srcPtr[pixId+c] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[pixId+c*2]) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
-        srcPtr[pixId+c*2] = RPPPIXELCHECK(pixel);
+        float pixel = ((float) input[pixId]) * (1.5 + (fogValue*fogValue)) - (fogValue*4) + (130*fogValue);
+        input[pixId] = saturate_8u(pixel);
+        pixel = ((float) input[pixId+c]) * (1.5 + (fogValue*fogValue)) + (130*fogValue);
+        input[pixId+c] = saturate_8u(pixel);
+        pixel = ((float) input[pixId+c*2]) * (1.5 + (fogValue*fogValue)) + (fogValue*4) + 130*fogValue;
+        input[pixId+c*2] = saturate_8u(pixel);
     }
     else
     {
-        float pixel = ((float) srcPtr[pixId]) * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
-        srcPtr[pixId] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[pixId+c]) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
-        srcPtr[pixId+c] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[pixId+c*2]) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
-        srcPtr[pixId+c*2] = RPPPIXELCHECK(pixel);
+        float pixel = ((float) input[pixId]) * (1.5 + (fogValue * ( fogValue * 1.414))) - (fogValue*4) + 20 + (100*fogValue);
+        input[pixId] = saturate_8u(pixel);
+        pixel = ((float) input[pixId+c]) * (1.5 + (fogValue * ( fogValue * 1.414))) + 20 + (100*fogValue);
+        input[pixId+c] = saturate_8u(pixel);
+        pixel = ((float) input[pixId+c*2]) * (1.5 + (fogValue * ( fogValue * 1.414))) + (fogValue*4) + (100*fogValue);
+        input[pixId+c*2] = saturate_8u(pixel);
     }
 }
+
 __kernel void fog_packed(  __global unsigned char* input,
                     const unsigned int height,
                     const unsigned int width,
@@ -59,30 +60,30 @@ __kernel void fog_packed(  __global unsigned char* input,
     {}
     else if(check>=(170*3) && fogValue!=0)
     {
-        float pixel = ((float) srcPtr[i]) * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
-        srcPtr[i] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[i + 1]) * (1.5 + fogValue) + (7*fogValue);
-        srcPtr[i+1] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[i + 2]) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
-        srcPtr[i+2] = RPPPIXELCHECK(pixel);
+        float pixel = ((float) input[i]) * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
+        input[i] = saturate_8u(pixel);
+        pixel = ((float) input[i + 1]) * (1.5 + fogValue) + (7*fogValue);
+        input[i+1] = saturate_8u(pixel);
+        pixel = ((float) input[i + 2]) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
+        input[i+2] = saturate_8u(pixel);
     }
     else if(check<=(85*3) && fogValue!=0)
     {
-        float pixel = ((float) srcPtr[i]) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
-        srcPtr[i] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[i + 1]) * (1.5 + pow(fogValue,2)) + (130*fogValue);
-        srcPtr[i+1] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[i + 2]) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
-        srcPtr[i+2] = RPPPIXELCHECK(pixel);
+        float pixel = ((float) input[i]) * (1.5 + (fogValue*fogValue)) - (fogValue*4) + (130*fogValue);
+        input[i] = saturate_8u(pixel);
+        pixel = ((float) input[i + 1]) * (1.5 + (fogValue*fogValue)) + (130*fogValue);
+        input[i+1] = saturate_8u(pixel);
+        pixel = ((float) input[i + 2]) * (1.5 + (fogValue*fogValue)) + (fogValue*4) + 130*fogValue;
+        input[i+2] = saturate_8u(pixel);
     }
     else if(fogValue!=0)
     {
-        float pixel = ((float) srcPtr[i]) * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
-        srcPtr[i] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[i + 1]) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
-        srcPtr[i+1] = RPPPIXELCHECK(pixel);
-        pixel = ((float) srcPtr[i + 2]) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
-        srcPtr[i+2] = RPPPIXELCHECK(pixel);
+        float pixel = ((float) input[i]) * (1.5 + (fogValue * ( fogValue * 1.414))) - (fogValue*4) + 20 + (100*fogValue);
+        input[i] = saturate_8u(pixel);
+        pixel = ((float) input[i + 1]) * (1.5 + (fogValue * ( fogValue * 1.414))) + 20 + (100*fogValue);
+        input[i+1] = saturate_8u(pixel);
+        pixel = ((float) input[i + 2]) * (1.5 + (fogValue * ( fogValue * 1.414))) + (fogValue*4) + (100*fogValue);
+        input[i+2] = saturate_8u(pixel);
     }
 
 }

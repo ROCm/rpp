@@ -47,7 +47,7 @@ int main( int argc, char* argv[] )
     srcSize.height=height;
     srcSize.width=width;
     
-    Rpp32f alpha=0.5;
+    Rpp32f alpha=0;
 
     Rpp32f noiseParameter=0.2;
     RppiNoise noiseType=SNP;
@@ -62,9 +62,9 @@ int main( int argc, char* argv[] )
     //Rpp32f mean;
     Rpp32f sd;
 
-    rppi_accumulate_weighted_u8_pkd3_host(h_a, h_b, srcSize, alpha);
-    stbi_write_png("/home/mcw/Desktop/AMDRPP/sample_test/images/ACCUMULATE_WEIGHT_HOST.png",
-                          dstSize.width,dstSize.height, channel, h_a, dstSize.width *channel);
+    rppi_fog_u8_pkd3_host(h_a, srcSize, h_c, alpha);
+    stbi_write_png("/home/mcw/Desktop/AMDRPP/sample_test/images/FOG_HOST.png",
+                          dstSize.width,dstSize.height, channel, h_c, dstSize.width *channel);
 
     // rppi_noiseAdd_u8_pkd3_host(h_a, srcSize, h_c, noiseType, &noiseParameter);
     // stbi_write_png("/home/mcw/Desktop/AMDRPP/sample_test/images/2.SaltAndPepper.png",
