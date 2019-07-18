@@ -3201,7 +3201,6 @@ rppi_fog_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fo
 #ifdef OCL_COMPILE
  	{
 
-    if(fogValue!=0)
  	blur_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
@@ -3232,7 +3231,6 @@ rppi_fog_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fo
 #ifdef OCL_COMPILE
  	{
 
-    if(fogValue!=0)
  	blur_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
@@ -3263,7 +3261,6 @@ rppi_fog_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fo
 #ifdef OCL_COMPILE
  	{
 
-    if(fogValue!=0)
  	blur_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr),

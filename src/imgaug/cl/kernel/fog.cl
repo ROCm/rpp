@@ -44,7 +44,7 @@ __kernel void fog_planar(  __global unsigned char* input,
     }
 }
 
-__kernel void fog_packed(  __global unsigned char* input,
+__kernel void fog_pkd(  __global unsigned char* input,
                     const unsigned int height,
                     const unsigned int width,
                     const unsigned int channel,
