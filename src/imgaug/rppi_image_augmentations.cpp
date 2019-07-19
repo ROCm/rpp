@@ -447,49 +447,49 @@ rppi_fog_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f f
 
 
 RppStatus
-rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainValue,Rpp32u rainWidth,Rpp32u rainHeight)
+rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainPercentage,Rpp32u rainWidth,Rpp32u rainHeight, Rpp32f transparency)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, rainValue);
+ 	 validate_float_range( 0, 1, rainPercentage);
 	 rain_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			rainValue,
+			rainPercentage,
 			rainWidth,
-			rainHeight,
+			rainHeight, transparency,
 			RPPI_CHN_PLANAR, 1);
 	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainValue,Rpp32u rainWidth,Rpp32u rainHeight)
+rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainPercentage,Rpp32u rainWidth,Rpp32u rainHeight, Rpp32f transparency)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, rainValue);
+ 	 validate_float_range( 0, 1, rainPercentage);
 	 rain_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			rainValue,
+			rainPercentage,
 			rainWidth,
-			rainHeight,
+			rainHeight, transparency,
 			RPPI_CHN_PLANAR, 3);
 	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainValue,Rpp32u rainWidth,Rpp32u rainHeight)
+rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainPercentage,Rpp32u rainWidth,Rpp32u rainHeight, Rpp32f transparency)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, rainValue);
+ 	 validate_float_range( 0, 1, rainPercentage);
 	 rain_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			rainValue,
+			rainPercentage,
 			rainWidth,
-			rainHeight,
+			rainHeight, transparency,
 			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }

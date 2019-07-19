@@ -650,74 +650,86 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
     }
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+        Rpp8u *srcPtr1,*srcPtr2;
+        srcPtr1=srcPtr + (srcSize.width * srcSize.height);
+        srcPtr2=srcPtr + (srcSize.width * srcSize.height*2);
         for (int i = 0; i < (srcSize.width * srcSize.height); i++)
         {
-            Rpp32f check=srcPtr[i] + srcPtr[i + srcSize.width * srcSize.height] + srcPtr[i + srcSize.width * srcSize.height * 2];
+            Rpp32f check= *srcPtr + *srcPtr1 + *srcPtr2;
             if(check >= (240*3) && fogValue!=0)
             {            }
             else if(check>=(170*3))
             {
-                Rpp32f pixel = ((Rpp32f) srcPtr[i])  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
-                srcPtr[i] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + srcSize.width * srcSize.height]) * (1.5 + fogValue) + (7*fogValue);
-                srcPtr[i + srcSize.width * srcSize.height] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + srcSize.width * srcSize.height * 2]) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
-                srcPtr[i + srcSize.width * srcSize.height * 2] = RPPPIXELCHECK(pixel);
+                Rpp32f pixel = ((Rpp32f) *srcPtr)  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
+                *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr1) * (1.5 + fogValue) + (7*fogValue);
+                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr2) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
+                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+				srcPtr++;srcPtr1++;srcPtr2++;
             }
             else if(check<=(85*3))
             {
-                Rpp32f pixel = ((Rpp32f) srcPtr[i]) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
-                srcPtr[i] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + srcSize.width * srcSize.height]) * (1.5 + pow(fogValue,2)) + (130*fogValue);
-                srcPtr[i + srcSize.width * srcSize.height] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + srcSize.width * srcSize.height * 2]) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
-                srcPtr[i + srcSize.width * srcSize.height * 2] = RPPPIXELCHECK(pixel);
+                Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
+                *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,2)) + (130*fogValue);
+                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
+                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+				srcPtr++;srcPtr1++;srcPtr2++;
             }
             else
             {
-                Rpp32f pixel = ((Rpp32f) srcPtr[i]) * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
-                srcPtr[i] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + srcSize.width * srcSize.height]) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
-                srcPtr[i + srcSize.width * srcSize.height] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + srcSize.width * srcSize.height * 2]) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
-                srcPtr[i + srcSize.width * srcSize.height * 2] = RPPPIXELCHECK(pixel);
+                Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
+                *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
+                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
+                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+				srcPtr++;srcPtr1++;srcPtr2++;
             }
         }
     }
     else
     {
+        Rpp8u *srcPtr1,*srcPtr2;
+        srcPtr1=srcPtr+1;
+        srcPtr2=srcPtr+2;
         for (int i = 0; i < (srcSize.width * srcSize.height * channel); i+=3)
         {
-            Rpp32f check=srcPtr[i] + srcPtr[i+1] + srcPtr[i+ 2];
+            Rpp32f check=*srcPtr + *srcPtr1 + *srcPtr2;
             if(check >= (240*3) && fogValue!=0)
             {            }
             else if(check>=(170*3) && fogValue!=0)
             {
-                Rpp32f pixel = ((Rpp32f) srcPtr[i]) * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
-                srcPtr[i] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + 1]) * (1.5 + fogValue) + (7*fogValue);
-                srcPtr[i+1] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + 2]) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
-                srcPtr[i+2] = RPPPIXELCHECK(pixel);
+                Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
+                *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr1) * (1.5 + fogValue) + (7*fogValue);
+                *srcPtr1 =(Rpp8u) RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr2) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
+                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
             }
             else if(check<=(85*3) && fogValue!=0)
             {
-                Rpp32f pixel = ((Rpp32f) srcPtr[i]) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
-                srcPtr[i] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + 1]) * (1.5 + pow(fogValue,2)) + (130*fogValue);
-                srcPtr[i+1] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + 2]) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
-                srcPtr[i+2] = RPPPIXELCHECK(pixel);
+                Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
+                *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,2)) + (130*fogValue);
+                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
+                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
             }
             else if(fogValue!=0)
             {
-                Rpp32f pixel = ((Rpp32f) srcPtr[i]) * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
-                srcPtr[i] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + 1]) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
-                srcPtr[i+1] = RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) srcPtr[i + 2]) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
-                srcPtr[i+2] = RPPPIXELCHECK(pixel);
+                Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
+                *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
+                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
+                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
             }
+			srcPtr+=3;
+			srcPtr1+=3;
+			srcPtr2+=3;
         }
     }
     return RPP_SUCCESS;
@@ -727,30 +739,26 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
 /**************** Rain ***************/
 template <typename T>
 RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
-                    Rpp32f rainValue, Rpp32f rainWidth, Rpp32f rainHeight,
+                    Rpp32f rainPercentage, Rpp32f rainWidth, Rpp32f rainHeight, Rpp32f transparency,
                     RppiChnFormat chnFormat,   unsigned int channel)
 { 
-    rainValue=rainValue/10;
-    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
-    {
-        Rpp32f pixel = ((Rpp32f) srcPtr[i]);
-        dstPtr[i] = RPPPIXELCHECK(pixel);
-    }
+    rainPercentage=rainPercentage/250;
+    transparency/=5;
 
-    Rpp32u rainProbability= (Rpp32u)(rainValue * srcSize.width * srcSize.height * channel );
+    Rpp32u rainDrops= (Rpp32u)(rainPercentage * srcSize.width * srcSize.height * channel );
     
     
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        for(int i = 0 ; i < rainProbability ; i++)
+        for(int i = 0 ; i < rainDrops ; i++)
         {
             Rpp32u row = rand() % srcSize.height;
             Rpp32u column = rand() % srcSize.width;
             Rpp32f pixel;
             for(int k=0;k<channel;k++)
             {
-                pixel=(Rpp32f)dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] + 5;
-                dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] = RPPPIXELCHECK(pixel) ;
+                //pixel=(Rpp32f)dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] + 5;
+                dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] = (k==0)?196:(k==1)?226:255 ;
             }
             if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
             {
@@ -760,8 +768,8 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
                     {
                         for(int m=0;m<rainWidth;m++)
                         {
-                            pixel=(Rpp32f)dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m]+5;
-                            dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m] = RPPPIXELCHECK(pixel) ;
+                            //pixel=(Rpp32f)dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m]+5;
+                            dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m] = (k==0)?196:(k==1)?226:255 ;
                         }
                     }            
                 }
@@ -770,15 +778,15 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        for(int i = 0 ; i < rainProbability ; i++)
+        for(int i = 0 ; i < rainDrops ; i++)
         {
             Rpp32u row = rand() % srcSize.height;
             Rpp32u column = rand() % srcSize.width;
             Rpp32f pixel;
             for(int k=0;k<channel;k++)
             {
-                pixel=(Rpp32f)dstPtr[(channel * row * srcSize.width) + (column * channel) + k] + 5;
-                dstPtr[(channel * row * srcSize.width) + (column * channel) + k] = RPPPIXELCHECK(pixel) ;
+                //pixel=(Rpp32f)dstPtr[(channel * row * srcSize.width) + (column * channel) + k] + 5;
+                dstPtr[(channel * row * srcSize.width) + (column * channel) + k] = (k==0)?196:(k==1)?226:255 ;
             }
             if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
             {
@@ -788,13 +796,19 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
                     {
                         for(int m=0;m<rainWidth;m++)
                         {
-                            pixel=(Rpp32f)dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)]+5;
-                            dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)] = RPPPIXELCHECK(pixel) ;
+                            //pixel=(Rpp32f)dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)]+5;
+                            dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)] = (k==0)?196:(k==1)?226:255 ;
                         } 
                     }            
                 }
             }
         }
+    }
+
+        for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    {
+        Rpp32f pixel = ((Rpp32f) srcPtr[i])+ transparency * dstPtr[i];
+        dstPtr[i] = RPPPIXELCHECK(pixel);
     }
 
 }
