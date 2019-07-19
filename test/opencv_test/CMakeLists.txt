@@ -1,0 +1,16 @@
+cmake_minimum_required (VERSION 2.8)
+project (Rpp_test)
+set (CMAKE_CXX_STANDARD 11)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+find_package(OpenCV REQUIRED )
+
+include_directories (${OpenCV_INCLUDE_DIRS})
+include_directories (/opt/rocm/opencl/include/)
+include_directories (/opt/rocm/include)
+link_directories    (/opt/rocm/lib)
+link_directories    (/opt/rocm/rpp/lib/)
+
+add_executable(rpp_test rpp_test.cpp)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+#target_link_libraries(rppTest ${OpenCV_LIBS} -L/opt/rocm/opencl/lib/x86_64/ -lOpenCL pthread)
+target_link_libraries(rpp_test ${OpenCV_LIBS})

@@ -1,5 +1,5 @@
-#ifndef RPPI_COLOR_MODEL_CONVERSIONS.H
-#define RPPI_COLOR_MODEL_CONVERSIONS.H
+#ifndef RPPI_COLOR_MODEL_CONVERSIONS
+#define RPPI_COLOR_MODEL_CONVERSIONS
  
 #include "rppdefs.h"
 #ifdef __cplusplus
@@ -138,6 +138,93 @@ RppStatus
 rppi_saturationHSV_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor);
 
 // ----------------------------------------
+// Host rgb_to_hsl functions declaration 
+// ----------------------------------------
+/* Converts RGB image to HSL image.
+param[in] srcPtr input image
+*param[in] srcSize dimensions of the image
+*param[out] dstPtr output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_rgb_to_hsl_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_rgb_to_hsl_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_rgb_to_hsl_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+// ----------------------------------------
+// Host hsl_to_rgb functions declaration 
+// ----------------------------------------
+/* Converts HSL image to RGB image.
+param[in] srcPtr input image
+*param[in] srcSize dimensions of the image
+*param[out] dstPtr output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_hsl_to_rgb_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_hsl_to_rgb_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_hsl_to_rgb_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+// ----------------------------------------
+// Host color_temperature functions declaration 
+// ----------------------------------------
+/* Changes color temperature of an image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] adjustmentValue adjustmentValue adjustment value used in color temperature correction which should range between -100 - 100
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_color_temperature_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue);
+
+RppStatus
+rppi_color_temperature_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue);
+
+RppStatus
+rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue);
+
+// ----------------------------------------
+// Host vignette functions declaration 
+// ----------------------------------------
+/* Introduces vignette effect in the entire image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] stdDev stdDev standard deviation for the gaussian function used in the vignette (decides amount of vignette) which should range between 0 - 100
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_vignette_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev);
+
+RppStatus
+rppi_vignette_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev);
+
+RppStatus
+rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev);
+
+
+// ----------------------------------------
 // GPU rgb_to_hsv functions declaration 
 // ----------------------------------------
 /* Converts RGB image to HSV image.
@@ -273,32 +360,52 @@ rppi_saturationHSV_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
 RppStatus
 rppi_saturationHSV_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f saturationFactor, RppHandle_t rppHandle) ;
 
-// ----------------------------------------
-// GPU Color Temprature Modification 
-// ----------------------------------------
-
-RppStatus
-rppi_temprature_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle) ;
-RppStatus
-rppi_temprature_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle) ;
-RppStatus
-rppi_temprature_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f adjustmentValue, RppHandle_t rppHandle) ;
 
 // ----------------------------------------
-// GPU vignette 
+// GPU color_temperature functions declaration 
 // ----------------------------------------
-
-// value should always be greater than 0
-//0-> full vignette effect
-//100-> no vignette effect
+/* Changes color temperature of an image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] adjustmentValue adjustmentValue adjustment value used in color temperature correction which should range between -100 - 100
+*param[in] rppHandle OpenCL handle
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
 RppStatus
-rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle) ;
-RppStatus
-rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle) ;
-RppStatus
-rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, RppHandle_t rppHandle) ;
+rppi_color_temperature_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue, RppHandle_t rppHandle) ;
 
+RppStatus
+rppi_color_temperature_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_color_temperature_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32s adjustmentValue, RppHandle_t rppHandle) ;
+
+// ----------------------------------------
+// GPU vignette functions declaration 
+// ----------------------------------------
+/* Introduces vignette effect in the entire image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] stdDev stdDev standard deviation for the gaussian function used in the vignette (decides amount of vignette) which should range between 0 - 100
+*param[in] rppHandle OpenCL handle
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) ;
  
 #ifdef __cplusplus
 }
