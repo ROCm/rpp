@@ -17,7 +17,10 @@ __kernel void randomcropletterbox_planar(  __global unsigned char* input,
     int id_z = get_global_id(2);
     if (id_x >= srcwidth || id_y >= srcheight || id_z >= channel) 
         return;
-    int OPpixIdx = (id_x) + (id_y * srcwidth) + (id_z * srcwidth * srcheight) ;
+    int width=x2-x1+6;
+    int height=y2-y1+6;
+    int displacement=((dstwidth-width)*id_y)+(channel*srcheight*srcwidth);
+    int OPpixIdx = (id_x) + (id_y * srcwidth) + (id_z * srcwidth * srcheight) + displacement;
     int IPpixIdx = ((x1) + (y1 *srcwidth) + (id_z * srcwidth * srcheight)) + ((id_x) + (id_y * srcwidth));
     output[OPpixIdx] = input[IPpixIdx];
 
@@ -45,11 +48,14 @@ __kernel void randomcropletterbox_packed(  __global unsigned char* input,
     if (id_x >= srcwidth || id_y >= srcheight || id_z >= channel) 
         return;
 
-    int OPpixIdx = (channel * id_y * dstwidth) + (id_x * channel) + (id_z);
+    int width=x2-x1+6;
+    int height=y2-y1+6;
+    int displacement=((dstwidth-width)*channel*id_y);
+    int OPpixIdx = (channel * id_y * width) + (id_x * channel) + (id_z) + displacement;
     int IPpixIdx = (srcwidth * channel * y1 + x1 * channel) + (channel * id_y * srcwidth) + (id_x * channel) + (id_z);
     output[OPpixIdx] = input[IPpixIdx];
 
-    if(id_y <=5 || id_y >= dstheight-5 || id_x <= 5 || id_x >= dstwidth-5)
+    if(id_y <=5 || id_y >= height-5 || id_x <= 5 || id_x >= width-5)
         output[OPpixIdx]=0;
 
 }
