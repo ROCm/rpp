@@ -466,18 +466,18 @@ RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus noise_gaussian_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                        RppiNoise noiseType,  RppiGaussParameter *noiseParameter, 
+                        Rpp32f mean, Rpp32f sigma, 
                         RppiChnFormat chnFormat, unsigned int channel)
 {
-    std::default_random_engine generator;
-    std::normal_distribution<>  distribution{noiseParameter->mean, noiseParameter->sigma}; 
-    for(int i = 0; i < (srcSize.height * srcSize.width * channel) ; i++)
-    {
-        Rpp32f pixel = ((Rpp32f) *srcPtr) + ((Rpp32f) distribution(generator));
-		*dstPtr = RPPPIXELCHECK(pixel); 
-        dstPtr++;
-        srcPtr++;       
-    }
+    // std::default_random_engine generator;
+    // std::normal_distribution<>  distribution{mean, sigma}; 
+    // for(int i = 0; i < (srcSize.height * srcSize.width * channel) ; i++)
+    // {
+    //     Rpp32f pixel = ((Rpp32f) *srcPtr) + ((Rpp32f) distribution(generator));
+	// 	*dstPtr = RPPPIXELCHECK(pixel); 
+    //     dstPtr++;
+    //     srcPtr++;       
+    // }
     return RPP_SUCCESS;
 }
 
@@ -485,47 +485,74 @@ RppStatus noise_gaussian_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                        RppiNoise noiseType,  Rpp32f *noiseParameter, 
+                        Rpp32f noiseProbability, 
                         RppiChnFormat chnFormat, unsigned int channel)
 {
-    int i;
-    for (i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
         Rpp32f pixel = ((Rpp32f) srcPtr[i]);
         dstPtr[i] = RPPPIXELCHECK(pixel);
     }
-
-    Rpp32u noiseProbability= (Rpp32u)(*noiseParameter * srcSize.width * srcSize.height * channel );
-    if (chnFormat == RPPI_CHN_PLANAR)
+    srand(time(0)); 
+    Rpp32u noisePixel= (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
+    Rpp32u pixelDistance= (srcSize.width * srcSize.height) / noisePixel;
+    if(chnFormat==RPPI_CHN_PACKED)
     {
-        for(i = 0 ; i < noiseProbability ; i++)
+        for(int i=0 ; i<srcSize.width * srcSize.height *channel ; i+=channel*pixelDistance)
         {
-            Rpp32u row = rand() % srcSize.height;
-            Rpp32u column = rand() % srcSize.width;
-            Rpp8u newValue = rand()%2 ? 255 : 1;
-            for (int c = 0; c < channel; c++)
+            Rpp32u initialPixel= rand() % pixelDistance;
+            dstPtr += initialPixel*channel;
+            Rpp8u newPixel=rand()%2 ? 0 : 255;
+            std::cout<<(int)newPixel<<" ";
+            for(int j=0 ; j<channel ; j++)
             {
-                dstPtr[(row * srcSize.width) + (column) + (c * srcSize.width * srcSize.height) ] = newValue;
+                *dstPtr=newPixel;
+                dstPtr++;
             }
-        }        
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        for(i = 0 ; i < noiseProbability ; i++)
-        {
-            Rpp32u row = rand() % srcSize.height;
-            Rpp32u column = rand() % srcSize.width;
-            Rpp8u newValue = rand()%2 ? 1 : 255;
-            for (int c = 0; c < channel; c++)
-            {
-                dstPtr[(channel * row * srcSize.width) + (column * channel) + c] = newValue;
-            }
+            dstPtr+= ((pixelDistance - initialPixel - 1) * channel);
         }
     }
+    else if(chnFormat==RPPI_CHN_PLANAR)
+    {
+        if(channel==3)
+        {
+            Rpp8u *dstPtrTemp1,*dstPtrTemp2;
+            dstPtrTemp1 = dstPtr + (srcSize.height * srcSize.width);
+            dstPtrTemp2 = dstPtr + (2 * srcSize.height * srcSize.width);   
+            for(int i=0 ; i<srcSize.width * srcSize.height * channel ; i+=pixelDistance)
+            {
+                Rpp32u initialPixel= rand() % pixelDistance;
+                dstPtr += initialPixel;
+                Rpp8u newPixel=rand()%2 ? 255 : 1;
+                *dstPtr=newPixel;
+                dstPtr+= ((pixelDistance - initialPixel - 1));
 
+                dstPtrTemp1 += initialPixel;
+                *dstPtrTemp1=newPixel;
+                dstPtrTemp1+= ((pixelDistance - initialPixel - 1));
+
+                dstPtrTemp2 += initialPixel;
+                *dstPtrTemp2=newPixel;
+                dstPtrTemp2+= ((pixelDistance - initialPixel - 1));
+                
+            }
+        }
+        else
+        {
+            for(int i=0 ; i<srcSize.width * srcSize.height ; i+=pixelDistance)
+            {
+                Rpp32u initialPixel= rand() % pixelDistance;
+                dstPtr += initialPixel;
+                Rpp8u newPixel=rand()%2 ? 255 : 1;
+                *dstPtr=newPixel;
+                dstPtr+= ((pixelDistance - initialPixel - 1));
+            }   
+        }
+        
+    }
     return RPP_SUCCESS;
 }
-/**************** Gamma Correction ***************/
+
 /**************** Random Shadow ***************/
 
 template <typename T>
