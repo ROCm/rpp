@@ -657,37 +657,51 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
         {
             Rpp32f check= *srcPtr + *srcPtr1 + *srcPtr2;
             if(check >= (240*3) && fogValue!=0)
-            {            }
+            {
+
+            }
             else if(check>=(170*3))
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr)  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
                 *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr1) * (1.5 + fogValue) + (7*fogValue);
-                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr2) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
-                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
-				srcPtr++;srcPtr1++;srcPtr2++;
+                srcPtr++;
+                if(channel>1)
+                {
+                    pixel = ((Rpp32f) *srcPtr1) * (1.5 + fogValue) + (7*fogValue);
+                    *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    pixel = ((Rpp32f) *srcPtr2) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
+                    *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    srcPtr1++;srcPtr2++;
+                }
             }
             else if(check<=(85*3))
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
                 *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,2)) + (130*fogValue);
-                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
-                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
-				srcPtr++;srcPtr1++;srcPtr2++;
+                srcPtr++;
+                if(channel>1)
+                {
+                    pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,2)) + (130*fogValue);
+                    *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
+                    *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    srcPtr1++;srcPtr2++;
+                }
             }
             else
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
                 *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
-                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
-                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
-				srcPtr++;srcPtr1++;srcPtr2++;
-            }
+                srcPtr++;
+                if(channel>1)
+                {
+                    pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
+                    *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
+                    *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    srcPtr1++;srcPtr2++;
+                }
+            } 
         }
     }
     else
