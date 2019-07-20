@@ -264,61 +264,107 @@ rppi_jitter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 // Host Noise functions  calls 
 // ----------------------------------------
 
+// RppStatus
+// rppi_noise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+//                             RppiNoise noiseType, void* noiseParameter)
+// {
+//     if(noiseType==GAUSSIAN)
+//     {
+//         noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+//                                     noiseType, (RppiGaussParameter *)noiseParameter,
+//                                     RPPI_CHN_PLANAR, 1);
+//     }
+//     else if(noiseType==SNP)
+//     {
+//         noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+//                                     noiseType, (Rpp32f *)noiseParameter,
+//                                     RPPI_CHN_PLANAR, 1);
+//     }
+// }
+
+// RppStatus
+// rppi_noise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+//                             RppiNoise noiseType, void* noiseParameter)
+// {
+//     if(noiseType==GAUSSIAN)
+//     {
+        // noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+        //                     noiseType, (RppiGaussParameter *)noiseParameter,
+        //                     RPPI_CHN_PLANAR, 3);
+//     }
+//     else if(noiseType==SNP)
+//     {
+//         noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+//                                     noiseType, (Rpp32f *)noiseParameter,
+//                                     RPPI_CHN_PLANAR, 3);        
+//     }
+// }
+
+// RppStatus
+// rppi_noise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+//                             RppiNoise noiseType, void* noiseParameter)
+// {
+//     if(noiseType==GAUSSIAN)
+//     {
+//         noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+//                             noiseType, (RppiGaussParameter *)noiseParameter,
+//                             RPPI_CHN_PACKED, 3);
+//     }
+//     else if(noiseType==SNP)
+//     {
+//         noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+//                                     noiseType, (Rpp32f *)noiseParameter,
+//                                     RPPI_CHN_PACKED, 3);        
+//     }
+// }
+
 RppStatus
-rppi_noise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                            RppiNoise noiseType, void* noiseParameter)
+rppi_snpNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
-    if(noiseType==GAUSSIAN)
-    {
-        noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                                    noiseType, (RppiGaussParameter *)noiseParameter,
-                                    RPPI_CHN_PLANAR, 1);
-    }
-    else if(noiseType==SNP)
-    {
-        noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                                    noiseType, (Rpp32f *)noiseParameter,
-                                    RPPI_CHN_PLANAR, 1);
-    }
+    noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                        noiseProbability,
+                        RPPI_CHN_PLANAR, 1);
 }
 
 RppStatus
-rppi_noise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                            RppiNoise noiseType, void* noiseParameter)
+rppi_snpNoise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
-    if(noiseType==GAUSSIAN)
-    {
-        noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                            noiseType, (RppiGaussParameter *)noiseParameter,
-                            RPPI_CHN_PLANAR, 3);
-    }
-    else if(noiseType==SNP)
-    {
-        noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                                    noiseType, (Rpp32f *)noiseParameter,
-                                    RPPI_CHN_PLANAR, 3);        
-    }
+    noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                        noiseProbability,
+                        RPPI_CHN_PLANAR, 3);
 }
 
 RppStatus
-rppi_noise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
-                            RppiNoise noiseType, void* noiseParameter)
+rppi_snpNoise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
-    if(noiseType==GAUSSIAN)
-    {
-        noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                            noiseType, (RppiGaussParameter *)noiseParameter,
-                            RPPI_CHN_PACKED, 3);
-    }
-    else if(noiseType==SNP)
-    {
-        noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                                    noiseType, (Rpp32f *)noiseParameter,
-                                    RPPI_CHN_PACKED, 3);        
-    }
+    noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                        noiseProbability,
+                        RPPI_CHN_PACKED, 3);
 }
 
+RppStatus
+rppi_gaussianNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma)
+{
+    noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                        mean, sigma, 
+                        RPPI_CHN_PLANAR, 1);
+}
 
+RppStatus
+rppi_gaussianNoise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma)
+{
+    noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                        mean, sigma, 
+                        RPPI_CHN_PLANAR, 3);
+}
+
+RppStatus
+rppi_gaussianNoise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma)
+{
+    noise_gaussian_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                        mean, sigma, 
+                        RPPI_CHN_PACKED, 3);
+}
 
 // ----------------------------------------
 // Host fog functions call 
@@ -401,49 +447,49 @@ rppi_fog_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f f
 
 
 RppStatus
-rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainValue,Rpp32u rainWidth,Rpp32u rainHeight)
+rppi_rain_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainPercentage,Rpp32u rainWidth,Rpp32u rainHeight, Rpp32f transparency)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, rainValue);
+ 	 validate_float_range( 0, 1, rainPercentage);
 	 rain_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			rainValue,
+			rainPercentage,
 			rainWidth,
-			rainHeight,
+			rainHeight, transparency,
 			RPPI_CHN_PLANAR, 1);
 	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainValue,Rpp32u rainWidth,Rpp32u rainHeight)
+rppi_rain_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainPercentage,Rpp32u rainWidth,Rpp32u rainHeight, Rpp32f transparency)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, rainValue);
+ 	 validate_float_range( 0, 1, rainPercentage);
 	 rain_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			rainValue,
+			rainPercentage,
 			rainWidth,
-			rainHeight,
+			rainHeight, transparency,
 			RPPI_CHN_PLANAR, 3);
 	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainValue,Rpp32u rainWidth,Rpp32u rainHeight)
+rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f rainPercentage,Rpp32u rainWidth,Rpp32u rainHeight, Rpp32f transparency)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, rainValue);
+ 	 validate_float_range( 0, 1, rainPercentage);
 	 rain_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
-			rainValue,
+			rainPercentage,
 			rainWidth,
-			rainHeight,
+			rainHeight, transparency,
 			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }
@@ -2146,25 +2192,165 @@ rppi_jitter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp3
 // GPU ADD NOISE functions  calls 
 // ----------------------------------------
 
+// RppStatus
+// rppi_noise_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+// {
+//    	validate_image_size(srcSize);
+
+// #ifdef OCL_COMPILE
+//  	{
+//  	    if(noiseType==GAUSSIAN)
+//             noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+//                 srcSize,
+//                 static_cast<cl_mem>(dstPtr), 
+//                 noiseType,(RppiGaussParameter *)noiseParameter,
+//                 RPPI_CHN_PLANAR, 1,
+//                 static_cast<cl_command_queue>(rppHandle));
+//         else if(noiseType==SNP)
+//             noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
+//                 srcSize,
+//                 static_cast<cl_mem>(dstPtr), 
+//                 noiseType,(Rpp32f *)noiseParameter,
+//                 RPPI_CHN_PLANAR, 1,
+//                 static_cast<cl_command_queue>(rppHandle));
+//  	} 
+// #elif defined (HIP_COMPILE) 
+//  	{ 
+//  	} 
+// #endif //BACKEND 
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_noise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+// {
+//    	validate_image_size(srcSize);
+
+// #ifdef OCL_COMPILE
+//  	{
+//  	    if(noiseType==GAUSSIAN)
+//             noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+//                 srcSize,
+//                 static_cast<cl_mem>(dstPtr), 
+//                 noiseType,(RppiGaussParameter *)noiseParameter,
+//                 RPPI_CHN_PLANAR, 3,
+//                 static_cast<cl_command_queue>(rppHandle));
+//         else if(noiseType==SNP)
+//             noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
+//                 srcSize,
+//                 static_cast<cl_mem>(dstPtr), 
+//                 noiseType,(Rpp32f *)noiseParameter,
+//                 RPPI_CHN_PLANAR, 3,
+//                 static_cast<cl_command_queue>(rppHandle));
+//  	} 
+// #elif defined (HIP_COMPILE) 
+//  	{ 
+//  	} 
+// #endif //BACKEND 
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_noise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+// {
+//    	validate_image_size(srcSize);
+
+// #ifdef OCL_COMPILE
+//  	{
+//  	    if(noiseType==GAUSSIAN)
+//             noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+//                 srcSize,
+//                 static_cast<cl_mem>(dstPtr), 
+//                 noiseType,(RppiGaussParameter *)noiseParameter,
+//                 RPPI_CHN_PACKED, 3,
+//                 static_cast<cl_command_queue>(rppHandle));
+//         else if(noiseType==SNP)
+//             noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
+//                 srcSize,
+//                 static_cast<cl_mem>(dstPtr), 
+//                 noiseType,(Rpp32f *)noiseParameter,
+//                 RPPI_CHN_PACKED, 3,
+//                 static_cast<cl_command_queue>(rppHandle));
+//  	} 
+// #elif defined (HIP_COMPILE) 
+//  	{ 
+//  	} 
+// #endif //BACKEND 
+// 	return RPP_SUCCESS;
+// }
+
+
 RppStatus
-rppi_noise_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+rppi_snpNoise_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
 
 #ifdef OCL_COMPILE
  	{
- 	    if(noiseType==GAUSSIAN)
-            noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+            snpNoise_cl(static_cast<cl_mem>(srcPtr), 
                 srcSize,
                 static_cast<cl_mem>(dstPtr), 
-                noiseType,(RppiGaussParameter *)noiseParameter,
+                noiseProbability,
                 RPPI_CHN_PLANAR, 1,
                 static_cast<cl_command_queue>(rppHandle));
-        else if(noiseType==SNP)
-            noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+RppStatus
+rppi_snpNoise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+            snpNoise_cl(static_cast<cl_mem>(srcPtr), 
                 srcSize,
                 static_cast<cl_mem>(dstPtr), 
-                noiseType,(Rpp32f *)noiseParameter,
+                noiseProbability,
+                RPPI_CHN_PLANAR, 3,
+                static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+RppStatus
+rppi_snpNoise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+            snpNoise_cl(static_cast<cl_mem>(srcPtr), 
+                srcSize,
+                static_cast<cl_mem>(dstPtr), 
+                noiseProbability,
+                RPPI_CHN_PACKED, 3,
+                static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	{ 
+ 	} 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+RppStatus
+rppi_gaussianNoise_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma, RppHandle_t rppHandle)
+{
+   	validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	{
+            gaussianNoise_cl(static_cast<cl_mem>(srcPtr),
+                srcSize,
+                static_cast<cl_mem>(dstPtr), 
+                mean, sigma,
                 RPPI_CHN_PLANAR, 1,
                 static_cast<cl_command_queue>(rppHandle));
  	} 
@@ -2174,26 +2360,17 @@ rppi_noise_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiN
 #endif //BACKEND 
 	return RPP_SUCCESS;
 }
-
 RppStatus
-rppi_noise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+rppi_gaussianNoise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
 
 #ifdef OCL_COMPILE
  	{
- 	    if(noiseType==GAUSSIAN)
-            noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+            gaussianNoise_cl(static_cast<cl_mem>(srcPtr),
                 srcSize,
                 static_cast<cl_mem>(dstPtr), 
-                noiseType,(RppiGaussParameter *)noiseParameter,
-                RPPI_CHN_PLANAR, 3,
-                static_cast<cl_command_queue>(rppHandle));
-        else if(noiseType==SNP)
-            noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
-                srcSize,
-                static_cast<cl_mem>(dstPtr), 
-                noiseType,(Rpp32f *)noiseParameter,
+                mean, sigma,
                 RPPI_CHN_PLANAR, 3,
                 static_cast<cl_command_queue>(rppHandle));
  	} 
@@ -2203,26 +2380,17 @@ rppi_noise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiN
 #endif //BACKEND 
 	return RPP_SUCCESS;
 }
-
 RppStatus
-rppi_noise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiNoise noiseType, void * noiseParameter, RppHandle_t rppHandle)
+rppi_gaussianNoise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
 
 #ifdef OCL_COMPILE
  	{
- 	    if(noiseType==GAUSSIAN)
-            noise_add_gaussian_cl(static_cast<cl_mem>(srcPtr),
+            gaussianNoise_cl(static_cast<cl_mem>(srcPtr),
                 srcSize,
                 static_cast<cl_mem>(dstPtr), 
-                noiseType,(RppiGaussParameter *)noiseParameter,
-                RPPI_CHN_PACKED, 3,
-                static_cast<cl_command_queue>(rppHandle));
-        else if(noiseType==SNP)
-            noise_add_snp_cl(static_cast<cl_mem>(srcPtr), 
-                srcSize,
-                static_cast<cl_mem>(dstPtr), 
-                noiseType,(Rpp32f *)noiseParameter,
+                mean, sigma,
                 RPPI_CHN_PACKED, 3,
                 static_cast<cl_command_queue>(rppHandle));
  	} 
@@ -2232,6 +2400,7 @@ rppi_noise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiN
 #endif //BACKEND 
 	return RPP_SUCCESS;
 }
+
 
 
 
