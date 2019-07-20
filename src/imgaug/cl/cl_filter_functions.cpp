@@ -8,6 +8,7 @@ bilateral_filter_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)
 {
+    unsigned short counter=0;
     cl_int err;
     cl_context theContext;
     clGetCommandQueueInfo(  theQueue,
@@ -20,14 +21,18 @@ bilateral_filter_cl(cl_mem srcPtr, RppiSize srcSize,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        cl_kernel_initializer(  theQueue, "bilateral_filter.cl",
-                                "bilateral_filter_planar", theProgram, theKernel);
+        CreateProgramFromBinary(theQueue,"bilateral_filter.cl","bilateral_filter.cl.bin","bilateral_filter_planar",theProgram,theKernel);
+        clRetainKernel(theKernel); 
+        // cl_kernel_initializer(  theQueue, "bilateral_filter.cl",
+        //                         "bilateral_filter_planar", theProgram, theKernel);
 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        cl_kernel_initializer(  theQueue, "bilateral_filter.cl",
-                                "bilateral_filter_packed", theProgram, theKernel);
+        CreateProgramFromBinary(theQueue,"bilateral_filter.cl","bilateral_filter.cl.bin","bilateral_filter_packed",theProgram,theKernel);
+        clRetainKernel(theKernel); 
+        // cl_kernel_initializer(  theQueue, "bilateral_filter.cl",
+        //                         "bilateral_filter_packed", theProgram, theKernel);
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
@@ -35,14 +40,14 @@ bilateral_filter_cl(cl_mem srcPtr, RppiSize srcSize,
 
 
 
-    err  = clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
-    err |= clSetKernelArg(theKernel, 1, sizeof(cl_mem), &dstPtr);
-    err |= clSetKernelArg(theKernel, 2, sizeof(unsigned int), &srcSize.height);
-    err |= clSetKernelArg(theKernel, 3, sizeof(unsigned int), &srcSize.width);
-    err |= clSetKernelArg(theKernel, 4, sizeof(unsigned int), &channel);
-    err |= clSetKernelArg(theKernel, 5, sizeof(unsigned int), &filterSize);
-    err |= clSetKernelArg(theKernel, 6, sizeof(double), &sigmaI);
-    err |= clSetKernelArg(theKernel, 7, sizeof(double), &sigmaS);
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &filterSize);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(double), &sigmaI);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(double), &sigmaS);
 
 //----
     size_t gDim3[3];
