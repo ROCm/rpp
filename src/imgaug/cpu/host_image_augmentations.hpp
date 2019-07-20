@@ -651,15 +651,16 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         Rpp8u *srcPtr1,*srcPtr2;
-        srcPtr1=srcPtr + (srcSize.width * srcSize.height);
-        srcPtr2=srcPtr + (srcSize.width * srcSize.height*2);
+        if(channel>1)
+        {
+            srcPtr1=srcPtr + (srcSize.width * srcSize.height);
+            srcPtr2=srcPtr + (srcSize.width * srcSize.height*2);
+        }
         for (int i = 0; i < (srcSize.width * srcSize.height); i++)
         {
             Rpp32f check= *srcPtr + *srcPtr1 + *srcPtr2;
             if(check >= (240*3) && fogValue!=0)
-            {
-
-            }
+            {            }
             else if(check>=(170*3))
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr)  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
@@ -671,7 +672,7 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
                     *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
                     pixel = ((Rpp32f) *srcPtr2) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
                     *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
-                    srcPtr1++;srcPtr2++;
+				    srcPtr1++;srcPtr2++;
                 }
             }
             else if(check<=(85*3))
@@ -701,7 +702,7 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
                     *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
                     srcPtr1++;srcPtr2++;
                 }
-            } 
+            }
         }
     }
     else
@@ -749,6 +750,7 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
     return RPP_SUCCESS;
 
 }
+
 
 /**************** Rain ***************/
 template <typename T>
