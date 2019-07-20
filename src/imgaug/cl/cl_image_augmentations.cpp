@@ -434,14 +434,17 @@ snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
            RppiChnFormat chnFormat, unsigned int channel,
            cl_command_queue theQueue)
 {
+    std::cerr<<" Entering snow_cl \n";
     unsigned short counter=0;
     cl_int err;
     cl_kernel theKernel;
     cl_program theProgram;
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+        std::cerr<<"\n Snow Plannar \n";
         CreateProgramFromBinary(theQueue, "snow.cl","snow.bin",
                                 "snow_pln", theProgram, theKernel);
+        std::cerr<<"\n Returning back from planar";
         clRetainKernel(theKernel); 
 
     }
