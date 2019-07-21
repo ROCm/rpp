@@ -6,8 +6,8 @@
 
 template <typename T>
 RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    Rpp32f stdDev, unsigned int kernelSize,
-                    RppiChnFormat chnFormat, unsigned int channel)
+                    Rpp32f stdDev, Rpp32u kernelSize,
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (kernelSize % 2 == 0)
     {
@@ -21,7 +21,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     RppiSize srcSizeMod;
     srcSizeMod.width = srcSize.width + (2 * bound);
     srcSizeMod.height = srcSize.height + (2 * bound);
-    Rpp8u *srcPtrMod = (Rpp8u *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(Rpp8u));
+    T *srcPtrMod = (T *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
     
@@ -35,33 +35,44 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 template <typename T>
 RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                         Rpp32u new_min, Rpp32u new_max,
-                        RppiChnFormat chnFormat, unsigned int channel)
+                        RppiChnFormat chnFormat, Rpp32u channel)
 {
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp32f pixel, min, max;
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for(int c = 0; c < channel; c++)
         {
-            Rpp32f Min, Max;
-            Min = srcPtr[c * srcSize.height * srcSize.width];
-            Max = srcPtr[c * srcSize.height * srcSize.width];
+            srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
+            min = *srcPtrTemp;
+            max = *srcPtrTemp;
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                if (srcPtr[i + (c * srcSize.height * srcSize.width)] < Min)
+                if (*srcPtrTemp < min)
                 {
-                    Min = srcPtr[i + (c * srcSize.height * srcSize.width)];
+                    min = *srcPtrTemp;
                 }
-                if (srcPtr[i + (c * srcSize.height * srcSize.width)] > Max)
+                if (*srcPtrTemp > max)
                 {
-                    Max = srcPtr[i + (c * srcSize.height * srcSize.width)];
+                    max = *srcPtrTemp;
                 }
+                srcPtrTemp++;
             }
+
+            srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                Rpp32f pixel = (Rpp32f) srcPtr[i + (c * srcSize.height * srcSize.width)];
-                pixel = ((pixel - Min) * ((new_max - new_min) / (Max - Min))) + new_min;
+                pixel = (Rpp32f) (*srcPtrTemp);
+                pixel = ((pixel - min) * ((new_max - new_min) / (max - min))) + new_min;
                 pixel = (pixel < (Rpp32f)new_max) ? pixel : ((Rpp32f)new_max);
                 pixel = (pixel > (Rpp32f)new_min) ? pixel : ((Rpp32f)new_min);
-                dstPtr[i + (c * srcSize.height * srcSize.width)] = (Rpp8u) pixel;
+                *dstPtrTemp = (T) pixel;
+                srcPtrTemp++;
+                dstPtrTemp++;
             }
         }
     }
@@ -69,27 +80,33 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     {
         for(int c = 0; c < channel; c++)
         {
-            Rpp32f Min, Max;
-            Min = srcPtr[c];
-            Max = srcPtr[c];
+            srcPtrTemp = srcPtr + c;
+            dstPtrTemp = dstPtr + c;
+            min = *srcPtrTemp;
+            max = *srcPtrTemp;
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                if (srcPtr[(channel * i) + c] < Min)
+                if (*srcPtrTemp < min)
                 {
-                    Min = srcPtr[(channel * i) + c];
+                    min = *srcPtrTemp;
                 }
-                if (srcPtr[(channel * i) + c] > Max)
+                if (*srcPtrTemp > max)
                 {
-                    Max = srcPtr[(channel * i) + c];
+                    max = *srcPtrTemp;
                 }
+                srcPtrTemp = srcPtrTemp + channel;
             }
+
+            srcPtrTemp = srcPtr + c;
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                Rpp32f pixel = (Rpp32f) srcPtr[(channel * i) + c];
-                pixel = ((pixel - Min) * ((new_max - new_min) / (Max - Min))) + new_min;
+                pixel = (Rpp32f) (*srcPtrTemp);
+                pixel = ((pixel - min) * ((new_max - new_min) / (max - min))) + new_min;
                 pixel = (pixel < (Rpp32f)new_max) ? pixel : ((Rpp32f)new_max);
                 pixel = (pixel > (Rpp32f)new_min) ? pixel : ((Rpp32f)new_min);
-                dstPtr[(channel * i) + c] = (Rpp8u) pixel;
+                *dstPtrTemp = (T) pixel;
+                srcPtrTemp = srcPtrTemp + channel;
+                dstPtrTemp = dstPtrTemp + channel;
             }
         }
     }
@@ -99,17 +116,25 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 /************ Brightness ************/
 
+
 template <typename T>
 RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                           Rpp32f alpha, Rpp32f beta, 
-                          RppiChnFormat chnFormat, unsigned int channel)
+                          RppiChnFormat chnFormat, Rpp32u channel)
 {
-    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp8u pixel;
+
+    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        Rpp32f pixel = ((Rpp32f) srcPtr[i]) * alpha + beta;
-        pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-        pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-        dstPtr[i] =(Rpp8u) pixel;
+        pixel = ((Rpp32f) (*srcPtrTemp)) * alpha + beta;
+        pixel = RPPPIXELCHECK(pixel);
+        *dstPtrTemp = (T) round(pixel);
+        srcPtrTemp++;
+        dstPtrTemp++;
     }
 
     return RPP_SUCCESS;
@@ -122,14 +147,22 @@ RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 template <typename T>
 RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                 Rpp32f gamma,
-                                RppiChnFormat chnFormat,   unsigned int channel)
+                                RppiChnFormat chnFormat, Rpp32u channel)
 {
-    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp8u pixel;
+
+    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        Rpp32f pixel = ((Rpp32f) srcPtr[i]) / 255;
+        pixel = ((Rpp32f) (*srcPtrTemp)) / 255.0;
         pixel = pow(pixel, gamma);
-        pixel *= 255;
-        dstPtr[i] =(Rpp8u) pixel;
+        pixel = pixel * 255.0;
+        *dstPtrTemp = (T) pixel;
+        srcPtrTemp++;
+        dstPtrTemp++;
     }
 
     return RPP_SUCCESS;
@@ -141,15 +174,15 @@ RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    unsigned int kernelSize, unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, 
-                    RppiChnFormat chnFormat, unsigned int channel)
+                    Rpp32u kernelSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (kernelSize % 2 == 0)
     {
         return RPP_ERROR;
     }
 
-    unsigned int bound = ((kernelSize - 1) / 2);
+    Rpp32u bound = ((kernelSize - 1) / 2);
 
     if ((RPPINRANGE(x1, bound, srcSize.width - 1 - bound) == 0) 
         || (RPPINRANGE(x2, bound, srcSize.width - 1 - bound) == 0) 
@@ -158,8 +191,6 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     {
         return RPP_ERROR;
     }
-
-
 
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
@@ -170,8 +201,6 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         srcPtrTemp++;
         dstPtrTemp++;
     }
-
-
 
     Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
 
@@ -200,12 +229,12 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 }
 
-/**************** Jitter Add ***************/
+/**************** Jitter ***************/
 
 template <typename T>
-RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    unsigned int maxJitterX, unsigned int maxJitterY, 
-                    RppiChnFormat chnFormat, unsigned int channel)
+RppStatus jitterAdd_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                    Rpp32u maxJitterX, Rpp32u maxJitterY, 
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
     if ((RPPINRANGE(maxJitterX, 0, srcSize.width - 1) == 0) 
         || (RPPINRANGE(maxJitterY, 0, srcSize.height - 1) == 0))
@@ -213,7 +242,7 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         return RPP_ERROR;
     }
 
-    Rpp8u *dstPtrForJitter = (Rpp8u *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp8u));
+    T *dstPtrForJitter = (T *)calloc(channel * srcSize.height * srcSize.width, sizeof(T));
 
     T *srcPtrTemp, *dstPtrTemp;
     T *srcPtrBeginJitter, *dstPtrBeginJitter;
@@ -256,8 +285,7 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             }
         }
 
-        
-        resize_crop_kernel_host<Rpp8u>(static_cast<Rpp8u*>(dstPtrForJitter), srcSize, static_cast<Rpp8u*>(dstPtr), srcSize,
+        resize_crop_kernel_host<T>(static_cast<T*>(dstPtrForJitter), srcSize, static_cast<T*>(dstPtr), srcSize,
                             maxJitterX, maxJitterY, srcSize.width - maxJitterX - 1, srcSize.height - maxJitterY - 1,
                             RPPI_CHN_PLANAR, channel);
     }
@@ -288,7 +316,7 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             srcPtrTemp += channeledJitterRangeX;
             dstPtrTemp += channeledJitterRangeX;
         }
-        resize_crop_kernel_host<Rpp8u>(static_cast<Rpp8u*>(dstPtrForJitter), srcSize, static_cast<Rpp8u*>(dstPtr), srcSize,
+        resize_crop_kernel_host<T>(static_cast<T*>(dstPtrForJitter), srcSize, static_cast<T*>(dstPtr), srcSize,
                             maxJitterX, maxJitterY, srcSize.width - maxJitterX - 1, srcSize.height - maxJitterY - 1,
                             RPPI_CHN_PACKED, channel);
     }
@@ -296,13 +324,13 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 }
 
-/**************** Occlusion Add ***************/
+/**************** Occlusion ***************/
 
 template <typename T>
-RppStatus occlusion_host(T* srcPtr1,RppiSize srcSize1,  T* srcPtr2, RppiSize srcSize2, T* dstPtr, 
+RppStatus occlusion_host(T* srcPtr1, RppiSize srcSize1, T* srcPtr2, RppiSize srcSize2, T* dstPtr, 
                             Rpp32u src1x1, Rpp32u src1y1, Rpp32u src1x2, Rpp32u src1y2, 
                             Rpp32u src2x1, Rpp32u src2y1, Rpp32u src2x2, Rpp32u src2y2, 
-                            RppiChnFormat chnFormat, unsigned int channel)
+                            RppiChnFormat chnFormat, Rpp32u channel)
 {
     RppiSize srcSize1SubImage, srcSize2SubImage, dstSizeSubImage;
     T *srcPtr1SubImage, *srcPtr2SubImage, *dstPtrSubImage;
@@ -375,70 +403,148 @@ RppStatus occlusion_host(T* srcPtr1,RppiSize srcSize1,  T* srcPtr2, RppiSize src
     return RPP_SUCCESS;
 }
 
-/**************** Snowy ***************/
+/**************** Snow ***************/
 
 template <typename T, typename U>
 RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f strength,
-                    RppiChnFormat chnFormat, unsigned channel, RppiFormat imageFormat)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (strength < 0 || strength > 1)
     {
         return RPP_ERROR;
     }
 
-    if (imageFormat == RGB)
-    {
-        Rpp32f *srcPtrHSL = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            compute_rgb_to_hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
-
-            Rpp32f *srcPtrHSLTemp;
-            srcPtrHSLTemp = srcPtrHSL + (2 * srcSize.height * srcSize.width);
-
-            for (int i = 0; i < srcSize.height * srcSize.width; i++)
-            {
-                if (*srcPtrHSLTemp < strength)
-                {
-                    *srcPtrHSLTemp *= 4;
-                }
-                if (*srcPtrHSLTemp > 1)
-                {
-                    *srcPtrHSLTemp = 1;
-                }
-                srcPtrHSLTemp++;
-            }
-
-            compute_hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PLANAR, 3);
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            compute_rgb_to_hsl_host(srcPtr, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
-
-            Rpp32f *srcPtrHSLTemp;
-            srcPtrHSLTemp = srcPtrHSL + 2;
-
-            for (int i = 0; i < srcSize.height * srcSize.width; i++)
-            {
-                if (*srcPtrHSLTemp < strength)
-                {
-                    *srcPtrHSLTemp *= 4;
-                }
-                if (*srcPtrHSLTemp > 1)
-                {
-                    *srcPtrHSLTemp = 1;
-                }
-                srcPtrHSLTemp = srcPtrHSLTemp + channel;
-            }
-
-            compute_hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtr, RPPI_CHN_PACKED, 3);
-        }
-    }
-    else
+    if (channel != 1 && channel != 3)
     {
         return RPP_ERROR;
     }
+
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    T *srcPtrRGB = (T *)calloc(3 * srcSize.height * srcSize.width, sizeof(T));
+    T *dstPtrRGB = (T *)calloc(3 * srcSize.height * srcSize.width, sizeof(T));
+    T *srcPtrRGBTemp, *dstPtrRGBTemp;
+    srcPtrRGBTemp = srcPtrRGB;
+    dstPtrRGBTemp = dstPtrRGB;
+
+    if (channel == 1)
+    {
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                srcPtrTemp = srcPtr;
+                for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+                {
+                    *srcPtrRGBTemp = *srcPtrTemp;
+                    srcPtrRGBTemp++;
+                    srcPtrTemp++;
+                }
+            }
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+            {
+                for (int c = 0; c < 3; c++)
+                {
+                    *srcPtrRGBTemp = *srcPtrTemp;
+                    srcPtrRGBTemp++;
+                }
+                srcPtrTemp++;
+            }
+        }
+    }
+    else if (channel == 3)
+    {
+        for (int i = 0; i < (3 * srcSize.height * srcSize.width); i++)
+        {
+            *srcPtrRGBTemp = *srcPtrTemp;
+            srcPtrRGBTemp++;
+            srcPtrTemp++;
+        }
+    }
+
+    Rpp32f *srcPtrHSL = (Rpp32f *)calloc(3 * srcSize.height * srcSize.width, sizeof(Rpp32f));
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        rgb_to_hsl_host(srcPtrRGB, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
+
+        Rpp32f *srcPtrHSLTemp;
+        srcPtrHSLTemp = srcPtrHSL + (2 * srcSize.height * srcSize.width);
+
+        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        {
+            if (*srcPtrHSLTemp < strength)
+            {
+                *srcPtrHSLTemp *= 4;
+            }
+            if (*srcPtrHSLTemp > 1)
+            {
+                *srcPtrHSLTemp = 1;
+            }
+            srcPtrHSLTemp++;
+        }
+
+        hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtrRGB, RPPI_CHN_PLANAR, 3);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        rgb_to_hsl_host(srcPtrRGB, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
+
+        Rpp32f *srcPtrHSLTemp;
+        srcPtrHSLTemp = srcPtrHSL + 2;
+
+        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        {
+            if (*srcPtrHSLTemp < strength)
+            {
+                *srcPtrHSLTemp *= 4;
+            }
+            if (*srcPtrHSLTemp > 1)
+            {
+                *srcPtrHSLTemp = 1;
+            }
+            srcPtrHSLTemp = srcPtrHSLTemp + channel;
+        }
+
+        hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtrRGB, RPPI_CHN_PACKED, 3);
+    }
+
+    if (channel == 1)
+    {
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+            {
+                *dstPtrTemp = *dstPtrRGBTemp;
+                dstPtrRGBTemp++;
+                dstPtrTemp++;
+            }
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+            {
+                *dstPtrTemp = *dstPtrRGBTemp;
+                dstPtrRGBTemp = dstPtrRGBTemp + 3;;
+                dstPtrTemp++;
+            }
+        }
+    }
+    else if (channel == 3)
+    {
+        for (int i = 0; i < (3 * srcSize.height * srcSize.width); i++)
+        {
+            *dstPtrTemp = *dstPtrRGBTemp;
+            dstPtrRGBTemp++;
+            dstPtrTemp++;
+        }
+    }
+
     return RPP_SUCCESS;
 }
 
@@ -559,13 +665,18 @@ template <typename T>
 RppStatus random_shadow_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                              Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
                              Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, 
-                             RppiChnFormat chnFormat, unsigned int channel)
+                             RppiChnFormat chnFormat, Rpp32u channel)
 {
     srand (time(NULL));
     RppiSize srcSizeSubImage, dstSizeSubImage, shadowSize;
     T *srcPtrSubImage, *dstPtrSubImage;
     
     compute_subimage_location_host(srcPtr, &srcPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
+
+    if (maxSizeX > srcSizeSubImage.width || maxSizeY > srcSizeSubImage.height)
+    {
+        return RPP_ERROR;
+    }
 
     compute_subimage_location_host(dstPtr, &dstPtrSubImage, srcSize, &dstSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
     
@@ -582,11 +693,11 @@ RppStatus random_shadow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     for (int shadow = 0; shadow < numberOfShadows; shadow++)
     {
-        shadowSize.height = rand() % (srcSizeSubImage.height / 2);
-        shadowSize.width = rand() % (srcSizeSubImage.width / 2);
+        shadowSize.height = rand() % maxSizeY;
+        shadowSize.width = rand() % maxSizeX;
         Rpp32u shadowPosI = rand() % (srcSizeSubImage.height - shadowSize.height);
         Rpp32u shadowPosJ = rand() % (srcSizeSubImage.width - shadowSize.width);
-        
+
         if (chnFormat == RPPI_CHN_PLANAR)
         {
             Rpp32u remainingElementsInRow = srcSize.width - shadowSize.width;
@@ -838,7 +949,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
 template <typename T>
 RppStatus random_crop_letterbox_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                                      Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
-                                     RppiChnFormat chnFormat, unsigned int channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel)
 {
     if ((RPPINRANGE(x1, 0, srcSize.width - 1) == 0) 
         || (RPPINRANGE(x2, 0, srcSize.width - 1) == 0) 
@@ -908,74 +1019,22 @@ RppStatus random_crop_letterbox_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rpp
 template <typename T, typename U>
 RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f exposureFactor,
-                    RppiChnFormat chnFormat, unsigned channel, RppiFormat imageFormat)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
-    Rpp32f pixel;
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    if (imageFormat == RGB)
+    Rpp32f pixel;
+
+    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
-        {
-            pixel = *srcPtrTemp * (pow(2, exposureFactor));
-            pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-            pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-            *dstPtrTemp = (T) round(pixel);
-            dstPtrTemp++;
-            srcPtrTemp++;
-        }
-    }
-    else if (imageFormat == HSV)
-    {
-        exposureFactor = RPPABS(exposureFactor);
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            for (int i = 0; i < ((channel - 1) * (srcSize.width * srcSize.height)); i++)
-            {
-                *dstPtrTemp = *srcPtrTemp;
-                srcPtrTemp++;
-                dstPtrTemp++;
-            }
-            for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-            {
-                pixel = *srcPtrTemp * exposureFactor;
-                pixel = (pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1);
-                pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                *dstPtrTemp = pixel;
-                dstPtrTemp++;
-                srcPtrTemp++;
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            int count = 0;
-            for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
-            {
-                if (count == 2)
-                {
-                    pixel = *srcPtrTemp * exposureFactor;
-                    pixel = (pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1);
-                    pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                    *dstPtrTemp = pixel;
-                    dstPtrTemp++;
-                    srcPtrTemp++;
-                    count = 0;
-                }
-                else
-                {
-                    *dstPtrTemp = *srcPtrTemp;
-                    dstPtrTemp++;
-                    srcPtrTemp++;
-                    count++;
-                }
-            }
-        }
+        pixel = ((Rpp32f) (*srcPtrTemp)) * (pow(2, exposureFactor));
+        pixel = RPPPIXELCHECK(pixel);
+        *dstPtrTemp = (T) round(pixel);
+        dstPtrTemp++;
+        srcPtrTemp++;
     }
 
     return RPP_SUCCESS;
 }
-
-
-

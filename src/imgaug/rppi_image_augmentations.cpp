@@ -223,7 +223,7 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 
 
 // // ----------------------------------------
-// Host jitterAdd functions calls 
+// Host jitter functions calls 
 // ----------------------------------------
 
 
@@ -499,19 +499,19 @@ rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f r
 // ----------------------------------------
 
 
-// RppStatus
-// rppi_snow_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue)
-// {
+RppStatus
+rppi_snow_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue)
+{
 
-//  	 validate_image_size(srcSize);
-//  	 validate_float_range( 0, 1, snowValue);
-// 	 snow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-// 			srcSize,
-// 			static_cast<Rpp8u*>(dstPtr), 
-// 			snowValue,
-// 			RPPI_CHN_PLANAR, 1,RGB);
-// 	return RPP_SUCCESS;
-// }
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 1, snowValue);
+	 snow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			snowValue,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
 
 RppStatus
 rppi_snow_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue)
@@ -523,7 +523,7 @@ rppi_snow_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			snowValue,
-			RPPI_CHN_PLANAR, 3,RGB);
+			RPPI_CHN_PLANAR, 3);
 	return RPP_SUCCESS;
 }
 
@@ -537,7 +537,7 @@ rppi_snow_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			snowValue,
-			RPPI_CHN_PACKED, 3,RGB);
+			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }
  
@@ -912,68 +912,19 @@ rppi_occlusion_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,
 // Host exposure functions calls 
 // ----------------------------------------
 
-// RppStatus
-// rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-//                          Rpp32f exposureFactor)
-// {
+RppStatus
+rppi_exposure_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f exposureValue)
+{
 
-//     exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-//                            exposureFactor,
-//                            RPPI_CHN_PLANAR, 3, RGB);
-//     return RPP_SUCCESS;
-// }
-
-// RppStatus
-// rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-//                          Rpp32f exposureFactor)
-// {
-
-//     exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-//                            exposureFactor,
-//                            RPPI_CHN_PACKED, 3, RGB);
-//     return RPP_SUCCESS;
-// }
-
-// RppStatus
-// rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-//                          Rpp32f exposureFactor)
-// {
-
-//     exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-//                            exposureFactor,
-//                            RPPI_CHN_PLANAR, 3, HSV);
-//     return RPP_SUCCESS;
-// }
-
-// RppStatus
-// rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-//                          Rpp32f exposureFactor)
-// {
-
-//     exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-//                            exposureFactor,
-//                            RPPI_CHN_PACKED, 3, HSV);
-//     return RPP_SUCCESS;
-// }
- 
-
-
-
-
-
-// RppStatus
-// rppi_exposure_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f exposureValue)
-// {
-
-//  	 validate_image_size(srcSize);
-//  	 validate_float_range( -4, 4, exposureValue);
-// 	 exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-// 			srcSize,
-// 			static_cast<Rpp8u*>(dstPtr), 
-// 			exposureValue,
-// 			RPPI_CHN_PLANAR, 1,RGB);
-// 	return RPP_SUCCESS;
-// }
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( -4, 4, exposureValue);
+	 exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			exposureValue,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
 
 RppStatus
 rppi_exposure_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f exposureValue)
@@ -985,7 +936,7 @@ rppi_exposure_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			exposureValue,
-			RPPI_CHN_PLANAR, 3,RGB);
+			RPPI_CHN_PLANAR, 3);
 	return RPP_SUCCESS;
 }
 
@@ -999,7 +950,7 @@ rppi_exposure_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			exposureValue,
-			RPPI_CHN_PACKED, 3,RGB);
+			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }
 
