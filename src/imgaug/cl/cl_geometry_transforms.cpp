@@ -367,8 +367,8 @@ random_crop_letterbox_cl(  cl_mem srcPtr, RppiSize srcSize,
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &y2);
     
     size_t gDim3[3];
-    gDim3[0] = dstSize.width;
-    gDim3[1] = dstSize.height;
+    gDim3[0] = x2-x1+6;
+    gDim3[1] = y2-y1+6;
     gDim3[2] = channel;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     

@@ -191,18 +191,18 @@ snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
            RppiChnFormat chnFormat, unsigned int channel,
            cl_command_queue theQueue);
 RppStatus  
-noise_add_gaussian_cl(cl_mem srcPtr,
+gaussianNoise_cl(cl_mem srcPtr,
                 RppiSize srcSize,
                 cl_mem dstPtr, 
-                RppiNoise noiseType,RppiGaussParameter *noiseParameter,
+                Rpp32f mean,Rpp32f sigma,
                 RppiChnFormat chnFormat, unsigned int channel, 
                 cl_command_queue theQueue);
 
 RppStatus
-noise_add_snp_cl(cl_mem srcPtr, 
+snpNoise_cl(cl_mem srcPtr, 
                 RppiSize srcSize,
                 cl_mem dstPtr, 
-                RppiNoise noiseType,Rpp32f *noiseParameter,
+                Rpp32f noiseProbability,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
@@ -227,7 +227,7 @@ exposure_cl(    cl_mem srcPtr, RppiSize srcSize,
 
 RppStatus
 rain_cl(    cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight,
+                cl_mem dstPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f transparency,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
