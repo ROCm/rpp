@@ -33,9 +33,7 @@ __kernel void snp_pkd(  __global unsigned char* input,
                     const unsigned int height,
                     const unsigned int width,
                     const unsigned int channel,
-                    const unsigned int initialPixel,
-                    const unsigned int pixelDistance,
-                    __global unsigned char* randPtr
+                    const unsigned int pixelDistance
 )
 {
     int id_x = get_global_id(0);
@@ -69,9 +67,7 @@ __kernel void snp_pln(  __global unsigned char* input,
                     const unsigned int height,
                     const unsigned int width,
                     const unsigned int channel,
-                    const unsigned int initialPixel,
-                    const unsigned int pixelDistance,
-                    __global unsigned char* randPtr
+                    const unsigned int pixelDistance
 )
 {
     int id_x = get_global_id(0);

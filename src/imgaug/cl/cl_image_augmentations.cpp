@@ -371,10 +371,6 @@ snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     int ctr=0; 
     Rpp32u noisePixel= (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
     const Rpp32u pixelDistance= (srcSize.width * srcSize.height) / noisePixel;
-    int random[pixelDistance];
-    for(int i=0;i<pixelDistance;i++)
-        random[i]=rand() % pixelDistance;
-    Rpp32u initialPixel= rand() % pixelDistance;
     cl_kernel theKernel;
     cl_program theProgram;
     if(chnFormat == RPPI_CHN_PACKED)
@@ -387,16 +383,6 @@ snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
         CreateProgramFromBinary(theQueue,"noise.cl","noise.cl.bin","snp_pln",theProgram,theKernel);
         clRetainKernel(theKernel);
     }
-    cl_context theContext;
-    clGetCommandQueueInfo(  theQueue,
-                            CL_QUEUE_CONTEXT,
-                            sizeof(cl_context), &theContext, NULL);
-    cl_mem randPtr = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
-                                    sizeof(int)*pixelDistance, NULL, NULL);
-    clEnqueueWriteBuffer(theQueue, randPtr, CL_TRUE, 0,
-                                   sizeof(int)*pixelDistance,
-                                   random, 0, NULL, NULL);
-
     // cl_mem d_a;
     // int bytes=pixelDistance*
     // d_a = clCreateBuffer(theContext, CL_MEM_READ_ONLY, bytes, NULL, NULL);
@@ -407,9 +393,7 @@ snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &initialPixel);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &randPtr);
     
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
