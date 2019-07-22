@@ -430,7 +430,7 @@ snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         CreateProgramFromBinary(theQueue, "snow.cl","snow.bin",
-                                "snow_pln", theProgram, theKernel);
+                                "snow_pkd", theProgram, theKernel);
         clRetainKernel(theKernel); 
 
     }
