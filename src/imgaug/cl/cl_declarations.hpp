@@ -227,7 +227,7 @@ exposure_cl(    cl_mem srcPtr, RppiSize srcSize,
 
 RppStatus
 rain_cl(    cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, Rpp32f rainValue, Rpp32u rainWidth, Rpp32u rainHeight,
+                cl_mem dstPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f transparency,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue);
 
