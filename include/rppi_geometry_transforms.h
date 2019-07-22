@@ -148,19 +148,19 @@ rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPt
 
 RppStatus
 rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
-                                  RppPtr_t affine);
+                                  Rpp32f* affine);
 
 RppStatus
 rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine);
+                              Rpp32f* affine);
 
 RppStatus
 rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine);
+                              Rpp32f* affine);
 
 RppStatus
 rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine);
+                              Rpp32f* affine);
 
 
 
