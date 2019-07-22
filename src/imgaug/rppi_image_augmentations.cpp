@@ -1432,6 +1432,8 @@ rppi_snow_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f sn
 
 		cl_context theContext;
 		cl_int err;
+		size_t bytes1C = sizeof(unsigned char)*srcSize.width * srcSize.height;
+		size_t bytes3C = sizeof(unsigned char)*srcSize.width * srcSize.height * 3;
 		clGetCommandQueueInfo(  static_cast<cl_command_queue>(rppHandle),
 								CL_QUEUE_CONTEXT,
 								sizeof(cl_context), &theContext, NULL);
@@ -1442,12 +1444,14 @@ rppi_snow_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f sn
 		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C, 0, 0,
 									sizeof(unsigned char)*srcSize.width*srcSize.height,
 							        0, NULL, NULL);
-		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C, 0, srcSize.width*srcSize.height,
-									sizeof(unsigned char)*srcSize.width*srcSize.height,
-							        0, NULL, NULL);
-		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C, 0, srcSize.width*srcSize.height * 2,
-									sizeof(unsigned char)*srcSize.width*srcSize.height,
-							        0, NULL, NULL);
+		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C,
+								 0, sizeof(unsigned char) * srcSize.width*srcSize.height,
+								 sizeof(unsigned char)*srcSize.width*srcSize.height,
+							     0, NULL, NULL);
+		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C,
+								  0, sizeof(unsigned char) * srcSize.width*srcSize.height * 2,
+								  sizeof(unsigned char)*srcSize.width*srcSize.height,
+							      0, NULL, NULL);
 		snow_cl(src3C, 
 				srcSize,
 				dst3C, 
@@ -1455,11 +1459,9 @@ rppi_snow_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f sn
 				RPPI_CHN_PLANAR, 1,
 				static_cast<cl_command_queue>(rppHandle));
 		
-		std::cerr<<"\n returning from snow_cl";
 		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), dst3C, static_cast<cl_mem>(dstPtr),  0, 0,
 									sizeof(unsigned char)*srcSize.width*srcSize.height,
 							        0, NULL, NULL);
-		std::cerr<<"\n clEnqueueCopyBuffer completed";
  	 } 
 #elif defined (HIP_COMPILE) 
  	 { 
