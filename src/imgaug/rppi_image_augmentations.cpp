@@ -378,7 +378,7 @@ rppi_fog_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f f
  	validate_float_min(0, stdDev);
 	unsigned int kernelSize = 5;
     if(fogValue!=0)
-        blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+	blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
                 srcSize,
                 static_cast<Rpp8u*>(dstPtr), 
                 stdDev,
@@ -1470,28 +1470,54 @@ rppi_rain_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f ra
 // ----------------------------------------
 
 
-// RppStatus
-// rppi_snow_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue, RppHandle_t rppHandle) 
-// {
+RppStatus
+rppi_snow_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue, RppHandle_t rppHandle) 
+{
 
-//  	 validate_image_size(srcSize);
-//  	 validate_float_range( 0, 1, snowValue);
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 1, snowValue);
+#ifdef OCL_COMPILE
+ 	 {
 
-// #ifdef OCL_COMPILE
-//  	 {
-//  	 snow_cl(static_cast<cl_mem>(srcPtr), 
-// 			srcSize,
-// 			static_cast<cl_mem>(dstPtr), 
-// 			snowValue,
-// 			RPPI_CHN_PLANAR, 1,
-// 			static_cast<cl_command_queue>(rppHandle));
-//  	 } 
-// #elif defined (HIP_COMPILE) 
-//  	 { 
-//  	 } 
-// #endif //BACKEND 
-// 		return RPP_SUCCESS;
-// }
+		cl_context theContext;
+		cl_int err;
+		size_t bytes1C = sizeof(unsigned char)*srcSize.width * srcSize.height;
+		size_t bytes3C = sizeof(unsigned char)*srcSize.width * srcSize.height * 3;
+		clGetCommandQueueInfo(  static_cast<cl_command_queue>(rppHandle),
+								CL_QUEUE_CONTEXT,
+								sizeof(cl_context), &theContext, NULL);
+		cl_mem src3C = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+										sizeof(unsigned char)*srcSize.width * srcSize.height * 3, NULL, NULL);
+		cl_mem dst3C = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
+										sizeof(unsigned char)*srcSize.width * srcSize.height * 3, NULL, NULL);
+		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C, 0, 0,
+									sizeof(unsigned char)*srcSize.width*srcSize.height,
+							        0, NULL, NULL);
+		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C,
+								 0, sizeof(unsigned char) * srcSize.width*srcSize.height,
+								 sizeof(unsigned char)*srcSize.width*srcSize.height,
+							     0, NULL, NULL);
+		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C,
+								  0, sizeof(unsigned char) * srcSize.width*srcSize.height * 2,
+								  sizeof(unsigned char)*srcSize.width*srcSize.height,
+							      0, NULL, NULL);
+		snow_cl(src3C, 
+				srcSize,
+				dst3C, 
+				snowValue,
+				RPPI_CHN_PLANAR, 1,
+				static_cast<cl_command_queue>(rppHandle));
+		
+		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), dst3C, static_cast<cl_mem>(dstPtr),  0, 0,
+									sizeof(unsigned char)*srcSize.width*srcSize.height,
+							        0, NULL, NULL);
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
 
 RppStatus
 rppi_snow_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue, RppHandle_t rppHandle) 
