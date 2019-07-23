@@ -511,6 +511,8 @@ rppi_random_shadow_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
  	 validate_unsigned_int_min(1, &numberOfShadows);
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 random_shadow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -535,6 +537,8 @@ rppi_random_shadow_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
  	 validate_unsigned_int_min(1, &numberOfShadows);
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 random_shadow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -559,6 +563,8 @@ rppi_random_shadow_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
  	 validate_unsigned_int_min(1, &numberOfShadows);
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 random_shadow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -638,6 +644,8 @@ rppi_pixelate_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 Rpp32u kernelSize = 3;
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
@@ -660,6 +668,8 @@ rppi_pixelate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 Rpp32u kernelSize = 3;
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -682,6 +692,8 @@ rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 Rpp32u kernelSize = 3;
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -709,6 +721,8 @@ rppi_random_crop_letterbox_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -731,6 +745,8 @@ rppi_random_crop_letterbox_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -753,6 +769,8 @@ rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 	 random_crop_letterbox_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -784,6 +802,10 @@ rppi_occlusion_u8_pln1_host(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,
  	 validate_unsigned_int_range( 0, srcSize1.height - 1, &src2y1);
  	 validate_unsigned_int_range( 0, srcSize1.width - 1, &src2x2);
  	 validate_unsigned_int_range( 0, srcSize1.height - 1,&src2y2);
+	 validate_unsigned_int_max(src1x2,&src1x1);
+	 validate_unsigned_int_max(src1y2,&src1y1);
+	 validate_unsigned_int_max(src2x2,&src2x1);
+	 validate_unsigned_int_max(src2y2,&src2y1);
 	 occlusion_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			srcSize1,
 			static_cast<Rpp8u*>(srcPtr2), 
@@ -815,6 +837,10 @@ rppi_occlusion_u8_pln3_host(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,
  	 validate_unsigned_int_range( 0, srcSize1.height - 1, &src2y1);
  	 validate_unsigned_int_range( 0, srcSize1.width - 1, &src2x2);
  	 validate_unsigned_int_range( 0, srcSize1.height - 1,&src2y2);
+	 validate_unsigned_int_max(src1x2,&src1x1);
+	 validate_unsigned_int_max(src1y2,&src1y1);
+	 validate_unsigned_int_max(src2x2,&src2x1);
+	 validate_unsigned_int_max(src2y2,&src2y1);
 	 occlusion_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			srcSize1,
 			static_cast<Rpp8u*>(srcPtr2), 
@@ -846,6 +872,10 @@ rppi_occlusion_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,
  	 validate_unsigned_int_range( 0, srcSize1.height - 1, &src2y1);
  	 validate_unsigned_int_range( 0, srcSize1.width - 1, &src2x2);
  	 validate_unsigned_int_range( 0, srcSize1.height - 1,&src2y2);
+	 validate_unsigned_int_max(src1x2,&src1x1);
+	 validate_unsigned_int_max(src1y2,&src1y1);
+	 validate_unsigned_int_max(src2x2,&src2x1);
+	 validate_unsigned_int_max(src2y2,&src2y1);
 	 occlusion_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			srcSize1,
 			static_cast<Rpp8u*>(srcPtr2), 
@@ -1413,6 +1443,8 @@ rppi_random_shadow_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
  	 validate_unsigned_int_min(1, &numberOfShadows);
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -1446,7 +1478,8 @@ rppi_random_shadow_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
  	 validate_unsigned_int_min(1, &numberOfShadows);
-
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 #ifdef OCL_COMPILE
  	 {
  	 random_shadow_cl(static_cast<cl_mem>(srcPtr), 
@@ -1479,7 +1512,8 @@ rppi_random_shadow_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
  	 validate_unsigned_int_min(1, &numberOfShadows);
-
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 #ifdef OCL_COMPILE
  	 {
  	 random_shadow_cl(static_cast<cl_mem>(srcPtr), 
@@ -1594,6 +1628,8 @@ rppi_pixelate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 Rpp32u kernelSize = 3;
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 #ifdef OCL_COMPILE
  	 {
  	 pixelate_cl(static_cast<cl_mem>(srcPtr), 
@@ -1624,6 +1660,8 @@ rppi_pixelate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 Rpp32u kernelSize = 3;
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -1655,6 +1693,8 @@ rppi_pixelate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 Rpp32u kernelSize = 3;
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -1691,7 +1731,8 @@ rppi_random_crop_letterbox_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 #ifdef OCL_COMPILE
  	 {
  	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
@@ -1722,7 +1763,8 @@ rppi_random_crop_letterbox_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 #ifdef OCL_COMPILE
  	 {
  	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
@@ -1753,7 +1795,8 @@ rppi_random_crop_letterbox_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-
+	 validate_unsigned_int_max(x2,&x1);
+	 validate_unsigned_int_max(y2,&y1);
 #ifdef OCL_COMPILE
  	 {
  	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
@@ -1793,6 +1836,10 @@ rppi_occlusion_u8_pln1_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
  	 validate_unsigned_int_range( 0, srcSize1.height - 1, &src2y1);
  	 validate_unsigned_int_range( 0, srcSize1.width - 1, &src2x2);
  	 validate_unsigned_int_range( 0, srcSize1.height - 1,&src2y2);
+	 validate_unsigned_int_max(src1x2,&src1x1);
+	 validate_unsigned_int_max(src1y2,&src1y1);
+	 validate_unsigned_int_max(src2x2,&src2x1);
+	 validate_unsigned_int_max(src2y2,&src2y1);
 
 #ifdef OCL_COMPILE
  	 {
@@ -1835,7 +1882,10 @@ rppi_occlusion_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
  	 validate_unsigned_int_range( 0, srcSize1.height - 1, &src2y1);
  	 validate_unsigned_int_range( 0, srcSize1.width - 1, &src2x2);
  	 validate_unsigned_int_range( 0, srcSize1.height - 1,&src2y2);
-
+	 validate_unsigned_int_max(src1x2,&src1x1);
+	 validate_unsigned_int_max(src1y2,&src1y1);
+	 validate_unsigned_int_max(src2x2,&src2x1);
+	 validate_unsigned_int_max(src2y2,&src2y1);
 #ifdef OCL_COMPILE
  	 {
  	 occlusion_cl(static_cast<cl_mem>(srcPtr1), 
@@ -1875,6 +1925,10 @@ rppi_occlusion_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
  	 validate_unsigned_int_range( 0, srcSize1.height - 1, &src2y1);
  	 validate_unsigned_int_range( 0, srcSize1.width - 1, &src2x2);
  	 validate_unsigned_int_range( 0, srcSize1.height - 1,&src2y2);
+	 validate_unsigned_int_max(src1x2,&src1x1);
+	 validate_unsigned_int_max(src1y2,&src1y1);
+	 validate_unsigned_int_max(src2x2,&src2x1);
+	 validate_unsigned_int_max(src2y2,&src2y1);
 
 #ifdef OCL_COMPILE
  	 {
