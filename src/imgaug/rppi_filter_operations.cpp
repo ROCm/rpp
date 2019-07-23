@@ -27,9 +27,9 @@ rppi_bilateral_filter_u8_pln1_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, filterSize);
- 	 validate_float_range( 0, 20, sigmaI);
- 	 validate_float_range( 0, 20, sigmaS);
+ 	 validate_unsigned_int_min(0,&filterSize);
+ 	 validate_double_range( 0, 20, &sigmaI);
+ 	 validate_double_range( 0, 20, &sigmaS);
 	 bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -45,9 +45,9 @@ rppi_bilateral_filter_u8_pln3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, filterSize);
- 	 validate_float_range( 0, 20, sigmaI);
- 	 validate_float_range( 0, 20, sigmaS);
+ 	 validate_unsigned_int_min(0,&filterSize);
+ 	 validate_double_range( 0, 20, &sigmaI);
+ 	 validate_double_range( 0, 20, &sigmaS);
 	 bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -63,9 +63,9 @@ rppi_bilateral_filter_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t ds
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, filterSize);
- 	 validate_float_range( 0, 20, sigmaI);
- 	 validate_float_range( 0, 20, sigmaS);
+ 	 validate_unsigned_int_min(0,&filterSize);
+ 	 validate_double_range( 0, 20, &sigmaI);
+ 	 validate_double_range( 0, 20, &sigmaS);
 	 bilateral_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -119,9 +119,9 @@ rppi_bilateral_filter_u8_pln1_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, filterSize);
- 	 validate_float_range( 0, 20, sigmaI);
- 	 validate_float_range( 0, 20, sigmaS);
+ 	 validate_unsigned_int_min(0,&filterSize);
+ 	 validate_double_range( 0, 20, &sigmaI);
+ 	 validate_double_range( 0, 20, &sigmaS);
 
 #ifdef OCL_COMPILE
  	 {
@@ -146,9 +146,9 @@ rppi_bilateral_filter_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, filterSize);
- 	 validate_float_range( 0, 20, sigmaI);
- 	 validate_float_range( 0, 20, sigmaS);
+ 	 validate_unsigned_int_min(0,&filterSize);
+ 	 validate_double_range( 0, 20, &sigmaI);
+ 	 validate_double_range( 0, 20, &sigmaS);
 
 #ifdef OCL_COMPILE
  	 {
@@ -173,9 +173,9 @@ rppi_bilateral_filter_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_min(0, filterSize);
- 	 validate_float_range( 0, 20, sigmaI);
- 	 validate_float_range( 0, 20, sigmaS);
+ 	 validate_unsigned_int_min(0,&filterSize);
+ 	 validate_double_range( 0, 20, &sigmaI);
+ 	 validate_double_range( 0, 20, &sigmaS);
 
 #ifdef OCL_COMPILE
  	 {
