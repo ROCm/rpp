@@ -4,7 +4,7 @@
 
 template <typename T, typename U>
 RppStatus absolute_difference_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+                                   RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
     U *srcPtr2Temp;
@@ -34,7 +34,7 @@ RppStatus absolute_difference_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* 
 template <typename T, typename U>
 RppStatus accumulate_weighted_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
                                    Rpp32f alpha,
-                                   Rpp32u channel)
+                                   RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp;
     U *srcPtr2Temp;
@@ -60,7 +60,7 @@ RppStatus accumulate_weighted_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
 
 template <typename T, typename U>
 RppStatus accumulate_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
-                                   Rpp32u channel)
+                          RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp;
     U *srcPtr2Temp;
@@ -86,7 +86,7 @@ RppStatus accumulate_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
 
 template <typename T, typename U>
 RppStatus add_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+                   RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
     U *srcPtr2Temp;
@@ -114,7 +114,7 @@ RppStatus add_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T, typename U>
 RppStatus subtract_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+                        RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
     U *srcPtr2Temp;
