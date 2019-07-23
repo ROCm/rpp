@@ -369,16 +369,6 @@ rppi_snpNoise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
 RppStatus
 rppi_snpNoise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability);
 
-RppStatus
-rppi_gaussianNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma);
-
-RppStatus
-rppi_gaussianNoise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma);
-
-RppStatus
-rppi_gaussianNoise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma);
-
-
 
 // ----------------------------------------
 // GPU blur functions declaration 
@@ -751,15 +741,6 @@ rppi_snpNoise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rp
 
 RppStatus
 rppi_snpNoise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle);
-
-RppStatus
-rppi_gaussianNoise_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma, RppHandle_t rppHandle);
-
-RppStatus
-rppi_gaussianNoise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma, RppHandle_t rppHandle);
-
-RppStatus
-rppi_gaussianNoise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f mean, Rpp32f sigma, RppHandle_t rppHandle);
 
 //------------------------------------
 //Histogram Balance
