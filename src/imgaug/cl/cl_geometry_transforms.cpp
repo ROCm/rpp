@@ -301,14 +301,20 @@ lens_correction_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     {std::cerr << "Internal error: Unknown Channel format";}
     if (strength == 0)
         strength = 0.000001;
+    float halfWidth = (float)srcSize.width / 2.0;
+    float halfHeight = (float)srcSize.height / 2.0;
+    float correctionRadius = (float)sqrt((float)srcSize.width * srcSize.width + srcSize.height * srcSize.height) / (float)strength;
     //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &strength);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &zoom);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &halfWidth);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &halfHeight);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &correctionRadius);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &strength);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &zoom);
     //----
 
     size_t gDim3[3];

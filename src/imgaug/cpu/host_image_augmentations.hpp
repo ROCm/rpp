@@ -650,42 +650,62 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         Rpp8u *srcPtr1,*srcPtr2;
-        srcPtr1=srcPtr + (srcSize.width * srcSize.height);
-        srcPtr2=srcPtr + (srcSize.width * srcSize.height*2);
+        if(channel>1)
+        {
+            srcPtr1=srcPtr + (srcSize.width * srcSize.height);
+            srcPtr2=srcPtr + (srcSize.width * srcSize.height*2);
+        }
         for (int i = 0; i < (srcSize.width * srcSize.height); i++)
         {
-            Rpp32f check= *srcPtr + *srcPtr1 + *srcPtr2;
-            if(check >= (240*3) && fogValue!=0)
+            Rpp32f check= *srcPtr;
+            if(channel>1) 
+            {
+                check+= *srcPtr1 + *srcPtr2;
+                check/=3;
+            }
+            if(check >= (240) && fogValue!=0)
             {            }
-            else if(check>=(170*3))
+            else if(check>=(170))
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr)  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
                 *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr1) * (1.5 + fogValue) + (7*fogValue);
-                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr2) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
-                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
-				srcPtr++;srcPtr1++;srcPtr2++;
+                srcPtr++;
+                if(channel>1)
+                {
+                    pixel = ((Rpp32f) *srcPtr1) * (1.5 + fogValue) + (7*fogValue);
+                    *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    pixel = ((Rpp32f) *srcPtr2) * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
+                    *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+				    srcPtr1++;srcPtr2++;
+                }
             }
-            else if(check<=(85*3))
+            else if(check<=(85))
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
                 *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,2)) + (130*fogValue);
-                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
-                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
-				srcPtr++;srcPtr1++;srcPtr2++;
+                srcPtr++;
+                if(channel>1)
+                {
+                    pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,2)) + (130*fogValue);
+                    *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
+                    *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    srcPtr1++;srcPtr2++;
+                }
             }
             else
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
                 *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
-                *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
-                pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
-                *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
-				srcPtr++;srcPtr1++;srcPtr2++;
+                srcPtr++;
+                if(channel>1)
+                {
+                    pixel = ((Rpp32f) *srcPtr1) * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
+                    *srcPtr1 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    pixel = ((Rpp32f) *srcPtr2) * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
+                    *srcPtr2 = (Rpp8u)RPPPIXELCHECK(pixel);
+                    srcPtr1++;srcPtr2++;
+                }
             }
         }
     }
@@ -734,6 +754,7 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
     return RPP_SUCCESS;
 
 }
+
 
 /**************** Rain ***************/
 template <typename T>
@@ -891,15 +912,13 @@ RppStatus random_crop_letterbox_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rpp
 template <typename T, typename U>
 RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f exposureFactor,
-                    RppiChnFormat chnFormat, unsigned channel, RppiFormat imageFormat)
+                    RppiChnFormat chnFormat, unsigned channel)
 {
     Rpp32f pixel;
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    if (imageFormat == RGB)
-    {
         for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
         {
             pixel = *srcPtrTemp * (pow(2, exposureFactor));
@@ -909,53 +928,6 @@ RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             dstPtrTemp++;
             srcPtrTemp++;
         }
-    }
-    else if (imageFormat == HSV)
-    {
-        exposureFactor = RPPABS(exposureFactor);
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            for (int i = 0; i < ((channel - 1) * (srcSize.width * srcSize.height)); i++)
-            {
-                *dstPtrTemp = *srcPtrTemp;
-                srcPtrTemp++;
-                dstPtrTemp++;
-            }
-            for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-            {
-                pixel = *srcPtrTemp * exposureFactor;
-                pixel = (pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1);
-                pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                *dstPtrTemp = pixel;
-                dstPtrTemp++;
-                srcPtrTemp++;
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            int count = 0;
-            for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
-            {
-                if (count == 2)
-                {
-                    pixel = *srcPtrTemp * exposureFactor;
-                    pixel = (pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1);
-                    pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-                    *dstPtrTemp = pixel;
-                    dstPtrTemp++;
-                    srcPtrTemp++;
-                    count = 0;
-                }
-                else
-                {
-                    *dstPtrTemp = *srcPtrTemp;
-                    dstPtrTemp++;
-                    srcPtrTemp++;
-                    count++;
-                }
-            }
-        }
-    }
 
     return RPP_SUCCESS;
 }
