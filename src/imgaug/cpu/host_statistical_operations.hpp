@@ -6,7 +6,7 @@
 
 template <typename T>
 RppStatus histogram_host(T* srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, 
-                         unsigned int channel)
+                         Rpp32u channel)
 {
     histogram_kernel_host(srcPtr, srcSize, outputHistogram, bins, channel);
 
@@ -18,9 +18,9 @@ RppStatus histogram_host(T* srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, R
 
 template <typename T>
 RppStatus equalize_histogram_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-                                  unsigned int channel)
+                                  Rpp32u channel)
 {
-    Rpp32u bins = (Rpp32u)(std::numeric_limits<unsigned char>::max()) + 1;
+    Rpp32u bins = (Rpp32u)(std::numeric_limits<Rpp8u>::max()) + 1;
     Rpp32u *histogram = (Rpp32u *) calloc(bins, sizeof(Rpp32u));
     T *lookUpTable = (T *) calloc (bins, sizeof(T));
     Rpp32u *histogramTemp;
