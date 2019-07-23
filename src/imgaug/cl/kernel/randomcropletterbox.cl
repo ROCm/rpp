@@ -19,8 +19,8 @@ __kernel void randomcropletterbox_planar(  __global unsigned char* input,
         return;
     int width=x2-x1+6;
     int height=y2-y1+6;
-    int displacement=((dstwidth-width)*id_y)+(channel*srcheight*srcwidth);
-    int OPpixIdx = (id_x) + (id_y * srcwidth) + (id_z * srcwidth * srcheight) + displacement;
+    int displacement=((dstwidth-width)*id_y)+(id_z*srcheight*srcwidth);
+    int OPpixIdx = (id_x) + (id_y * width) + (id_z * width * height) + displacement;
     int IPpixIdx = ((x1) + (y1 *srcwidth) + (id_z * srcwidth * srcheight)) + ((id_x) + (id_y * srcwidth));
     output[OPpixIdx] = input[IPpixIdx];
 

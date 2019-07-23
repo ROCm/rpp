@@ -245,6 +245,7 @@ RppStatus
 rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
                                   Rpp32f* affine)
 {
+	validate_image_size(srcSize);
     warp_affine_output_size_host(srcSize, dstSizePtr,
                                          affine);
     return RPP_SUCCESS;
@@ -255,6 +256,7 @@ RppStatus
 rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                               Rpp32f* affine)
 {
+	validate_image_size(srcSize);
     warp_affine_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
                             affine,RPPI_CHN_PLANAR, 1);
 
@@ -266,6 +268,7 @@ RppStatus
 rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                               Rpp32f* affine)
 {
+	validate_image_size(srcSize);
     warp_affine_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
                             affine,RPPI_CHN_PLANAR, 3);
 
@@ -277,6 +280,7 @@ RppStatus
 rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
                               Rpp32f* affine)
 {
+	validate_image_size(srcSize);
     warp_affine_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
                             affine,RPPI_CHN_PACKED, 3);
 

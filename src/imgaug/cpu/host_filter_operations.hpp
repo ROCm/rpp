@@ -5,7 +5,7 @@
 template <typename T>
 RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                 Rpp32u kernelSize, Rpp32f sigmaI, Rpp32f sigmaS,
-                                RppiChnFormat chnFormat, unsigned int channel)
+                                RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (kernelSize % 2 == 0)
     {
@@ -18,7 +18,7 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     RppiSize srcSizeMod;
     srcSizeMod.height = srcSize.height + (2 * bound);
     srcSizeMod.width = srcSize.width + (2 * bound);
-    Rpp8u *srcPtrMod = (Rpp8u *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(Rpp8u));
+    T *srcPtrMod = (T *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(T));
     
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
 
@@ -78,8 +78,9 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             srcPtrWindow += ((kernelSize - 1) * channel);
         }
     }
-
+    
     return RPP_SUCCESS;
+
 }
 
 
@@ -87,8 +88,8 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus box_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    unsigned int kernelSize,
-                    RppiChnFormat chnFormat, unsigned int channel)
+                    Rpp32u kernelSize,
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (kernelSize % 2 == 0)
     {
@@ -102,7 +103,7 @@ RppStatus box_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     RppiSize srcSizeMod;
     srcSizeMod.width = srcSize.width + (2 * bound);
     srcSizeMod.height = srcSize.height + (2 * bound);
-    Rpp8u *srcPtrMod = (Rpp8u *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(Rpp8u));
+    T *srcPtrMod = (T *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
     

@@ -223,7 +223,7 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 
 
 // // ----------------------------------------
-// Host jitterAdd functions calls 
+// Host jitter functions calls 
 // ----------------------------------------
 
 
@@ -231,6 +231,9 @@ RppStatus
 rppi_jitter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                              unsigned int maxJitterX, unsigned int maxJitterY)
 {
+	validate_image_size(srcSize);
+	validate_int_range(0,srcSize.width-1,maxJitterX);
+	validate_int_range(0,srcSize.height-1,maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                      maxJitterX, maxJitterY, 
                      RPPI_CHN_PLANAR, 1);
@@ -241,6 +244,9 @@ RppStatus
 rppi_jitter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                              unsigned int maxJitterX, unsigned int maxJitterY)
 {
+	validate_image_size(srcSize);
+	validate_int_range(0,srcSize.width-1,maxJitterX);
+	validate_int_range(0,srcSize.height-1,maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                      maxJitterX, maxJitterY, 
                      RPPI_CHN_PLANAR, 3);
@@ -251,6 +257,9 @@ RppStatus
 rppi_jitter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                              unsigned int maxJitterX, unsigned int maxJitterY)
 {
+	validate_image_size(srcSize);
+	validate_int_range(0,srcSize.width-1,maxJitterX);
+	validate_int_range(0,srcSize.height-1,maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                      maxJitterX, maxJitterY, 
                      RPPI_CHN_PACKED, 3);
@@ -321,6 +330,8 @@ rppi_jitter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_snpNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
+	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
     noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
                         noiseProbability,
                         RPPI_CHN_PLANAR, 1);
@@ -329,6 +340,8 @@ rppi_snpNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
 RppStatus
 rppi_snpNoise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
+	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
     noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
                         noiseProbability,
                         RPPI_CHN_PLANAR, 3);
@@ -337,6 +350,8 @@ rppi_snpNoise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
 RppStatus
 rppi_snpNoise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
+	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
     noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
                         noiseProbability,
                         RPPI_CHN_PACKED, 3);
@@ -499,19 +514,19 @@ rppi_rain_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f r
 // ----------------------------------------
 
 
-// RppStatus
-// rppi_snow_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue)
-// {
+RppStatus
+rppi_snow_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue)
+{
 
-//  	 validate_image_size(srcSize);
-//  	 validate_float_range( 0, 1, snowValue);
-// 	 snow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-// 			srcSize,
-// 			static_cast<Rpp8u*>(dstPtr), 
-// 			snowValue,
-// 			RPPI_CHN_PLANAR, 1,RGB);
-// 	return RPP_SUCCESS;
-// }
+ 	 validate_image_size(srcSize);
+ 	 validate_float_range( 0, 1, snowValue);
+	 snow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			snowValue,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
 
 RppStatus
 rppi_snow_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f snowValue)
@@ -523,7 +538,7 @@ rppi_snow_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			snowValue,
-			RPPI_CHN_PLANAR, 3,RGB);
+			RPPI_CHN_PLANAR, 3);
 	return RPP_SUCCESS;
 }
 
@@ -537,7 +552,7 @@ rppi_snow_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
 			snowValue,
-			RPPI_CHN_PACKED, 3,RGB);
+			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }
  
@@ -912,68 +927,6 @@ rppi_occlusion_u8_pkd3_host(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,
 // Host exposure functions calls 
 // ----------------------------------------
 
-// RppStatus
-// rppi_exposureRGB_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-//                          Rpp32f exposureFactor)
-// {
-
-//     exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-//                            exposureFactor,
-//                            RPPI_CHN_PLANAR, 3, RGB);
-//     return RPP_SUCCESS;
-// }
-
-// RppStatus
-// rppi_exposureRGB_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-//                          Rpp32f exposureFactor)
-// {
-
-//     exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-//                            exposureFactor,
-//                            RPPI_CHN_PACKED, 3, RGB);
-//     return RPP_SUCCESS;
-// }
-
-// RppStatus
-// rppi_exposureHSV_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-//                          Rpp32f exposureFactor)
-// {
-
-//     exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-//                            exposureFactor,
-//                            RPPI_CHN_PLANAR, 3, HSV);
-//     return RPP_SUCCESS;
-// }
-
-// RppStatus
-// rppi_exposureHSV_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-//                          Rpp32f exposureFactor)
-// {
-
-//     exposure_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), srcSize, static_cast<Rpp32f*>(dstPtr),
-//                            exposureFactor,
-//                            RPPI_CHN_PACKED, 3, HSV);
-//     return RPP_SUCCESS;
-// }
- 
-
-
-
-
-
-// RppStatus
-// rppi_exposure_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f exposureValue)
-// {
-
-//  	 validate_image_size(srcSize);
-//  	 validate_float_range( -4, 4, exposureValue);
-// 	 exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-// 			srcSize,
-// 			static_cast<Rpp8u*>(dstPtr), 
-// 			exposureValue,
-// 			RPPI_CHN_PLANAR, 1,RGB);
-// 	return RPP_SUCCESS;
-// }
 RppStatus
 rppi_exposure_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f exposureValue)
 {
@@ -2000,10 +1953,12 @@ rppi_occlusion_u8_pln1_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
 }
 
 RppStatus
-rppi_occlusion_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,RppiSize srcSize2,RppPtr_t dstPtr,Rpp32u src1x1,Rpp32u src1y1,Rpp32u src1x2,Rpp32u src1y2,Rpp32u src2x1,Rpp32u src2y1,Rpp32u src2x2,Rpp32u src2y2, RppHandle_t rppHandle) 
+rppi_occlusion_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,RppiSize srcSize2,RppPtr_t dstPtr,
+			Rpp32u src1x1,Rpp32u src1y1,Rpp32u src1x2,Rpp32u src1y2,Rpp32u src2x1,Rpp32u src2y1,
+			Rpp32u src2x2,Rpp32u src2y2, RppHandle_t rppHandle) 
 {
 
- 	 validate_image_size(srcSize1);
+ 	 /*validate_image_size(srcSize1);
  	 validate_image_size(srcSize2);
  	 validate_int_range( 0, srcSize1.width - 1, src1x1);
  	 validate_int_range( 0, srcSize1.height - 1, src1y1);
@@ -2012,7 +1967,7 @@ rppi_occlusion_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
  	 validate_int_range( 0, srcSize1.width - 1, src2x1);
  	 validate_int_range( 0, srcSize1.height - 1, src2y1);
  	 validate_int_range( 0, srcSize1.width - 1, src2x2);
- 	 validate_int_range( 0, srcSize1.height - 1, src2y2);
+ 	 validate_int_range( 0, srcSize1.height - 1, src2y2);*/
 
 #ifdef OCL_COMPILE
  	 {
@@ -2043,7 +1998,7 @@ RppStatus
 rppi_occlusion_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,RppiSize srcSize2,RppPtr_t dstPtr,Rpp32u src1x1,Rpp32u src1y1,Rpp32u src1x2,Rpp32u src1y2,Rpp32u src2x1,Rpp32u src2y1,Rpp32u src2x2,Rpp32u src2y2, RppHandle_t rppHandle) 
 {
 
- 	 validate_image_size(srcSize1);
+ 	 /*validate_image_size(srcSize1);
  	 validate_image_size(srcSize2);
  	 validate_int_range( 0, srcSize1.width - 1, src1x1);
  	 validate_int_range( 0, srcSize1.height - 1, src1y1);
@@ -2052,10 +2007,11 @@ rppi_occlusion_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
  	 validate_int_range( 0, srcSize1.width - 1, src2x1);
  	 validate_int_range( 0, srcSize1.height - 1, src2y1);
  	 validate_int_range( 0, srcSize1.width - 1, src2x2);
- 	 validate_int_range( 0, srcSize1.height - 1, src2y2);
+ 	 validate_int_range( 0, srcSize1.height - 1, src2y2);*/
 
 #ifdef OCL_COMPILE
  	 {
+	
  	 occlusion_cl(static_cast<cl_mem>(srcPtr1), 
 			srcSize1,
 			static_cast<cl_mem>(srcPtr2), 
@@ -2326,7 +2282,7 @@ RppStatus
 rppi_snpNoise_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
-
+ 	validate_float_range( 0, 1, noiseProbability);
 #ifdef OCL_COMPILE
  	{
             snpNoise_cl(static_cast<cl_mem>(srcPtr), 
@@ -2346,6 +2302,7 @@ RppStatus
 rppi_snpNoise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
 
 #ifdef OCL_COMPILE
  	{
@@ -2366,6 +2323,7 @@ RppStatus
 rppi_snpNoise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
 
 #ifdef OCL_COMPILE
  	{
