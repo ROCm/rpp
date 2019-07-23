@@ -12,10 +12,15 @@ __kernel void fog_planar(  __global unsigned char* input,
     if (id_x >= width || id_y >= height) return;
     int pixId= width * id_y  + id_x;
     int c=width*height;
-    float check=input[pixId]+input[pixId+c]+input[pixId+c*2];
-    if(check >= (240*3) && fogValue!=0)
+    float check=input[pixId];
+    if(channel>1)
+    {
+        check+=input[pixId+c]+input[pixId+c*2];
+        check=check/3;
+    }
+    if(check >= (240) && fogValue!=0)
     {}
-    else if(check>=(170*3))
+    else if(check>=(170))
     {
         float pixel = ((float) input[pixId])  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
         input[pixId] = saturate_8u(pixel);
@@ -28,7 +33,7 @@ __kernel void fog_planar(  __global unsigned char* input,
         }
     }
 
-    else if(check<=(85*3))
+    else if(check<=(85))
     {
         float pixel = ((float) input[pixId]) * (1.5 + (fogValue*fogValue)) - (fogValue*4) + (130*fogValue);
         input[pixId] = saturate_8u(pixel);
