@@ -575,15 +575,15 @@ RppStatus noise_gaussian_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         Rpp32f mean, Rpp32f sigma, 
                         RppiChnFormat chnFormat, unsigned int channel)
 {
-    std::default_random_engine generator;
-    std::normal_distribution<>  distribution{mean, sigma}; 
-    for(int i = 0; i < (srcSize.height * srcSize.width * channel) ; i++)
-    {
-        Rpp32f pixel = ((Rpp32f) *srcPtr) + ((Rpp32f) distribution(generator));
-		*dstPtr = RPPPIXELCHECK(pixel); 
-        dstPtr++;
-        srcPtr++;       
-    }
+//    std::default_random_engine generator;
+//    std::normal_distribution<>  distribution{mean, sigma}; 
+//    for(int i = 0; i < (srcSize.height * srcSize.width * channel) ; i++)
+//    {
+//        Rpp32f pixel = ((Rpp32f) *srcPtr) + ((Rpp32f) distribution(generator));
+//		*dstPtr = RPPPIXELCHECK(pixel); 
+//        dstPtr++;
+//        srcPtr++;       
+//    }
     return RPP_SUCCESS;
 }
 

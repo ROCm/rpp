@@ -4,7 +4,7 @@
 
 template <typename T, typename U>
 RppStatus bitwise_AND_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+                           RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
     U *srcPtr2Temp;
@@ -32,7 +32,7 @@ RppStatus bitwise_AND_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus bitwise_NOT_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+                           RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
@@ -57,7 +57,7 @@ RppStatus bitwise_NOT_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T, typename U>
 RppStatus exclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+                            RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
     U *srcPtr2Temp;
@@ -85,7 +85,7 @@ RppStatus exclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T, typename U>
 RppStatus inclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+                            RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
     U *srcPtr2Temp;
