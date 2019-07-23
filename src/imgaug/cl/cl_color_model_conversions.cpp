@@ -269,8 +269,8 @@ vignette_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float stdDev, RppiCh
     cl_program theProgram;
     CreateProgramFromBinary(theQueue,"vignette.cl","vignette.cl.bin","vignette",theProgram,theKernel);
     clRetainKernel(theKernel);  
-    stdDev=1-stdDev;
-    stdDev=srcSize.width*stdDev;
+    // stdDev=1-stdDev;
+    // stdDev=srcSize.width*stdDev;
 
     //---- Args Setter
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);

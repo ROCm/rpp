@@ -350,32 +350,16 @@ rppi_jitter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 // ----------------------------------------
 // Host add noise functions  declaration
 // ----------------------------------------
-/* Introduces noise in the entire image using gaussian or salt and pepper.
+/* Introduces noise in the entire image using salt and pepper.
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the input images
 *param[out] dstPtr output image
-*param[in] dstSize dimensions of the output images
-*param[in] noiseType takes RppiNoise as input
-*typedef enum{
-    GAUSSIAN,
-    SNP
-} RppiNoise;
-*param[in] noiseParameter parameters for Gaussian or salt and pepper
-SNP (salt and pepper) 
-pointer to a float variable and it should range between 0 - 1
-GAUSSIAN
-pointer to a structure 
-typedef struct {
-    Rpp32f mean;
-    Rpp32f sigma;
-} RppiGaussParameter;
-mean and sigma greater than 1
+*param[in] noiseProbability float value to decide the amount of noise effect to be added which should range between 0 - 1
 *param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
 */
-//Host function declaration
 RppStatus
 rppi_snpNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability);
 
@@ -749,26 +733,11 @@ rppi_jitter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp3
 // ----------------------------------------
 // GPU add noise functions  declaration
 // ----------------------------------------
-/* Introduces noise in the entire image using gaussian or salt and pepper.
+/* Introduces noise in the entire image using salt and pepper.
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the input images
 *param[out] dstPtr output image
-*param[in] dstSize dimensions of the output images
-*param[in] noiseType takes RppiNoise as input
-*typedef enum{
-    GAUSSIAN,
-    SNP
-} RppiNoise;
-*param[in] noiseParameter parameters for Gaussian or salt and pepper
-SNP (salt and pepper) 
-pointer to a float variable and it should range between 0 - 1
-GAUSSIAN
-pointer to a structure 
-typedef struct {
-    Rpp32f mean;
-    Rpp32f sigma;
-} RppiGaussParameter;
-mean and sigma greater than 1
+*param[in] noiseProbability float value to decide the amount of noise effect to be added which should range between 0 - 1
 *param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion

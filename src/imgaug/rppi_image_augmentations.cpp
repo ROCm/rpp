@@ -231,6 +231,9 @@ RppStatus
 rppi_jitter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                              unsigned int maxJitterX, unsigned int maxJitterY)
 {
+	validate_image_size(srcSize);
+	validate_int_range(0,srcSize.width-1,maxJitterX);
+	validate_int_range(0,srcSize.height-1,maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                      maxJitterX, maxJitterY, 
                      RPPI_CHN_PLANAR, 1);
@@ -241,6 +244,9 @@ RppStatus
 rppi_jitter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                              unsigned int maxJitterX, unsigned int maxJitterY)
 {
+	validate_image_size(srcSize);
+	validate_int_range(0,srcSize.width-1,maxJitterX);
+	validate_int_range(0,srcSize.height-1,maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                      maxJitterX, maxJitterY, 
                      RPPI_CHN_PLANAR, 3);
@@ -251,6 +257,9 @@ RppStatus
 rppi_jitter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
                              unsigned int maxJitterX, unsigned int maxJitterY)
 {
+	validate_image_size(srcSize);
+	validate_int_range(0,srcSize.width-1,maxJitterX);
+	validate_int_range(0,srcSize.height-1,maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                      maxJitterX, maxJitterY, 
                      RPPI_CHN_PACKED, 3);
@@ -321,6 +330,8 @@ rppi_jitter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_snpNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
+	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
     noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
                         noiseProbability,
                         RPPI_CHN_PLANAR, 1);
@@ -329,6 +340,8 @@ rppi_snpNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
 RppStatus
 rppi_snpNoise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
+	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
     noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
                         noiseProbability,
                         RPPI_CHN_PLANAR, 3);
@@ -337,6 +350,8 @@ rppi_snpNoise_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
 RppStatus
 rppi_snpNoise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability)
 {
+	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
     noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
                         noiseProbability,
                         RPPI_CHN_PACKED, 3);
@@ -2264,7 +2279,7 @@ RppStatus
 rppi_snpNoise_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
-
+ 	validate_float_range( 0, 1, noiseProbability);
 #ifdef OCL_COMPILE
  	{
             snpNoise_cl(static_cast<cl_mem>(srcPtr), 
@@ -2284,6 +2299,7 @@ RppStatus
 rppi_snpNoise_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
 
 #ifdef OCL_COMPILE
  	{
@@ -2304,6 +2320,7 @@ RppStatus
 rppi_snpNoise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f noiseProbability, RppHandle_t rppHandle)
 {
    	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1, noiseProbability);
 
 #ifdef OCL_COMPILE
  	{
