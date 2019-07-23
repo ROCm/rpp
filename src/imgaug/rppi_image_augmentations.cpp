@@ -2000,10 +2000,12 @@ rppi_occlusion_u8_pln1_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
 }
 
 RppStatus
-rppi_occlusion_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,RppiSize srcSize2,RppPtr_t dstPtr,Rpp32u src1x1,Rpp32u src1y1,Rpp32u src1x2,Rpp32u src1y2,Rpp32u src2x1,Rpp32u src2y1,Rpp32u src2x2,Rpp32u src2y2, RppHandle_t rppHandle) 
+rppi_occlusion_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,RppiSize srcSize2,RppPtr_t dstPtr,
+			Rpp32u src1x1,Rpp32u src1y1,Rpp32u src1x2,Rpp32u src1y2,Rpp32u src2x1,Rpp32u src2y1,
+			Rpp32u src2x2,Rpp32u src2y2, RppHandle_t rppHandle) 
 {
 
- 	 validate_image_size(srcSize1);
+ 	 /*validate_image_size(srcSize1);
  	 validate_image_size(srcSize2);
  	 validate_int_range( 0, srcSize1.width - 1, src1x1);
  	 validate_int_range( 0, srcSize1.height - 1, src1y1);
@@ -2012,7 +2014,7 @@ rppi_occlusion_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
  	 validate_int_range( 0, srcSize1.width - 1, src2x1);
  	 validate_int_range( 0, srcSize1.height - 1, src2y1);
  	 validate_int_range( 0, srcSize1.width - 1, src2x2);
- 	 validate_int_range( 0, srcSize1.height - 1, src2y2);
+ 	 validate_int_range( 0, srcSize1.height - 1, src2y2);*/
 
 #ifdef OCL_COMPILE
  	 {
@@ -2043,7 +2045,7 @@ RppStatus
 rppi_occlusion_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,RppiSize srcSize2,RppPtr_t dstPtr,Rpp32u src1x1,Rpp32u src1y1,Rpp32u src1x2,Rpp32u src1y2,Rpp32u src2x1,Rpp32u src2y1,Rpp32u src2x2,Rpp32u src2y2, RppHandle_t rppHandle) 
 {
 
- 	 validate_image_size(srcSize1);
+ 	 /*validate_image_size(srcSize1);
  	 validate_image_size(srcSize2);
  	 validate_int_range( 0, srcSize1.width - 1, src1x1);
  	 validate_int_range( 0, srcSize1.height - 1, src1y1);
@@ -2052,10 +2054,11 @@ rppi_occlusion_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize1,RppPtr_t srcPtr2,R
  	 validate_int_range( 0, srcSize1.width - 1, src2x1);
  	 validate_int_range( 0, srcSize1.height - 1, src2y1);
  	 validate_int_range( 0, srcSize1.width - 1, src2x2);
- 	 validate_int_range( 0, srcSize1.height - 1, src2y2);
+ 	 validate_int_range( 0, srcSize1.height - 1, src2y2);*/
 
 #ifdef OCL_COMPILE
  	 {
+	
  	 occlusion_cl(static_cast<cl_mem>(srcPtr1), 
 			srcSize1,
 			static_cast<cl_mem>(srcPtr2), 
