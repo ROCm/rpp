@@ -374,7 +374,7 @@ RppStatus warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
 
 template <typename T>
 RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
-                           U* affine,
+                           Rpp32f* affine,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32f minX = 0, minY = 0;
