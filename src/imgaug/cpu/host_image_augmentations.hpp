@@ -609,7 +609,6 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             Rpp32u initialPixel= rand() % pixelDistance;
             dstPtr += initialPixel*channel;
             Rpp8u newPixel=rand()%2 ? 0 : 255;
-            std::cout<<(int)newPixel<<" ";
             for(int j=0 ; j<channel ; j++)
             {
                 *dstPtr=newPixel;
@@ -769,10 +768,15 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
         }
         for (int i = 0; i < (srcSize.width * srcSize.height); i++)
         {
-            Rpp32f check= *srcPtr + *srcPtr1 + *srcPtr2;
-            if(check >= (240*3) && fogValue!=0)
+            Rpp32f check= *srcPtr;
+            if(channel>1) 
+            {
+                check+= *srcPtr1 + *srcPtr2;
+                check/=3;
+            }
+            if(check >= (240) && fogValue!=0)
             {            }
-            else if(check>=(170*3))
+            else if(check>=(170))
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr)  * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
                 *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);
@@ -786,7 +790,7 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
 				    srcPtr1++;srcPtr2++;
                 }
             }
-            else if(check<=(85*3))
+            else if(check<=(85))
             {
                 Rpp32f pixel = ((Rpp32f) *srcPtr) * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
                 *srcPtr = (Rpp8u)RPPPIXELCHECK(pixel);

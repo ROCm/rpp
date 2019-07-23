@@ -337,9 +337,8 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 
 /**************** Warp Affine ***************/
 
-template <typename T>
 RppStatus warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
-                                       T* affine)
+                                       Rpp32f* affine)
 {
     Rpp32f minX = 0, minY = 0, maxX = 0, maxY = 0;
     for (int i = 0; i < srcSize.height; i++)
@@ -373,7 +372,7 @@ RppStatus warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
     return RPP_SUCCESS;
 }
 
-template <typename T, typename U>
+template <typename T>
 RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            U* affine,
                            RppiChnFormat chnFormat, Rpp32u channel)
