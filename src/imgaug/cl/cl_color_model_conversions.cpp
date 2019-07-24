@@ -267,9 +267,17 @@ vignette_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float stdDev, RppiCh
     int ctr=0;
     cl_kernel theKernel;
     cl_program theProgram;
-    CreateProgramFromBinary(theQueue,"vignette.cl","vignette.cl.bin","vignette",theProgram,theKernel);
-    clRetainKernel(theKernel);  
-
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {    
+        CreateProgramFromBinary(theQueue,"vignette.cl","vignette.cl.bin","vignette_pln",theProgram,theKernel);
+        clRetainKernel(theKernel); 
+    } 
+    else
+    {
+        CreateProgramFromBinary(theQueue,"vignette.cl","vignette.cl.bin","vignette_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    
     //---- Args Setter
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
