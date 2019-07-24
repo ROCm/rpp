@@ -895,19 +895,20 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
                 //pixel=(Rpp32f)dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] + 5;
                 dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width)] = (k==0)?196:(k==1)?226:255 ;
             }
-            if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
+            for(int j=0;j<rainHeight;j++)
             {
-                for(int j=0;j<rainHeight;j++)
+                if(row+rainHeight < srcSize.height && row+rainHeight > 0 )
+                for(int k=0;k<channel;k++)
                 {
-                    for(int k=0;k<channel;k++)
+                    for(int m=0;m<rainWidth;m++)
                     {
-                        for(int m=0;m<rainWidth;m++)
+                        if (column+rainWidth< srcSize.width && column+rainWidth > 0)
                         {
                             //pixel=(Rpp32f)dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m]+5;
                             dstPtr[(row * srcSize.width) + (column) + (k*srcSize.height*srcSize.width) + (srcSize.width*j)+m] = (k==0)?196:(k==1)?226:255 ;
                         }
-                    }            
-                }
+                    }
+                }            
             }
         }
     }
@@ -923,19 +924,20 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
                 //pixel=(Rpp32f)dstPtr[(channel * row * srcSize.width) + (column * channel) + k] + 5;
                 dstPtr[(channel * row * srcSize.width) + (column * channel) + k] = (k==0)?196:(k==1)?226:255 ;
             }
-            if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
+            for(int j=0;j<rainHeight;j++)
             {
-                for(int j=0;j<rainHeight;j++)
+                if(row+rainHeight < srcSize.height && row+rainHeight > 0 )
+                for(int k=0;k<channel;k++)
                 {
-                    for(int k=0;k<channel;k++)
+                    for(int m=0;m<rainWidth;m++)
                     {
-                        for(int m=0;m<rainWidth;m++)
+                        if (column+rainWidth < srcSize.width && column+rainWidth > 0)
                         {
                             //pixel=(Rpp32f)dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)]+5;
                             dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j)+(channel*m)] = (k==0)?196:(k==1)?226:255 ;
-                        } 
-                    }            
-                }
+                        }
+                    } 
+                }            
             }
         }
     }
