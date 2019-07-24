@@ -594,10 +594,14 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         Rpp32f noiseProbability, 
                         RppiChnFormat chnFormat, unsigned int channel)
 {
+    Rpp8u *cpdst,*cpsrc;
+    cpdst=dstPtr;
+    cpsrc=srcPtr;
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        Rpp32f pixel = ((Rpp32f) srcPtr[i]);
-        dstPtr[i] = RPPPIXELCHECK(pixel);
+        *cpdst = *cpsrc;
+        cpdst++;
+        cpsrc++;
     }
     srand(time(0)); 
     Rpp32u noisePixel= (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );

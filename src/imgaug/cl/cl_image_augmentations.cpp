@@ -380,11 +380,6 @@ snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
         CreateProgramFromBinary(theQueue,"noise.cl","noise.cl.bin","snp_pln",theProgram,theKernel);
         clRetainKernel(theKernel);
     }
-    // cl_mem d_a;
-    // int bytes=pixelDistance*
-    // d_a = clCreateBuffer(theContext, CL_MEM_READ_ONLY, bytes, NULL, NULL);
-    // clEnqueueWriteBuffer(theQueue, d_a, CL_TRUE, 0, bytes, h_a, 0, NULL, NULL);
-        //---- Args Setter
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
