@@ -1733,9 +1733,10 @@ rppi_random_crop_letterbox_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 validate_unsigned_int_max(x2,&x1);
 	 validate_unsigned_int_max(y2,&y1);
+     unsigned int padding=(unsigned int)((dstSize.width/100)*5);
 #ifdef OCL_COMPILE
  	 {
- 	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			dstSize,
@@ -1743,6 +1744,7 @@ rppi_random_crop_letterbox_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
+            padding,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -1765,9 +1767,10 @@ rppi_random_crop_letterbox_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 validate_unsigned_int_max(x2,&x1);
 	 validate_unsigned_int_max(y2,&y1);
+     unsigned int padding=(unsigned int)((dstSize.width/100)*5);
 #ifdef OCL_COMPILE
  	 {
- 	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			dstSize,
@@ -1775,6 +1778,7 @@ rppi_random_crop_letterbox_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
+            padding,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -1797,9 +1801,10 @@ rppi_random_crop_letterbox_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 validate_unsigned_int_max(x2,&x1);
 	 validate_unsigned_int_max(y2,&y1);
+     unsigned int padding=(unsigned int)((dstSize.width/100)*5);
 #ifdef OCL_COMPILE
  	 {
- 	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			dstSize,
@@ -1807,6 +1812,7 @@ rppi_random_crop_letterbox_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
+            padding,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 

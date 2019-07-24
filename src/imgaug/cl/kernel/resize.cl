@@ -90,6 +90,7 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
                             const unsigned int y1,
                             const unsigned int x2,
                             const unsigned int y2,
+                            const unsigned int padding,
                             const unsigned int channel
 )
 {
@@ -122,7 +123,10 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
                     ) ;
 
     dstPtr[pixId] =  saturate_8u(pixVal);
-
+    if((id_x <= padding) || (id_x >= (dest_width-padding)) || (id_y <= padding) || (id_y >= (dest_height-padding)))
+    {
+        dstPtr[pixId]=0;
+    }
   
 }
 
@@ -136,6 +140,7 @@ __kernel void resize_crop_pkd (  __global unsigned char* srcPtr,
                             const unsigned int y1,
                             const unsigned int x2,
                             const unsigned int y2,
+                            const unsigned int padding,
                             const unsigned int channel
 )
 {
@@ -168,5 +173,9 @@ __kernel void resize_crop_pkd (  __global unsigned char* srcPtr,
                     ) ;
 
     dstPtr[pixId] =  saturate_8u(pixVal);
+    if((id_x <= padding) || (id_x >= (dest_width-padding)) || (id_y <= padding) || (id_y >= (dest_height-padding)))
+    {
+        dstPtr[pixId]=0;
+    }
 
 }
