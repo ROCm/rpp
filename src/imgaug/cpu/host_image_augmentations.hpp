@@ -595,66 +595,66 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp8u *cpdst,*cpsrc;
-    cpdst=dstPtr;
-    cpsrc=srcPtr;
-    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+    cpdst = dstPtr;
+    cpsrc = srcPtr;
+    for (int i = 0; i < ( channel * srcSize.width * srcSize.height ); i++ )
     {
         *cpdst = *cpsrc;
         cpdst++;
         cpsrc++;
     }
     srand(time(0)); 
-    Rpp32u noisePixel= (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
-    Rpp32u pixelDistance= (srcSize.width * srcSize.height) / noisePixel;
-    if(chnFormat==RPPI_CHN_PACKED)
+    Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
+    Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
+    if(chnFormat == RPPI_CHN_PACKED)
     {
-        for(int i=0 ; i<srcSize.width * srcSize.height *channel ; i+=channel*pixelDistance)
+        for(int i = 0 ; i < srcSize.width * srcSize.height * channel ; i += channel*pixelDistance)
         {
-            Rpp32u initialPixel= rand() % pixelDistance;
+            Rpp32u initialPixel = rand() % pixelDistance;
             dstPtr += initialPixel*channel;
-            Rpp8u newPixel=rand()%2 ? 0 : 255;
-            for(int j=0 ; j<channel ; j++)
+            Rpp8u newPixel = rand()%2 ? 0 : 255;
+            for(int j = 0 ; j < channel ; j++)
             {
-                *dstPtr=newPixel;
+                *dstPtr = newPixel;
                 dstPtr++;
             }
-            dstPtr+= ((pixelDistance - initialPixel - 1) * channel);
+            dstPtr += ((pixelDistance - initialPixel - 1) * channel);
         }
     }
-    else if(chnFormat==RPPI_CHN_PLANAR)
+    else if(chnFormat == RPPI_CHN_PLANAR)
     {
-        if(channel==3)
+        if(channel == 3)
         {
             Rpp8u *dstPtrTemp1,*dstPtrTemp2;
             dstPtrTemp1 = dstPtr + (srcSize.height * srcSize.width);
             dstPtrTemp2 = dstPtr + (2 * srcSize.height * srcSize.width);   
-            for(int i=0 ; i<srcSize.width * srcSize.height * channel ; i+=pixelDistance)
+            for(int i = 0 ; i < srcSize.width * srcSize.height * channel ; i += pixelDistance)
             {
-                Rpp32u initialPixel= rand() % pixelDistance;
+                Rpp32u initialPixel = rand() % pixelDistance;
                 dstPtr += initialPixel;
-                Rpp8u newPixel=rand()%2 ? 255 : 1;
-                *dstPtr=newPixel;
-                dstPtr+= ((pixelDistance - initialPixel - 1));
+                Rpp8u newPixel = (rand() % 2) ? 255 : 1;
+                *dstPtr = newPixel;
+                dstPtr += ((pixelDistance - initialPixel - 1));
 
                 dstPtrTemp1 += initialPixel;
-                *dstPtrTemp1=newPixel;
-                dstPtrTemp1+= ((pixelDistance - initialPixel - 1));
+                *dstPtrTemp1 = newPixel;
+                dstPtrTemp1 += ((pixelDistance - initialPixel - 1));
 
                 dstPtrTemp2 += initialPixel;
-                *dstPtrTemp2=newPixel;
-                dstPtrTemp2+= ((pixelDistance - initialPixel - 1));
+                *dstPtrTemp2 = newPixel;
+                dstPtrTemp2 += ((pixelDistance - initialPixel - 1));
                 
             }
         }
         else
         {
-            for(int i=0 ; i<srcSize.width * srcSize.height ; i+=pixelDistance)
+            for(int i = 0 ; i < srcSize.width * srcSize.height ; i += pixelDistance)
             {
-                Rpp32u initialPixel= rand() % pixelDistance;
+                Rpp32u initialPixel = rand() % pixelDistance;
                 dstPtr += initialPixel;
-                Rpp8u newPixel=rand()%2 ? 255 : 1;
-                *dstPtr=newPixel;
-                dstPtr+= ((pixelDistance - initialPixel - 1));
+                Rpp8u newPixel = rand()%2 ? 255 : 1;
+                *dstPtr = newPixel;
+                dstPtr += ((pixelDistance - initialPixel - 1));
             }   
         }
         
@@ -897,7 +897,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
             }
             if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
             {
-                for(int j=1;j<rainHeight;j++)
+                for(int j=0;j<rainHeight;j++)
                 {
                     for(int k=0;k<channel;k++)
                     {
@@ -925,7 +925,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
             }
             if (row+rainHeight < srcSize.height && column+rainWidth< srcSize.width)
             {
-                for(int j=1;j<rainHeight;j++)
+                for(int j=0;j<rainHeight;j++)
                 {
                     for(int k=0;k<channel;k++)
                     {
