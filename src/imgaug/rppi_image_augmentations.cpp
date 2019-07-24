@@ -1824,10 +1824,21 @@ rppi_random_crop_letterbox_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_int_range( 0, srcSize.height - 1, y1);
  	 validate_int_range( 0, srcSize.width - 1, x2);
  	 validate_int_range( 0, srcSize.height - 1, y2);
+     unsigned int padding=(dstSize.width)/0.05;
 
 #ifdef OCL_COMPILE
  	 {
- 	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+ 	//  random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+	// 		srcSize,
+	// 		static_cast<cl_mem>(dstPtr), 
+	// 		dstSize,
+	// 		x1,
+	// 		y1,
+	// 		x2,
+	// 		y2,
+	// 		RPPI_CHN_PLANAR, 1,
+	// 		static_cast<cl_command_queue>(rppHandle));
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			dstSize,
@@ -1835,6 +1846,7 @@ rppi_random_crop_letterbox_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
+            padding,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -1855,10 +1867,22 @@ rppi_random_crop_letterbox_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_int_range( 0, srcSize.height - 1, y1);
  	 validate_int_range( 0, srcSize.width - 1, x2);
  	 validate_int_range( 0, srcSize.height - 1, y2);
+     unsigned int padding=(dstSize.width)/0.05;
+
 
 #ifdef OCL_COMPILE
  	 {
- 	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+ 	//  random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+	// 		srcSize,
+	// 		static_cast<cl_mem>(dstPtr), 
+	// 		dstSize,
+	// 		x1,
+	// 		y1,
+	// 		x2,
+	// 		y2,
+	// 		RPPI_CHN_PLANAR, 3,
+	// 		static_cast<cl_command_queue>(rppHandle));
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			dstSize,
@@ -1866,6 +1890,7 @@ rppi_random_crop_letterbox_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
+            padding,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -1886,10 +1911,22 @@ rppi_random_crop_letterbox_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
  	 validate_int_range( 0, srcSize.height - 1, y1);
  	 validate_int_range( 0, srcSize.width - 1, x2);
  	 validate_int_range( 0, srcSize.height - 1, y2);
+     unsigned int padding=(int)((dstSize.width/100)/5);
+
 
 #ifdef OCL_COMPILE
  	 {
- 	 random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+ 	//  random_crop_letterbox_cl(static_cast<cl_mem>(srcPtr), 
+	// 		srcSize,
+	// 		static_cast<cl_mem>(dstPtr), 
+	// 		dstSize,
+	// 		x1,
+	// 		y1,
+	// 		x2,
+	// 		y2,
+	// 		RPPI_CHN_PACKED, 3,
+	// 		static_cast<cl_command_queue>(rppHandle));
+ 	 resize_crop_cl(static_cast<cl_mem>(srcPtr), 
 			srcSize,
 			static_cast<cl_mem>(dstPtr), 
 			dstSize,
@@ -1897,6 +1934,7 @@ rppi_random_crop_letterbox_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
+            padding,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 

@@ -132,7 +132,7 @@ resize_cl(cl_mem srcPtr, RppiSize srcSize,
 cl_int
 resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiSize dstSize,
-                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  
+                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u padding,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)
 {
@@ -169,6 +169,7 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y1);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x2);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y2);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &padding);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
 
 
