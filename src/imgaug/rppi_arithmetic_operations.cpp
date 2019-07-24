@@ -71,7 +71,7 @@ rppi_accumulate_weighted_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
+ 	 validate_double_range( 0, 1, &alpha);
 	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			static_cast<Rpp8u*>(srcPtr2), 
 			srcSize,
@@ -85,7 +85,7 @@ rppi_accumulate_weighted_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
+ 	 validate_double_range( 0, 1, &alpha);
 	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			static_cast<Rpp8u*>(srcPtr2), 
 			srcSize,
@@ -99,7 +99,7 @@ rppi_accumulate_weighted_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
+ 	 validate_double_range( 0, 1, &alpha);
 	 accumulate_weighted_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
 			static_cast<Rpp8u*>(srcPtr2), 
 			srcSize,
@@ -358,7 +358,7 @@ rppi_accumulate_weighted_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
+ 	 validate_double_range( 0, 1, &alpha);
 
 #ifdef OCL_COMPILE
  	 {
@@ -381,7 +381,7 @@ rppi_accumulate_weighted_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
+ 	 validate_double_range( 0, 1, &alpha);
 
 #ifdef OCL_COMPILE
  	 {
@@ -404,7 +404,7 @@ rppi_accumulate_weighted_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize 
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, alpha);
+ 	 validate_double_range( 0, 1, &alpha);
 
 #ifdef OCL_COMPILE
  	 {

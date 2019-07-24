@@ -213,13 +213,6 @@ color_temperature_cl( cl_mem srcPtr1,
                  cl_command_queue theQueue);
 
 RppStatus
-random_crop_letterbox_cl(  cl_mem srcPtr, RppiSize srcSize, 
-                            cl_mem dstPtr, RppiSize dstSize, 
-                            Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
-                            RppiChnFormat chnFormat, unsigned int channel,
-                            cl_command_queue theQueue);
-
-RppStatus
 exposure_cl(    cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, Rpp32f exposureValue,
                 RppiChnFormat chnFormat, unsigned int channel,

@@ -342,7 +342,7 @@ rppi_color_temperature_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t ds
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_range( -100, 100, adjustmentValue);
+ 	 validate_int_range( -100, 100, &adjustmentValue);
 	 color_temperature_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -356,7 +356,7 @@ rppi_color_temperature_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t ds
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_range( -100, 100, adjustmentValue);
+ 	 validate_int_range( -100, 100, &adjustmentValue);
 	 color_temperature_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -370,7 +370,7 @@ rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t ds
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_range( -100, 100, adjustmentValue);
+ 	 validate_int_range( -100, 100, &adjustmentValue);
 	 color_temperature_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -389,7 +389,7 @@ rppi_vignette_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_min( 0, stdDev);
+ 	 validate_float_min( 0, &stdDev);
 	 vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -403,7 +403,7 @@ rppi_vignette_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_min( 0, stdDev);
+ 	 validate_float_min( 0, &stdDev);
 	 vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -417,7 +417,7 @@ rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_min( 0, stdDev);
+ 	 validate_float_min( 0, &stdDev);
 	 vignette_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr), 
@@ -855,7 +855,7 @@ rppi_color_temperature_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_range( -100, 100, adjustmentValue);
+ 	 validate_int_range( -100, 100, &adjustmentValue);
 
 #ifdef OCL_COMPILE
  	 {
@@ -878,7 +878,7 @@ rppi_color_temperature_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_range( -100, 100, adjustmentValue);
+ 	 validate_int_range( -100, 100, &adjustmentValue);
 
 #ifdef OCL_COMPILE
  	 {
@@ -901,7 +901,7 @@ rppi_color_temperature_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 {
 
  	 validate_image_size(srcSize);
- 	 validate_int_range( -100, 100, adjustmentValue);
+ 	 validate_int_range( -100, 100, &adjustmentValue);
 
 #ifdef OCL_COMPILE
  	 {
@@ -929,7 +929,7 @@ rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_min( 0,stdDev);
+ 	 validate_float_min( 0,&stdDev);
 
 #ifdef OCL_COMPILE
  	 {
@@ -952,7 +952,7 @@ rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_min( 0, stdDev);
+ 	 validate_float_min( 0, &stdDev);
 
 #ifdef OCL_COMPILE
  	 {
@@ -975,7 +975,7 @@ rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_min( 0, stdDev);
+ 	 validate_float_min( 0, &stdDev);
 
 #ifdef OCL_COMPILE
  	 {
