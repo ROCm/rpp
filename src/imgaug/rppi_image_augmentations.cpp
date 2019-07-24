@@ -1744,7 +1744,7 @@ rppi_random_crop_letterbox_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
-            padding,
+            padding, 1,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -1778,7 +1778,7 @@ rppi_random_crop_letterbox_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
-            padding,
+            padding, 1,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
@@ -1812,7 +1812,7 @@ rppi_random_crop_letterbox_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t
 			y1,
 			x2,
 			y2,
-            padding,
+            padding, 1,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 } 
