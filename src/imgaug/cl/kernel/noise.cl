@@ -46,17 +46,12 @@ __kernel void snp_pkd(  __global unsigned char* input,
     
     if(pixIdx % pixelDistance == 0 )
     {
-        for(int i=0;i<channel;i++)
-            output[pixIdx + i] = input[pixIdx+i];
-        int rand_id = xorshift(pixIdx) % 60;
+        int rand_id = xorshift(pixIdx) % (60 * pixelDistance);
         rand_id-=rand_id%3;
         rand=(rand_id%2)?0:255;
         for(int i=0;i<channel;i++)
             output[pixIdx + i + rand_id] = rand;
     }
-    else
-        for(int i=0;i<channel;i++)
-            output[pixIdx+i] = input[pixIdx+i];
 }
 
 
@@ -82,15 +77,10 @@ __kernel void snp_pln(  __global unsigned char* input,
     
     if(pixIdx % pixelDistance == 0 )
     {
-        for(int i=0;i<channel;i++)
-            output[pixIdx+channelSize*i] = input[pixIdx+channelSize*i];
-        int rand_id = xorshift(pixIdx) % 60;
+        int rand_id = xorshift(pixIdx) % (60 * pixelDistance);
         rand_id-=rand_id%3;
         rand=(rand_id%2)?0:255;
         for(int i=0;i<channel;i++)
             output[pixIdx+channelSize*i + rand_id] = rand;
     }
-    else
-        for(int i=0;i<channel;i++)
-            output[pixIdx+channelSize*i] = input[pixIdx+channelSize*i];
 }

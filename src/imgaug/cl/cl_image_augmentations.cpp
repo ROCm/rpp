@@ -366,6 +366,7 @@ snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
 {
     srand(time(0));
     int ctr=0; 
+    clEnqueueCopyBuffer(theQueue, srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
     Rpp32u noisePixel= (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
     const Rpp32u pixelDistance= (srcSize.width * srcSize.height) / noisePixel;
     cl_kernel theKernel;
