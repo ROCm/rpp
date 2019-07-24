@@ -230,12 +230,12 @@ color_temperature_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float adju
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        CreateProgramFromBinary(theQueue,"temprature.cl","temprature.cl.bin","temprature_planar",theProgram,theKernel);
+        CreateProgramFromBinary(theQueue,"temperature.cl","temperature.cl.bin","temperature_planar",theProgram,theKernel);
         clRetainKernel(theKernel);    
     }
     else
     {
-        CreateProgramFromBinary(theQueue,"temprature.cl","temprature.cl.bin","temprature_packed",theProgram,theKernel);
+        CreateProgramFromBinary(theQueue,"temperature.cl","temperature.cl.bin","temperature_packed",theProgram,theKernel);
         clRetainKernel(theKernel);    
     }
     //---- Args Setter
@@ -249,7 +249,7 @@ color_temperature_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, float adju
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
-    gDim3[2] = channel;
+    gDim3[2] = 1;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     
     return RPP_SUCCESS;
