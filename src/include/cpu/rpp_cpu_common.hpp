@@ -1354,5 +1354,64 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     return RPP_SUCCESS;
 }
 
+inline Rpp32u fogGenerator(Rpp32u srcPtr, Rpp32f fogValue, int colour, int check)
+{
+    unsigned int fog=0;
+    int range;
+    if(check >= (240) && fogValue!=0);
+    else if(check>=(170))
+        range = 1;
+    else if(check<=(85))
+        range = 2; 
+    else 
+    range = 3;
+    switch(range)
+    {
+        case 1:
+            if(colour==1)
+            {
+                fog = srcPtr * (1.5 + fogValue) - (fogValue*4) + (7*fogValue);
+            }
+            else if(colour==2)
+            {
+                fog = srcPtr * (1.5 + fogValue) + (7*fogValue);
+            }
+            else
+            {
+                fog = srcPtr * (1.5 + fogValue) + (fogValue*4) + (7*fogValue);
+            }
+            break;
+        case 2:
+            if(colour==1)
+            {
+                fog = srcPtr * (1.5 + pow(fogValue,2)) - (fogValue*4) + (130*fogValue);
+            }
+            else if(colour==2)
+            {
+                fog = srcPtr * (1.5 + pow(fogValue,2)) + (130*fogValue);
+            }
+            else
+            {
+                fog = srcPtr * (1.5 + pow(fogValue,2)) + (fogValue*4) + 130*fogValue;
+            }
+            break;
+        case 3:
+            if(colour==1)
+            {
+                fog = srcPtr * (1.5 + pow(fogValue,1.5)) - (fogValue*4) + 20 + (100*fogValue);
+            }
+            else if(colour==2)
+            {
+                fog = srcPtr * (1.5 + pow(fogValue,1.5)) + 20 + (100*fogValue);
+            }
+            else
+            {
+                fog = srcPtr * (1.5 + pow(fogValue,1.5)) + (fogValue*4) + (100*fogValue);
+            }
+            break;
+    }
+    fog = RPPPIXELCHECK(fog);
+    return fog;
+}
 
 #endif //RPP_CPU_COMMON_H
