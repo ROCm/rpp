@@ -146,21 +146,24 @@ RppStatus mean_stddev_host(T* srcPtr, RppiSize srcSize,
                             RppiChnFormat chnFormat, unsigned int channel)
 {
     int i;
-    *mean = 0;
-    *stddev = 0;
+    Rpp32f *meanTemp, *stdDevTemp;
+    meanTemp = mean;
+    stdDevTemp = stddev;
     T* srcPtrTemp=srcPtr;
+    *meanTemp = 0;
+    *stdDevTemp = 0;
     for(i = 0; i < (srcSize.height * srcSize.width * channel); i++)
     {
-        *mean += *srcPtr;
+        *meanTemp += *srcPtr;
         srcPtr++;
     }
-    *mean = (*mean)/(srcSize.height * srcSize.width * channel);
+    *meanTemp = (*meanTemp) / (srcSize.height * srcSize.width * channel);
 
     for(i = 0; i < (srcSize.height * srcSize.width * channel); i++)
     {
-        *stddev += (((*mean)-(*srcPtrTemp)) * ((*mean)-(*srcPtrTemp)));
+        *stdDevTemp += (((*meanTemp)-(*srcPtrTemp)) * ((*meanTemp)-(*srcPtrTemp)));
         srcPtrTemp++;
     }
-    *stddev = sqrt((*stddev)/(srcSize.height * srcSize.width * channel));
+    *stdDevTemp = sqrt((*stdDevTemp) / (srcSize.height * srcSize.width * channel));
     return RPP_SUCCESS;
 }
