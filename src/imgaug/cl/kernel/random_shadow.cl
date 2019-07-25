@@ -31,13 +31,11 @@ __kernel void random_shadow_planar(  __global unsigned char* input,
     int id_z = get_global_id(2);
     if (id_x >= srcwidth || id_y >= srcheight || id_z >= channel) 
         return;
-    int pixIdx=(srcwidth*srcheight*id_z) + (srcwidth * id_y) + id_x;
-    if(id_x >= x1 && id_x <= x2 && id_y >= y1 && id_y <=y2)
-    {
-        if(output[pixIdx] != input[pixIdx]/2)
-        {    
-            output[pixIdx] = input[pixIdx]/2;
-        }
+    int pixIdx = ((y1 - 1 + id_y) * srcwidth) + (x1 + id_x) + (id_z * srcheight * srcwidth);
+    // (srcwidth * srcheight * id_z) + (srcwidth * id_y) + id_x;
+    if(output[pixIdx] != input[pixIdx] / 2)
+    {    
+        output[pixIdx] = input[pixIdx] / 2;
     }
 }
 
@@ -58,14 +56,11 @@ __kernel void random_shadow_packed(  __global unsigned char* input,
 
     if (id_x >= srcwidth || id_y >= srcheight || id_z >= channel) 
         return;
-    int pixIdx = (channel * srcwidth * id_y) + (channel * id_x) + (id_z);
-    
-    if(id_x >= x1 && id_x <= x2 && id_y >= y1 && id_y <=y2)
-    {
-        if(output[pixIdx] != input[pixIdx]/2)
-        {    
-            output[pixIdx] = input[pixIdx]/2;
-        }
+    int width = x2-x1;
+    int pixIdx = ((y1 - 1 + id_y) * channel * srcwidth) + ((x1 + id_x) * channel) + (id_z);// +  +  + ((srcwidth - x2) * channel * id_y);
+    if(output[pixIdx] != input[pixIdx] / 2)
+    {    
+        output[pixIdx] = input[pixIdx] / 2;
     }
 
 }
