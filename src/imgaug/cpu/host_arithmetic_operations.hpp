@@ -149,7 +149,7 @@ RppStatus mean_stddev_host(T* srcPtr, RppiSize srcSize,
     Rpp32f *meanTemp, *stdDevTemp;
     meanTemp = mean;
     stdDevTemp = stddev;
-    T* srcPtrTemp=srcPtr;
+    T* srcPtrTemp = srcPtr;
     *meanTemp = 0;
     *stdDevTemp = 0;
     for(i = 0; i < (srcSize.height * srcSize.width * channel); i++)
@@ -161,7 +161,7 @@ RppStatus mean_stddev_host(T* srcPtr, RppiSize srcSize,
 
     for(i = 0; i < (srcSize.height * srcSize.width * channel); i++)
     {
-        *stdDevTemp += (((*meanTemp)-(*srcPtrTemp)) * ((*meanTemp)-(*srcPtrTemp)));
+        *stdDevTemp += (((*meanTemp) - (*srcPtrTemp)) * ((*meanTemp) - (*srcPtrTemp)));
         srcPtrTemp++;
     }
     *stdDevTemp = sqrt((*stdDevTemp) / (srcSize.height * srcSize.width * channel));

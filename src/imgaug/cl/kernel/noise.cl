@@ -41,15 +41,15 @@ __kernel void snp_pkd(  __global unsigned char* input,
     int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height) return;
 
-    int pixIdx = id_y*width*channel + id_x*channel;
+    int pixIdx = id_y * width * channel + id_x * channel;
     int rand;
     
     if(pixIdx % pixelDistance == 0 )
     {
         int rand_id = xorshift(pixIdx) % (60 * pixelDistance);
-        rand_id-=rand_id%3;
-        rand=(rand_id%2)?0:255;
-        for(int i=0;i<channel;i++)
+        rand_id -= rand_id % 3;
+        rand = (rand_id % 2) ? 0 : 255;
+        for(int i = 0 ; i < channel ; i++)
             output[pixIdx + i + rand_id] = rand;
     }
 }
@@ -70,17 +70,17 @@ __kernel void snp_pln(  __global unsigned char* input,
     int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height) return;
 
-    int pixIdx = id_y*width + id_x;
-    int channelSize= width*height;
+    int pixIdx = id_y * width + id_x;
+    int channelSize = width * height;
     
     int rand;
     
     if(pixIdx % pixelDistance == 0 )
     {
         int rand_id = xorshift(pixIdx) % (60 * pixelDistance);
-        rand_id-=rand_id%3;
-        rand=(rand_id%2)?0:255;
-        for(int i=0;i<channel;i++)
-            output[pixIdx+channelSize*i + rand_id] = rand;
+        rand_id -= rand_id % 3;
+        rand = (rand_id % 2) ? 0 : 255;
+        for(int i = 0 ; i < channel ; i++)
+            output[pixIdx + channelSize * i + rand_id] = rand;
     }
 }

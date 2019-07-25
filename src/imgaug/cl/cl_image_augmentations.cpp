@@ -365,20 +365,20 @@ snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                 cl_command_queue theQueue)
 {
     srand(time(0));
-    int ctr=0; 
+    int ctr = 0; 
     clEnqueueCopyBuffer(theQueue, srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
-    Rpp32u noisePixel= (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
-    const Rpp32u pixelDistance= (srcSize.width * srcSize.height) / noisePixel;
+    Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
+    const Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
     cl_kernel theKernel;
     cl_program theProgram;
     if(chnFormat == RPPI_CHN_PACKED)
     {
-        CreateProgramFromBinary(theQueue,"noise.cl","noise.cl.bin","snp_pkd",theProgram,theKernel);
+        CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pkd", theProgram, theKernel);
         clRetainKernel(theKernel);
     }
     else if(chnFormat == RPPI_CHN_PLANAR)
     {
-        CreateProgramFromBinary(theQueue,"noise.cl","noise.cl.bin","snp_pln",theProgram,theKernel);
+        CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pln", theProgram, theKernel);
         clRetainKernel(theKernel);
     }
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
@@ -662,7 +662,7 @@ random_shadow_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u x1, Rpp3
         {
             row1 = rand() % srcSize.height;
             column1 = rand() % srcSize.width;
-        }while (column1 <= x1 || column1 >= x2 || row1 <= y1 || row1 >= y2);
+        } while (column1 <= x1 || column1 >= x2 || row1 <= y1 || row1 >= y2);
         do
         {
             row2 = rand() % srcSize.height;

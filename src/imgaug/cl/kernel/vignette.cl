@@ -26,9 +26,9 @@ __kernel void vignette_pkd(  __global unsigned char* input,
 
     int pixIdx = id_y * channel * width + id_x * channel + id_z;
 
-    int x=(id_x-(width/2));
-    int y=(id_y-(height/2));
-    float gaussianvalue=gaussian(x,y,stdDev)/gaussian(0.0,0.0,stdDev);
+    int x = (id_x - (width / 2));
+    int y = (id_y - (height / 2));
+    float gaussianvalue = gaussian(x, y, stdDev) / gaussian(0.0, 0.0, stdDev);
     float res = ((float)input[pixIdx]) * gaussianvalue ;
     output[pixIdx] = saturate_8u(res) ;
 }
@@ -47,9 +47,9 @@ __kernel void vignette_pln(  __global unsigned char* input,
 
     int pixIdx = id_z * width * height + id_y * width + id_x;
 
-    int x=(id_x-(width/2));
-    int y=(id_y-(height/2));
-    float gaussianvalue=gaussian(x,y,stdDev)/gaussian(0.0,0.0,stdDev);
+    int x = (id_x - (width / 2));
+    int y = (id_y - (height / 2));
+    float gaussianvalue=gaussian(x, y, stdDev) / gaussian(0.0, 0.0, stdDev);
     float res = ((float)input[pixIdx]) * gaussianvalue ;
     output[pixIdx] = saturate_8u(res) ;
 }
