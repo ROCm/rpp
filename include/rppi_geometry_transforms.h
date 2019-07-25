@@ -106,7 +106,7 @@ rppi_rotate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSi
 // ----------------------------------------
 // Host random_crop_letterbox functions declaration 
 // ----------------------------------------
-/* Rotates the input image according to the angle specified
+/* Crops the roi region, adds border and stores it in destination
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the input images
 *param[out] dstPtr output image
@@ -135,11 +135,10 @@ rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPt
 // ----------------------------------------
 // Host warp_affine functions declaration 
 // ----------------------------------------
-/* Resizes the input image to the destination dimension.
+/* Rotates translates and sheers the input image according to the affine values.
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the images
-*param[out] dstPtr output image
-*param[in] dstSize dimensions of the output images
+*param[in] dstPtr output image
 *param[in] affine affine transformation matrix
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
@@ -148,19 +147,19 @@ rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPt
 
 RppStatus
 rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
-                                  RppPtr_t affine);
+                                  Rpp32f* affine);
 
 RppStatus
 rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine);
+                              Rpp32f* affine);
 
 RppStatus
 rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine);
+                              Rpp32f* affine);
 
 RppStatus
 rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
-                              RppPtr_t affine);
+                              Rpp32f* affine);
 
 
 
@@ -357,41 +356,19 @@ rppi_lens_correction_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPt
 RppStatus
 rppi_lens_correction_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom, RppHandle_t rppHandle) ;
 
-// // ----------------------------------------
-// // GPU fisheye functions declaration 
-// // ----------------------------------------
-// RppStatus
-// rppi_fisheye_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_fisheye_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_fisheye_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
-
-// // ----------------------------------------
-// // GPU lens correction functions declaration 
-// // ----------------------------------------
-// RppStatus
-// rppi_lenscorrection_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_lenscorrection_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-// RppStatus
-// rppi_lenscorrection_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f strength, Rpp32f zoom, RppHandle_t rppHandle) ;
-
-// // GPU RandomCropLetterBox declaration 
-// // ----------------------------------------
-
-// RppStatus
-// rppi_Random_Crop_Letter_Box_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
-
-// RppStatus
-// rppi_Random_Crop_Letter_Box_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
-
-// RppStatus
-// rppi_Random_Crop_Letter_Box_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle) ;
  
- //-----------------------------
- //Warp Affine -----------
- //------------------------------
+// ----------------------------------------
+// GPU warp_affine functions declaration 
+// ----------------------------------------
+/* Rotates translates and sheers the input image according to the affine values.
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the images
+*param[in] dstPtr output image
+*param[in] affine affine transformation matrix
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
  RppStatus
 rppi_warp_affine_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,

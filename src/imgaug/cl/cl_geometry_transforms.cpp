@@ -132,7 +132,7 @@ resize_cl(cl_mem srcPtr, RppiSize srcSize,
 cl_int
 resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiSize dstSize,
-                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,  
+                Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u padding, Rpp32u type,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)
 {
@@ -158,24 +158,45 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
-
+    unsigned int width = dstSize.width - padding * 2;
+    unsigned int height = dstSize.height - padding * 2;
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstSize.height);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstSize.width);
+    if(type == 1)
+    {    
+        err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &height);
+        err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &width);
+    }
+    else
+    {    
+        err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstSize.height);
+        err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstSize.width);
+    }
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x1);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y1);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x2);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y2);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &padding);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &type);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
 
 
     size_t gDim3[3];
-    gDim3[0] = dstSize.width;
-    gDim3[1] = dstSize.height;
-    gDim3[2] = channel;
+    if(type == 1)
+    {
+        gDim3[0] = dstSize.width - padding * 2;
+        gDim3[1] = dstSize.height - padding * 2;
+        gDim3[2] = channel;
+    }
+    else
+    {
+        gDim3[0] = dstSize.width;
+        gDim3[1] = dstSize.height;
+        gDim3[2] = channel;
+    }
+    
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 }
 
@@ -301,14 +322,20 @@ lens_correction_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     {std::cerr << "Internal error: Unknown Channel format";}
     if (strength == 0)
         strength = 0.000001;
+    float halfWidth = (float)srcSize.width / 2.0;
+    float halfHeight = (float)srcSize.height / 2.0;
+    float correctionRadius = (float)sqrt((float)srcSize.width * srcSize.width + srcSize.height * srcSize.height) / (float)strength;
     //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &strength);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &zoom);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &halfWidth);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &halfHeight);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &correctionRadius);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &strength);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &zoom);
     //----
 
     size_t gDim3[3];
@@ -319,61 +346,6 @@ lens_correction_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     return RPP_SUCCESS;
 }
 
-//--------------------------------Rotate
-
-/*********** RandomCropLetterBox ***********/
-
-RppStatus
-random_crop_letterbox_cl(  cl_mem srcPtr, RppiSize srcSize, 
-                            cl_mem dstPtr, RppiSize dstSize, 
-                            Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
-                            RppiChnFormat chnFormat, unsigned int channel,
-                            cl_command_queue theQueue)
-{
-    int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
-
-    if (chnFormat == RPPI_CHN_PLANAR)
-    {
-        CreateProgramFromBinary(theQueue,"randomcropletterbox.cl","randomcropletterbox.bin","randomcropletterbox_planar",theProgram,theKernel);
-        clRetainKernel(theKernel);    
-    }
-    // cl_kernel_initializer(theQueue,
-    //                       "randomcropletterbox.cl",
-    //                       "trandomcropletterbox_planar",
-    //                       theProgram, theKernel);
-    else
-    {
-        CreateProgramFromBinary(theQueue,"randomcropletterbox.cl","randomcropletterbox.bin","randomcropletterbox_packed",theProgram,theKernel);
-        clRetainKernel(theKernel);    
-    }
-    // cl_kernel_initializer(theQueue,
-    //                       "randomcropletterbox.cl",
-    //                       "randomcropletterbox_packed",
-    //                       theProgram, theKernel);
-    
-    //---- Args Setter
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.height);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.width);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &x1);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &y1);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &x2);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &y2);
-    
-    size_t gDim3[3];
-    gDim3[0] = dstSize.width;
-    gDim3[1] = dstSize.height;
-    gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-    
-    return RPP_SUCCESS;
-}
 
 //Warp -Affine
 cl_int

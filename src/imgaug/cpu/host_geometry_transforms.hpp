@@ -5,72 +5,61 @@
 template <typename T>
 RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                     RppiAxis flipAxis,
-                    RppiChnFormat chnFormat, unsigned channel)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+    
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         if (flipAxis == RPPI_HORIZONTAL_AXIS)
         {
-            int srcLoc = 0, dstLoc = 0;
-            for (int i = (srcSize.height - 1); i >= 0; i--)
+            for (int c = 0; c < channel; c++)
             {
-                for (int j = 0; j < srcSize.width; j++)
+                srcPtrTemp = srcPtr + ((c + 1) * srcSize.height * srcSize.width) - srcSize.width;
+                for (int i = 0; i < srcSize.height; i++)
                 {
-                    srcLoc = (i * srcSize.width) + j;
-                    for (int c = 0; c < channel; c++)
+                    for (int j = 0; j < srcSize.width; j++)
                     {
-                        dstPtr[dstLoc + (c * srcSize.height * srcSize.width)] = srcPtr[srcLoc + (c * srcSize.height * srcSize.width)];
+                        *dstPtrTemp = *srcPtrTemp;
+                        dstPtrTemp++;
+                        srcPtrTemp++;
                     }
-                    dstLoc += 1;
+                    srcPtrTemp = srcPtrTemp - (2 * srcSize.width);
                 }
             }
         }
         else if (flipAxis == RPPI_VERTICAL_AXIS)
         {
-            int srcLoc = 0, dstLoc = 0;
-            for (int i = (srcSize.width - 1); i >= 0; i--)
+            for (int c = 0; c < channel; c++)
             {
-                dstLoc = srcSize.width - 1 - i;
-                for (int j = 0; j < srcSize.height; j++)
+                srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width) + srcSize.width - 1;
+                for (int i = 0; i < srcSize.height; i++)
                 {
-                    srcLoc = (j * srcSize.width) + i;
-                    for (int c = 0; c < channel; c++)
+                    for (int j = 0; j < srcSize.width; j++)
                     {
-                        dstPtr[dstLoc + (c * srcSize.height * srcSize.width)] = srcPtr[srcLoc + (c * srcSize.height * srcSize.width)];
+                        *dstPtrTemp = *srcPtrTemp;
+                        dstPtrTemp++;
+                        srcPtrTemp--;
                     }
-                    dstLoc += srcSize.width;
+                    srcPtrTemp = srcPtrTemp + (2 * srcSize.width);
                 }
             }
         }
         else if (flipAxis == RPPI_BOTH_AXIS)
         {
-            Rpp8u *pInter = (Rpp8u *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp8u));
-            int srcLoc = 0, interLoc = 0;
-            for (int i = (srcSize.height - 1); i >= 0; i--)
+            for (int c = 0; c < channel; c++)
             {
-                for (int j = 0; j < srcSize.width; j++)
+                srcPtrTemp = srcPtr + ((c + 1) * srcSize.height * srcSize.width) - 1;
+                for (int i = 0; i < srcSize.height; i++)
                 {
-                    srcLoc = (i * srcSize.width) + j;
-                    for (int c = 0; c < channel; c++)
+                    for (int j = 0; j < srcSize.width; j++)
                     {
-                        pInter[interLoc + (c * srcSize.height * srcSize.width)] = srcPtr[srcLoc + (c * srcSize.height * srcSize.width)];
+                        *dstPtrTemp = *srcPtrTemp;
+                        dstPtrTemp++;
+                        srcPtrTemp--;
                     }
-                    interLoc += 1;
-                }
-            }
-            int dstLoc = 0;
-            interLoc = 0;
-            for (int i = (srcSize.width - 1); i >= 0; i--)
-            {
-                dstLoc = srcSize.width - 1 - i;
-                for (int j = 0; j < srcSize.height; j++)
-                {
-                    interLoc = (j * srcSize.width) + i;
-                    for (int c = 0; c < channel; c++)
-                    {
-                        dstPtr[dstLoc + (c * srcSize.height * srcSize.width)] = pInter[interLoc + (c * srcSize.height * srcSize.width)];
-                    }
-                    dstLoc += srcSize.width;
                 }
             }
         }
@@ -79,77 +68,58 @@ RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     {
         if (flipAxis == RPPI_HORIZONTAL_AXIS)
         {
-            int srcLoc = 0, dstLoc = 0;
-            for (int i = (srcSize.height - 1); i >= 0; i--)
+            srcPtrTemp = srcPtr + (channel * ((srcSize.height * srcSize.width) - srcSize.width));
+            for (int i = 0; i < srcSize.height; i++)
             {
                 for (int j = 0; j < srcSize.width; j++)
                 {
-                    srcLoc = (i * channel * srcSize.width) + (channel * j);
                     for (int c = 0; c < channel; c++)
                     {
-                        dstPtr[dstLoc + c] = srcPtr[srcLoc + c];
+                        *dstPtrTemp = *srcPtrTemp;
+                        dstPtrTemp++;
+                        srcPtrTemp++;
                     }
-                    srcLoc += channel;
-                    dstLoc += channel;
                 }
+                srcPtrTemp = srcPtrTemp - (channel * (2 * srcSize.width));
             }
         }
         else if (flipAxis == RPPI_VERTICAL_AXIS)
         {
-            int srcLoc = 0, dstLoc = 0;
-            for (int i = (srcSize.width - 1); i >= 0; i--)
+            srcPtrTemp = srcPtr + (channel * ((srcSize.height * srcSize.width) + srcSize.width - 1));
+            for (int i = 0; i < srcSize.height; i++)
             {
-                dstLoc = channel * (srcSize.width - 1 - i);
-                for (int j = 0; j < srcSize.height; j++)
+                for (int j = 0; j < srcSize.width; j++)
                 {
-                    srcLoc = (j * channel * srcSize.width) + (i * channel);
                     for (int c = 0; c < channel; c++)
                     {
-                        dstPtr[dstLoc + c] = srcPtr[srcLoc + c];
+                        *dstPtrTemp = *srcPtrTemp;
+                        dstPtrTemp++;
+                        srcPtrTemp++;
                     }
-                    dstLoc += (srcSize.width * channel);
+                    srcPtrTemp = srcPtrTemp - (2 * channel);
                 }
+                srcPtrTemp = srcPtrTemp + (channel * (2 * srcSize.width));
             }
         }
         else if (flipAxis == RPPI_BOTH_AXIS)
         {
-            Rpp8u *pInter = (Rpp8u *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp8u));
-            int srcLoc = 0, interLoc = 0;
-
-            for (int i = (srcSize.height - 1); i >= 0; i--)
+            srcPtrTemp = srcPtr + (channel * ((srcSize.height * srcSize.width) - 1));
+            for (int i = 0; i < srcSize.height; i++)
             {
                 for (int j = 0; j < srcSize.width; j++)
                 {
-                    srcLoc = (i * channel * srcSize.width) + (channel * j);
                     for (int c = 0; c < channel; c++)
                     {
-                        pInter[interLoc + c] = srcPtr[srcLoc + c];
+                        *dstPtrTemp = *srcPtrTemp;
+                        dstPtrTemp++;
+                        srcPtrTemp++;
                     }
-                    srcLoc += channel;
-                    interLoc += channel;
-                }
-            }
-
-            int dstLoc = 0;
-            interLoc = 0;
-
-
-            for (int i = (srcSize.width - 1); i >= 0; i--)
-            {
-                dstLoc = channel * (srcSize.width - 1 - i);
-                for (int j = 0; j < srcSize.height; j++)
-                {
-                    interLoc = (j * channel * srcSize.width) + (i * channel);
-                    for (int c = 0; c < channel; c++)
-                    {
-                        dstPtr[dstLoc + c] = pInter[interLoc + c];
-                    }
-                    dstLoc += (srcSize.width * channel);
+                    srcPtrTemp = srcPtrTemp - (2 * channel);
                 }
             }
         }
     }
-
+    
     return RPP_SUCCESS;
 }
 
@@ -160,7 +130,7 @@ RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus resize_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
-                           RppiChnFormat chnFormat, unsigned int channel)
+                           RppiChnFormat chnFormat, Rpp32u channel)
 {
     resize_kernel_host(srcPtr, srcSize, dstPtr, dstSize, chnFormat, channel);
 
@@ -175,7 +145,7 @@ RppStatus resize_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 template <typename T>
 RppStatus resize_crop_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
-                           RppiChnFormat chnFormat, unsigned int channel)
+                           RppiChnFormat chnFormat, Rpp32u channel)
 {
     resize_crop_kernel_host(srcPtr, srcSize, dstPtr, dstSize, x1, y1, x2, y2, chnFormat, channel);
 
@@ -198,7 +168,7 @@ RppStatus rotate_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
     rotate[2] = -sin(angleRad);
     rotate[3] = cos(angleRad);
     
-    float minX = 0, minY = 0, maxX = 0, maxY = 0;
+    Rpp32f minX = 0, minY = 0, maxX = 0, maxY = 0;
     for (int i = 0; i < srcSize.height; i++)
     {
         for (int j = 0; j < srcSize.width; j++)
@@ -233,7 +203,7 @@ RppStatus rotate_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
 template <typename T>
 RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            Rpp32f angleDeg,
-                           RppiChnFormat chnFormat, unsigned int channel)
+                           RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32f angleRad = -RAD(angleDeg);
     Rpp32f rotate[4] = {0};
@@ -306,7 +276,7 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                             + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
                             + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
                     
-                        *dstPtrTemp = (Rpp8u) round(pixel);
+                        *dstPtrTemp = (T) round(pixel);
                         dstPtrTemp ++;
                     }
                 }
@@ -353,7 +323,7 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
                     
-                        *dstPtrTemp = (Rpp8u) round(pixel);
+                        *dstPtrTemp = (T) round(pixel);
                         dstPtrTemp ++;
                     }
                 }
@@ -367,11 +337,10 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 
 /**************** Warp Affine ***************/
 
-template <typename T>
 RppStatus warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
-                                       T* affine)
+                                       Rpp32f* affine)
 {
-    float minX = 0, minY = 0, maxX = 0, maxY = 0;
+    Rpp32f minX = 0, minY = 0, maxX = 0, maxY = 0;
     for (int i = 0; i < srcSize.height; i++)
     {
         for (int j = 0; j < srcSize.width; j++)
@@ -403,10 +372,10 @@ RppStatus warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
     return RPP_SUCCESS;
 }
 
-template <typename T, typename U>
+template <typename T>
 RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
-                           U* affine,
-                           RppiChnFormat chnFormat, unsigned int channel)
+                           Rpp32f* affine,
+                           RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32f minX = 0, minY = 0;
     T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
@@ -472,7 +441,7 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
                             + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
                             + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
                     
-                        *dstPtrTemp = (Rpp8u) round(pixel);
+                        *dstPtrTemp = (T) round(pixel);
                         dstPtrTemp ++;
                     }
                 }
@@ -519,7 +488,7 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
                     
-                        *dstPtrTemp = (Rpp8u) round(pixel);
+                        *dstPtrTemp = (T) round(pixel);
                         dstPtrTemp ++;
                     }
                 }
@@ -531,12 +500,11 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
 }
 
 
-
-/**************** Fish Eye Effect ***************/
+/**************** Fisheye ***************/
 
 template <typename T>
 RppStatus fisheye_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    RppiChnFormat chnFormat, unsigned int channel)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
@@ -638,7 +606,7 @@ RppStatus fisheye_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 template <typename T>
 RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                                Rpp32f strength, Rpp32f zoom, 
-                               RppiChnFormat chnFormat, unsigned int channel)
+                               RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (strength < 0)
     {
@@ -718,7 +686,7 @@ RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                 + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
                                 + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
 
-                        *dstPtrTemp = (Rpp8u) round(pixel);
+                        *dstPtrTemp = (T) round(pixel);
                     }
                     dstPtrTemp++;
                 }
@@ -781,7 +749,7 @@ RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
                         
-                        *dstPtrTemp = (Rpp8u) round(pixel);
+                        *dstPtrTemp = (T) round(pixel);
                     }
                     dstPtrTemp++;
                 }

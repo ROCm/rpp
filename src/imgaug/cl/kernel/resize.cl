@@ -90,6 +90,8 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
                             const unsigned int y1,
                             const unsigned int x2,
                             const unsigned int y2,
+                            const unsigned int padding,
+                            const unsigned int type,
                             const unsigned int channel
 )
 {
@@ -110,8 +112,10 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
     y_diff = (y_ratio * id_y) - y ;
 
     unsigned int pixId;
-    pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height;
-       
+    if(type == 0)
+        pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height;
+    else
+        pixId = id_x + id_y * dest_width + id_z * dest_width * dest_height + ((dest_width + padding * 2) * padding) + (id_y * padding * 2) + (padding);
     A = srcPtr[(x + x1) + (y+y1) * source_width + id_z * source_height * source_width];
     B = srcPtr[(x + x1 + 1)  + (y+y1) * source_width + id_z * source_height * source_width];
     C = srcPtr[(x + x1)+ (y + y1 + 1) * source_width + id_z * source_height * source_width];
@@ -122,7 +126,6 @@ __kernel void resize_crop_pln (  __global unsigned char* srcPtr,
                     ) ;
 
     dstPtr[pixId] =  saturate_8u(pixVal);
-
   
 }
 
@@ -136,6 +139,8 @@ __kernel void resize_crop_pkd (  __global unsigned char* srcPtr,
                             const unsigned int y1,
                             const unsigned int x2,
                             const unsigned int y2,
+                            const unsigned int padding,
+                            const unsigned int type,
                             const unsigned int channel
 )
 {
@@ -156,8 +161,10 @@ __kernel void resize_crop_pkd (  __global unsigned char* srcPtr,
     y_diff = (y_ratio * id_y) - y ;
 
     unsigned int pixId;
-    pixId = id_x * channel + id_y * dest_width * channel + id_z;
-
+    if(type == 0)
+        pixId = id_x * channel + id_y * dest_width * channel + id_z;
+    else
+        pixId = id_x * channel + id_y * dest_width * channel + id_z + ((dest_width + padding * 2) * channel * padding) + (id_y * padding * 2 * channel) + (padding * channel);
     A = srcPtr[(x+x1) * channel + (y+y1) * source_width * channel + id_z];
     B = srcPtr[(x +x1 +1) * channel + (y+y1) * source_width * channel + id_z];
     C = srcPtr[(x+x1) * channel + (y+ y1+ 1) * source_width * channel + id_z];
