@@ -734,7 +734,7 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
                     maxWorkItemPerWorkGroup,NULL);
 
     size_t workItemPerWorkGroup = maxWorkItemPerWorkGroup[0] * maxWorkItemPerWorkGroup[1];
-    unsigned int numGroups = srcSize.height * srcSize.width / workItemPerWorkGroup;
+    unsigned int numGroups = (srcSize.height * srcSize.width / workItemPerWorkGroup) + 1;
 
     cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(unsigned int)*256*channel*numGroups, NULL, NULL);
@@ -751,9 +751,11 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-
+        std::cerr << "Inside cl.cpp" <<std::endl;
         CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pkd",theProgram,theKernel);
+        std::cerr << "Inside cl.cpp Second time" <<std::endl;
         clRetainKernel(theKernel);
+
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
@@ -761,6 +763,7 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
 
 
     // For partial histogram kernel
+    counter = 0;
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &partialHistogram);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
@@ -776,24 +779,23 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     lDim3[0] = maxWorkItemPerWorkGroup[0];
     lDim3[1] = maxWorkItemPerWorkGroup[1];
     lDim3[2] = 1;
-    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
+    std::cerr << "Inside cl.cpp Second time" <<std::endl;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    std::cerr << "Inside cl.cpp Second time" <<std::endl;
 
-
-    // For sum histogram kernel
+    /*// For sum histogram kernel
+    CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_sum_partial",theProgram,theKernel);
+    clRetainKernel(theKernel);
     counter = 0;
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &partialHistogram);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &histogram);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &numGroups);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
 
-    CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
-    clRetainKernel(theKernel);
 
-    size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = 1;
-    size_t lDim3[3];
     lDim3[0] = maxWorkItemPerWorkGroup[0];
     lDim3[1] = maxWorkItemPerWorkGroup[1];
     lDim3[2] = 1;
@@ -804,23 +806,57 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     counter = 0;
     cl_mem cum_histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(unsigned int)*256*channel, NULL, NULL);
+
+    CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
+    clRetainKernel(theKernel);
+
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &histogram);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &cum_histogram);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), NULL);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), NULL);
-    CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
-    clRetainKernel(theKernel);
 
-    size_t gDim3[3];
+
+
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = 1;
-    size_t lDim3[3];
     lDim3[0] = maxWorkItemPerWorkGroup[0];
     lDim3[1] = maxWorkItemPerWorkGroup[1];
     lDim3[2] = 1;
     cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
 
+
+
+    // For histogram equalize
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_equalize_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_equalize_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+    counter = 0;
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &cum_histogram);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
+    clReleaseMemObject(cum_histogram);
+    clReleaseMemObject(partialHistogram);
+    clReleaseMemObject(histogram);*/
     return RPP_SUCCESS;
 
 }

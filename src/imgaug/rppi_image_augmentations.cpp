@@ -2344,8 +2344,7 @@ rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
  	histogram_balance_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			kernelSize,
-			RPPI_CHN_PACKED, 3,
+			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle));
  	 }
 #elif defined (HIP_COMPILE)
@@ -2357,7 +2356,7 @@ rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
+rppi_histogram_balance_u8_pln3_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
                                     RppiSize srcSize, RppHandle_t rppHandle)
 {
 
@@ -2370,8 +2369,7 @@ rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
  	histogram_balance_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			kernelSize,
-			RPPI_CHN_PACKED, 3,
+			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 }
 #elif defined (HIP_COMPILE)
@@ -2382,7 +2380,7 @@ rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
 }
 
 RppStatus
-rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
+rppi_histogram_balance_u8_pkd3_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
                                     RppiSize srcSize, RppHandle_t rppHandle)
 {
 
@@ -2395,7 +2393,6 @@ rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
  	histogram_balance_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			kernelSize,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 }

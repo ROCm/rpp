@@ -750,11 +750,11 @@ rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
                                     RppiSize srcSize, RppHandle_t rppHandle);
 
 RppStatus
-rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
+rppi_histogram_balance_u8_pln3_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
                                     RppiSize srcSize, RppHandle_t rppHandle);
 
 RppStatus
-rppi_histogram_balance_u8_pln1_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
+rppi_histogram_balance_u8_pkd3_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr,
                                     RppiSize srcSize, RppHandle_t rppHandle);
 
 
