@@ -413,3 +413,72 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
     gDim3[2] = channel;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 }
+
+//Channel Extract
+RppStatus
+channel_extract_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u extractChannelNumber, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    cl_int err;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue,"channel_extract.cl","channel_extract.cl.bin","channel_extract_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"channel_extract.cl","channel_extract.cl.bin","channel_extract_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    //---- Args Setter
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &extractChannelNumber);
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = 1;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return RPP_SUCCESS;  
+}
+
+//Channel Combine
+RppStatus
+channel_extract_cl(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem srcPtr3, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    cl_int err;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue,"channel_combine.cl","channel_combine.cl.bin","channel_combine_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"channel_combine.cl","channel_combine.cl.bin","channel_combine_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    //---- Args Setter
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr3);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = 1;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return RPP_SUCCESS;      
+}

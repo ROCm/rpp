@@ -262,4 +262,15 @@ occlusion_cl(   cl_mem srcPtr1,RppiSize srcSize1,
                 RppiChnFormat chnFormat,unsigned int channel,
                 cl_command_queue theQueue);
 
+RppStatus
+channel_extract_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr, Rpp32u extractChannelNumber, 
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
+
+RppStatus
+channel_extract_cl(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem srcPtr3, RppiSize srcSize,
+                cl_mem dstPtr,
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue);
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
