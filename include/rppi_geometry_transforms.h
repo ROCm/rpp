@@ -135,11 +135,10 @@ rppi_random_crop_letterbox_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPt
 // ----------------------------------------
 // Host warp_affine functions declaration 
 // ----------------------------------------
-/* Resizes the input image to the destination dimension.
+/* Rotates translates and sheers the input image according to the affine values.
 *param[in] srcPtr input image
 *param[in] srcSize dimensions of the images
-*param[out] dstPtr output image
-*param[in] dstSize dimensions of the output images
+*param[in] dstPtr output image
 *param[in] affine affine transformation matrix
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
@@ -358,9 +357,18 @@ RppStatus
 rppi_lens_correction_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom, RppHandle_t rppHandle) ;
 
  
- //-----------------------------
- //Warp Affine -----------
- //------------------------------
+// ----------------------------------------
+// GPU warp_affine functions declaration 
+// ----------------------------------------
+/* Rotates translates and sheers the input image according to the affine values.
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the images
+*param[in] dstPtr output image
+*param[in] affine affine transformation matrix
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
 
  RppStatus
 rppi_warp_affine_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,

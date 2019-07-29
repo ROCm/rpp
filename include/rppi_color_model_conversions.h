@@ -208,7 +208,7 @@ rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t ds
 *param srcPtr [in] srcPtr input image
 *param[in] srcSize  srcSize dimensions of the images
 *param[out] dstPtr dstPtr output image
-*param[in] stdDev stdDev standard deviation for the gaussian function used in the vignette (decides amount of vignette) which should range between 0 - 100
+*param[in] stdDev stdDev standard deviation for the gaussian function used in the vignette (decides amount of vignette)
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
@@ -391,7 +391,7 @@ rppi_color_temperature_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 *param srcPtr [in] srcPtr input image
 *param[in] srcSize  srcSize dimensions of the images
 *param[out] dstPtr dstPtr output image
-*param[in] stdDev stdDev standard deviation for the gaussian function used in the vignette (decides amount of vignette) which should range between 0 - 100
+*param[in] stdDev stdDev standard deviation for the gaussian function used in the vignette (decides amount of vignette)
 *param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration. 
 *retval RPP_SUCCESS : No error succesful completion
