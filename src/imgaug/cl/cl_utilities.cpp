@@ -59,9 +59,9 @@ cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* lo
 
     err = clEnqueueNDRangeKernel(theQueue, theKernel, 3, NULL, globalDim3, localDim3,
                                                               0, NULL, NULL);
-    // clFinish(theQueue);
-    // clReleaseProgram(theProgram);
-    // clReleaseKernel(theKernel);
+    //clFinish(theQueue);
+    //clReleaseProgram(theProgram);
+    //clReleaseKernel(theKernel);
     return err;
 }
 
