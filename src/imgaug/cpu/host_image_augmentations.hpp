@@ -195,12 +195,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
-    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
-    {
-        *dstPtrTemp = *srcPtrTemp;
-        srcPtrTemp++;
-        dstPtrTemp++;
-    }
+    memcpy(dstPtr, srcPtr, channel * srcSize.height * srcSize.width * sizeof(T));
 
     Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
 
@@ -248,12 +243,7 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     T *srcPtrBeginJitter, *dstPtrBeginJitter;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtrForJitter;
-    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
-    {
-        *dstPtrTemp = *srcPtrTemp;
-        srcPtrTemp++;
-        dstPtrTemp++;
-    }
+    memcpy(dstPtr, srcPtr, channel * srcSize.height * srcSize.width * sizeof(T));
 
     srand (time(NULL));
     int jitteredPixelLocDiffX, jitteredPixelLocDiffY;
@@ -349,6 +339,8 @@ RppStatus occlusion_host(T* srcPtr1, RppiSize srcSize1, T* srcPtr2, RppiSize src
 
     compute_subimage_location_host(dstPtr, &dstPtrSubImage, srcSize1, &dstSizeSubImage, src1x1, src1y1, src1x2, src1y2, chnFormat, channel);
 
+    memcpy(dstPtr, srcPtr1, channel * srcSize1.height * srcSize1.width * sizeof(T));
+/*
     T *srcPtr1Temp, *dstPtrTemp;
     srcPtr1Temp = srcPtr1;
     dstPtrTemp = dstPtr;
@@ -359,7 +351,7 @@ RppStatus occlusion_host(T* srcPtr1, RppiSize srcSize1, T* srcPtr2, RppiSize src
         srcPtr1Temp++;
         dstPtrTemp++;
     }
-
+*/
     T *dstPtrResizeTemp, *dstPtrSubImageTemp;
     dstPtrResizeTemp = dstPtrResize;
     dstPtrSubImageTemp = dstPtrSubImage;
@@ -460,12 +452,7 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     }
     else if (channel == 3)
     {
-        for (int i = 0; i < (3 * srcSize.height * srcSize.width); i++)
-        {
-            *srcPtrRGBTemp = *srcPtrTemp;
-            srcPtrRGBTemp++;
-            srcPtrTemp++;
-        }
+        memcpy(srcPtrRGB, srcPtr, 3 * srcSize.height * srcSize.width * sizeof(T));
     }
 
     Rpp32f *srcPtrHSL = (Rpp32f *)calloc(3 * srcSize.height * srcSize.width, sizeof(Rpp32f));
@@ -690,12 +677,7 @@ RppStatus random_shadow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
-    {
-        *dstPtrTemp = *srcPtrTemp;
-        srcPtrTemp++;
-        dstPtrTemp++;
-    }
+    memcpy(dstPtr, srcPtr, channel * srcSize.height * srcSize.width * sizeof(T));
 
     for (int shadow = 0; shadow < numberOfShadows; shadow++)
     {
