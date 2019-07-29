@@ -367,32 +367,35 @@ snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     srand(time(0));
     int ctr = 0; 
     clEnqueueCopyBuffer(theQueue, srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
-    Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
-    const Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
-    cl_kernel theKernel;
-    cl_program theProgram;
-    if(chnFormat == RPPI_CHN_PACKED)
-    {
-        CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pkd", theProgram, theKernel);
-        clRetainKernel(theKernel);
+    if(noiseProbability != 0)
+    {    
+        Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
+        const Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
+        cl_kernel theKernel;
+        cl_program theProgram;
+        if(chnFormat == RPPI_CHN_PACKED)
+        {
+            CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pkd", theProgram, theKernel);
+            clRetainKernel(theKernel);
+        }
+        else if(chnFormat == RPPI_CHN_PLANAR)
+        {
+            CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pln", theProgram, theKernel);
+            clRetainKernel(theKernel);
+        }
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
+        
+        size_t gDim3[3];
+        gDim3[0] = srcSize.width;
+        gDim3[1] = srcSize.height;
+        gDim3[2] = 1;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     }
-    else if(chnFormat == RPPI_CHN_PLANAR)
-    {
-        CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pln", theProgram, theKernel);
-        clRetainKernel(theKernel);
-    }
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
-    
-    size_t gDim3[3];
-    gDim3[0] = srcSize.width;
-    gDim3[1] = srcSize.height;
-    gDim3[2] = 1;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
     return RPP_SUCCESS;
 }
