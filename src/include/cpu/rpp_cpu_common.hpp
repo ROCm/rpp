@@ -383,34 +383,23 @@ inline RppStatus convolution_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSi
 
 template<typename T>
 inline RppStatus histogram_kernel_host(T* srcPtr, RppiSize srcSize, Rpp32u* histogram, 
-                                Rpp32u bins, 
+                                Rpp8u bins, 
                                 Rpp32u channel)
 {
-    Rpp32u elementsInBin = ((Rpp32u)(std::numeric_limits<T>::max()) + 1) / bins;
-    int flag = 0;
-
-    T *srcPtrTemp;
-    srcPtrTemp = srcPtr;
-    Rpp32u *histogramTemp;
-    histogramTemp = histogram;
-
-    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
+    if (bins == 0)
     {
-        flag = 0;
-        for (int binCheck = 0; binCheck < bins - 1; binCheck++)
+        *histogram = channel * srcSize.height * srcSize.width;
+    }
+    else
+    {
+        Rpp8u rangeInBin = 256 / (bins + 1);
+        T *srcPtrTemp;
+        srcPtrTemp = srcPtr;
+        for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
         {
-            if (*srcPtrTemp >= binCheck * elementsInBin && *srcPtrTemp <= ((binCheck + 1) * elementsInBin) - 1)
-            {
-                *(histogramTemp + binCheck) += 1;
-                flag = 1;
-                break;
-            }
+            *(histogram + (*srcPtrTemp / rangeInBin)) += 1;
+            srcPtrTemp++;
         }
-        if (flag == 0)
-        {
-            *(histogramTemp + bins - 1) += 1;
-        }
-        srcPtrTemp++;
     }
 
     return RPP_SUCCESS;
