@@ -970,3 +970,44 @@ RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     return RPP_SUCCESS;
 }
+
+/**************** Equalize Histogram ***************/
+
+template <typename T>
+RppStatus histogram_balance_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+                                  Rpp32u channel)
+{
+    Rpp32u *histogram = (Rpp32u *) calloc(256, sizeof(Rpp32u));
+    T *lookUpTable = (T *) calloc (256, sizeof(T));
+    Rpp32u *histogramTemp;
+    T *lookUpTableTemp;
+    Rpp32f multiplier = 255.0 / ((Rpp32f)(channel * srcSize.height * srcSize.width));
+
+    histogram_kernel_host(srcPtr, srcSize, histogram, 255, channel);
+
+    Rpp32u sum = 0;
+    histogramTemp = histogram;
+    lookUpTableTemp = lookUpTable;
+    
+    for (int i = 0; i < 256; i++)
+    {
+        sum += *histogramTemp;
+        *lookUpTableTemp = (T)round(((Rpp32f)sum) * multiplier);
+        histogramTemp++;
+        lookUpTableTemp++;
+    }
+
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
+    {
+        *dstPtrTemp = *(lookUpTable + *srcPtrTemp);
+        srcPtrTemp++;
+        dstPtrTemp++;
+    }
+    
+    return RPP_SUCCESS;
+
+}
