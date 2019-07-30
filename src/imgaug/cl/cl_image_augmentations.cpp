@@ -784,3 +784,39 @@ erode_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, Rp
     
     return RPP_SUCCESS;    
 }
+
+/********************** local binary pattern ************************/
+RppStatus
+local_binary_pattern_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    int ctr=0;
+    // Rpp32u kernelSize = 3;
+    // Rpp32u bound = ((kernelSize - 1) / 2);
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if(chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"local_binary_pattern.cl","local_binary_pattern.cl.bin","local_binary_pattern_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {
+        CreateProgramFromBinary(theQueue,"local_binary_pattern.cl","local_binary_pattern.cl.bin","local_binary_pattern_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    
+    //---- Args Setter
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    
+    return RPP_SUCCESS;    
+}
