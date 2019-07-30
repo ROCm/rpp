@@ -781,44 +781,47 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
             temp++;
         }
     }
-    if (chnFormat == RPPI_CHN_PLANAR)
+    if(fogValue != 0)
     {
-        Rpp8u *srcPtr1, *srcPtr2;
-        if(channel > 1)
+        if (chnFormat == RPPI_CHN_PLANAR)
         {
-            srcPtr1 = srcPtr + (srcSize.width * srcSize.height);
-            srcPtr2 = srcPtr + (srcSize.width * srcSize.height * 2);
-        }
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-        {
-            Rpp32f check= *srcPtr;
-            if(channel > 1) 
-                check = (check + *srcPtr1 + *srcPtr2) / 3;
-            *srcPtr = fogGenerator(*srcPtr, fogValue, 1, check);
-            srcPtr++;
+            Rpp8u *srcPtr1, *srcPtr2;
             if(channel > 1)
             {
-                *srcPtr1 = fogGenerator(*srcPtr1, fogValue, 2, check);
-                *srcPtr2 = fogGenerator(*srcPtr2, fogValue, 3, check);
-                srcPtr1++;
-                srcPtr2++;
+                srcPtr1 = srcPtr + (srcSize.width * srcSize.height);
+                srcPtr2 = srcPtr + (srcSize.width * srcSize.height * 2);
+            }
+            for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+            {
+                Rpp32f check= *srcPtr;
+                if(channel > 1) 
+                    check = (check + *srcPtr1 + *srcPtr2) / 3;
+                *srcPtr = fogGenerator(*srcPtr, fogValue, 1, check);
+                srcPtr++;
+                if(channel > 1)
+                {
+                    *srcPtr1 = fogGenerator(*srcPtr1, fogValue, 2, check);
+                    *srcPtr2 = fogGenerator(*srcPtr2, fogValue, 3, check);
+                    srcPtr1++;
+                    srcPtr2++;
+                }
             }
         }
-    }
-    else
-    {
-        Rpp8u *srcPtr1, *srcPtr2;
-        srcPtr1 = srcPtr + 1;
-        srcPtr2 = srcPtr + 2;
-        for (int i = 0; i < (srcSize.width * srcSize.height * channel); i += 3)
+        else
         {
-            Rpp32f check = (*srcPtr + *srcPtr1 + *srcPtr2) / 3;
-            *srcPtr = fogGenerator(*srcPtr, fogValue, 1, check);
-            *srcPtr1 = fogGenerator(*srcPtr1, fogValue, 2, check);
-            *srcPtr2 = fogGenerator(*srcPtr2, fogValue, 3, check);
-			srcPtr += 3;
-			srcPtr1 += 3;
-			srcPtr2 += 3;
+            Rpp8u *srcPtr1, *srcPtr2;
+            srcPtr1 = srcPtr + 1;
+            srcPtr2 = srcPtr + 2;
+            for (int i = 0; i < (srcSize.width * srcSize.height * channel); i += 3)
+            {
+                Rpp32f check = (*srcPtr + *srcPtr1 + *srcPtr2) / 3;
+                *srcPtr = fogGenerator(*srcPtr, fogValue, 1, check);
+                *srcPtr1 = fogGenerator(*srcPtr1, fogValue, 2, check);
+                *srcPtr2 = fogGenerator(*srcPtr2, fogValue, 3, check);
+                srcPtr += 3;
+                srcPtr1 += 3;
+                srcPtr2 += 3;
+            }
         }
     }
     return RPP_SUCCESS;
