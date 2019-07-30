@@ -793,6 +793,18 @@ rppi_local_binary_pattern_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_
 RppStatus
 rppi_local_binary_pattern_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
 
+//--------------------------------------
+//Sobel
+//--------------------------------------
+RppStatus
+rppi_sobel_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u sobelType, RppHandle_t rppHandle);
+
+RppStatus
+rppi_sobel_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u sobelType, RppHandle_t rppHandle);
+
+RppStatus
+rppi_sobel_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u sobelType, RppHandle_t rppHandle);
+
                                     
 #ifdef __cplusplus
 }
