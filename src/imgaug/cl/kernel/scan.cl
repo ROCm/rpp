@@ -43,3 +43,19 @@ __kernel void scan(__global int *input,
     }
    printf("%d",output[767]);}
 }
+
+__kernel void scan_1c(__global int *input,
+                   __global int *output,
+                   __local  int *b,
+                   __local  int *c)
+{
+
+    uint gid = get_global_id(0);
+    int i;
+    if (gid == 0){
+        output[0]= input[0];
+    for(i =1; i<256; i++){
+        output[i] = output[i-1] + input[i];
+    }
+   printf("%d",output[767]);}
+}
