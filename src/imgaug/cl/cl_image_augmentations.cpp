@@ -15,7 +15,7 @@ brightness_cl (    cl_mem srcPtr, RppiSize srcSize,
     cl_program theProgram;
 
     CreateProgramFromBinary(theQueue,"brightness_contrast.cl","brightness_contrast.cl.bin","brightness_contrast",theProgram,theKernel);
-    clRetainKernel(theKernel); 
+    clRetainKernel(theKernel);
 
     // cl_kernel_initializer(theQueue,
     //                       "brightness_contrast.cl",
@@ -58,7 +58,7 @@ contrast_cl (    cl_mem srcPtr, RppiSize srcSize,
     cl_program theProgram;
 
     CreateProgramFromBinary(theQueue,"contrast_stretch.cl","contrast_stretch.cl.bin","contrast_stretch",theProgram,theKernel);
-    clRetainKernel(theKernel); 
+    clRetainKernel(theKernel);
 
     // cl_kernel_initializer(theQueue,
     //                       "contrast_stretch.cl",
@@ -128,7 +128,7 @@ blur_cl(cl_mem srcPtr, RppiSize srcSize,
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         CreateProgramFromBinary(theQueue,"convolution.cl","convolution.cl.bin","naive_convolution_planar",theProgram,theKernel);
-        clRetainKernel(theKernel); 
+        clRetainKernel(theKernel);
 
         // cl_kernel_initializer(  theQueue, "convolution.cl",
         //                         "naive_convolution_planar", theProgram, theKernel);
@@ -138,7 +138,7 @@ blur_cl(cl_mem srcPtr, RppiSize srcSize,
     {
 
         CreateProgramFromBinary(theQueue,"convolution.cl","convolution.cl.bin","naive_convolution_packed",theProgram,theKernel);
-        clRetainKernel(theKernel); 
+        clRetainKernel(theKernel);
         // cl_kernel_initializer(  theQueue, "convolution.cl",
         //                         "naive_convolution_packed", theProgram, theKernel);
     }
@@ -177,7 +177,7 @@ blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
     cl_kernel theKernel;
     cl_program theProgram;
     CreateProgramFromBinary(theQueue,"blend.cl","blend.cl.bin","blend",theProgram,theKernel);
-    clRetainKernel(theKernel); 
+    clRetainKernel(theKernel);
     // cl_kernel_initializer(theQueue,
     //                       "blend.cl",
     //                       "blend",
@@ -203,7 +203,7 @@ blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
 }
 
 cl_int
-pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, 
+pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
             unsigned int filterSize, unsigned int x1, unsigned int y1,
             unsigned int x2, unsigned int y2,RppiChnFormat chnFormat,
             unsigned int channel,cl_command_queue theQueue)
@@ -234,7 +234,7 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
     {
         CreateProgramFromBinary(theQueue, "pixelate.cl","pixelate.bin",
                                 "pixelate_planar", theProgram, theKernel);
-        clRetainKernel(theKernel); 
+        clRetainKernel(theKernel);
 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -242,7 +242,7 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
 
         CreateProgramFromBinary(theQueue, "pixelate.cl","pixelate.bin",
                                 "pixelate_packed", theProgram, theKernel);
-        clRetainKernel(theKernel); 
+        clRetainKernel(theKernel);
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
@@ -270,16 +270,16 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
 //----
 /********************** ADDING NOISE ************************/
 
-RppStatus  
+RppStatus
 gaussianNoise_cl(cl_mem srcPtr,
                 RppiSize srcSize,
-                cl_mem dstPtr, 
+                cl_mem dstPtr,
                 Rpp32f mean,Rpp32f sigma,
-                RppiChnFormat chnFormat, unsigned int channel, 
+                RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)
 {
 //    std::default_random_engine generator;
-//    std::normal_distribution<>  distribution{mean, sigma}; 
+//    std::normal_distribution<>  distribution{mean, sigma};
 //    const unsigned int size = (srcSize.height * srcSize.width * channel);
 //    unsigned char output[size];
 //    for(int i = 0; i < (srcSize.height * srcSize.width * channel) ; i++)
@@ -287,11 +287,11 @@ gaussianNoise_cl(cl_mem srcPtr,
 //        Rpp32f pixel = ((Rpp32f)distribution(generator));
 //        pixel=(pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255));
 //        output[i] = (Rpp8u)pixel;
-//    } 
-//    
-//    cl_mem d_b;  
+//    }
+//
+//    cl_mem d_b;
 //    cl_context context;
-//    clGetCommandQueueInfo(  theQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &context, NULL); 
+//    clGetCommandQueueInfo(  theQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &context, NULL);
 //    d_b = clCreateBuffer(context, CL_MEM_READ_ONLY, srcSize.height * srcSize.width * channel , NULL, NULL);
 //    clEnqueueWriteBuffer(theQueue, d_b, CL_TRUE, 0, srcSize.height * srcSize.width * channel, output, 0, NULL, NULL);
 //
@@ -303,7 +303,7 @@ gaussianNoise_cl(cl_mem srcPtr,
 //    //                       "noise.cl",
 //    //                       "gaussian",
 //    //                       theProgram, theKernel);
-//     
+//
 //    //---- Args Setter
 //    clSetKernelArg(theKernel, 0, sizeof(cl_mem), &srcPtr);
 //    clSetKernelArg(theKernel, 1, sizeof(cl_mem), &d_b);
@@ -336,10 +336,10 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     cl_int err;
     cl_kernel theKernel;
     cl_program theProgram;
-    
+
     CreateProgramFromBinary(theQueue, "jitter.cl","jitter.bin",
                                 "jitter", theProgram, theKernel);
-    clRetainKernel(theKernel); 
+    clRetainKernel(theKernel);
 
     //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
@@ -359,13 +359,13 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
 }
 
 RppStatus
-snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, 
-                Rpp32f noiseProbability, 
+snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
+                Rpp32f noiseProbability,
                 RppiChnFormat chnFormat, unsigned int channel,
                 cl_command_queue theQueue)
 {
     srand(time(0));
-    int ctr = 0; 
+    int ctr = 0;
     clEnqueueCopyBuffer(theQueue, srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
     if(noiseProbability != 0)
     {    
@@ -414,7 +414,7 @@ snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     {
         CreateProgramFromBinary(theQueue, "snow.cl","snow.bin",
                                 "snow_pkd", theProgram, theKernel);
-        clRetainKernel(theKernel); 
+        clRetainKernel(theKernel);
 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -422,7 +422,7 @@ snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
 
         CreateProgramFromBinary(theQueue, "snow.cl","snow.bin",
                                 "snow_pkd", theProgram, theKernel);
-        clRetainKernel(theKernel); 
+        clRetainKernel(theKernel);
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
@@ -466,14 +466,14 @@ exposure_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f exposureValue
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
     clSetKernelArg(theKernel, ctr++, sizeof(float), &exposureValue);
-        
+
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-    
-    return RPP_SUCCESS;    
+
+    return RPP_SUCCESS;
 }
 
 
@@ -535,7 +535,7 @@ rain_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, Rpp32f rainPercentage, Rp
         cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram1, theKernel1);
     }
 
-    return RPP_SUCCESS;   
+    return RPP_SUCCESS;
 }
 
 
@@ -582,12 +582,12 @@ fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnForma
         cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     }
 
-    return RPP_SUCCESS;   
-}   
+    return RPP_SUCCESS;
+}
 ////////////////////////////////////////////////////
 
 RppStatus
-occlusion_cl(   cl_mem srcPtr1,RppiSize srcSize1, 
+occlusion_cl(   cl_mem srcPtr1,RppiSize srcSize1,
                 cl_mem srcPtr2,RppiSize srcSize2, cl_mem dstPtr,
                 const unsigned int x11,
                 const unsigned int y11,
@@ -596,18 +596,18 @@ occlusion_cl(   cl_mem srcPtr1,RppiSize srcSize1,
                 const unsigned int x21,
                 const unsigned int y21,
                 const unsigned int x22,
-                const unsigned int y22, 
+                const unsigned int y22,
                 RppiChnFormat chnFormat,unsigned int channel,
                 cl_command_queue theQueue)
 {
     cl_kernel theKernel;
     cl_program theProgram;
-    
-    
+
+
     clRetainKernel(theKernel);
      if (chnFormat == RPPI_CHN_PLANAR)
     {
-        
+
         CreateProgramFromBinary(theQueue,"occlusion.cl","occlusion.cl.bin","occlusion_pln",theProgram,theKernel);
         clRetainKernel(theKernel);
     }
@@ -652,14 +652,14 @@ occlusion_cl(   cl_mem srcPtr1,RppiSize srcSize1,
 RppStatus
 random_shadow_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
-    
+
     Rpp32u row1, row2, column2, column1;
     int i, j, ctr = 0;
-    
+
     cl_kernel theKernel;
-    cl_program theProgram;   
+    cl_program theProgram;
     CreateProgramFromBinary(theQueue, "random_shadow.cl", "random_shadow.cl.bin", "random_shadow", theProgram, theKernel);
-    clRetainKernel(theKernel);  
+    clRetainKernel(theKernel);
     // cl_kernel_initializer(theQueue, "random_shadow.cl", "random_shadow", theProgram, theKernel);
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
@@ -689,7 +689,7 @@ random_shadow_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u x1, Rpp3
         if(RPPI_CHN_PACKED == chnFormat)
         {
                 CreateProgramFromBinary(theQueue, "random_shadow.cl", "random_shadow.cl.bin", "random_shadow_packed", theProgram, theKernel);
-                clRetainKernel(theKernel);      
+                clRetainKernel(theKernel);
             // cl_kernel_initializer(theQueue,
             //                     "random_shadow.cl",
             //                     "random_shadow_packed",
@@ -720,4 +720,158 @@ random_shadow_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u x1, Rpp3
         gDim3[2] = channel;
         cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     }
+}
+
+/********************** Histogram balance ************************/
+
+cl_int
+histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
+                cl_mem dstPtr,
+                RppiChnFormat chnFormat, unsigned int channel,
+                cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    cl_int err;
+
+    cl_context theContext;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_CONTEXT,
+                            sizeof(cl_context), &theContext, NULL);
+    cl_device_id theDevice;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
+
+    
+    cl_kernel theKernel;
+    cl_program theProgram;
+    unsigned int numGroups;
+
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pln",
+                                    theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pkd",
+                                    theProgram,theKernel);
+        clRetainKernel(theKernel);
+
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+
+    size_t lDim3[3];
+    size_t gDim3[3];
+    int num_pixels_per_work_item = 16;
+
+    gDim3[0] = srcSize.width / num_pixels_per_work_item + 1;
+    gDim3[1] = srcSize.height / num_pixels_per_work_item + 1;
+    lDim3[0] = num_pixels_per_work_item;
+    lDim3[1] = num_pixels_per_work_item;
+    gDim3[2] = 1;
+    lDim3[2] = 1;
+    
+
+    numGroups = gDim3[0] * gDim3[1];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    
+    cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
+                                    sizeof(unsigned int)*256*channel*numGroups, NULL, NULL);
+    cl_mem histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                    sizeof(unsigned int)*256*channel, NULL, NULL);
+    
+    
+
+    counter = 0;
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &partialHistogram);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+
+
+    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
+
+    // // For sum histogram kernel
+    CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_sum_partial",
+                                                                        theProgram,theKernel);
+    clRetainKernel(theKernel);
+
+    counter = 0;
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &partialHistogram);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &histogram);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &numGroups);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+
+    gDim3[0] = 256 * channel;
+    lDim3[0] = 256;
+    gDim3[1] = 1; 
+    gDim3[2] = 1;
+    lDim3[1] = 1;
+    lDim3[2] = 1;
+
+    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
+   
+    // For scan kernel
+    counter = 0;
+    cl_mem cum_histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                    sizeof(unsigned int)*256*channel, NULL, NULL);
+
+    CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
+    clRetainKernel(theKernel);
+
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &histogram);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &cum_histogram);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), NULL);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), NULL);
+
+
+
+    gDim3[0] = 256;
+    gDim3[1] = 1; 
+    gDim3[2] = 1;
+    lDim3[0] = 32;
+    lDim3[1] = 1; 
+    lDim3[2] = 1;
+
+    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
+
+    // For histogram equalize
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_equalize_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_equalize_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {std::cerr << "Internal error: Unknown Channel format";}
+    counter = 0;
+    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &cum_histogram);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    //std::cerr<<"Hist equalize call"<<std::endl;
+    cl_kernel_implementer (theQueue, gDim3, NULL, theProgram, theKernel);
+    //std::cerr<<"Hist equalize return"<<std::endl;
+    clReleaseMemObject(cum_histogram);
+    clReleaseMemObject(partialHistogram);
+    clReleaseMemObject(histogram);
+    return RPP_SUCCESS;
+
 }
