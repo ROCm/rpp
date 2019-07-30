@@ -6,7 +6,7 @@ __kernel void scan(__global int *input,
                    __local  int *c)
 {
     //printf("Inside scan");
-    uint gid = get_global_id(0);
+    /*uint gid = get_global_id(0);
     uint lid = get_local_id(0);
     uint gs = get_local_size(0);
 
@@ -28,6 +28,18 @@ __kernel void scan(__global int *input,
     }
     output[gid] = b[lid];
     output[gid + 256] = b[lid + 256];
-    output[gid + 512] = b[lid + 512];
-    //printf("%d",output[gid]);
+    output[gid + 512] = b[lid + 512];*/
+
+    uint gid = get_global_id(0);
+    int i;
+    if (gid == 0){
+        output[0]= input[0];
+        output[256]= input[256];
+        output[512]= output[512];
+    for(i =1; i<256; i++){
+        output[i] = output[i-1] + input[i];
+        output[i+256] = output[256+i-1] + input[256+i];
+        output[i+ 512] = output[512+i-1] + input[512+i];
+    }
+   printf("%d",output[767]);}
 }

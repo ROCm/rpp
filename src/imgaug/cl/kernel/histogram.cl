@@ -70,7 +70,7 @@ void partial_histogram_pkd(__global unsigned char *input,
                            const unsigned int height,
                            const unsigned int channel){
 
-    //printf("inside");
+    //printf("inside hist packed");
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int local_size = (int)get_local_size(0) * (int)get_local_size(1);
@@ -119,7 +119,7 @@ void partial_histogram_pkd(__global unsigned char *input,
             if (tid < j)
             {
                 histogramPartial[group_indx + indx + tid] = tmp_histogram[ indx + tid];
-                //printf("%d",histogramPartial[group_indx + indx + tid]);
+               // printf("%d",histogramPartial[group_indx + indx + tid]);
             }
             j -= local_size;
             indx += local_size;
@@ -140,14 +140,14 @@ histogram_sum_partial(global unsigned int *histogramPartial,
     local uint tmp_histogram[256 * 3];
      
     tmp_histogram[tid] = histogramPartial[tid];
-   // printf("inside %d", tmp_histogram[ tid]);
+   //printf("inside %d", tmp_histogram[ tid]);
     
     group_indx = 256*channel;
     while (--n > 1)
     {
         tmp_histogram[tid] = tmp_histogram[tid] +  histogramPartial[group_indx + tid];
         //printf("inside  histopartial%d", histogramPartial[ group_indx + tid]);
-        printf("inside %d", tmp_histogram[ tid]);
+        //printf("inside %d", tmp_histogram[ tid]);
           
           //printf("inside %d", group_indx + tid);
         group_indx += 256*channel;
@@ -156,7 +156,7 @@ histogram_sum_partial(global unsigned int *histogramPartial,
        // n = n-1;
     }
     histogram[tid] = tmp_histogram[tid];
-     
+    //printf("inside histogram %d", histogram[tid]);
 
 }
 

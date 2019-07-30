@@ -724,88 +724,51 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
 
-    cl_uint maxWorkItemDimensions;
-    clGetDeviceInfo(theDevice, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
-                    sizeof(maxWorkItemDimensions), &maxWorkItemDimensions, NULL);
-
-    size_t *maxWorkItemPerWorkGroup = (size_t *) malloc(sizeof(size_t) * maxWorkItemDimensions);
-    clGetDeviceInfo(theDevice, CL_DEVICE_MAX_WORK_ITEM_SIZES,
-                    sizeof(size_t) * maxWorkItemDimensions,
-                    maxWorkItemPerWorkGroup,NULL);
-
-    size_t workItemPerWorkGroup = maxWorkItemPerWorkGroup[0] * maxWorkItemPerWorkGroup[1];
-    workItemPerWorkGroup = 256 * 256;
-    unsigned int numGroups = (srcSize.height * srcSize.width / workItemPerWorkGroup) + 1;
-
-    cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
-                                    sizeof(unsigned int)*257*channel*numGroups, NULL, NULL);
-    cl_mem histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
-                                    sizeof(unsigned int)*257*channel, NULL, NULL);
+    
     cl_kernel theKernel;
     cl_program theProgram;
+    unsigned int numGroups;
 
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pln",theProgram,theKernel);
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pln",
+                                    theProgram,theKernel);
         clRetainKernel(theKernel);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        std::cerr << "Inside cl.cpp" <<std::endl;
-        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pkd",theProgram,theKernel);
-        std::cerr << "Returned from CreateProgramFromBinary parial histogram" <<std::endl;
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pkd",
+                                    theProgram,theKernel);
         clRetainKernel(theKernel);
 
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
 
-    size_t              workgroup_size;
-    clGetKernelWorkGroupInfo(theKernel, theDevice, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &workgroup_size, NULL);
-    std::cerr<<"\n workgroup_size"<<workgroup_size<<std::endl;
     size_t lDim3[3];
     size_t gDim3[3];
-    int num_pixels_per_work_item = 32;
+    int num_pixels_per_work_item = 16;
+
+    gDim3[0] = srcSize.width / num_pixels_per_work_item + 1;
+    gDim3[1] = srcSize.height / num_pixels_per_work_item + 1;
+    lDim3[0] = num_pixels_per_work_item;
+    lDim3[1] = num_pixels_per_work_item;
+    gDim3[2] = 1;
+    lDim3[2] = 1;
     
-        size_t  gsize[2];
-        int     w;
 
-        if (workgroup_size <= 256)
-        {
-            gsize[0] = 16;
-            gsize[1] = workgroup_size / 16;
-        }
-        else if (workgroup_size <= 1024)
-        {
-            gsize[0] = workgroup_size / 16;
-            gsize[1] = 16;
-        }
-        else
-        {
-            gsize[0] = workgroup_size / 32;
-            gsize[1] = 32;
-        }
-
-        lDim3[0] = gsize[0];
-        lDim3[1] = gsize[1];
-
-        w = (srcSize.width + num_pixels_per_work_item - 1) / num_pixels_per_work_item;
-        gDim3[0] = ((w + gsize[0] - 1) / gsize[0]);
-        gDim3[1] = ((srcSize.height + gsize[1] - 1) / gsize[1]);
-        std::cerr<<"\n workgroup_size"<<gDim3[0]<<"endl" << gDim3[1]<<std::endl;
-        numGroups = gDim3[0] * gDim3[1];
-        gDim3[0] *= gsize[0];
-        gDim3[1] *= gsize[1];
+    numGroups = gDim3[0] * gDim3[1];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
     
-    size_t temp_gdim0 = gDim3[0];
-    size_t temp_gdim1 = gDim3[1];
-    size_t temp_ldim0 = lDim3[0];
-    size_t temp_ldim1 = lDim3[1];
-    std::cerr<<"\n numGroups "<<numGroups<<std::endl;
-    std::cerr<<"gDim3[0]   ::"<<gDim3[0]<<"gDim3[1]    ::"<<gDim3[1]<<std::endl;
-    std::cerr<<"lDim3[0]   ::"<<lDim3[0]<<"lDim3[1]    ::"<<lDim3[1]<<std::endl;
-    // For partial histogram kernel
+    cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
+                                    sizeof(unsigned int)*256*channel*numGroups, NULL, NULL);
+    cl_mem histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                    sizeof(unsigned int)*256*channel, NULL, NULL);
+    
+    
+
     counter = 0;
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &partialHistogram);
@@ -813,47 +776,29 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
 
-//----
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    gDim3[2] = 1;
 
-    // lDim3[0] = 256; //maxWorkItemPerWorkGroup[0];
-    // lDim3[1] = 256; //maxWorkItemPerWorkGroup[1];
-    lDim3[2] = 1;
-    std::cerr << "Inside cl.cpp Second time" <<std::endl;
     cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
-    std::cerr << "Returned from partial histogram" <<std::endl;
 
     // // For sum histogram kernel
-    CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_sum_partial",theProgram,theKernel);
+    CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_sum_partial",
+                                                                        theProgram,theKernel);
     clRetainKernel(theKernel);
-    clGetKernelWorkGroupInfo(theKernel, theDevice, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &workgroup_size, NULL);
-    std::cerr<<"\n workgroup_size"<<workgroup_size<<std::endl;
-    if (workgroup_size < 256)
-    {
-        printf("A min. of 256 work-items in work-group is needed for histogram_sum_partial_results_unorm8 kernel. (%d)\n", (int)workgroup_size);
-        return EXIT_FAILURE;
-    }
-    gDim3[0] = 256;
-    lDim3[0] = 256;//(workgroup_size > 256) ? 256 : workgroup_size;
+
     counter = 0;
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &partialHistogram);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &histogram);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &numGroups);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
 
-
-    // gDim3[0] = srcSize.width;
-    gDim3[1] = 1; //srcSize.height;
+    gDim3[0] = 256 * channel;
+    lDim3[0] = 256;
+    gDim3[1] = 1; 
     gDim3[2] = 1;
-    // lDim3[0] = maxWorkItemPerWorkGroup[0];
-    lDim3[1] = 1; //maxWorkItemPerWorkGroup[1];
+    lDim3[1] = 1;
     lDim3[2] = 1;
-    std::cerr<<"sumHist call"<<std::endl;
-   cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
-    std::cerr<<"sumHist return"<<std::endl;
 
+    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
+   
     // For scan kernel
     counter = 0;
     cl_mem cum_histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
@@ -869,17 +814,16 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
 
 
 
-    gDim3[0] = 256 * 3;// srcSize.width;
-    gDim3[1] = 1; //srcSize.height;
+    gDim3[0] = 256;
+    gDim3[1] = 1; 
     gDim3[2] = 1;
-    lDim3[0] = 16;//temp_ldim0; //maxWorkItemPerWorkGroup[0];
-    lDim3[1] = 1; //maxWorkItemPerWorkGroup[1];
+    lDim3[0] = 32;
+    lDim3[1] = 1; 
     lDim3[2] = 1;
-    std::cerr<<"scan call"<<std::endl;
-    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
-    std::cerr<<"scan return"<<std::endl;
 
-    // // For histogram equalize
+    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
+
+    // For histogram equalize
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
@@ -905,9 +849,9 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;
-    std::cerr<<"Hist equalize call"<<std::endl;
+    //std::cerr<<"Hist equalize call"<<std::endl;
     cl_kernel_implementer (theQueue, gDim3, NULL, theProgram, theKernel);
-    std::cerr<<"Hist equalize return"<<std::endl;
+    //std::cerr<<"Hist equalize return"<<std::endl;
     clReleaseMemObject(cum_histogram);
     clReleaseMemObject(partialHistogram);
     clReleaseMemObject(histogram);
