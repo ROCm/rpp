@@ -234,7 +234,7 @@ RppStatus
 fog_cl( cl_mem srcPtr, RppiSize srcSize, 
                 Rpp32f fogValue,
                 RppiChnFormat chnFormat, unsigned int channel,
-                cl_command_queue theQueue);
+                cl_command_queue theQueue, cl_mem temp);
 
 RppStatus
 random_shadow_cl(    cl_mem srcPtr, RppiSize srcSize,

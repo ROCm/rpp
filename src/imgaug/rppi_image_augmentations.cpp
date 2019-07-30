@@ -328,9 +328,9 @@ rppi_gaussianNoise_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstP
 RppStatus
 rppi_fog_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue)
 {
- 	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1,&fogValue);
+    validate_image_size(srcSize);
     Rpp32f stdDev=fogValue*50;
- 	validate_float_min(0, &stdDev);
 	unsigned int kernelSize = 5;
     if(fogValue!=0)
 	blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
@@ -352,10 +352,9 @@ RppStatus
 rppi_fog_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue)
 {
 
-
+    validate_float_range( 0, 1,&fogValue);
  	validate_image_size(srcSize);
     Rpp32f stdDev=fogValue*50;
- 	validate_float_min(0, &stdDev);
 	unsigned int kernelSize = 5;
     if(fogValue!=0)
 	blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
@@ -375,9 +374,9 @@ rppi_fog_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f f
 RppStatus
 rppi_fog_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue)
 {
- 	validate_image_size(srcSize);
+ 	validate_float_range( 0, 1,&fogValue);
+    validate_image_size(srcSize);
     Rpp32f stdDev=fogValue*10;
- 	validate_float_min(0, &stdDev);
 	unsigned int kernelSize = 5;
     if(fogValue!=0)
 	blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
@@ -2240,10 +2239,8 @@ rppi_gaussianNoise_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
 RppStatus
 rppi_fog_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue,RppHandle_t rppHandle)
 {
- 	Rpp32f stdDev=fogValue*50;
-    validate_float_min(0, &stdDev);
+ 	validate_float_range( 0, 1,&fogValue);
     validate_image_size(srcSize);
- 	validate_float_min(0, &stdDev);
 	unsigned int kernelSize = 3;
 #ifdef OCL_COMPILE
  	{
@@ -2258,7 +2255,7 @@ rppi_fog_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fo
 			srcSize, 
 			fogValue,
 			RPPI_CHN_PLANAR, 1, 
-            static_cast<cl_command_queue>(rppHandle) );
+            static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr) );
  	 } 
 #elif defined (HIP_COMPILE) 
  	 { 
@@ -2270,10 +2267,8 @@ rppi_fog_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fo
 RppStatus
 rppi_fog_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue, RppHandle_t rppHandle)
 {
- 	Rpp32f stdDev=fogValue*50;
-    validate_float_min(0, &stdDev);
+ 	validate_float_range( 0, 1,&fogValue);
     validate_image_size(srcSize);
- 	validate_float_min(0, &stdDev);
 	unsigned int kernelSize = 3;
 #ifdef OCL_COMPILE
  	{
@@ -2288,7 +2283,7 @@ rppi_fog_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fo
 			srcSize, 
 			fogValue,
 			RPPI_CHN_PLANAR, 3, 
-            static_cast<cl_command_queue>(rppHandle) );
+            static_cast<cl_command_queue>(rppHandle) , static_cast<cl_mem>(srcPtr) );
  	 } 
 #elif defined (HIP_COMPILE) 
  	 { 
@@ -2300,10 +2295,8 @@ rppi_fog_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fo
 RppStatus
 rppi_fog_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fogValue, RppHandle_t rppHandle)
 {
- 	Rpp32f stdDev=fogValue*50;
-    validate_float_min(0, &stdDev);
+ 	validate_float_range( 0, 1,&fogValue);
     validate_image_size(srcSize);
- 	validate_float_min(0, &stdDev);
 	unsigned int kernelSize = 3;
 #ifdef OCL_COMPILE
  	{
@@ -2318,7 +2311,7 @@ rppi_fog_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32f fo
 			srcSize, 
 			fogValue,
 			RPPI_CHN_PACKED, 3, 
-            static_cast<cl_command_queue>(rppHandle) );
+            static_cast<cl_command_queue>(rppHandle) , static_cast<cl_mem>(srcPtr) );
  	 } 
 #elif defined (HIP_COMPILE) 
  	 { 

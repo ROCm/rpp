@@ -542,38 +542,45 @@ rain_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, Rpp32f rainPercentage, Rp
 /********************** Fog ************************/
 
 RppStatus
-fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue, cl_mem temp)
 {
-    int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
-
-    if (chnFormat == RPPI_CHN_PLANAR)
+    if(fogValue == 0)
     {
-        
-        CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_planar",theProgram,theKernel);
-        clRetainKernel(theKernel);
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_pkd",theProgram,theKernel);
-        clRetainKernel(theKernel);
+        clEnqueueCopyBuffer(theQueue, temp, srcPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
     }
     else
-    {std::cerr << "Internal error: Unknown Channel format";}
-    //---- Args Setter
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(float), &fogValue);
-    //----
+    {
+        int ctr=0;
+        cl_kernel theKernel;
+        cl_program theProgram;
 
-    size_t gDim3[2];
-    gDim3[0] = srcSize.width;
-    gDim3[1] = srcSize.height;
-    gDim3[2] = 1;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            
+            CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_planar",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_pkd",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+        else
+        {std::cerr << "Internal error: Unknown Channel format";}
+        //---- Args Setter
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        clSetKernelArg(theKernel, ctr++, sizeof(float), &fogValue);
+        //----
+
+        size_t gDim3[2];
+        gDim3[0] = srcSize.width;
+        gDim3[1] = srcSize.height;
+        gDim3[2] = 1;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    }
 
     return RPP_SUCCESS;   
 }   
