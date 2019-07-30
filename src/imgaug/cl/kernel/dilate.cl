@@ -47,10 +47,10 @@ __kernel void dilate_pln(  __global unsigned char* input,
     int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    unsigned char pixel = 0;
+    
     int pixIdx = id_y * width + id_x + id_z * width * height;
     int bound = (kernelSize - 1) / 2;
-    
+    unsigned char pixel = input[pixIdx];
     for(int i = -bound ; i <= bound ; i++)
     {
         for(int j = -bound ; j <= bound ; j++)
