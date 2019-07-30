@@ -482,51 +482,58 @@ exposure_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f exposureValue
 RppStatus
 rain_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f transparency, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {   
-    int ctr=0; 
-    Rpp32u rainDrops= (Rpp32u)((rainPercentage * srcSize.width * srcSize.height )/100);
-    Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / rainDrops);
-    cl_kernel theKernel;
-    cl_program theProgram;
-    if(chnFormat == RPPI_CHN_PACKED)
+    if(rainPercentage == 0)
     {
-        CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain_pkd",theProgram,theKernel);
-        clRetainKernel(theKernel);
+        clEnqueueCopyBuffer(theQueue, srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
     }
-    else if(chnFormat == RPPI_CHN_PLANAR)
+    else
     {
-        CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain_pln",theProgram,theKernel);
+        int ctr=0; 
+        Rpp32u rainDrops= (Rpp32u)((rainPercentage * srcSize.width * srcSize.height )/100);
+        Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / rainDrops);
+        cl_kernel theKernel;
+        cl_program theProgram;
+        if(chnFormat == RPPI_CHN_PACKED)
+        {
+            CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain_pkd",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+        else if(chnFormat == RPPI_CHN_PLANAR)
+        {
+            CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain_pln",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+
+        //---- Args Setter
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &rainWidth);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &rainHeight);
+        clSetKernelArg(theKernel, ctr++, sizeof(float), &transparency);
+        //----
+
+        size_t gDim3[3];
+        gDim3[0] = srcSize.width;
+        gDim3[1] = srcSize.height;
+        gDim3[2] = 1;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+        cl_kernel theKernel1;
+        cl_program theProgram1;
+        CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain",theProgram1,theKernel1);
         clRetainKernel(theKernel);
+        ctr=0;
+        clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &srcPtr);
+        clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &channel);
+        gDim3[2] = channel;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram1, theKernel1);
     }
-
-    //---- Args Setter
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &rainWidth);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &rainHeight);
-    clSetKernelArg(theKernel, ctr++, sizeof(float), &transparency);
-    //----
-
-    size_t gDim3[3];
-    gDim3[0] = srcSize.width;
-    gDim3[1] = srcSize.height;
-    gDim3[2] = 1;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-
-    cl_kernel theKernel1;
-    cl_program theProgram1;
-    CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain",theProgram1,theKernel1);
-    clRetainKernel(theKernel);
-    ctr=0;
-    clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &channel);
-    gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram1, theKernel1);
 
     return RPP_SUCCESS;   
 }
