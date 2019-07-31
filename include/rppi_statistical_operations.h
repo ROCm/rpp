@@ -43,6 +43,45 @@ rppi_thresholding_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
 RppStatus
 rppi_thresholding_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp8u min, Rpp8u max);
 
+// ----------------------------------------
+// Host min functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_min_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_min_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_min_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
+// ----------------------------------------
+// Host max functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_max_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_max_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_max_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr);
+
+// ----------------------------------------
+// Host minMaxLoc functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_minMaxLoc_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t maskPtr, Rpp8u* min, Rpp8u* max, Rpp8u** minLoc, Rpp8u** maxLoc);
+
+RppStatus
+rppi_minMaxLoc_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t maskPtr, Rpp8u* min, Rpp8u* max, Rpp8u** minLoc, Rpp8u** maxLoc);
+
+RppStatus
+rppi_minMaxLoc_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t maskPtr, Rpp8u* min, Rpp8u* max, Rpp8u** minLoc, Rpp8u** maxLoc);
+
 
  
 #ifdef __cplusplus
