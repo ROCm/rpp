@@ -705,6 +705,123 @@ inline RppStatus median_filter_kernel_host(T* srcPtrWindow, T* dstPtrPixel, Rppi
     return RPP_SUCCESS;
 }
 
+template<typename T>
+RppStatus local_binary_pattern_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize, 
+                                       Rpp32u remainingElementsInRow, T* centerPixelPtr, 
+                                       RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T pixel = (T) 0;
+    T *srcPtrWindowTemp;
+    srcPtrWindowTemp = srcPtrWindow;
+    
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 0);
+        }
+        srcPtrWindowTemp++;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 1);
+        }
+        srcPtrWindowTemp++;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 2);
+        }
+        srcPtrWindowTemp++;
+        srcPtrWindowTemp += remainingElementsInRow;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 7);
+        }
+        srcPtrWindowTemp += 2;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 3);
+        }
+        srcPtrWindowTemp++;
+        srcPtrWindowTemp += remainingElementsInRow;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 6);
+        }
+        srcPtrWindowTemp++;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 5);
+        }
+        srcPtrWindowTemp++;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 4);
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 0);
+        }
+        srcPtrWindowTemp += channel;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 1);
+        }
+        srcPtrWindowTemp += channel;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 2);
+        }
+        srcPtrWindowTemp += channel;
+        srcPtrWindowTemp += remainingElementsInRow;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 7);
+        }
+        srcPtrWindowTemp += (2 * channel);
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 3);
+        }
+        srcPtrWindowTemp += channel;
+        srcPtrWindowTemp += remainingElementsInRow;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 6);
+        }
+        srcPtrWindowTemp += channel;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 5);
+        }
+        srcPtrWindowTemp += channel;
+
+        if (*srcPtrWindowTemp - *centerPixelPtr >= 0)
+        {
+            pixel += pow(2, 4);
+        }
+    }
+
+    *dstPtrPixel = pixel;
+
+    return RPP_SUCCESS;
+}
+
 
 
 
