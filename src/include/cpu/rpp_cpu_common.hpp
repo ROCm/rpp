@@ -317,6 +317,45 @@ inline RppStatus generate_crop_host(T* srcPtr, RppiSize srcSize, T* srcPtrSubIma
     return RPP_SUCCESS;
 }
 
+inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
+{
+    Rpp32f* kernelTemp;
+    kernelTemp = kernel;
+
+    if (type == 1)
+    {
+        Rpp32f kernelX[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
+        Rpp32f* kernelXTemp;
+        kernelXTemp = kernelX;
+
+        for (int i = 0; i < 9; i++)
+        {
+            *kernelTemp = *kernelXTemp / 9;
+            kernelTemp++;
+            kernelXTemp++;
+        }
+    }
+    else if (type == 2)
+    {
+        Rpp32f kernelY[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+        Rpp32f* kernelYTemp;
+        kernelYTemp = kernelY;
+
+        for (int i = 0; i < 9; i++)
+        {
+            *kernelTemp = *kernelYTemp / 9;
+            kernelTemp++;
+            kernelYTemp++;
+        }
+    }
+    else
+    {
+        return RPP_ERROR;
+    }
+
+    return RPP_SUCCESS;
+}
+
 
 
 
@@ -336,9 +375,9 @@ inline RppStatus generate_crop_host(T* srcPtr, RppiSize srcSize, T* srcPtrSubIma
 
 // Kernels for functions
 
-template<typename T>
-inline RppStatus convolution_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize, 
-                                       Rpp32f* kernel, Rpp32u kernelSize, Rpp32u remainingElementsInRow, 
+template<typename T, typename U>
+inline RppStatus convolution_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSize srcSize, 
+                                       Rpp32f* kernel, Rpp32u kernelSize, Rpp32u remainingElementsInRow, U maxVal, U minVal, 
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32f pixel = 0.0;
@@ -375,8 +414,8 @@ inline RppStatus convolution_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSi
             srcPtrWindowTemp += remainingElementsInRow;
         }
     }
-    pixel = RPPPIXELCHECK(pixel);
-    *dstPtrPixel = (T) round(pixel);
+    (pixel < (Rpp32f) minVal) ? pixel = (Rpp32f) minVal : ((pixel < (Rpp32f) maxVal) ? pixel : pixel = (Rpp32f) maxVal);
+    *dstPtrPixel = (U) round(pixel);
 
     return RPP_SUCCESS;
 }
@@ -549,18 +588,22 @@ inline RppStatus resize_crop_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 // Convolution Functions
 
-template<typename T>
-inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, T* dstPtr, RppiSize srcSize, 
+template<typename T, typename U>
+inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPtr, RppiSize srcSize, 
                         Rpp32f* kernel, Rpp32u kernelSize, 
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32u remainingElementsInRowPlanar = srcSizeMod.width - kernelSize;
     Rpp32u remainingElementsInRowPacked = (srcSizeMod.width - kernelSize) * channel;
     
-    T *srcPtrWindow, *dstPtrTemp;
+    T *srcPtrWindow;
+    U *dstPtrTemp;
     srcPtrWindow = srcPtrMod;
     dstPtrTemp = dstPtr;
-    
+
+    U maxVal = (U)(std::numeric_limits<U>::max());
+    U minVal = (U)(std::numeric_limits<U>::min());
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for (int c = 0; c < channel; c++)
@@ -570,7 +613,7 @@ inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, T* dstPt
                 for (int j = 0; j < srcSize.width; j++)
                 {
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPlanar, 
+                                                 kernel, kernelSize, remainingElementsInRowPlanar, maxVal, minVal, 
                                                  chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -589,7 +632,7 @@ inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, T* dstPt
                 for (int c = 0; c < channel; c++)
                 {   
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPacked, 
+                                                 kernel, kernelSize, remainingElementsInRowPacked, maxVal, minVal, 
                                                  chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -614,6 +657,9 @@ inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* ds
     int widthDiffPacked = (srcSize.width - srcSizeSubImage.width) * channel;
 
     T *srcPtrWindow, *dstPtrTemp;
+
+    T maxVal = (T)(std::numeric_limits<T>::max());
+    T minVal = (T)(std::numeric_limits<T>::min());
     
     if (chnFormat == RPPI_CHN_PLANAR)
     {
@@ -626,7 +672,7 @@ inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* ds
                 for (int j = 0; j < srcSizeSubImage.width; j++)
                 {
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPlanar, 
+                                                 kernel, kernelSize, remainingElementsInRowPlanar, maxVal, minVal, 
                                                  chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -647,7 +693,7 @@ inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* ds
                 for (int c = 0; c < channel; c++)
                 {   
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPacked, 
+                                                 kernel, kernelSize, remainingElementsInRowPacked, maxVal, minVal, 
                                                  chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -1341,6 +1387,89 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     }
 
     return RPP_SUCCESS;
+}
+
+template <typename T>
+inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+                         RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
+    srcPtr1Temp = srcPtr1;
+    srcPtr2Temp = srcPtr2;
+    dstPtrTemp = dstPtr;
+
+    Rpp32f pixel;
+    
+    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
+    {
+        pixel = sqrt(((Rpp32f)(*srcPtr1Temp) * (Rpp32f)(*srcPtr1Temp)) + ((Rpp32f)(*srcPtr2Temp) * (Rpp32f)(*srcPtr2Temp)));
+        pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
+        pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
+        *dstPtrTemp =(Rpp8u) round(pixel);
+        srcPtr1Temp++;
+        srcPtr2Temp++;
+        dstPtrTemp++;
+    }
+
+    return RPP_SUCCESS;
+
+}
+
+template <typename T, typename U>
+inline RppStatus compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr, 
+                                 U min, U max, Rpp32u type, 
+                                 RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T *srcPtrTemp;
+    U *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    if (type == 1)
+    {
+        for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
+        {
+            if (*srcPtrTemp < min)
+            {
+                *dstPtrTemp = (U) 0;
+            }
+            else if (*srcPtrTemp <= max)
+            {
+                *dstPtrTemp = (U) 255;
+            }
+            else
+            {
+                *dstPtrTemp = (U) 0;
+            }
+            
+            srcPtrTemp++;
+            dstPtrTemp++;
+        }
+    }
+    else if (type == 2)
+    {
+        for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
+        {
+            if (RPPABS(*srcPtrTemp) < min)
+            {
+                *dstPtrTemp = (U) 0;
+            }
+            else if (RPPABS(*srcPtrTemp) <= max)
+            {
+                *dstPtrTemp = (U) 255;
+            }
+            else
+            {
+                *dstPtrTemp = (U) 0;
+            }
+            
+            srcPtrTemp++;
+            dstPtrTemp++;
+        }
+    }
+
+    return RPP_SUCCESS;
+
 }
 
 inline Rpp32u fogGenerator(Rpp32u srcPtr, Rpp32f fogValue, int colour, int check)

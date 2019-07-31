@@ -32,12 +32,13 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 /**************** Contrast ***************/
 
-template <typename T>
-RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-                        Rpp32u new_min, Rpp32u new_max,
+template <typename T, typename U>
+RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr, 
+                        Rpp32f new_min, Rpp32f new_max,
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
-    T *srcPtrTemp, *dstPtrTemp;
+    T *srcPtrTemp;
+    U *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
@@ -66,11 +67,7 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                pixel = (Rpp32f) (*srcPtrTemp);
-                pixel = ((pixel - min) * ((new_max - new_min) / (max - min))) + new_min;
-                pixel = (pixel < (Rpp32f)new_max) ? pixel : ((Rpp32f)new_max);
-                pixel = (pixel > (Rpp32f)new_min) ? pixel : ((Rpp32f)new_min);
-                *dstPtrTemp = (T) pixel;
+                *dstPtrTemp = (U) (((((Rpp32f) (*srcPtrTemp)) - min) * ((new_max - new_min) / (max - min))) + new_min);
                 srcPtrTemp++;
                 dstPtrTemp++;
             }
@@ -100,11 +97,7 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             srcPtrTemp = srcPtr + c;
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                pixel = (Rpp32f) (*srcPtrTemp);
-                pixel = ((pixel - min) * ((new_max - new_min) / (max - min))) + new_min;
-                pixel = (pixel < (Rpp32f)new_max) ? pixel : ((Rpp32f)new_max);
-                pixel = (pixel > (Rpp32f)new_min) ? pixel : ((Rpp32f)new_min);
-                *dstPtrTemp = (T) pixel;
+                *dstPtrTemp = (U) (((((Rpp32f) (*srcPtrTemp)) - min) * ((new_max - new_min) / (max - min))) + new_min);
                 srcPtrTemp = srcPtrTemp + channel;
                 dstPtrTemp = dstPtrTemp + channel;
             }

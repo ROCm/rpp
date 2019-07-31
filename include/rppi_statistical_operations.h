@@ -30,6 +30,20 @@ RppStatus
 rppi_histogram_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins);
 
 
+// ----------------------------------------
+// Host thresholding functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_thresholding_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp8u min, Rpp8u max);
+
+RppStatus
+rppi_thresholding_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp8u min, Rpp8u max);
+
+RppStatus
+rppi_thresholding_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp8u min, Rpp8u max);
+
+
  
 #ifdef __cplusplus
 }
