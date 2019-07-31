@@ -117,6 +117,33 @@ RppStatus
 rppi_subtract_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr);
 
 // ----------------------------------------
+// Host magnitude functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_magnitude_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_magnitude_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_magnitude_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr);
+
+// ----------------------------------------
+// Host multiply functions declaration 
+// ----------------------------------------
+
+
+RppStatus
+rppi_multiply_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_multiply_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_multiply_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr);
+
+// ----------------------------------------
 // GPU absolute_difference functions declaration 
 // ----------------------------------------
 /* Computes the absolute difference between two images.
