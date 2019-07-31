@@ -390,6 +390,58 @@ rppi_lens_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 }
  
 // ----------------------------------------
+// Host scale functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_scale_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                             Rpp32f percentage)
+{
+    scale_output_size_host(srcSize, dstSizePtr,
+                            percentage);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_scale_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage)
+{
+    scale_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            percentage,
+                            RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_scale_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage)
+{
+    scale_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            percentage,
+                            RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_scale_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage)
+{
+    scale_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
+                            percentage,
+                            RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
+ 
+// ----------------------------------------
 // GPU flip functions  calls 
 // ----------------------------------------
 
