@@ -93,7 +93,7 @@ __kernel void sobel_pln(  __global unsigned char* input,
                     const unsigned int height,
                     const unsigned int width,
                     const unsigned int channel,
-                    const float kernelSize
+                    const float sobelType
 )
 {
     int id_x = get_global_id(0);
