@@ -67,6 +67,19 @@ RppStatus
 rppi_sobel_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u sobelType);
 
 // ----------------------------------------
+// Host median_filter functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_median_filter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize);
+
+RppStatus
+rppi_median_filter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize);
+
+RppStatus
+rppi_median_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize);
+
+// ----------------------------------------
 // GPU bilateral_filter functions declaration 
 // ----------------------------------------
 /* Apllies bilateral filtering to the input image.
