@@ -159,98 +159,48 @@ inline RppStatus generate_evenly_padded_image_host(T* srcPtr, RppiSize srcSize, 
     {
         for (int c = 0; c < channel; c++)
         {
-            for (int b = 0; b < bound; b++)
-            {
-                for (int i = 0; i < srcSizeMod.width; i++)
-                {
-                    *srcPtrModTemp = 0;
-                    srcPtrModTemp++;
-                }
-            }
+            memset (srcPtrModTemp,(T) 0,bound * srcSizeMod.width * sizeof(T));
+            srcPtrModTemp += (bound * srcSizeMod.width);
             for (int i = 0; i < srcSize.height; i++)
             {
-                for (int b = 0; b < bound; b++)
-                {
-                    *srcPtrModTemp = 0;
-                    srcPtrModTemp++;
-                }
-                for (int j = 0; j < srcSize.width; j++)
-                {
-                    *srcPtrModTemp = *srcPtrTemp;
-                    srcPtrModTemp++;
-                    srcPtrTemp++;
-                }
-                for (int b = 0; b < bound; b++)
-                {
-                    *srcPtrModTemp = 0;
-                    srcPtrModTemp++;
-                }
+                memset (srcPtrModTemp,(T) 0,bound * sizeof(T));
+                srcPtrModTemp += bound;
+                
+                memcpy(srcPtrModTemp, srcPtrTemp, srcSize.width * sizeof(T));
+                srcPtrModTemp += srcSize.width;
+                srcPtrTemp += srcSize.width;
+                
+                memset (srcPtrModTemp,(T) 0,bound * sizeof(T));
+                srcPtrModTemp += bound;
             }
-            for (int b = 0; b < bound; b++)
-            {
-                for (int i = 0; i < srcSizeMod.width; i++)
-                {
-                    *srcPtrModTemp = 0;
-                    srcPtrModTemp++;
-                }
-            }
+            memset (srcPtrModTemp,(T) 0,bound * srcSizeMod.width * sizeof(T));
+            srcPtrModTemp += (bound * srcSizeMod.width);
         }
     }
     else if(chnFormat == RPPI_CHN_PACKED)
     {
-        for (int b = 0; b < bound; b++)
-        {
-            for (int i = 0; i < srcSizeMod.width; i++)
-            {
-                for (int c = 0; c < channel; c++)
-                {
-                    *srcPtrModTemp = 0;
-                    srcPtrModTemp++;
-                }
+        Rpp32u elementsInRow = channel * srcSize.width;
+        Rpp32u numOfPixelsVtBorder = bound * channel;
+        Rpp32u numOfPixelsHrBorder = numOfPixelsVtBorder * srcSizeMod.width;
 
-            }
-        }
+        memset (srcPtrModTemp,(T) 0,numOfPixelsHrBorder * sizeof(T));
+        srcPtrModTemp += (numOfPixelsHrBorder);
 
         for (int i = 0; i < srcSize.height; i++)
         {
-            for (int b = 0; b < bound; b++)
-            {
-                for (int c = 0; c < channel; c++)
-                {
-                    *srcPtrModTemp = 0;
-                    srcPtrModTemp++;
-                }
-            }
-            for (int j = 0; j < srcSize.width; j++)
-            {
-                for (int c = 0; c < channel; c++)
-                {
-                    *srcPtrModTemp = *srcPtrTemp;
-                    srcPtrModTemp++;
-                    srcPtrTemp++;
-                }
-            }
-            for (int b = 0; b < bound; b++)
-            {
-                for (int c = 0; c < channel; c++)
-                {
-                    *srcPtrModTemp = 0;
-                    srcPtrModTemp++;
-                }
-            }
+            memset (srcPtrModTemp,(T) 0,numOfPixelsVtBorder * sizeof(T));
+            srcPtrModTemp += (numOfPixelsVtBorder);
+
+            memcpy(srcPtrModTemp, srcPtrTemp, elementsInRow * sizeof(T));
+            srcPtrModTemp += elementsInRow;
+            srcPtrTemp += elementsInRow;
+            
+            memset (srcPtrModTemp,(T) 0,numOfPixelsVtBorder * sizeof(T));
+            srcPtrModTemp += (numOfPixelsVtBorder);
         }
 
-        for (int b = 0; b < bound; b++)
-        {
-            for (int i = 0; i < srcSizeMod.width; i++)
-            {
-                for (int c = 0; c < channel; c++)
-                {
-                    *srcPtrModTemp = 0;
-                    srcPtrModTemp++;
-                }
-            }
-        }
+        memset (srcPtrModTemp,(T) 0,numOfPixelsHrBorder * sizeof(T));
+        srcPtrModTemp += (numOfPixelsHrBorder);
     }
 
     return RPP_SUCCESS;
