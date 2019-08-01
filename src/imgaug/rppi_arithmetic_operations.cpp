@@ -631,3 +631,66 @@ rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+// ----------------------------------------
+// GPU Tensor functions calls 
+// ----------------------------------------
+
+RppStatus
+rppi_tensor_add_gpu(Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppPtr_t srcPtr1,RppPtr_t srcPtr2, RppPtr_t dstPtr, RppHandle_t rppHandle)
+{
+
+#ifdef OCL_COMPILE
+ 	 {
+
+    std::cout<<"INSIDE\n\n\n\n";
+ 	 tensor_add_cl(tensorDimension, static_cast<cl_mem>(tensorDimensionValues),
+            static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			static_cast<cl_mem>(dstPtr),
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_subtract_gpu(Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppPtr_t srcPtr1,RppPtr_t srcPtr2, RppPtr_t dstPtr, RppHandle_t rppHandle)
+{
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 tensor_subtract_cl(tensorDimension, static_cast<cl_mem>(tensorDimensionValues),
+            static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			static_cast<cl_mem>(dstPtr),
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_multiply_gpu(Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppPtr_t srcPtr1,RppPtr_t srcPtr2, RppPtr_t dstPtr, RppHandle_t rppHandle)
+{
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 tensor_multiply_cl(tensorDimension, static_cast<cl_mem>(tensorDimensionValues),
+            static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			static_cast<cl_mem>(dstPtr),
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}

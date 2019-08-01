@@ -286,4 +286,13 @@ local_binary_pattern_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiCh
 RppStatus
 sobel_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u sobelType, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
+RppStatus
+tensor_add_cl(Rpp32u tensorDimension, cl_mem tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue);
+
+RppStatus
+tensor_subtract_cl(Rpp32u tensorDimension, cl_mem tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue);
+
+RppStatus
+tensor_multiply_cl(Rpp32u tensorDimension, cl_mem tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
