@@ -193,165 +193,163 @@ accumulate_weighted_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
 }
 
 RppStatus
-tensor_add_cl(Rpp32u tensorDimension, cl_mem tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue)
-{
-    
+tensor_add_cl(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue)
+{ 
     unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
 
     CreateProgramFromBinary(theQueue,"tensor.cl","tensor.cl.bin","tensor_add",theProgram,theKernel);
-    clRetainKernel(theKernel); 
-
-    //---- Args Setter
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &tensorDimensionValues);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    //----
-    
-    unsigned int* tensorDimensionValuesCopy;
-    size_t dest_bytes = tensorDimension * sizeof(Rpp32u);
-    tensorDimensionValuesCopy = (unsigned int*)malloc(dest_bytes);
-    clEnqueueReadBuffer(theQueue, tensorDimensionValues, CL_TRUE, 0, dest_bytes, tensorDimensionValuesCopy, 0, NULL, NULL );
+    clRetainKernel(theKernel);
     
     size_t gDim3[3];
     if(tensorDimension == 1)
     {
-        gDim3[0] = tensorDimensionValuesCopy[0];
+        gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = 1;
         gDim3[2] = 1;
     }
     else if(tensorDimension == 2)
     {
-        gDim3[0] = tensorDimensionValuesCopy[0];
-        gDim3[1] = tensorDimensionValuesCopy[1];
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = tensorDimensionValues[1];
         gDim3[2] = 1;
     }
     else
     {
-        gDim3[0] = 1280; //tensorDimensionValuesCopy[0];
-        gDim3[1] = 720; //tensorDimensionValuesCopy[1];
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = tensorDimensionValues[1];
         int value = 1;
         for(int i = 2 ; i < tensorDimension ; i++)
-            value *= tensorDimensionValuesCopy[i];
-        gDim3[2] = 3; //value;
+        {    
+            value *= tensorDimensionValues[i];
+        }
+        gDim3[2] = value;
     }
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[0]);
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[1]);
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[2]);
-    std::cout<<"12345";
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    
+    unsigned int dim1,dim2,dim3;
+    dim1 = gDim3[0];
+    dim2 = gDim3[1];
+    dim3 = gDim3[2];
 
+    //---- Args Setter
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim1);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim2);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim3);
+    //----
+
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;
 }
 
 RppStatus
-tensor_subtract_cl(Rpp32u tensorDimension, cl_mem tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue)
-{
+tensor_subtract_cl(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue)
+{ 
     unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
 
     CreateProgramFromBinary(theQueue,"tensor.cl","tensor.cl.bin","tensor_subtract",theProgram,theKernel);
-    clRetainKernel(theKernel); 
-
-    //---- Args Setter
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &tensorDimensionValues);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    //----
-
-    unsigned int* tensorDimensionValuesCopy;
-    size_t dest_bytes = tensorDimension * sizeof(Rpp32u);
-    tensorDimensionValuesCopy = (unsigned int*)malloc(dest_bytes);
-    clEnqueueReadBuffer(theQueue, tensorDimensionValues, CL_TRUE, 0, dest_bytes, tensorDimensionValuesCopy, 0, NULL, NULL );
+    clRetainKernel(theKernel);
     
     size_t gDim3[3];
     if(tensorDimension == 1)
     {
-        gDim3[0] = tensorDimensionValuesCopy[0];
+        gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = 1;
         gDim3[2] = 1;
     }
     else if(tensorDimension == 2)
     {
-        gDim3[0] = tensorDimensionValuesCopy[0];
-        gDim3[1] = tensorDimensionValuesCopy[1];
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = tensorDimensionValues[1];
         gDim3[2] = 1;
     }
     else
     {
-        gDim3[0] = tensorDimensionValuesCopy[0];
-        gDim3[1] = tensorDimensionValuesCopy[1];
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = tensorDimensionValues[1];
         int value = 1;
         for(int i = 2 ; i < tensorDimension ; i++)
-            value *= tensorDimensionValuesCopy[i];
+        {    
+            value *= tensorDimensionValues[i];
+        }
         gDim3[2] = value;
     }
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[0]);
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[1]);
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[2]);
     
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    unsigned int dim1,dim2,dim3;
+    dim1 = gDim3[0];
+    dim2 = gDim3[1];
+    dim3 = gDim3[2];
 
+    //---- Args Setter
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim1);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim2);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim3);
+    //----
+
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;
 }
 
 RppStatus
-tensor_multiply_cl(Rpp32u tensorDimension, cl_mem tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue)
-{
+tensor_multiply_cl(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, cl_command_queue theQueue)
+{ 
     unsigned short counter=0;
     cl_kernel theKernel;
     cl_program theProgram;
 
     CreateProgramFromBinary(theQueue,"tensor.cl","tensor.cl.bin","tensor_multiply",theProgram,theKernel);
-    clRetainKernel(theKernel); 
-
-    //---- Args Setter
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &tensorDimensionValues);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    //----
-
-    unsigned int* tensorDimensionValuesCopy;
-    size_t dest_bytes = tensorDimension * sizeof(Rpp32u);
-    tensorDimensionValuesCopy = (unsigned int*)malloc(dest_bytes);
-    clEnqueueReadBuffer(theQueue, tensorDimensionValues, CL_TRUE, 0, dest_bytes, tensorDimensionValuesCopy, 0, NULL, NULL );
+    clRetainKernel(theKernel);
     
     size_t gDim3[3];
     if(tensorDimension == 1)
     {
-        gDim3[0] = tensorDimensionValuesCopy[0];
+        gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = 1;
         gDim3[2] = 1;
     }
     else if(tensorDimension == 2)
     {
-        gDim3[0] = tensorDimensionValuesCopy[0];
-        gDim3[1] = tensorDimensionValuesCopy[1];
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = tensorDimensionValues[1];
         gDim3[2] = 1;
     }
     else
     {
-        gDim3[0] = tensorDimensionValuesCopy[0];
-        gDim3[1] = tensorDimensionValuesCopy[1];
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = tensorDimensionValues[1];
         int value = 1;
         for(int i = 2 ; i < tensorDimension ; i++)
-            value *= tensorDimensionValuesCopy[i];
+        {    
+            value *= tensorDimensionValues[i];
+        }
         gDim3[2] = value;
-        
     }
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[0]);
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[1]);
-    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &gDim3[2]);
     
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    unsigned int dim1,dim2,dim3;
+    dim1 = gDim3[0];
+    dim2 = gDim3[1];
+    dim3 = gDim3[2];
 
+    //---- Args Setter
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim1);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim2);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim3);
+    //----
+
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;    
 }
