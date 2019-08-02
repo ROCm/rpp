@@ -341,6 +341,44 @@ rppi_phase_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rp
     return RPP_SUCCESS;
 
 }
+ 
+// ----------------------------------------
+// Host tensor functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_tensor_add_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, 
+                        Rpp32u tensorDimension, RppPtr_t tensorDimensionValues)
+{
+    tensor_add_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), static_cast<Rpp8u*>(dstPtr), 
+                           tensorDimension, static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_tensor_subtract_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, 
+                        Rpp32u tensorDimension, RppPtr_t tensorDimensionValues)
+{
+    tensor_subtract_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), static_cast<Rpp8u*>(dstPtr), 
+                           tensorDimension, static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, 
+                        Rpp32u tensorDimension, RppPtr_t tensorDimensionValues)
+{
+    tensor_multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), static_cast<Rpp8u*>(dstPtr), 
+                           tensorDimension, static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+
+}
 
 // ----------------------------------------
 // Host mean and standard deviation functions calls 

@@ -190,6 +190,117 @@ RppStatus phase_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 }
 
+/**************** Tensor Add ***************/
+
+template <typename T, typename U>
+RppStatus tensor_add_host(T* srcPtr1, U* srcPtr2, T* dstPtr, 
+                          Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
+{
+    Rpp32u *tensorDimensionValuesTemp;
+    tensorDimensionValuesTemp = tensorDimensionValues;
+
+    Rpp32u tensorSize = 1;
+    for(int i = 0; i < tensorDimension; i++)
+    {
+        tensorSize *= *tensorDimensionValuesTemp;
+        tensorDimensionValuesTemp++;
+    }
+
+    T *srcPtr1Temp, *dstPtrTemp;
+    U *srcPtr2Temp;
+    srcPtr1Temp = srcPtr1;
+    srcPtr2Temp = srcPtr2;
+    dstPtrTemp = dstPtr;
+    Rpp32f pixel;
+
+    for (int i = 0; i < tensorSize; i++)
+    {
+        pixel = ((Rpp32f) (*srcPtr1Temp)) + ((Rpp32f) (*srcPtr2Temp));
+        pixel = RPPPIXELCHECK(pixel);
+        *dstPtrTemp =(T) pixel;
+        srcPtr1Temp++;
+        srcPtr2Temp++;
+        dstPtrTemp++;
+    }
+
+    return RPP_SUCCESS;
+
+}
+
+/**************** Tensor Subtract ***************/
+
+template <typename T, typename U>
+RppStatus tensor_subtract_host(T* srcPtr1, U* srcPtr2, T* dstPtr, 
+                          Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
+{
+    Rpp32u *tensorDimensionValuesTemp;
+    tensorDimensionValuesTemp = tensorDimensionValues;
+
+    Rpp32u tensorSize = 1;
+    for(int i = 0; i < tensorDimension; i++)
+    {
+        tensorSize *= *tensorDimensionValuesTemp;
+        tensorDimensionValuesTemp++;
+    }
+
+    T *srcPtr1Temp, *dstPtrTemp;
+    U *srcPtr2Temp;
+    srcPtr1Temp = srcPtr1;
+    srcPtr2Temp = srcPtr2;
+    dstPtrTemp = dstPtr;
+    Rpp32f pixel;
+
+    for (int i = 0; i < tensorSize; i++)
+    {
+        pixel = ((Rpp32f) (*srcPtr1Temp)) - ((Rpp32f) (*srcPtr2Temp));
+        pixel = RPPPIXELCHECK(pixel);
+        *dstPtrTemp =(T) pixel;
+        srcPtr1Temp++;
+        srcPtr2Temp++;
+        dstPtrTemp++;
+    }
+
+    return RPP_SUCCESS;
+
+}
+
+/**************** Tensor Multiply ***************/
+
+template <typename T, typename U>
+RppStatus tensor_multiply_host(T* srcPtr1, U* srcPtr2, T* dstPtr, 
+                          Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
+{
+    Rpp32u *tensorDimensionValuesTemp;
+    tensorDimensionValuesTemp = tensorDimensionValues;
+
+    Rpp32u tensorSize = 1;
+    for(int i = 0; i < tensorDimension; i++)
+    {
+        tensorSize *= *tensorDimensionValuesTemp;
+        tensorDimensionValuesTemp++;
+    }
+
+    T *srcPtr1Temp, *dstPtrTemp;
+    U *srcPtr2Temp;
+    srcPtr1Temp = srcPtr1;
+    srcPtr2Temp = srcPtr2;
+    dstPtrTemp = dstPtr;
+    Rpp32f pixel;
+
+    for (int i = 0; i < tensorSize; i++)
+    {
+        pixel = ((Rpp32f) (*srcPtr1Temp)) * ((Rpp32f) (*srcPtr2Temp));
+        pixel = RPPPIXELCHECK(pixel);
+        *dstPtrTemp =(T) pixel;
+        srcPtr1Temp++;
+        srcPtr2Temp++;
+        dstPtrTemp++;
+    }
+
+    return RPP_SUCCESS;
+
+}
+
 /**************** Mean & Standard Deviation ***************/
 
 template <typename T>
