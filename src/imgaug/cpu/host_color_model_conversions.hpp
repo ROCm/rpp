@@ -4,111 +4,10 @@
 
 template <typename T, typename U>
 RppStatus rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
-                    RppiChnFormat chnFormat, unsigned channel)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
-    if (chnFormat == RPPI_CHN_PLANAR)
-    {
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-        {
-            float rf, gf, bf, cmax, cmin, delta;
-            rf = ((float) srcPtr[i]) / 255;
-            gf = ((float) srcPtr[i + (srcSize.width * srcSize.height)]) / 255;
-            bf = ((float) srcPtr[i + (2 * srcSize.width * srcSize.height)]) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
-            delta = cmax - cmin;
-
-            if (delta == 0)
-            {
-                dstPtr[i] = 0;
-            }
-            else if (cmax == rf)
-            {
-                dstPtr[i] = round(60 * fmod(((gf - bf) / delta),6));
-            }
-            else if (cmax == gf)
-            {
-                dstPtr[i] = round(60 * (((bf - rf) / delta) + 2));
-            }
-            else if (cmax == bf)
-            {
-                dstPtr[i] = round(60 * (((rf - gf) / delta) + 4));
-            }
-            
-            while (dstPtr[i] > 360)
-            {
-                dstPtr[i] = dstPtr[i] - 360;
-            }
-            while (dstPtr[i] < 0)
-            {
-                dstPtr[i] = 360 + dstPtr[i];
-            }
-
-            if (cmax == 0)
-            {
-                dstPtr[i + (srcSize.width * srcSize.height)] = 0;
-            }
-            else
-            {
-                dstPtr[i + (srcSize.width * srcSize.height)] = delta / cmax;
-            }
-
-            dstPtr[i + (2 * srcSize.width * srcSize.height)] = cmax;
-
-        }
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
-        {
-            float rf, gf, bf, cmax, cmin, delta;
-            rf = ((float) srcPtr[i]) / 255;
-            gf = ((float) srcPtr[i + 1]) / 255;
-            bf = ((float) srcPtr[i + 2]) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
-            delta = cmax - cmin;
-
-            if (delta == 0)
-            {
-                dstPtr[i] = 0;
-            }
-            else if (cmax == rf)
-            {
-                dstPtr[i] = round(60 * fmod(((gf - bf) / delta),6));
-            }
-            else if (cmax == gf)
-            {
-                dstPtr[i] = round(60 * (((bf - rf) / delta) + 2));
-            }
-            else if (cmax == bf)
-            {
-                dstPtr[i] = round(60 * (((rf - gf) / delta) + 4));
-            }
-            
-            while (dstPtr[i] > 360)
-            {
-                dstPtr[i] = dstPtr[i] - 360;
-            }
-            while (dstPtr[i] < 0)
-            {
-                dstPtr[i] = 360 + dstPtr[i];
-            }
-
-            if (cmax == 0)
-            {
-                dstPtr[i + 1] = 0;
-            }
-            else
-            {
-                dstPtr[i + 1] = delta / cmax;
-            }
-
-            dstPtr[i + 2] = cmax;
-
-        }
-    }
-
+    compute_rgb_to_hsv_host(srcPtr, srcSize, dstPtr, chnFormat, channel);
+    
     return RPP_SUCCESS;
 }
 
@@ -116,110 +15,9 @@ RppStatus rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
 template <typename T, typename U>
 RppStatus hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
-                    RppiChnFormat chnFormat, unsigned channel)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
-    if (chnFormat == RPPI_CHN_PLANAR)
-    {
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-        {
-            float c, x, m, rf, gf, bf;
-            c = srcPtr[i + (2 * srcSize.width * srcSize.height)] * srcPtr[i + (srcSize.width * srcSize.height)];
-            x = c * (1 - abs((fmod((srcPtr[i] / 60), 2)) - 1));
-            m = srcPtr[i + (2 * srcSize.width * srcSize.height)] - c;
-            
-            if ((0 <= srcPtr[i]) && (srcPtr[i] < 60))
-            {
-                rf = c;
-                gf = x;
-                bf = 0;
-            }
-            else if ((60 <= srcPtr[i]) && (srcPtr[i] < 120))
-            {
-                rf = x;
-                gf = c;
-                bf = 0;
-            }
-            else if ((120 <= srcPtr[i]) && (srcPtr[i] < 180))
-            {
-                rf = 0;
-                gf = c;
-                bf = x;
-            }
-            else if ((180 <= srcPtr[i]) && (srcPtr[i] < 240))
-            {
-                rf = 0;
-                gf = x;
-                bf = c;
-            }
-            else if ((240 <= srcPtr[i]) && (srcPtr[i] < 300))
-            {
-                rf = x;
-                gf = 0;
-                bf = c;
-            }
-            else if ((300 <= srcPtr[i]) && (srcPtr[i] < 360))
-            {
-                rf = c;
-                gf = 0;
-                bf = x;
-            }
-
-            dstPtr[i] = (Rpp8u) round((rf + m) * 255);
-            dstPtr[i + (srcSize.width * srcSize.height)] = (Rpp8u) round((gf + m) * 255);
-            dstPtr[i + (2 * srcSize.width * srcSize.height)] = (Rpp8u) round((bf + m) * 255);
-        }
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
-        {
-            float c, x, m, rf, gf, bf;
-            c = srcPtr[i + 2] * srcPtr[i + 1];
-            x = c * (1 - RPPABS((fmod((srcPtr[i] / 60), 2)) - 1));
-            m = srcPtr[i + 2] - c;
-            
-            if ((0 <= srcPtr[i]) && (srcPtr[i] < 60))
-            {
-                rf = c;
-                gf = x;
-                bf = 0;
-            }
-            else if ((60 <= srcPtr[i]) && (srcPtr[i] < 120))
-            {
-                rf = x;
-                gf = c;
-                bf = 0;
-            }
-            else if ((120 <= srcPtr[i]) && (srcPtr[i] < 180))
-            {
-                rf = 0;
-                gf = c;
-                bf = x;
-            }
-            else if ((180 <= srcPtr[i]) && (srcPtr[i] < 240))
-            {
-                rf = 0;
-                gf = x;
-                bf = c;
-            }
-            else if ((240 <= srcPtr[i]) && (srcPtr[i] < 300))
-            {
-                rf = x;
-                gf = 0;
-                bf = c;
-            }
-            else if ((300 <= srcPtr[i]) && (srcPtr[i] < 360))
-            {
-                rf = c;
-                gf = 0;
-                bf = x;
-            }
-
-            dstPtr[i] = (Rpp8u) round((rf + m) * 255);
-            dstPtr[i + 1] = (Rpp8u) round((gf + m) * 255);
-            dstPtr[i + 2] = (Rpp8u) round((bf + m) * 255);
-        }
-    }
+    compute_hsv_to_rgb_host(srcPtr, srcSize, dstPtr, chnFormat, channel);
 
     return RPP_SUCCESS;
 }
@@ -229,281 +27,108 @@ RppStatus hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 template <typename T, typename U>
 RppStatus hueRGB_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f hueShift,
-                    RppiChnFormat chnFormat, unsigned channel)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
+    Rpp32f *srcPtrHSV = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
+    compute_rgb_to_hsv_host(srcPtr, srcSize, srcPtrHSV, chnFormat, channel);
+
+    Rpp32f *srcPtrHSVTemp;
+    srcPtrHSVTemp = srcPtrHSV;
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        Rpp32u channel = 3;
-        Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            float rf, gf, bf, cmax, cmin, delta;
-            rf = ((float) srcPtr[i]) / 255;
-            gf = ((float) srcPtr[i + (srcSize.width * srcSize.height)]) / 255;
-            bf = ((float) srcPtr[i + (2 * srcSize.width * srcSize.height)]) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
-            delta = cmax - cmin;
-
-            if (delta == 0)
+            *srcPtrHSVTemp = *srcPtrHSVTemp + hueShift;
+            while (*srcPtrHSVTemp > 360)
             {
-                pHSV[i] = 0;
+                *srcPtrHSVTemp = *srcPtrHSVTemp - 360;
             }
-            else if (cmax == rf)
+            while (*srcPtrHSVTemp < 0)
             {
-                pHSV[i] = round(60 * fmod(((gf - bf) / delta),6));
+                *srcPtrHSVTemp = 360 + *srcPtrHSVTemp;
             }
-            else if (cmax == gf)
-            {
-                pHSV[i] = round(60 * (((bf - rf) / delta) + 2));
-            }
-            else if (cmax == bf)
-            {
-                pHSV[i] = round(60 * (((rf - gf) / delta) + 4));
-            }
-            
-            while (pHSV[i] > 360)
-            {
-                pHSV[i] = pHSV[i] - 360;
-            }
-            while (pHSV[i] < 0)
-            {
-                pHSV[i] = 360 + pHSV[i];
-            }
-
-            if (cmax == 0)
-            {
-                pHSV[i + (srcSize.width * srcSize.height)] = 0;
-            }
-            else
-            {
-                pHSV[i + (srcSize.width * srcSize.height)] = delta / cmax;
-            }
-
-            pHSV[i + (2 * srcSize.width * srcSize.height)] = cmax;
-
-        }
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-        {
-            pHSV[i] += hueShift;
-            while (pHSV[i] > 360)
-            {
-                pHSV[i] = pHSV[i] - 360;
-            }
-            while (pHSV[i] < 0)
-            {
-                pHSV[i] = 360 + pHSV[i];
-            }
-        }
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-        {
-            float c, x, m, rf, gf, bf;
-            c = pHSV[i + (2 * srcSize.width * srcSize.height)] * pHSV[i + (srcSize.width * srcSize.height)];
-            x = c * (1 - abs((fmod((pHSV[i] / 60), 2)) - 1));
-            m = pHSV[i + (2 * srcSize.width * srcSize.height)] - c;
-            
-            if ((0 <= pHSV[i]) && (pHSV[i] < 60))
-            {
-                rf = c;
-                gf = x;
-                bf = 0;
-            }
-            else if ((60 <= pHSV[i]) && (pHSV[i] < 120))
-            {
-                rf = x;
-                gf = c;
-                bf = 0;
-            }
-            else if ((120 <= pHSV[i]) && (pHSV[i] < 180))
-            {
-                rf = 0;
-                gf = c;
-                bf = x;
-            }
-            else if ((180 <= pHSV[i]) && (pHSV[i] < 240))
-            {
-                rf = 0;
-                gf = x;
-                bf = c;
-            }
-            else if ((240 <= pHSV[i]) && (pHSV[i] < 300))
-            {
-                rf = x;
-                gf = 0;
-                bf = c;
-            }
-            else if ((300 <= pHSV[i]) && (pHSV[i] < 360))
-            {
-                rf = c;
-                gf = 0;
-                bf = x;
-            }
-
-            dstPtr[i] = (Rpp8u) round((rf + m) * 255);
-            dstPtr[i + (srcSize.width * srcSize.height)] = (Rpp8u) round((gf + m) * 255);
-            dstPtr[i + (2 * srcSize.width * srcSize.height)] = (Rpp8u) round((bf + m) * 255);
+            srcPtrHSVTemp++;
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        Rpp32u channel = 3;
-        Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            float rf, gf, bf, cmax, cmin, delta;
-            rf = ((float) srcPtr[i]) / 255;
-            gf = ((float) srcPtr[i + 1]) / 255;
-            bf = ((float) srcPtr[i + 2]) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
-            delta = cmax - cmin;
-
-            if (delta == 0)
+            *srcPtrHSVTemp = *srcPtrHSVTemp + hueShift;
+            while (*srcPtrHSVTemp > 360)
             {
-                pHSV[i] = 0;
+                *srcPtrHSVTemp = *srcPtrHSVTemp - 360;
             }
-            else if (cmax == rf)
+            while (*srcPtrHSVTemp < 0)
             {
-                pHSV[i] = round(60 * fmod(((gf - bf) / delta),6));
+                *srcPtrHSVTemp = 360 + *srcPtrHSVTemp;
             }
-            else if (cmax == gf)
-            {
-                pHSV[i] = round(60 * (((bf - rf) / delta) + 2));
-            }
-            else if (cmax == bf)
-            {
-                pHSV[i] = round(60 * (((rf - gf) / delta) + 4));
-            }
-            
-            while (pHSV[i] > 360)
-            {
-                pHSV[i] = pHSV[i] - 360;
-            }
-            while (pHSV[i] < 0)
-            {
-                pHSV[i] = 360 + pHSV[i];
-            }
-
-            if (cmax == 0)
-            {
-                pHSV[i + 1] = 0;
-            }
-            else
-            {
-                pHSV[i + 1] = delta / cmax;
-            }
-
-            pHSV[i + 2] = cmax;
-
-        }
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
-        {
-            pHSV[i] += hueShift;
-            while (pHSV[i] > 360)
-            {
-                pHSV[i] = pHSV[i] - 360;
-            }
-            while (pHSV[i] < 0)
-            {
-                pHSV[i] = 360 + pHSV[i];
-            }
-        }
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
-        {
-            float c, x, m, rf, gf, bf;
-            c = pHSV[i + 2] * pHSV[i + 1];
-            x = c * (1 - abs((fmod((pHSV[i] / 60), 2)) - 1));
-            m = pHSV[i + 2] - c;
-            
-            if ((0 <= pHSV[i]) && (pHSV[i] < 60))
-            {
-                rf = c;
-                gf = x;
-                bf = 0;
-            }
-            else if ((60 <= pHSV[i]) && (pHSV[i] < 120))
-            {
-                rf = x;
-                gf = c;
-                bf = 0;
-            }
-            else if ((120 <= pHSV[i]) && (pHSV[i] < 180))
-            {
-                rf = 0;
-                gf = c;
-                bf = x;
-            }
-            else if ((180 <= pHSV[i]) && (pHSV[i] < 240))
-            {
-                rf = 0;
-                gf = x;
-                bf = c;
-            }
-            else if ((240 <= pHSV[i]) && (pHSV[i] < 300))
-            {
-                rf = x;
-                gf = 0;
-                bf = c;
-            }
-            else if ((300 <= pHSV[i]) && (pHSV[i] < 360))
-            {
-                rf = c;
-                gf = 0;
-                bf = x;
-            }
-
-            dstPtr[i] = (Rpp8u) round((rf + m) * 255);
-            dstPtr[i + 1] = (Rpp8u) round((gf + m) * 255);
-            dstPtr[i + 2] = (Rpp8u) round((bf + m) * 255);
+            srcPtrHSVTemp = srcPtrHSVTemp + channel;
         }
     }
+
+    compute_hsv_to_rgb_host(srcPtrHSV, srcSize, dstPtr, chnFormat, channel);
+
     return RPP_SUCCESS;
 }
+
 template <typename T, typename U>
 RppStatus hueHSV_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f hueShift,
-                    RppiChnFormat chnFormat, unsigned channel)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        Rpp32u channel = 3;
-        for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            dstPtr[i] = srcPtr[i];
+            *dstPtrTemp = *srcPtrTemp + hueShift;
+            while (*dstPtrTemp > 360)
+            {
+                *dstPtrTemp = *dstPtrTemp - 360;
+            }
+            while (*dstPtrTemp < 0)
+            {
+                *dstPtrTemp = 360 + *dstPtrTemp;
+            }
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+        for (int i = 0; i < (2 * srcSize.height * srcSize.width); i++)
         {
-            dstPtr[i] += hueShift;
-            while (dstPtr[i] > 360)
-            {
-                dstPtr[i] = dstPtr[i] - 360;
-            }
-            while (dstPtr[i] < 0)
-            {
-                dstPtr[i] = 360 + dstPtr[i];
-            }
+            *dstPtrTemp = *srcPtrTemp;
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        Rpp32u channel = 3;
-        for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            dstPtr[i] = srcPtr[i];
-        }
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
-        {
-            dstPtr[i] += hueShift;
-            while (dstPtr[i] > 360)
+            *dstPtrTemp = *srcPtrTemp + hueShift;
+            while (*dstPtrTemp > 360)
             {
-                dstPtr[i] = dstPtr[i] - 360;
+                *dstPtrTemp = *dstPtrTemp - 360;
             }
-            while (dstPtr[i] < 0)
+            while (*dstPtrTemp < 0)
             {
-                dstPtr[i] = 360 + dstPtr[i];
+                *dstPtrTemp = 360 + *dstPtrTemp;
+            }
+            srcPtrTemp++;
+            dstPtrTemp++;
+            for (int c = 0; c < (channel - 1); c++)
+            {
+                *dstPtrTemp = *srcPtrTemp;
+                srcPtrTemp++;
+                dstPtrTemp++;
             }
         }
     }
+
     return RPP_SUCCESS;
 }
 
@@ -512,256 +137,323 @@ RppStatus hueHSV_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 template <typename T, typename U>
 RppStatus saturationRGB_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f saturationFactor,
-                    RppiChnFormat chnFormat, unsigned channel)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
+    Rpp32f *srcPtrHSV = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
+    compute_rgb_to_hsv_host(srcPtr, srcSize, srcPtrHSV, chnFormat, channel);
+
+    Rpp32f *srcPtrHSVTemp;
+    srcPtrHSVTemp = srcPtrHSV;
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        Rpp32u channel = 3;
-        Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+        srcPtrHSVTemp = srcPtrHSV + (srcSize.height * srcSize.width);
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            float rf, gf, bf, cmax, cmin, delta;
-            rf = ((float) srcPtr[i]) / 255;
-            gf = ((float) srcPtr[i + (srcSize.width * srcSize.height)]) / 255;
-            bf = ((float) srcPtr[i + (2 * srcSize.width * srcSize.height)]) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
-            delta = cmax - cmin;
-
-            if (delta == 0)
-            {
-                pHSV[i] = 0;
-            }
-            else if (cmax == rf)
-            {
-                pHSV[i] = round(60 * fmod(((gf - bf) / delta),6));
-            }
-            else if (cmax == gf)
-            {
-                pHSV[i] = round(60 * (((bf - rf) / delta) + 2));
-            }
-            else if (cmax == bf)
-            {
-                pHSV[i] = round(60 * (((rf - gf) / delta) + 4));
-            }
-            
-            while (pHSV[i] > 360)
-            {
-                pHSV[i] = pHSV[i] - 360;
-            }
-            while (pHSV[i] < 0)
-            {
-                pHSV[i] = 360 + pHSV[i];
-            }
-
-            if (cmax == 0)
-            {
-                pHSV[i + (srcSize.width * srcSize.height)] = 0;
-            }
-            else
-            {
-                pHSV[i + (srcSize.width * srcSize.height)] = delta / cmax;
-            }
-
-            pHSV[i + (2 * srcSize.width * srcSize.height)] = cmax;
-
-        }
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-        {
-            pHSV[i + (srcSize.width * srcSize.height)] *= saturationFactor;
-            pHSV[i + (srcSize.width * srcSize.height)] = (pHSV[i + (srcSize.width * srcSize.height)] < (float) 1) ? pHSV[i + (srcSize.width * srcSize.height)] : ((float) 1);
-            pHSV[i + (srcSize.width * srcSize.height)] = (pHSV[i + (srcSize.width * srcSize.height)] > (float) 0) ? pHSV[i + (srcSize.width * srcSize.height)] : ((float) 0);
-        }
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
-        {
-            float c, x, m, rf, gf, bf;
-            c = pHSV[i + (2 * srcSize.width * srcSize.height)] * pHSV[i + (srcSize.width * srcSize.height)];
-            x = c * (1 - abs((fmod((pHSV[i] / 60), 2)) - 1));
-            m = pHSV[i + (2 * srcSize.width * srcSize.height)] - c;
-            
-            if ((0 <= pHSV[i]) && (pHSV[i] < 60))
-            {
-                rf = c;
-                gf = x;
-                bf = 0;
-            }
-            else if ((60 <= pHSV[i]) && (pHSV[i] < 120))
-            {
-                rf = x;
-                gf = c;
-                bf = 0;
-            }
-            else if ((120 <= pHSV[i]) && (pHSV[i] < 180))
-            {
-                rf = 0;
-                gf = c;
-                bf = x;
-            }
-            else if ((180 <= pHSV[i]) && (pHSV[i] < 240))
-            {
-                rf = 0;
-                gf = x;
-                bf = c;
-            }
-            else if ((240 <= pHSV[i]) && (pHSV[i] < 300))
-            {
-                rf = x;
-                gf = 0;
-                bf = c;
-            }
-            else if ((300 <= pHSV[i]) && (pHSV[i] < 360))
-            {
-                rf = c;
-                gf = 0;
-                bf = x;
-            }
-
-            dstPtr[i] = (Rpp8u) round((rf + m) * 255);
-            dstPtr[i + (srcSize.width * srcSize.height)] = (Rpp8u) round((gf + m) * 255);
-            dstPtr[i + (2 * srcSize.width * srcSize.height)] = (Rpp8u) round((bf + m) * 255);
+            *srcPtrHSVTemp *= saturationFactor;
+            *srcPtrHSVTemp = (*srcPtrHSVTemp < (Rpp32f) 1) ? *srcPtrHSVTemp : ((Rpp32f) 1);
+            *srcPtrHSVTemp = (*srcPtrHSVTemp > (Rpp32f) 0) ? *srcPtrHSVTemp : ((Rpp32f) 0);
+            srcPtrHSVTemp++;
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        Rpp32u channel = 3;
-        Rpp32f *pHSV = (Rpp32f *)malloc(channel * srcSize.width * srcSize.height * sizeof(Rpp32f));
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
+        srcPtrHSVTemp = srcPtrHSV + 1;
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            float rf, gf, bf, cmax, cmin, delta;
-            rf = ((float) srcPtr[i]) / 255;
-            gf = ((float) srcPtr[i + 1]) / 255;
-            bf = ((float) srcPtr[i + 2]) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
-            delta = cmax - cmin;
-
-            if (delta == 0)
-            {
-                pHSV[i] = 0;
-            }
-            else if (cmax == rf)
-            {
-                pHSV[i] = round(60 * fmod(((gf - bf) / delta),6));
-            }
-            else if (cmax == gf)
-            {
-                pHSV[i] = round(60 * (((bf - rf) / delta) + 2));
-            }
-            else if (cmax == bf)
-            {
-                pHSV[i] = round(60 * (((rf - gf) / delta) + 4));
-            }
-            
-            while (pHSV[i] > 360)
-            {
-                pHSV[i] = pHSV[i] - 360;
-            }
-            while (pHSV[i] < 0)
-            {
-                pHSV[i] = 360 + pHSV[i];
-            }
-
-            if (cmax == 0)
-            {
-                pHSV[i + 1] = 0;
-            }
-            else
-            {
-                pHSV[i + 1] = delta / cmax;
-            }
-
-            pHSV[i + 2] = cmax;
-
-        }
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
-        {
-            pHSV[i + 1] *= saturationFactor;
-            pHSV[i + 1] = (pHSV[i + 1] < (float) 1) ? pHSV[i + 1] : ((float) 1);
-            pHSV[i + 1] = (pHSV[i + 1] > (float) 0) ? pHSV[i + 1] : ((float) 0);
-        }
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
-        {
-            float c, x, m, rf, gf, bf;
-            c = pHSV[i + 2] * pHSV[i + 1];
-            x = c * (1 - abs((fmod((pHSV[i] / 60), 2)) - 1));
-            m = pHSV[i + 2] - c;
-            
-            if ((0 <= pHSV[i]) && (pHSV[i] < 60))
-            {
-                rf = c;
-                gf = x;
-                bf = 0;
-            }
-            else if ((60 <= pHSV[i]) && (pHSV[i] < 120))
-            {
-                rf = x;
-                gf = c;
-                bf = 0;
-            }
-            else if ((120 <= pHSV[i]) && (pHSV[i] < 180))
-            {
-                rf = 0;
-                gf = c;
-                bf = x;
-            }
-            else if ((180 <= pHSV[i]) && (pHSV[i] < 240))
-            {
-                rf = 0;
-                gf = x;
-                bf = c;
-            }
-            else if ((240 <= pHSV[i]) && (pHSV[i] < 300))
-            {
-                rf = x;
-                gf = 0;
-                bf = c;
-            }
-            else if ((300 <= pHSV[i]) && (pHSV[i] < 360))
-            {
-                rf = c;
-                gf = 0;
-                bf = x;
-            }
-
-            dstPtr[i] = (Rpp8u) round((rf + m) * 255);
-            dstPtr[i + 1] = (Rpp8u) round((gf + m) * 255);
-            dstPtr[i + 2] = (Rpp8u) round((bf + m) * 255);
+            *srcPtrHSVTemp *= saturationFactor;
+            *srcPtrHSVTemp = (*srcPtrHSVTemp < (Rpp32f) 1) ? *srcPtrHSVTemp : ((Rpp32f) 1);
+            *srcPtrHSVTemp = (*srcPtrHSVTemp > (Rpp32f) 0) ? *srcPtrHSVTemp : ((Rpp32f) 0);
+            srcPtrHSVTemp = srcPtrHSVTemp + channel;
         }
     }
+
+    compute_hsv_to_rgb_host(srcPtrHSV, srcSize, dstPtr, chnFormat, channel);
+
     return RPP_SUCCESS;
 }
+
 template <typename T, typename U>
 RppStatus saturationHSV_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f saturationFactor,
-                    RppiChnFormat chnFormat, unsigned channel)
+                    RppiChnFormat chnFormat, Rpp32u channel)
 {
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        Rpp32u channel = 3;
-        for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            dstPtr[i] = srcPtr[i];
+            *dstPtrTemp = *srcPtrTemp;
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
-        for (int i = 0; i < (srcSize.width * srcSize.height); i++)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            dstPtr[i + (srcSize.width * srcSize.height)] *= saturationFactor;
-            dstPtr[i + (srcSize.width * srcSize.height)] = (dstPtr[i + (srcSize.width * srcSize.height)] < (float) 1) ? dstPtr[i + (srcSize.width * srcSize.height)] : ((float) 1);
-            dstPtr[i + (srcSize.width * srcSize.height)] = (dstPtr[i + (srcSize.width * srcSize.height)] > (float) 0) ? dstPtr[i + (srcSize.width * srcSize.height)] : ((float) 0);
+            *dstPtrTemp = *srcPtrTemp * saturationFactor;
+            *dstPtrTemp = (*dstPtrTemp < (Rpp32f) 1) ? *dstPtrTemp : ((Rpp32f) 1);
+            *dstPtrTemp = (*dstPtrTemp > (Rpp32f) 0) ? *dstPtrTemp : ((Rpp32f) 0);
+            srcPtrTemp++;
+            dstPtrTemp++;
+        }
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+        {
+            *dstPtrTemp = *srcPtrTemp;
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        Rpp32u channel = 3;
-        for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            dstPtr[i] = srcPtr[i];
-        }
-        for (int i = 0; i < (3 * srcSize.width * srcSize.height); i += 3)
-        {
-            dstPtr[i + 1] *= saturationFactor;
-            dstPtr[i + 1] = (dstPtr[i + 1] < (float) 1) ? dstPtr[i + 1] : ((float) 1);
-            dstPtr[i + 1] = (dstPtr[i + 1] > (float) 0) ? dstPtr[i + 1] : ((float) 0);
+            *dstPtrTemp = *srcPtrTemp;
+            srcPtrTemp++;
+            dstPtrTemp++;
+
+            *dstPtrTemp = *srcPtrTemp * saturationFactor;
+            *dstPtrTemp = (*dstPtrTemp < (Rpp32f) 1) ? *dstPtrTemp : ((Rpp32f) 1);
+            *dstPtrTemp = (*dstPtrTemp > (Rpp32f) 0) ? *dstPtrTemp : ((Rpp32f) 0);
+            srcPtrTemp++;
+            dstPtrTemp++;
+
+            *dstPtrTemp = *srcPtrTemp;
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
+
+    return RPP_SUCCESS;
+}
+
+/**************** RGB2HSL ***************/
+
+template <typename T, typename U>
+RppStatus rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    RppiChnFormat chnFormat, Rpp32u channel)
+{
+    compute_rgb_to_hsl_host(srcPtr, srcSize, dstPtr, chnFormat, channel);
+
+    return RPP_SUCCESS;
+}
+
+/**************** HSL2RGB ***************/
+
+template <typename T, typename U>
+RppStatus hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    RppiChnFormat chnFormat, Rpp32u channel)
+{
+    compute_hsl_to_rgb_host(srcPtr, srcSize, dstPtr, chnFormat, channel);
+
+    return RPP_SUCCESS;
+}
+
+
+/**************** Color Temperature ***************/
+
+template <typename T>
+RppStatus color_temperature_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                    Rpp8s adjustmentValue,
+                    RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if (channel != 1 && channel !=  3)
+    {
+        return RPP_ERROR;
+    }
+    if (adjustmentValue < -100 || adjustmentValue > 100)
+    {
+        return RPP_ERROR;
+    }   
+
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp32s pixel;
+
+    if (channel == 1)
+    {
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+        {
+            pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+            pixel = RPPPIXELCHECK(pixel);
+            *dstPtrTemp = (T) pixel;
+            dstPtrTemp++;
+            srcPtrTemp++;
+        }
+    }
+    else if (channel == 3)
+    {   
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+            {
+                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                pixel = RPPPIXELCHECK(pixel);
+                *dstPtrTemp = (T) pixel;
+                dstPtrTemp++;
+                srcPtrTemp++;
+            }
+            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+            {
+                *dstPtrTemp = *srcPtrTemp;
+                dstPtrTemp++;
+                srcPtrTemp++;
+            }
+            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+            {
+                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                pixel = RPPPIXELCHECK(pixel);
+                *dstPtrTemp = (T) pixel;
+                dstPtrTemp++;
+                srcPtrTemp++;
+            }
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+            {
+                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                pixel = RPPPIXELCHECK(pixel);
+                *dstPtrTemp = (T) pixel;
+                dstPtrTemp++;
+                srcPtrTemp++;
+
+                *dstPtrTemp = *srcPtrTemp;
+                dstPtrTemp++;
+                srcPtrTemp++;
+
+                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                pixel = RPPPIXELCHECK(pixel);
+                *dstPtrTemp = (T) pixel;
+                dstPtrTemp++;
+                srcPtrTemp++;
+            }
+        }
+    }
+    
+    return RPP_SUCCESS;
+}
+
+
+/**************** Vignette ***************/
+
+template <typename T>
+RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                    Rpp32f stdDev,
+                    RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp32f *mask = (Rpp32f *)calloc(srcSize.height * srcSize.width, sizeof(Rpp32f));
+    Rpp32f *maskTemp;
+    maskTemp = mask;
+
+    RppiSize kernelRowsSize, kernelColumnsSize;
+    kernelRowsSize.height = srcSize.height;
+    kernelRowsSize.width = 1;
+    kernelColumnsSize.height = srcSize.width;
+    kernelColumnsSize.width = 1;
+
+    Rpp32f *kernelRows = (Rpp32f *)calloc(kernelRowsSize.height * kernelRowsSize.width, sizeof(Rpp32f));
+    Rpp32f *kernelColumns = (Rpp32f *)calloc(kernelColumnsSize.height * kernelColumnsSize.width, sizeof(Rpp32f));
+
+    if (kernelRowsSize.height % 2 == 0)
+    {
+        generate_gaussian_kernel_asymmetric_host(stdDev, kernelRows, kernelRowsSize.height - 1, kernelRowsSize.width);
+        kernelRows[kernelRowsSize.height - 1] = kernelRows[kernelRowsSize.height - 2];
+    }
+    else
+    {
+        generate_gaussian_kernel_asymmetric_host(stdDev, kernelRows, kernelRowsSize.height, kernelRowsSize.width);
+    }
+    
+    if (kernelColumnsSize.height % 2 == 0)
+    {
+        generate_gaussian_kernel_asymmetric_host(stdDev, kernelColumns, kernelColumnsSize.height - 1, kernelColumnsSize.width);
+        kernelColumns[kernelColumnsSize.height - 1] = kernelColumns[kernelColumnsSize.height - 2];
+    }
+    else
+    {
+        generate_gaussian_kernel_asymmetric_host(stdDev, kernelColumns, kernelColumnsSize.height, kernelColumnsSize.width);
+    }
+
+    Rpp32f *kernelRowsTemp, *kernelColumnsTemp;
+    kernelRowsTemp = kernelRows;
+    kernelColumnsTemp = kernelColumns;
+    
+    for (int i = 0; i < srcSize.height; i++)
+    {
+        kernelColumnsTemp = kernelColumns;
+        for (int j = 0; j < srcSize.width; j++)
+        {
+            *maskTemp = *kernelRowsTemp * *kernelColumnsTemp;
+            maskTemp++;
+            kernelColumnsTemp++;
+        }
+        kernelRowsTemp++;
+    }
+
+    Rpp32f max = 0;
+    maskTemp = mask;
+    for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+    {
+        if (*maskTemp > max)
+        {
+            max = *maskTemp;
+        }
+        maskTemp++;
+    }
+
+    maskTemp = mask;
+    for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+    {
+        *maskTemp = *maskTemp / max;
+        maskTemp++;
+    }
+
+    Rpp32f *maskFinal = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
+    Rpp32f *maskFinalTemp;
+    maskFinalTemp = maskFinal;
+    maskTemp = mask;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int c = 0; c < channel; c++)
+        {
+            maskTemp = mask;
+            for (int i = 0; i < srcSize.height; i++)
+            {
+                for (int j = 0; j < srcSize.width; j++)
+                {
+                    *maskFinalTemp = *maskTemp;
+                    maskFinalTemp++;
+                    maskTemp++;
+                }
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        for (int i = 0; i < srcSize.height; i++)
+        {
+            for (int j = 0; j < srcSize.width; j++)
+            {
+                for (int c = 0; c < channel; c++)
+                {
+                    *maskFinalTemp = *maskTemp;
+                    maskFinalTemp++;
+                }
+                maskTemp++;
+            }
+        }
+    }
+
+    compute_multiply_host(srcPtr, maskFinal, srcSize, dstPtr, channel);
+    
     return RPP_SUCCESS;
 }

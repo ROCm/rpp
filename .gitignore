@@ -1,3 +1,6 @@
 .vscode
 build/
 sample_test
+build.sh
+temp/
+Gtest
