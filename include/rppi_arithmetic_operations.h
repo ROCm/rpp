@@ -256,6 +256,19 @@ rppi_tensor_subtract_gpu(Rpp32u tensorDimension, RppPtr_t tensorDimensionValues,
 RppStatus
 rppi_tensor_multiply_gpu(Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppPtr_t srcPtr1,RppPtr_t srcPtr2, RppPtr_t dstPtr, RppHandle_t rppHandle) ;
 
+// ----------------------------------------
+// GPU multiply functions declaration 
+// ----------------------------------------
+
+
+RppStatus
+rppi_multiply_u8_pln1_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_multiply_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_multiply_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
  
 #ifdef __cplusplus
 }

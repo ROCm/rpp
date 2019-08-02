@@ -353,3 +353,29 @@ tensor_multiply_cl(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, cl_mem
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;    
 }
+
+RppStatus
+multiply_cl( cl_mem srcPtr1,cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    CreateProgramFromBinary(theQueue,"multiply.cl","multiply.cl.bin","multiply",theProgram,theKernel);
+    //---- Args Setter
+    clRetainKernel(theKernel);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    //----
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;
+}

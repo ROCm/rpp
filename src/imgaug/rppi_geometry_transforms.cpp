@@ -983,7 +983,7 @@ rppi_channel_combine_u8_pln1_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t sr
     /*call that offset function */
     #ifdef OCL_COMPILE
 
-    channel_extract_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2), static_cast<cl_mem>(srcPtr3), srcSize,
+    channel_combine_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2), static_cast<cl_mem>(srcPtr3), srcSize,
             static_cast<cl_mem>(dstPtr), RPPI_CHN_PLANAR, 1 /* Channel */,
             static_cast<cl_command_queue>(rppHandle) );
 
@@ -999,7 +999,7 @@ rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t sr
     /*call that offset function */
     #ifdef OCL_COMPILE
 
-    channel_extract_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2), static_cast<cl_mem>(srcPtr3), srcSize,
+    channel_combine_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2), static_cast<cl_mem>(srcPtr3), srcSize,
             static_cast<cl_mem>(dstPtr), RPPI_CHN_PLANAR, 3 /* Channel */,
             static_cast<cl_command_queue>(rppHandle) );
 
@@ -1016,7 +1016,7 @@ rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t sr
     /*call that offset function */
     #ifdef OCL_COMPILE
 
-    channel_extract_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2), static_cast<cl_mem>(srcPtr3), srcSize,
+    channel_combine_cl(static_cast<cl_mem>(srcPtr1), static_cast<cl_mem>(srcPtr2), static_cast<cl_mem>(srcPtr3), srcSize,
             static_cast<cl_mem>(dstPtr), RPPI_CHN_PACKED, 3 /* Channel */,
             static_cast<cl_command_queue>(rppHandle) );
 
