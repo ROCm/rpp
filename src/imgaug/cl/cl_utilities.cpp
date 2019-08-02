@@ -59,9 +59,9 @@ cl_kernel_implementer (cl_command_queue theQueue, size_t* globalDim3, size_t* lo
 
     err = clEnqueueNDRangeKernel(theQueue, theKernel, 3, NULL, globalDim3, localDim3,
                                                               0, NULL, NULL);
-    clFinish(theQueue);
-    clReleaseProgram(theProgram);
-    clReleaseKernel(theKernel);
+    //clFinish(theQueue);
+    //clReleaseProgram(theProgram);
+    //clReleaseKernel(theKernel);
     return err;
 }
 
@@ -162,7 +162,7 @@ bool SaveProgramBinary(cl_program program, cl_device_id device, const std::strin
 //  Attempt to create the program object from a cached binary.  Note that
 //  on first run this will fail because the binary has not yet been created.
 //
-cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kernelFile, 
+cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kernelFile,
                                 const std::string binaryFile, std::string kernelName,
                                 cl_program& theProgram, cl_kernel& theKernel)
 {
@@ -225,7 +225,7 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
             clReleaseProgram(theProgram);
             return NULL;
         }
-        
+
     }
     if (theProgram == NULL)
     {
@@ -252,5 +252,3 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
     theKernel = clCreateKernel(theProgram, kernelName.c_str(), &err);
     return err;
 }
-
-
