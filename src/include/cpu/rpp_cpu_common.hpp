@@ -206,6 +206,106 @@ inline RppStatus generate_evenly_padded_image_host(T* srcPtr, RppiSize srcSize, 
     return RPP_SUCCESS;
 }
 
+template <typename T>
+inline RppStatus generate_corner_padded_image_host(T* srcPtr, RppiSize srcSize, T* srcPtrMod, RppiSize srcSizeMod, Rpp32u padType, 
+                                     RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T *srcPtrTemp, *srcPtrModTemp;
+    srcPtrTemp = srcPtr;
+    srcPtrModTemp = srcPtrMod;
+    Rpp32u boundY = srcSizeMod.height - srcSize.height;
+    Rpp32u boundX = srcSizeMod.width - srcSize.width;
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int c = 0; c < channel; c++)
+        {
+            if (padType == 1 || padType == 2)
+            {
+                memset (srcPtrModTemp,(T) 0,boundY * srcSizeMod.width * sizeof(T));
+                srcPtrModTemp += (boundY * srcSizeMod.width);
+            }
+            
+            if (padType == 1 || padType == 3)
+            {
+                for (int i = 0; i < srcSize.height; i++)
+                {
+                    memset (srcPtrModTemp,(T) 0,boundX * sizeof(T));
+                    srcPtrModTemp += boundX;
+
+                    memcpy(srcPtrModTemp, srcPtrTemp, srcSize.width * sizeof(T));
+                    srcPtrModTemp += srcSize.width;
+                    srcPtrTemp += srcSize.width;
+                }
+            }
+               
+            if (padType == 2 || padType == 4)
+            {
+                for (int i = 0; i < srcSize.height; i++)
+                {
+                    memcpy(srcPtrModTemp, srcPtrTemp, srcSize.width * sizeof(T));
+                    srcPtrModTemp += srcSize.width;
+                    srcPtrTemp += srcSize.width;
+                    
+                    memset (srcPtrModTemp,(T) 0,boundX * sizeof(T));
+                    srcPtrModTemp += boundX;
+                }
+            }
+            
+            if (padType == 3 || padType == 4)
+            {
+                memset (srcPtrModTemp,(T) 0,boundY * srcSizeMod.width * sizeof(T));
+                srcPtrModTemp += (boundY * srcSizeMod.width);
+            }
+        }
+    }
+    else if(chnFormat == RPPI_CHN_PACKED)
+    {
+        Rpp32u elementsInRow = channel * srcSize.width;
+        Rpp32u numOfPixelsVtBorder = boundX * channel;
+        Rpp32u numOfPixelsHrBorder = boundY * channel * srcSizeMod.width;
+
+        if (padType == 1 || padType == 2)
+        {
+            memset (srcPtrModTemp,(T) 0,numOfPixelsHrBorder * sizeof(T));
+            srcPtrModTemp += (numOfPixelsHrBorder);
+        }
+
+        if (padType == 1 || padType == 3)
+        {
+            for (int i = 0; i < srcSize.height; i++)
+            {
+                memset (srcPtrModTemp,(T) 0,numOfPixelsVtBorder * sizeof(T));
+                srcPtrModTemp += (numOfPixelsVtBorder);
+
+                memcpy(srcPtrModTemp, srcPtrTemp, elementsInRow * sizeof(T));
+                srcPtrModTemp += elementsInRow;
+                srcPtrTemp += elementsInRow;
+            }
+        }
+        
+        if (padType == 2 || padType == 4)
+        {
+            for (int i = 0; i < srcSize.height; i++)
+            {
+                memcpy(srcPtrModTemp, srcPtrTemp, elementsInRow * sizeof(T));
+                srcPtrModTemp += elementsInRow;
+                srcPtrTemp += elementsInRow;
+
+                memset (srcPtrModTemp,(T) 0,numOfPixelsVtBorder * sizeof(T));
+                srcPtrModTemp += (numOfPixelsVtBorder);
+            }
+        }
+
+        if (padType == 3 || padType == 4)
+        {
+            memset (srcPtrModTemp,(T) 0,numOfPixelsHrBorder * sizeof(T));
+            srcPtrModTemp += (numOfPixelsHrBorder);
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus generate_box_kernel_host(Rpp32f* kernel, Rpp32u kernelSize)
 {
     Rpp32f* kernelTemp;
