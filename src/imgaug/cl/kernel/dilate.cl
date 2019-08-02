@@ -21,7 +21,7 @@ __kernel void dilate_pkd(  __global unsigned char* input,
     {
         for(int j = -bound ; j <= bound ; j++)
         {
-            if(!(((id_x + j) < bound) || ((id_x + j) > width - bound) || ((id_y + i) < bound) || ((id_y + i) > height - bound)))
+            if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
                 unsigned int index = pixIdx + (j * channel) + (i * width * channel);
                 if(input[index] > pixel)
@@ -55,7 +55,7 @@ __kernel void dilate_pln(  __global unsigned char* input,
     {
         for(int j = -bound ; j <= bound ; j++)
         {
-            if(!(((id_x + j) < bound) || ((id_x + j) > width - bound) || ((id_y + i) < bound) || ((id_y + i) > height - bound)))
+            if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
                 unsigned int index = pixIdx + j + (i * width);
                 if(input[index] > pixel)
