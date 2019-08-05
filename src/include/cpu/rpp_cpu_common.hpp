@@ -427,7 +427,7 @@ inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
 
 template<typename T, typename U>
 inline RppStatus convolution_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSize srcSize, 
-                                       Rpp32f* kernel, Rpp32u kernelSize, Rpp32u remainingElementsInRow, U maxVal, U minVal, 
+                                       Rpp32f* kernel, RppiSize kernelSize, Rpp32u remainingElementsInRow, U maxVal, U minVal, 
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32f pixel = 0.0;
@@ -440,9 +440,9 @@ inline RppStatus convolution_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSi
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        for (int m = 0; m < kernelSize; m++)
+        for (int m = 0; m < kernelSize.height; m++)
         {
-            for (int n = 0; n < kernelSize; n++)
+            for (int n = 0; n < kernelSize.width; n++)
             {
                 pixel += ((*kernelPtrTemp) * (Rpp32f)(*srcPtrWindowTemp));
                 kernelPtrTemp++;
@@ -453,9 +453,9 @@ inline RppStatus convolution_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSi
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        for (int m = 0; m < kernelSize; m++)
+        for (int m = 0; m < kernelSize.height; m++)
         {
-            for (int n = 0; n < kernelSize; n++)
+            for (int n = 0; n < kernelSize.width; n++)
             {
                 pixel += ((*kernelPtrTemp) * (Rpp32f)(*srcPtrWindowTemp));
                 kernelPtrTemp++;
@@ -895,12 +895,9 @@ RppStatus local_binary_pattern_kernel_host(T* srcPtrWindow, T* dstPtrPixel, Rppi
 
 template<typename T, typename U>
 inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPtr, RppiSize srcSize, 
-                        Rpp32f* kernel, Rpp32u kernelSize, 
+                        Rpp32f* kernel, RppiSize kernelSize, 
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
-    Rpp32u remainingElementsInRowPlanar = srcSizeMod.width - kernelSize;
-    Rpp32u remainingElementsInRowPacked = (srcSizeMod.width - kernelSize) * channel;
-    
     T *srcPtrWindow;
     U *dstPtrTemp;
     srcPtrWindow = srcPtrMod;
@@ -911,6 +908,8 @@ inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPt
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+        Rpp32u remainingElementsInRow = srcSizeMod.width - kernelSize.width;
+
         for (int c = 0; c < channel; c++)
         {
             for (int i = 0; i < srcSize.height; i++)
@@ -918,18 +917,20 @@ inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPt
                 for (int j = 0; j < srcSize.width; j++)
                 {
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPlanar, maxVal, minVal, 
+                                                 kernel, kernelSize, remainingElementsInRow, maxVal, minVal, 
                                                  chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
                 }
-                srcPtrWindow += (kernelSize - 1);
+                srcPtrWindow += (kernelSize.width - 1);
             }
-            srcPtrWindow += ((kernelSize - 1) * srcSizeMod.width);
+            srcPtrWindow += ((kernelSize.height - 1) * srcSizeMod.width);
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
+        Rpp32u remainingElementsInRow = (srcSizeMod.width - kernelSize.width) * channel;
+        
         for (int i = 0; i < srcSize.height; i++)
         {
             for (int j = 0; j < srcSize.width; j++)
@@ -937,13 +938,13 @@ inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPt
                 for (int c = 0; c < channel; c++)
                 {   
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPacked, maxVal, minVal, 
+                                                 kernel, kernelSize, remainingElementsInRow, maxVal, minVal, 
                                                  chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
                 }
             }
-            srcPtrWindow += ((kernelSize - 1) * channel);
+            srcPtrWindow += ((kernelSize.width - 1) * channel);
         }
     }
     
@@ -952,12 +953,9 @@ inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPt
 
 template<typename T>
 inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* dstPtr, RppiSize srcSizeSubImage, RppiSize srcSize, 
-                        Rpp32f* kernel, Rpp32u kernelSize, 
+                        Rpp32f* kernel, RppiSize kernelSize, 
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
-    Rpp32u remainingElementsInRowPlanar = srcSize.width - kernelSize;
-    Rpp32u remainingElementsInRowPacked = (srcSize.width - kernelSize) * channel;
-    
     int widthDiffPlanar = srcSize.width - srcSizeSubImage.width;
     int widthDiffPacked = (srcSize.width - srcSizeSubImage.width) * channel;
 
@@ -968,6 +966,8 @@ inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* ds
     
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+        Rpp32u remainingElementsInRow = srcSize.width - kernelSize.width;
+
         for (int c = 0; c < channel; c++)
         {
             srcPtrWindow = srcPtrMod + (c * srcSize.height * srcSize.width);
@@ -977,7 +977,7 @@ inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* ds
                 for (int j = 0; j < srcSizeSubImage.width; j++)
                 {
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPlanar, maxVal, minVal, 
+                                                 kernel, kernelSize, remainingElementsInRow, maxVal, minVal, 
                                                  chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -989,6 +989,8 @@ inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* ds
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
+        Rpp32u remainingElementsInRow = (srcSize.width - kernelSize.width) * channel;
+
         srcPtrWindow = srcPtrMod;
         dstPtrTemp = dstPtr;
         for (int i = 0; i < srcSizeSubImage.height; i++)
@@ -998,7 +1000,7 @@ inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* ds
                 for (int c = 0; c < channel; c++)
                 {   
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                                 kernel, kernelSize, remainingElementsInRowPacked, maxVal, minVal, 
+                                                 kernel, kernelSize, remainingElementsInRow, maxVal, minVal, 
                                                  chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;

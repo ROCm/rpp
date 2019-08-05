@@ -80,6 +80,19 @@ RppStatus
 rppi_median_filter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize);
 
 // ----------------------------------------
+// Host custom_convolution functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_custom_convolution_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t kernel, RppiSize kernelSize, Rpp32f scale);
+
+RppStatus
+rppi_custom_convolution_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t kernel, RppiSize kernelSize, Rpp32f scale);
+
+RppStatus
+rppi_custom_convolution_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t kernel, RppiSize kernelSize, Rpp32f scale);
+
+// ----------------------------------------
 // GPU bilateral_filter functions declaration 
 // ----------------------------------------
 /* Apllies bilateral filtering to the input image.
