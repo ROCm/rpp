@@ -19,6 +19,20 @@ rppi_local_binary_pattern_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr
 
 RppStatus
 rppi_local_binary_pattern_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+
+// ----------------------------------------
+// Host data_object_copy functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_data_object_copy_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_data_object_copy_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+
+RppStatus
+rppi_data_object_copy_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
  
 #ifdef __cplusplus
 }

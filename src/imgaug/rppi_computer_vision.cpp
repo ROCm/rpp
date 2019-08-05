@@ -18,7 +18,7 @@ using namespace std::chrono;
 #include "cpu/host_computer_vision.hpp" 
  
 // ----------------------------------------
-// Host local binary pattern functions calls 
+// Host local_binary_pattern functions calls 
 // ----------------------------------------
 
 
@@ -42,6 +42,35 @@ RppStatus
 rppi_local_binary_pattern_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
     local_binary_pattern_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
+
+// ----------------------------------------
+// Host data_object_copy functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_data_object_copy_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    data_object_copy_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_data_object_copy_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    data_object_copy_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_data_object_copy_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    data_object_copy_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                      RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 }
