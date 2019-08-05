@@ -1779,6 +1779,66 @@ inline RppStatus compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
 }
 
+template <typename T>
+inline RppStatus compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize, 
+                                         RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp8u checkEven;
+    checkEven = (Rpp8u) RPPISEVEN(srcSize.width);
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int c = 0; c < channel; c++)
+        {
+            srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
+
+            for (int i = 0; i < dstSize.height; i++)
+            {
+                for (int j = 0; j < dstSize.width; j++)
+                {
+                    *dstPtrTemp = *srcPtrTemp;
+                    srcPtrTemp += 2;
+                    dstPtrTemp++;
+                }
+                if (checkEven == 0)
+                {
+                    srcPtrTemp--;
+                }
+                srcPtrTemp += srcSize.width;
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        Rpp32u elementsInRow = srcSize.width * channel;    
+        
+        for (int i = 0; i < dstSize.height; i++)
+        {
+            for (int j = 0; j < dstSize.width; j++)
+            {
+                for (int c = 0; c < channel; c++)
+                {
+                    *dstPtrTemp = *srcPtrTemp;
+                    srcPtrTemp++;
+                    dstPtrTemp++;
+                }
+                srcPtrTemp += channel;
+            }
+            if (checkEven == 0)
+            {
+                srcPtrTemp -= channel;
+            }
+            srcPtrTemp += elementsInRow;
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
 inline Rpp32u fogGenerator(Rpp32u srcPtr, Rpp32f fogValue, int colour, int check)
 {
     unsigned int fog=0;
