@@ -430,6 +430,20 @@ rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t sr
 RppStatus
 rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize srcSize, RppPtr_t dstPtr,
                          RppHandle_t rppHandle);
+
+// ----------------------------------------
+// Host scale functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_scale_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32f percentage, RppHandle_t rppHandle);
+
+RppStatus
+rppi_scale_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32f percentage, RppHandle_t rppHandle);
+
+RppStatus
+rppi_scale_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32f percentage, RppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
