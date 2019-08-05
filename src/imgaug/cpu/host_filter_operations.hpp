@@ -18,7 +18,7 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     RppiSize srcSizeMod;
     srcSizeMod.height = srcSize.height + (2 * bound);
     srcSizeMod.width = srcSize.width + (2 * bound);
-    T *srcPtrMod = (T *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(T));
+    T *srcPtrMod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(T));
     
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
 
@@ -38,6 +38,10 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     T maxVal = (T)(std::numeric_limits<T>::max());
     T minVal = (T)(std::numeric_limits<T>::min());
 
+    RppiSize rppiKernelSize;
+    rppiKernelSize.height = kernelSize;
+    rppiKernelSize.width = kernelSize;
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for (int c = 0; c < channel; c++)
@@ -50,7 +54,7 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                                       srcPtrWindow, srcSizeMod, remainingElementsInRowPlanar, incrementToWindowCenterPlanar, 
                                                       chnFormat, channel);
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                            kernel, kernelSize, remainingElementsInRowPlanar, maxVal, minVal, 
+                                            kernel, rppiKernelSize, remainingElementsInRowPlanar, maxVal, minVal, 
                                             chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -72,7 +76,7 @@ RppStatus bilateral_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                                       srcPtrWindow, srcSizeMod, remainingElementsInRowPacked, incrementToWindowCenterPacked, 
                                                       chnFormat, channel);
                     convolution_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                            kernel, kernelSize, remainingElementsInRowPacked, maxVal, minVal, 
+                                            kernel, rppiKernelSize, remainingElementsInRowPacked, maxVal, minVal, 
                                             chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -106,11 +110,14 @@ RppStatus box_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     RppiSize srcSizeMod;
     srcSizeMod.width = srcSize.width + (2 * bound);
     srcSizeMod.height = srcSize.height + (2 * bound);
-    T *srcPtrMod = (T *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(T));
+    T *srcPtrMod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
     
-    convolve_image_host(srcPtrMod, srcSizeMod, dstPtr, srcSize, kernel, kernelSize, chnFormat, channel);
+    RppiSize rppiKernelSize;
+    rppiKernelSize.height = kernelSize;
+    rppiKernelSize.width = kernelSize;
+    convolve_image_host(srcPtrMod, srcSizeMod, dstPtr, srcSize, kernel, rppiKernelSize, chnFormat, channel);
     
     return RPP_SUCCESS;
 }
@@ -132,29 +139,33 @@ RppStatus sobel_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     Rpp32s *dstPtrIntermediate = (Rpp32s *)calloc(srcSize.height * srcSize.width * channel, sizeof(Rpp32s));
 
+    RppiSize rppiKernelSize;
+    rppiKernelSize.height = 3;
+    rppiKernelSize.width = 3;
+
     if (sobelType == 0)
     {
         Rpp32f *kernelX = (Rpp32f *)calloc(3 * 3, sizeof(Rpp32f));
         generate_sobel_kernel_host(kernelX, 1);
-        convolve_image_host(srcPtrMod, srcSizeMod, dstPtrIntermediate, srcSize, kernelX, 3, chnFormat, channel);
+        convolve_image_host(srcPtrMod, srcSizeMod, dstPtrIntermediate, srcSize, kernelX, rppiKernelSize, chnFormat, channel);
     }
     else if (sobelType == 1)
     {
         Rpp32f *kernelY = (Rpp32f *)calloc(3 * 3, sizeof(Rpp32f));
         generate_sobel_kernel_host(kernelY, 2);
-        convolve_image_host(srcPtrMod, srcSizeMod, dstPtrIntermediate, srcSize, kernelY, 3, chnFormat, channel);
+        convolve_image_host(srcPtrMod, srcSizeMod, dstPtrIntermediate, srcSize, kernelY, rppiKernelSize, chnFormat, channel);
     }
     else if (sobelType == 2)
     {
         Rpp32f *kernelX = (Rpp32f *)calloc(3 * 3, sizeof(Rpp32f));
         generate_sobel_kernel_host(kernelX, 1);
         Rpp32s *dstPtrIntermediateX = (Rpp32s *)calloc(srcSize.height * srcSize.width * channel, sizeof(Rpp32s));
-        convolve_image_host(srcPtrMod, srcSizeMod, dstPtrIntermediateX, srcSize, kernelX, 3, chnFormat, channel);
+        convolve_image_host(srcPtrMod, srcSizeMod, dstPtrIntermediateX, srcSize, kernelX, rppiKernelSize, chnFormat, channel);
 
         Rpp32f *kernelY = (Rpp32f *)calloc(3 * 3, sizeof(Rpp32f));
         generate_sobel_kernel_host(kernelY, 2);
         Rpp32s *dstPtrIntermediateY = (Rpp32s *)calloc(srcSize.height * srcSize.width * channel, sizeof(Rpp32s));
-        convolve_image_host(srcPtrMod, srcSizeMod, dstPtrIntermediateY, srcSize, kernelY, 3, chnFormat, channel);
+        convolve_image_host(srcPtrMod, srcSizeMod, dstPtrIntermediateY, srcSize, kernelY, rppiKernelSize, chnFormat, channel);
 
         compute_magnitude_host(dstPtrIntermediateX, dstPtrIntermediateY, srcSize, dstPtrIntermediate, chnFormat, channel);
     }
