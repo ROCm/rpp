@@ -322,6 +322,19 @@ rppi_phase_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp
 
 RppStatus
 rppi_phase_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
+
+// ----------------------------------------
+// GPU accumulate functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_accumulate_squared_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_accumulate_squared_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_accumulate_squared_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle_t rppHandle) ;
  
 #ifdef __cplusplus
 }

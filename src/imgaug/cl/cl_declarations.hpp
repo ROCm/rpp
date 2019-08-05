@@ -315,4 +315,7 @@ median_filter_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelS
 RppStatus
 scale_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize, Rpp32f percentage, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
+RppStatus
+accumulate_squared_cl(cl_mem srcPtr, RppiSize srcSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

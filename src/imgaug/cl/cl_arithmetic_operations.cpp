@@ -483,3 +483,30 @@ phase_cl( cl_mem srcPtr1,cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr, RppiCh
 
     return RPP_SUCCESS;
 }
+
+RppStatus
+accumulate_squared_cl(cl_mem srcPtr, RppiSize srcSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    cl_kernel theKernel;
+    cl_program theProgram;
+
+    CreateProgramFromBinary(theQueue,"accumulate.cl","accumulate.cl.bin","accumulate_squared",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    //---- Args Setter
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    //----
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+    return RPP_SUCCESS;
+
+}
