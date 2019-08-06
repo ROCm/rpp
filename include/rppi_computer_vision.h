@@ -50,6 +50,23 @@ rppi_gaussian_image_pyramid_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppP
 RppStatus
 rppi_gaussian_image_pyramid_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
                           Rpp32f stdDev, Rpp32u kernelSize);
+
+
+// ----------------------------------------
+// Host laplacian_image_pyramid functions declaration
+// ----------------------------------------
+
+RppStatus
+rppi_laplacian_image_pyramid_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev, Rpp32u kernelSize);
+
+RppStatus
+rppi_laplacian_image_pyramid_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev, Rpp32u kernelSize);
+
+RppStatus
+rppi_laplacian_image_pyramid_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                          Rpp32f stdDev, Rpp32u kernelSize);
  
 #ifdef __cplusplus
 }
