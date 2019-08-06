@@ -14,6 +14,7 @@ __kernel void phase(  __global unsigned char* input1,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    int res = atan((float)input1[pixIdx] / (float)input2[pixIdx]);
+    float res = atan((float)input1[pixIdx] / (float)input2[pixIdx]);
+    res = (res / 1.570796) * 255;
     output[pixIdx] = saturate_8u(res);
 }
