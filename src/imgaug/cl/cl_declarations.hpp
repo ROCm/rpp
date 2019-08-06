@@ -325,9 +325,12 @@ RppStatus
 integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
-non_max_suppression_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+non_max_suppression_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
-custom_convolution_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem kernel, RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+custom_convolution_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem kernel, RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+
+RppStatus
+histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

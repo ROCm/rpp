@@ -15,6 +15,7 @@ extern "C" {
 #include "rppi_support_functions.h"
 #include "rppi_computer_vision.h"
 #include "rppi_morphological_transforms.h"
+#include "rppi_statistical_operations.h"
 
 
 #ifdef __cplusplus
