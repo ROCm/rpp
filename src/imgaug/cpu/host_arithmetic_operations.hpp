@@ -12,11 +12,11 @@ RppStatus absolute_difference_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* 
     srcPtr2Temp = srcPtr2;
     dstPtrTemp = dstPtr;
 
-    Rpp32f pixel;
+    Rpp32s pixel;
 
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = ((Rpp32f) (*srcPtr1Temp)) - ((Rpp32f) (*srcPtr2Temp));
+        pixel = ((Rpp32s) (*srcPtr1Temp)) - ((Rpp32s) (*srcPtr2Temp));
         pixel = RPPABS(pixel);
         pixel = RPPPIXELCHECK(pixel);
         *dstPtrTemp =(T) pixel;
@@ -67,11 +67,11 @@ RppStatus accumulate_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
     srcPtr1Temp = srcPtr1;
     srcPtr2Temp = srcPtr2;
 
-    Rpp32f pixel;
+    Rpp32s pixel;
     
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = ((Rpp32f) (*srcPtr1Temp)) + ((Rpp32f) (*srcPtr2Temp));
+        pixel = ((Rpp32s) (*srcPtr1Temp)) + ((Rpp32s) (*srcPtr2Temp));
         pixel = RPPPIXELCHECK(pixel);
         *srcPtr1Temp =(T) pixel;
         srcPtr1Temp++;
@@ -94,11 +94,11 @@ RppStatus add_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
     srcPtr2Temp = srcPtr2;
     dstPtrTemp = dstPtr;
 
-    Rpp32f pixel;
+    Rpp32s pixel;
 
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = ((Rpp32f) (*srcPtr1Temp)) + ((Rpp32f) (*srcPtr2Temp));
+        pixel = ((Rpp32s) (*srcPtr1Temp)) + ((Rpp32s) (*srcPtr2Temp));
         pixel = RPPPIXELCHECK(pixel);
         *dstPtrTemp =(T) pixel;
         srcPtr1Temp++;
@@ -197,11 +197,11 @@ RppStatus tensor_add_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
     srcPtr1Temp = srcPtr1;
     srcPtr2Temp = srcPtr2;
     dstPtrTemp = dstPtr;
-    Rpp32f pixel;
+    Rpp32s pixel;
 
     for (int i = 0; i < tensorSize; i++)
     {
-        pixel = ((Rpp32f) (*srcPtr1Temp)) + ((Rpp32f) (*srcPtr2Temp));
+        pixel = ((Rpp32s) (*srcPtr1Temp)) + ((Rpp32s) (*srcPtr2Temp));
         pixel = RPPPIXELCHECK(pixel);
         *dstPtrTemp =(T) pixel;
         srcPtr1Temp++;
@@ -234,11 +234,11 @@ RppStatus tensor_subtract_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
     srcPtr1Temp = srcPtr1;
     srcPtr2Temp = srcPtr2;
     dstPtrTemp = dstPtr;
-    Rpp32f pixel;
+    Rpp32s pixel;
 
     for (int i = 0; i < tensorSize; i++)
     {
-        pixel = ((Rpp32f) (*srcPtr1Temp)) - ((Rpp32f) (*srcPtr2Temp));
+        pixel = ((Rpp32s) (*srcPtr1Temp)) - ((Rpp32s) (*srcPtr2Temp));
         pixel = RPPPIXELCHECK(pixel);
         *dstPtrTemp =(T) pixel;
         srcPtr1Temp++;
@@ -271,11 +271,11 @@ RppStatus tensor_multiply_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
     srcPtr1Temp = srcPtr1;
     srcPtr2Temp = srcPtr2;
     dstPtrTemp = dstPtr;
-    Rpp32f pixel;
+    Rpp32s pixel;
 
     for (int i = 0; i < tensorSize; i++)
     {
-        pixel = ((Rpp32f) (*srcPtr1Temp)) * ((Rpp32f) (*srcPtr2Temp));
+        pixel = ((Rpp32s) (*srcPtr1Temp)) * ((Rpp32s) (*srcPtr2Temp));
         pixel = RPPPIXELCHECK(pixel);
         *dstPtrTemp =(T) pixel;
         srcPtr1Temp++;
@@ -296,11 +296,11 @@ RppStatus accumulate_squared_host(T* srcPtr, RppiSize srcSize,
     T *srcPtrTemp;
     srcPtrTemp = srcPtr;
 
-    Rpp32f pixel;
+    Rpp32s pixel;
     
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = (Rpp32f) *srcPtrTemp;
+        pixel = (Rpp32s) *srcPtrTemp;
         pixel = pixel * pixel;
         pixel = RPPPIXELCHECK(pixel);
         *srcPtrTemp =(T) pixel;
