@@ -209,6 +209,39 @@ rppi_custom_convolution_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t
 }
  
 // ----------------------------------------
+// Host non_max_suppression functions calls 
+// ----------------------------------------
+
+
+
+RppStatus
+rppi_non_max_suppression_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize)
+{
+    non_max_suppression_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     kernelSize,
+                     RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_non_max_suppression_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize)
+{
+    non_max_suppression_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     kernelSize,
+                     RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_non_max_suppression_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize)
+{
+    non_max_suppression_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     kernelSize,
+                     RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
 // GPU bilateral_filter functions  calls 
 // ----------------------------------------
 

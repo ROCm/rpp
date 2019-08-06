@@ -872,6 +872,59 @@ RppStatus local_binary_pattern_kernel_host(T* srcPtrWindow, T* dstPtrPixel, Rppi
     return RPP_SUCCESS;
 }
 
+template<typename T>
+inline RppStatus non_max_suppression_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize, 
+                                       Rpp32u kernelSize, Rpp32u remainingElementsInRow, T windowCenter, 
+                                       RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T pixel;
+
+    T* srcPtrWindowTemp;
+    srcPtrWindowTemp = srcPtrWindow;
+    pixel = *srcPtrWindowTemp;
+    
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int m = 0; m < kernelSize; m++)
+        {
+            for (int n = 0; n < kernelSize; n++)
+            {
+                if (*srcPtrWindowTemp > pixel)
+                {
+                    pixel = *srcPtrWindowTemp;
+                }
+                srcPtrWindowTemp++;
+            }
+            srcPtrWindowTemp += remainingElementsInRow;
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        for (int m = 0; m < kernelSize; m++)
+        {
+            for (int n = 0; n < kernelSize; n++)
+            {
+                if (*srcPtrWindowTemp > pixel)
+                {
+                    pixel = *srcPtrWindowTemp;
+                }
+                srcPtrWindowTemp += channel;
+            }
+            srcPtrWindowTemp += remainingElementsInRow;
+        }
+    }
+    if (windowCenter >= pixel)
+    {
+        *dstPtrPixel = windowCenter;
+    }
+    else
+    {
+        *dstPtrPixel = (T) 0;
+    }
+
+    return RPP_SUCCESS;
+}
+
 
 
 
