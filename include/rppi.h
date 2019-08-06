@@ -13,6 +13,8 @@ extern "C" {
 #include "rppi_geometry_transforms.h"
 #include "rppi_logical_operations.h"
 #include "rppi_support_functions.h"
+#include "rppi_computer_vision.h"
+#include "rppi_morphological_transforms.h"
 
 
 #ifdef __cplusplus

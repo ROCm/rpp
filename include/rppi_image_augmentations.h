@@ -789,42 +789,6 @@ rppi_histogram_balance_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
                                     RppPtr_t dstPtr, RppHandle_t rppHandle);
 
 //--------------------------------------
-//Dilate
-//--------------------------------------
-RppStatus
-rppi_dilate_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
-
-RppStatus
-rppi_dilate_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
-
-RppStatus
-rppi_dilate_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
-
-//--------------------------------------
-//Erode
-//--------------------------------------
-RppStatus
-rppi_erode_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
-
-RppStatus
-rppi_erode_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
-
-RppStatus
-rppi_erode_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
-
-//--------------------------------------
-//LBP
-//--------------------------------------
-RppStatus
-rppi_local_binary_pattern_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
-
-RppStatus
-rppi_local_binary_pattern_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
-
-RppStatus
-rppi_local_binary_pattern_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
-
-//--------------------------------------
 //Sobel
 //--------------------------------------
 RppStatus
