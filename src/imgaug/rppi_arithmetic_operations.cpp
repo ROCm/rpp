@@ -379,6 +379,41 @@ rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr
     return RPP_SUCCESS;
 
 }
+ 
+// ----------------------------------------
+// Host accumulate_squared functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_accumulate_squared_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize)
+{
+    accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_accumulate_squared_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize)
+{
+    accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_accumulate_squared_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize)
+{
+    accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
+                                    RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
 
 // ----------------------------------------
 // Host mean and standard deviation functions calls 
