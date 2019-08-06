@@ -159,11 +159,13 @@ RppStatus phase_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
     dstPtrTemp = dstPtr;
 
     Rpp32f pixel;
+    Rpp32f multiplier = 255 / 1.570796;
 
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
         pixel = atan(((Rpp32f) (*srcPtr1Temp)) / ((Rpp32f) (*srcPtr2Temp)));
-        //pixel = RPPPIXELCHECK(pixel);
+        pixel = pixel * multiplier;
+        pixel = RPPPIXELCHECK(pixel);
         *dstPtrTemp =(T) pixel;
         srcPtr1Temp++;
         srcPtr2Temp++;
