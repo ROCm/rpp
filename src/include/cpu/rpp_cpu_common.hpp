@@ -1859,6 +1859,15 @@ inline RppStatus compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 }
 
 template <typename T>
+inline RppStatus compute_data_object_copy_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                    RppiChnFormat chnFormat, Rpp32u channel)
+{
+    memcpy(dstPtr, srcPtr, srcSize.height * srcSize.width * channel * sizeof(T));
+    
+    return RPP_SUCCESS;
+}
+
+template <typename T>
 inline RppStatus compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize, 
                                          RppiChnFormat chnFormat, Rpp32u channel)
 {
