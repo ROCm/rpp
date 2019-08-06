@@ -106,6 +106,19 @@ rppi_non_max_suppression_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t
 RppStatus
 rppi_non_max_suppression_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
 
+// ----------------------------------------
+// gpu custom_convolution functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_custom_convolution_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t kernel, RppiSize kernelSize, RppHandle_t rppHandle);
+
+RppStatus
+rppi_custom_convolution_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t kernel, RppiSize kernelSize, RppHandle_t rppHandle);
+
+RppStatus
+rppi_custom_convolution_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t kernel, RppiSize kernelSize, RppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif

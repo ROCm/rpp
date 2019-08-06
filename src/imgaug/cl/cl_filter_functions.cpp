@@ -125,3 +125,38 @@ non_max_suppression_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u k
     return RPP_SUCCESS;  
 
 }
+
+RppStatus
+custom_convolution_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem kernel, RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    int ctr=0;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if(chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"custom_convolution.cl","custom_convolution.cl.bin","custom_convolution_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {
+        CreateProgramFromBinary(theQueue,"custom_convolution.cl","custom_convolution.cl.bin","custom_convolution_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+
+    //---- Args Setter
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &kernel);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize.width);
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return RPP_SUCCESS;  
+}
