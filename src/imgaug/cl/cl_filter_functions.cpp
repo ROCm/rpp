@@ -91,3 +91,37 @@ median_filter_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernel
     
     return RPP_SUCCESS;    
 }
+
+RppStatus
+non_max_suppression_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    int ctr=0;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if(chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"non_max_suppression.cl","non_max_suppression.cl.bin","non_max_suppression_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {
+        CreateProgramFromBinary(theQueue,"non_max_suppression.cl","non_max_suppression.cl.bin","non_max_suppression_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+
+     //---- Args Setter
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize);
+
+     size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return RPP_SUCCESS;  
+
+}
