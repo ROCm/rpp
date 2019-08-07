@@ -456,6 +456,19 @@ rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t sr
 RppStatus
 rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize srcSize, RppPtr_t dstPtr,
                          RppHandle_t rppHandle);
+
+// ----------------------------------------
+// gpu look_up_table functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_look_up_table_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t lutPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_look_up_table_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t lutPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_look_up_table_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t lutPtr, RppHandle_t rppHandle);
  
 #ifdef __cplusplus
 }

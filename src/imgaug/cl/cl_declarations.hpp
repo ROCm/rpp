@@ -333,4 +333,7 @@ custom_convolution_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem ker
 RppStatus
 histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
+RppStatus
+look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,cl_mem lutPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H
