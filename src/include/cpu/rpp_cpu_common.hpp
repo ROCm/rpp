@@ -1785,13 +1785,15 @@ inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize
     dstPtrTemp = dstPtr;
 
     Rpp32f pixel;
+    Rpp32s srcPtr1Value, srcPtr2Value;
     
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = sqrt(((Rpp32f)(*srcPtr1Temp) * (Rpp32f)(*srcPtr1Temp)) + ((Rpp32f)(*srcPtr2Temp) * (Rpp32f)(*srcPtr2Temp)));
-        pixel = (pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255);
-        pixel = (pixel > (Rpp32f) 0) ? pixel : ((Rpp32f) 0);
-        *dstPtrTemp =(Rpp8u) round(pixel);
+        srcPtr1Value = (Rpp32s) *srcPtr1Temp;
+        srcPtr2Value = (Rpp32s) *srcPtr2Temp;
+        pixel = sqrt((srcPtr1Value * srcPtr1Value) + (srcPtr2Value * srcPtr2Value));
+        pixel = RPPPIXELCHECK(pixel);
+        *dstPtrTemp =(T) round(pixel);
         srcPtr1Temp++;
         srcPtr2Temp++;
         dstPtrTemp++;
