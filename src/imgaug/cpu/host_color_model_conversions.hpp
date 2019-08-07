@@ -98,12 +98,7 @@ RppStatus hueHSV_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             srcPtrTemp++;
             dstPtrTemp++;
         }
-        for (int i = 0; i < (2 * srcSize.height * srcSize.width); i++)
-        {
-            *dstPtrTemp = *srcPtrTemp;
-            srcPtrTemp++;
-            dstPtrTemp++;
-        }
+        memcpy(dstPtrTemp, srcPtrTemp, 2 * srcSize.height * srcSize.width * sizeof(T));
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -184,12 +179,9 @@ RppStatus saturationHSV_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-        {
-            *dstPtrTemp = *srcPtrTemp;
-            srcPtrTemp++;
-            dstPtrTemp++;
-        }
+        memcpy(dstPtrTemp, srcPtrTemp, srcSize.height * srcSize.width * sizeof(T));
+        dstPtrTemp += srcSize.height * srcSize.width;
+        srcPtrTemp += srcSize.height * srcSize.width;
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             *dstPtrTemp = *srcPtrTemp * saturationFactor;
@@ -198,12 +190,7 @@ RppStatus saturationHSV_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             srcPtrTemp++;
             dstPtrTemp++;
         }
-        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-        {
-            *dstPtrTemp = *srcPtrTemp;
-            srcPtrTemp++;
-            dstPtrTemp++;
-        }
+        memcpy(dstPtrTemp, srcPtrTemp, srcSize.height * srcSize.width * sizeof(T));
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -477,12 +464,7 @@ RppStatus channel_extract_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         srcPtrTemp = srcPtr + (extractChannelNumber * srcSize.height * srcSize.width);
-        for (int i = 0; i < srcSize.height * srcSize.width; i++)
-        {
-            *dstPtrTemp = *srcPtrTemp;
-            srcPtrTemp++;
-            dstPtrTemp++;
-        }
+        memcpy(dstPtrTemp, srcPtrTemp, srcSize.height * srcSize.width * sizeof(T));
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -514,24 +496,12 @@ RppStatus channel_combine_host(T* srcPtr1, T* srcPtr2, T* srcPtr3, RppiSize srcS
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        for (int i = 0; i < srcSize.height * srcSize.width; i++)
-        {
-            *dstPtrTemp = *srcPtr1Temp;
-            srcPtr1Temp++;
-            dstPtrTemp++;
-        }
-        for (int i = 0; i < srcSize.height * srcSize.width; i++)
-        {
-            *dstPtrTemp = *srcPtr2Temp;
-            srcPtr2Temp++;
-            dstPtrTemp++;
-        }
-        for (int i = 0; i < srcSize.height * srcSize.width; i++)
-        {
-            *dstPtrTemp = *srcPtr3Temp;
-            srcPtr3Temp++;
-            dstPtrTemp++;
-        }
+        Rpp32u increment = srcSize.height * srcSize.width;
+        memcpy(dstPtrTemp, srcPtr1Temp, srcSize.height * srcSize.width * sizeof(T));
+        dstPtrTemp += increment;
+        memcpy(dstPtrTemp, srcPtr2Temp, srcSize.height * srcSize.width * sizeof(T));
+        dstPtrTemp += increment;
+        memcpy(dstPtrTemp, srcPtr3Temp, srcSize.height * srcSize.width * sizeof(T));
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
