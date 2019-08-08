@@ -309,6 +309,19 @@ rppi_accumulate_squared_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle
 
 RppStatus
 rppi_accumulate_squared_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle_t rppHandle) ;
+
+// ----------------------------------------
+// gpu mean and standard deviation functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_mean_stddev_u8_pln1_gpu(RppPtr_t srcPtr1,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle);
+
+RppStatus
+rppi_mean_stddev_u8_pln3_gpu(RppPtr_t srcPtr1,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle);
+
+RppStatus
+rppi_mean_stddev_u8_pkd3_gpu(RppPtr_t srcPtr1,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle);
  
 #ifdef __cplusplus
 }

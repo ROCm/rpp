@@ -458,3 +458,51 @@ accumulate_squared_cl(cl_mem srcPtr, RppiSize srcSize, RppiChnFormat chnFormat, 
     return RPP_SUCCESS;
 
 }
+
+RppStatus
+mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    unsigned short counter=0;
+    
+    cl_kernel theKernel;
+    cl_program theProgram;
+    CreateProgramFromBinary(theQueue,"mean_stddev.cl","mean_stddev.cl.bin","sum",theProgram,theKernel);
+    clRetainKernel(theKernel);   
+    
+    int i;
+    
+    const int LIST_SIZE = srcSize.height * srcSize.width * channel;
+    int numGroups = srcSize.width * channel;
+
+    int sum = 0;
+    long *partial_sum;
+    partial_sum = (long *) calloc (numGroups, sizeof(long));
+ 
+    cl_context theContext;
+    clGetCommandQueueInfo(theQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
+    cl_device_id theDevice;
+    clGetCommandQueueInfo(theQueue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
+
+    cl_mem b_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(long), NULL, NULL);
+
+    clEnqueueWriteBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);
+
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), NULL);
+
+    size_t global_item_size[1]; 
+    global_item_size[0]= 1024;
+    size_t local_item_size[1];
+    local_item_size[0] = 64;
+    cl_kernel_implementer (theQueue, global_item_size, local_item_size, theProgram, theKernel);
+    clEnqueueReadBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);   
+    
+    for(i = 0; i < numGroups; i++)
+    {
+        sum += partial_sum[i];
+    }
+    std::cout<<"SUM IS: "<<sum<<"\n";
+    clReleaseMemObject(b_mem_obj); 
+    free(partial_sum);
+}

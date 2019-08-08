@@ -939,3 +939,64 @@ rppi_accumulate_squared_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+// ----------------------------------------
+// gpu mean and standard deviation functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_mean_stddev_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle)
+{
+ 	validate_image_size(srcSize);
+#ifdef OCL_COMPILE
+ 	{
+ 	mean_stddev_cl(static_cast<cl_mem>(srcPtr),
+			            srcSize, mean, stddev,
+			            RPPI_CHN_PLANAR, 1,
+			            static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_mean_stddev_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle)
+{
+ 	validate_image_size(srcSize);
+#ifdef OCL_COMPILE
+ 	{
+ 	mean_stddev_cl(static_cast<cl_mem>(srcPtr),
+			            srcSize, mean, stddev,
+			            RPPI_CHN_PLANAR, 3,
+			            static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_mean_stddev_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle)
+{
+ 	validate_image_size(srcSize);
+#ifdef OCL_COMPILE
+ 	{
+ 	mean_stddev_cl(static_cast<cl_mem>(srcPtr),
+			            srcSize, mean, stddev,
+			            RPPI_CHN_PACKED, 3,
+			            static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+
+}
