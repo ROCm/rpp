@@ -368,7 +368,6 @@ channel_combine_cl(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem srcPtr3, RppiSize srcS
 RppStatus
 look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,cl_mem lutPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
-    std::cout<<"dshfdsufvdsuvhdsilfhvdsfhkjds\n\n";
     unsigned short counter=0;
     cl_int err;
     cl_kernel theKernel;
@@ -395,7 +394,6 @@ look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,cl_mem lutPtr, R
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-    std::cout<<"dshfdsufvdsuvhdsilfhvdsfhkjds\n\n";    
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);   
     return RPP_SUCCESS;      
 }
