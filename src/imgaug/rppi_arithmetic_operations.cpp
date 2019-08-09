@@ -637,7 +637,7 @@ rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
 // ----------------------------------------
 
 RppStatus
-rppi_tensor_add_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppHandle_t rppHandle)
+rppi_tensor_add_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppHandle_t rppHandle)
 {
 
 #ifdef OCL_COMPILE
@@ -657,7 +657,7 @@ rppi_tensor_add_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u 
 }
 
 RppStatus
-rppi_tensor_subtract_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppHandle_t rppHandle)
+rppi_tensor_subtract_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppHandle_t rppHandle)
 {
 
 #ifdef OCL_COMPILE
@@ -677,7 +677,7 @@ rppi_tensor_subtract_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rp
 }
 
 RppStatus
-rppi_tensor_multiply_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppHandle_t rppHandle)
+rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppHandle_t rppHandle)
 {
 
 #ifdef OCL_COMPILE
