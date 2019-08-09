@@ -473,20 +473,23 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, Rp
     
     const int LIST_SIZE = srcSize.height * srcSize.width * channel;
     int numGroups = std::ceil(LIST_SIZE / 256);
-
-
-    float sum = 0;
-    long *partial_sum;
-    partial_sum = (long *) calloc (numGroups, sizeof(long));
- 
+    
     cl_context theContext;
     clGetCommandQueueInfo(theQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
     clGetCommandQueueInfo(theQueue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
 
+    float sum = 0;
+    long *partial_sum;
+    partial_sum = (long *) calloc (numGroups, sizeof(long));
     cl_mem b_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(long), NULL, NULL);
-
     clEnqueueWriteBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);
+
+    float mean_sum = 0;
+    float *partial_mean_sum;
+    partial_mean_sum = (float *) calloc (numGroups, sizeof(float));
+    cl_mem c_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(float), NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);
 
 
     clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
@@ -510,6 +513,26 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, Rp
 
     *mean = (sum) / LIST_SIZE ;
     *stddev = *mean;
+
+
+    CreateProgramFromBinary(theQueue,"mean_stddev.cl","mean_stddev.cl.bin","mean_stddev",theProgram,theKernel);
+    clRetainKernel(theKernel); 
+
+    counter = 0;
+    float meanCopy = *mean;
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj);
+    clSetKernelArg(theKernel, counter++, sizeof(float), &meanCopy);
+    cl_kernel_implementer (theQueue, gDim3, local_item_size, theProgram, theKernel);
+    clEnqueueReadBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);  
+    for(i = 0; i < numGroups; i++)
+    {
+        mean_sum += partial_mean_sum[i];
+    }
+
+    mean_sum = mean_sum / LIST_SIZE ;
+    mean_sum = std::sqrt(mean_sum);
+    *stddev = mean_sum;
 
     clReleaseMemObject(b_mem_obj); 
     free(partial_sum);
