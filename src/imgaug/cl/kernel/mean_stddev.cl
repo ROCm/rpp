@@ -29,9 +29,14 @@ __kernel void mean_stddev ( __global const unsigned char* input,
 
     for (uint stride = group_size/2; stride>0; stride /=2)
     {
-        barrier(CLK_LOCAL_MEM_FENCE);
         if (local_id < stride)
-            localSums[local_id] = ((localSums[local_id] - mean) * (localSums[local_id] - mean)) + ((localSums[local_id + stride] - mean) * (localSums[local_id + stride] - mean));
+        {
+            barrier(CLK_LOCAL_MEM_FENCE);
+            if(stride == group_size/2)
+                localSums[local_id] = sqrt((localSums[local_id] - mean) * (localSums[local_id] - mean)) + sqrt((localSums[local_id + stride] - mean ) * (localSums[local_id + stride] - mean));
+            else
+                localSums[local_id] += localSums[local_id + stride];
+        }
         barrier(CLK_LOCAL_MEM_FENCE);
     }
     if (local_id == 0)

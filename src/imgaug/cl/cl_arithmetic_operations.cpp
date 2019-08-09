@@ -512,7 +512,6 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, Rp
     }
 
     *mean = (sum) / LIST_SIZE ;
-    *stddev = *mean;
 
 
     CreateProgramFromBinary(theQueue,"mean_stddev.cl","mean_stddev.cl.bin","mean_stddev",theProgram,theKernel);
@@ -521,7 +520,7 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, Rp
     counter = 0;
     float meanCopy = *mean;
     clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj);
+    clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj);
     clSetKernelArg(theKernel, counter++, sizeof(float), &meanCopy);
     cl_kernel_implementer (theQueue, gDim3, local_item_size, theProgram, theKernel);
     clEnqueueReadBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);  
@@ -529,9 +528,9 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, Rp
     {
         mean_sum += partial_mean_sum[i];
     }
-
+    
     mean_sum = mean_sum / LIST_SIZE ;
-    mean_sum = std::sqrt(mean_sum);
+    std::cout<<mean_sum;
     *stddev = mean_sum;
 
     clReleaseMemObject(b_mem_obj); 
