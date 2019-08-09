@@ -52,7 +52,7 @@ __kernel void median_filter_pln(  __global unsigned char* input,
                     const unsigned int height,
                     const unsigned int width,
                     const unsigned int channel,
-                    const float kernelSize
+                    const unsigned int kernelSize
 )
 {
     int id_x = get_global_id(0);
@@ -93,5 +93,4 @@ __kernel void median_filter_pln(  __global unsigned char* input,
     }
     counter = kernelSize * bound + bound;
     output[pixIdx] = c[counter];
-    output[pixIdx] = pixel; 
 }

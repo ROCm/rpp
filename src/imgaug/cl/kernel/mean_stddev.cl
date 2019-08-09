@@ -1,9 +1,9 @@
 __kernel void sum ( __global const unsigned char* input,
-                    __global long *partialSums,
-                    __local  int *localSums)
+                    __global long *partialSums)
 {
     uint local_id = get_local_id(0);
     uint group_size = get_local_size(0);
+    local int localSums[256];
 
     localSums[local_id] = (long)input[get_global_id(0)];
 
@@ -15,4 +15,4 @@ __kernel void sum ( __global const unsigned char* input,
     }
     if (local_id == 0)
     partialSums[get_group_id(0)] = localSums[0];
-}                                 
+}                                
