@@ -565,14 +565,14 @@ rppi_snow_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f sn
 *param srcPtr [in] srcPtr input image
 *param[in] srcSize  srcSize dimensions of the images
 *param[out] dstPtr dstPtr output image
-*param[in] Rpp32u x1 value of roi
-*param[in] validate_int_range y1 value of roi
- srcSize.width - 1 *param[in] x2 value of roi
- y1 *param[in]y2 value of roi
-*param[in] x2 numberOfShadows number of shadows to be added in the roi region
-*param[in] y2 maxSizeX shadow's maximum width
-*param[in] numberOfShadows maxSizeY shadow's maximum height
-*param[in] maxSizeX OpenCL handle
+*param[in] x1 x1 value of roi
+*param[in] y1 y1 value of roi
+*param[in] x2 x2 value of roi
+*param[in] y2 y2 value of roi
+*param[in] numberOfShadows number of shadows to be added in the roi region
+*param[in] maxSizeX shadow's maximum width
+*param[in] maxSizeY shadow's maximum height
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration.
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error
@@ -596,7 +596,7 @@ rppi_random_shadow_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,
 *param[in] srcSize  srcSize dimensions of the images
 *param[out] dstPtr dstPtr output image
 *param[in] alpha alpha transperancy factor of the images where alpha is for image1 and 1-alpha is for image2
-param[in] rppHandle OpenCL handle
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration.
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error
@@ -618,11 +618,11 @@ rppi_blend_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr
 *param srcPtr [in] srcPtr1 input image
 *param[in] srcSize  srcSize dimensions of the images
 *param[out] dstPtr dstPtr output image
-*param[in] Rpp32u x1 x1 value of roi
-*param[in] validate_int_range y1 y1 value of roi
- srcSize.width - 1 *param[in] x2 x2 value of roi
- y1 *param[in] y2 y2 value of roi
-*param[in] x2 OpenCL handle
+*param[in] x1 x1 value of roi
+*param[in] y1 y1 value of roi
+*param[in] x2 x2 value of roi
+*param[in] y2 y2 value of roi
+*param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration.
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error
@@ -647,8 +647,8 @@ rppi_pixelate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 *param[out] dstSize dstPtr output image
 *param[in] x1 x1 value of roi
 *param[in] y1 y1 value of roi
- x2 *param[in] x2 value of roi
- y2 *param[in]y2 value of roi
+*param[in] x2 x2 value of roi
+*param[in] y2 y2 value of roi
 *param[in] rppHandle OpenCL handle
 *returns a  RppStatus enumeration.
 *retval RPP_SUCCESS : No error succesful completion
