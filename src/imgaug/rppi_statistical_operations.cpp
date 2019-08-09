@@ -299,7 +299,7 @@ rppi_max_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPt
 }
 
 RppStatus
-rppi_minMaxLoc_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp8u** minLoc, Rpp8u** maxLoc, RppHandle_t rppHandle)
+rppi_minMaxLoc_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc, RppHandle_t rppHandle)
 {
  	validate_image_size(srcSize);
 
@@ -319,7 +319,7 @@ rppi_minMaxLoc_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u*
 }
 
 RppStatus
-rppi_minMaxLoc_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp8u** minLoc, Rpp8u** maxLoc, RppHandle_t rppHandle)
+rppi_minMaxLoc_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc, RppHandle_t rppHandle)
 {
  	validate_image_size(srcSize);
 
@@ -339,7 +339,7 @@ rppi_minMaxLoc_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u*
 }
 
 RppStatus
-rppi_minMaxLoc_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp8u** minLoc, Rpp8u** maxLoc, RppHandle_t rppHandle)
+rppi_minMaxLoc_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc, RppHandle_t rppHandle)
 {
  	validate_image_size(srcSize);
 

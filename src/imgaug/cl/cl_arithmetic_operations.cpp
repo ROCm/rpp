@@ -530,11 +530,11 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, Rp
     }
     
     mean_sum = mean_sum / LIST_SIZE ;
-    std::cout<<mean_sum;
     *stddev = mean_sum;
 
     clReleaseMemObject(b_mem_obj); 
     free(partial_sum);
- 
+    clReleaseMemObject(c_mem_obj); 
+    free(partial_mean_sum);
     
 }
