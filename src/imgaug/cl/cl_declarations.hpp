@@ -339,4 +339,7 @@ look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,cl_mem lutPtr, R
 RppStatus
 mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
+RppStatus
+min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp8u** minLoc, Rpp8u** maxLoc, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

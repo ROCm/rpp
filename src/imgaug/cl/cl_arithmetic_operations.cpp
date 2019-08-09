@@ -472,9 +472,18 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, Rp
     int i;
     
     const int LIST_SIZE = srcSize.height * srcSize.width * channel;
-    int numGroups = srcSize.width * channel;
+    int numGroups = std::ceil(LIST_SIZE / 256);
+    
+    // for(i = LIST_SIZE / 256 ; i > 0 ; i--)
+    // {
+    //     if(LIST_SIZE % i ==0)
+    //     {
+    //         numGroups = i;
+    //         break;
+    //     }
+    // }
 
-    int sum = 0;
+    float sum = 0;
     long *partial_sum;
     partial_sum = (long *) calloc (numGroups, sizeof(long));
  
@@ -484,25 +493,55 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, Rp
     clGetCommandQueueInfo(theQueue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
 
     cl_mem b_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(long), NULL, NULL);
+    // cl_mem c_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(long), NULL, NULL);
 
     clEnqueueWriteBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);
+    // clEnqueueWriteBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);
 
     clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj);
     clSetKernelArg(theKernel, counter++, sizeof(cl_mem), NULL);
 
-    size_t global_item_size[1]; 
-    global_item_size[0]= 1024;
-    size_t local_item_size[1];
-    local_item_size[0] = 64;
-    cl_kernel_implementer (theQueue, global_item_size, local_item_size, theProgram, theKernel);
+    size_t gDim3[3];
+    gDim3[0] = LIST_SIZE;
+    gDim3[1] = 1;
+    gDim3[2] = 1;
+    size_t local_item_size[3];
+    local_item_size[0] = LIST_SIZE / numGroups;
+    local_item_size[1] = 1;
+    local_item_size[2] = 1;
+    cl_kernel_implementer (theQueue, gDim3, local_item_size, theProgram, theKernel);
     clEnqueueReadBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);   
     
     for(i = 0; i < numGroups; i++)
     {
-        sum += partial_sum[i];
+        sum += (float)partial_sum[i];
+        // std::cout<<partial_sum[i]<<"\t";
     }
-    std::cout<<"SUM IS: "<<sum<<"\n";
+    std::cout<<"\nsum is"<<sum<<"\t";
+    *mean = (sum ) / LIST_SIZE ;
+    *stddev = 255;
+
+    // CreateProgramFromBinary(theQueue,"mean_stddev.cl","mean_stddev.cl.bin","std_dev",theProgram,theKernel);
+    // clRetainKernel(theKernel);   
+    
+    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
+    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj);
+    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), NULL);
+    // clSetKernelArg(theKernel, counter++, sizeof(float), mean);
+
+    // cl_kernel_implementer (theQueue, gDim3, local_item_size, theProgram, theKernel);
+    // clEnqueueReadBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);   
+    // sum = 0;
+    // for(i = 0; i < numGroups; i++)
+    // {
+    //     sum += partial_sum[i];
+    // }
+    // *stddev = (float)(sum / LIST_SIZE);
+    // *stddev = std::sqrt(*stddev);
+    
     clReleaseMemObject(b_mem_obj); 
     free(partial_sum);
+
+    
 }

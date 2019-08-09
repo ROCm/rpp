@@ -2,7 +2,6 @@ __kernel void sum ( __global const unsigned char* input,
                     __global long *partialSums,
                     __local  int *localSums)
 {
-    /*printf("HELLO");
     uint local_id = get_local_id(0);
     uint group_size = get_local_size(0);
 
@@ -15,7 +14,5 @@ __kernel void sum ( __global const unsigned char* input,
             localSums[local_id] += localSums[local_id + stride];
     }
     if (local_id == 0)
-    partialSums[get_group_id(0)] = localSums[0];*/
-    partialSums[get_group_id(0)] = 255;
-
-}                                     
+    partialSums[get_group_id(0)] = localSums[0];
+}                                 
