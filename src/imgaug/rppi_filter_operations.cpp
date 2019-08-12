@@ -489,17 +489,56 @@ rppi_histogram_equalize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 RppStatus
 rppi_gaussian_filter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppHandle_t rppHandle)
 {
-
+#ifdef OCL_COMPILE
+    {
+        gaussian_filter_cl(static_cast<cl_mem>(srcPtr), 
+                            srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            stdDev, kernelSize,
+                            RPPI_CHN_PLANAR, 1,
+                            static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
 rppi_gaussian_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppHandle_t rppHandle)
 {
-
+#ifdef OCL_COMPILE
+    {
+        gaussian_filter_cl(static_cast<cl_mem>(srcPtr), 
+                            srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            stdDev, kernelSize,
+                            RPPI_CHN_PLANAR, 3,
+                            static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
 
 RppStatus
 rppi_gaussian_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppHandle_t rppHandle)
 {
-    
+#ifdef OCL_COMPILE
+    {
+        gaussian_filter_cl(static_cast<cl_mem>(srcPtr), 
+                            srcSize,
+                            static_cast<cl_mem>(dstPtr),
+                            stdDev, kernelSize,
+                            RPPI_CHN_PACKED, 3,
+                            static_cast<cl_command_queue>(rppHandle));
+ 	} 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
 }
