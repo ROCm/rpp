@@ -130,13 +130,6 @@ accumulate_weighted_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
                  cl_command_queue theQueue);
 
 cl_int
-box_filter_cl(cl_mem srcPtr, RppiSize srcSize,
-                cl_mem dstPtr, unsigned int filterSize,
-                RppiChnFormat chnFormat, unsigned int channel,
-                cl_command_queue theQueue);
-
-
-cl_int
 resize_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiSize dstSize,
                 RppiChnFormat chnFormat, unsigned int channel,
@@ -347,5 +340,8 @@ gaussian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f
 
 RppStatus
 laplacian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+
+RppStatus
+box_filter_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 #endif //RPP_CL_IMGAUG_DECLATAIONS_H

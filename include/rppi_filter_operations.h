@@ -119,6 +119,33 @@ rppi_custom_convolution_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 RppStatus
 rppi_custom_convolution_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t kernel, RppiSize kernelSize, RppHandle_t rppHandle);
 
+RppStatus
+rppi_box_filter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
+
+RppStatus
+rppi_box_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
+
+RppStatus
+rppi_box_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle);
+
+RppStatus
+rppi_histogram_equalize_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_histogram_equalize_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_histogram_equalize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_gaussian_filter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppHandle_t rppHandle);
+
+RppStatus
+rppi_gaussian_filter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppHandle_t rppHandle);
+
+RppStatus
+rppi_gaussian_filter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif

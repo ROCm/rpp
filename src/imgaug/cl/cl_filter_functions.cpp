@@ -160,3 +160,54 @@ custom_convolution_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem ke
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;  
 }
+
+RppStatus
+box_filter_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    float box_3x3[] = {
+    0.111, 0.111, 0.111,
+    0.111, 0.111, 0.111,
+    0.111, 0.111, 0.111,
+    };
+
+    int ctr=0;
+    cl_context theContext;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_CONTEXT,
+                            sizeof(cl_context), &theContext, NULL);
+    cl_mem filtPtr = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                    sizeof(float)*3*3, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, filtPtr, CL_TRUE, 0,
+                                   sizeof(float)*3*3,
+                                   box_3x3, 0, NULL, NULL);
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue,"convolution.cl","convolution.cl.bin","naive_convolution_planar",theProgram,theKernel);
+        clRetainKernel(theKernel); 
+
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"convolution.cl","convolution.cl.bin","naive_convolution_packed",theProgram,theKernel);
+        clRetainKernel(theKernel); 
+    }
+    kernelSize=3;
+     //---- Args Setter
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &filtPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize);
+
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return RPP_SUCCESS;  
+
+}
