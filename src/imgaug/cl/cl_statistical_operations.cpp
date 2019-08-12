@@ -231,7 +231,7 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
     clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj1);
 
     size_t gDim3[3];
-    gDim3[0] = LIST_SIZE - (LIST_SIZE % 256);
+    gDim3[0] = LIST_SIZE;
     gDim3[1] = 1;
     gDim3[2] = 1;
     size_t local_item_size[3];
