@@ -13,7 +13,7 @@ __kernel void laplacian_image_pyramid_pkd(  __global unsigned char* input,
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int id_z = get_global_id(2);
-    if (id_x >= (width / 2 + 1) || id_y >= (height / 2 + 1) || id_z >= channel) return;
+    if (id_x >= ceil((float)(width / 2)) || id_y >= ceil((float)(height / 2)) || id_z >= channel) return;
 
     int pixIdx = id_y * channel * width + id_x * channel + id_z;
     int boundx = (kernalwidth - 1) / 2;
@@ -48,7 +48,7 @@ __kernel void laplacian_image_pyramid_pln(  __global unsigned char* input,
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int id_z = get_global_id(2);
-    if (id_x >= (width / 2 + 1) || id_y >= (height / 2 + 1) || id_z >= channel) return;
+if (id_x >= ceil((float)(width / 2)) || id_y >= ceil((float)(height / 2)) || id_z >= channel) return;
 
     int pixIdx = id_y * width + id_x + id_z * width * height;
     int boundx = (kernalwidth - 1) / 2;
