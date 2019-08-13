@@ -324,7 +324,7 @@ RppStatus
 custom_convolution_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem kernel, RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
-histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
 look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,cl_mem lutPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);

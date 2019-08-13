@@ -87,8 +87,11 @@ max_cl( cl_mem srcPtr1,cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr, RppiChnF
 }
 
 RppStatus
-histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
+    const unsigned int totalBin = channel * 256;
+    unsigned int *tempBin = (unsigned int*)malloc(sizeof(unsigned int) * totalBin);
+
     unsigned short counter=0;
     cl_int err;
 
@@ -180,7 +183,22 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, RppiChnFo
 
     cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
     
-    clEnqueueReadBuffer(theQueue, histogram, CL_TRUE, 0, sizeof(unsigned int)*256*channel, outputHistogram, 0, NULL, NULL );
+    clEnqueueReadBuffer(theQueue, histogram, CL_TRUE, 0, sizeof(unsigned int)*256*channel, tempBin, 0, NULL, NULL );
+
+    int noOfValuesInBins = (256 * channel) /bins;
+    for(int i = 0 ; i < bins ; i++)
+    {
+        for(int j = 0 ; j < noOfValuesInBins ; j++)
+        {
+            *outputHistogram += *tempBin;
+            tempBin++;
+        }
+        outputHistogram++;
+    }
+    for(int i = 255 * channel ; i >= (256 * channel) % bins; i--)
+    {
+        outputHistogram[bins-1] += tempBin[i];
+    }
 }
 
 RppStatus
