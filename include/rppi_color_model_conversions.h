@@ -406,6 +406,69 @@ rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 
 RppStatus
 rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) ;
+
+
+// ----------------------------------------
+// Channel Extract functions declaration 
+// ----------------------------------------
+/* Extracts a single channel from the source image and posts it into the destination images first channel.
+*param[in] srcPtr input image
+*param[in] srcSize dimensions of the images
+*param[in] dstPtr output image
+*param[in] Channel to be extracted (0, 1 or 2)
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_channel_extract_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32u extractChannelNumber, RppHandle_t rppHandle);
+
+RppStatus
+rppi_channel_extract_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32u extractChannelNumber, RppHandle_t rppHandle);
+
+RppStatus
+rppi_channel_extract_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp32u extractChannelNumber, RppHandle_t rppHandle);
+
+// ----------------------------------------
+// Channel Combine functions declaration 
+// ----------------------------------------
+/* Combines 3 different single channel source images and formes a 3 channel RGB image.
+*param[in] srcPtr input image1, srcPtr input image2, srcPtr input image3
+*param[in] srcSize dimensions of the images
+*param[in] dstPtr output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_channel_combine_u8_pln1_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize srcSize, RppPtr_t dstPtr,
+                         RppHandle_t rppHandle);
+
+RppStatus
+rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize srcSize, RppPtr_t dstPtr,
+                         RppHandle_t rppHandle);
+
+RppStatus
+rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize srcSize, RppPtr_t dstPtr,
+                         RppHandle_t rppHandle);
+
+// ----------------------------------------
+// gpu look_up_table functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_look_up_table_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t lutPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_look_up_table_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t lutPtr, RppHandle_t rppHandle);
+
+RppStatus
+rppi_look_up_table_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppPtr_t lutPtr, RppHandle_t rppHandle);
  
 #ifdef __cplusplus
 }
