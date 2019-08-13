@@ -21,23 +21,27 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     RppiSize srcSizeMod;
     srcSizeMod.width = srcSize.width + (2 * bound);
     srcSizeMod.height = srcSize.height + (2 * bound);
-    T *srcPtrMod = (T *)calloc(srcSizeMod.width * srcSizeMod.height * channel, sizeof(T));
+    T *srcPtrMod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
     
-    convolve_image_host(srcPtrMod, srcSizeMod, dstPtr, srcSize, kernel, kernelSize, chnFormat, channel);
+    RppiSize rppiKernelSize;
+    rppiKernelSize.height = kernelSize;
+    rppiKernelSize.width = kernelSize;
+    convolve_image_host(srcPtrMod, srcSizeMod, dstPtr, srcSize, kernel, rppiKernelSize, chnFormat, channel);
     
     return RPP_SUCCESS;
 }
 
 /**************** Contrast ***************/
 
-template <typename T>
-RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-                        Rpp32u new_min, Rpp32u new_max,
+template <typename T, typename U>
+RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr, 
+                        Rpp32f new_min, Rpp32f new_max,
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
-    T *srcPtrTemp, *dstPtrTemp;
+    T *srcPtrTemp;
+    U *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
@@ -66,11 +70,7 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                pixel = (Rpp32f) (*srcPtrTemp);
-                pixel = ((pixel - min) * ((new_max - new_min) / (max - min))) + new_min;
-                pixel = (pixel < (Rpp32f)new_max) ? pixel : ((Rpp32f)new_max);
-                pixel = (pixel > (Rpp32f)new_min) ? pixel : ((Rpp32f)new_min);
-                *dstPtrTemp = (T) pixel;
+                *dstPtrTemp = (U) (((((Rpp32f) (*srcPtrTemp)) - min) * ((new_max - new_min) / (max - min))) + new_min);
                 srcPtrTemp++;
                 dstPtrTemp++;
             }
@@ -100,11 +100,7 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             srcPtrTemp = srcPtr + c;
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                pixel = (Rpp32f) (*srcPtrTemp);
-                pixel = ((pixel - min) * ((new_max - new_min) / (max - min))) + new_min;
-                pixel = (pixel < (Rpp32f)new_max) ? pixel : ((Rpp32f)new_max);
-                pixel = (pixel > (Rpp32f)new_min) ? pixel : ((Rpp32f)new_min);
-                *dstPtrTemp = (T) pixel;
+                *dstPtrTemp = (U) (((((Rpp32f) (*srcPtrTemp)) - min) * ((new_max - new_min) / (max - min))) + new_min);
                 srcPtrTemp = srcPtrTemp + channel;
                 dstPtrTemp = dstPtrTemp + channel;
             }
@@ -192,9 +188,6 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         return RPP_ERROR;
     }
 
-    T *srcPtrTemp, *dstPtrTemp;
-    srcPtrTemp = srcPtr;
-    dstPtrTemp = dstPtr;
     memcpy(dstPtr, srcPtr, channel * srcSize.height * srcSize.width * sizeof(T));
 
     Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
@@ -219,7 +212,10 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         srcPtrMod = srcPtrSubImage - (bound * srcSize.width * channel) - (bound * channel);
     }
 
-    convolve_subimage_host(srcPtrMod, srcSizeMod, dstPtrSubImage, srcSizeSubImage, srcSize, kernel, kernelSize, chnFormat, channel);
+    RppiSize rppiKernelSize;
+    rppiKernelSize.height = kernelSize;
+    rppiKernelSize.width = kernelSize;
+    convolve_subimage_host(srcPtrMod, srcSizeMod, dstPtrSubImage, srcSizeSubImage, srcSize, kernel, rppiKernelSize, chnFormat, channel);
 
     return RPP_SUCCESS;
 }

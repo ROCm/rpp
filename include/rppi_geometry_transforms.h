@@ -208,6 +208,26 @@ rppi_lens_correction_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 RppStatus
 rppi_lens_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f strength,Rpp32f zoom);
 
+// ----------------------------------------
+// Host scale functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_scale_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
+                             Rpp32f percentage);
+
+RppStatus
+rppi_scale_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage);
+
+RppStatus
+rppi_scale_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage);
+
+RppStatus
+rppi_scale_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
+                         Rpp32f percentage);
+
 
 // ----------------------------------------
 // GPU flip functions declaration 

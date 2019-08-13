@@ -72,6 +72,20 @@ rppi_histogram_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp32u* outputHist
  	}
 #endif //BACKEND
 		return RPP_SUCCESS;
+}
+// ----------------------------------------
+// Host thresholding functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_thresholding_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp8u min, Rpp8u max)
+{
+    thresholding_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                             min, max, 
+                             RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
 
 }
 
@@ -92,13 +106,23 @@ rppi_histogram_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp32u* outputHist
  	}
 #endif //BACKEND
 		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_thresholding_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp8u min, Rpp8u max)
+{
+    thresholding_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                             min, max, 
+                             RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
 
 }
 
 RppStatus
 rppi_histogram_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppHandle_t rppHandle)
+// 	validate_image_size(srcSize);
 {
- 	validate_image_size(srcSize);
 #ifdef OCL_COMPILE
  	{
  	histogram_cl(static_cast<cl_mem>(srcPtr),
@@ -356,4 +380,158 @@ rppi_minMaxLoc_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u*
  	} 
 #endif //BACKEND 
 		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_thresholding_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp8u min, Rpp8u max)
+{
+    thresholding_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
+                             min, max, 
+                             RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
+ 
+// ----------------------------------------
+// Host min functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_min_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    min_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_min_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    min_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_min_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    min_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    3);
+
+    return RPP_SUCCESS;
+
+}
+ 
+// ----------------------------------------
+// Host max functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_max_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    max_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_max_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    max_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_max_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    max_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
+                                    3);
+
+    return RPP_SUCCESS;
+
+}
+ 
+// ----------------------------------------
+// Host minMaxLoc functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_minMaxLoc_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32s* minLoc, Rpp32s* maxLoc)
+{
+    minMaxLoc_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, 
+                       min, max, minLoc, maxLoc, 
+                       RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_minMaxLoc_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32s* minLoc, Rpp32s* maxLoc)
+{
+    minMaxLoc_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, 
+                       min, max, minLoc, maxLoc, 
+                       RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_minMaxLoc_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32s* minLoc, Rpp32s* maxLoc)
+{
+    minMaxLoc_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, 
+                       min, max, minLoc, maxLoc, 
+                       RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
+}
+ 
+// ----------------------------------------
+// Host Integral functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_integral_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    integral_host<Rpp8u, Rpp32u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32u*>(dstPtr), 
+                         RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_integral_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    integral_host<Rpp8u, Rpp32u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32u*>(dstPtr), 
+                         RPPI_CHN_PLANAR, 3);
+
+    return RPP_SUCCESS;
+
+}
+
+RppStatus
+rppi_integral_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    integral_host<Rpp8u, Rpp32u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp32u*>(dstPtr), 
+                         RPPI_CHN_PACKED, 3);
+
+    return RPP_SUCCESS;
+
 }

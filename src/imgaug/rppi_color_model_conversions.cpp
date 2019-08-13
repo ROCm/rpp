@@ -425,6 +425,92 @@ rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }
+ 
+// ----------------------------------------
+// Host channel_extract functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_channel_extract_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                                  Rpp32u extractChannelNumber)
+{
+    channel_extract_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     extractChannelNumber, 
+                     RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_channel_extract_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, 
+                                  Rpp32u extractChannelNumber)
+{
+    channel_extract_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                     extractChannelNumber, 
+                     RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host channel_combine functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_channel_combine_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    channel_combine_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), static_cast<Rpp8u*>(srcPtr3), 
+                                srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_channel_combine_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    channel_combine_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), static_cast<Rpp8u*>(srcPtr3), 
+                                srcSize, static_cast<Rpp8u*>(dstPtr), 
+                                RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host look_up_table functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_look_up_table_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp8u *lutPtr)
+{
+
+    look_up_table_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           lutPtr,
+                           RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_look_up_table_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp8u *lutPtr)
+{
+
+    look_up_table_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           lutPtr,
+                           RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_look_up_table_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
+                         Rpp8u *lutPtr)
+{
+
+    look_up_table_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
+                           lutPtr,
+                           RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
 
 // ----------------------------------------
 // GPU rgb_to_hsv functions  calls 
