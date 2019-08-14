@@ -274,7 +274,7 @@ rppi_snpNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
  	validate_float_range( 0, 1, &noiseProbability);
     noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                         noiseProbability,
-                        RPPI_CHN_PLANAR, 1);
+                        RPPI_CHN_PACKED, 1);
 }
 
 RppStatus
