@@ -6,7 +6,7 @@
 
 template <typename T>
 RppStatus histogram_host(T* srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, 
-                         Rpp32u channel)
+                            RppiChnFormat chnFormat,Rpp32u channel)
 {
     histogram_kernel_host(srcPtr, srcSize, outputHistogram, bins - 1, channel);
 
@@ -30,8 +30,8 @@ RppStatus thresholding_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 /**************** Min ***************/
 
 template <typename T, typename U>
-RppStatus min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+RppStatus min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr, 
+                                RppiChnFormat chnFormat,Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
     U *srcPtr2Temp;
@@ -54,8 +54,8 @@ RppStatus min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** Max ***************/
 
 template <typename T, typename U>
-RppStatus max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
-                                   Rpp32u channel)
+RppStatus max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr, 
+                                RppiChnFormat chnFormat,Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
     U *srcPtr2Temp;
@@ -78,8 +78,8 @@ RppStatus max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** Min Max Loc ***************/
 
 template <typename T>
-RppStatus minMaxLoc_host(T* srcPtr, RppiSize srcSize, 
-                         Rpp8u* min, Rpp8u* max, Rpp32s* minLoc, Rpp32s* maxLoc, 
+RppStatus min_max_loc_host(T* srcPtr, RppiSize srcSize, 
+                         Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc, 
                          RppiChnFormat chnFormat, Rpp32u channel)
 {
     *min = 255;

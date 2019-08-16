@@ -973,8 +973,8 @@ RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 /**************** Equalize Histogram ***************/
 
 template <typename T>
-RppStatus histogram_balance_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-                                  Rpp32u channel)
+RppStatus histogram_balance_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                    RppiChnFormat chnFormat,Rpp32u channel)
 {
     Rpp32u *histogram = (Rpp32u *) calloc(256, sizeof(Rpp32u));
     T *lookUpTable = (T *) calloc (256, sizeof(T));

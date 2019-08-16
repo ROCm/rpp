@@ -237,39 +237,48 @@ rppi_subtract_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rp
 	return RPP_SUCCESS;
 }
  
-// ----------------------------------------
+ // ----------------------------------------
 // Host magnitude functions calls 
 // ----------------------------------------
 
 
 RppStatus
-rppi_magnitude_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_magnitude_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    magnitude_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PLANAR, 1);
 
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+	 magnitude_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_magnitude_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_magnitude_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    magnitude_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PLANAR, 3);
 
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+	 magnitude_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_magnitude_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_magnitude_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    magnitude_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PACKED, 3);
 
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+	 magnitude_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
 }
  
 // ----------------------------------------
@@ -278,33 +287,124 @@ rppi_magnitude_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize
 
 
 RppStatus
-rppi_multiply_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_multiply_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PLANAR, 1);
 
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+	 multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_multiply_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_multiply_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PLANAR, 3);
 
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+	 multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_multiply_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_multiply_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PACKED, 3);
 
-    return RPP_SUCCESS;
+ 	 validate_image_size(srcSize);
+	 multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host accumulate_squared functions calls 
+// ----------------------------------------
 
+
+RppStatus
+rppi_accumulate_squared_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize)
+{
+
+ 	 validate_image_size(srcSize);
+	 accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_squared_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize)
+{
+
+ 	 validate_image_size(srcSize);
+	 accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_squared_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize)
+{
+
+ 	 validate_image_size(srcSize);
+	 accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// Host mean_stddev functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_mean_stddev_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,Rpp32f* mean,Rpp32f* stdDev)
+{
+
+ 	 validate_image_size(srcSize);
+	 mean_stddev_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			mean,
+			stdDev,
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_mean_stddev_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,Rpp32f* mean,Rpp32f* stdDev)
+{
+
+ 	 validate_image_size(srcSize);
+	 mean_stddev_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			mean,
+			stdDev,
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_mean_stddev_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,Rpp32f* mean,Rpp32f* stdDev)
+{
+
+ 	 validate_image_size(srcSize);
+	 mean_stddev_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			mean,
+			stdDev,
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
 }
  
 // ----------------------------------------
@@ -313,35 +413,44 @@ rppi_multiply_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize,
 
 
 RppStatus
-rppi_phase_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_phase_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    phase_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PLANAR, 1);
 
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+	 phase_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_phase_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_phase_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    phase_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PLANAR, 3);
 
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+	 phase_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_phase_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr)
+rppi_phase_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr)
 {
-    phase_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, static_cast<Rpp8u*>(dstPtr),
-                                    RPPI_CHN_PACKED, 3);
 
-    return RPP_SUCCESS;
-
+ 	 validate_image_size(srcSize);
+	 phase_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
 }
- 
+
 // ----------------------------------------
 // Host tensor functions calls 
 // ----------------------------------------
@@ -378,81 +487,6 @@ rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr
 
     return RPP_SUCCESS;
 
-}
- 
-// ----------------------------------------
-// Host accumulate_squared functions calls 
-// ----------------------------------------
-
-
-RppStatus
-rppi_accumulate_squared_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize)
-{
-    accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_accumulate_squared_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize)
-{
-    accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    RPPI_CHN_PLANAR, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_accumulate_squared_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize)
-{
-    accumulate_squared_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize,
-                                    RPPI_CHN_PACKED, 3);
-
-    return RPP_SUCCESS;
-
-}
-
-// ----------------------------------------
-// Host mean and standard deviation functions calls 
-// ----------------------------------------
-
-RppStatus
-rppi_mean_stddev_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev)
-{
- 	 validate_image_size(srcSize);
-	 mean_stddev_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),  
-			srcSize,
-            mean,
-            stddev,
-			RPPI_CHN_PLANAR, 1);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_mean_stddev_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev)
-{
- 	 validate_image_size(srcSize);
-	 mean_stddev_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),  
-			srcSize,
-            mean,
-            stddev,
-			RPPI_CHN_PLANAR, 3);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_mean_stddev_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev)
-{
- 	 validate_image_size(srcSize);
-	 mean_stddev_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),  
-			srcSize,
-            mean,
-            stddev,
-			RPPI_CHN_PACKED, 3);
-    return RPP_SUCCESS;
 }
  
 // ----------------------------------------
@@ -810,6 +844,357 @@ rppi_subtract_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,Rpp
 		return RPP_SUCCESS;
 }
 
+
+
+// ----------------------------------------
+// GPU magnitude functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_magnitude_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 magnitude_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_magnitude_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 magnitude_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_magnitude_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 magnitude_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU multiply functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_multiply_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 multiply_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_multiply_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 multiply_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_multiply_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 multiply_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU accumulate_squared functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_accumulate_squared_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 accumulate_squared_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_squared_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 accumulate_squared_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_squared_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 accumulate_squared_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU mean_stddev functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_mean_stddev_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,Rpp32f* mean,Rpp32f* stdDev, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 mean_stddev_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			mean,
+			stdDev,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_mean_stddev_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,Rpp32f* mean,Rpp32f* stdDev, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 mean_stddev_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			mean,
+			stdDev,
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_mean_stddev_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,Rpp32f* mean,Rpp32f* stdDev, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 mean_stddev_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			mean,
+			stdDev,
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+ 
+// ----------------------------------------
+// GPU phase functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_phase_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 phase_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_phase_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 phase_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_phase_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 phase_cl(static_cast<cl_mem>(srcPtr1), 
+			static_cast<cl_mem>(srcPtr2), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
 // ----------------------------------------
 // GPU Tensor functions calls 
 // ----------------------------------------
@@ -853,7 +1238,6 @@ rppi_tensor_subtract_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr,
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
-
 RppStatus
 rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, RppHandle_t rppHandle)
 {
@@ -874,307 +1258,3 @@ rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr,
 		return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_multiply_u8_pln1_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 multiply_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PLANAR, 1,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_multiply_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 multiply_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PLANAR, 3,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_multiply_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 multiply_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PACKED, 3,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-
-RppStatus
-rppi_magnitude_u8_pln1_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 magnitude_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PLANAR, 1,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_magnitude_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 magnitude_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PLANAR, 3,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_magnitude_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 magnitude_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PACKED, 3,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_phase_u8_pln1_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 phase_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PLANAR, 1,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_phase_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 phase_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PLANAR, 3,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_phase_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, RppPtr_t dstPtr, RppHandle_t rppHandle)
-{
- 	 validate_image_size(srcSize);
-
-#ifdef OCL_COMPILE
- 	 {
- 	 phase_cl(static_cast<cl_mem>(srcPtr1), 
-			static_cast<cl_mem>(srcPtr2), 
-			srcSize,
-			static_cast<cl_mem>(dstPtr), 
-			RPPI_CHN_PACKED, 3,
-			static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_squared_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle_t rppHandle)
-{
- 	validate_image_size(srcSize);
-#ifdef OCL_COMPILE
- 	{
- 	accumulate_squared_cl(static_cast<cl_mem>(srcPtr),
-			            srcSize,
-			            RPPI_CHN_PLANAR, 1,
-			            static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_squared_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle_t rppHandle)
-{
- 	validate_image_size(srcSize);
-#ifdef OCL_COMPILE
- 	{
- 	accumulate_squared_cl(static_cast<cl_mem>(srcPtr),
-			            srcSize,
-			            RPPI_CHN_PLANAR, 3,
-			            static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_squared_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppHandle_t rppHandle)
-{
- 	validate_image_size(srcSize);
-#ifdef OCL_COMPILE
- 	{
- 	accumulate_squared_cl(static_cast<cl_mem>(srcPtr),
-			            srcSize,
-			            RPPI_CHN_PACKED, 3,
-			            static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-}
-
-// ----------------------------------------
-// gpu mean and standard deviation functions declaration 
-// ----------------------------------------
-
-RppStatus
-rppi_mean_stddev_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle)
-{
- 	validate_image_size(srcSize);
-#ifdef OCL_COMPILE
- 	{
- 	mean_stddev_cl(static_cast<cl_mem>(srcPtr),
-			            srcSize, mean, stddev,
-			            RPPI_CHN_PLANAR, 1,
-			            static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_mean_stddev_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle)
-{
- 	validate_image_size(srcSize);
-#ifdef OCL_COMPILE
- 	{
- 	mean_stddev_cl(static_cast<cl_mem>(srcPtr),
-			            srcSize, mean, stddev,
-			            RPPI_CHN_PLANAR, 3,
-			            static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-
-}
-
-RppStatus
-rppi_mean_stddev_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppHandle_t rppHandle)
-{
- 	validate_image_size(srcSize);
-#ifdef OCL_COMPILE
- 	{
- 	mean_stddev_cl(static_cast<cl_mem>(srcPtr),
-			            srcSize, mean, stddev,
-			            RPPI_CHN_PACKED, 3,
-			            static_cast<cl_command_queue>(rppHandle));
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-		return RPP_SUCCESS;
-
-}
