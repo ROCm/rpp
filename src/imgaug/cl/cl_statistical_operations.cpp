@@ -89,9 +89,6 @@ max_cl( cl_mem srcPtr1,cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr, RppiChnF
 RppStatus
 histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
-    const unsigned int totalBin = channel * 256;
-    unsigned int *tempBin = (unsigned int*)malloc(sizeof(unsigned int) * totalBin);
-
     unsigned short counter=0;
     cl_int err;
 
@@ -103,7 +100,7 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
 
-    
+
     cl_kernel theKernel;
     cl_program theProgram;
     unsigned int numGroups;
@@ -140,18 +137,18 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     lDim3[1] = num_pixels_per_work_item;
     gDim3[2] = 1;
     lDim3[2] = 1;
-    
+
 
     numGroups = gDim3[0] * gDim3[1];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
-    
+
     cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
                                     sizeof(unsigned int)*256*channel*numGroups, NULL, NULL);
     cl_mem histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(unsigned int)*256*channel, NULL, NULL);
-    
-    
+
+
 
     counter = 0;
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
@@ -163,8 +160,8 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
 
     cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
 
-    // // For minElement histogram kernel
-    CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_minElement_partial",
+    // For sum histogram kernel
+    CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_sum_partial",
                                                                         theProgram,theKernel);
     clRetainKernel(theKernel);
 
@@ -180,24 +177,20 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     gDim3[2] = 1;
     lDim3[1] = 1;
     lDim3[2] = 1;
-
-    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
+    const unsigned int totalBin = channel * 256;
+    unsigned int tempBin[totalBin];
     
+    cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
     clEnqueueReadBuffer(theQueue, histogram, CL_TRUE, 0, sizeof(unsigned int)*256*channel, tempBin, 0, NULL, NULL );
-
     int noOfValuesInBins = (256 * channel) /bins;
     for(int i = 0 ; i < bins ; i++)
     {
+        *outputHistogram=0;
         for(int j = 0 ; j < noOfValuesInBins ; j++)
         {
-            *outputHistogram += *tempBin;
-            tempBin++;
+            *outputHistogram += tempBin[i*noOfValuesInBins+j];
         }
         outputHistogram++;
-    }
-    for(int i = 255 * channel ; i >= (256 * channel) % bins; i--)
-    {
-        outputHistogram[bins-1] += tempBin[i];
     }
 }
 
