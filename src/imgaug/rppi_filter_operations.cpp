@@ -449,7 +449,7 @@ rppi_custom_convolution_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
         custom_convolution_cl(static_cast<cl_mem>(srcPtr), 
                             srcSize,
                             static_cast<cl_mem>(dstPtr), 
-                            static_cast<cl_mem>(kernel), 
+                            static_cast<Rpp32f*>(kernel), 
                             kernelSize,
                             RPPI_CHN_PLANAR, 1,
                             static_cast<cl_command_queue>(rppHandle));
@@ -469,7 +469,7 @@ rppi_custom_convolution_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
         custom_convolution_cl(static_cast<cl_mem>(srcPtr), 
                             srcSize,
                             static_cast<cl_mem>(dstPtr), 
-                            static_cast<cl_mem>(kernel), 
+                            static_cast<Rpp32f*>(kernel), 
                             kernelSize,
                             RPPI_CHN_PLANAR, 3,
                             static_cast<cl_command_queue>(rppHandle));
@@ -489,7 +489,7 @@ rppi_custom_convolution_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
         custom_convolution_cl(static_cast<cl_mem>(srcPtr), 
                             srcSize,
                             static_cast<cl_mem>(dstPtr), 
-                            static_cast<cl_mem>(kernel), 
+                            static_cast<Rpp32f*>(kernel), 
                             kernelSize,
                             RPPI_CHN_PACKED, 3,
                             static_cast<cl_command_queue>(rppHandle));

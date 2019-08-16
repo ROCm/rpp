@@ -321,13 +321,13 @@ RppStatus
 non_max_suppression_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
-custom_convolution_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem kernel, RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+custom_convolution_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f* kernel, RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
 histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
-look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,cl_mem lutPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
+look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,Rpp8u* lutPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);
 
 RppStatus
 mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue);

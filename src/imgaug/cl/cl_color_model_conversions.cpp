@@ -366,8 +366,19 @@ channel_combine_cl(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem srcPtr3, RppiSize srcS
 
 
 RppStatus
-look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,cl_mem lutPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,Rpp8u* lutPtr, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
+    cl_context theContext;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_CONTEXT,
+                            sizeof(cl_context), &theContext, NULL);
+    cl_device_id theDevice;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
+    cl_mem clLutPtr = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
+                                    sizeof(Rpp8u)*256*channel, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, clLutPtr, CL_TRUE, 0, sizeof(Rpp8u)*256*channel, lutPtr, 0, NULL, NULL);
+
     unsigned short counter=0;
     cl_int err;
     cl_kernel theKernel;
@@ -385,7 +396,7 @@ look_up_table_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,cl_mem lutPtr, R
     //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &lutPtr);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &clLutPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);

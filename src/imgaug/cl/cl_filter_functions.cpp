@@ -127,8 +127,18 @@ non_max_suppression_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u k
 }
 
 RppStatus
-custom_convolution_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem kernel, RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+custom_convolution_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f* kernel, RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
 {
+    cl_context theContext;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_CONTEXT,
+                            sizeof(cl_context), &theContext, NULL);
+    cl_device_id theDevice;
+    clGetCommandQueueInfo(  theQueue,
+                            CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
+    cl_mem clkernel = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
+                                    sizeof(Rpp32f)*kernelSize.height*kernelSize.width, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, clkernel, CL_TRUE, 0, sizeof(Rpp32f)*kernelSize.height*kernelSize.width, kernel, 0, NULL, NULL);
     int ctr=0;
     cl_kernel theKernel;
     cl_program theProgram;
@@ -149,7 +159,7 @@ custom_convolution_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem ke
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &kernel);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &clkernel);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize.height);
     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize.width);
 
