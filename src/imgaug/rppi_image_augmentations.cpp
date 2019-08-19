@@ -949,7 +949,7 @@ RppStatus
 rppi_histogram_balance_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
     histogram_balance_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                       1);
+                       RPPI_CHN_PLANAR,1);
 
     return RPP_SUCCESS;
 
@@ -959,7 +959,7 @@ RppStatus
 rppi_histogram_balance_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
     histogram_balance_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                       3);
+                       RPPI_CHN_PLANAR,3);
 
     return RPP_SUCCESS;
 
@@ -969,12 +969,52 @@ RppStatus
 rppi_histogram_balance_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
 {
     histogram_balance_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), 
-                       3);
+                       RPPI_CHN_PACKED,3);
 
     return RPP_SUCCESS;
 
 }
 
+// ----------------------------------------
+// Host histogram_equalize functions calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_histogram_equalize_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 histogram_balance_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 1);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_histogram_equalize_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 histogram_balance_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PLANAR, 3);
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_histogram_equalize_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
+{
+
+ 	 validate_image_size(srcSize);
+	 histogram_balance_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr), 
+			RPPI_CHN_PACKED, 3);
+	return RPP_SUCCESS;
+}
 
 // ----------------------------------------
 // GPU blur functions  calls
@@ -2418,5 +2458,73 @@ rppi_histogram_balance_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
  	 {
  	 }
 #endif //BACKEND
+		return RPP_SUCCESS;
+}
+
+// ----------------------------------------
+// GPU histogram_equalize functions  calls 
+// ----------------------------------------
+
+
+RppStatus
+rppi_histogram_equalize_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 histogram_balance_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_histogram_equalize_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 histogram_balance_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PLANAR, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+		return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_histogram_equalize_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) 
+{
+
+ 	 validate_image_size(srcSize);
+
+#ifdef OCL_COMPILE
+ 	 {
+ 	 histogram_balance_cl(static_cast<cl_mem>(srcPtr), 
+			srcSize,
+			static_cast<cl_mem>(dstPtr), 
+			RPPI_CHN_PACKED, 3,
+			static_cast<cl_command_queue>(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
 		return RPP_SUCCESS;
 }

@@ -393,6 +393,28 @@ rppi_histogram_balance_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 RppStatus
 rppi_histogram_balance_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
 
+
+// ----------------------------------------
+// Host histogram_equalize functions declaration 
+// ----------------------------------------
+/* Does histogram equalization on the input image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_histogram_equalize_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_histogram_equalize_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_histogram_equalize_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr);
+
 // ----------------------------------------
 // GPU blur functions declaration
 // ----------------------------------------
@@ -787,6 +809,29 @@ rppi_histogram_balance_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
 RppStatus
 rppi_histogram_balance_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize,
                                     RppPtr_t dstPtr, RppHandle_t rppHandle);
+
+// ----------------------------------------
+// GPU histogram_equalize functions declaration 
+// ----------------------------------------
+/* Does histogram equalization on the input image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] rppHandle  rppHandle OpenCL handle	
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_histogram_equalize_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_histogram_equalize_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_histogram_equalize_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;                           
+
 
 #ifdef __cplusplus
 }

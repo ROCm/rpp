@@ -210,6 +210,30 @@ rppi_lens_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 
 
 // ----------------------------------------
+// Host scale functions declaration 
+// ----------------------------------------
+/* Scales the input image according to the percentage given by the user.
+*param srcPtr [in] input image
+*param[in] srcSize dimensions of the images
+*param[out] dstPtr output image where resized image is stored
+*param[in] dstSize dimensions of the output images
+*param[in] percentage percentage Percentage to which the input image needs to be scaled
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_scale_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f percentage);
+
+RppStatus
+rppi_scale_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f percentage);
+
+RppStatus
+rppi_scale_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f percentage);
+
+
+// ----------------------------------------
 // GPU flip functions declaration 
 // ----------------------------------------
 /* Flips the image.
@@ -381,6 +405,30 @@ rppi_warp_affine_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 RppStatus
 rppi_warp_affine_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize,
 Rpp32f *affine, RppHandle_t rppHandle);
+
+// ----------------------------------------
+// GPU scale functions declaration 
+// ----------------------------------------
+/* Scales the input image according to the percentage given by the user.
+*param srcPtr [in] input image
+*param[in] srcSize dimensions of the images
+*param[out] dstPtr output image where resized image is stored
+*param[in] dstSize dimensions of the output images
+*param[in] percentage percentage Percentage to which the input image needs to be scaled
+param[in] rppHandle  rppHandle OpenCL handle
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_scale_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f percentage, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_scale_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f percentage, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_scale_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppiSize dstSize,Rpp32f percentage, RppHandle_t rppHandle) ;
 #ifdef __cplusplus
 }
 #endif
