@@ -1,181 +1,110 @@
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
-inline float HueToRGB(float v1, float v2, float vH) {
-    if (vH < 0)
-        vH += 1;
-
-    if (vH > 1)
-        vH -= 1;
-
-    if ((6 * vH) < 1)
-        return (v1 + (v2 - v1) * 6 * vH);
-
-    if ((2 * vH) < 1)
-        return v2;
-
-    if ((3 * vH) < 2)
-        return (v1 + (v2 - v1) * ((float)(2.0 / 3) - vH) * 6);
-
-    return v1;
+#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
+unsigned int xorshift(int pixid)
+{
+    unsigned int x = 123456789;
+    unsigned int w = 88675123;
+    unsigned int seed = x + pixid;
+    unsigned int t = seed ^ (seed << 11);
+    unsigned int res = w ^ (w >> 19) ^ (t ^ (t >> 8));
+    return res;
 }
-__kernel void snow_pkd(
-        const __global unsigned char* input,
-        __global  unsigned char* output,
-        const unsigned int height,
-        const unsigned int width,
-        const unsigned int channel,
-        const float snowCoefficient
-){
-    int id = get_global_id(0);
-    float r,g,b, min, max, delta;
-    float h, s, l;
 
-    //Make sure we do not go out of bounds
-    id = id * 3;
-    if (id < 3 *height * width ){
-        r = (float)input[id] / 255.0;
-        g = (float)input[id + 1] / 255.0;
-        b = (float)input[id + 2]/ 255.0;
+__kernel void snow(__global unsigned char *input,
+                   __global unsigned char *output,
+                   const unsigned int height,
+                   const unsigned int width,
+                   const unsigned int channel)
+{
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
+    if (id_x >= width || id_y >= height)
+        return;
 
-        min = (r < g && r< b)? r : ((g < b)? g: b);
-        max = (r > g && r > b)? r : ((g > b)? g: b);
-
-        delta = max - min;
-
-        l = (float)(min + max) / 2.0;
-        if (delta == 0){
-            h = 0;
-            s = 0;
-        }
-        else {
-            s = (l <= 0.5) ? (delta / (max + min)) : (delta / (2.0 - (max - min)));
-            float hue;
-
-            if (r == max)
-            {
-                hue = ((g - b) / 6) / delta;
-            }
-            else if (g == max)
-            {
-                hue = (1.0f / 3) + ((b - r) / 6) / delta;
-            }
-            else
-            {
-                hue = (2.0f / 3) + ((r - g) / 6) / delta;
-            }
-
-            if (hue < 0)
-                hue += 1;
-            if (hue > 1)
-                hue -= 1;
-
-            h = (int)(hue * 360);
-        }
-        if ( l < snowCoefficient)
-            l = l * 2.5;
-        if( l > 1)
-            l = 1;
-
-        if (s <= 0){
-            r = l * 255;
-            g = l * 255;
-            b = l * 255;
-        } 
-        else {
-            
-            float v1, v2;
-            float hue = (float)h / 360;
-
-            v2 = (l < 0.5) ? (l * (1 + s)) : ((l + s) - (l * s));
-            v1 = 2 * l - v2;
-
-            r = (unsigned char)(255 * HueToRGB(v1, v2, hue + (1.0f / 3)));
-            g = (unsigned char)(255 * HueToRGB(v1, v2, hue));
-            b = (unsigned char)(255 * HueToRGB(v1, v2, hue - (1.0f / 3)));
-        }
-        output[id] = saturate_8u(r);
-        output[id + 1] = saturate_8u(g);
-        output[id + 2] = saturate_8u(b);
-    }
-
+    int pixIdx = id_y * width * channel + id_x * channel + id_z;
+    int pixel = input[pixIdx] + output[pixIdx];
+    output[pixIdx] = saturate_8u(pixel);
 }
-__kernel void snow_pln(
-        const __global unsigned char* input,
-        __global  unsigned char* output,
-        const unsigned int height,
-        const unsigned int width,
-        const unsigned int channel,
-        const float snowCoefficient
-){
-    int id = get_global_id(0);
-    float r,g,b, min, max, delta;
-    float h, s, l;
 
-    //Make sure we do not go out of bounds
-    id = id * 3;
-    if (id < 3 *height * width ){
-        r = (float)input[id] / 255.0;
-        g = (float)input[id + height * width] / 255.0;
-        b = (float)input[id + 2 * height * width]/ 255.0;
+__kernel void snow_pkd(__global unsigned char *output,
+                       const unsigned int height,
+                       const unsigned int width,
+                       const unsigned int channel,
+                       const unsigned int pixelDistance)
+{
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
+    if (id_x >= width || id_y >= height)
+        return;
+    int snow_mat[5][5] = {{0,50,75,50,0}, {40,80,120,80,40}, {75,120,255,120,75}, {40,80,120,80,40}, {0,50,75,50,0}};
+    const unsigned int snowWidth = width / 200 + 1;
+    float transparency = 0.5;
+    int pixIdx = id_y * width * channel + id_x * channel;
+    output[pixIdx] = 0;
+    output[pixIdx + 1] = 0;
+    output[pixIdx + 2] = 0;
+    int rand;
 
-        min = (r < g && r< b)? r : ((g < b)? g: b);
-        max = (r > g && r > b)? r : ((g > b)? g: b);
+    if (pixIdx % pixelDistance == 0)
+    {
+        int rand_id = xorshift(pixIdx) % 100;
+        rand_id -= rand_id % 3;
 
-        delta = max - min;
-
-        l = (float)(min + max) / 2.0;
-        if (delta == 0){
-            h = 0;
-            s = 0;
-        }
-        else {
-            s = (l <= 0.5) ? (delta / (max + min)) : (delta / (2.0 - (max - min)));
-            float hue;
-
-            if (r == max)
+        for (int i = 0; i < 5; i++)
+        {
+            for (int j = 0; j < 5; j++)
             {
-                hue = ((g - b) / 6) / delta;
+                if (id_x + i + 5 <= width && id_y + j < height)
+                {
+                    int id = i * channel + j * width * channel;
+                    for(int k = 0;k < channel ; k++)
+                        output[pixIdx + rand_id + id + k] = snow_mat[i][j];
+                }
             }
-            else if (g == max)
-            {
-                hue = (1.0f / 3) + ((b - r) / 6) / delta;
-            }
-            else
-            {
-                hue = (2.0f / 3) + ((r - g) / 6) / delta;
-            }
-
-            if (hue < 0)
-                hue += 1;
-            if (hue > 1)
-                hue -= 1;
-
-            h = (int)(hue * 360);
         }
-        if ( l < snowCoefficient)
-            l = l * 2.5;
-        if( l > 1)
-            l = 1;
-
-        if (s <= 0){
-            r = l * 255;
-            g = l * 255;
-            b = l * 255;
-        } 
-        else {
-            
-            float v1, v2;
-            float hue = (float)h / 360;
-
-            v2 = (l < 0.5) ? (l * (1 + s)) : ((l + s) - (l * s));
-            v1 = 2 * l - v2;
-
-            r = (unsigned char)(255 * HueToRGB(v1, v2, hue + (1.0f / 3)));
-            g = (unsigned char)(255 * HueToRGB(v1, v2, hue));
-            b = (unsigned char)(255 * HueToRGB(v1, v2, hue - (1.0f / 3)));
-        }
-        output[id] = saturate_8u(r);
-        output[id + height * width] = saturate_8u(g);
-        output[id + 2 * height * width] = saturate_8u(b);
     }
+}
 
+__kernel void snow_pln(__global unsigned char *output,
+                       const unsigned int height,
+                       const unsigned int width,
+                       const unsigned int channel,
+                       const unsigned int pixelDistance)
+{
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = get_global_id(2);
+    if (id_x >= width || id_y >= height)
+        return;
+    int snow_mat[5][5] = {{0,50,75,50,0}, {40,80,120,80,40}, {75,120,255,120,75}, {40,80,120,80,40}, {0,50,75,50,0}};
+    const unsigned int snowWidth = width / 200 + 1;
+    float transparency = 0.5;
+    int pixIdx = id_y * width + id_x;
+    int channelSize = width * height;
+    output[pixIdx] = 0;
+    if (channel > 1)
+    {
+        output[pixIdx + channelSize] = 0;
+        output[pixIdx + 2 * channelSize] = 0;
+    }
+    int rand;
+
+    if (pixIdx % pixelDistance == 0)
+    {
+        int rand_id = xorshift(pixIdx) % 60;
+        for (int i = 0; i < 5; i++)
+        {
+            for (int j = 0; j < 5; j++)
+            {
+                if (id_x + i + 5 <= width && id_y + j < height)
+                {
+                    int id = i + j * width;
+                    for(int k = 0;k < channel ; k++)
+                        output[pixIdx + rand_id + id + ( k * channelSize)] = snow_mat[i][j];
+                }
+            }
+        }
+        
+    }
 }
