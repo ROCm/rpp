@@ -432,137 +432,72 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f strength,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
-    if (strength < 0 || strength > 1)
-    {
-        return RPP_ERROR;
-    }
+    strength = strength/100;
+    int snow_mat[5][5] = {{0,50,75,50,0}, {40,80,120,80,40}, {75,120,255,120,75}, {40,80,120,80,40}, {0,50,75,50,0}};
 
-    if (channel != 1 && channel != 3)
-    {
-        return RPP_ERROR;
-    }
-
-    T *srcPtrTemp, *dstPtrTemp;
-    srcPtrTemp = srcPtr;
-    dstPtrTemp = dstPtr;
-
-    T *srcPtrRGB = (T *)calloc(3 * srcSize.height * srcSize.width, sizeof(T));
-    T *dstPtrRGB = (T *)calloc(3 * srcSize.height * srcSize.width, sizeof(T));
-    T *srcPtrRGBTemp, *dstPtrRGBTemp;
-    srcPtrRGBTemp = srcPtrRGB;
-    dstPtrRGBTemp = dstPtrRGB;
-
-    if (channel == 1)
-    {
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            for (int c = 0; c < 3; c++)
-            {
-                srcPtrTemp = srcPtr;
-                for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-                {
-                    *srcPtrRGBTemp = *srcPtrTemp;
-                    srcPtrRGBTemp++;
-                    srcPtrTemp++;
-                }
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-            {
-                for (int c = 0; c < 3; c++)
-                {
-                    *srcPtrRGBTemp = *srcPtrTemp;
-                    srcPtrRGBTemp++;
-                }
-                srcPtrTemp++;
-            }
-        }
-    }
-    else if (channel == 3)
-    {
-        memcpy(srcPtrRGB, srcPtr, 3 * srcSize.height * srcSize.width * sizeof(T));
-    }
-
-    Rpp32f *srcPtrHSL = (Rpp32f *)calloc(3 * srcSize.height * srcSize.width, sizeof(Rpp32f));
+    Rpp32u snowDrops = (Rpp32u)(strength * srcSize.width * srcSize.height * channel );
+    
+    
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        compute_rgb_to_hsl_host(srcPtrRGB, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
-
-        Rpp32f *srcPtrHSLTemp;
-        srcPtrHSLTemp = srcPtrHSL + (2 * srcSize.height * srcSize.width);
-
-        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        for(int i = 0 ; i < snowDrops ; i++)
         {
-            if (*srcPtrHSLTemp < strength)
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp32f pixel;
+            for(int k = 0;k < channel;k++)
             {
-                *srcPtrHSLTemp *= 4;
+                dstPtr[(row * srcSize.width) + (column) + (k * srcSize.height * srcSize.width)] = snow_mat[0][0] ;
             }
-            if (*srcPtrHSLTemp > 1)
+            for(int j = 0;j < 5;j++)
             {
-                *srcPtrHSLTemp = 1;
+                if(row + 5 < srcSize.height && row + 5 > 0 )
+                for(int k = 0;k < channel;k++)
+                {
+                    for(int m = 0;m < 5;m++)
+                    {
+                        if (column + 5 < srcSize.width && column + 5 > 0)
+                        {
+                            dstPtr[(row * srcSize.width) + (column) + (k * srcSize.height * srcSize.width) + (srcSize.width * j) + m] = snow_mat[j][m] ;
+                        }
+                    }
+                }            
             }
-            srcPtrHSLTemp++;
         }
-
-        compute_hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtrRGB, RPPI_CHN_PLANAR, 3);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        compute_rgb_to_hsl_host(srcPtrRGB, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
-
-        Rpp32f *srcPtrHSLTemp;
-        srcPtrHSLTemp = srcPtrHSL + 2;
-
-        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        for(int i = 0 ; i < snowDrops ; i++)
         {
-            if (*srcPtrHSLTemp < strength)
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp32f pixel;
+            for(int k = 0;k < channel;k++)
             {
-                *srcPtrHSLTemp *= 4;
+                dstPtr[(channel * row * srcSize.width) + (column * channel) + k] = snow_mat[0][0] ;
             }
-            if (*srcPtrHSLTemp > 1)
+            for(int j = 0;j < 5;j++)
             {
-                *srcPtrHSLTemp = 1;
+                if(row + 5 < srcSize.height && row + 5 > 0 )
+                for(int k = 0;k < channel;k++)
+                {
+                    for(int m = 0;m < 5;m++)
+                    {
+                        if (column + 5 < srcSize.width && column + 5 > 0)
+                        {
+                            dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j) + (channel * m)] = snow_mat[j][m];
+                        }
+                    } 
+                }            
             }
-            srcPtrHSLTemp = srcPtrHSLTemp + channel;
         }
-
-        compute_hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtrRGB, RPPI_CHN_PACKED, 3);
     }
 
-    if (channel == 1)
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-            {
-                *dstPtrTemp = *dstPtrRGBTemp;
-                dstPtrRGBTemp++;
-                dstPtrTemp++;
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-            {
-                *dstPtrTemp = *dstPtrRGBTemp;
-                dstPtrRGBTemp = dstPtrRGBTemp + 3;;
-                dstPtrTemp++;
-            }
-        }
+        Rpp32f pixel = ((Rpp32f) srcPtr[i]) + dstPtr[i];
+        dstPtr[i] = RPPPIXELCHECK(pixel);
     }
-    else if (channel == 3)
-    {
-        for (int i = 0; i < (3 * srcSize.height * srcSize.width); i++)
-        {
-            *dstPtrTemp = *dstPtrRGBTemp;
-            dstPtrRGBTemp++;
-            dstPtrTemp++;
-        }
-    }
-
-    return RPP_SUCCESS;
 }
 
 /**************** Blend ***************/
