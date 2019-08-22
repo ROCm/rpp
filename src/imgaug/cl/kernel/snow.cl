@@ -48,7 +48,7 @@ __kernel void snow_pkd(__global unsigned char *output,
 
     if (pixIdx % pixelDistance == 0)
     {
-        int rand_id = xorshift(pixIdx) % 100;
+        int rand_id = xorshift(pixIdx) % 997;
         rand_id -= rand_id % 3;
 
         for (int i = 0; i < 5; i++)
@@ -92,7 +92,7 @@ __kernel void snow_pln(__global unsigned char *output,
 
     if (pixIdx % pixelDistance == 0)
     {
-        int rand_id = xorshift(pixIdx) % 60;
+        int rand_id = xorshift(pixIdx) % 997;
         for (int i = 0; i < 5; i++)
         {
             for (int j = 0; j < 5; j++)
