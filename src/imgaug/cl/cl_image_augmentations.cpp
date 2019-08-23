@@ -367,32 +367,35 @@ snpNoise_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     srand(time(0));
     int ctr = 0;
     clEnqueueCopyBuffer(theQueue, srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
-    Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
-    const Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
-    cl_kernel theKernel;
-    cl_program theProgram;
-    if(chnFormat == RPPI_CHN_PACKED)
-    {
-        CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pkd", theProgram, theKernel);
-        clRetainKernel(theKernel);
+    if(noiseProbability != 0)
+    {    
+        Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
+        const Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
+        cl_kernel theKernel;
+        cl_program theProgram;
+        if(chnFormat == RPPI_CHN_PACKED)
+        {
+            CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pkd", theProgram, theKernel);
+            clRetainKernel(theKernel);
+        }
+        else if(chnFormat == RPPI_CHN_PLANAR)
+        {
+            CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pln", theProgram, theKernel);
+            clRetainKernel(theKernel);
+        }
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
+        
+        size_t gDim3[3];
+        gDim3[0] = srcSize.width;
+        gDim3[1] = srcSize.height;
+        gDim3[2] = 1;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     }
-    else if(chnFormat == RPPI_CHN_PLANAR)
-    {
-        CreateProgramFromBinary(theQueue, "noise.cl", "noise.cl.bin", "snp_pln", theProgram, theKernel);
-        clRetainKernel(theKernel);
-    }
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
-
-    size_t gDim3[3];
-    gDim3[0] = srcSize.width;
-    gDim3[1] = srcSize.height;
-    gDim3[2] = 1;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
     return RPP_SUCCESS;
 }
@@ -403,43 +406,59 @@ snow_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
            RppiChnFormat chnFormat, unsigned int channel,
            cl_command_queue theQueue)
 {
-    unsigned short counter=0;
-    cl_int err;
-    cl_kernel theKernel;
-    cl_program theProgram;
-    if (chnFormat == RPPI_CHN_PLANAR)
+       
+    if(snowCoefficient == 0)
     {
-        CreateProgramFromBinary(theQueue, "snow.cl","snow.bin",
-                                "snow_pkd", theProgram, theKernel);
-        clRetainKernel(theKernel);
-
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-
-        CreateProgramFromBinary(theQueue, "snow.cl","snow.bin",
-                                "snow_pkd", theProgram, theKernel);
-        clRetainKernel(theKernel);
+        clEnqueueCopyBuffer(theQueue, srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
     }
     else
-    {std::cerr << "Internal error: Unknown Channel format";}
+    {
+        int ctr=0; 
+        Rpp32u snowDrops= (Rpp32u)((snowCoefficient * srcSize.width * srcSize.height )/100);
+        Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / snowDrops);
+        cl_kernel theKernel;
+        cl_program theProgram;
+        if(chnFormat == RPPI_CHN_PACKED)
+        {
+            CreateProgramFromBinary(theQueue,"snow.cl","snow.cl.bin","snow_pkd",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+        else if(chnFormat == RPPI_CHN_PLANAR)
+        {
+            CreateProgramFromBinary(theQueue,"snow.cl","snow.cl.bin","snow_pln",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
 
-    //---- Args Setter
-    err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(float), &snowCoefficient);
-    //----
+        //---- Args Setter
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
+        //----
 
-    size_t gDim3[3];
-    gDim3[0] = srcSize.height * srcSize.width;
-    gDim3[1] = 1;
-    gDim3[2] = 1;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+        size_t gDim3[3];
+        gDim3[0] = srcSize.width;
+        gDim3[1] = srcSize.height;
+        gDim3[2] = 1;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+        cl_kernel theKernel1;
+        cl_program theProgram1;
+        CreateProgramFromBinary(theQueue,"snow.cl","snow.cl.bin","snow",theProgram1,theKernel1);
+        clRetainKernel(theKernel);
+        ctr=0;
+        clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &srcPtr);
+        clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &channel);
+        gDim3[2] = channel;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram1, theKernel1);
+    }
 
     return RPP_SUCCESS;
+
 }
 /********************** Exposure mocification ************************/
 
@@ -478,52 +497,59 @@ exposure_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f exposureValue
 
 RppStatus
 rain_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f transparency, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
-{
-    int ctr=0;
-    Rpp32u rainDrops= (Rpp32u)((rainPercentage * srcSize.width * srcSize.height )/100);
-    Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / rainDrops);
-    cl_kernel theKernel;
-    cl_program theProgram;
-    if(chnFormat == RPPI_CHN_PACKED)
+{   
+    if(rainPercentage == 0)
     {
-        CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain_pkd",theProgram,theKernel);
-        clRetainKernel(theKernel);
+        clEnqueueCopyBuffer(theQueue, srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
     }
-    else if(chnFormat == RPPI_CHN_PLANAR)
+    else
     {
-        CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain_pln",theProgram,theKernel);
+        int ctr=0; 
+        Rpp32u rainDrops= (Rpp32u)((rainPercentage * srcSize.width * srcSize.height )/100);
+        Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / rainDrops);
+        cl_kernel theKernel;
+        cl_program theProgram;
+        if(chnFormat == RPPI_CHN_PACKED)
+        {
+            CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain_pkd",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+        else if(chnFormat == RPPI_CHN_PLANAR)
+        {
+            CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain_pln",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+
+        //---- Args Setter
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &rainWidth);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &rainHeight);
+        clSetKernelArg(theKernel, ctr++, sizeof(float), &transparency);
+        //----
+
+        size_t gDim3[3];
+        gDim3[0] = srcSize.width;
+        gDim3[1] = srcSize.height;
+        gDim3[2] = 1;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+
+        cl_kernel theKernel1;
+        cl_program theProgram1;
+        CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain",theProgram1,theKernel1);
         clRetainKernel(theKernel);
+        ctr=0;
+        clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &srcPtr);
+        clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &dstPtr);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &channel);
+        gDim3[2] = channel;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram1, theKernel1);
     }
-
-    //---- Args Setter
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &rainWidth);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &rainHeight);
-    clSetKernelArg(theKernel, ctr++, sizeof(float), &transparency);
-    //----
-
-    size_t gDim3[3];
-    gDim3[0] = srcSize.width;
-    gDim3[1] = srcSize.height;
-    gDim3[2] = 1;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-
-    cl_kernel theKernel1;
-    cl_program theProgram1;
-    CreateProgramFromBinary(theQueue,"rain.cl","rain.cl.bin","rain",theProgram1,theKernel1);
-    clRetainKernel(theKernel);
-    ctr=0;
-    clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(theKernel1, ctr++, sizeof(cl_mem), &dstPtr);
-    clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel1, ctr++, sizeof(unsigned int), &channel);
-    gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram1, theKernel1);
 
     return RPP_SUCCESS;
 }
@@ -532,38 +558,45 @@ rain_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, Rpp32f rainPercentage, Rp
 /********************** Fog ************************/
 
 RppStatus
-fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+fog_cl( cl_mem srcPtr, RppiSize srcSize, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue, cl_mem temp)
 {
-    int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
-
-    if (chnFormat == RPPI_CHN_PLANAR)
+    if(fogValue == 0)
     {
-
-        CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_planar",theProgram,theKernel);
-        clRetainKernel(theKernel);
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_pkd",theProgram,theKernel);
-        clRetainKernel(theKernel);
+        clEnqueueCopyBuffer(theQueue, temp, srcPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
     }
     else
-    {std::cerr << "Internal error: Unknown Channel format";}
-    //---- Args Setter
-    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    clSetKernelArg(theKernel, ctr++, sizeof(float), &fogValue);
-    //----
+    {
+        int ctr=0;
+        cl_kernel theKernel;
+        cl_program theProgram;
 
-    size_t gDim3[2];
-    gDim3[0] = srcSize.width;
-    gDim3[1] = srcSize.height;
-    gDim3[2] = 1;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            
+            CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_planar",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            CreateProgramFromBinary(theQueue,"fog.cl","fog.cl.bin","fog_pkd",theProgram,theKernel);
+            clRetainKernel(theKernel);
+        }
+        else
+        {std::cerr << "Internal error: Unknown Channel format";}
+        //---- Args Setter
+        clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+        clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+        clSetKernelArg(theKernel, ctr++, sizeof(float), &fogValue);
+        //----
+
+        size_t gDim3[2];
+        gDim3[0] = srcSize.width;
+        gDim3[1] = srcSize.height;
+        gDim3[2] = 1;
+        cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    }
 
     return RPP_SUCCESS;
 }
@@ -803,8 +836,11 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     counter = 0;
     cl_mem cum_histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(unsigned int)*256*channel, NULL, NULL);
+    if (channel == 3)
+        CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
+    else
+        CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan_1c",theProgram,theKernel);
 
-    CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
     clRetainKernel(theKernel);
 
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &histogram);
@@ -827,7 +863,12 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_equalize_pln",theProgram,theKernel);
+        if (channel == 1)
+            CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin",
+                                    "histogram_equalize_pln1",theProgram,theKernel);
+        else
+            CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin",
+                                    "histogram_equalize_pln",theProgram,theKernel);
         clRetainKernel(theKernel);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -857,4 +898,39 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     clReleaseMemObject(histogram);
     return RPP_SUCCESS;
 
+}
+
+/********************** sobel ************************/
+RppStatus
+sobel_cl ( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u sobelType, RppiChnFormat chnFormat, unsigned int channel, cl_command_queue theQueue)
+{
+    int ctr=0;
+    cl_kernel theKernel;
+    cl_program theProgram;
+    if(chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue,"sobel.cl","sobel.cl.bin","sobel_pkd",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    else
+    {
+        CreateProgramFromBinary(theQueue,"sobel.cl","sobel.cl.bin","sobel_pln",theProgram,theKernel);
+        clRetainKernel(theKernel);
+    }
+    
+    //---- Args Setter
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &sobelType);
+        
+    size_t gDim3[3];
+    gDim3[0] = srcSize.width;
+    gDim3[1] = srcSize.height;
+    gDim3[2] = channel;
+    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    
+    return RPP_SUCCESS;    
 }

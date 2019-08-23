@@ -51,7 +51,7 @@ __kernel void occlusion_pln (  __global unsigned char* srcPtr1,
         dstPtr[pixId] =  saturate_8u(pixVal);
     }
     else
-        dstPtr[pixId] =  255;
+        dstPtr[pixId] =  srcPtr2[pixId];
   
 }
 

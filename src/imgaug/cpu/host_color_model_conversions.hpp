@@ -304,7 +304,7 @@ RppStatus color_temperature_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             }
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                pixel = (Rpp32s) *srcPtrTemp - (Rpp32s) adjustmentValue;
                 pixel = RPPPIXELCHECK(pixel);
                 *dstPtrTemp = (T) pixel;
                 dstPtrTemp++;
@@ -325,7 +325,7 @@ RppStatus color_temperature_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                 dstPtrTemp++;
                 srcPtrTemp++;
 
-                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                pixel = (Rpp32s) *srcPtrTemp - (Rpp32s) adjustmentValue;
                 pixel = RPPPIXELCHECK(pixel);
                 *dstPtrTemp = (T) pixel;
                 dstPtrTemp++;
@@ -454,6 +454,143 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
 
     compute_multiply_host(srcPtr, maskFinal, srcSize, dstPtr, channel);
+    
+    return RPP_SUCCESS;
+}
+
+
+/**************** Channel Extract ***************/
+
+template <typename T>
+RppStatus channel_extract_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                    Rpp32u extractChannelNumber, 
+                    RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if (extractChannelNumber != 0 && extractChannelNumber != 1 && extractChannelNumber != 2)
+    {
+        return RPP_ERROR;
+    }
+
+    T *srcPtrTemp, *dstPtrTemp;
+    dstPtrTemp = dstPtr;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        srcPtrTemp = srcPtr + (extractChannelNumber * srcSize.height * srcSize.width);
+        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        {
+            *dstPtrTemp = *srcPtrTemp;
+            srcPtrTemp++;
+            dstPtrTemp++;
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        srcPtrTemp = srcPtr + extractChannelNumber;
+        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        {
+            *dstPtrTemp = *srcPtrTemp;
+            srcPtrTemp = srcPtrTemp + channel;
+            dstPtrTemp++;
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+
+/**************** Channel Combine ***************/
+
+template <typename T>
+RppStatus channel_combine_host(T* srcPtr1, T* srcPtr2, T* srcPtr3, RppiSize srcSize, T* dstPtr,
+                               RppiChnFormat chnFormat, Rpp32u channel)
+{
+
+    T *srcPtr1Temp, *srcPtr2Temp, *srcPtr3Temp, *dstPtrTemp;
+    srcPtr1Temp = srcPtr1;
+    srcPtr2Temp = srcPtr2;
+    srcPtr3Temp = srcPtr3;
+    dstPtrTemp = dstPtr;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        {
+            *dstPtrTemp = *srcPtr1Temp;
+            srcPtr1Temp++;
+            dstPtrTemp++;
+        }
+        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        {
+            *dstPtrTemp = *srcPtr2Temp;
+            srcPtr2Temp++;
+            dstPtrTemp++;
+        }
+        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        {
+            *dstPtrTemp = *srcPtr3Temp;
+            srcPtr3Temp++;
+            dstPtrTemp++;
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        {
+            *dstPtrTemp = *srcPtr1Temp;
+            dstPtrTemp++;
+            srcPtr1Temp++;
+            *dstPtrTemp = *srcPtr2Temp;
+            dstPtrTemp++;
+            srcPtr2Temp++;
+            *dstPtrTemp = *srcPtr3Temp;
+            dstPtrTemp++;
+            srcPtr3Temp++;
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+
+/**************** Look Up Table ***************/
+
+template <typename T, typename U>
+RppStatus look_up_table_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                    U *lutPtr,
+                    RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+    U *lutPtrTemp;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int c = 0; c < channel; c++)
+        {
+            lutPtrTemp = lutPtr + (c * 256);
+            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+            {
+                *dstPtrTemp = *(lutPtrTemp + (Rpp32u)(*srcPtrTemp));
+                srcPtrTemp++;
+                dstPtrTemp++;
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        lutPtrTemp = lutPtr;
+        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+        {
+            for (int c = 0; c < channel; c++)
+            {
+                *dstPtrTemp = *(lutPtrTemp + c + (channel * (Rpp32u)(*srcPtrTemp)));
+                srcPtrTemp++;
+                dstPtrTemp++;
+            }
+        }
+    }
     
     return RPP_SUCCESS;
 }

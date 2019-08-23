@@ -41,6 +41,9 @@ __kernel void rain_pkd(  __global unsigned char* output,
     if (id_x >= width || id_y >= height) return;
 
     int pixIdx = id_y*width*channel + id_x*channel;
+    output[pixIdx] = 0;
+    output[pixIdx + 1] = 0;
+    output[pixIdx + 2] = 0;
     int rand;
     
     if(pixIdx % pixelDistance == 0 )
@@ -80,6 +83,9 @@ __kernel void rain_pln(  __global unsigned char* output,
 
     int pixIdx = id_y*width + id_x;
     int channelSize= width*height;
+    output[pixIdx] = 0;
+    output[pixIdx + channelSize] = 0;
+    output[pixIdx + 2*channelSize] = 0;
     
     int rand;
     
