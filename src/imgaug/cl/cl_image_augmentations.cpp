@@ -520,6 +520,7 @@ rain_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, Rpp32f rainPercentage, Rp
             clRetainKernel(theKernel);
         }
 
+        transparency /= 5;
         //---- Args Setter
         clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
         clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
