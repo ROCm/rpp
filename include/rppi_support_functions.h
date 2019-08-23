@@ -18,6 +18,8 @@ RppStatus rotate_output_size(RppiSize srcSize, RppiSize *dstSizePtr,
 RppStatus rotate_output_offset(RppiSize srcSize, RppiPoint *offset,
                                   Rpp32f angleDeg);
 
+
+
 #ifdef __cplusplus
 }
 #endif

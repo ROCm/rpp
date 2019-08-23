@@ -15,7 +15,7 @@ __kernel void absolute_difference(  __global unsigned char* input1,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
 
-    int res = input1[pixIdx] + input2[pixIdx];
+    int res = input1[pixIdx] - input2[pixIdx];
     res = abs(res);
     output[pixIdx] = saturate_8u(res);
 }

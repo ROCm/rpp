@@ -291,7 +291,7 @@ RppStatus color_temperature_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             }
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                pixel = (Rpp32s) *srcPtrTemp - (Rpp32s) adjustmentValue;
                 pixel = RPPPIXELCHECK(pixel);
                 *dstPtrTemp = (T) pixel;
                 dstPtrTemp++;
@@ -312,7 +312,7 @@ RppStatus color_temperature_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                 dstPtrTemp++;
                 srcPtrTemp++;
 
-                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                pixel = (Rpp32s) *srcPtrTemp - (Rpp32s) adjustmentValue;
                 pixel = RPPPIXELCHECK(pixel);
                 *dstPtrTemp = (T) pixel;
                 dstPtrTemp++;

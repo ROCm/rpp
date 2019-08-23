@@ -19,7 +19,7 @@ __kernel void pixelate_planar (  __global unsigned char* srcPtr,
 
     int pixIdx = id_x + id_y * width + id_z * width * height;
     int hfFiltSz = filterSize/2;
-    if (x1 <= id_x <= x2 && y1 <= id_y <= y2)
+    if ((x1 <= id_x) && (id_x <= x2) && (y1 <= id_y) &&( id_y <= y2))
     {
         // Handle shd be padded area here or in validation
         if ( (id_x < hfFiltSz) || (id_y < hfFiltSz) ||
