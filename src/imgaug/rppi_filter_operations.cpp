@@ -313,12 +313,12 @@ rppi_gaussian_filter_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 
  	 validate_image_size(srcSize);
  	 validate_float_min(0, &stdDev);
-	//  gaussian_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-	// 		srcSize,
-	// 		static_cast<Rpp8u*>(dstPtr), 
-	// 		stdDev,
-	// 		kernelSize,
-	// 		RPPI_CHN_PLANAR, 1);
+	 gaussian_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+	 		srcSize,
+	 		static_cast<Rpp8u*>(dstPtr), 
+	 		stdDev,
+	 		kernelSize,
+	 		RPPI_CHN_PLANAR, 1);
 	return RPP_SUCCESS;
 }
 
@@ -328,12 +328,12 @@ rppi_gaussian_filter_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 
  	 validate_image_size(srcSize);
  	 validate_float_min(0, &stdDev);
-	//  gaussian_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-	// 		srcSize,
-	// 		static_cast<Rpp8u*>(dstPtr), 
-	// 		stdDev,
-	// 		kernelSize,
-	// 		RPPI_CHN_PLANAR, 3);
+	 gaussian_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+	 		srcSize,
+	 		static_cast<Rpp8u*>(dstPtr), 
+	 		stdDev,
+	 		kernelSize,
+	 		RPPI_CHN_PLANAR, 3);
 	return RPP_SUCCESS;
 }
 
@@ -343,12 +343,12 @@ rppi_gaussian_filter_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstP
 
  	 validate_image_size(srcSize);
  	 validate_float_min(0, &stdDev);
-	//  gaussian_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
-	// 		srcSize,
-	// 		static_cast<Rpp8u*>(dstPtr), 
-	// 		stdDev,
-	// 		kernelSize,
-	// 		RPPI_CHN_PACKED, 3);
+	 gaussian_filter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), 
+	 		srcSize,
+	 		static_cast<Rpp8u*>(dstPtr), 
+	 		stdDev,
+	 		kernelSize,
+	 		RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }
  
