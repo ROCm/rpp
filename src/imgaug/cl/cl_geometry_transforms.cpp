@@ -380,7 +380,7 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        CreateProgramFromBinary(theQueue,"warp_affine.cl","warp_affine.cl.bin","waro_affine_pln",theProgram,theKernel);
+        CreateProgramFromBinary(theQueue,"warp_affine.cl","warp_affine.cl.bin","warp_affine_pln",theProgram,theKernel);
         clRetainKernel(theKernel);
         // cl_kernel_initializer(  theQueue, "rotate.cl", "rotate_pln",
         //                         theProgram, theKernel); 
