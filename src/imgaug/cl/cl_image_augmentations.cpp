@@ -864,11 +864,8 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        if (channel == 1)
-            CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin",
-                                    "histogram_equalize_pln1",theProgram,theKernel);
-        else
-            CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin",
+       
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin",
                                     "histogram_equalize_pln",theProgram,theKernel);
         clRetainKernel(theKernel);
     }
