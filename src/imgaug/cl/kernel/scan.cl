@@ -57,6 +57,6 @@ __kernel void scan_1c(__global int *input,
     for(i =1; i<256; i++){
         output[i] = output[i-1] + input[i];
     }
-  // printf("%d",output[223]);
-  }
+    }
+  // printf("%d",output[223]);}
 }
