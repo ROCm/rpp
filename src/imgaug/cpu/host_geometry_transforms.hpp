@@ -85,7 +85,7 @@ RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         }
         else if (flipAxis == RPPI_VERTICAL_AXIS)
         {
-            srcPtrTemp = srcPtr + (channel * ((srcSize.height * srcSize.width) + srcSize.width - 1));
+            srcPtrTemp = srcPtr + (channel * (srcSize.width - 1));
             for (int i = 0; i < srcSize.height; i++)
             {
                 for (int j = 0; j < srcSize.width; j++)

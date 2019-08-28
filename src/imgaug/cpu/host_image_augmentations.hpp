@@ -149,13 +149,14 @@ RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    Rpp8u pixel;
+    Rpp32f pixel;
 
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
         pixel = ((Rpp32f) (*srcPtrTemp)) / 255.0;
         pixel = pow(pixel, gamma);
         pixel = pixel * 255.0;
+        pixel = RPPPIXELCHECK(pixel);
         *dstPtrTemp = (T) pixel;
         srcPtrTemp++;
         dstPtrTemp++;
