@@ -116,7 +116,7 @@ blur_cl(cl_mem srcPtr, RppiSize srcSize,
                             sizeof(cl_context), &theContext, NULL);
     cl_mem filtPtr = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(float)*filterSize*filterSize, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_TRUE, 0,
+    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_FALSE, 0,
                                    sizeof(float)*filterSize*filterSize,
                                    filterBuffer, 0, NULL, NULL);
 
@@ -221,7 +221,7 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
                             sizeof(cl_context), &theContext, NULL);
     cl_mem filtPtr = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(float)*filterSize*filterSize, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_TRUE, 0,
+    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_FALSE, 0,
                                    sizeof(float)*filterSize*filterSize,
                                    filterBuffer, 0, NULL, NULL);
 

@@ -374,7 +374,7 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
                             sizeof(cl_context), &theContext, NULL);
     cl_mem affine_array = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(float)*6, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, affine_array, CL_TRUE, 0,
+    err = clEnqueueWriteBuffer(theQueue, affine_array, CL_FALSE, 0,
                                    sizeof(float)*6,
                                    affine_inv, 0, NULL, NULL);
 
