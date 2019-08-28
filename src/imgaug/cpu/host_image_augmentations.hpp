@@ -225,88 +225,74 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    Rpp32u maxJitterX, Rpp32u maxJitterY, 
+                    Rpp32u kernelSize, 
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
-    if ((RPPINRANGE(maxJitterX, 0, srcSize.width - 1) == 0) 
-        || (RPPINRANGE(maxJitterY, 0, srcSize.height - 1) == 0))
+    Rpp8u *dstTemp,*srcTemp;
+    dstTemp = dstPtr;
+    srcTemp = srcPtr;
+    int bound = (kernelSize - 1) / 2;
+    srand(time(0)); 
+    unsigned int width = srcSize.width;
+    unsigned int height = srcSize.height;
+    if(chnFormat == RPPI_CHN_PACKED)
     {
-        return RPP_ERROR;
-    }
-
-    T *dstPtrForJitter = (T *)calloc(channel * srcSize.height * srcSize.width, sizeof(T));
-
-    T *srcPtrTemp, *dstPtrTemp;
-    T *srcPtrBeginJitter, *dstPtrBeginJitter;
-    srcPtrTemp = srcPtr;
-    dstPtrTemp = dstPtrForJitter;
-    memcpy(dstPtr, srcPtr, channel * srcSize.height * srcSize.width * sizeof(T));
-
-    srand (time(NULL));
-    int jitteredPixelLocDiffX, jitteredPixelLocDiffY;
-    int jitterRangeX = 2 * maxJitterX;
-    int jitterRangeY = 2 * maxJitterY;
-
-    if (chnFormat == RPPI_CHN_PLANAR)
-    {      
-        srcPtrBeginJitter = srcPtr + (maxJitterY * srcSize.width) + maxJitterX;
-        dstPtrBeginJitter = dstPtrForJitter + (maxJitterY * srcSize.width) + maxJitterX;
-        for (int c = 0; c < channel; c++)
+        for(int id_y = 0 ; id_y < srcSize.height ; id_y++)
         {
-            srcPtrTemp = srcPtrBeginJitter + (c * srcSize.height * srcSize.width);
-            dstPtrTemp = dstPtrBeginJitter + (c * srcSize.height * srcSize.width);
-            for (int i = 0; i < srcSize.height - jitterRangeY; i++)
+            for(int id_x = 0 ; id_x < srcSize.width ; id_x++)
             {
-                for (int j = 0; j < srcSize.width - jitterRangeX; j++)
+                int pixIdx = id_y * channel * width + id_x * channel;
+                int nhx = rand() % (kernelSize);
+                int nhy = rand() % (kernelSize);
+                if((id_y - bound + nhy) >= 0 && (id_y - bound + nhy) <= height - 1 && (id_x - bound + nhx) >= 0 && (id_x - bound + nhx) <= width - 1)
                 {
-                    jitteredPixelLocDiffX = (rand() % (jitterRangeX + 1));
-                    jitteredPixelLocDiffY = (rand() % (jitterRangeY + 1));
-                    jitteredPixelLocDiffX -= maxJitterX;
-                    jitteredPixelLocDiffY -= maxJitterY;
-                    *dstPtrTemp = *(srcPtrTemp + (jitteredPixelLocDiffY * (int) srcSize.width) + jitteredPixelLocDiffX);
-                    srcPtrTemp++;
-                    dstPtrTemp++;
+                    int index = ((id_y - bound) * channel * width) + ((id_x - bound) * channel) + (nhy * channel * width) + (nhx * channel);
+                    for(int i = 0 ; i < channel ; i++)
+                    {
+                        *(dstPtr + pixIdx + i) = *(srcPtr + index + i);  
+                    }
                 }
-                srcPtrTemp += jitterRangeX;
-                dstPtrTemp += jitterRangeX;
-            }
-        }
-
-        resize_crop_kernel_host<T>(static_cast<T*>(dstPtrForJitter), srcSize, static_cast<T*>(dstPtr), srcSize,
-                            maxJitterX, maxJitterY, srcSize.width - maxJitterX - 1, srcSize.height - maxJitterY - 1,
-                            RPPI_CHN_PLANAR, channel);
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        int elementsInRow = (int)(srcSize.width * channel);
-        int channeledJitterRangeX = jitterRangeX * channel;
-        int channeledJitterRangeY = jitterRangeY * channel;
-        srcPtrBeginJitter = srcPtr + (maxJitterY * elementsInRow) + (maxJitterX * channel);
-        dstPtrBeginJitter = dstPtrForJitter + (maxJitterY * elementsInRow) + (maxJitterX * channel);
-        srcPtrTemp = srcPtrBeginJitter;
-        dstPtrTemp = dstPtrBeginJitter;
-        for (int i = 0; i < srcSize.height - jitterRangeY; i++)
-        {
-            for (int j = 0; j < srcSize.width - jitterRangeX; j++)
-            {
-                for (int c = 0; c < channel; c++)
+                else 
                 {
-                    jitteredPixelLocDiffX = rand() % (jitterRangeX + 1);
-                    jitteredPixelLocDiffY = rand() % (jitterRangeY + 1);
-                    jitteredPixelLocDiffX -= maxJitterX;
-                    jitteredPixelLocDiffY -= maxJitterY;
-                    *dstPtrTemp = *(srcPtrTemp + (jitteredPixelLocDiffY * elementsInRow) + (jitteredPixelLocDiffX * (int) channel));
-                    srcPtrTemp++;
-                    dstPtrTemp++;
+                    for(int i = 0 ; i < channel ; i++)
+                    {
+                        *(dstPtr + pixIdx + i) = *(srcPtr + pixIdx + i);  
+                    }
                 }
             }
-            srcPtrTemp += channeledJitterRangeX;
-            dstPtrTemp += channeledJitterRangeX;
         }
-        resize_crop_kernel_host<T>(static_cast<T*>(dstPtrForJitter), srcSize, static_cast<T*>(dstPtr), srcSize,
-                            maxJitterX, maxJitterY, srcSize.width - maxJitterX - 1, srcSize.height - maxJitterY - 1,
-                            RPPI_CHN_PACKED, channel);
     }
+    else
+    {
+        for(int id_y = 0 ; id_y < srcSize.height ; id_y++)
+        {
+            for(int id_x = 0 ; id_x < srcSize.width ; id_x++)
+            {
+                int pixIdx = id_y * width + id_x;
+                int channelPixel = height * width;
+                int nhx = rand() % (kernelSize);
+                int nhy = rand() % (kernelSize);
+                int bound = (kernelSize - 1) / 2;
+                if((id_y - bound + nhy) >= 0 && (id_y - bound + nhy) <= height - 1 && (id_x - bound + nhx) >= 0 && (id_x - bound + nhx) <= width - 1)
+                {
+                    int index = ((id_y - bound) * width) + (id_x - bound) + (nhy * width) + (nhx);
+                    for(int i = 0 ; i < channel ; i++)
+                    {
+                        *(dstPtr + pixIdx + (height * width * i)) = *(srcPtr + index + (height * width * i));  
+                    }
+                }
+                else 
+                {
+                    for(int i = 0 ; i < channel ; i++)
+                    {
+                        *(dstPtr + pixIdx + (height * width * i)) = *(srcPtr + pixIdx + (height * width * i));  
+                    }
+                }
+            }
+        }
+        
+    }
+    
     
     return RPP_SUCCESS;
 }

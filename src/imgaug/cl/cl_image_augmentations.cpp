@@ -328,7 +328,7 @@ gaussianNoise_cl(cl_mem srcPtr,
 
 cl_int
 jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
-           unsigned int minJitter,unsigned int maxJitter,
+           unsigned int kernelSize,
            RppiChnFormat chnFormat, unsigned int channel,
            cl_command_queue theQueue)
 {
@@ -337,9 +337,16 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     cl_kernel theKernel;
     cl_program theProgram;
 
-    CreateProgramFromBinary(theQueue, "jitter.cl","jitter.bin",
-                                "jitter", theProgram, theKernel);
-    clRetainKernel(theKernel);
+    if(chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue, "jitter.cl", "jitter.cl.bin", "jitter_pkd", theProgram, theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue, "jitter.cl", "jitter.cl.bin", "jitter_pln", theProgram, theKernel);
+        clRetainKernel(theKernel);
+    }
 
     //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
@@ -347,12 +354,11 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &minJitter);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &maxJitter);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &kernelSize);
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
-    gDim3[2] = channel;
+    gDim3[2] = 1;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
     return err;
