@@ -424,7 +424,13 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     Rpp32u snowDrops = (Rpp32u)(strength * srcSize.width * srcSize.height * channel );
     
-    
+    U *dstptrtemp;
+    dstptrtemp=dstPtr;
+    for(int k=0;k<srcSize.height*srcSize.width*channel;k++)
+    {
+        *dstptrtemp = 0;
+        dstptrtemp++;
+    }
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for(int i = 0 ; i < snowDrops ; i++)
@@ -482,7 +488,7 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        Rpp32f pixel = ((Rpp32f) srcPtr[i]) + dstPtr[i];
+        Rpp32u pixel = ((Rpp32u) srcPtr[i]) + (Rpp32u)dstPtr[i];
         dstPtr[i] = RPPPIXELCHECK(pixel);
     }
 }
