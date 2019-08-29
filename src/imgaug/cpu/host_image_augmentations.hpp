@@ -122,7 +122,7 @@ RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    Rpp8u pixel;
+    Rpp32f pixel;
 
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
