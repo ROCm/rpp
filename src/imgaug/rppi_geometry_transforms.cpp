@@ -252,6 +252,8 @@ rppi_warp_affine_output_size_host(RppiSize srcSize, RppiSize *dstSizePtr,
                                   Rpp32f* affine)
 {
 	validate_image_size(srcSize);
+	validate_affine_matrix(affine);
+
     warp_affine_output_size_host(srcSize, dstSizePtr,
                                          affine);
     return RPP_SUCCESS;
@@ -263,6 +265,7 @@ rppi_warp_affine_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr
                               Rpp32f* affine)
 {
 	validate_image_size(srcSize);
+	validate_affine_matrix(affine);
     warp_affine_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
                             affine,RPPI_CHN_PLANAR, 1);
 
@@ -275,6 +278,7 @@ rppi_warp_affine_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr
                               Rpp32f* affine)
 {
 	validate_image_size(srcSize);
+	validate_affine_matrix(affine);
     warp_affine_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
                             affine,RPPI_CHN_PLANAR, 3);
 
@@ -287,6 +291,8 @@ rppi_warp_affine_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr
                               Rpp32f* affine)
 {
 	validate_image_size(srcSize);
+	validate_affine_matrix(affine);
+
     warp_affine_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr), dstSize,
                             affine,RPPI_CHN_PACKED, 3);
 
@@ -929,6 +935,7 @@ rppi_warp_affine_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     /*call that offset function */
     #ifdef OCL_COMPILE
+	validate_affine_matrix(affine);
 
     warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
             static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PLANAR, 1 /* Channel */,
@@ -946,7 +953,7 @@ rppi_warp_affine_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     /*call that offset function */
     #ifdef OCL_COMPILE
-
+    validate_affine_matrix(affine);
     warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
             static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PLANAR, 3 /* Channel */,
             static_cast<cl_command_queue>(rppHandle) );
@@ -964,6 +971,7 @@ rppi_warp_affine_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
 
     /*call that offset function */
     #ifdef OCL_COMPILE
+	validate_affine_matrix(affine);
 
     warp_affine_cl(static_cast<cl_mem>(srcPtr), srcSize,
             static_cast<cl_mem>(dstPtr), dstSize, affine, RPPI_CHN_PACKED, 3 /* Channel */,
