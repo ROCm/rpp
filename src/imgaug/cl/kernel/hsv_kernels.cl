@@ -275,7 +275,7 @@ __kernel void huergb_pln(   __global  unsigned char *input,
 
         temp1 += hue;
         if ( temp1 < 0)  temp1 = temp1 +360.0;
-        else if (temp > 360) temp1 = temp1 - 360.0;
+        else if (temp1 > 360) temp1 = temp1 - 360.0;
         
         if (max == 0) temp2 = 0;
         else temp2 = delta / max;
@@ -388,7 +388,7 @@ __kernel void huergb_pkd(   __global  unsigned char *input,
 
         temp1 += hue;
         if ( temp1 < 0)  temp1 = temp1 +360;
-        else if (temp > 360) temp1 = temp1 - 360.0;
+        else if (temp1 > 360) temp1 = temp1 - 360.0;
 
         if (max == 0) temp2 = 0;
         else temp2= delta / max;
