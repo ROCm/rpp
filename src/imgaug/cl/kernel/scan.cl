@@ -58,5 +58,4 @@ __kernel void scan_1c(__global int *input,
         output[i] = output[i-1] + input[i];
     }
     }
-  // printf("%d",output[223]);}
 }
