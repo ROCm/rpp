@@ -225,6 +225,76 @@ rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 
 
 // ----------------------------------------
+// Host channel_extract functions declaration 
+// ----------------------------------------
+/* Extract a single channel from given RGB image and stores it in destination grey scale image. 
+/*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr Output image
+*param[in] extractChannelNumber extractChannelNumber The channel to be extracted and it could be
+*0---> R channel
+ *1---> G channel
+*2---> B channel
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_channel_extract_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u extractChannelNumber);
+
+RppStatus
+rppi_channel_extract_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u extractChannelNumber);
+
+RppStatus
+rppi_channel_extract_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u extractChannelNumber);
+
+// ----------------------------------------
+// Host channel_combine functions declaration 
+// ----------------------------------------
+/* Combines 3 greyscale images to produce a single RGB image. 
+/*param srcPtr1 [in] srcPtr1 Input image1
+*param srcPtr2 [in] srcPtr2 Input image2
+*param srcPtr3 [in] srcPtr3 Input image3
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr Output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_channel_combine_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppPtr_t srcPtr3,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_channel_combine_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppPtr_t srcPtr3,RppiSize srcSize,RppPtr_t dstPtr);
+
+RppStatus
+rppi_channel_combine_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppPtr_t srcPtr3,RppiSize srcSize,RppPtr_t dstPtr);
+
+// ----------------------------------------
+// Host look_up_table functions declaration 
+// ----------------------------------------
+/* This function uses each pixel in an image to index into a LUT and put the indexed LUT value into the output image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] lutPtr lutPtr contains the input look up table values
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_look_up_table_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp8u* lutPtr);
+
+RppStatus
+rppi_look_up_table_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp8u* lutPtr);
+
+RppStatus
+rppi_look_up_table_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp8u* lutPtr);
+
+// ----------------------------------------
 // GPU rgb_to_hsv functions declaration 
 // ----------------------------------------
 /* Converts RGB image to HSV image.
@@ -406,6 +476,80 @@ rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 
 RppStatus
 rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev, RppHandle_t rppHandle) ;
+
+// ----------------------------------------
+// GPU channel_extract functions declaration 
+// ----------------------------------------
+/* Extract a single channel from given RGB image and stores it in destination grey scale image. 
+/*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr Output image
+*param[in] extractChannelNumber extractChannelNumber The channel to be extracted and it could be
+*0---> rppHandle R channel
+ *1---> G channel
+*2---> B channel
+*param[in]  rppHandle OpenCL handle
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_channel_extract_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u extractChannelNumber, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_channel_extract_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u extractChannelNumber, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_channel_extract_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u extractChannelNumber, RppHandle_t rppHandle) ;
+
+// ----------------------------------------
+// GPU channel_combine functions declaration 
+// ----------------------------------------
+/* Combines 3 greyscale images to produce a single RGB image. 
+/*param srcPtr1 [in] srcPtr1 Input image1
+*param srcPtr2 [in] srcPtr2 Input image2
+*param srcPtr3 [in] srcPtr3 Input image3
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr Output image
+*param[in] rppHandle  rppHandle OpenCL handle
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_channel_combine_u8_pln1_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppPtr_t srcPtr3,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppPtr_t srcPtr3,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppPtr_t srcPtr3,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle) ;
+
+// ----------------------------------------
+// GPU look_up_table functions declaration 
+// ----------------------------------------
+/* This function uses each pixel in an image to index into a LUT and put the indexed LUT value into the output image.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] lutPtr lutPtr contains the input look up table values
+*param[in] rppHandle  rppHandle OpenCL handle
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_look_up_table_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp8u* lutPtr, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_look_up_table_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp8u* lutPtr, RppHandle_t rppHandle) ;
+
+RppStatus
+rppi_look_up_table_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp8u* lutPtr, RppHandle_t rppHandle) ;
+
  
 #ifdef __cplusplus
 }

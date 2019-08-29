@@ -4,3 +4,4 @@ sample_test
 build.sh
 temp/
 Gtest
+opencv_test
