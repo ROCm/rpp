@@ -110,7 +110,7 @@ inline void validate_float_min(Rpp32f min, Rpp32f *value) {
 inline void validate_affine_matrix(Rpp32f* affine){
     if((affine[0] * affine[4] - affine[1] * affine[3]) == 0){
         //std::cerr<<"\n Affine matrix is not valid--\n Identity matrix is considered instead"
-                                    << std::endl;
+                                   // << std::endl;
         affine[0] = 1;
         affine[1] = 0;
         affine[3] = 0;
