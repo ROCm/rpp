@@ -211,35 +211,26 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
     rotate[1] = sin(angleRad);
     rotate[2] = -sin(angleRad);
     rotate[3] = cos(angleRad);
-    
-    Rpp32f minX = 0, minY = 0;
+
     T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
-    for (int i = 0; i < srcSize.height; i++)
-    {
-        for (int j = 0; j < srcSize.width; j++)
-        {
-            Rpp32f newi = 0, newj = 0;
-            newi = (rotate[0] * i) + (rotate[1] * j);
-            newj = (rotate[2] * i) + (rotate[3] * j);
-            if (newi < minX)
-            {
-                minX = newi;
-            }
-            if (newj < minY)
-            {
-                minY = newj;
-            }
-        }
-    }
-
+    
     Rpp32f divisor = (rotate[1] * rotate[2]) - (rotate[0] * rotate[3]);
     Rpp32f srcLocationRow, srcLocationColumn, srcLocationRowTerm1, srcLocationColumnTerm1, pixel;
     Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
 
-    Rpp32f srcLocationRowParameter = (-rotate[3] * (Rpp32s)minX) + (rotate[1] * (Rpp32s)minY);
-    Rpp32f srcLocationColumnParameter = (rotate[2] * (Rpp32s)minX) + (-rotate[0] * (Rpp32s)minY);
+    Rpp32f halfSrcHeight = srcSize.height / 2;
+    Rpp32f halfSrcWidth = srcSize.width / 2;
+    Rpp32f halfDstHeight = dstSize.height / 2;
+    Rpp32f halfDstWidth = dstSize.width / 2;
+    Rpp32f halfHeightDiff = halfSrcHeight - halfDstHeight;
+    Rpp32f halfWidthDiff = halfSrcWidth - halfDstWidth;
+
+    Rpp32f srcLocationRowParameter = (rotate[0] * halfSrcHeight) + (rotate[1] * halfSrcWidth) - halfSrcHeight + halfHeightDiff;
+    Rpp32f srcLocationColumnParameter = (rotate[2] * halfSrcHeight) + (rotate[3] * halfSrcWidth) - halfSrcWidth + halfWidthDiff;
+    Rpp32f srcLocationRowParameter2 = (-rotate[3] * (Rpp32s)srcLocationRowParameter) + (rotate[1] * (Rpp32s)srcLocationColumnParameter);
+    Rpp32f srcLocationColumnParameter2 = (rotate[2] * (Rpp32s)srcLocationRowParameter) + (-rotate[0] * (Rpp32s)srcLocationColumnParameter);
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
@@ -251,8 +242,8 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                 srcLocationColumnTerm1 = rotate[2] * i;
                 for (int j = 0; j < dstSize.width; j++)
                 {
-                    srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter) / divisor;
-                    srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter) / divisor;
+                    srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter2) / divisor;
+                    srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter2) / divisor;
                     
                     if (srcLocationRow < 0 || srcLocationColumn < 0 || srcLocationRow > (srcSize.height - 2) || srcLocationColumn > (srcSize.width - 2))
                     {
@@ -293,8 +284,8 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
             srcLocationColumnTerm1 = rotate[2] * i;
             for (int j = 0; j < dstSize.width; j++)
             {
-                srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter) / divisor;
-                srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter) / divisor;
+                srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter2) / divisor;
+                srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter2) / divisor;
                 
                 if (srcLocationRow < 0 || srcLocationColumn < 0 || srcLocationRow > (srcSize.height - 2) || srcLocationColumn > (srcSize.width - 2))
                 {
