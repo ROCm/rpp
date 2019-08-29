@@ -162,7 +162,7 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
 
 cl_int
 jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
-           unsigned int minJitter,unsigned int maxJitter,
+           unsigned int KernelSize,
            RppiChnFormat chnFormat, unsigned int channel,
            cl_command_queue theQueue);
 

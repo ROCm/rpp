@@ -129,7 +129,7 @@ rppi_resize_crop_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
  	 validate_unsigned_int_range( 0, srcSize.width - 1,&x1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,&y1);
+ 	 validate_unsigned_int_range( 0, srcSize.height - 1,&y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1,&x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1,&y2);
 	 validate_unsigned_int_max(x2,&x1);
@@ -153,7 +153,7 @@ rppi_resize_crop_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
  	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,&y1);
+ 	 validate_unsigned_int_range( 0, srcSize.height - 1,&y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 validate_unsigned_int_max(x2,&x1);
@@ -177,7 +177,7 @@ rppi_resize_crop_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,R
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
  	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,&y1);
+ 	 validate_unsigned_int_range( 0, srcSize.height - 1,&y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 validate_unsigned_int_max(x2,&x1);
@@ -605,7 +605,7 @@ rppi_resize_crop_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
  	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,&y1);
+ 	 validate_unsigned_int_range( 0, srcSize.height - 1,&y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 validate_unsigned_int_max(x2,&x1);
@@ -639,7 +639,7 @@ rppi_resize_crop_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
  	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,&y1);
+ 	 validate_unsigned_int_range( 0, srcSize.height - 1,&y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 validate_unsigned_int_max(x2,&x1);
@@ -673,7 +673,7 @@ rppi_resize_crop_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  	 validate_image_size(srcSize);
  	 validate_image_size(dstSize);
  	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,&y1);
+ 	 validate_unsigned_int_range( 0, srcSize.height - 1,&y1);
  	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
  	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
 	 validate_unsigned_int_max(x2,&x1);

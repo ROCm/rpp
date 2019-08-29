@@ -45,10 +45,10 @@ __kernel void lenscorrection_pkd(
         pixVal = (int)(  pix*(1-x_diff)*(1-y_diff) +  pix_right*(x_diff)*(1-y_diff) +
                     pix_right_down*(y_diff)*(1-x_diff)   +  pix_down*(x_diff*y_diff)) ;
         output[dstpixIdx] =  saturate_8u(pixVal);
-    } 
-    // else if((x == width - 1) || (y == height - 1)){
-    //     output[dstpixIdx] =  input[x * channel + y * width * channel + id_z];;
-    // }
+    }
+    else {
+        output[dstpixIdx] = 0;
+    }
 }
 
 __kernel void lenscorrection_pln(
@@ -97,6 +97,9 @@ __kernel void lenscorrection_pln(
         pixVal = (int)(  pix*(1-x_diff)*(1-y_diff) +  pix_right*(x_diff)*(1-y_diff) +
                     pix_right_down*(y_diff)*(1-x_diff)   +  pix_down*(x_diff*y_diff)) ;
         output[dstpixIdx] =  saturate_8u(pixVal);
+    }
+    else {
+        output[dstpixIdx] = 0;
     }
     // else if((x == width - 1) || (y == height - 1)){
     //     output[dstpixIdx] =  input[x + y * width + id_z * channel];;

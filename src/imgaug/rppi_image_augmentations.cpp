@@ -228,40 +228,31 @@ rppi_gamma_correction_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dst
 
 
 RppStatus
-rppi_jitter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             unsigned int maxJitterX, unsigned int maxJitterY)
+rppi_jitter_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize)
 {
 	validate_image_size(srcSize);
-	validate_unsigned_int_range(0,srcSize.width-1,&maxJitterX);
-	validate_unsigned_int_range(0,srcSize.height-1,&maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     maxJitterX, maxJitterY,
+                     kernelSize,
                      RPPI_CHN_PLANAR, 1);
     return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_jitter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             unsigned int maxJitterX, unsigned int maxJitterY)
+rppi_jitter_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize)
 {
 	validate_image_size(srcSize);
-	validate_unsigned_int_range(0,srcSize.width-1,&maxJitterX);
-	validate_unsigned_int_range(0,srcSize.height-1,&maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     maxJitterX, maxJitterY,
+                     kernelSize,
                      RPPI_CHN_PLANAR, 3);
     return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_jitter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr,
-                             unsigned int maxJitterX, unsigned int maxJitterY)
+rppi_jitter_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize)
 {
 	validate_image_size(srcSize);
-	validate_unsigned_int_range(0,srcSize.width-1,&maxJitterX);
-	validate_unsigned_int_range(0,srcSize.height-1,&maxJitterY);
     jitter_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
-                     maxJitterX, maxJitterY,
+                     kernelSize,
                      RPPI_CHN_PACKED, 3);
     return RPP_SUCCESS;
 }
@@ -274,7 +265,7 @@ rppi_snpNoise_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
  	validate_float_range( 0, 1, &noiseProbability);
     noise_snp_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8u*>(dstPtr),
                         noiseProbability,
-                        RPPI_CHN_PLANAR, 1);
+                        RPPI_CHN_PACKED, 1);
 }
 
 RppStatus
@@ -1414,42 +1405,16 @@ rppi_snow_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f sn
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1,&snowValue);
+ 	 validate_float_range( 0, 1, &snowValue);
+
 #ifdef OCL_COMPILE
  	 {
-
-		cl_context theContext;
-		cl_int err;
-		size_t bytes1C = sizeof(unsigned char)*srcSize.width * srcSize.height;
-		size_t bytes3C = sizeof(unsigned char)*srcSize.width * srcSize.height * 3;
-		clGetCommandQueueInfo(  static_cast<cl_command_queue>(rppHandle),
-								CL_QUEUE_CONTEXT,
-								sizeof(cl_context), &theContext, NULL);
-		cl_mem src3C = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
-										sizeof(unsigned char)*srcSize.width * srcSize.height * 3, NULL, NULL);
-		cl_mem dst3C = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
-										sizeof(unsigned char)*srcSize.width * srcSize.height * 3, NULL, NULL);
-		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C, 0, 0,
-									sizeof(unsigned char)*srcSize.width*srcSize.height,
-							        0, NULL, NULL);
-		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C,
-								 0, sizeof(unsigned char) * srcSize.width*srcSize.height,
-								 sizeof(unsigned char)*srcSize.width*srcSize.height,
-							     0, NULL, NULL);
-		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), static_cast<cl_mem>(srcPtr), src3C,
-								  0, sizeof(unsigned char) * srcSize.width*srcSize.height * 2,
-								  sizeof(unsigned char)*srcSize.width*srcSize.height,
-							      0, NULL, NULL);
-		snow_cl(src3C,
-				srcSize,
-				dst3C,
-				snowValue,
-				RPPI_CHN_PLANAR, 1,
-				static_cast<cl_command_queue>(rppHandle));
-
-		err = clEnqueueCopyBuffer(static_cast<cl_command_queue>(rppHandle), dst3C, static_cast<cl_mem>(dstPtr),  0, 0,
-									sizeof(unsigned char)*srcSize.width*srcSize.height,
-							        0, NULL, NULL);
+ 	 snow_cl(static_cast<cl_mem>(srcPtr),
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			snowValue,
+			RPPI_CHN_PLANAR, 1,
+			static_cast<cl_command_queue>(rppHandle));
  	 }
 #elif defined (HIP_COMPILE)
  	 {
@@ -1463,7 +1428,7 @@ rppi_snow_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f sn
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1,&snowValue);
+ 	 validate_float_range( 0, 1, &snowValue);
 
 #ifdef OCL_COMPILE
  	 {
@@ -1486,7 +1451,7 @@ rppi_snow_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f sn
 {
 
  	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1,&snowValue);
+ 	 validate_float_range( 0, 1, &snowValue);
 
 #ifdef OCL_COMPILE
  	 {
@@ -2116,20 +2081,16 @@ rppi_exposure_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 // GPU jitter functions  calls
 // ----------------------------------------
 RppStatus
-rppi_jitter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u minJitter, Rpp32u maxJitter, RppHandle_t rppHandle)
+rppi_jitter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle)
 {
    	 validate_image_size(srcSize);
-	 validate_unsigned_int_range(0,255,&minJitter);
-	 validate_unsigned_int_range(0,255,&maxJitter);
-	 validate_unsigned_int_min(minJitter,&maxJitter);
 
 #ifdef OCL_COMPILE
  	 {
  	 jitter_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			minJitter,
-			maxJitter,
+			kernelSize,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle));
  	 }
@@ -2141,19 +2102,15 @@ rppi_jitter_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp3
 }
 
 RppStatus
-rppi_jitter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u minJitter, Rpp32u maxJitter, RppHandle_t rppHandle)
+rppi_jitter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle)
 {
    	 validate_image_size(srcSize);
-	 validate_unsigned_int_range(0,255,&minJitter);
-	 validate_unsigned_int_range(0,255,&maxJitter);
-	 validate_unsigned_int_min(minJitter,& maxJitter);
 #ifdef OCL_COMPILE
  	 {
  	 jitter_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			minJitter,
-			maxJitter,
+			kernelSize,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 }
@@ -2165,19 +2122,15 @@ rppi_jitter_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp3
 }
 
 RppStatus
-rppi_jitter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u minJitter, Rpp32u maxJitter, RppHandle_t rppHandle)
+rppi_jitter_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32u kernelSize, RppHandle_t rppHandle)
 {
    	 validate_image_size(srcSize);
-	 validate_unsigned_int_range(0,255,&minJitter);
-	 validate_unsigned_int_range(0,255,&maxJitter);
-	 validate_unsigned_int_min(minJitter,& maxJitter);
 #ifdef OCL_COMPILE
  	 {
  	 jitter_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			minJitter,
-			maxJitter,
+			kernelSize,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 }

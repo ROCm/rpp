@@ -138,7 +138,7 @@ custom_convolution_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f* k
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
     cl_mem clkernel = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
                                     sizeof(Rpp32f)*kernelSize.height*kernelSize.width, NULL, NULL);
-    clEnqueueWriteBuffer(theQueue, clkernel, CL_TRUE, 0, sizeof(Rpp32f)*kernelSize.height*kernelSize.width, kernel, 0, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, clkernel, CL_FALSE, 0, sizeof(Rpp32f)*kernelSize.height*kernelSize.width, kernel, 0, NULL, NULL);
     int ctr=0;
     cl_kernel theKernel;
     cl_program theProgram;
@@ -187,7 +187,7 @@ box_filter_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize,
                             sizeof(cl_context), &theContext, NULL);
     cl_mem filtPtr = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(float)*3*3, NULL, NULL);
-    clEnqueueWriteBuffer(theQueue, filtPtr, CL_TRUE, 0,
+    clEnqueueWriteBuffer(theQueue, filtPtr, CL_FALSE, 0,
                                    sizeof(float)*3*3,
                                    box_3x3, 0, NULL, NULL);
     cl_kernel theKernel;
@@ -233,7 +233,7 @@ gaussian_filter_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f stdDev
     cl_device_id theDevice;
     clGetCommandQueueInfo(theQueue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
     cl_mem kernel = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, kernelSize * kernelSize * sizeof(Rpp32f), NULL, NULL);
-    clEnqueueWriteBuffer(theQueue, kernel, CL_TRUE, 0, kernelSize * kernelSize * sizeof(Rpp32f), kernelMain, 0, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, kernel, CL_FALSE, 0, kernelSize * kernelSize * sizeof(Rpp32f), kernelMain, 0, NULL, NULL);
 
     int ctr=0;
     cl_kernel theKernel;

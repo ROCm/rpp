@@ -149,13 +149,14 @@ RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    Rpp8u pixel;
+    Rpp32f pixel;
 
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
         pixel = ((Rpp32f) (*srcPtrTemp)) / 255.0;
         pixel = pow(pixel, gamma);
         pixel = pixel * 255.0;
+        pixel = RPPPIXELCHECK(pixel);
         *dstPtrTemp = (T) pixel;
         srcPtrTemp++;
         dstPtrTemp++;
@@ -224,88 +225,74 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    Rpp32u maxJitterX, Rpp32u maxJitterY, 
+                    Rpp32u kernelSize, 
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
-    if ((RPPINRANGE(maxJitterX, 0, srcSize.width - 1) == 0) 
-        || (RPPINRANGE(maxJitterY, 0, srcSize.height - 1) == 0))
+    Rpp8u *dstTemp,*srcTemp;
+    dstTemp = dstPtr;
+    srcTemp = srcPtr;
+    int bound = (kernelSize - 1) / 2;
+    srand(time(0)); 
+    unsigned int width = srcSize.width;
+    unsigned int height = srcSize.height;
+    if(chnFormat == RPPI_CHN_PACKED)
     {
-        return RPP_ERROR;
-    }
-
-    T *dstPtrForJitter = (T *)calloc(channel * srcSize.height * srcSize.width, sizeof(T));
-
-    T *srcPtrTemp, *dstPtrTemp;
-    T *srcPtrBeginJitter, *dstPtrBeginJitter;
-    srcPtrTemp = srcPtr;
-    dstPtrTemp = dstPtrForJitter;
-    memcpy(dstPtr, srcPtr, channel * srcSize.height * srcSize.width * sizeof(T));
-
-    srand (time(NULL));
-    int jitteredPixelLocDiffX, jitteredPixelLocDiffY;
-    int jitterRangeX = 2 * maxJitterX;
-    int jitterRangeY = 2 * maxJitterY;
-
-    if (chnFormat == RPPI_CHN_PLANAR)
-    {      
-        srcPtrBeginJitter = srcPtr + (maxJitterY * srcSize.width) + maxJitterX;
-        dstPtrBeginJitter = dstPtrForJitter + (maxJitterY * srcSize.width) + maxJitterX;
-        for (int c = 0; c < channel; c++)
+        for(int id_y = 0 ; id_y < srcSize.height ; id_y++)
         {
-            srcPtrTemp = srcPtrBeginJitter + (c * srcSize.height * srcSize.width);
-            dstPtrTemp = dstPtrBeginJitter + (c * srcSize.height * srcSize.width);
-            for (int i = 0; i < srcSize.height - jitterRangeY; i++)
+            for(int id_x = 0 ; id_x < srcSize.width ; id_x++)
             {
-                for (int j = 0; j < srcSize.width - jitterRangeX; j++)
+                int pixIdx = id_y * channel * width + id_x * channel;
+                int nhx = rand() % (kernelSize);
+                int nhy = rand() % (kernelSize);
+                if((id_y - bound + nhy) >= 0 && (id_y - bound + nhy) <= height - 1 && (id_x - bound + nhx) >= 0 && (id_x - bound + nhx) <= width - 1)
                 {
-                    jitteredPixelLocDiffX = (rand() % (jitterRangeX + 1));
-                    jitteredPixelLocDiffY = (rand() % (jitterRangeY + 1));
-                    jitteredPixelLocDiffX -= maxJitterX;
-                    jitteredPixelLocDiffY -= maxJitterY;
-                    *dstPtrTemp = *(srcPtrTemp + (jitteredPixelLocDiffY * (int) srcSize.width) + jitteredPixelLocDiffX);
-                    srcPtrTemp++;
-                    dstPtrTemp++;
+                    int index = ((id_y - bound) * channel * width) + ((id_x - bound) * channel) + (nhy * channel * width) + (nhx * channel);
+                    for(int i = 0 ; i < channel ; i++)
+                    {
+                        *(dstPtr + pixIdx + i) = *(srcPtr + index + i);  
+                    }
                 }
-                srcPtrTemp += jitterRangeX;
-                dstPtrTemp += jitterRangeX;
-            }
-        }
-
-        resize_crop_kernel_host<T>(static_cast<T*>(dstPtrForJitter), srcSize, static_cast<T*>(dstPtr), srcSize,
-                            maxJitterX, maxJitterY, srcSize.width - maxJitterX - 1, srcSize.height - maxJitterY - 1,
-                            RPPI_CHN_PLANAR, channel);
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        int elementsInRow = (int)(srcSize.width * channel);
-        int channeledJitterRangeX = jitterRangeX * channel;
-        int channeledJitterRangeY = jitterRangeY * channel;
-        srcPtrBeginJitter = srcPtr + (maxJitterY * elementsInRow) + (maxJitterX * channel);
-        dstPtrBeginJitter = dstPtrForJitter + (maxJitterY * elementsInRow) + (maxJitterX * channel);
-        srcPtrTemp = srcPtrBeginJitter;
-        dstPtrTemp = dstPtrBeginJitter;
-        for (int i = 0; i < srcSize.height - jitterRangeY; i++)
-        {
-            for (int j = 0; j < srcSize.width - jitterRangeX; j++)
-            {
-                for (int c = 0; c < channel; c++)
+                else 
                 {
-                    jitteredPixelLocDiffX = rand() % (jitterRangeX + 1);
-                    jitteredPixelLocDiffY = rand() % (jitterRangeY + 1);
-                    jitteredPixelLocDiffX -= maxJitterX;
-                    jitteredPixelLocDiffY -= maxJitterY;
-                    *dstPtrTemp = *(srcPtrTemp + (jitteredPixelLocDiffY * elementsInRow) + (jitteredPixelLocDiffX * (int) channel));
-                    srcPtrTemp++;
-                    dstPtrTemp++;
+                    for(int i = 0 ; i < channel ; i++)
+                    {
+                        *(dstPtr + pixIdx + i) = *(srcPtr + pixIdx + i);  
+                    }
                 }
             }
-            srcPtrTemp += channeledJitterRangeX;
-            dstPtrTemp += channeledJitterRangeX;
         }
-        resize_crop_kernel_host<T>(static_cast<T*>(dstPtrForJitter), srcSize, static_cast<T*>(dstPtr), srcSize,
-                            maxJitterX, maxJitterY, srcSize.width - maxJitterX - 1, srcSize.height - maxJitterY - 1,
-                            RPPI_CHN_PACKED, channel);
     }
+    else
+    {
+        for(int id_y = 0 ; id_y < srcSize.height ; id_y++)
+        {
+            for(int id_x = 0 ; id_x < srcSize.width ; id_x++)
+            {
+                int pixIdx = id_y * width + id_x;
+                int channelPixel = height * width;
+                int nhx = rand() % (kernelSize);
+                int nhy = rand() % (kernelSize);
+                int bound = (kernelSize - 1) / 2;
+                if((id_y - bound + nhy) >= 0 && (id_y - bound + nhy) <= height - 1 && (id_x - bound + nhx) >= 0 && (id_x - bound + nhx) <= width - 1)
+                {
+                    int index = ((id_y - bound) * width) + (id_x - bound) + (nhy * width) + (nhx);
+                    for(int i = 0 ; i < channel ; i++)
+                    {
+                        *(dstPtr + pixIdx + (height * width * i)) = *(srcPtr + index + (height * width * i));  
+                    }
+                }
+                else 
+                {
+                    for(int i = 0 ; i < channel ; i++)
+                    {
+                        *(dstPtr + pixIdx + (height * width * i)) = *(srcPtr + pixIdx + (height * width * i));  
+                    }
+                }
+            }
+        }
+        
+    }
+    
     
     return RPP_SUCCESS;
 }
@@ -432,137 +419,72 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     Rpp32f strength,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
-    if (strength < 0 || strength > 1)
-    {
-        return RPP_ERROR;
-    }
+    strength = strength/100;
+    int snow_mat[5][5] = {{0,50,75,50,0}, {40,80,120,80,40}, {75,120,255,120,75}, {40,80,120,80,40}, {0,50,75,50,0}};
 
-    if (channel != 1 && channel != 3)
-    {
-        return RPP_ERROR;
-    }
-
-    T *srcPtrTemp, *dstPtrTemp;
-    srcPtrTemp = srcPtr;
-    dstPtrTemp = dstPtr;
-
-    T *srcPtrRGB = (T *)calloc(3 * srcSize.height * srcSize.width, sizeof(T));
-    T *dstPtrRGB = (T *)calloc(3 * srcSize.height * srcSize.width, sizeof(T));
-    T *srcPtrRGBTemp, *dstPtrRGBTemp;
-    srcPtrRGBTemp = srcPtrRGB;
-    dstPtrRGBTemp = dstPtrRGB;
-
-    if (channel == 1)
-    {
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            for (int c = 0; c < 3; c++)
-            {
-                srcPtrTemp = srcPtr;
-                for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-                {
-                    *srcPtrRGBTemp = *srcPtrTemp;
-                    srcPtrRGBTemp++;
-                    srcPtrTemp++;
-                }
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-            {
-                for (int c = 0; c < 3; c++)
-                {
-                    *srcPtrRGBTemp = *srcPtrTemp;
-                    srcPtrRGBTemp++;
-                }
-                srcPtrTemp++;
-            }
-        }
-    }
-    else if (channel == 3)
-    {
-        memcpy(srcPtrRGB, srcPtr, 3 * srcSize.height * srcSize.width * sizeof(T));
-    }
-
-    Rpp32f *srcPtrHSL = (Rpp32f *)calloc(3 * srcSize.height * srcSize.width, sizeof(Rpp32f));
+    Rpp32u snowDrops = (Rpp32u)(strength * srcSize.width * srcSize.height * channel );
+    
+    
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        compute_rgb_to_hsl_host(srcPtrRGB, srcSize, srcPtrHSL, RPPI_CHN_PLANAR, 3);
-
-        Rpp32f *srcPtrHSLTemp;
-        srcPtrHSLTemp = srcPtrHSL + (2 * srcSize.height * srcSize.width);
-
-        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        for(int i = 0 ; i < snowDrops ; i++)
         {
-            if (*srcPtrHSLTemp < strength)
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp32f pixel;
+            for(int k = 0;k < channel;k++)
             {
-                *srcPtrHSLTemp *= 4;
+                dstPtr[(row * srcSize.width) + (column) + (k * srcSize.height * srcSize.width)] = snow_mat[0][0] ;
             }
-            if (*srcPtrHSLTemp > 1)
+            for(int j = 0;j < 5;j++)
             {
-                *srcPtrHSLTemp = 1;
+                if(row + 5 < srcSize.height && row + 5 > 0 )
+                for(int k = 0;k < channel;k++)
+                {
+                    for(int m = 0;m < 5;m++)
+                    {
+                        if (column + 5 < srcSize.width && column + 5 > 0)
+                        {
+                            dstPtr[(row * srcSize.width) + (column) + (k * srcSize.height * srcSize.width) + (srcSize.width * j) + m] = snow_mat[j][m] ;
+                        }
+                    }
+                }            
             }
-            srcPtrHSLTemp++;
         }
-
-        compute_hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtrRGB, RPPI_CHN_PLANAR, 3);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        compute_rgb_to_hsl_host(srcPtrRGB, srcSize, srcPtrHSL, RPPI_CHN_PACKED, 3);
-
-        Rpp32f *srcPtrHSLTemp;
-        srcPtrHSLTemp = srcPtrHSL + 2;
-
-        for (int i = 0; i < srcSize.height * srcSize.width; i++)
+        for(int i = 0 ; i < snowDrops ; i++)
         {
-            if (*srcPtrHSLTemp < strength)
+            Rpp32u row = rand() % srcSize.height;
+            Rpp32u column = rand() % srcSize.width;
+            Rpp32f pixel;
+            for(int k = 0;k < channel;k++)
             {
-                *srcPtrHSLTemp *= 4;
+                dstPtr[(channel * row * srcSize.width) + (column * channel) + k] = snow_mat[0][0] ;
             }
-            if (*srcPtrHSLTemp > 1)
+            for(int j = 0;j < 5;j++)
             {
-                *srcPtrHSLTemp = 1;
+                if(row + 5 < srcSize.height && row + 5 > 0 )
+                for(int k = 0;k < channel;k++)
+                {
+                    for(int m = 0;m < 5;m++)
+                    {
+                        if (column + 5 < srcSize.width && column + 5 > 0)
+                        {
+                            dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j) + (channel * m)] = snow_mat[j][m];
+                        }
+                    } 
+                }            
             }
-            srcPtrHSLTemp = srcPtrHSLTemp + channel;
         }
-
-        compute_hsl_to_rgb_host(srcPtrHSL, srcSize, dstPtrRGB, RPPI_CHN_PACKED, 3);
     }
 
-    if (channel == 1)
+    for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-            {
-                *dstPtrTemp = *dstPtrRGBTemp;
-                dstPtrRGBTemp++;
-                dstPtrTemp++;
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
-            {
-                *dstPtrTemp = *dstPtrRGBTemp;
-                dstPtrRGBTemp = dstPtrRGBTemp + 3;;
-                dstPtrTemp++;
-            }
-        }
+        Rpp32f pixel = ((Rpp32f) srcPtr[i]) + dstPtr[i];
+        dstPtr[i] = RPPPIXELCHECK(pixel);
     }
-    else if (channel == 3)
-    {
-        for (int i = 0; i < (3 * srcSize.height * srcSize.width); i++)
-        {
-            *dstPtrTemp = *dstPtrRGBTemp;
-            dstPtrRGBTemp++;
-            dstPtrTemp++;
-        }
-    }
-
-    return RPP_SUCCESS;
 }
 
 /**************** Blend ***************/

@@ -41,7 +41,7 @@ __kernel void scan(__global int *input,
         output[i+256] = output[256+i-1] + input[256+i];
         output[i+ 512] = output[512+i-1] + input[512+i];
     }
-   printf("%d",output[767]);}
+   }
 }
 
 __kernel void scan_1c(__global int *input,
@@ -57,5 +57,6 @@ __kernel void scan_1c(__global int *input,
     for(i =1; i<256; i++){
         output[i] = output[i-1] + input[i];
     }
-   printf("%d",output[767]);}
+    }
+  // printf("%d",output[223]);}
 }
