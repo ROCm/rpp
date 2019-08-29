@@ -380,7 +380,7 @@ inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
 
         for (int i = 0; i < 9; i++)
         {
-            *kernelTemp = *kernelXTemp / 9;
+            *kernelTemp = *kernelXTemp;
             kernelTemp++;
             kernelXTemp++;
         }
@@ -393,7 +393,7 @@ inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
 
         for (int i = 0; i < 9; i++)
         {
-            *kernelTemp = *kernelYTemp / 9;
+            *kernelTemp = *kernelYTemp;
             kernelTemp++;
             kernelYTemp++;
         }
@@ -1194,13 +1194,13 @@ inline RppStatus compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
     srcPtr2Temp = srcPtr2;
     dstPtrTemp = dstPtr;
 
-    Rpp32s pixel;
+    Rpp32f pixel;
 
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = ((Rpp32s) (*srcPtr1Temp)) * ((Rpp32s) (*srcPtr2Temp));
+        pixel = ((Rpp32f) (*srcPtr1Temp)) * ((Rpp32f) (*srcPtr2Temp));
         pixel = RPPPIXELCHECK(pixel);
-        *dstPtrTemp =(T) pixel;
+        *dstPtrTemp = (T) pixel;
         srcPtr1Temp++;
         srcPtr2Temp++;
         dstPtrTemp++;
@@ -1218,12 +1218,13 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+        Rpp32u imageDim = srcSize.height * srcSize.width;
         srcPtrTempR = srcPtr;
-        srcPtrTempG = srcPtr + (srcSize.height * srcSize.width);
-        srcPtrTempB = srcPtr + (2 * srcSize.height * srcSize.width);
+        srcPtrTempG = srcPtr + (imageDim);
+        srcPtrTempB = srcPtr + (2 * imageDim);
         dstPtrTempH = dstPtr;
-        dstPtrTempS = dstPtr + (srcSize.height * srcSize.width);
-        dstPtrTempV = dstPtr + (2 * srcSize.height * srcSize.width);
+        dstPtrTempS = dstPtr + (imageDim);
+        dstPtrTempV = dstPtr + (2 * imageDim);
 
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
@@ -1231,8 +1232,8 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             rf = ((Rpp32f) *srcPtrTempR) / 255;
             gf = ((Rpp32f) *srcPtrTempG) / 255;
             bf = ((Rpp32f) *srcPtrTempB) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
+            cmax = RPPMAX3(rf, gf, bf);
+            cmin = RPPMIN3(rf, gf, bf);
             delta = cmax - cmin;
 
             if (delta == 0)
@@ -1295,8 +1296,8 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             rf = ((Rpp32f) *srcPtrTempR) / 255;
             gf = ((Rpp32f) *srcPtrTempG) / 255;
             bf = ((Rpp32f) *srcPtrTempB) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
+            cmax = RPPMAX3(rf, gf, bf);
+            cmin = RPPMIN3(rf, gf, bf);
             delta = cmax - cmin;
 
             if (delta == 0)
@@ -1357,12 +1358,13 @@ inline RppStatus compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+        Rpp32u imageDim = srcSize.height * srcSize.width;
         srcPtrTempH = srcPtr;
-        srcPtrTempS = srcPtr + (srcSize.height * srcSize.width);
-        srcPtrTempV = srcPtr + (2 * srcSize.height * srcSize.width);
+        srcPtrTempS = srcPtr + (imageDim);
+        srcPtrTempV = srcPtr + (2 * imageDim);
         dstPtrTempR = dstPtr;
-        dstPtrTempG = dstPtr + (srcSize.height * srcSize.width);
-        dstPtrTempB = dstPtr + (2 * srcSize.height * srcSize.width);
+        dstPtrTempG = dstPtr + (imageDim);
+        dstPtrTempB = dstPtr + (2 * imageDim);
 
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
@@ -1498,12 +1500,13 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+        Rpp32u imageDim = srcSize.height * srcSize.width;
         srcPtrTempR = srcPtr;
-        srcPtrTempG = srcPtr + (srcSize.height * srcSize.width);
-        srcPtrTempB = srcPtr + (2 * srcSize.height * srcSize.width);
+        srcPtrTempG = srcPtr + (imageDim);
+        srcPtrTempB = srcPtr + (2 * imageDim);
         dstPtrTempH = dstPtr;
-        dstPtrTempS = dstPtr + (srcSize.height * srcSize.width);
-        dstPtrTempL = dstPtr + (2 * srcSize.height * srcSize.width);
+        dstPtrTempS = dstPtr + (imageDim);
+        dstPtrTempL = dstPtr + (2 * imageDim);
 
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
@@ -1511,8 +1514,8 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             rf = ((Rpp32f) *srcPtrTempR) / 255;
             gf = ((Rpp32f) *srcPtrTempG) / 255;
             bf = ((Rpp32f) *srcPtrTempB) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
+            cmax = RPPMAX3(rf, gf, bf);
+            cmin = RPPMIN3(rf, gf, bf);
             divisor = cmax + cmin - 1;
             delta = cmax - cmin;
 
@@ -1577,8 +1580,8 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             rf = ((Rpp32f) *srcPtrTempR) / 255;
             gf = ((Rpp32f) *srcPtrTempG) / 255;
             bf = ((Rpp32f) *srcPtrTempB) / 255;
-            cmax = ((rf > gf) && (rf > bf)) ? rf : ((gf > bf) ? gf : bf);
-            cmin = ((rf < gf) && (rf < bf)) ? rf : ((gf < bf) ? gf : bf);
+            cmax = RPPMAX3(rf, gf, bf);
+            cmin = RPPMIN3(rf, gf, bf);
             divisor = cmax + cmin - 1;
             delta = cmax - cmin;
 
@@ -1641,12 +1644,13 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+        Rpp32u imageDim = srcSize.height * srcSize.width;
         srcPtrTempH = srcPtr;
-        srcPtrTempS = srcPtr + (srcSize.height * srcSize.width);
-        srcPtrTempL = srcPtr + (2 * srcSize.height * srcSize.width);
+        srcPtrTempS = srcPtr + (imageDim);
+        srcPtrTempL = srcPtr + (2 * imageDim);
         dstPtrTempR = dstPtr;
-        dstPtrTempG = dstPtr + (srcSize.height * srcSize.width);
-        dstPtrTempB = dstPtr + (2 * srcSize.height * srcSize.width);
+        dstPtrTempG = dstPtr + (imageDim);
+        dstPtrTempB = dstPtr + (2 * imageDim);
 
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
@@ -1775,11 +1779,12 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     return RPP_SUCCESS;
 }
 
-template <typename T>
-inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+template <typename T, typename U>
+inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, U* dstPtr,
                          RppiChnFormat chnFormat, Rpp32u channel)
 {
-    T *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
+    T *srcPtr1Temp, *srcPtr2Temp;
+    U *dstPtrTemp;
     srcPtr1Temp = srcPtr1;
     srcPtr2Temp = srcPtr2;
     dstPtrTemp = dstPtr;
@@ -1793,7 +1798,7 @@ inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize
         srcPtr2Value = (Rpp32s) *srcPtr2Temp;
         pixel = sqrt((srcPtr1Value * srcPtr1Value) + (srcPtr2Value * srcPtr2Value));
         pixel = RPPPIXELCHECK(pixel);
-        *dstPtrTemp =(T) round(pixel);
+        *dstPtrTemp =(U) round(pixel);
         srcPtr1Temp++;
         srcPtr2Temp++;
         dstPtrTemp++;
