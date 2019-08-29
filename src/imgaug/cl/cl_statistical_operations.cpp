@@ -221,9 +221,9 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
     unsigned int *partial_min_location;
     partial_min_location = (unsigned int *) calloc (numGroups, sizeof(unsigned int));
     cl_mem b_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(unsigned char), NULL, NULL);
-    clEnqueueWriteBuffer(theQueue, b_mem_obj, CL_FALSE, 0, numGroups * sizeof(unsigned char), partial_min, 0, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min, 0, NULL, NULL);
     cl_mem b_mem_obj1 = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(unsigned int), NULL, NULL);
-    clEnqueueWriteBuffer(theQueue, b_mem_obj1, CL_FALSE, 0, numGroups * sizeof(unsigned int), partial_min_location, 0, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned int), partial_min_location, 0, NULL, NULL);
 
     unsigned char maxElement = 0;
     unsigned int maxLocation;
@@ -232,9 +232,9 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
     unsigned int *partial_max_location;
     partial_max_location = (unsigned int *) calloc (numGroups, sizeof(unsigned int));
     cl_mem c_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(unsigned char), NULL, NULL);
-    clEnqueueWriteBuffer(theQueue, c_mem_obj, CL_FALSE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL);
     cl_mem c_mem_obj1 = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(unsigned int), NULL, NULL);
-    clEnqueueWriteBuffer(theQueue, c_mem_obj1, CL_FALSE, 0, numGroups * sizeof(unsigned int), partial_max_location, 0, NULL, NULL);
+    clEnqueueWriteBuffer(theQueue, c_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned int), partial_max_location, 0, NULL, NULL);
 
 
     clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
@@ -250,8 +250,8 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
     local_item_size[1] = 1;
     local_item_size[2] = 1;
     cl_kernel_implementer (theQueue, gDim3, local_item_size, theProgram, theKernel);
-    clEnqueueReadBuffer(theQueue, b_mem_obj, CL_FALSE, 0, numGroups * sizeof(unsigned char), partial_min, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, b_mem_obj1, CL_FALSE, 0, numGroups * sizeof(unsigned char), partial_min_location, 0, NULL, NULL);   
+    clEnqueueReadBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min, 0, NULL, NULL);
+    clEnqueueReadBuffer(theQueue, b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min_location, 0, NULL, NULL);   
     
     for(i = 0; i < numGroups; i++)
     {
@@ -275,8 +275,8 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
     clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj1);
 
     cl_kernel_implementer (theQueue, gDim3, local_item_size, theProgram, theKernel);
-    clEnqueueReadBuffer(theQueue, c_mem_obj, CL_FALSE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL); 
-    clEnqueueReadBuffer(theQueue, b_mem_obj1, CL_FALSE, 0, numGroups * sizeof(unsigned char), partial_max_location, 0, NULL, NULL); 
+    clEnqueueReadBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL); 
+    clEnqueueReadBuffer(theQueue, b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max_location, 0, NULL, NULL); 
     for(i = 0; i < numGroups; i++)
     {
         if(maxElement < partial_max[i])
