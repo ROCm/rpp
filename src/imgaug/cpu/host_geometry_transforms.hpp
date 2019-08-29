@@ -368,34 +368,25 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
                            Rpp32f* affine,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
-    Rpp32f minX = 0, minY = 0;
     T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
-    for (int i = 0; i < srcSize.height; i++)
-    {
-        for (int j = 0; j < srcSize.width; j++)
-        {
-            Rpp32f newi = 0, newj = 0;
-            newi = (affine[0] * i) + (affine[1] * j) + (affine[2] * 1);
-            newj = (affine[3] * i) + (affine[4] * j) + (affine[5] * 1);
-            if (newi < minX)
-            {
-                minX = newi;
-            }
-            if (newj < minY)
-            {
-                minY = newj;
-            }
-        }
-    }
 
     Rpp32f divisor = (affine[1] * affine[3]) - (affine[0] * affine[4]);
     Rpp32f srcLocationRow, srcLocationColumn, srcLocationRowTerm1, srcLocationColumnTerm1, pixel;
     Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
 
-    Rpp32f srcLocationRowParameter = (-affine[4] * (-affine[2] + (Rpp32s)minX)) + (affine[1] * (-affine[5] + (Rpp32s)minY));
-    Rpp32f srcLocationColumnParameter = (affine[3] * (-affine[2] + (Rpp32s)minX)) + (-affine[0] * (-affine[5] + (Rpp32s)minY));
+    Rpp32f halfSrcHeight = srcSize.height / 2;
+    Rpp32f halfSrcWidth = srcSize.width / 2;
+    Rpp32f halfDstHeight = dstSize.height / 2;
+    Rpp32f halfDstWidth = dstSize.width / 2;
+    Rpp32f halfHeightDiff = halfSrcHeight - halfDstHeight;
+    Rpp32f halfWidthDiff = halfSrcWidth - halfDstWidth;
+
+    Rpp32f srcLocationRowParameter = (affine[0] * halfSrcHeight) + (affine[1] * halfSrcWidth) + (affine[2] * 1) - halfSrcHeight + halfHeightDiff;
+    Rpp32f srcLocationColumnParameter = (affine[3] * halfSrcHeight) + (affine[4] * halfSrcWidth) + (affine[5] * 1) - halfSrcWidth + halfWidthDiff;
+    Rpp32f srcLocationRowParameter2 = (-affine[4] * (-affine[2] + (Rpp32s)srcLocationRowParameter)) + (affine[1] * (-affine[5] + (Rpp32s)srcLocationColumnParameter));
+    Rpp32f srcLocationColumnParameter2 = (affine[3] * (-affine[2] + (Rpp32s)srcLocationRowParameter)) + (-affine[0] * (-affine[5] + (Rpp32s)srcLocationColumnParameter));
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
@@ -407,8 +398,8 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
                 srcLocationColumnTerm1 = affine[3] * i;
                 for (int j = 0; j < dstSize.width; j++)
                 {
-                    srcLocationRow = (srcLocationRowTerm1 + (affine[1] * j) + srcLocationRowParameter) / divisor;
-                    srcLocationColumn = (srcLocationColumnTerm1 + (-affine[0] * j) + srcLocationColumnParameter) / divisor;
+                    srcLocationRow = (srcLocationRowTerm1 + (affine[1] * j) + srcLocationRowParameter2) / divisor;
+                    srcLocationColumn = (srcLocationColumnTerm1 + (-affine[0] * j) + srcLocationColumnParameter2) / divisor;
                     
                     if (srcLocationRow < 0 || srcLocationColumn < 0 || srcLocationRow > (srcSize.height - 2) || srcLocationColumn > (srcSize.width - 2))
                     {
@@ -449,8 +440,8 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
             srcLocationColumnTerm1 = affine[3] * i;
             for (int j = 0; j < dstSize.width; j++)
             {
-                srcLocationRow = (srcLocationRowTerm1 + (affine[1] * j) + srcLocationRowParameter) / divisor;
-                srcLocationColumn = (srcLocationColumnTerm1 + (-affine[0] * j) + srcLocationColumnParameter) / divisor;
+                srcLocationRow = (srcLocationRowTerm1 + (affine[1] * j) + srcLocationRowParameter2) / divisor;
+                srcLocationColumn = (srcLocationColumnTerm1 + (-affine[0] * j) + srcLocationColumnParameter2) / divisor;
                 
                 if (srcLocationRow < 0 || srcLocationColumn < 0 || srcLocationRow > (srcSize.height - 2) || srcLocationColumn > (srcSize.width - 2))
                 {
