@@ -116,7 +116,7 @@ blur_cl(cl_mem srcPtr, RppiSize srcSize,
                             sizeof(cl_context), &theContext, NULL);
     cl_mem filtPtr = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(float)*filterSize*filterSize, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_TRUE, 0,
+    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_FALSE, 0,
                                    sizeof(float)*filterSize*filterSize,
                                    filterBuffer, 0, NULL, NULL);
 
@@ -221,7 +221,7 @@ pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
                             sizeof(cl_context), &theContext, NULL);
     cl_mem filtPtr = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(float)*filterSize*filterSize, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_TRUE, 0,
+    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_FALSE, 0,
                                    sizeof(float)*filterSize*filterSize,
                                    filterBuffer, 0, NULL, NULL);
 
@@ -328,7 +328,7 @@ gaussianNoise_cl(cl_mem srcPtr,
 
 cl_int
 jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
-           unsigned int minJitter,unsigned int maxJitter,
+           unsigned int kernelSize,
            RppiChnFormat chnFormat, unsigned int channel,
            cl_command_queue theQueue)
 {
@@ -337,9 +337,16 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     cl_kernel theKernel;
     cl_program theProgram;
 
-    CreateProgramFromBinary(theQueue, "jitter.cl","jitter.bin",
-                                "jitter", theProgram, theKernel);
-    clRetainKernel(theKernel);
+    if(chnFormat == RPPI_CHN_PACKED)
+    {
+        CreateProgramFromBinary(theQueue, "jitter.cl", "jitter.cl.bin", "jitter_pkd", theProgram, theKernel);
+        clRetainKernel(theKernel);
+    }
+    else if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue, "jitter.cl", "jitter.cl.bin", "jitter_pln", theProgram, theKernel);
+        clRetainKernel(theKernel);
+    }
 
     //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
@@ -347,12 +354,11 @@ jitter_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &minJitter);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &maxJitter);
+    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &kernelSize);
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
-    gDim3[2] = channel;
+    gDim3[2] = 1;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
     return err;
@@ -520,6 +526,7 @@ rain_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr, Rpp32f rainPercentage, Rp
             clRetainKernel(theKernel);
         }
 
+        transparency /= 5;
         //---- Args Setter
         clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
         clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
@@ -863,11 +870,8 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
-        if (channel == 1)
-            CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin",
-                                    "histogram_equalize_pln1",theProgram,theKernel);
-        else
-            CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin",
+       
+        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin",
                                     "histogram_equalize_pln",theProgram,theKernel);
         clRetainKernel(theKernel);
     }

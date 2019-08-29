@@ -1,6 +1,7 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
-
+#include <map>
+#include <vector>
 
 #ifndef MOD_CL_PATH
 # error Kernel files base path not defined; undefined `MOD_CL_PATH`
@@ -9,6 +10,48 @@
 // Note: gcc throws stray issue without this preprocessor derivative being used
 //       for reading MOD_CL_PATH used for reading kernel file
 //#define TO_STRING(x) #x
+
+class CLKernelManager
+{
+    public:
+    ~CLKernelManager()
+    {
+        // release resources
+        
+        for(auto& kernel : _kernel_map)
+            clReleaseKernel(kernel.second);
+    }
+    static CLKernelManager* obj() 
+    {
+        if(!_obj)
+            _obj = new CLKernelManager();
+        
+        return _obj;
+    }
+    cl_kernel find( const std::string& kernel_name)
+    {
+        auto it = _kernel_map.find(kernel_name);
+        if( it != _kernel_map.end())
+            return it->second;
+        
+        return nullptr;
+    }
+    
+    bool set(cl_kernel theKernel, const std::string& kernel_name)
+    {
+        if(find(kernel_name)!= nullptr)
+            return false;
+        _kernel_map.insert(std::make_pair(kernel_name, theKernel));
+    }
+//    std::vector< cl_program> _prog_map;
+private:
+    std::map<std::string, cl_kernel> _kernel_map;
+    static CLKernelManager* _obj;
+    CLKernelManager(){};
+};
+
+CLKernelManager* CLKernelManager::_obj = NULL;
+
 
 cl_int
 cl_kernel_initializer ( cl_command_queue theQueue,
@@ -166,7 +209,7 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
                                 const std::string binaryFile, std::string kernelName,
                                 cl_program& theProgram, cl_kernel& theKernel)
 {
-    cl_int err;
+    cl_int status = CL_SUCCESS, err;
     cl_context theContext;
     clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_CONTEXT,
@@ -174,7 +217,14 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
     cl_device_id theDevice;
     clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
+       
+    theKernel = CLKernelManager::obj()->find(kernelName);
+
+    if( theKernel != nullptr)
+        return status;
+    
     FILE *fp = fopen(binaryFile.c_str(), "rb");
+    
     if (fp == NULL)
     {
         theProgram = NULL;
@@ -227,6 +277,8 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
         }
 
     }
+
+    
     if (theProgram == NULL)
     {
         //std::cout << "Binary not loaded, create from source..." << kernelFile << " "  << kernelName << std::endl;
@@ -244,11 +296,15 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
             clReleaseKernel(theKernel);
             return 1;
         }
+        
     }
     else
     {
         //std::cout << "Read program from binary." << std::endl;
     }
+
     theKernel = clCreateKernel(theProgram, kernelName.c_str(), &err);
+    clReleaseProgram(theProgram);
+    CLKernelManager::obj()->set( theKernel, kernelName);
     return err;
 }

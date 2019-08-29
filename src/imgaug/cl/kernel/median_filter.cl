@@ -31,19 +31,24 @@ __kernel void median_filter_pkd(  __global unsigned char* input,
             counter++;
         }
     }
-    for (int i = 0; i < counter - 1; i++)          
+    int pos;
+    int max = 0;
+    for (int i = 0; i < counter; i++)          
     {
-        for (int j = 0; j < counter - i - 1; j++)  
+        for (int j = i; j < counter; j++)  
         {
-            if (c[j] > c[j+1]) 
+            if (max < c[j]) 
             {
-                int temp = c[i];
-                c[i] = c[j];
-                c[j] = temp;
+                max = c[j];
+                pos = j;
             }
         }
+        max = 0;
+        int temp = c[pos];
+        c[pos] = c[i];
+        c[i] = temp;
     }
-    counter = kernelSize * bound + bound;
+    counter = kernelSize * bound + bound + 1;
     output[pixIdx] = c[counter];
 }
 
@@ -79,18 +84,23 @@ __kernel void median_filter_pln(  __global unsigned char* input,
             counter++;
         }
     }
-    for (int i = 0; i < counter - 1; i++)          
+    int pos;
+    int max = 0;
+    for (int i = 0; i < counter; i++)          
     {
-        for (int j = 0; j < counter - i - 1; j++)  
+        for (int j = i; j < counter; j++)  
         {
-            if (c[j] > c[j+1]) 
+            if (max < c[j]) 
             {
-                int temp = c[i];
-                c[i] = c[j];
-                c[j] = temp;
+                max = c[j];
+                pos = j;
             }
         }
+        max = 0;
+        int temp = c[pos];
+        c[pos] = c[i];
+        c[i] = temp;
     }
-    counter = kernelSize * bound + bound;
+    counter = kernelSize * bound + bound + 1;
     output[pixIdx] = c[counter];
 }
