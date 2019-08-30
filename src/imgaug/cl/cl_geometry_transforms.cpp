@@ -276,6 +276,7 @@ fisheye_cl(cl_mem srcPtr, RppiSize srcSize,
     }
     else
     {std::cerr << "Internal error: Unknown Channel format";}
+    counter = 0;
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
