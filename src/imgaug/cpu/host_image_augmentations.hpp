@@ -171,53 +171,86 @@ RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    Rpp32u kernelSize, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
-    if (kernelSize % 2 == 0)
+    Rpp8u *dstTemp,*srcTemp;
+    dstTemp = dstPtr;
+    srcTemp = srcPtr;
+    int sum = 0;
+    if(chnFormat == RPPI_CHN_PACKED)
     {
-        return RPP_ERROR;
-    }
+        for(int y = 0 ; y < srcSize.height ;)
+        {
+            for(int x = 0 ; x < srcSize.width ;)
+            {
+                for(int c = 0 ; c < channel ; c++)    
+                {    
+                    for(int i = 0 ; i < 7 ; i++)
+                    {
+                        for(int j = 0 ; j < 7 ; j++)
+                        {
+                            if(y + i < srcSize.height && x + j < srcSize.width && y + i >= 0 && x + j >= 0)
+                            {    
+                                sum += *(srcPtr + ((y + i) * srcSize.width * channel + (x + j) * channel + c));
+                            }
+                        }
+                    }
+                    sum /= 49;
 
-    Rpp32u bound = ((kernelSize - 1) / 2);
-
-    if ((RPPINRANGE(x1, bound, srcSize.width - 1 - bound) == 0) 
-        || (RPPINRANGE(x2, bound, srcSize.width - 1 - bound) == 0) 
-        || (RPPINRANGE(y1, bound, srcSize.height - 1 - bound) == 0) 
-        || (RPPINRANGE(y2, bound, srcSize.height - 1 - bound) == 0))
+                    for(int i = 0 ; i < 7 ; i++)
+                    {
+                        for(int j = 0 ; j < 7 ; j++)
+                        {
+                            if(y + i < srcSize.height && x + j < srcSize.width)
+                            {    
+                                *(dstTemp + ((y + i) * srcSize.width * channel + (x + j) * channel + c)) = RPPPIXELCHECK(sum);
+                            }
+                        }
+                    }
+                    sum = 0;
+                }
+                x +=7;
+            }
+            y += 7;
+        }
+    }    
+    else
     {
-        return RPP_ERROR;
+        for(int c = 0 ; c < channel ; c++)
+        {
+            for(int y = 0 ; y < srcSize.height ;)
+            {
+                for(int x = 0 ; x < srcSize.width ;)    
+                {    
+                    for(int i = 0 ; i < 7 ; i++)
+                    {
+                        for(int j = 0 ; j < 7 ; j++)
+                        {
+                            if(y + i < srcSize.height && x + j < srcSize.width && y + i >= 0 && x + j >= 0)
+                            {    
+                                sum += *(srcPtr + (y + i) * srcSize.width + (x + j) + c * srcSize.height * srcSize.width);
+                            }
+                        }
+                    }
+                    sum /= 49;
+
+                    for(int i = 0 ; i < 7 ; i++)
+                    {
+                        for(int j = 0 ; j < 7 ; j++)
+                        {
+                            if(y + i < srcSize.height && x + j < srcSize.width)
+                            {    
+                                *(dstTemp + (y + i) * srcSize.width + (x + j) + c * srcSize.height * srcSize.width) = RPPPIXELCHECK(sum);
+                            }
+                        }
+                    }
+                    sum = 0;
+                    x +=7;
+                }
+                y += 7;
+            }
+        }
     }
-
-    memcpy(dstPtr, srcPtr, channel * srcSize.height * srcSize.width * sizeof(T));
-
-    Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
-
-    generate_box_kernel_host(kernel, kernelSize);
-
-    RppiSize srcSizeMod, srcSizeSubImage;
-    T *srcPtrMod, *srcPtrSubImage, *dstPtrSubImage;
-
-    compute_subimage_location_host(srcPtr, &srcPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
-    compute_subimage_location_host(dstPtr, &dstPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
-
-    srcSizeMod.height = srcSizeSubImage.height + (2 * bound);
-    srcSizeMod.width = srcSizeSubImage.width + (2* bound);
-
-    if (chnFormat == RPPI_CHN_PLANAR)
-    {
-        srcPtrMod = srcPtrSubImage - (bound * srcSize.width) - bound;
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-        srcPtrMod = srcPtrSubImage - (bound * srcSize.width * channel) - (bound * channel);
-    }
-
-    RppiSize rppiKernelSize;
-    rppiKernelSize.height = kernelSize;
-    rppiKernelSize.width = kernelSize;
-    convolve_subimage_host(srcPtrMod, srcSizeMod, dstPtrSubImage, srcSizeSubImage, srcSize, kernel, rppiKernelSize, chnFormat, channel);
-
     return RPP_SUCCESS;
 }
 

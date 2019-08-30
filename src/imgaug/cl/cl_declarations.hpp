@@ -156,8 +156,7 @@ blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
 
 cl_int
 pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
-            unsigned int filterSize, unsigned int x1, unsigned int y1,
-            unsigned int x2, unsigned int y2,RppiChnFormat chnFormat,
+            RppiChnFormat chnFormat,
             unsigned int channel,cl_command_queue theQueue);
 
 cl_int
