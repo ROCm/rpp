@@ -803,9 +803,9 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     gDim3[1] = srcSize.height;
     
     cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
-                                    sizeof(unsigned int)*256*channel*numGroups, NULL, NULL);
+                                    sizeof(unsigned int)*256*numGroups, NULL, NULL);
     cl_mem histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
-                                    sizeof(unsigned int)*256*channel, NULL, NULL);
+                                    sizeof(unsigned int)*256, NULL, NULL);
     
     
 
@@ -830,7 +830,7 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &numGroups);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
 
-    gDim3[0] = 256 * channel;
+    gDim3[0] = 256;
     lDim3[0] = 256;
     gDim3[1] = 1; 
     gDim3[2] = 1;
@@ -839,10 +839,11 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
 
     cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
    
+
     // For scan kernel
     counter = 0;
     cl_mem cum_histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
-                                    sizeof(unsigned int)*256*channel, NULL, NULL);
+                                    sizeof(unsigned int)*256, NULL, NULL);
     if (channel == 3)
         CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
     else

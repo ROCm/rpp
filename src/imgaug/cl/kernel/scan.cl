@@ -1,6 +1,6 @@
 #define SWAP(a,b) {__local int *tmp=a;a=b;b=tmp;}
 
-__kernel void scan(__global int *input,
+__kernel void scan_1c(__global int *input,
                    __global int *output,
                    __local  int *b,
                    __local  int *c)
@@ -44,7 +44,7 @@ __kernel void scan(__global int *input,
    }
 }
 
-__kernel void scan_1c(__global int *input,
+__kernel void scan(__global int *input,
                    __global int *output,
                    __local  int *b,
                    __local  int *c)

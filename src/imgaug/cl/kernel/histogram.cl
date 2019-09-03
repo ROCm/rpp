@@ -10,11 +10,11 @@ void partial_histogram_pln(__global unsigned char *input,
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int local_size = (int)get_local_size(0) * (int)get_local_size(1);
-    int group_indx = (get_group_id(1) * get_num_groups(0) + get_group_id(0)) * 256 * channel;
+    int group_indx = (get_group_id(1) * get_num_groups(0) + get_group_id(0)) * 256;
     unsigned int pixId;
-    local uint tmp_histogram [768];
+    local uint tmp_histogram [256];
     int tid = get_local_id(1) * get_local_size(0) + get_local_id(0);
-    int j = 256 * channel;
+    int j = 256;
     int indx = 0;
     do
     {
@@ -32,19 +32,19 @@ void partial_histogram_pln(__global unsigned char *input,
         unsigned char pixelG = input[pixId + height * width];
         unsigned char pixelB = input[pixId + 2 * height * width];
         atomic_inc(&tmp_histogram[pixelR]);
-        atomic_inc(&tmp_histogram[256+pixelG]);
-        atomic_inc(&tmp_histogram[512+pixelB]);
+        atomic_inc(&tmp_histogram[pixelG]);
+        atomic_inc(&tmp_histogram[pixelB]);
     }
     barrier(CLK_LOCAL_MEM_FENCE);
-    if (local_size >= (256 * channel))
+    if (local_size >= (256 ))
     {
-        if (tid < (256 * channel)){
+        if (tid < (256 )){
             histogramPartial[group_indx + tid] = tmp_histogram[tid];
         }
     }
     else
     {
-        j = 256 * channel;
+        j = 256;
         indx = 0;
         do
         {
@@ -124,11 +124,11 @@ void partial_histogram_pkd(__global unsigned char *input,
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int local_size = (int)get_local_size(0) * (int)get_local_size(1);
-    int group_indx = (get_group_id(1) * get_num_groups(0) + get_group_id(0)) * 256 * channel;
+    int group_indx = (get_group_id(1) * get_num_groups(0) + get_group_id(0)) * 256 ;
     unsigned int pixId;
-    local uint tmp_histogram [768];
+    local uint tmp_histogram [256];
     int tid = get_local_id(1) * get_local_size(0) + get_local_id(0);
-    int j = 256 * channel;
+    int j = 256 ;
     int indx = 0;
     do
     {
@@ -146,19 +146,19 @@ void partial_histogram_pkd(__global unsigned char *input,
         unsigned char pixelG = input[pixId + 1];
         unsigned char pixelB = input[pixId + 2];
         atomic_inc(&tmp_histogram[pixelR]);
-        atomic_inc(&tmp_histogram[256+pixelG]);
-        atomic_inc(&tmp_histogram[512+pixelB]);
+        atomic_inc(&tmp_histogram[pixelG]);
+        atomic_inc(&tmp_histogram[pixelB]);
     }
     barrier(CLK_LOCAL_MEM_FENCE);
-    if (local_size >= (256 * channel))
+    if (local_size >= (256 ))
     {
-        if (tid < (256 * channel)){
+        if (tid < (256 )){
             histogramPartial[group_indx + tid] = tmp_histogram[tid];
         }
     }
     else
     {
-        j = 256 * channel;
+        j = 256;
         indx = 0;
         do
         {
@@ -182,14 +182,14 @@ histogram_sum_partial(global unsigned int *histogramPartial,
     int  tid = (int)get_global_id(0);
     int  group_indx;
     int  n = num_groups;
-    local uint tmp_histogram[256 * 3];
+    local uint tmp_histogram[256];
      
     tmp_histogram[tid] = histogramPartial[tid];    
-    group_indx = 256*channel;
+    group_indx = 256;
     while (--n > 1)
     {
         tmp_histogram[tid] = tmp_histogram[tid] +  histogramPartial[group_indx + tid];
-        group_indx += 256*channel; 
+        group_indx += 256; 
     }
     histogram[tid] = tmp_histogram[tid];
 }
@@ -203,13 +203,13 @@ histogram_equalize_pln(global unsigned char *input,
                    const unsigned int channel
                    )
 {
-    float normalize_factor = 255.0 / (height * width);
+    float normalize_factor = 255.0 / (height * width * channel);
     unsigned int id_x = get_global_id(0);
     unsigned int id_y = get_global_id(1);
     unsigned int id_z = get_global_id(2);
     unsigned pixId;
     pixId = id_x  + id_y * width + id_z * height * width;
-    output[pixId] = cum_histogram[input[pixId] + id_z * 256] * (normalize_factor);
+    output[pixId] = cum_histogram[input[pixId]] * (normalize_factor);
 }
 
 kernel void
@@ -221,13 +221,13 @@ histogram_equalize_pkd(global unsigned char *input,
                    const unsigned int channel
                    )
 {
-    float normalize_factor = 255.0 / (height * width);
+    float normalize_factor = 255.0 / (height * width * channel);
     unsigned int id_x = get_global_id(0);
     unsigned int id_y = get_global_id(1);
     unsigned int id_z = get_global_id(2);
     unsigned pixId;
     pixId = id_x * channel + id_y * width * channel + id_z;
-    output[pixId] = cum_histogram[input[pixId] + id_z * 256] * (normalize_factor);
+    output[pixId] = cum_histogram[input[pixId]] * (normalize_factor);
 }
 
 

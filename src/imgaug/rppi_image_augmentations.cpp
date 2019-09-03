@@ -82,7 +82,7 @@ rppi_contrast_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  	 validate_image_size(srcSize);
  	 validate_unsigned_int_max(newMax, &newMin);
 	 if (newMax > 255) newMax = 255;
-	 if  (newMax < 0)  newMin = 0;
+	 if  (newMin < 0)  newMin = 0;
 	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
@@ -99,7 +99,7 @@ rppi_contrast_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  	 validate_image_size(srcSize);
  	 validate_unsigned_int_max(newMax, &newMin);
 	 if (newMax > 255) newMax = 255;
-	 if  (newMax < 0)  newMin = 0;
+	 if  (newMin < 0)  newMin = 0;
 	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
@@ -116,7 +116,7 @@ rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  	 validate_image_size(srcSize);
  	 validate_unsigned_int_max(newMax, &newMin);
 	 if (newMax > 255) newMax = 255;
-	 if  (newMax < 0)  newMin = 0;
+	 if  (newMin < 0)  newMin = 0;
 	 contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
@@ -1100,7 +1100,7 @@ rppi_contrast_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  	 validate_image_size(srcSize);
  	 validate_unsigned_int_max(newMax, &newMin);
 	if (newMax > 255) newMax = 255;
-	 if  (newMax < 0)  newMin = 0;
+	 if  (newMin < 0)  newMin = 0;
 
 #ifdef OCL_COMPILE
  	 {
@@ -1126,7 +1126,7 @@ rppi_contrast_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  	 validate_image_size(srcSize);
  	 validate_unsigned_int_max(newMax, &newMin);
 	if (newMax > 255) newMax = 255;
-	 if  (newMax < 0)  newMin = 0;
+	 if  (newMin < 0)  newMin = 0;
 
 #ifdef OCL_COMPILE
  	 {
@@ -1152,7 +1152,7 @@ rppi_contrast_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
  	 validate_image_size(srcSize);
  	 validate_unsigned_int_max(newMax, &newMin);
 	if (newMax > 255) newMax = 255;
-	 if  (newMax < 0)  newMin = 0;
+	 if  (newMin < 0)  newMin = 0;
 
 #ifdef OCL_COMPILE
  	 {
