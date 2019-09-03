@@ -1,2 +1,0 @@
-# rpp
-Radeon Performance Primitives
