@@ -631,73 +631,37 @@ rppi_blend_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPt
 
 
 RppStatus
-rppi_pixelate_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, Rpp32u x1,Rpp32u y1,Rpp32u x2,Rpp32u y2 )
+rppi_pixelate_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-	 Rpp32u kernelSize = 3;
-	 validate_unsigned_int_max(x2,&x1);
-	 validate_unsigned_int_max(y2,&y1);
 	 pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
-			kernelSize,
-			x1,
-			y1,
-			x2,
-			y2,
 			RPPI_CHN_PLANAR, 1);
 	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_pixelate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2 )
+rppi_pixelate_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-	 Rpp32u kernelSize = 3;
-	 validate_unsigned_int_max(x2,&x1);
-	 validate_unsigned_int_max(y2,&y1);
 	 pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
-			kernelSize,
-			x1,
-			y1,
-			x2,
-			y2,
 			RPPI_CHN_PLANAR, 3);
 	return RPP_SUCCESS;
 }
 
 RppStatus
-rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2 )
+rppi_pixelate_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-	 Rpp32u kernelSize = 3;
-	 validate_unsigned_int_max(x2,&x1);
-	 validate_unsigned_int_max(y2,&y1);
 	 pixelate_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
-			kernelSize,
-			x1,
-			y1,
-			x2,
-			y2,
 			RPPI_CHN_PACKED, 3);
 	return RPP_SUCCESS;
 }
@@ -1672,27 +1636,15 @@ rppi_blend_u8_pkd3_gpu(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr
 
 
 RppStatus
-rppi_pixelate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2 , RppHandle_t rppHandle)
+rppi_pixelate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-	 Rpp32u kernelSize = 3;
-	 validate_unsigned_int_max(x2,&x1);
-	 validate_unsigned_int_max(y2,&y1);
 #ifdef OCL_COMPILE
  	 {
  	 pixelate_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			kernelSize,
-			x1,
-			y1,
-			x2,
-			y2,
 			RPPI_CHN_PLANAR, 1,
 			static_cast<cl_command_queue>(rppHandle));
  	 }
@@ -1704,28 +1656,16 @@ rppi_pixelate_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 }
 
 RppStatus
-rppi_pixelate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle)
+rppi_pixelate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-	 Rpp32u kernelSize = 3;
-	 validate_unsigned_int_max(x2,&x1);
-	 validate_unsigned_int_max(y2,&y1);
 
 #ifdef OCL_COMPILE
  	 {
  	 pixelate_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			kernelSize,
-			x1,
-			y1,
-			x2,
-			y2,
 			RPPI_CHN_PLANAR, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 }
@@ -1737,28 +1677,16 @@ rppi_pixelate_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32
 }
 
 RppStatus
-rppi_pixelate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32u x1 ,Rpp32u y1,Rpp32u x2,Rpp32u y2, RppHandle_t rppHandle)
+rppi_pixelate_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr, RppHandle_t rppHandle)
 {
 
  	 validate_image_size(srcSize);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1,& x1);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y1);
- 	 validate_unsigned_int_range( 0, srcSize.width - 1, &x2);
- 	 validate_unsigned_int_range( 0, srcSize.height - 1, &y2);
-	 Rpp32u kernelSize = 3;
-	 validate_unsigned_int_max(x2,&x1);
-	 validate_unsigned_int_max(y2,&y1);
 
 #ifdef OCL_COMPILE
  	 {
  	 pixelate_cl(static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
-			kernelSize,
-			x1,
-			y1,
-			x2,
-			y2,
 			RPPI_CHN_PACKED, 3,
 			static_cast<cl_command_queue>(rppHandle));
  	 }

@@ -204,68 +204,38 @@ blend_cl( cl_mem srcPtr1,cl_mem srcPtr2,
 
 cl_int
 pixelate_cl(cl_mem srcPtr, RppiSize srcSize,cl_mem dstPtr,
-            unsigned int filterSize, unsigned int x1, unsigned int y1,
-            unsigned int x2, unsigned int y2,RppiChnFormat chnFormat,
+            RppiChnFormat chnFormat,
             unsigned int channel,cl_command_queue theQueue)
 {
-    cl_int err;
     unsigned short counter=0;
-
-    float* filterBuffer;
-    if (filterSize == 3) filterBuffer= gauss_3x3;
-    else  std::cerr << "Unimplemeted kernel Size";
-
-    cl_context theContext;
-    clGetCommandQueueInfo(  theQueue,
-                            CL_QUEUE_CONTEXT,
-                            sizeof(cl_context), &theContext, NULL);
-    cl_mem filtPtr = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
-                                    sizeof(float)*filterSize*filterSize, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, filtPtr, CL_TRUE, 0,
-                                   sizeof(float)*filterSize*filterSize,
-                                   filterBuffer, 0, NULL, NULL);
-
-
+    cl_int err;
     cl_kernel theKernel;
     cl_program theProgram;
 
-
-    if (chnFormat == RPPI_CHN_PLANAR)
+    if(chnFormat == RPPI_CHN_PACKED)
     {
-        CreateProgramFromBinary(theQueue, "pixelate.cl","pixelate.bin",
-                                "pixelate_planar", theProgram, theKernel);
-        clRetainKernel(theKernel);
-
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-
-        CreateProgramFromBinary(theQueue, "pixelate.cl","pixelate.bin",
-                                "pixelate_packed", theProgram, theKernel);
+        CreateProgramFromBinary(theQueue, "pixelate.cl", "pixelate.cl.bin", "pixelate_pkd", theProgram, theKernel);
         clRetainKernel(theKernel);
     }
-    else
-    {std::cerr << "Internal error: Unknown Channel format";}
+    else if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        CreateProgramFromBinary(theQueue, "pixelate.cl", "pixelate.cl.bin", "pixelate_pln", theProgram, theKernel);
+        clRetainKernel(theKernel);
+    }
 
+    //---- Args Setter
     err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &filtPtr);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x1);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y1);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x2);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y2);
     err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &filterSize);
-
     size_t gDim3[3];
-    gDim3[0] = srcSize.width;
-    gDim3[1] = srcSize.height;
+    gDim3[0] = ceil(srcSize.width / 7) + 1;
+    gDim3[1] = ceil(srcSize.height / 7) + 1;
     gDim3[2] = channel;
     cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
-    return RPP_SUCCESS;
+    return err;
 }
 //----
 /********************** ADDING NOISE ************************/
