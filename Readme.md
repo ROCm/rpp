@@ -21,6 +21,7 @@ RPP is developed for __Linux__ operating system.
 * Gamma
 * Blend
 * Warp Affine
+* Resize
 * CropResize
 * Rotation
 * Flip(Horizontal, Vertical and Both)
