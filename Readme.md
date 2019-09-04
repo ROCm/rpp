@@ -18,11 +18,24 @@ RPP is developed for __Linux__ operating system.
 ## Functions Included
 * Brightness
 * Contrast
+* Gamma
+* Blend
+* Warp Affine
+* CropResize
+* Rotation
 * Flip(Horizontal, Vertical and Both)
 * Blur (Gaussian 3x3)
-* Hue and Saturation modification
-* HSV2RGB
-* RGB2HSV
+* Fisheye lens
+* Vignette
+* Jitter
+* Salt and pepper noise
+* Snow flakes
+* Rain drops
+* Fog
+* Color temperature
+* Lens correction
+* Pixelization
+* Exposure modification
 
 ## Variations
 * Support for 3C(RGB) and 1C(Grayscale) images
