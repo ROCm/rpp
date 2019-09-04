@@ -814,10 +814,8 @@ histogram_balance_cl(cl_mem srcPtr, RppiSize srcSize,
     counter = 0;
     cl_mem cum_histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(unsigned int)*256, NULL, NULL);
-    if (channel == 3)
-        CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
-    else
-        CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan_1c",theProgram,theKernel);
+    CreateProgramFromBinary(theQueue,"scan.cl","scan.cl.bin","scan",theProgram,theKernel);
+    
 
     clRetainKernel(theKernel);
 

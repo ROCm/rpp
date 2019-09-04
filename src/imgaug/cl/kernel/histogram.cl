@@ -1,4 +1,5 @@
 #pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
+#define round(value) ( (value - (int)(value)) >=0.5 ? (value + 1) : (value))
 
 kernel
 void partial_histogram_pln(__global unsigned char *input,
@@ -10,11 +11,11 @@ void partial_histogram_pln(__global unsigned char *input,
     int id_x = get_global_id(0);
     int id_y = get_global_id(1);
     int local_size = (int)get_local_size(0) * (int)get_local_size(1);
-    int group_indx = (get_group_id(1) * get_num_groups(0) + get_group_id(0)) * 256;
+    int group_indx = (get_group_id(1) * get_num_groups(0) + get_group_id(0)) * 256 ;
     unsigned int pixId;
     local uint tmp_histogram [256];
     int tid = get_local_id(1) * get_local_size(0) + get_local_id(0);
-    int j = 256;
+    int j = 256 ;
     int indx = 0;
     do
     {
@@ -27,10 +28,10 @@ void partial_histogram_pln(__global unsigned char *input,
 
     if ((id_x < width) && (id_y < height))
     {
-        pixId = id_x + id_y * width * channel;
+        pixId = id_x * width + id_y * width * height;
         unsigned char pixelR = input[pixId];
-        unsigned char pixelG = input[pixId + height * width];
-        unsigned char pixelB = input[pixId + 2 * height * width];
+        unsigned char pixelG = input[pixId + width * height];
+        unsigned char pixelB = input[pixId + 2 * width * height];
         atomic_inc(&tmp_histogram[pixelR]);
         atomic_inc(&tmp_histogram[pixelG]);
         atomic_inc(&tmp_histogram[pixelB]);
@@ -57,6 +58,7 @@ void partial_histogram_pln(__global unsigned char *input,
         } while (j > 0);
     }
 }
+
 
 kernel
 void partial_histogram_pln1(__global unsigned char *input,
@@ -141,7 +143,7 @@ void partial_histogram_pkd(__global unsigned char *input,
 
     if ((id_x < width) && (id_y < height))
     {
-        pixId = id_x + id_y * width * channel;
+        pixId = id_x * channel + id_y * width * channel;
         unsigned char pixelR = input[pixId];
         unsigned char pixelG = input[pixId + 1];
         unsigned char pixelB = input[pixId + 2];
@@ -227,7 +229,7 @@ histogram_equalize_pkd(global unsigned char *input,
     unsigned int id_z = get_global_id(2);
     unsigned pixId;
     pixId = id_x * channel + id_y * width * channel + id_z;
-    output[pixId] = cum_histogram[input[pixId]] * (normalize_factor);
+    output[pixId] = round(cum_histogram[input[pixId]] * (normalize_factor));
 }
 
 
