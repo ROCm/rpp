@@ -37,7 +37,7 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     link_libraries(-amdgpu-target=gfx803 -amdgpu-target=gfx900 -Wno-unused-command-line-argument)
 elseif( "${BACKEND}" STREQUAL "OCL")
-    set(CMAKE_CXX_COMPILER  ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
+    set(CMAKE_CXX_COMPILER  ${COMPILER_FOR_OPENCL}) 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -lm")
     set( LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
     set( INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
