@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(imgaug) #Rename the Project name
 
 file( GLOB MOD_CPP "*.cpp" )
-add_library( ${PROJECT_NAME} STATIC ${MOD_CPP})
+add_library( ${PROJECT_NAME} OBJECT ${MOD_CPP})
 
 # Backend Specific Settings
 if( "${TIME_INFO}" STREQUAL "1")
@@ -13,14 +13,15 @@ if( "${BACKEND}" STREQUAL "HIP")
     add_subdirectory( cl )
     add_subdirectory( hipoc )
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIPOC})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -lm")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
     set(LINK_LIST ${PROJECT_NAME}-hipoc ${LINK_LIST})
     add_definitions(-DHIP_COMPILE)
 elseif( "${BACKEND}" STREQUAL "OCL")
     add_subdirectory( cl )
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -lm")
+    set(SUB_MODULES_LIST ${PROJECT_NAME}-opencl ${SUB_MODULES_LIST} PARENT_SCOPE)
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set(LINK_LIST ${PROJECT_NAME}-opencl ${OpenCL_LIBRARIES} ${LINK_LIST})
     set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
     add_definitions(-DOCL_COMPILE)
