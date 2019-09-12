@@ -11,10 +11,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 #set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
 #set(COMPILER_FOR_HIPOC /opt/rocm/bin/hipcc)
 # Set Compilers
-set(COMPILER_FOR_HIP clang++)
-set(COMPILER_FOR_HIPOC clang++)
-set(COMPILER_FOR_OPENCL clang++)
-
+set(COMPILER_FOR_HIP /opt/AMD/aocc-compiler-2.0.0/bin/clang++)
+set(COMPILER_FOR_HIPOC /opt/AMD/aocc-compiler-2.0.0/bin/clang++)
+set(COMPILER_FOR_OPENCL /opt/AMD/aocc-compiler-2.0.0/bin/clang++)
 
 add_library(${PROJECT_NAME} SHARED include/rpp.h)
 
@@ -40,7 +39,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     link_libraries(-amdgpu-target=gfx803 -amdgpu-target=gfx900 -Wno-unused-command-line-argument)
 elseif( "${BACKEND}" STREQUAL "OCL")
     set(CMAKE_CXX_COMPILER  ${COMPILER_FOR_OPENCL})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
     set( LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
     set( INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
 endif()
@@ -48,7 +47,10 @@ endif()
 # target setting
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(${PROJECT_NAME} ${MODULES_LIST} ${SUB_MODULES_LIST} ${LINK_LIST})
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+	target_link_libraries(${PROJECT_NAME} ${MODULES_LIST} ${SUB_MODULES_LIST} ${LINK_LIST} OpenMP::OpenMP_CXX)
+endif()
 target_include_directories(${PROJECT_NAME}
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
