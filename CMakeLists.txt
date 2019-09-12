@@ -11,9 +11,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 #set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
 #set(COMPILER_FOR_HIPOC /opt/rocm/bin/hipcc)
 # Set Compilers
-set(COMPILER_FOR_HIP /home/reza/aocc-compiler-2.0.0/bin/clang++)
-set(COMPILER_FOR_HIPOC /home/reza/aocc-compiler-2.0.0/bin/clang++)
-set(COMPILER_FOR_OPENCL /home/reza/aocc-compiler-2.0.0/bin/clang++)
+set(COMPILER_FOR_HIP clang++)
+set(COMPILER_FOR_HIPOC clang++)
+set(COMPILER_FOR_OPENCL clang++)
 
 
 add_library(${PROJECT_NAME} SHARED include/rpp.h)
