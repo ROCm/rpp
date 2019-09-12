@@ -42,6 +42,7 @@ class CLKernelManager
         if(find(kernel_name)!= nullptr)
             return false;
         _kernel_map.insert(std::make_pair(kernel_name, theKernel));
+        return true;
     }
 //    std::vector< cl_program> _prog_map;
 private:

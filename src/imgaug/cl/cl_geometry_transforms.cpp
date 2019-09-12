@@ -77,7 +77,7 @@ flip_cl(cl_mem srcPtr, RppiSize srcSize,
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 }
 
 //Resize-------------
@@ -123,7 +123,7 @@ resize_cl(cl_mem srcPtr, RppiSize srcSize,
     gDim3[0] = dstSize.width;
     gDim3[1] = dstSize.height;
     gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 }
 
 //------------Resize
@@ -197,7 +197,7 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
         gDim3[2] = channel;
     }
     
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 }
 
 //Rotate---------------------------
@@ -245,7 +245,7 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
     gDim3[0] = dstSize.width;
     gDim3[1] = dstSize.height;
     gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
 }
 //Fish eye
@@ -287,7 +287,7 @@ fisheye_cl(cl_mem srcPtr, RppiSize srcSize,
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
 }
 
@@ -343,8 +343,7 @@ lens_correction_cl( cl_mem srcPtr,RppiSize srcSize, cl_mem dstPtr,
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-    return RPP_SUCCESS;
+    return cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 }
 
 
@@ -412,5 +411,5 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
     gDim3[0] = dstSize.width;
     gDim3[1] = dstSize.height;
     gDim3[2] = channel;
-    cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    return cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 }

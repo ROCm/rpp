@@ -411,6 +411,7 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         Rpp32u pixel = ((Rpp32u) srcPtr[i]) + (Rpp32u)dstPtr[i];
         dstPtr[i] = RPPPIXELCHECK(pixel);
     }
+    return RPP_SUCCESS;
 }
 
 /**************** Blend ***************/
@@ -650,7 +651,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
         Rpp32f pixel = ((Rpp32f) srcPtr[i]) + transparency * dstPtr[i];
         dstPtr[i] = RPPPIXELCHECK(pixel);
     }
-
+    return RPP_SUCCESS;
 }
 
 /**************** Exposure Modification ***************/
