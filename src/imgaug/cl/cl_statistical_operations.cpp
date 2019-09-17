@@ -109,17 +109,17 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         if(channel > 1)
-            CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pln",
+            CreateProgramFromBinary(theQueue,"hist.cl","hist.cl.bin","partial_histogram_pln",
                                     theProgram,theKernel);
         else
-            CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pln1",
+            CreateProgramFromBinary(theQueue,"hist.cl","hist.cl.bin","partial_histogram_pln1",
                                     theProgram,theKernel);
         
         clRetainKernel(theKernel);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","partial_histogram_pkd",
+        CreateProgramFromBinary(theQueue,"hist.cl","hist.cl.bin","partial_histogram_pkd",
                                     theProgram,theKernel);
         clRetainKernel(theKernel);
 
@@ -161,7 +161,7 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
 
     // For sum histogram kernel
-    CreateProgramFromBinary(theQueue,"histogram.cl","histogram.cl.bin","histogram_sum_partial",
+    CreateProgramFromBinary(theQueue,"hist.cl","hist.cl.bin","histogram_sum_partial",
                                                                         theProgram,theKernel);
     clRetainKernel(theKernel);
 
