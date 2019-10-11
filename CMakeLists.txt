@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 project(amd_rpp VERSION 0.1)
 
 # Cmake checks and setups
@@ -11,9 +11,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 #set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
 #set(COMPILER_FOR_HIPOC /opt/rocm/bin/hipcc)
 # Set Compilers
-set(COMPILER_FOR_HIP /opt/AMD/aocc-compiler-2.0.0/bin/clang++)
-set(COMPILER_FOR_HIPOC /opt/AMD/aocc-compiler-2.0.0/bin/clang++)
-set(COMPILER_FOR_OPENCL /opt/AMD/aocc-compiler-2.0.0/bin/clang++)
+set(COMPILER_FOR_HIP clang++)
+set(COMPILER_FOR_HIPOC clang++)
+set(COMPILER_FOR_OPENCL clang++)
 
 add_library(${PROJECT_NAME} SHARED include/rpp.h)
 
