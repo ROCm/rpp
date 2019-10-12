@@ -135,29 +135,6 @@ RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 }
 
-
-template <>
-RppStatus brightness_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, 
-                          Rpp32f alpha, Rpp32f beta, 
-                          RppiChnFormat chnFormat, Rpp32u channel)
-{
-    Rpp8u *srcPtrTemp, *dstPtrTemp;
-    srcPtrTemp = srcPtr;
-    dstPtrTemp = dstPtr;
-
-//    Rpp32f pixel;
-#pragma omp parallel for simd //parallel for 
-    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
-    {
-        Rpp32f pixel = ((Rpp32f) (srcPtrTemp[i])) * alpha + beta;
-        pixel = RPPPIXELCHECK(pixel);
-        dstPtrTemp[i] = (Rpp8u) round(pixel);
-    }
-
-    return RPP_SUCCESS;
-
-}
-
 /**************** Gamma Correction ***************/
 
 template <typename T>
@@ -169,17 +146,15 @@ RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    Rpp32f pixel;
-
+    //Rpp32f pixel;
+#pragma omp parallel for simd
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = ((Rpp32f) (*srcPtrTemp)) / 255.0;
+        Rpp32f pixel = ((Rpp32f) (srcPtrTemp[i])) / 255.0;
         pixel = pow(pixel, gamma);
         pixel = pixel * 255.0;
         pixel = RPPPIXELCHECK(pixel);
-        *dstPtrTemp = (T) pixel;
-        srcPtrTemp++;
-        dstPtrTemp++;
+        dstPtrTemp[i] = (T) pixel;
     }
 
     return RPP_SUCCESS;
@@ -196,13 +171,16 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     Rpp8u *dstTemp,*srcTemp;
     dstTemp = dstPtr;
     srcTemp = srcPtr;
-    int sum = 0;
+
     if(chnFormat == RPPI_CHN_PACKED)
     {
-        for(int y = 0 ; y < srcSize.height ;)
+#pragma omp parallel for 
+        for(int y = 0 ; y < srcSize.height ;y += 7)
         {
-            for(int x = 0 ; x < srcSize.width ;)
+#pragma omp parallel for
+            for(int x = 0 ; x < srcSize.width ;x +=7)
             {
+                int sum = 0;
                 for(int c = 0 ; c < channel ; c++)    
                 {    
                     for(int i = 0 ; i < 7 ; i++)
@@ -227,21 +205,21 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                             }
                         }
                     }
-                    sum = 0;
                 }
-                x +=7;
             }
-            y += 7;
         }
     }    
     else
     {
         for(int c = 0 ; c < channel ; c++)
         {
-            for(int y = 0 ; y < srcSize.height ;)
+#pragma omp parallel for
+            for(int y = 0 ; y < srcSize.height ;y += 7)
             {
-                for(int x = 0 ; x < srcSize.width ;)    
-                {    
+#pragma omp parallel for
+                for(int x = 0 ; x < srcSize.width ;x +=7)
+                {
+                    int sum = 0;
                     for(int i = 0 ; i < 7 ; i++)
                     {
                         for(int j = 0 ; j < 7 ; j++)
@@ -264,10 +242,8 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                             }
                         }
                     }
-                    sum = 0;
-                    x +=7;
+
                 }
-                y += 7;
             }
         }
     }
