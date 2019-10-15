@@ -174,7 +174,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     if(chnFormat == RPPI_CHN_PACKED)
     {
-#pragma omp parallel for 
+#pragma omp parallel for
         for(int y = 0 ; y < srcSize.height ;y += 7)
         {
 #pragma omp parallel for
@@ -189,7 +189,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         {
                             if(y + i < srcSize.height && x + j < srcSize.width && y + i >= 0 && x + j >= 0)
                             {    
-                                sum += *(srcPtr + ((y + i) * srcSize.width * channel + (x + j) * channel + c));
+                                sum += srcPtr [ ((y + i) * srcSize.width * channel + (x + j) * channel + c)];
                             }
                         }
                     }
@@ -201,7 +201,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         {
                             if(y + i < srcSize.height && x + j < srcSize.width)
                             {    
-                                *(dstTemp + ((y + i) * srcSize.width * channel + (x + j) * channel + c)) = RPPPIXELCHECK(sum);
+                                dstTemp [ ((y + i) * srcSize.width * channel + (x + j) * channel + c)] = RPPPIXELCHECK(sum);
                             }
                         }
                     }
@@ -226,7 +226,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         {
                             if(y + i < srcSize.height && x + j < srcSize.width && y + i >= 0 && x + j >= 0)
                             {    
-                                sum += *(srcPtr + (y + i) * srcSize.width + (x + j) + c * srcSize.height * srcSize.width);
+                                sum += srcPtr [(y + i) * srcSize.width + (x + j) + c * srcSize.height * srcSize.width];
                             }
                         }
                     }
@@ -238,7 +238,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         {
                             if(y + i < srcSize.height && x + j < srcSize.width)
                             {    
-                                *(dstTemp + (y + i) * srcSize.width + (x + j) + c * srcSize.height * srcSize.width) = RPPPIXELCHECK(sum);
+                                dstTemp [ (y + i) * srcSize.width + (x + j) + c * srcSize.height * srcSize.width] = RPPPIXELCHECK(sum);
                             }
                         }
                     }
@@ -260,32 +260,40 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     Rpp8u *dstTemp,*srcTemp;
     dstTemp = dstPtr;
     srcTemp = srcPtr;
-    int bound = (kernelSize - 1) / 2;
-    srand(time(0)); 
-    unsigned int width = srcSize.width;
-    unsigned int height = srcSize.height;
+    const int bound = (kernelSize - 1) / 2;
+    const unsigned int width = srcSize.width;
+    const unsigned int height = srcSize.height;
+    int anhx[srcSize.width];
+    int anhy[srcSize.width];
+    for(int i = 0; i<  srcSize.width; i++)
+    {
+        anhx[i] = rand() % kernelSize;
+        anhy[i] = rand() % kernelSize;
+    }
     if(chnFormat == RPPI_CHN_PACKED)
     {
+#pragma omp parallel for
         for(int id_y = 0 ; id_y < srcSize.height ; id_y++)
         {
+#pragma omp parallel for simd
             for(int id_x = 0 ; id_x < srcSize.width ; id_x++)
             {
                 int pixIdx = id_y * channel * width + id_x * channel;
-                int nhx = rand() % (kernelSize);
-                int nhy = rand() % (kernelSize);
+                int nhx = anhx[id_x];
+                int nhy = anhy[id_x];
                 if((id_y - bound + nhy) >= 0 && (id_y - bound + nhy) <= height - 1 && (id_x - bound + nhx) >= 0 && (id_x - bound + nhx) <= width - 1)
                 {
                     int index = ((id_y - bound) * channel * width) + ((id_x - bound) * channel) + (nhy * channel * width) + (nhx * channel);
                     for(int i = 0 ; i < channel ; i++)
                     {
-                        *(dstPtr + pixIdx + i) = *(srcPtr + index + i);  
+                        dstTemp [pixIdx + i] = srcTemp[ index + i];
                     }
                 }
                 else 
                 {
                     for(int i = 0 ; i < channel ; i++)
                     {
-                        *(dstPtr + pixIdx + i) = *(srcPtr + pixIdx + i);  
+                        dstTemp[pixIdx + i]= srcTemp[ pixIdx + i];
                     }
                 }
             }
@@ -293,28 +301,29 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
     else
     {
+#pragma omp parallel for
         for(int id_y = 0 ; id_y < srcSize.height ; id_y++)
         {
+#pragma omp parallel for simd
             for(int id_x = 0 ; id_x < srcSize.width ; id_x++)
             {
                 int pixIdx = id_y * width + id_x;
-                int channelPixel = height * width;
-                int nhx = rand() % (kernelSize);
-                int nhy = rand() % (kernelSize);
+                int nhx = anhx[id_x];
+                int nhy = anhy[id_x];
                 int bound = (kernelSize - 1) / 2;
                 if((id_y - bound + nhy) >= 0 && (id_y - bound + nhy) <= height - 1 && (id_x - bound + nhx) >= 0 && (id_x - bound + nhx) <= width - 1)
                 {
                     int index = ((id_y - bound) * width) + (id_x - bound) + (nhy * width) + (nhx);
                     for(int i = 0 ; i < channel ; i++)
                     {
-                        *(dstPtr + pixIdx + (height * width * i)) = *(srcPtr + index + (height * width * i));  
+                        dstPtr [ pixIdx + (height * width * i)] = srcPtr [ index + (height * width * i)];
                     }
                 }
                 else 
                 {
                     for(int i = 0 ; i < channel ; i++)
                     {
-                        *(dstPtr + pixIdx + (height * width * i)) = *(srcPtr + pixIdx + (height * width * i));  
+                        dstPtr [pixIdx + (height * width * i)] = srcPtr [ pixIdx + (height * width * i)];
                     }
                 }
             }
@@ -325,7 +334,6 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     
     return RPP_SUCCESS;
 }
-
 
 
 /**************** Snow ***************/
@@ -339,7 +347,7 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     int snow_mat[5][5] = {{0,50,75,50,0}, {40,80,120,80,40}, {75,120,255,120,75}, {40,80,120,80,40}, {0,50,75,50,0}};
 
     Rpp32u snowDrops = (Rpp32u)(strength * srcSize.width * srcSize.height * channel );
-    
+
     U *dstptrtemp;
     dstptrtemp=dstPtr;
     for(int k=0;k<srcSize.height*srcSize.width*channel;k++)
@@ -370,7 +378,7 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                             dstPtr[(row * srcSize.width) + (column) + (k * srcSize.height * srcSize.width) + (srcSize.width * j) + m] = snow_mat[j][m] ;
                         }
                     }
-                }            
+                }
             }
         }
     }
@@ -396,8 +404,8 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                         {
                             dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j) + (channel * m)] = snow_mat[j][m];
                         }
-                    } 
-                }            
+                    }
+                }
             }
         }
     }
@@ -417,12 +425,10 @@ RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                         Rpp32f alpha, RppiChnFormat chnFormat, 
                         unsigned int channel)
 {
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
-        *dstPtr = ((1 - alpha) * (*srcPtr1)) + (alpha * (*srcPtr2));
-        srcPtr1++;
-        srcPtr2++;
-        dstPtr++;
+        dstPtr[i] = ((1 - alpha) * (srcPtr1[i])) + (alpha * (srcPtr2[i]));
     }  
 
     return RPP_SUCCESS;  
@@ -434,8 +440,8 @@ RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                        Rpp32f noiseProbability, 
-                        RppiChnFormat chnFormat, unsigned int channel)
+                         Rpp32f noiseProbability,
+                         RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp8u *cpdst,*cpsrc;
     cpdst = dstPtr;
@@ -447,8 +453,8 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         cpsrc++;
     }
     if(noiseProbability != 0)
-    {        
-        srand(time(0)); 
+    {
+        srand(time(0));
         Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
         Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
         if(chnFormat == RPPI_CHN_PACKED)
@@ -472,7 +478,7 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             {
                 Rpp8u *dstPtrTemp1,*dstPtrTemp2;
                 dstPtrTemp1 = dstPtr + (srcSize.height * srcSize.width);
-                dstPtrTemp2 = dstPtr + (2 * srcSize.height * srcSize.width);   
+                dstPtrTemp2 = dstPtr + (2 * srcSize.height * srcSize.width);
                 for(int i = 0 ; i < srcSize.width * srcSize.height * channel ; i += pixelDistance)
                 {
                     Rpp32u initialPixel = rand() % pixelDistance;
@@ -488,7 +494,7 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     dstPtrTemp2 += initialPixel;
                     *dstPtrTemp2 = newPixel;
                     dstPtrTemp2 += ((pixelDistance - initialPixel - 1));
-                    
+
                 }
             }
             else
@@ -500,19 +506,18 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     Rpp8u newPixel = rand()%2 ? 255 : 1;
                     *dstPtr = newPixel;
                     dstPtr += ((pixelDistance - initialPixel - 1));
-                }   
+                }
             }
-            
+
         }
     }
     return RPP_SUCCESS;
 }
-
 /**************** Fog ***************/
 template <typename T>
 RppStatus fog_host(T* srcPtr, RppiSize srcSize,
-                    Rpp32f fogValue,
-                    RppiChnFormat chnFormat,   unsigned int channel, T* temp)
+                   Rpp32f fogValue,
+                   RppiChnFormat chnFormat,   unsigned int channel, T* temp)
 {
     if(fogValue <= 0)
     {
@@ -536,7 +541,7 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
             for (int i = 0; i < (srcSize.width * srcSize.height); i++)
             {
                 Rpp32f check= *srcPtr;
-                if(channel > 1) 
+                if(channel > 1)
                     check = (check + *srcPtr1 + *srcPtr2) / 3;
                 *srcPtr = fogGenerator(*srcPtr, fogValue, 1, check);
                 srcPtr++;
@@ -570,7 +575,6 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
 
 }
 
-
 /**************** Rain ***************/
 template <typename T>
 RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
@@ -580,15 +584,24 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
     rainPercentage = rainPercentage / 250;
     transparency /= 5;
 
-    Rpp32u rainDrops = (Rpp32u)(rainPercentage * srcSize.width * srcSize.height * channel );
-    
+    const Rpp32u rainDrops = (Rpp32u)(rainPercentage * srcSize.width * srcSize.height * channel );
+    const unsigned rand_len = srcSize.width;
+    unsigned int col_rand[rand_len];
+    unsigned int row_rand[rand_len];
+    for(int i = 0; i<  rand_len; i++)
+    {
+        col_rand[i] = rand() % srcSize.width;
+        row_rand[i] = rand() % srcSize.height;
+    }
     
     if (chnFormat == RPPI_CHN_PLANAR)
     {
+#pragma omp parallel for
         for(int i = 0 ; i < rainDrops ; i++)
         {
-            Rpp32u row = rand() % srcSize.height;
-            Rpp32u column = rand() % srcSize.width;
+            int rand_idx = i%rand_len;
+            Rpp32u row = row_rand[rand_idx];
+            Rpp32u column = col_rand[rand_idx];
             Rpp32f pixel;
             for(int k = 0;k < channel;k++)
             {
@@ -614,10 +627,12 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
+#pragma omp parallel for
         for(int i = 0 ; i < rainDrops ; i++)
         {
-            Rpp32u row = rand() % srcSize.height;
-            Rpp32u column = rand() % srcSize.width;
+            int rand_idx = i%rand_len;
+            Rpp32u row = row_rand[rand_idx];
+            Rpp32u column = col_rand[rand_idx];
             Rpp32f pixel;
             for(int k = 0;k < channel;k++)
             {
@@ -642,6 +657,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
         }
     }
 
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.width * srcSize.height); i++)
     {
         Rpp32f pixel = ((Rpp32f) srcPtr[i]) + transparency * dstPtr[i];
@@ -662,14 +678,12 @@ RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     dstPtrTemp = dstPtr;
 
     Rpp32f pixel;
-
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = ((Rpp32f) (*srcPtrTemp)) * (pow(2, exposureFactor));
+        pixel = ((Rpp32f) (srcPtrTemp[i])) * (pow(2, exposureFactor));
         pixel = RPPPIXELCHECK(pixel);
-        *dstPtrTemp = (T) round(pixel);
-        dstPtrTemp++;
-        srcPtrTemp++;
+        dstPtrTemp[i] = (T) round(pixel);
     }
 
     return RPP_SUCCESS;

@@ -32,14 +32,14 @@ endforeach(MOD_NAME)
 
 if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
 
     #set( LINK_LIST  /opt/rocm/lib/libhip_hcc.so  /opt/rocm/lib/libhip_hcc.so ${LINK_LIST})
 
     link_libraries(-amdgpu-target=gfx803 -amdgpu-target=gfx900 -Wno-unused-command-line-argument)
 elseif( "${BACKEND}" STREQUAL "OCL")
     set(CMAKE_CXX_COMPILER  ${COMPILER_FOR_OPENCL})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast")
     set( LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
     set( INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
 endif()
