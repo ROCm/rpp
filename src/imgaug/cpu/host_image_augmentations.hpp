@@ -24,12 +24,13 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     T *srcPtrMod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
-    
+
     RppiSize rppiKernelSize;
     rppiKernelSize.height = kernelSize;
     rppiKernelSize.width = kernelSize;
     convolve_image_host(srcPtrMod, srcSizeMod, dstPtr, srcSize, kernel, rppiKernelSize, chnFormat, channel);
-    
+    free(kernel);
+    free(srcPtrMod);
     return RPP_SUCCESS;
 }
 
@@ -335,7 +336,6 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 }
 
-
 /**************** Snow ***************/
 
 template <typename T, typename U>
@@ -521,11 +521,10 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
 {
     if(fogValue <= 0)
     {
+#pragma omp parallel for
         for(int i = 0;i < srcSize.height * srcSize.width * channel;i++)
         {
-            *srcPtr = *temp;
-            srcPtr++;
-            temp++;
+            srcPtr[i] = temp[i];
         }
     }
     if(fogValue != 0)
@@ -538,6 +537,7 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
                 srcPtr1 = srcPtr + (srcSize.width * srcSize.height);
                 srcPtr2 = srcPtr + (srcSize.width * srcSize.height * 2);
             }
+#pragma omp parallel for
             for (int i = 0; i < (srcSize.width * srcSize.height); i++)
             {
                 Rpp32f check= *srcPtr;
@@ -556,18 +556,15 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
         }
         else
         {
-            Rpp8u *srcPtr1, *srcPtr2;
-            srcPtr1 = srcPtr + 1;
-            srcPtr2 = srcPtr + 2;
+            Rpp8u * srcPtr1 = srcPtr + 1;
+            Rpp8u * srcPtr2 = srcPtr + 2;
+#pragma omp parallel for
             for (int i = 0; i < (srcSize.width * srcSize.height * channel); i += 3)
             {
-                Rpp32f check = (*srcPtr + *srcPtr1 + *srcPtr2) / 3;
-                *srcPtr = fogGenerator(*srcPtr, fogValue, 1, check);
-                *srcPtr1 = fogGenerator(*srcPtr1, fogValue, 2, check);
-                *srcPtr2 = fogGenerator(*srcPtr2, fogValue, 3, check);
-                srcPtr += 3;
-                srcPtr1 += 3;
-                srcPtr2 += 3;
+                Rpp32f check = 0;//(srcPtr[i] + srcPtr1[i] + srcPtr2[i]) / 3;
+                srcPtr[i] = 0;//fogGenerator(srcPtr[i], fogValue, 1, check);
+                srcPtr1[i] = 1;//fogGenerator(srcPtr1[i], fogValue, 2, check);
+                srcPtr2[i] = 2;//fogGenerator(srcPtr2[i], fogValue, 3, check);
             }
         }
     }
