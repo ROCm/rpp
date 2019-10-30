@@ -55,6 +55,7 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
             min = *srcPtrTemp;
             max = *srcPtrTemp;
+
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
                 if (*srcPtrTemp < min)
@@ -69,11 +70,11 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             }
 
             srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
+
+#pragma omp parallel for simd
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                *dstPtrTemp = (U) (((((Rpp32f) (*srcPtrTemp)) - min) * ((new_max - new_min) / (max - min))) + new_min);
-                srcPtrTemp++;
-                dstPtrTemp++;
+                dstPtrTemp[i] = (U) (((((Rpp32f) (srcPtrTemp[i])) - min) * ((new_max - new_min) / (max - min))) + new_min);
             }
         }
     }
@@ -99,11 +100,10 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             }
 
             srcPtrTemp = srcPtr + c;
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+#pragma omp parallel for simd
+            for (int i = 0; i < (srcSize.height * srcSize.width); i += channel)
             {
-                *dstPtrTemp = (U) (((((Rpp32f) (*srcPtrTemp)) - min) * ((new_max - new_min) / (max - min))) + new_min);
-                srcPtrTemp = srcPtrTemp + channel;
-                dstPtrTemp = dstPtrTemp + channel;
+                dstPtrTemp[i] = (U) (((((Rpp32f) (srcPtrTemp[i])) - min) * ((new_max - new_min) / (max - min))) + new_min);
             }
         }
     }
@@ -113,7 +113,6 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
 /************ Brightness ************/
 
-#include <omp.h>
 template <typename T>
 RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                           Rpp32f alpha, Rpp32f beta, 
@@ -136,6 +135,28 @@ RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 }
 
+
+template <>
+RppStatus brightness_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
+                          Rpp32f alpha, Rpp32f beta,
+                          RppiChnFormat chnFormat, Rpp32u channel)
+{
+    Rpp8u *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    //Rpp32f pixel;
+#pragma omp parallel for simd
+    for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
+    {
+        Rpp32f pixel = ((Rpp32f) (srcPtrTemp[i])) * alpha + beta;
+        pixel = RPPPIXELCHECK(pixel);
+        dstPtrTemp[i] = (Rpp8u) round(pixel);
+    }
+
+    return RPP_SUCCESS;
+
+}
 /**************** Gamma Correction ***************/
 
 template <typename T>
@@ -454,7 +475,6 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
     if(noiseProbability != 0)
     {
-        srand(time(0));
         Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
         Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
         if(chnFormat == RPPI_CHN_PACKED)
