@@ -114,6 +114,75 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 /************ Brightness ************/
 
 #include <omp.h>
+#if ENABLE_SSE_INTRINSICS
+
+// TODO:: add AVX if supported
+template <typename T>
+RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                          Rpp32f alpha, Rpp32f beta,
+                          RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if (std::is_same<T, Rpp8u>::value) {
+        Rpp8u *srcPtrTemp, *dstPtrTemp;
+        srcPtrTemp = srcPtr;
+        dstPtrTemp = dstPtr;
+        int length = (channel * srcSize.height * srcSize.width);
+        int alignedlength = length & ~15;
+        __m128i const zero = _mm_setzero_si128();
+        __m128 pMul = _mm_set1_ps(alpha), pAdd = _mm_set1_ps(beta);
+        __m128 p0, p1, p2, p3;
+        __m128i px0, px1, px2, px3;
+        int i = 0;
+        for (; i < alignedlength; i+=16)
+        {
+            px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp); // todo: check if we can use _mm_load_si128 instead (aligned)
+            px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
+            px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
+            p2 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));   // pixels 4-7
+            p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));  // pixels 0-3
+            p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));   // pixels 12-15
+            p1 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));  // pixels 8-11
+            p0 = _mm_mul_ps(p0, pMul);
+            p2 = _mm_mul_ps(p2, pMul);
+            p1 = _mm_mul_ps(p1, pMul);
+            p3 = _mm_mul_ps(p3, pMul);
+            px0 = _mm_cvtps_epi32(_mm_add_ps(p0, pAdd));
+            px2 = _mm_cvtps_epi32(_mm_add_ps(p2, pAdd));
+            px1 = _mm_cvtps_epi32(_mm_add_ps(p1, pAdd));
+            px3 = _mm_cvtps_epi32(_mm_add_ps(p3, pAdd));
+            px0 = _mm_packus_epi32(px0, px2);
+            px1 = _mm_packus_epi32(px1, px3);
+            px0 = _mm_packus_epi16(px0, px1);       // pix 0-15
+            _mm_storeu_si128((__m128i *)dstPtrTemp, px0);      // todo: check if we can use _mm_store_si128 instead (aligned)
+            srcPtrTemp +=16, dstPtrTemp +=16;
+        }
+        for (; i < length; i++) {
+            Rpp32f pixel = ((Rpp32f) (*srcPtrTemp++)) * alpha + beta;
+            pixel = RPPPIXELCHECK(pixel);
+            *dstPtrTemp++ = (Rpp8u) round(pixel);
+        }
+
+    } else {
+        T *srcPtrTemp, *dstPtrTemp;
+        srcPtrTemp = srcPtr;
+        dstPtrTemp = dstPtr;
+        //Rpp32f pixel;
+    #pragma omp parallel for simd
+        for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
+        {
+            Rpp32f pixel = ((Rpp32f) (srcPtrTemp[i])) * alpha + beta;
+            pixel = RPPPIXELCHECK(pixel);
+            dstPtrTemp[i] = (T) round(pixel);
+        }
+
+    }
+
+    return RPP_SUCCESS;
+
+}
+
+#else
+
 template <typename T>
 RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                           Rpp32f alpha, Rpp32f beta, 
@@ -135,6 +204,8 @@ RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 
 }
+
+#endif
 
 /**************** Gamma Correction ***************/
 

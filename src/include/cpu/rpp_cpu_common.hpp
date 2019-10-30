@@ -18,9 +18,17 @@
 #define RPPCEIL(a)              ((int) (a + 1.0))
 #define RPPISEVEN(a)            ((a % 2 == 0) ? 1 : 0)
 #define RPPPIXELCHECK(pixel)    (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
+#define ENABLE_SSE_INTRINSICS   1
 
-
-
+#if ENABLE_SSE_INTRINSICS
+#if _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#endif
+#endif
 
 
 // Generate Functions
