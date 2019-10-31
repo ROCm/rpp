@@ -204,6 +204,10 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
 
     compute_multiply_host(srcPtr, maskFinal, srcSize, dstPtr, channel);
-    
+    free(maskFinal);
+    free(kernelRows);
+    free(kernelColumns);
+    free(mask);
+
     return RPP_SUCCESS;
 }
