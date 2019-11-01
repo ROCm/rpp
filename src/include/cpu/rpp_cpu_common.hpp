@@ -406,23 +406,6 @@ inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
     return RPP_SUCCESS;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Kernels for functions
 
 template<typename T, typename U>
@@ -589,6 +572,7 @@ inline RppStatus resize_crop_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     resize_kernel_host(srcPtrResize, srcSizeSubImage, dstPtr, dstSize, chnFormat, channel);
 
+    free(srcPtrResize);
     return RPP_SUCCESS;
     
 }
@@ -727,7 +711,7 @@ inline RppStatus median_filter_kernel_host(T* srcPtrWindow, T* dstPtrPixel, Rppi
     std::sort(kernel, kernel + (kernelSize * kernelSize));
 
     *dstPtrPixel = *(kernel + (((kernelSize * kernelSize) - 1) / 2));
-
+    free(kernel);
     return RPP_SUCCESS;
 }
 
@@ -900,26 +884,6 @@ inline RppStatus non_max_suppression_kernel_host(T* srcPtrWindow, T* dstPtrPixel
 
     return RPP_SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Convolution Functions
 
 template<typename T, typename U>
