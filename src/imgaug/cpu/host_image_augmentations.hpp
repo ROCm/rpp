@@ -29,7 +29,8 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     rppiKernelSize.height = kernelSize;
     rppiKernelSize.width = kernelSize;
     convolve_image_host(srcPtrMod, srcSizeMod, dstPtr, srcSize, kernel, rppiKernelSize, chnFormat, channel);
-    
+    free(kernel);
+    free(srcPtrMod);
     return RPP_SUCCESS;
 }
 
