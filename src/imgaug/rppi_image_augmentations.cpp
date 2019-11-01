@@ -16,6 +16,7 @@
 using namespace std::chrono;
 
 #include "cpu/host_image_augmentations.hpp"
+#include "cpu/host_image_augmentations_simd.hpp"
 
 // ----------------------------------------
 // Host blur functions calls
@@ -25,17 +26,17 @@ using namespace std::chrono;
 RppStatus
 rppi_blur_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f stdDev)
 {
-
+	 RppStatus status;
  	 validate_image_size(srcSize);
  	 validate_float_min(0, &stdDev);
 	 unsigned int kernelSize = 3;
-	 blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+	 status = blur_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			stdDev,
 			kernelSize,
 			RPPI_CHN_PLANAR, 1);
-	return RPP_SUCCESS;
+	return status;
 }
 
 RppStatus
@@ -134,49 +135,77 @@ rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 RppStatus
 rppi_brightness_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta)
 {
-
+	 RppStatus status;
  	 validate_image_size(srcSize);
  	 validate_float_range( 0, 2, &alpha);
  	 validate_float_range( 0, 255, &beta);
-	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+#if ENABLE_SIMD_INTRINSICS
+	 status = brightness_host_simd(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			beta,
 			RPPI_CHN_PLANAR, 1);
-	return RPP_SUCCESS;
+#else 	 
+	 status = brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			alpha,
+			beta,
+			RPPI_CHN_PLANAR, 1);
+#endif	 
+	return status;
 }
 
 RppStatus
 rppi_brightness_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta)
 {
 
+	 RppStatus status;
  	 validate_image_size(srcSize);
  	 validate_float_range( 0, 2, &alpha);
  	 validate_float_range( 0, 255, &beta);
-	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+#if ENABLE_SIMD_INTRINSICS
+	 status = brightness_host_simd(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			beta,
 			RPPI_CHN_PLANAR, 3);
-	return RPP_SUCCESS;
+#else 	 
+	 status = brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			alpha,
+			beta,
+			RPPI_CHN_PLANAR, 3);
+#endif	 
+	return status;
 }
 
 RppStatus
 rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha,Rpp32f beta)
 {
-
+	 RppStatus status;
  	 validate_image_size(srcSize);
  	 validate_float_range( 0, 2, &alpha);
  	 validate_float_range( 0, 255, &beta);
-	 brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+#if ENABLE_SIMD_INTRINSICS
+	 status = brightness_host_simd(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			beta,
 			RPPI_CHN_PACKED, 3);
-	return RPP_SUCCESS;
+#else 	 
+	 status = brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			alpha,
+			beta,
+			RPPI_CHN_PACKED, 3);
+#endif	 
+	return status;
 }
 
 // ----------------------------------------
@@ -485,45 +514,74 @@ rppi_snow_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f s
 RppStatus
 rppi_blend_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha)
 {
-
- 	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, &alpha);
-	 blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+	RppStatus status;
+	validate_image_size(srcSize);
+	validate_float_range( 0, 1, &alpha);
+#if ENABLE_SIMD_INTRINSICS
+	status = blend_host_simd(static_cast<Rpp8u*>(srcPtr1),
 			static_cast<Rpp8u*>(srcPtr2),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			RPPI_CHN_PLANAR, 1);
-	return RPP_SUCCESS;
+#else	
+	status = blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+			static_cast<Rpp8u*>(srcPtr2),
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			alpha,
+			RPPI_CHN_PLANAR, 1);
+#endif	
+	return status;
 }
 
 RppStatus
 rppi_blend_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha)
 {
 
- 	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, &alpha);
-	 blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+	RppStatus status;
+	validate_image_size(srcSize);
+	validate_float_range( 0, 1, &alpha);
+#if ENABLE_SIMD_INTRINSICS
+	status = blend_host(static_cast<Rpp8u*>(srcPtr1),
 			static_cast<Rpp8u*>(srcPtr2),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			RPPI_CHN_PLANAR, 3);
-	return RPP_SUCCESS;
+#else	
+	status = blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+			static_cast<Rpp8u*>(srcPtr2),
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			alpha,
+			RPPI_CHN_PLANAR, 3);
+#endif	
+	return status;
 }
 
 RppStatus
 rppi_blend_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPtr_t dstPtr,Rpp32f alpha)
 {
 
- 	 validate_image_size(srcSize);
- 	 validate_float_range( 0, 1, &alpha);
-	 blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+	RppStatus status;
+	validate_image_size(srcSize);
+	validate_float_range( 0, 1, &alpha);
+#if ENABLE_SIMD_INTRINSICS
+	blend_host(static_cast<Rpp8u*>(srcPtr1),
 			static_cast<Rpp8u*>(srcPtr2),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			RPPI_CHN_PACKED, 3);
+#else	
+	blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+			static_cast<Rpp8u*>(srcPtr2),
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			alpha,
+			RPPI_CHN_PACKED, 3);
+#endif	
 	return RPP_SUCCESS;
 }
 
