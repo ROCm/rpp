@@ -55,10 +55,11 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         for(int c = 0; c < channel; c++)
         {
             int length = (srcSize.height * srcSize.width);
-            srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
+            srcPtrTemp = srcPtr + (c * length);
             min = *srcPtrTemp;
             max = *srcPtrTemp;
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+
+            for (int i = 0; i < length; i++)
             {
                 if (*srcPtrTemp < min)
                 {
@@ -70,12 +71,11 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                 }
                 srcPtrTemp++;
             }
-            srcPtrTemp = srcPtr + (c * length);
+
+#pragma omp parallel for simd
             for (int i = 0; i < length; i++)
             {
-                *dstPtrTemp = (U) (((((Rpp32f) (*srcPtrTemp)) - min) * ((new_max - new_min) / (max - min))) + new_min);
-                srcPtrTemp++;
-                dstPtrTemp++;
+                dstPtrTemp[i] = (U) (((((Rpp32f) (srcPtrTemp[i])) - min) * ((new_max - new_min) / (max - min))) + new_min);
             }
         }
     }
@@ -101,11 +101,10 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             }
 
             srcPtrTemp = srcPtr + c;
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+#pragma omp parallel for simd
+            for (int i = 0; i < (srcSize.height * srcSize.width); i += channel)
             {
-                *dstPtrTemp = (U) (((((Rpp32f) (*srcPtrTemp)) - min) * ((new_max - new_min) / (max - min))) + new_min);
-                srcPtrTemp = srcPtrTemp + channel;
-                dstPtrTemp = dstPtrTemp + channel;
+                dstPtrTemp[i] = (U) (((((Rpp32f) (srcPtrTemp[i])) - min) * ((new_max - new_min) / (max - min))) + new_min);
             }
         }
     }
@@ -113,8 +112,6 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     return RPP_SUCCESS;
 }
 
-
-/************ Brightness ************/
 template <typename T>
 RppStatus brightness_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                           Rpp32f alpha, Rpp32f beta, 
@@ -455,7 +452,6 @@ RppStatus noise_snp_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
     if(noiseProbability != 0)
     {
-        srand(time(0));
         Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
         Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
         if(chnFormat == RPPI_CHN_PACKED)
