@@ -63,6 +63,7 @@ cl_kernel_initializer ( cl_command_queue theQueue,
     // File Handling
     char *sourceStr;
     size_t sourceSize;
+
     std::string kernelFile_cl = MOD_CL_PATH + kernelFile;
     FILE *filePtr = fopen( kernelFile_cl.c_str(), "rb");
     if (!filePtr) {
@@ -218,13 +219,15 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
     cl_device_id theDevice;
     clGetCommandQueueInfo(  theQueue,
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
-       
-    theKernel = CLKernelManager::obj()->find(kernelName);
+    char deviceName[100] = "\0";
+    clGetDeviceInfo(theDevice, CL_DEVICE_NAME, sizeof(deviceName), deviceName, nullptr);
+    std::string device_name(deviceName);
+    theKernel = CLKernelManager::obj()->find(device_name+kernelName);
 
     if( theKernel != nullptr)
         return status;
     
-    FILE *fp = fopen(binaryFile.c_str(), "rb");
+    FILE *fp = fopen((device_name+binaryFile).c_str(), "rb");
     
     if (fp == NULL)
     {
@@ -289,7 +292,7 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
                            theProgram, theKernel);
 
         //std::cout << "Save program binary for future run..." << std::endl;
-        if (SaveProgramBinary(theProgram, theDevice, binaryFile) == false)
+        if (SaveProgramBinary(theProgram, theDevice, device_name+binaryFile) == false)
         {
             std::cerr << "Failed to write program binary" << std::endl;
             clFinish(theQueue);
@@ -306,6 +309,6 @@ cl_int CreateProgramFromBinary(cl_command_queue theQueue, const std::string kern
 
     theKernel = clCreateKernel(theProgram, kernelName.c_str(), &err);
     clReleaseProgram(theProgram);
-    CLKernelManager::obj()->set( theKernel, kernelName);
+    CLKernelManager::obj()->set( theKernel, device_name+kernelName);
     return err;
 }
