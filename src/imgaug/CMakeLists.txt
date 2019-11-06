@@ -4,33 +4,43 @@ project(imgaug) #Rename the Project name
 file( GLOB MOD_CPP "*.cpp" )
 add_library( ${PROJECT_NAME} OBJECT ${MOD_CPP})
 
-# Backend Specific Settings
 if( "${TIME_INFO}" STREQUAL "1")
     add_definitions(-DTIME_INFO)
 endif()
+#enable of disable SIMD for host implementations
+# Backend Specific Settings
 if( "${BACKEND}" STREQUAL "HIP")
     set(BACKEND_HIPOC 1)
     add_subdirectory( cl )
     add_subdirectory( hipoc )
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIPOC})
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -mavx2")
     set(LINK_LIST ${PROJECT_NAME}-hipoc ${LINK_LIST})
     add_definitions(-DHIP_COMPILE)
 elseif( "${BACKEND}" STREQUAL "OCL")
     add_subdirectory( cl )
     set(SUB_MODULES_LIST ${PROJECT_NAME}-opencl ${SUB_MODULES_LIST} PARENT_SCOPE)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2")
-
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -mavx2")
     set(LINK_LIST ${PROJECT_NAME}-opencl ${OpenCL_LIBRARIES} ${LINK_LIST})
     set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
     add_definitions(-DOCL_COMPILE)
 endif()
 
+if (NOT DEFINED SIMD_ENABLE)
+    SET(SIMD_ENABLE "0")
+endif()
+
+if( "${SIMD_ENABLE}" STREQUAL "1")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=1)
+    message("-- ${Green}${PROJECT_NAME} built with ENABLE_SIMD_INTRINSICS")
+else()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=0)
+    message("-- ${Green}${PROJECT_NAME} not built with ENABLE_SIMD_INTRINSICS")
+endif()
 
 # target setting
-
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries (${PROJECT_NAME} ${LINK_LIST})
 target_include_directories( ${PROJECT_NAME}
