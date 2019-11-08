@@ -100,7 +100,7 @@ rppi_contrast_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 			newMax,
 			RPPI_CHN_PLANAR, 1);
 #endif 
-	return RPP_SUCCESS;
+	return status;
 }
 
 RppStatus
