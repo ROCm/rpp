@@ -50,7 +50,7 @@ $ git clone https://github.com/LokeshBonta/AMD-RPP.git
 $ cd AMD-RPP
 $ mkdir build
 $ cd build
-$ cmake -DBACKEND=OCL ..
+$ cmake -DBACKEND=OCL -DSIMD_ENABLE=1 ..
 $ make -j4
 $ sudo make install
 ```
