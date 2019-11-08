@@ -85,21 +85,14 @@ rppi_contrast_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  	 validate_unsigned_int_max(newMax, &newMin);
 	 if (newMax > 255) newMax = 255;
 	 if  (newMax < 0)  newMin = 0;
-#if ENABLE_SIMD_INTRINSICS
-	 status = contrast_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			newMin,
-			newMax,
-			RPPI_CHN_PLANAR, 1);
-#else
+
 	 status = contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			newMin,
 			newMax,
 			RPPI_CHN_PLANAR, 1);
-#endif 
+
 	return RPP_SUCCESS;
 }
 
@@ -112,21 +105,14 @@ rppi_contrast_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  	 validate_unsigned_int_max(newMax, &newMin);
 	 if (newMax > 255) newMax = 255;
 	 if  (newMax < 0)  newMin = 0;
-#if ENABLE_SIMD_INTRINSICS
-	 status = contrast_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			newMin,
-			newMax,
-			RPPI_CHN_PLANAR, 3);
-#else	 
+
 	 status = contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			newMin,
 			newMax,
 			RPPI_CHN_PLANAR, 3);
-#endif	 
+
 	return status;
 }
 
@@ -139,21 +125,14 @@ rppi_contrast_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
  	 validate_unsigned_int_max(newMax, &newMin);
 	 if (newMax > 255) newMax = 255;
 	 if  (newMax < 0)  newMin = 0;
-#if ENABLE_SIMD_INTRINSICS
-	 status = contrast_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			newMin,
-			newMax,
-			RPPI_CHN_PACKED, 3);
-#else 
+
 	 status = contrast_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			newMin,
 			newMax,
 			RPPI_CHN_PACKED, 3);
-#endif
+
 	return RPP_SUCCESS;
 }
 
@@ -169,21 +148,14 @@ rppi_brightness_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  	 validate_image_size(srcSize);
  	 validate_float_range( 0, 2, &alpha);
  	 validate_float_range( 0, 255, &beta);
-#if ENABLE_SIMD_INTRINSICS
-	 status = brightness_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			alpha,
-			beta,
-			RPPI_CHN_PLANAR, 1);
-#else
+
 	 status = brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			beta,
 			RPPI_CHN_PLANAR, 1);
-#endif
+
 	return status;
 }
 
@@ -195,21 +167,14 @@ rppi_brightness_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  	 validate_image_size(srcSize);
  	 validate_float_range( 0, 2, &alpha);
  	 validate_float_range( 0, 255, &beta);
-#if ENABLE_SIMD_INTRINSICS
-	 status = brightness_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			alpha,
-			beta,
-			RPPI_CHN_PLANAR, 3);
-#else
+
 	 status = brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			beta,
 			RPPI_CHN_PLANAR, 3);
-#endif
+
 	return status;
 }
 
@@ -220,21 +185,14 @@ rppi_brightness_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rp
  	 validate_image_size(srcSize);
  	 validate_float_range( 0, 2, &alpha);
  	 validate_float_range( 0, 255, &beta);
-#if ENABLE_SIMD_INTRINSICS
-	 status = brightness_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			alpha,
-			beta,
-			RPPI_CHN_PACKED, 3);
-#else
+
 	 status = brightness_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			beta,
 			RPPI_CHN_PACKED, 3);
-#endif
+
 	return status;
 }
 
@@ -547,21 +505,14 @@ rppi_blend_u8_pln1_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPt
 	RppStatus status;
 	validate_image_size(srcSize);
 	validate_float_range( 0, 1, &alpha);
-#if ENABLE_SIMD_INTRINSICS
-	status = blend_host_simd(static_cast<Rpp8u*>(srcPtr1),
-			static_cast<Rpp8u*>(srcPtr2),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			alpha,
-			RPPI_CHN_PLANAR, 1);
-#else	
+
 	status = blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
 			static_cast<Rpp8u*>(srcPtr2),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			RPPI_CHN_PLANAR, 1);
-#endif	
+
 	return status;
 }
 
@@ -572,21 +523,14 @@ rppi_blend_u8_pln3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPt
 	RppStatus status;
 	validate_image_size(srcSize);
 	validate_float_range( 0, 1, &alpha);
-#if ENABLE_SIMD_INTRINSICS
-	status = blend_host(static_cast<Rpp8u*>(srcPtr1),
-			static_cast<Rpp8u*>(srcPtr2),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			alpha,
-			RPPI_CHN_PLANAR, 3);
-#else	
+
 	status = blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
 			static_cast<Rpp8u*>(srcPtr2),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			RPPI_CHN_PLANAR, 3);
-#endif	
+
 	return status;
 }
 
@@ -597,21 +541,14 @@ rppi_blend_u8_pkd3_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2,RppiSize srcSize,RppPt
 	RppStatus status;
 	validate_image_size(srcSize);
 	validate_float_range( 0, 1, &alpha);
-#if ENABLE_SIMD_INTRINSICS
-	blend_host(static_cast<Rpp8u*>(srcPtr1),
-			static_cast<Rpp8u*>(srcPtr2),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			alpha,
-			RPPI_CHN_PACKED, 3);
-#else	
+
 	blend_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
 			static_cast<Rpp8u*>(srcPtr2),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			alpha,
 			RPPI_CHN_PACKED, 3);
-#endif	
+
 	return RPP_SUCCESS;
 }
 
@@ -1520,19 +1457,13 @@ rppi_exposure_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 	 RppStatus status;
  	 validate_image_size(srcSize);
  	 validate_float_range( -4, 4, &exposureValue);
-#if ENABLE_SIMD_INTRINSICS
-	 status = exposure_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			exposureValue,
-			RPPI_CHN_PLANAR, 1);
-#else 	 
+
 	 status = exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			exposureValue,
 			RPPI_CHN_PLANAR, 1);
-#endif	 
+
 	return status;
 }
 
@@ -1543,19 +1474,13 @@ rppi_exposure_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 	 RppStatus status;
  	 validate_image_size(srcSize);
  	 validate_float_range( -4, 4, &exposureValue);
-#if ENABLE_SIMD_INTRINSICS
-	 status = exposure_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			exposureValue,
-			RPPI_CHN_PLANAR, 3);
-#else 	 
+
 	 status = exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			exposureValue,
 			RPPI_CHN_PLANAR, 3);
-#endif	 
+
 	return status;
 }
 
@@ -1566,19 +1491,13 @@ rppi_exposure_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,Rpp3
 	 RppStatus status;
  	 validate_image_size(srcSize);
  	 validate_float_range( -4, 4, &exposureValue);
-#if ENABLE_SIMD_INTRINSICS
-	 status = exposure_host_simd(static_cast<Rpp8u*>(srcPtr),
-			srcSize,
-			static_cast<Rpp8u*>(dstPtr),
-			exposureValue,
-			RPPI_CHN_PACKED, 3);
-#else 	 
+
 	 status = exposure_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
 			srcSize,
 			static_cast<Rpp8u*>(dstPtr),
 			exposureValue,
 			RPPI_CHN_PACKED, 3);
-#endif	 
+
 	return status;
 }
 

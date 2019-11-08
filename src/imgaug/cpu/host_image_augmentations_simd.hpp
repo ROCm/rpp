@@ -67,8 +67,8 @@ static inline Rpp32u HorMax256(__m256i pmax)
 
 /**************** Contrast ***************/
 
-
-RppStatus contrast_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, 
+template<>
+RppStatus contrast_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
                         Rpp32f new_min, Rpp32f new_max,
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -248,7 +248,8 @@ RppStatus contrast_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
 /************ Brightness ************/
 
 // TODO:: add AVX if supported
-RppStatus brightness_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
+template<>
+RppStatus brightness_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
                           Rpp32f alpha, Rpp32f beta,
                           RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -296,8 +297,8 @@ RppStatus brightness_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
 
 
 /**************** Blend ***************/
-
-RppStatus blend_host_simd(Rpp8u* srcPtr1, Rpp8u* srcPtr2, RppiSize srcSize, Rpp8u* dstPtr, 
+template<>
+RppStatus blend_host(Rpp8u* srcPtr1, Rpp8u* srcPtr2, RppiSize srcSize, Rpp8u* dstPtr,
                         Rpp32f alpha, RppiChnFormat chnFormat, 
                         unsigned int channel)
 {
@@ -359,8 +360,8 @@ RppStatus blend_host_simd(Rpp8u* srcPtr1, Rpp8u* srcPtr2, RppiSize srcSize, Rpp8
 }
 
 /**************** Exposure Modification ***************/
-
-RppStatus exposure_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
+template<>
+RppStatus exposure_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
                     Rpp32f exposureFactor,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
