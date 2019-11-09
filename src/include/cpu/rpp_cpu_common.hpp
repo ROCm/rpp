@@ -462,7 +462,6 @@ inline RppStatus convolution_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSi
     return RPP_SUCCESS;
 }
 
-#if !ENABLE_SIMD_INTRINSICS
 
 template <typename T>
 inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
@@ -567,14 +566,16 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rppi
     return RPP_SUCCESS;
 }
 
-#else
+#if ENABLE_SIMD_INTRINSICS
 
 #define FP_BITS     16
 #define FP_MUL      (1<<FP_BITS)
 
-inline RppStatus resize_kernel_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiSize dstSize,
+template<>
+inline RppStatus resize_kernel_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiSize dstSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
+   // return RPP_SUCCESS;
     if (dstSize.height < 0 || dstSize.width < 0 )
     {
         return RPP_ERROR;
@@ -672,13 +673,15 @@ inline RppStatus resize_kernel_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u*
         int dstride = dstSize.width * channel;
         int sstride = srcSize.width * channel;
         Rpp8u *pSrcBorder = srcPtr + (srcSize.height*sstride) - channel;    // points to the last pixel
+#if __AVX2__
         const __m256i mm_zeros = _mm256_setzero_si256();
         const __m256i mm_round = _mm256_set1_epi32((int)0x80);
         const __m256i pmask1 = _mm256_set_epi32(0, 1, 2, 4, 5, 6, 3, 7);
         const __m256i pmask2 = _mm256_set_epi32(2, 3, 4, 5, 6, 7, 0, 1);
-
+#endif
         int ypos = (int)(FP_MUL * (yscale*0.5 - 0.5));
-        for (int y = 0; y < (int)dstSize.height; y++, ypos += yinc)
+//#pragma omp parallel for
+       for (int y = 0; y < (int)dstSize.height; y++, ypos += yinc)
         {
             int ym, fy, fy1;
             Rpp8u *pSrc1, *pSrc2;
@@ -695,9 +698,11 @@ inline RppStatus resize_kernel_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u*
                 pSrc1 = (ym<0)? srcPtrTemp : (srcPtrTemp + ym*sstride);
                 pSrc2 = pSrc1 + sstride;
             }
+            unsigned int x = 0;
+#if __AVX2__
+            
             __m256i w_y = _mm256_set_epi32(fy1, fy, fy1, fy, fy1, fy, fy1, fy);
             __m256i p01, p23, ps01, ps23, px0, px1, ps2, ps3;
-            unsigned int x = 0;
             for (; x < aligned_width; x += 4)
             {
                 // load 2 pixels each
@@ -754,7 +759,8 @@ inline RppStatus resize_kernel_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u*
                 px0 = _mm256_packus_epi16(px0, mm_zeros); //R0G0B0R1G1B1R2G2B2R3G3B3xxxx ....
                 _mm_storeu_si128((__m128i *)pdst, M256I(px0).m256i_i128[0]);      // write 12 bytes
                 pdst += 12;
-            } 
+            }
+#endif            
             for (; x < dstSize.width; x++) {
                 int result;
                 const unsigned char *p0 = pSrc1 + Xmap[x];
@@ -778,7 +784,6 @@ inline RppStatus resize_kernel_host_simd(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u*
 
     return RPP_SUCCESS;
 }
-
 #endif
 
 template <typename T>
