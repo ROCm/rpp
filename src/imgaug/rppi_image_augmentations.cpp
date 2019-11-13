@@ -16,7 +16,6 @@
 using namespace std::chrono;
 
 #include "cpu/host_image_augmentations.hpp"
-#include "cpu/host_image_augmentations_simd.hpp"
 
 // ----------------------------------------
 // Host blur functions calls

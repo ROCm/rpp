@@ -2,17 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
-
+#include "cpu/rpp_cpu_simd.hpp"
 #if ENABLE_SIMD_INTRINSICS
-
-#if _WIN32
-#include <intrin.h>
-#else
-#include <x86intrin.h>
-#include <smmintrin.h>
-#include <immintrin.h>
-#endif
-
 
 static inline Rpp32u HorMin(__m128i pmin)
 {
@@ -139,6 +130,8 @@ RppStatus contrast_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
     else if (chnFormat == RPPI_CHN_PACKED) {
 #if __AVX2__
         if (channel == 3) {
+            srcPtrTemp = srcPtr ;
+            dstPtrTemp = dstPtr ;
             int length = (srcSize.height * srcSize.width *3);
             int alignedlength = length & ~31;
            __m256i mask1 = _mm256_setr_epi8(0, 3, 6, 9, 12, 15, 18, 21, 1, 4, 7, 10, 13, 16, 19, 22, 
@@ -288,7 +281,6 @@ RppStatus brightness_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
 
 
 /**************** Blend ***************/
-
 template<>
 RppStatus blend_host(Rpp8u* srcPtr1, Rpp8u* srcPtr2, RppiSize srcSize, Rpp8u* dstPtr,
                         Rpp32f alpha, RppiChnFormat chnFormat, 

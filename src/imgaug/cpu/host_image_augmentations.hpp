@@ -1,3 +1,5 @@
+#ifndef HOST_IMAGE_AUGMENTATION_HPP
+#define HOST_IMAGE_AUGMENTATION_HPP
 #include <cpu/rpp_cpu_common.hpp>
 #include <stdlib.h>
 #include <time.h>
@@ -14,6 +16,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     {
         return RPP_ERROR;
     }
+#if 0
     Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
     int bound = ((kernelSize - 1) / 2);
 
@@ -32,6 +35,88 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     convolve_image_host(srcPtrMod, srcSizeMod, dstPtr, srcSize, kernel, rppiKernelSize, chnFormat, channel);
     free(kernel);
     free(srcPtrMod);
+#else
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+#pragma omp parallel for
+        for (int c = 0; c < channel; c++)
+        {
+            T *src_ptr = srcPtr + c*srcSize.width*srcSize.height;
+            T *dst_ptr = dstPtr + c*srcSize.width*srcSize.height;
+            for (int row = 0; row < srcSize.height; row++)
+            {
+                T* src_row = src_ptr + srcSize.width*row;
+                T* src_row_u = (row > 0) ? src_ptr + srcSize.width*(row-1) : nullptr;
+                T* src_row_d = (row < srcSize.height) ? src_ptr + srcSize.width*(row+1) : nullptr;
+                T* dst_row = dst_ptr + srcSize.width*row;
+
+                for (int col = 0; col < srcSize.width; col++)
+                {
+                    short col_idx = col;
+                    short col_idx_r = col + 1;
+                    short col_idx_l = col - 1;
+                    short val =  src_row[col];
+                    val += (src_row_u ? src_row_u[col_idx] : src_row[col_idx]);
+                    val += (src_row_d ? src_row_d[col_idx] : src_row[col_idx]);
+                    if(col > 0)
+                    {
+                        val += src_row[col_idx_l];
+                        val += (src_row_u ? src_row_u[col_idx_l] : src_row[col_idx_l]) ;
+                        val += (src_row_d ? src_row_d[col_idx_l] : src_row[col_idx_l]);
+                    }
+                    if(col < srcSize.width)
+                    {
+                        val += src_row[col_idx_r];
+                        val += (src_row_u ? src_row_u[col_idx_r] : src_row[col_idx_r]);
+                        val += (src_row_d ? src_row_d[col_idx_r] : src_row[col_idx_r]);
+                    }
+
+                    dst_row[col_idx] =  val / 9;
+                }
+
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+#pragma omp parallel for
+            for (int row = 0; row < srcSize.height; row++)
+            {
+                T* src_row = srcPtr + srcSize.width*channel*row;
+                T* src_row_u = (row > 0) ? srcPtr + srcSize.width*channel*(row-1) : nullptr;
+                T* src_row_d = (row < srcSize.height) ? srcPtr + srcSize.width*channel*(row+1) : nullptr;
+                T* dst_row = dstPtr + srcSize.width*channel*row;
+                for (int col = 0; col < srcSize.width; col++)
+                {
+                    for (int c = 0; c < channel; c++)
+                    {
+                        int col_idx = c + col * channel;
+                        int col_idx_r = c + (col + 1) * channel;
+                        int col_idx_l = c + (col - 1) * channel;
+
+                        short val =  src_row[col_idx];
+                        val += (src_row_u ? src_row_u[col_idx] : src_row[col_idx]);
+                        val += (src_row_d ? src_row_d[col_idx] : src_row[col_idx]);
+                        if(col > 0)
+                        {
+                            val += src_row[col_idx_l];
+                            val += (src_row_u ? src_row_u[col_idx_l] : src_row[col_idx_l]) ;
+                            val += (src_row_d ? src_row_d[col_idx_l] : src_row[col_idx_l]);
+                        }
+                        if(col < srcSize.width)
+                        {
+                            val += src_row[c + (col + 1) * channel ];
+                            val += (src_row_u ? src_row_u[ col_idx_r] : src_row[col_idx_r]);
+                            val += (src_row_d ? src_row_d[ col_idx_r] : src_row[col_idx_r]);
+                        }
+
+                        dst_row[col_idx] =  val / 9;
+                    }
+                }
+            }
+    }
+#endif
     return RPP_SUCCESS;
 }
 
@@ -558,10 +643,10 @@ RppStatus fog_host(T* srcPtr, RppiSize srcSize,
 #pragma omp parallel for
             for (int i = 0; i < (srcSize.width * srcSize.height * channel); i += 3)
             {
-                Rpp32f check = 0;//(srcPtr[i] + srcPtr1[i] + srcPtr2[i]) / 3;
-                srcPtr[i] = 0;//fogGenerator(srcPtr[i], fogValue, 1, check);
-                srcPtr1[i] = 1;//fogGenerator(srcPtr1[i], fogValue, 2, check);
-                srcPtr2[i] = 2;//fogGenerator(srcPtr2[i], fogValue, 3, check);
+                Rpp32f check = (srcPtr[i] + srcPtr1[i] + srcPtr2[i]) / 3;
+                srcPtr[i] = fogGenerator(srcPtr[i], fogValue, 1, check);
+                srcPtr1[i] = fogGenerator(srcPtr1[i], fogValue, 2, check);
+                srcPtr2[i] = fogGenerator(srcPtr2[i], fogValue, 3, check);
             }
         }
     }
@@ -682,3 +767,6 @@ RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     return RPP_SUCCESS;
 }
+
+#include "host_image_augmentations_simd.hpp"
+#endif
