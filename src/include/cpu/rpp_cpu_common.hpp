@@ -6,6 +6,7 @@
 #include <cstring>
 #include <rppdefs.h>
 
+
 #define PI 3.14159265
 #define RAD(deg)                (deg * PI / 180)
 #define RPPABS(a)               ((a < 0) ? (-a) : (a))
@@ -1927,5 +1928,6 @@ inline Rpp32u fogGenerator(Rpp32u srcPtr, Rpp32f fogValue, int colour, int check
     return fog;
 }
 
+#include "rpp_cpu_common_simd.hpp"
 
 #endif //RPP_CPU_COMMON_H
