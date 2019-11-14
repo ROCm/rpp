@@ -88,7 +88,6 @@ RppStatus flip_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
                     {
                         srcPtrTemp--;
                         *dstPtrTemp++ = *srcPtrTemp;
-                        dstPtrTemp++;
                     }
                 }
             }
