@@ -1,3 +1,6 @@
+#ifndef HOST_GEOMETRY_TRANSFORMS_HPP
+#define HOST_GEOMETRY_TRANSFORMS_HPP
+
 #include <cpu/rpp_cpu_common.hpp>
 
 /**************** Flip ***************/
@@ -679,3 +682,5 @@ RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 }
 
+#include "host_geometry_transforms_simd.hpp"
+#endif

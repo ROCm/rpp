@@ -7,6 +7,12 @@ add_library( ${PROJECT_NAME} OBJECT ${MOD_CPP})
 if( "${TIME_INFO}" STREQUAL "1")
     add_definitions(-DTIME_INFO)
 endif()
+
+#set default backend if not specified
+if (NOT DEFINED BACKEND)
+    SET(BACKEND "OCL")
+endif()
+
 #enable of disable SIMD for host implementations
 # Backend Specific Settings
 if( "${BACKEND}" STREQUAL "HIP")
