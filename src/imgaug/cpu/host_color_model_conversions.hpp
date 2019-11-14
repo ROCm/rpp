@@ -132,38 +132,31 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         generate_gaussian_kernel_asymmetric_host(stdDev, kernelColumns, kernelColumnsSize.height, kernelColumnsSize.width);
     }
 
-    Rpp32f *kernelRowsTemp, *kernelColumnsTemp;
-    kernelRowsTemp = kernelRows;
-    kernelColumnsTemp = kernelColumns;
-    
+#pragma omp parallel for
     for (int i = 0; i < srcSize.height; i++)
     {
-        kernelColumnsTemp = kernelColumns;
         for (int j = 0; j < srcSize.width; j++)
         {
-            *maskTemp = *kernelRowsTemp * *kernelColumnsTemp;
-            maskTemp++;
-            kernelColumnsTemp++;
+            maskTemp[i*srcSize.width+ j] = kernelRows[i] * kernelColumns[j];
         }
-        kernelRowsTemp++;
     }
 
     Rpp32f max = 0;
     maskTemp = mask;
+#pragma omp parallel for
     for (int i = 0; i < (srcSize.height * srcSize.width); i++)
     {
-        if (*maskTemp > max)
+        if (maskTemp[i] > max)
         {
-            max = *maskTemp;
+            max = maskTemp[i];
         }
-        maskTemp++;
     }
 
     maskTemp = mask;
+#pragma omp parallel for
     for (int i = 0; i < (srcSize.height * srcSize.width); i++)
     {
-        *maskTemp = *maskTemp / max;
-        maskTemp++;
+        maskTemp[i] /= max;
     }
 
     Rpp32f *maskFinal = (Rpp32f *)calloc(channel * srcSize.height * srcSize.width, sizeof(Rpp32f));
@@ -189,16 +182,15 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
+#pragma omp parallel for
         for (int i = 0; i < srcSize.height; i++)
         {
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
                 {
-                    *maskFinalTemp = *maskTemp;
-                    maskFinalTemp++;
+                    maskFinalTemp[i*srcSize.width*channel + j*channel+c] = maskTemp[i*srcSize.width+j];
                 }
-                maskTemp++;
             }
         }
     }
