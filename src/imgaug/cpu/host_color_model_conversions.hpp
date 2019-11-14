@@ -21,72 +21,62 @@ RppStatus color_temperature_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
-    Rpp32s pixel;
 
     if (channel == 1)
     {
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
-            pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+            Rpp32s pixel = ((Rpp32s)srcPtrTemp[i]) + (Rpp32s) adjustmentValue;
             pixel = RPPPIXELCHECK(pixel);
-            *dstPtrTemp = (T) pixel;
-            dstPtrTemp++;
-            srcPtrTemp++;
+            dstPtrTemp[i] = (T) pixel;
         }
     }
     else if (channel == 3)
     {   
         if (chnFormat == RPPI_CHN_PLANAR)
         {
+#pragma omp parallel for
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
+                Rpp32s pixel = ((Rpp32s)srcPtrTemp[i]) + (Rpp32s) adjustmentValue;
                 pixel = RPPPIXELCHECK(pixel);
-                *dstPtrTemp = (T) pixel;
-                dstPtrTemp++;
-                srcPtrTemp++;
+                dstPtrTemp[i] = (T) pixel;
             }
+            dstPtrTemp += (srcSize.height * srcSize.width);
+            srcPtrTemp += (srcSize.height * srcSize.width);
+#pragma omp parallel for
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                *dstPtrTemp = *srcPtrTemp;
-                dstPtrTemp++;
-                srcPtrTemp++;
+                dstPtrTemp[i] = srcPtrTemp[i];
             }
+            dstPtrTemp += (srcSize.height * srcSize.width);
+            srcPtrTemp += (srcSize.height * srcSize.width);
+#pragma omp parallel for
             for (int i = 0; i < (srcSize.height * srcSize.width); i++)
             {
-                pixel = (Rpp32s) *srcPtrTemp - (Rpp32s) adjustmentValue;
+                Rpp32s pixel = ((Rpp32s)srcPtrTemp[i]) - (Rpp32s) adjustmentValue;
                 pixel = RPPPIXELCHECK(pixel);
-                *dstPtrTemp = (T) pixel;
-                dstPtrTemp++;
-                srcPtrTemp++;
+                dstPtrTemp[i] = (T) pixel;
+
             }
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
-            for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+#pragma omp parallel for
+            for (int i = 0; i < (srcSize.height * srcSize.width*3); i +=3 )
             {
-                pixel = (Rpp32s) *srcPtrTemp + (Rpp32s) adjustmentValue;
-                pixel = RPPPIXELCHECK(pixel);
-                *dstPtrTemp = (T) pixel;
-                dstPtrTemp++;
-                srcPtrTemp++;
-
-                *dstPtrTemp = *srcPtrTemp;
-                dstPtrTemp++;
-                srcPtrTemp++;
-
-                pixel = (Rpp32s) *srcPtrTemp - (Rpp32s) adjustmentValue;
-                pixel = RPPPIXELCHECK(pixel);
-                *dstPtrTemp = (T) pixel;
-                dstPtrTemp++;
-                srcPtrTemp++;
+                Rpp32s pixel = ((Rpp32s)srcPtrTemp[i])+ (Rpp32s) adjustmentValue;
+                dstPtrTemp[i] = (T) RPPPIXELCHECK(pixel);
+                dstPtrTemp[i+1] = srcPtrTemp[i+1];
+                pixel = ((Rpp32s)srcPtrTemp[i+2])- (Rpp32s) adjustmentValue;
+                dstPtrTemp[i+2] = (T) RPPPIXELCHECK(pixel);
             }
         }
     }
     
     return RPP_SUCCESS;
 }
-
 
 /**************** Vignette ***************/
 
@@ -132,6 +122,7 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         generate_gaussian_kernel_asymmetric_host(stdDev, kernelColumns, kernelColumnsSize.height, kernelColumnsSize.width);
     }
 
+
 #pragma omp parallel for
     for (int i = 0; i < srcSize.height; i++)
     {
@@ -169,6 +160,7 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         for (int c = 0; c < channel; c++)
         {
             maskTemp = mask;
+#pragma omp parallel for
             for (int i = 0; i < srcSize.height; i++)
             {
                 for (int j = 0; j < srcSize.width; j++)
@@ -185,6 +177,7 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 #pragma omp parallel for
         for (int i = 0; i < srcSize.height; i++)
         {
+#pragma omp parallel for
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)

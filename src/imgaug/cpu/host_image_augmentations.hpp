@@ -231,7 +231,7 @@ RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     dstPtrTemp = dstPtr;
 
     //Rpp32f pixel;
-#pragma omp parallel for simd
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
         Rpp32f pixel = ((Rpp32f) (srcPtrTemp[i])) / 255.0;
