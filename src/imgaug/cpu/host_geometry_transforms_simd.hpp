@@ -201,6 +201,150 @@ RppStatus flip_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
 
     return RPP_SUCCESS;
 }
+/**************** Rotate ***************/
+
+
+template <>
+RppStatus rotate_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiSize dstSize,
+                           Rpp32f angleDeg,
+                           RppiChnFormat chnFormat, Rpp32u channel)
+{
+    Rpp32f angleRad = -RAD(angleDeg);
+    Rpp32f rotate[4] = {0};
+    rotate[0] = cos(angleRad);
+    rotate[1] = sin(angleRad);
+    rotate[2] = -sin(angleRad);
+    rotate[3] = cos(angleRad);
+
+    Rpp8u *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp32f divisor = (rotate[1] * rotate[2]) - (rotate[0] * rotate[3]);
+    Rpp32f srcLocationRow, srcLocationColumn, srcLocationRowTerm1, srcLocationColumnTerm1, pixel;
+    Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
+
+    Rpp32f halfSrcHeight = srcSize.height / 2;
+    Rpp32f halfSrcWidth = srcSize.width / 2;
+    Rpp32f halfDstHeight = dstSize.height / 2;
+    Rpp32f halfDstWidth = dstSize.width / 2;
+    Rpp32f halfHeightDiff = halfSrcHeight - halfDstHeight;
+    Rpp32f halfWidthDiff = halfSrcWidth - halfDstWidth;
+
+    Rpp32f srcLocationRowParameter = (rotate[0] * halfSrcHeight) + (rotate[1] * halfSrcWidth) - halfSrcHeight + halfHeightDiff;
+    Rpp32f srcLocationColumnParameter = (rotate[2] * halfSrcHeight) + (rotate[3] * halfSrcWidth) - halfSrcWidth + halfWidthDiff;
+    Rpp32f srcLocationRowParameter2 = (-rotate[3] * (Rpp32s)srcLocationRowParameter) + (rotate[1] * (Rpp32s)srcLocationColumnParameter);
+    Rpp32f srcLocationColumnParameter2 = (rotate[2] * (Rpp32s)srcLocationRowParameter) + (-rotate[0] * (Rpp32s)srcLocationColumnParameter);
+    Rpp32f div_mul_factor = 1.f/divisor;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+    {
+        for (int c = 0; c < channel; c++)
+        {
+            for (int i = 0; i < dstSize.height; i++)
+            {
+                srcLocationRowTerm1 = -rotate[3] * i;
+                srcLocationColumnTerm1 = rotate[2] * i;
+                for (int j = 0; j < dstSize.width; j++)
+                {
+                    srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter2) * div_mul_factor;
+                    srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter2) * div_mul_factor;
+
+                    if (srcLocationRow < 0 || srcLocationColumn < 0 || srcLocationRow > (srcSize.height - 2) || srcLocationColumn > (srcSize.width - 2))
+                    {
+                        *dstPtrTemp = 0;
+                        dstPtrTemp++;
+                    }
+                    else
+                    {
+                        srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
+                        srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
+                        Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
+                        Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
+
+                        srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcSize.width;
+                        srcPtrBottomRow  = srcPtrTopRow + srcSize.width;
+
+                        Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
+
+                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
+                            + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
+
+                        *dstPtrTemp = (Rpp8u) round(pixel);
+                        dstPtrTemp ++;
+                    }
+                }
+            }
+            srcPtrTemp += srcSize.height * srcSize.width;
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        Rpp32s elementsInRow = srcSize.width * channel;
+        for (int i = 0; i < dstSize.height; i++)
+        {
+            srcLocationRowTerm1 = -rotate[3] * i;
+            srcLocationColumnTerm1 = rotate[2] * i;
+            int j = 0;
+#if 0// todo;;__AVX2__
+           int alignedWidth = dstSize.width & ~7 ; //process 8 pixels in inner loop
+           // for (; j < alignedWidth; j+= 8) {
+
+           // }
+#endif
+            for (; j < dstSize.width; j++)
+            {
+                srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter2) * div_mul_factor;
+                srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter2) * div_mul_factor;
+
+                if (srcLocationRow < 0 || srcLocationColumn < 0 || srcLocationRow > (srcSize.height - 2) || srcLocationColumn > (srcSize.width - 2))
+                {
+                        *dstPtrTemp++ = 0;
+                        *dstPtrTemp++ = 0;
+                        *dstPtrTemp++ = 0;
+                }
+                else
+                {
+                    srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
+                    srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
+                    Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
+                    Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
+
+                    srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * elementsInRow;
+                    srcPtrBottomRow  = srcPtrTopRow + elementsInRow;
+
+                    Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
+                    Rpp32f mul0 = (1 - weightedHeight) * (1 - weightedWidth);
+                    Rpp32f mul1 = (1 - weightedHeight) * weightedWidth;
+                    Rpp32f mul2 = weightedHeight * (1 - weightedWidth);
+                    Rpp32f mul3 = weightedHeight * weightedWidth;
+                    Rpp32f R, G, B;
+
+                    R =   (srcPtrTopRow[srcLocColFloorChanneled] * mul0)
+                        + (srcPtrTopRow[srcLocColFloorChanneled+channel] * mul1)
+                        + (srcPtrBottomRow[srcLocColFloorChanneled] * mul2)
+                        + (srcPtrBottomRow[srcLocColFloorChanneled + channel] * mul3);
+                    G =   (srcPtrTopRow[srcLocColFloorChanneled + 1] * mul0)
+                        + (srcPtrTopRow[srcLocColFloorChanneled + channel + 1] * mul1)
+                        + (srcPtrBottomRow[srcLocColFloorChanneled + 1] * mul2)
+                        + (srcPtrBottomRow[srcLocColFloorChanneled + channel + 1] * mul3);
+                    B =   (srcPtrTopRow[srcLocColFloorChanneled + 2] * mul0)
+                        + (srcPtrTopRow[srcLocColFloorChanneled+channel + 2] * mul1)
+                        + (srcPtrBottomRow[srcLocColFloorChanneled + 2] * mul2)
+                        + (srcPtrBottomRow[srcLocColFloorChanneled + channel + 2] * mul3);
+
+                    *dstPtrTemp++ = (Rpp8u) round(R);
+                    *dstPtrTemp++ = (Rpp8u) round(G);
+                    *dstPtrTemp++ = (Rpp8u) round(B);
+                }
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
 
 #endif
 #endif //AMD_RPP_HOST_GEOMETRY_TRANSFORMS_SIMD_HPP
