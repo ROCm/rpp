@@ -140,6 +140,7 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         {
             max = *maskTemp;
         }
+        maskTemp++;
     }
 
     maskTemp = mask;
