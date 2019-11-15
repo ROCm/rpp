@@ -1055,10 +1055,8 @@ inline RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
         for (int c = 0; c < channel; c++)
         {
             srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
-#pragma omp parallel for
             for (int i = 0; i < dstSize.height; i++)
             {
-#pragma omp parallel for simd
                 for (int j = 0; j < dstSize.width; j++)
                 {
                     *dstPtrTemp = *(srcPtrTemp + (j * srcSize.width) + i);
@@ -1069,10 +1067,8 @@ inline RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-#pragma omp parallel for
         for (int i = 0; i < dstSize.height; i++)
         {
-#pragma omp parallel for simd
             for (int j = 0; j < dstSize.width; j++)
             {
                 srcPtrTemp = srcPtr + (channel * ((j * srcSize.width) + i));
@@ -1099,7 +1095,7 @@ inline RppStatus compute_subtract_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
     dstPtrTemp = dstPtr;
 
     Rpp32s pixel;
-#pragma omp parallel for simd
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
         pixel = (Rpp32s) srcPtr1Temp[i] - (Rpp32s) srcPtr2Temp[i];
@@ -1148,7 +1144,7 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempH = dstPtr;
         dstPtrTempS = dstPtr + (imageDim);
         dstPtrTempV = dstPtr + (2 * imageDim);
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             Rpp32f rf, gf, bf, cmax, cmin, delta;
@@ -1274,7 +1270,7 @@ inline RppStatus compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempR = dstPtr;
         dstPtrTempG = dstPtr + (imageDim);
         dstPtrTempB = dstPtr + (2 * imageDim);
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             Rpp32f c, x, m, rf, gf, bf;
@@ -1332,7 +1328,7 @@ inline RppStatus compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempR = dstPtr;
         dstPtrTempG = dstPtr + 1;
         dstPtrTempB = dstPtr + 2;
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i += 3)
         {
             Rpp32f c, x, m, rf, gf, bf;
@@ -1403,7 +1399,7 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempH = dstPtr;
         dstPtrTempS = dstPtr + (imageDim);
         dstPtrTempL = dstPtr + (2 * imageDim);
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             Rpp32f rf, gf, bf, cmax, cmin, delta, divisor;
@@ -1461,7 +1457,7 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempH = dstPtr;
         dstPtrTempS = dstPtr + 1;
         dstPtrTempL = dstPtr + 2;
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i +=3)
         {
             Rpp32f rf, gf, bf, cmax, cmin, delta, divisor;
@@ -1532,7 +1528,7 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempR = dstPtr;
         dstPtrTempG = dstPtr + (imageDim);
         dstPtrTempB = dstPtr + (2 * imageDim);
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             Rpp32f c, x, m, rf, gf, bf;
@@ -1591,7 +1587,7 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempR = dstPtr;
         dstPtrTempG = dstPtr + 1;
         dstPtrTempB = dstPtr + 2;
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i += 3)
         {
             Rpp32f c, x, m, rf, gf, bf;
@@ -1658,7 +1654,7 @@ inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize
 
     Rpp32f pixel;
     Rpp32s srcPtr1Value, srcPtr2Value;
-#pragma omp parallel for simd
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
         srcPtr1Value = (Rpp32s) srcPtr1Temp[i];
@@ -1684,7 +1680,7 @@ inline RppStatus compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     if (type == 1)
     {
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
         {
             if (srcPtrTemp[i] < min)
@@ -1703,7 +1699,7 @@ inline RppStatus compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     }
     else if (type == 2)
     {
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
         {
             if (RPPABS(srcPtrTemp[i]) < min)
@@ -1752,7 +1748,6 @@ inline RppStatus compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* 
             srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
             for (int i = 0; i < dstSize.height; i++)
             {
-#pragma omp parallel for simd
                 for (int j = 0; j < dstSize.width; j++)
                 {
                     *dstPtrTemp = *srcPtrTemp;
@@ -1772,7 +1767,6 @@ inline RppStatus compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* 
         Rpp32u elementsInRow = srcSize.width * channel;
         for (int i = 0; i < dstSize.height; i++)
         {
-#pragma omp parallel for simd
             for (int j = 0; j < dstSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
