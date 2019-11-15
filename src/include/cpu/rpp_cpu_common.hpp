@@ -1055,10 +1055,8 @@ inline RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
         for (int c = 0; c < channel; c++)
         {
             srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
-#pragma omp parallel for
             for (int i = 0; i < dstSize.height; i++)
             {
-#pragma omp parallel for simd
                 for (int j = 0; j < dstSize.width; j++)
                 {
                     *dstPtrTemp = *(srcPtrTemp + (j * srcSize.width) + i);
@@ -1069,10 +1067,8 @@ inline RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-#pragma omp parallel for
         for (int i = 0; i < dstSize.height; i++)
         {
-#pragma omp parallel for simd
             for (int j = 0; j < dstSize.width; j++)
             {
                 srcPtrTemp = srcPtr + (channel * ((j * srcSize.width) + i));
@@ -1099,15 +1095,12 @@ inline RppStatus compute_subtract_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
     dstPtrTemp = dstPtr;
 
     Rpp32s pixel;
-#pragma omp parallel for simd
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = ((Rpp32s) (*srcPtr1Temp)) - ((Rpp32s) (*srcPtr2Temp));
+        pixel = (Rpp32s) srcPtr1Temp[i] - (Rpp32s) srcPtr2Temp[i];
         pixel = RPPPIXELCHECK(pixel);
-        *dstPtrTemp =(T) pixel;
-        srcPtr1Temp++;
-        srcPtr2Temp++;
-        dstPtrTemp++;
+        dstPtrTemp[i] =(T) pixel;
     }
 
     return RPP_SUCCESS;
@@ -1123,17 +1116,13 @@ inline RppStatus compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
     srcPtr1Temp = srcPtr1;
     srcPtr2Temp = srcPtr2;
     dstPtrTemp = dstPtr;
-
-    Rpp32f pixel;
-#pragma omp parallel for simd
+    
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        pixel = ((Rpp32f) (*srcPtr1Temp)) * ((Rpp32f) (*srcPtr2Temp));
+        Rpp32f pixel = (Rpp32f)srcPtr1Temp[i] * (Rpp32f)srcPtr2Temp[i];
         pixel = RPPPIXELCHECK(pixel);
-        *dstPtrTemp = (T) pixel;
-        srcPtr1Temp++;
-        srcPtr2Temp++;
-        dstPtrTemp++;
+        dstPtrTemp[i] = (T) pixel;
     }
 
     return RPP_SUCCESS;
@@ -1155,7 +1144,7 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempH = dstPtr;
         dstPtrTempS = dstPtr + (imageDim);
         dstPtrTempV = dstPtr + (2 * imageDim);
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             Rpp32f rf, gf, bf, cmax, cmin, delta;
@@ -1168,47 +1157,40 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
             if (delta == 0)
             {
-                *dstPtrTempH = 0;
+                dstPtrTempH[i] = 0;
             }
             else if (cmax == rf)
             {
-                *dstPtrTempH = round(60 * fmod(((gf - bf) / delta),6));
+                dstPtrTempH[i] = round(60 * fmod(((gf - bf) / delta),6));
             }
             else if (cmax == gf)
             {
-                *dstPtrTempH = round(60 * (((bf - rf) / delta) + 2));
+                dstPtrTempH[i] = round(60 * (((bf - rf) / delta) + 2));
             }
             else if (cmax == bf)
             {
-                *dstPtrTempH = round(60 * (((rf - gf) / delta) + 4));
+                dstPtrTempH[i] = round(60 * (((rf - gf) / delta) + 4));
             }
             
-            while (*dstPtrTempH > 360)
+            while (*dstPtrTempH[i] > 360)
             {
-                *dstPtrTempH = *dstPtrTempH - 360;
+                dstPtrTempH[i] = dstPtrTempH[i] - 360;
             }
-            while (*dstPtrTempH < 0)
+            while (*dstPtrTempH[i] < 0)
             {
-                *dstPtrTempH = 360 + *dstPtrTempH;
+                dstPtrTempH[i] = 360 + dstPtrTempH[i];
             }
 
             if (cmax == 0)
             {
-                *dstPtrTempS = 0;
+                dstPtrTempS[i] = 0;
             }
             else
             {
-                *dstPtrTempS = delta / cmax;
+                dstPtrTempS[i] = delta / cmax;
             }
 
-            *dstPtrTempV = cmax;
-            
-            srcPtrTempR++;
-            srcPtrTempG++;
-            srcPtrTempB++;
-            dstPtrTempH++;
-            dstPtrTempS++;
-            dstPtrTempV++;
+            dstPtrTempV[i] = cmax;
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -1219,60 +1201,53 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempH = dstPtr;
         dstPtrTempS = dstPtr + 1;
         dstPtrTempV = dstPtr + 2;
-#pragma omp parallel for simd
-        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+#pragma omp parallel for
+        for (int i = 0; i < (srcSize.height * srcSize.width); i += 3)
         {
             Rpp32f rf, gf, bf, cmax, cmin, delta;
-            rf = ((Rpp32f) *srcPtrTempR) / 255;
-            gf = ((Rpp32f) *srcPtrTempG) / 255;
-            bf = ((Rpp32f) *srcPtrTempB) / 255;
+            rf = ((Rpp32f) srcPtrTempR[i]) / 255;
+            gf = ((Rpp32f) srcPtrTempG[i]) / 255;
+            bf = ((Rpp32f) srcPtrTempB[i]) / 255;
             cmax = RPPMAX3(rf, gf, bf);
             cmin = RPPMIN3(rf, gf, bf);
             delta = cmax - cmin;
 
             if (delta == 0)
             {
-                *dstPtrTempH = 0;
+                dstPtrTempH[i] = 0;
             }
             else if (cmax == rf)
             {
-                *dstPtrTempH = round(60 * fmod(((gf - bf) / delta),6));
+                dstPtrTempH[i] = round(60 * fmod(((gf - bf) / delta),6));
             }
             else if (cmax == gf)
             {
-                *dstPtrTempH = round(60 * (((bf - rf) / delta) + 2));
+                dstPtrTempH[i] = round(60 * (((bf - rf) / delta) + 2));
             }
             else if (cmax == bf)
             {
-                *dstPtrTempH = round(60 * (((rf - gf) / delta) + 4));
+                dstPtrTempH[i] = round(60 * (((rf - gf) / delta) + 4));
             }
             
-            while (*dstPtrTempH > 360)
+            while (dstPtrTempH[i] > 360)
             {
-                *dstPtrTempH = *dstPtrTempH - 360;
+                dstPtrTempH[i] = dstPtrTempH[i] - 360;
             }
-            while (*dstPtrTempH < 0)
+            while (dstPtrTempH[i] < 0)
             {
-                *dstPtrTempH = 360 + *dstPtrTempH;
+                dstPtrTempH[i] = 360 + dstPtrTempH[i];
             }
 
             if (cmax == 0)
             {
-                *dstPtrTempS = 0;
+                dstPtrTempS[i] = 0;
             }
             else
             {
-                *dstPtrTempS = delta / cmax;
+                dstPtrTempS[i] = delta / cmax;
             }
 
-            *dstPtrTempV = cmax;
-
-            srcPtrTempR += 3;
-            srcPtrTempG += 3;
-            srcPtrTempB += 3;
-            dstPtrTempH += 3;
-            dstPtrTempS += 3;
-            dstPtrTempV += 3;
+            dstPtrTempV[i] = cmax;
         }
     }
     
@@ -1295,61 +1270,54 @@ inline RppStatus compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempR = dstPtr;
         dstPtrTempG = dstPtr + (imageDim);
         dstPtrTempB = dstPtr + (2 * imageDim);
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             Rpp32f c, x, m, rf, gf, bf;
-            c = *srcPtrTempV * *srcPtrTempS;
-            x = c * (1 - abs((fmod((*srcPtrTempH / 60), 2)) - 1));
-            m = *srcPtrTempV - c;
+            c = srcPtrTempV[i] * srcPtrTempS[i];
+            x = c * (1 - abs((fmod((srcPtrTempH[i] / 60), 2)) - 1));
+            m = srcPtrTempV[i] - c;
             
-            if ((0 <= *srcPtrTempH) && (*srcPtrTempH < 60))
+            if ((0 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 60))
             {
                 rf = c;
                 gf = x;
                 bf = 0;
             }
-            else if ((60 <= *srcPtrTempH) && (*srcPtrTempH < 120))
+            else if ((60 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 120))
             {
                 rf = x;
                 gf = c;
                 bf = 0;
             }
-            else if ((120 <= *srcPtrTempH) && (*srcPtrTempH < 180))
+            else if ((120 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 180))
             {
                 rf = 0;
                 gf = c;
                 bf = x;
             }
-            else if ((180 <= *srcPtrTempH) && (*srcPtrTempH < 240))
+            else if ((180 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 240))
             {
                 rf = 0;
                 gf = x;
                 bf = c;
             }
-            else if ((240 <= *srcPtrTempH) && (*srcPtrTempH < 300))
+            else if ((240 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 300))
             {
                 rf = x;
                 gf = 0;
                 bf = c;
             }
-            else if ((300 <= *srcPtrTempH) && (*srcPtrTempH < 360))
+            else if ((300 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 360))
             {
                 rf = c;
                 gf = 0;
                 bf = x;
             }
 
-            *dstPtrTempR = (Rpp8u) round((rf + m) * 255);
-            *dstPtrTempG = (Rpp8u) round((gf + m) * 255);
-            *dstPtrTempB = (Rpp8u) round((bf + m) * 255);
-
-            srcPtrTempH++;
-            srcPtrTempS++;
-            srcPtrTempV++;
-            dstPtrTempR++;
-            dstPtrTempG++;
-            dstPtrTempB++;
+            dstPtrTempR[i] = (Rpp8u) round((rf + m) * 255);
+            dstPtrTempG[i] = (Rpp8u) round((gf + m) * 255);
+            dstPtrTempB[i] = (Rpp8u) round((bf + m) * 255);
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -1360,61 +1328,55 @@ inline RppStatus compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempR = dstPtr;
         dstPtrTempG = dstPtr + 1;
         dstPtrTempB = dstPtr + 2;
-#pragma omp parallel for simd
-        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+#pragma omp parallel for
+        for (int i = 0; i < (srcSize.height * srcSize.width); i += 3)
         {
             Rpp32f c, x, m, rf, gf, bf;
-            c = *srcPtrTempV * *srcPtrTempS;
-            x = c * (1 - abs((fmod((*srcPtrTempH / 60), 2)) - 1));
+            c = srcPtrTempV[i] * srcPtrTempS[i];
+            x = c * (1 - abs((fmod((srcPtrTempH[i] / 60), 2)) - 1));
             m = *srcPtrTempV - c;
             
-            if ((0 <= *srcPtrTempH) && (*srcPtrTempH < 60))
+            if ((0 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 60))
             {
                 rf = c;
                 gf = x;
                 bf = 0;
             }
-            else if ((60 <= *srcPtrTempH) && (*srcPtrTempH < 120))
+            else if ((60 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 120))
             {
                 rf = x;
                 gf = c;
                 bf = 0;
             }
-            else if ((120 <= *srcPtrTempH) && (*srcPtrTempH < 180))
+            else if ((120 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 180))
             {
                 rf = 0;
                 gf = c;
                 bf = x;
             }
-            else if ((180 <= *srcPtrTempH) && (*srcPtrTempH < 240))
+            else if ((180 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 240))
             {
                 rf = 0;
                 gf = x;
                 bf = c;
             }
-            else if ((240 <= *srcPtrTempH) && (*srcPtrTempH < 300))
+            else if ((240 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 300))
             {
                 rf = x;
                 gf = 0;
                 bf = c;
             }
-            else if ((300 <= *srcPtrTempH) && (*srcPtrTempH < 360))
+            else if ((300 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 360))
             {
                 rf = c;
                 gf = 0;
                 bf = x;
             }
 
-            *dstPtrTempR = (Rpp8u) round((rf + m) * 255);
-            *dstPtrTempG = (Rpp8u) round((gf + m) * 255);
-            *dstPtrTempB = (Rpp8u) round((bf + m) * 255);
+            dstPtrTempR[i] = (Rpp8u) round((rf + m) * 255);
+            dstPtrTempG[i] = (Rpp8u) round((gf + m) * 255);
+            dstPtrTempB[i] = (Rpp8u) round((bf + m) * 255);
 
-            srcPtrTempH += 3;
-            srcPtrTempS += 3;
-            srcPtrTempV += 3;
-            dstPtrTempR += 3;
-            dstPtrTempG += 3;
-            dstPtrTempB += 3;
         }
     }
 
@@ -1437,13 +1399,13 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempH = dstPtr;
         dstPtrTempS = dstPtr + (imageDim);
         dstPtrTempL = dstPtr + (2 * imageDim);
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             Rpp32f rf, gf, bf, cmax, cmin, delta, divisor;
-            rf = ((Rpp32f) *srcPtrTempR) / 255;
-            gf = ((Rpp32f) *srcPtrTempG) / 255;
-            bf = ((Rpp32f) *srcPtrTempB) / 255;
+            rf = ((Rpp32f) srcPtrTempR[i]) / 255;
+            gf = ((Rpp32f) srcPtrTempG[i]) / 255;
+            bf = ((Rpp32f) srcPtrTempB[i]) / 255;
             cmax = RPPMAX3(rf, gf, bf);
             cmin = RPPMIN3(rf, gf, bf);
             divisor = cmax + cmin - 1;
@@ -1451,48 +1413,40 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
             if (delta == 0)
             {
-                *dstPtrTempH = 0;
+                dstPtrTempH[i] = 0;
             }
             else if (cmax == rf)
             {
-                *dstPtrTempH = round(60 * fmod(((gf - bf) / delta),6));
+                dstPtrTempH[i] = round(60 * fmod(((gf - bf) / delta),6));
             }
             else if (cmax == gf)
             {
-                *dstPtrTempH = round(60 * (((bf - rf) / delta) + 2));
+                dstPtrTempH[i] = round(60 * (((bf - rf) / delta) + 2));
             }
             else if (cmax == bf)
             {
-                *dstPtrTempH = round(60 * (((rf - gf) / delta) + 4));
+                dstPtrTempH[i] = round(60 * (((rf - gf) / delta) + 4));
             }
             
-            while (*dstPtrTempH > 360)
+            while (dstPtrTempH[i] > 360)
             {
-                *dstPtrTempH = *dstPtrTempH - 360;
+                dstPtrTempH[i] = dstPtrTempH[i] - 360;
             }
-            while (*dstPtrTempH < 0)
+            while (dstPtrTempH[i] < 0)
             {
-                *dstPtrTempH = 360 + *dstPtrTempH;
+                dstPtrTempH[i] = 360 + dstPtrTempH[i];
             }
 
             if (delta == 0)
             {
-                *dstPtrTempS = 0;
+                dstPtrTempS[i] = 0;
             }
             else
             {
-                *dstPtrTempS = delta / (1 - RPPABS(divisor));
+                dstPtrTempS[i] = delta / (1 - RPPABS(divisor));
             }
 
-            *dstPtrTempL = (cmax + cmin) / 2;
-
-            srcPtrTempR++;
-            srcPtrTempG++;
-            srcPtrTempB++;
-            dstPtrTempH++;
-            dstPtrTempS++;
-            dstPtrTempL++;
-
+            dstPtrTempL[i] = (cmax + cmin) / 2;
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -1503,13 +1457,13 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempH = dstPtr;
         dstPtrTempS = dstPtr + 1;
         dstPtrTempL = dstPtr + 2;
-#pragma omp parallel for simd
-        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+#pragma omp parallel for
+        for (int i = 0; i < (srcSize.height * srcSize.width); i +=3)
         {
             Rpp32f rf, gf, bf, cmax, cmin, delta, divisor;
-            rf = ((Rpp32f) *srcPtrTempR) / 255;
-            gf = ((Rpp32f) *srcPtrTempG) / 255;
-            bf = ((Rpp32f) *srcPtrTempB) / 255;
+            rf = ((Rpp32f) srcPtrTempR[i]) / 255;
+            gf = ((Rpp32f) srcPtrTempG[i]) / 255;
+            bf = ((Rpp32f) srcPtrTempB[i]) / 255;
             cmax = RPPMAX3(rf, gf, bf);
             cmin = RPPMIN3(rf, gf, bf);
             divisor = cmax + cmin - 1;
@@ -1517,47 +1471,40 @@ inline RppStatus compute_rgb_to_hsl_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
             if (delta == 0)
             {
-                *dstPtrTempH = 0;
+                dstPtrTempH[i] = 0;
             }
             else if (cmax == rf)
             {
-                *dstPtrTempH = round(60 * fmod(((gf - bf) / delta),6));
+                dstPtrTempH[i] = round(60 * fmod(((gf - bf) / delta),6));
             }
             else if (cmax == gf)
             {
-                *dstPtrTempH = round(60 * (((bf - rf) / delta) + 2));
+                dstPtrTempH[i] = round(60 * (((bf - rf) / delta) + 2));
             }
             else if (cmax == bf)
             {
-                *dstPtrTempH = round(60 * (((rf - gf) / delta) + 4));
+                dstPtrTempH[i] = round(60 * (((rf - gf) / delta) + 4));
             }
             
-            while (*dstPtrTempH > 360)
+            while (dstPtrTempH[i] > 360)
             {
-                *dstPtrTempH = *dstPtrTempH - 360;
+                dstPtrTempH [i]= dstPtrTempH[i] - 360;
             }
-            while (*dstPtrTempH < 0)
+            while (dstPtrTempH [i]< 0)
             {
-                *dstPtrTempH = 360 + *dstPtrTempH;
+                dstPtrTempH[i] = 360 + dstPtrTempH[i];
             }
 
             if (delta == 0)
             {
-                *dstPtrTempS = 0;
+                dstPtrTempS[i] = 0;
             }
             else
             {
-                *dstPtrTempS = delta / (1 - RPPABS(divisor));
+                dstPtrTempS[i] = delta / (1 - RPPABS(divisor));
             }
 
-            *dstPtrTempL = (cmax + cmin) / 2;
-
-            srcPtrTempR += 3;
-            srcPtrTempG += 3;
-            srcPtrTempB += 3;
-            dstPtrTempH += 3;
-            dstPtrTempS += 3;
-            dstPtrTempL += 3;
+            dstPtrTempL[i] = (cmax + cmin) / 2;
 
         }
     }
@@ -1581,62 +1528,55 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempR = dstPtr;
         dstPtrTempG = dstPtr + (imageDim);
         dstPtrTempB = dstPtr + (2 * imageDim);
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (srcSize.height * srcSize.width); i++)
         {
             Rpp32f c, x, m, rf, gf, bf;
             c = (2 * *srcPtrTempL) - 1;
             c = (1 - RPPABS(c)) * *srcPtrTempS;
-            x = c * (1 - abs((fmod((*srcPtrTempH / 60), 2)) - 1));
+            x = c * (1 - abs((fmod((srcPtrTempH[i] / 60), 2)) - 1));
             m = *srcPtrTempL - c / 2;
             
-            if ((0 <= *srcPtrTempH) && (*srcPtrTempH < 60))
+            if ((0 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 60))
             {
                 rf = c;
                 gf = x;
                 bf = 0;
             }
-            else if ((60 <= *srcPtrTempH) && (*srcPtrTempH < 120))
+            else if ((60 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 120))
             {
                 rf = x;
                 gf = c;
                 bf = 0;
             }
-            else if ((120 <= *srcPtrTempH) && (*srcPtrTempH < 180))
+            else if ((120 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 180))
             {
                 rf = 0;
                 gf = c;
                 bf = x;
             }
-            else if ((180 <= *srcPtrTempH) && (*srcPtrTempH < 240))
+            else if ((180 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 240))
             {
                 rf = 0;
                 gf = x;
                 bf = c;
             }
-            else if ((240 <= *srcPtrTempH) && (*srcPtrTempH < 300))
+            else if ((240 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 300))
             {
                 rf = x;
                 gf = 0;
                 bf = c;
             }
-            else if ((300 <= *srcPtrTempH) && (*srcPtrTempH < 360))
+            else if ((300 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 360))
             {
                 rf = c;
                 gf = 0;
                 bf = x;
             }
 
-            *dstPtrTempR = (Rpp8u) round((rf + m) * 255);
-            *dstPtrTempG = (Rpp8u) round((gf + m) * 255);
-            *dstPtrTempB = (Rpp8u) round((bf + m) * 255);
-
-            srcPtrTempH++;
-            srcPtrTempS++;
-            srcPtrTempL++;
-            dstPtrTempR++;
-            dstPtrTempG++;
-            dstPtrTempB++;
+            dstPtrTempR[i] = (Rpp8u) round((rf + m) * 255);
+            dstPtrTempG[i] = (Rpp8u) round((gf + m) * 255);
+            dstPtrTempB[i] = (Rpp8u) round((bf + m) * 255);
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -1647,62 +1587,55 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         dstPtrTempR = dstPtr;
         dstPtrTempG = dstPtr + 1;
         dstPtrTempB = dstPtr + 2;
-#pragma omp parallel for simd
-        for (int i = 0; i < (srcSize.height * srcSize.width); i++)
+#pragma omp parallel for
+        for (int i = 0; i < (srcSize.height * srcSize.width); i += 3)
         {
             Rpp32f c, x, m, rf, gf, bf;
-            c = (2 * *srcPtrTempL) - 1;
-            c = (1 - RPPABS(c)) * *srcPtrTempS;
-            x = c * (1 - abs((fmod((*srcPtrTempH / 60), 2)) - 1));
+            c = (2 * srcPtrTempL[i]) - 1;
+            c = (1 - RPPABS(c)) * srcPtrTempS[i];
+            x = c * (1 - abs((fmod((srcPtrTempH[i] / 60), 2)) - 1));
             m = *srcPtrTempL - c / 2;
             
-            if ((0 <= *srcPtrTempH) && (*srcPtrTempH < 60))
+            if ((0 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 60))
             {
                 rf = c;
                 gf = x;
                 bf = 0;
             }
-            else if ((60 <= *srcPtrTempH) && (*srcPtrTempH < 120))
+            else if ((60 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 120))
             {
                 rf = x;
                 gf = c;
                 bf = 0;
             }
-            else if ((120 <= *srcPtrTempH) && (*srcPtrTempH < 180))
+            else if ((120 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 180))
             {
                 rf = 0;
                 gf = c;
                 bf = x;
             }
-            else if ((180 <= *srcPtrTempH) && (*srcPtrTempH < 240))
+            else if ((180 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 240))
             {
                 rf = 0;
                 gf = x;
                 bf = c;
             }
-            else if ((240 <= *srcPtrTempH) && (*srcPtrTempH < 300))
+            else if ((240 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 300))
             {
                 rf = x;
                 gf = 0;
                 bf = c;
             }
-            else if ((300 <= *srcPtrTempH) && (*srcPtrTempH < 360))
+            else if ((300 <= srcPtrTempH[i]) && (srcPtrTempH[i] < 360))
             {
                 rf = c;
                 gf = 0;
                 bf = x;
             }
 
-            *dstPtrTempR = (Rpp8u) round((rf + m) * 255);
-            *dstPtrTempG = (Rpp8u) round((gf + m) * 255);
-            *dstPtrTempB = (Rpp8u) round((bf + m) * 255);
-
-            srcPtrTempH += 3;
-            srcPtrTempS += 3;
-            srcPtrTempL += 3;
-            dstPtrTempR += 3;
-            dstPtrTempG += 3;
-            dstPtrTempB += 3;
+            dstPtrTempR[i] = (Rpp8u) round((rf + m) * 255);
+            dstPtrTempG[i] = (Rpp8u) round((gf + m) * 255);
+            dstPtrTempB[i] = (Rpp8u) round((bf + m) * 255);
         }
     }
 
@@ -1721,17 +1654,14 @@ inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize
 
     Rpp32f pixel;
     Rpp32s srcPtr1Value, srcPtr2Value;
-#pragma omp parallel for simd
+#pragma omp parallel for
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
-        srcPtr1Value = (Rpp32s) *srcPtr1Temp;
-        srcPtr2Value = (Rpp32s) *srcPtr2Temp;
+        srcPtr1Value = (Rpp32s) srcPtr1Temp[i];
+        srcPtr2Value = (Rpp32s) srcPtr2Temp[i];
         pixel = sqrt((srcPtr1Value * srcPtr1Value) + (srcPtr2Value * srcPtr2Value));
         pixel = RPPPIXELCHECK(pixel);
-        *dstPtrTemp =(U) round(pixel);
-        srcPtr1Temp++;
-        srcPtr2Temp++;
-        dstPtrTemp++;
+        dstPtrTemp[i] =(U) round(pixel);
     }
 
     return RPP_SUCCESS;
@@ -1750,46 +1680,40 @@ inline RppStatus compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     if (type == 1)
     {
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
         {
-            if (*srcPtrTemp < min)
+            if (srcPtrTemp[i] < min)
             {
-                *dstPtrTemp = (U) 0;
+                dstPtrTemp[i] = (U) 0;
             }
-            else if (*srcPtrTemp <= max)
+            else if (*srcPtrTemp[i] <= max)
             {
-                *dstPtrTemp = (U) 255;
+                dstPtrTemp[i] = (U) 255;
             }
             else
             {
-                *dstPtrTemp = (U) 0;
+                dstPtrTemp[i] = (U) 0;
             }
-            
-            srcPtrTemp++;
-            dstPtrTemp++;
         }
     }
     else if (type == 2)
     {
-#pragma omp parallel for simd
+#pragma omp parallel for
         for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
         {
-            if (RPPABS(*srcPtrTemp) < min)
+            if (RPPABS(srcPtrTemp[i]) < min)
             {
-                *dstPtrTemp = (U) 0;
+                dstPtrTemp[i] = (U) 0;
             }
             else if (RPPABS(*srcPtrTemp) <= max)
             {
-                *dstPtrTemp = (U) 255;
+                dstPtrTemp[i] = (U) 255;
             }
             else
             {
-                *dstPtrTemp = (U) 0;
+                dstPtrTemp[i] = (U) 0;
             }
-            
-            srcPtrTemp++;
-            dstPtrTemp++;
         }
     }
 
@@ -1822,10 +1746,8 @@ inline RppStatus compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* 
         for (int c = 0; c < channel; c++)
         {
             srcPtrTemp = srcPtr + (c * srcSize.height * srcSize.width);
-#pragma omp parallel for
             for (int i = 0; i < dstSize.height; i++)
             {
-#pragma omp parallel for simd
                 for (int j = 0; j < dstSize.width; j++)
                 {
                     *dstPtrTemp = *srcPtrTemp;
@@ -1843,10 +1765,8 @@ inline RppStatus compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* 
     else if (chnFormat == RPPI_CHN_PACKED)
     {
         Rpp32u elementsInRow = srcSize.width * channel;
-#pragma omp parallel for
         for (int i = 0; i < dstSize.height; i++)
         {
-#pragma omp parallel for simd
             for (int j = 0; j < dstSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
