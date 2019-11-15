@@ -134,13 +134,13 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     Rpp32f max = 0;
     maskTemp = mask;
-#pragma omp parallel for
     for (int i = 0; i < (srcSize.height * srcSize.width); i++)
     {
-        if (maskTemp[i] > max)
+        if (*maskTemp> max)
         {
-            max = maskTemp[i];
+            max = *maskTemp;
         }
+        maskTemp++;
     }
 
     maskTemp = mask;
@@ -160,7 +160,6 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         for (int c = 0; c < channel; c++)
         {
             maskTemp = mask;
-#pragma omp parallel for
             for (int i = 0; i < srcSize.height; i++)
             {
                 for (int j = 0; j < srcSize.width; j++)
@@ -177,7 +176,6 @@ RppStatus vignette_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 #pragma omp parallel for
         for (int i = 0; i < srcSize.height; i++)
         {
-#pragma omp parallel for
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
