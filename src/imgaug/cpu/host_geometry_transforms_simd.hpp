@@ -201,6 +201,7 @@ RppStatus flip_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
 
     return RPP_SUCCESS;
 }
+
 /**************** Rotate ***************/
 
 
