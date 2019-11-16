@@ -397,4 +397,26 @@ RppStatus exposure_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
     return RPP_SUCCESS;
 }
 
+template <>
+RppStatus gamma_correction_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
+                                Rpp32f gamma,
+                                RppiChnFormat chnFormat, Rpp32u channel)
+{
+    Rpp8u *srcPtrTemp, *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+    Rpp8u gamma_mat[256];       // gamma lookup_table
+
+    for (int i = 0; i < 256; i++) {
+        gamma_mat[i] = RPPPIXELCHECK((int)(pow( ((Rpp32f) i / 255.0), gamma ) * 255));
+    }
+    int length = (channel * srcSize.height * srcSize.width);
+
+#pragma omp parallel for
+    for (int i = 0; i < length ; i++)
+    {
+        dstPtrTemp[i] = (Rpp8u) gamma_mat[srcPtrTemp[i]];
+    }
+    return RPP_SUCCESS;
+}
 #endif
