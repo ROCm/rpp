@@ -7,7 +7,6 @@
 #include <string>
 #include <iostream>
 #include <math.h>
-#include <CL/cl.hpp>
 #include <algorithm>
 #include <rppdefs.h>
 
@@ -37,5 +36,4 @@ inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp
 
     return RPP_SUCCESS;
 }
-
 #endif //RPP_CL_COMMON_H
