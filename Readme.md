@@ -1,7 +1,7 @@
 
 # Radeon Performance Primitives Library
 
-Radeon performance primitives(RPP) libaray is  a comprehensive high performance computer vision library for AMD(CPU and GPU) with HIP and OpenCL backend on the device side.
+Radeon performance primitives(RPP) library is  a comprehensive high performance computer vision library for AMD(CPU and GPU) with HIP and OpenCL backend on the device side.
 
 
 ## Top level design
@@ -16,41 +16,130 @@ RPP is developed for __Linux__ operating system.
 3. [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
 
 ## Functions Included
-* Brightness
-* Contrast
-* Gamma
-* Blend
-* Warp Affine
-* Resize
-* CropResize
-* Rotation
-* Flip(Horizontal, Vertical and Both)
-* Blur (Gaussian 3x3)
-* Fisheye lens
-* Vignette
-* Jitter
-* Salt and pepper noise
-* Snow flakes
-* Rain drops
-* Fog
-* Color temperature
+### Image Augmentation Category
+#### Enhancements
+* Brightness modification
+* Contrast modification
+* Hue modification
+* Saturation modification
+* Color temperature modification
+* Vignette effect
+* Gamma Correction
+* Histogram Balance
+#### Self Driving Car Specs
+* Exposure modifications
+* Foggy
+* Rainy
+* Snowy
+* RandomShadow
+#### Geometric Disortion Nodes
+* Rotate
+* Warp-affine
+* Flip (horizontally or vertically)
+* Fish Eye Effect
 * Lens correction
-* Pixelization
-* Exposure modification
+#### Other Augumentations
+* Resize
+* RandomResizeCrop
+* Blending images
+* Adding Occlusion
+* Pixilation
+* Adding Noise
+* Blurring
+* Adding Jitter
+* RandomCropLetterBox
+### Vision Functions
+* Absolute Difference
+* Accumulate
+* Accumulate Squared
+* Accumulate Weighted
+* Arithmetic Addition
+* Arithmetic Subtraction
+* Bilateral Filter
+* Bitwise AND
+* Bitwise EXCLUSIVE OR
+* Bitwise INCLUSIVE OR
+* Bitwise NOT
+* Box Filter
+* Canny Edge Detector
+* Channel Combine
+* Channel Extract
+* Control Flow
+* Convert Bit Depth
+* Custom Convolution
+* Data Object Copy
+* Dilate Image
+* Equalize Histogram
+* Erode Image
+* Fast Corners
+* Gaussian Filter
+* Gaussian Image Pyramid
+* Harris Corners
+* Histogram
+* Integral Image
+* LBP
+* Laplacian Image Pyramid
+* Magnitude
+* MatchTemplate
+* Max
+* Mean and Standard Deviation
+* Median Filter
+* Min
+* Min, Max Location
+* Non Linear Filter
+* Non-Maxima Suppression
+* Phase
+* Pixel-wise Multiplication
+* Reconstruction from a Laplacian Image Pyramid
+* Remap
+* Scale Image
+* Sobel 3x3
+* TableLookup
+* Tensor Add
+* Tensor Convert Bit-Depth
+* Tensor Matrix Multiply
+* Tensor Multiply
+* Tensor Subtract
+* Tensor TableLookUp
+* Tensor Transpose
+* Thresholding
+* Warp Affine
+* Warp Perspective
 
 ## Variations
 * Support for 3C(RGB) and 1C(Grayscale) images
 * Planar and Packed
 * Host and GPU 
+* Batch Processing with 26 variations
+* ROI variations
+* Padded Variations
+
 
 ## [Instructions to build the library](#rpp-installation)
 
 ```sh
-$ git clone https://github.com/LokeshBonta/AMD-RPP.git
-$ cd AMD-RPP
+$ git clone https://github.com/MCW-Dev/AMDRPP.git
+$ cd AMDRPP
+$ git checkout mem_mgmt_HIP
 $ mkdir build
 $ cd build
-$ cmake -DBACKEND=OCL ..
+<<<<<<< HEAD
+$ cmake -DBACKEND=OCL .. for OCL and HOST
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=STATIC for HIPSTATIC
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO for HIPHSACOO
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC for HIPRTC        
+=======
+$ cmake -DBACKEND=OCL .. #for OCL and HOST
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=STATIC #for HIPSTATIC
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO #for HIPHSACOO
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC #for HIPRTC        
+>>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
 $ make -j4
 $ sudo make install
 ```
@@ -60,13 +149,11 @@ Extended RPP support as a functionality through OpenVX
 ### To build OpenVX with RPP extension
 * RPP should be installed, follow [Instructions to build the library](#rpp-installation)
 ```sh
-$ git  clone https://github.com/shobana-mcw/MIVisionX.git
+$ git  clone git clone https://github.com/MCW-Dev/MIVisionX
 $ cd MIVisionX
-$ git  checkout main-dev
+$ git checkout mem_mgmt_mivisionX
 $ mkdir build
-$ cd build ; cmake .. ; make -j4 //For GPU support
-        or
-$ cd build ; cmake -DCMAKE_DISABLE_FIND_PACKAGE_OpenCL=TRUE;  //For CPU support
+$ cd build ; cmake .. ; make -j4 //For GPU and CPU support
 $ make -j4
 $ sudo make install
 ```
@@ -75,7 +162,7 @@ $ sudo make install
 
 
 ## Miscellaneous
-#### RPP stand-alone code snippet
+#### RPP stand-alone code snippet using OCL 
 ```c
 err = clGetPlatformIDs(1, &platform_id, NULL);
     err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
@@ -98,6 +185,55 @@ err = clGetPlatformIDs(1, &platform_id, NULL);
     rppi_brighten_8u_pln1_gpu( d_a, srcSize, d_c, alpha, beta, theQueue);//device side API call
 
 ```
+
+#### RPP stand-alone code snippet using HOST
+```c
+        rppHandle_t handle;
+	rppCreateWithBatchSize(&handle, noOfImages);
+        rppi_resize_u8_pkd3_batchDD_host(input, srcSize, output, dstSize, noOfImages, handle);
+        Rpp32f alpha=2;
+        Rpp32s beta=1;
+    
+        RppiSize srcSize;
+        srcSize.height=height;
+        srcSize.width=width;
+        rppi_brighten_8u_pln1_gpu( d_a, srcSize, d_c, alpha, beta, theQueue);//device side API call
+
+```
+
+#### RPP stand-alone code snippet using HIP
+```c
+<<<<<<< HEAD
+hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+=======
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+>>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
+	hipMalloc(&d_output, ioBufferSize * sizeof(Rpp8u));
+	check_hip_error();
+	hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+	check_hip_error();
+
+<<<<<<< HEAD
+    
+    Rpp32f alpha=2;
+    Rpp32s beta=1;
+    
+    RppiSize srcSize;
+    srcSize.height=height;
+    srcSize.width=width;
+    rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0], d_output, alpha, beta, handle);//device side API call
+=======
+        Rpp32f alpha=2;
+        Rpp32s beta=1;
+    
+        RppiSize srcSize;
+        srcSize.height=height;
+        srcSize.width=width;
+        rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0], d_output, alpha, beta, handle);//device side API call
+>>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
+
+```
+
 
 #### RPP with [GDF](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/utilities/runvx/README.md#amd-runvx)(uses OpenVX) code snippet
 
@@ -127,3 +263,4 @@ node org.rpp.Brightness luma output alpha beta
 
 
 ```
+
