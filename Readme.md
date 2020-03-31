@@ -118,7 +118,7 @@ RPP is developed for __Linux__ operating system.
 ## [Instructions to build the library](#rpp-installation)
 
 ```sh
-$ git clone https://github.com/MCW-Dev/AMDRPP.git
+$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ cd AMDRPP
 $ git checkout mem_mgmt_HIP
 $ mkdir build
@@ -145,17 +145,8 @@ $ sudo make install
 ```
 ## MIVisionX(OpenVX) Support
 Extended RPP support as a functionality through OpenVX
- [MIVisionX](https://github.com/shobana-mcw/MIVisionX) (Clone the repository from the link)
-### To build OpenVX with RPP extension
-* RPP should be installed, follow [Instructions to build the library](#rpp-installation)
-```sh
-$ git  clone git clone https://github.com/MCW-Dev/MIVisionX
-$ cd MIVisionX
-$ git checkout mem_mgmt_mivisionX
-$ mkdir build
-$ cd build ; cmake .. ; make -j4 //For GPU and CPU support
-$ make -j4
-$ sudo make install
+ [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) (Find build instructions and build the amd_rpp library)
+
 ```
 
 
