@@ -30,8 +30,8 @@
 #include "hip/rpp/env.hpp"
 #include "hip/rpp/stringutils.hpp"
 #include "hip/rpp/expanduser.hpp"
-#include <rpp/rpp.h>
-#include "rpp/version.h"
+#include <rpp.h>
+#include "version.h"
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>

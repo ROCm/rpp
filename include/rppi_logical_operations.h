@@ -2,7 +2,7 @@
 #define RPPI_LOGICAL_OPERATIONS_H
  
 #include "rppdefs.h"
-#include "rpp/rpp.h"
+#include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

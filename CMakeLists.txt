@@ -137,7 +137,7 @@ enable_cppcheck(
 )
 
 
-add_library(${PROJECT_NAME} SHARED include/rpp/rpp.h)
+add_library(${PROJECT_NAME} SHARED include/rpp.h)
 
 # Find required packages
 find_package(OpenCL REQUIRED) # OpenCL_INCLUDE_DIRS, OpenCL_LIBRARIES

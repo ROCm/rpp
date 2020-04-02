@@ -2,7 +2,7 @@
 #define RPPI_VALIDATE_OPERATIONS_FUNCTIONS
 #include <iostream>
 #include <stdlib.h>
-#include <rpp/rpp.h>
+#include <rpp.h>
 #include <rppdefs.h>
 #include <hip/rpp/handle.hpp>
 

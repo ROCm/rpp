@@ -28,7 +28,7 @@
 
 #include <exception>
 #include <iostream>
-#include <rpp/rpp.h>
+#include <rpp.h>
 #include <hip/rpp/object.hpp>
 #include <hip/rpp/returns.hpp>
 #include <string>

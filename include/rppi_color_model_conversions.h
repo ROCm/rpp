@@ -2,7 +2,7 @@
 #define RPPI_COLOR_MODEL_CONVERSIONS_H
  
 #include "rppdefs.h"
-#include "rpp/rpp.h"
+#include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

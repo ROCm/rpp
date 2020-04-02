@@ -23,7 +23,7 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include <rpp/config.h>
+#include <config.h>
 #include <rpp/device_name.hpp>
 #include <rpp/errors.hpp>
 #include <rpp/logger.hpp>

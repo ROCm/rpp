@@ -2,7 +2,7 @@
 #define RPPI_GEOMETRY_TRANSFORMS_H
  
 #include "rppdefs.h"
-#include "rpp/rpp.h"
+#include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

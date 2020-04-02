@@ -27,7 +27,7 @@
 #define RPP_UTIL_HPP_
 
 #include <rpp/common.hpp>
-#include <rpp/rpp.h>
+#include <rpp.h>
 
 #include <boost/range/adaptors.hpp>
 

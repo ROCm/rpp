@@ -28,7 +28,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <rpp/config.h>
+#include <config.h>
 #include <rpp/env.hpp>
 #include <rpp/errors.hpp>
 #include <rpp/gcn_asm_utils.hpp>

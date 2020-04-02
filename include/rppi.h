@@ -1,7 +1,7 @@
 #ifndef RPPI_H
 #define RPPI_H
 
-#include "rpp/rpp.h"
+#include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

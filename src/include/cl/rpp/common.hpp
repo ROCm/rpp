@@ -27,7 +27,7 @@
 #define GUARD_RPP_COMMON_HPP_
 
 #include <rpp/manage_ptr.hpp>
-#include <rpp/rpp.h>
+#include <rpp.h>
 
 #if RPP_BACKEND_OPENCL
 

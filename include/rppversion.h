@@ -1,6 +1,6 @@
 #ifndef RPPVERSION_H
 #define RPPVERSION_H
-#include "rpp/rpp.h"
+#include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

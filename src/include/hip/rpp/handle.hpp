@@ -29,10 +29,10 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
-#include <rpp/config.h>
+#include <config.h>
 #include <hip/rpp/common.hpp>
 #include <hip/rpp/kernel.hpp>
-#include <rpp/rpp.h>
+#include <rpp.h>
 #include <rppdefs.h>
 #include <hip/rpp/object.hpp>
 #include <hip/rpp/allocator.hpp>

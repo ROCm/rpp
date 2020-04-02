@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include <rpp/config.h>
+#include <config.h>
 
 namespace rpp {
 std::string GetKernelSrc(std::string name);

@@ -6,7 +6,7 @@
 #include <hip/rpp/common.hpp>
 #include <hip/rpp/errors.hpp>
 #include <hip/rpp/manage_ptr.hpp>
-#include <rpp/rpp.h>
+#include <rpp.h>
 
 namespace rpp {
 

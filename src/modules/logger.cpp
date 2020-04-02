@@ -26,7 +26,7 @@
 #include <cstdlib>
 #include <hip/rpp/env.hpp>
 #include <hip/rpp/logger.hpp>
-#include <rpp/config.h>
+#include <config.h>
 
 #ifdef __linux__
 #include <unistd.h>

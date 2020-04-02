@@ -32,7 +32,7 @@
 #include <cassert>
 #include <functional>
 #include <memory>
-#include <rpp/rpp.h>
+#include <rpp.h>
 #include <numeric>
 #include <sstream>
 #include <utility>

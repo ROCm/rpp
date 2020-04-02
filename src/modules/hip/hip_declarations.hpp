@@ -1,7 +1,7 @@
 #ifndef HIP_DECLARATIONS_H
 #define HIP_DECLARATIONS_H
 
-#include "rpp/rpp.h"
+#include "rpp.h"
 #include "hip/rpp/handle.hpp"
 
 

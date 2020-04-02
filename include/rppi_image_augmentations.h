@@ -1,6 +1,6 @@
 #ifndef RPPI_IMAGE_AUGMENTATIONS_H
 #define RPPI_IMAGE_AUGMENTATIONS_H
-#include "rpp/rpp.h"
+#include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {

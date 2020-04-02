@@ -28,7 +28,7 @@
 
 #include <iostream>
 #include <hip/rpp/manage_ptr.hpp>
-#include <rpp/rpp.h>
+#include <rpp.h>
 #include <string>
 
 namespace rpp {

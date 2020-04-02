@@ -46,7 +46,7 @@
 #include <hip/rpp/handle.hpp>
 #include <hip/rpp/kernel.hpp>
 #include <hip/rpp/simple_hash.hpp>
-#include <rpp/rpp.h>
+#include <rpp.h>
 #include <string>
 #include <unordered_map>
 #include <vector>

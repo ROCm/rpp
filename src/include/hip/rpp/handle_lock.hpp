@@ -33,7 +33,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <mutex>
 #include <hip/rpp/errors.hpp>
-#include <rpp/config.h>
+#include <config.h>
 
 namespace rpp {
 
