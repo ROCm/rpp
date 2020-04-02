@@ -119,8 +119,7 @@ RPP is developed for __Linux__ operating system.
 
 ```sh
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
-$ cd AMDRPP
-$ git checkout mem_mgmt_HIP
+$ cd rpp
 $ mkdir build
 $ cd build
 <<<<<<< HEAD
