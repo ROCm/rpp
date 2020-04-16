@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(amd_rpp VERSION 0.1)
+project(amd_rpp VERSION 0.2)
 
 
 include(CheckCXXCompilerFlag)
