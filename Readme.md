@@ -122,24 +122,15 @@ $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ cd rpp
 $ mkdir build
 $ cd build
-<<<<<<< HEAD
-$ cmake -DBACKEND=OCL .. for OCL and HOST
+$ cmake -DBACKEND=OCL ..                   #for OCL and HOST
         or
-$ cmake -DBACKEND=HIP -DCOMPILE=STATIC for HIPSTATIC
+$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO ..  #for HIPHSACOO
         or
-$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO for HIPHSACOO
+$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC ..  #for HIPRTC  
         or
-$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC for HIPRTC        
-=======
-$ cmake -DBACKEND=OCL .. #for OCL and HOST
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=STATIC #for HIPSTATIC
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO #for HIPHSACOO
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC #for HIPRTC        
->>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
-$ make -j4
+$ cmake -DBACKEND=HIP -DCOMPILE=STATIC ..  #for HIPSTATIC
+
+$ make -j$nproc
 $ sudo make install
 ```
 ## MIVisionX(OpenVX) Support
@@ -149,12 +140,10 @@ Extended RPP support as a functionality through OpenVX
 ```
 
 
-
-
 ## Miscellaneous
 #### RPP stand-alone code snippet using OCL 
 ```c
-err = clGetPlatformIDs(1, &platform_id, NULL);
+    err = clGetPlatformIDs(1, &platform_id, NULL);
     err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
     theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
     theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
@@ -193,34 +182,20 @@ err = clGetPlatformIDs(1, &platform_id, NULL);
 
 #### RPP stand-alone code snippet using HIP
 ```c
-<<<<<<< HEAD
-hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-=======
         hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
->>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
 	hipMalloc(&d_output, ioBufferSize * sizeof(Rpp8u));
 	check_hip_error();
 	hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
 	check_hip_error();
 
-<<<<<<< HEAD
-    
-    Rpp32f alpha=2;
-    Rpp32s beta=1;
-    
-    RppiSize srcSize;
-    srcSize.height=height;
-    srcSize.width=width;
-    rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0], d_output, alpha, beta, handle);//device side API call
-=======
         Rpp32f alpha=2;
         Rpp32s beta=1;
-    
+
         RppiSize srcSize;
         srcSize.height=height;
         srcSize.width=width;
         rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0], d_output, alpha, beta, handle);//device side API call
->>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
 
 ```
 
