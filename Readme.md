@@ -183,7 +183,6 @@ Extended RPP support as a functionality through OpenVX
 #### RPP stand-alone code snippet using HIP
 ```c
         hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
 	hipMalloc(&d_output, ioBufferSize * sizeof(Rpp8u));
 	check_hip_error();
 	hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);

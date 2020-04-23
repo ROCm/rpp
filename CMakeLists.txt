@@ -281,7 +281,6 @@ else()
     message("-- ${Green}${PROJECT_NAME} not built with ENABLE_SIMD_INTRINSICS")
 endif()
 
-
 # target setting
 option(Boost_USE_STATIC_LIBS "Use boost static libraries" ON)
 set(BOOST_COMPONENTS filesystem system)
@@ -293,11 +292,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 find_package(OpenMP)
 
 
-
-if(OpenMP_CXX_FOUND)
-	target_link_libraries(${PROJECT_NAME} ${MODULES_LIST} ${SUB_MODULES_LIST} ${SUB_MODULES_LIST_HIP} ${LINK_LIST} ${LINK_LIST_HIP} OpenMP::OpenMP_CXX)
-endif()
-#target_link_libraries(${PROJECT_NAME} ${MODULES_LIST} ${LINK_LIST} ${LINK_LIST_HIP})
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
