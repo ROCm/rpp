@@ -1,15 +1,12 @@
-
 # Radeon Performance Primitives Library
 
-Radeon performance primitives(RPP) library is a comprehensive high-performance computer vision library for AMD(CPU and GPU) with HIP and OpenCL backend on the device side.
-
+Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL backend on the device side.
 
 ## Top level design
 <p align="center"><img width="60%" src="rpp_new.png" /></p>
 
-
-
 RPP is developed for __Linux__ operating system.
+
 ##### Prerequisites
 1. Ubuntu `16.04`/`18.04`
 2. [ROCm supported hardware](https://rocm.github.io/hardware.html)
@@ -32,13 +29,13 @@ RPP is developed for __Linux__ operating system.
 * Rainy
 * Snowy
 * RandomShadow
-#### Geometric Disortion Nodes
+#### Geometric Distortion Nodes
 * Rotate
 * Warp-affine
 * Flip (horizontally or vertically)
 * Fish Eye Effect
 * Lens correction
-#### Other Augumentations
+#### Other Augmentations
 * Resize
 * RandomResizeCrop
 * Blending images
@@ -86,7 +83,7 @@ RPP is developed for __Linux__ operating system.
 * Median Filter
 * Min
 * Min, Max Location
-* Non Linear Filter
+* Non-Linear Filter
 * Non-Maxima Suppression
 * Phase
 * Pixel-wise Multiplication
@@ -114,23 +111,13 @@ RPP is developed for __Linux__ operating system.
 * ROI variations
 * Padded Variations
 
-
 ## [Instructions to build the library](#rpp-installation)
 
-```sh
+```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ cd rpp
 $ mkdir build
 $ cd build
-<<<<<<< HEAD
-$ cmake -DBACKEND=OCL .. for OCL and HOST
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=STATIC for HIPSTATIC
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO for HIPHSACOO
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC for HIPRTC        
-=======
 $ cmake -DBACKEND=OCL .. #for OCL and HOST
         or
 $ cmake -DBACKEND=HIP -DCOMPILE=STATIC #for HIPSTATIC
@@ -138,23 +125,18 @@ $ cmake -DBACKEND=HIP -DCOMPILE=STATIC #for HIPSTATIC
 $ cmake -DBACKEND=HIP -DCOMPILE=HSACOO #for HIPHSACOO
         or
 $ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC #for HIPRTC        
->>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
 $ make -j4
 $ sudo make install
 ```
+
 ## MIVisionX(OpenVX) Support
-Extended RPP support as a functionality through OpenVX
- [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) (Find build instructions and build the amd_rpp library)
-
-```
-
-
-
+Extended RPP support as a functionality through OpenVX [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) (Find build instructions and build the amd_rpp library)
 
 ## Miscellaneous
-#### RPP stand-alone code snippet using OCL 
-```c
-err = clGetPlatformIDs(1, &platform_id, NULL);
+#### RPP stand-alone code snippet using OCL
+
+````
+    err = clGetPlatformIDs(1, &platform_id, NULL);
     err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
     theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
     theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
@@ -173,13 +155,13 @@ err = clGetPlatformIDs(1, &platform_id, NULL);
     srcSize.height=height;
     srcSize.width=width;
     rppi_brighten_8u_pln1_gpu( d_a, srcSize, d_c, alpha, beta, theQueue);//device side API call
-
-```
+````
 
 #### RPP stand-alone code snippet using HOST
-```c
+
+```
         rppHandle_t handle;
-	rppCreateWithBatchSize(&handle, noOfImages);
+    	rppCreateWithBatchSize(&handle, noOfImages);
         rppi_resize_u8_pkd3_batchDD_host(input, srcSize, output, dstSize, noOfImages, handle);
         Rpp32f alpha=2;
         Rpp32s beta=1;
@@ -192,42 +174,25 @@ err = clGetPlatformIDs(1, &platform_id, NULL);
 ```
 
 #### RPP stand-alone code snippet using HIP
-```c
-<<<<<<< HEAD
-hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-=======
-        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
->>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
-	hipMalloc(&d_output, ioBufferSize * sizeof(Rpp8u));
-	check_hip_error();
-	hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-	check_hip_error();
 
-<<<<<<< HEAD
-    
+```
+    hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+    hipMalloc(&d_output, ioBufferSize * sizeof(Rpp8u));
+    check_hip_error();
+    hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+    check_hip_error();
     Rpp32f alpha=2;
     Rpp32s beta=1;
-    
+
     RppiSize srcSize;
     srcSize.height=height;
     srcSize.width=width;
-    rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0], d_output, alpha, beta, handle);//device side API call
-=======
-        Rpp32f alpha=2;
-        Rpp32s beta=1;
-    
-        RppiSize srcSize;
-        srcSize.height=height;
-        srcSize.width=width;
-        rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0], d_output, alpha, beta, handle);//device side API call
->>>>>>> 977ec0a11ae7111a6b8abaa9d219b85733943403
-
+    rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0], d_output, alpha, beta, handle); //device side API call
 ```
-
 
 #### RPP with [GDF](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/utilities/runvx/README.md#amd-runvx)(uses OpenVX) code snippet
 
-```sh
+```
 # specify input source for input image and request for displaying input and output images
 read input  ../images/face.jpg
 view input  inputWindow
@@ -249,8 +214,4 @@ node org.khronos.openvx.channel_extract yuv !CHANNEL_Y luma
 data alpha = scalar:FLOAT32,1.0  #contrast control
 data beta = scalar:INT32,30    #brightness control
 node org.rpp.Brightness luma output alpha beta
-
-
-
 ```
-
