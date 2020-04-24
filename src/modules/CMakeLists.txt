@@ -1,14 +1,10 @@
-cmake_minimum_required(VERSION 3.5)
 project(modules)
-
 if (${BACKEND} MATCHES OCL)
 	file(GLOB RPP_KERNELS cl/kernel/*.cl)
 endif()
-
 if (${BACKEND} MATCHES HIP)
 	file(GLOB RPP_KERNELS hip/kernel/*.cpp)
 endif()
-
 
 if( ${BACKEND} MATCHES "OCL" OR ${BACKEND} STREQUAL "HIPOC" OR ${BACKEND} STREQUAL "HIP")
     list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/rpp_kernels.h)
@@ -33,7 +29,6 @@ if( ${BACKEND} MATCHES "OCL" OR ${BACKEND} STREQUAL "HIPOC" OR ${BACKEND} STREQU
     add_custom_target(rpp_tidy_inlining
         DEPENDS ${PROJECT_BINARY_DIR}/rpp_kernels.h ${PROJECT_BINARY_DIR}/rpp_kernel_includes.h
         )
-
     add_dependencies(tidy rpp_tidy_inlining)
 endif()
 
@@ -78,7 +73,6 @@ file( GLOB CPPFILES "*.cpp" )
 list(APPEND Rpp_Source ${CPPFILES})
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel.cpp)
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
-
 # Backend Specific Settings
 if( "${TIME_INFO}" STREQUAL "1")
     add_definitions(-DTIME_INFO)
@@ -92,11 +86,10 @@ if( "${BACKEND}" STREQUAL "HIP")
 	add_definitions(-DSTATIC)
     endif()
     set(BACKEND_HIPOC 1)
-    add_subdirectory( hip )
+    #add_subdirectory( hip )
     # add_subdirectory( hipoc )
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}  -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -g3 -std=c++14")
-
     # set(LINK_LIST_HIPOC ${PROJECT_NAME}-hipoc ${LINK_LIST})
     set(LINK_LIST_HIP ${PROJECT_NAME}-hip ${LINK_LIST})
     # set(SUB_MODULES_LIST_HIPOC ${PROJECT_NAME}-hipoc ${SUB_MODULES_LIST} PARENT_SCOPE)
@@ -106,13 +99,17 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(HIP_INC "/opt/rocm/hip/include")
     set(INCLUDE_LIST ${HIP_INC} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "OCL")
-    add_subdirectory( cl )
-    set(SUB_MODULES_LIST ${PROJECT_NAME}-opencl ${SUB_MODULES_LIST} PARENT_SCOPE)
+    file( GLOB MOD_CL_CPP "cl/*.cpp" )
+    list(APPEND Rpp_Source ${CPPFILES} ${MOD_CL_CPP})
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -g3 -std=c++14 -Wno-deprecated-declarations")
-    set(LINK_LIST ${PROJECT_NAME}-opencl ${OpenCL_LIBRARIES} ${LINK_LIST})
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
     set(ROCM_INC "/opt/rocm/include")
+    list(APPEND OpenCL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/cl/)
+    MESSAGE("OPenCL incude directories are ${OpenCL_INCLUDE_DIRS}")
+    add_definitions(-DMOD_CL_PATH="${CMAKE_CURRENT_LIST_DIR}/cl/kernel/")
+    add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
+    add_definitions(-DOCL_COMPILE)
     set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST} ${ROCM_INC})
     add_definitions(-DOCL_COMPILE)
     add_definitions(-DRPP_BACKEND_OPENCL)
@@ -120,16 +117,9 @@ endif()
 
 add_kernels("${RPP_KERNELS}")
 add_kernel_includes("${RPP_KERNEL_INCLUDES}")
-
-
-add_library( ${PROJECT_NAME} OBJECT ${Rpp_Source})
-
-clang_tidy_check(${PROJECT_NAME})
-
+add_library(${PROJECT_NAME} OBJECT ${Rpp_Source} )
 # target setting
-
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_link_libraries (${PROJECT_NAME} ${LINK_LIST})
 target_include_directories( ${PROJECT_NAME}
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include
