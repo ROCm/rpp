@@ -20,13 +20,11 @@ install:
   - sudo apt update
   - sudo apt install rocm-dkms rocm-opencl-dev
 
-before_script:
+script:
   - mkdir build
   - cd build
-
-script:
   - cmake -DBACKEND=OCL ..
-  - make -j4
+  - make
   - sudo make install
 
 after_success:
