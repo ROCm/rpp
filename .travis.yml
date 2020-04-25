@@ -25,8 +25,8 @@ script:
   - mkdir build
   - cd build
   - cmake -DBACKEND=OCL ..
-  - make
-  - sudo make install
+#  - make
+#  - sudo make install
 
 after_success:
 
