@@ -1,3 +1,6 @@
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://travis-ci.org/GPUOpen-ProfessionalCompute-Libraries/rpp.svg?branch=master)](https://travis-ci.org/GPUOpen-ProfessionalCompute-Libraries/rpp)
+
 # Radeon Performance Primitives Library
 
 Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL backend on the device side.
