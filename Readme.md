@@ -3,7 +3,7 @@
 
 # Radeon Performance Primitives Library
 
-Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL backend on the device side.
+Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends.
 
 ## Top level design
 <p align="center"><img width="60%" src="rpp_new.png" /></p>
