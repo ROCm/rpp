@@ -22,6 +22,13 @@ cmake_minimum_required(VERSION 3.5)
 project(amd_rpp)
 set(VERSION "0.3")
 
+# ROCm Path
+set(ROCM_PATH /opt/rocm CACHE PATH "ROCm installation path")
+# need to do this to avoid setting the default path to /usr/local
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH}/rpp CACHE PATH "RPP default ROCm installation path" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
 # set message options
 if(NOT WIN32)
   string(ASCII 27 Esc)
@@ -34,6 +41,7 @@ if(NOT WIN32)
 endif()
 
 message("-- ${BoldBlue}Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
+message("-- ${BoldBlue}RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
 message("-- ${Yellow}cmake minimum version required: ${CMAKE_MINIMUM_REQUIRED_VERSION}${ColourReset}")
 message("-- ${Green}cmake version found: ${CMAKE_VERSION}${ColourReset}")
 
@@ -56,12 +64,10 @@ endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # Set Compilers
-# set(COMPILER_FOR_OPENCL /opt/rocm/bin/hipcc)
-# set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
-# set(COMPILER_FOR_HIPOC /opt/rocm/bin/hipcc)
-
-set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
-# set(COMPILER_FOR_HIPOC /opt/rocm/bin/hipcc)
+# set(COMPILER_FOR_OPENCL ${ROCM_PATH}/bin/hipcc)
+# set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+# set(COMPILER_FOR_HIPOC ${ROCM_PATH}/bin/hipcc)
+set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
 set(COMPILER_FOR_OPENCL clang++)
 
 include(ClangTidy)
@@ -182,23 +188,23 @@ set( MODULES_LIST modules)
 # look for and register extractkernel
 find_program(EXTRACTKERNEL_BIN extractkernel
     PATH_SUFFIXES bin
-    PATHS /opt/rocm
+    PATHS ${ROCM_PATH}
 )
 if(EXTRACTKERNEL_BIN)
-    message(STATUS "-- ${Green}extractkernel found: ${EXTRACTKERNEL_BIN}${ColourReset}")
+    message(STATUS "${Green}extractkernel found: ${EXTRACTKERNEL_BIN}${ColourReset}")
     set(EXTRACTKERNEL_BIN "${EXTRACTKERNEL_BIN}")
 else()
-    message(FATAL_ERROR "-- ${Red}extractkernel not found${ColourReset}")
+    message(FATAL_ERROR "${Red}extractkernel not found${ColourReset}")
 endif()
 
 # Online assembler
 find_program(MIOPEN_AMDGCN_ASSEMBLER
     NAMES clang
-    PATHS ${MIOPEN_AMDGCN_ASSEMBLER_PATH} /opt/rocm
+    PATHS ${MIOPEN_AMDGCN_ASSEMBLER_PATH} ${ROCM_PATH}
     PATH_SUFFIXES /opencl/bin/x86_64
     NO_DEFAULT_PATH
 )
-message(STATUS "-- ${Green}AMDGCN assembler: ${MIOPEN_AMDGCN_ASSEMBLER}${ColourReset}")
+message(STATUS "${Yellow}AMDGCN assembler: ${MIOPEN_AMDGCN_ASSEMBLER}${ColourReset}")
 
 foreach (MOD_NAME ${MODULES_LIST})
     add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
@@ -211,28 +217,28 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
 
-    #set( LINK_LIST  /opt/rocm/lib/libhip_hcc.so  /opt/rocm/lib/libhip_hcc.so ${LINK_LIST})
+    #set( LINK_LIST  ${ROCM_PATH}/lib/libhip_hcc.so  ${ROCM_PATH}/lib/libhip_hcc.so ${LINK_LIST})
    find_program(HIP_OC_COMPILER clang-ocl
         PATH_SUFFIXES bin
-        PATHS /opt/rocm
+        PATHS ${ROCM_PATH}
     )
     if(HIP_OC_COMPILER)
-        message(STATUS "-- ${Green}hip compiler: ${HIP_OC_COMPILER}${ColourReset}")
+        message(STATUS "${Green}hip compiler: ${HIP_OC_COMPILER}${ColourReset}")
         set(HIP_OC_COMPILER "${HIP_OC_COMPILER}")
     else()
-        message(FATAL_ERROR "-- ${Red}clang-ocl not found${ColourReset}")
+        message(FATAL_ERROR "${Red}clang-ocl not found${ColourReset}")
     endif()
 
     set(RPP_BACKEND_HIP 1)
     find_program(HIP_OC_COMPILER clang-ocl
         PATH_SUFFIXES bin
-        PATHS /opt/rocm
+        PATHS ${ROCM_PATH}
     )
     if(HIP_OC_COMPILER)
-        message(STATUS "-- ${Green}hip compiler: ${HIP_OC_COMPILER}${ColourReset}")
+        message(STATUS "${Green}hip compiler: ${HIP_OC_COMPILER}${ColourReset}")
         set(HIP_OC_COMPILER "${HIP_OC_COMPILER}")
     else()
-        message(FATAL_ERROR "-- ${Red}clang-ocl not found${ColourReset}")
+        message(FATAL_ERROR "${Red}clang-ocl not found${ColourReset}")
     endif()
 
     link_libraries(stdc++)
@@ -300,7 +306,7 @@ find_package(OpenMP)
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        /opt/rocm/include
+        ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${INCLUDE_LIST}
@@ -309,10 +315,5 @@ target_include_directories(${PROJECT_NAME}
 add_subdirectory(addkernels)
 
 # Installation
-install (TARGETS amd_rpp
-         LIBRARY DESTINATION /opt/rocm/rpp/lib
-)
-install (DIRECTORY include
-         DESTINATION /opt/rocm/rpp/
-)
-message("-- ${BoldBlue}RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
+install (TARGETS amd_rpp LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install (DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
