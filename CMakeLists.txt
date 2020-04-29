@@ -315,5 +315,5 @@ target_include_directories(${PROJECT_NAME}
 add_subdirectory(addkernels)
 
 # Installation
-install (TARGETS amd_rpp LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install (TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 install (DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
