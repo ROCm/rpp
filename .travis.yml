@@ -1,0 +1,36 @@
+language: cpp
+sudo: required
+dist: trusty
+os:
+  - linux
+compiler:
+  - g++
+  
+services:
+  - docker
+
+branches:
+  - master
+
+install:
+  - sudo apt update
+  - sudo apt --yes install cmake git wget unzip libnuma-dev
+  - wget -qO - http://repo.radeon.com/rocm/apt/debian/rocm.gpg.key | sudo apt-key add -
+  - sudo sh -c 'echo deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ xenial main > /etc/apt/sources.list.d/rocm.list'
+  - sudo apt update
+  - sudo apt --yes install rocm-dkms rocm-opencl-dev
+  - sudo apt --yes install libblkid-dev e2fslibs-dev libboost-all-dev libaudit-dev
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -DBACKEND=OCL ..
+#  - make
+#  - sudo make install
+
+after_success:
+
+notifications:
+  email:
+    - kiriti.nageshgowda@amd.com
+    - pavel.tcherniaev@amd.com
