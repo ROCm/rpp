@@ -26,8 +26,16 @@ install:
   - docker cp ../rpp rocm_image:/rpp
 
 script:
-  - docker exec rocm_image cmake -H/rpp -B/_build -DCMAKE_BUILD_TYPE=Release -DBACKEND=OCL
-  - docker exec rocm_image cmake --build /_build
+  - docker exec rocm_image cmake -H/rpp -B/_buildOCL -DCMAKE_BUILD_TYPE=Release -DBACKEND=OCL
+  - docker exec rocm_image cmake --build /_buildOCL
+  - docker exec rocm_image cmake -H/rpp -B/_buildHIP -DCMAKE_BUILD_TYPE=Release -DBACKEND=HIP
+  - docker exec rocm_image cmake --build /_buildHIP
+  - docker exec rocm_image cmake -H/rpp -B/_buildHIPStatic -DCMAKE_BUILD_TYPE=Release -DBACKEND=HIP -DCOMPILE=STATIC
+  - docker exec rocm_image cmake --build /_buildHIPStatic
+  - docker exec rocm_image cmake -H/rpp -B/_buildHIPHSACOO -DCMAKE_BUILD_TYPE=Release -DBACKEND=HIP -DCOMPILE=HSACOO
+  - docker exec rocm_image cmake --build /_buildHIPHSACOO
+  - docker exec rocm_image cmake -H/rpp -B/_buildHIPRTC -DCMAKE_BUILD_TYPE=Release -DBACKEND=HIP -DCOMPILE=HIPRTC
+  - docker exec rocm_image cmake --build /_buildHIPRTC
 
 after_success:
 
