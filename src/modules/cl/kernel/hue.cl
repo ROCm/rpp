@@ -241,5 +241,4 @@ __kernel void saturation_batch(  __global unsigned char* input,
         output[pixIdx + inc[id_z]] =  pixel.y;
         output[pixIdx + 2*inc[id_z]] = pixel.z;
     }
-
 }
