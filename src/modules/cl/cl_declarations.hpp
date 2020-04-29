@@ -609,7 +609,8 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
 
 RppStatus
 crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);
-
+RppStatus
+resize_crop_mirror_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);
 /* Fused Functions End*/
 
 #endif //CL_DECLATAIONS_H

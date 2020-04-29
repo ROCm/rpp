@@ -413,7 +413,6 @@ RppStatus
 RppStatus
  rppi_blend_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
 
-
 // ----------------------------------------
 // CPU blend functions declaration 
 // ----------------------------------------

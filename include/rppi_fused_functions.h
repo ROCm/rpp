@@ -365,6 +365,18 @@ rppi_resize_crop_mirror_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 RppStatus  
 rppi_resize_crop_mirror_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
 
+// ----------------------------------------
+// GPU resize_crop_mirror functions declaration 
+// ----------------------------------------
+
+RppStatus  
+rppi_resize_crop_mirror_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+
+RppStatus  
+rppi_resize_crop_mirror_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+
+RppStatus  
+rppi_resize_crop_mirror_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
 
 #ifdef __cplusplus
 }

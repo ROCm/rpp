@@ -4386,3 +4386,59 @@ rppi_resize_crop_mirror_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 
 	return RPP_SUCCESS;
 }
+
+// ----------------------------------------
+// GPU resize_crop_mirror functions declaration 
+// ----------------------------------------
+
+RppStatus  
+rppi_resize_crop_mirror_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_dstSize(dstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize (maxDstSize, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	get_dstBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint (yRoiBegin, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint (yRoiEnd, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint (mirrorFlag, rpp::deref(rppHandle), paramIndex++);
+
+	#ifdef OCL_COMPILE
+		{
+			resize_crop_mirror_cl_batch(
+				static_cast<cl_mem>(srcPtr),
+				static_cast<cl_mem>(dstPtr),
+				rpp::deref(rppHandle),
+				RPPI_CHN_PACKED, 3
+			);
+		}
+	#elif defined (HIP_COMPILE)
+		{
+			resize_crop_mirror_hip_batch(
+				static_cast<Rpp8u*>(srcPtr),
+				static_cast<Rpp8u*>(dstPtr),
+				rpp::deref(rppHandle),
+				RPPI_CHN_PACKED, 3
+			);
+		}
+	#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus  
+rppi_resize_crop_mirror_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+
+	return RPP_SUCCESS;
+}
+
+RppStatus  
+rppi_resize_crop_mirror_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	return RPP_SUCCESS;
+}
