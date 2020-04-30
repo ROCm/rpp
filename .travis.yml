@@ -29,6 +29,7 @@ script:
   # OpenCL Backend
   - docker exec rocm_image cmake -H/rpp -B/_buildOCL -DCMAKE_BUILD_TYPE=Release -DBACKEND=OCL
   - docker exec rocm_image cmake --build /_buildOCL
+  - docker exec rocm_image cmake --install /_buildOCL
   # HIP Backend - Turn OFF HIP - (TBD - Turn ON all tests)
   ##- docker exec rocm_image cmake -H/rpp -B/_buildHIP -DCMAKE_BUILD_TYPE=Release -DBACKEND=HIP
   ##- docker exec rocm_image cmake --build /_buildHIP
