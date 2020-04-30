@@ -20,7 +20,7 @@ install:
   - sudo apt update
   - sudo apt --yes install rocm-dkms
   
- before_script:
+before_script:
   - docker pull kiritigowda/ubuntu-18.04:latest-rocm
   - docker run -it -d --name rocm_image --network host kiritigowda/ubuntu-18.04:latest-rocm bash
   - docker cp ../rpp rocm_image:/rpp
