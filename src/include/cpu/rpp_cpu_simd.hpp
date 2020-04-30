@@ -84,6 +84,7 @@ inline void _mm_print_epi8(__m128i vPrintArray)
 {
   char printArray[16];
   _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+  printf("\n");
   for (int ct = 0; ct < 16; ct++)
   {
       printf("%d ", printArray[ct]);
@@ -94,6 +95,7 @@ inline void _mm_print_epi32(__m128i vPrintArray)
 {
   int printArray[4];
   _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+  printf("\n");
   for (int ct = 0; ct < 4; ct++)
   {
       printf("%d ", printArray[ct]);
@@ -104,6 +106,7 @@ inline void _mm_print_ps(__m128 vPrintArray)
 {
   float printArray[4];
   _mm_storeu_ps(printArray, vPrintArray);
+  printf("\n");
   for (int ct = 0; ct < 4; ct++)
   {
       printf("%0.6f ", printArray[ct]);

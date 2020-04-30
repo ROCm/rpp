@@ -108,7 +108,7 @@ __kernel void huergb_pkd(   __global  unsigned char *input,
     if(hsv.x > 360.0) {hsv.x = hsv.x - 360.0;}
     else if(hsv.x < 0){hsv.x = hsv.x + 360.0;}
 
-    hsv.y += sat;
+    hsv.y *= sat;
     if(hsv.y > 1.0){hsv.y = 1.0;}
     else if(hsv.y < 0.0){hsv.y = 0.0;}
 
@@ -142,7 +142,7 @@ __kernel void huergb_pln(   __global  unsigned char *input,
     if(hsv.x > 360.0) {hsv.x = hsv.x - 360.0;}
     else if(hsv.x < 0){hsv.x = hsv.x + 360.0;}
 
-    hsv.y += sat;
+    hsv.y *= sat;
     if(hsv.y > 1.0){hsv.y = 1.0;}
     else if(hsv.y < 0.0){hsv.y = 0.0;}
 
@@ -228,7 +228,7 @@ __kernel void saturation_batch(  __global unsigned char* input,
     if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
     {
         hsv = convert_one_pixel_to_hsv(pixel);
-        hsv.y += sat[id_z];
+        hsv.y *= sat[id_z];
         if(hsv.y > 1.0){hsv.y = 1.0;}
         else if(hsv.y < 0.0){hsv.y = 0.0;}
         pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with saturation modification
@@ -241,5 +241,4 @@ __kernel void saturation_batch(  __global unsigned char* input,
         output[pixIdx + inc[id_z]] =  pixel.y;
         output[pixIdx + 2*inc[id_z]] = pixel.z;
     }
-
 }

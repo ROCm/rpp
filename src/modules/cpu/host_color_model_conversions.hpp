@@ -1660,11 +1660,17 @@ RppStatus hueRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
             _MM_TRANSPOSE4_PS (h0, xG, xS, xV);
 
+            __m128 h1, h2, h3;
+
+            h1 = xG;
+            h2 = xS;
+            h3 = xV;
+
             // Prepare HUE for RGB components (per pixel).
             x0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(1, 1, 1, 3));     // x0 <- [H           |H           |H           |V          ]
-            x1 = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(1, 1, 1, 3));     // x1 <- [H           |H           |H           |V          ]
-            x2 = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(1, 1, 1, 3));     // x2 <- [H           |H           |H           |V          ]
-            x3 = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(1, 1, 1, 3));     // x3 <- [H           |H           |H           |V          ]
+            x1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(1, 1, 1, 3));     // x1 <- [H           |H           |H           |V          ]
+            x2 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(1, 1, 1, 3));     // x2 <- [H           |H           |H           |V          ]
+            x3 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(1, 1, 1, 3));     // x3 <- [H           |H           |H           |V          ]
 
             // Calculate intervals from HUE.
             x0 = _mm_sub_ps(x0, SIMD_GET_PS(p4o6_p2o6_p3o6_p0));   // x0 <- [H-4/6       |H-2/6       |H-3/6       |V          ]
@@ -1700,31 +1706,31 @@ RppStatus hueRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
             // Prepare S/V vectors.
             a0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
-            a1 = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
+            a1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
             h0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(3, 3, 3, 0));     // h0 <- [V           |V           |V           |A          ]
-            xG = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(3, 3, 3, 0));     // xG <- [V           |V           |V           |A          ]
+            h1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(3, 3, 3, 0));     // h1 <- [V           |V           |V           |A          ]
 
             // Multiply with 'S*V' and add 'V'.
             x0 = _mm_mul_ps(x0, a0);                               // x0 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x1 = _mm_mul_ps(x1, a1);                               // x1 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
-            a0 = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
-            a1 = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
+            a0 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
+            a1 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
 
             x0 = _mm_mul_ps(x0, h0);                               // x0 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x1 = _mm_mul_ps(x1, xG);                               // x1 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            xS = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(3, 3, 3, 0));     // xS <- [V           |V           |V           |A          ]
-            xV = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(3, 3, 3, 0));     // xV <- [V           |V           |V           |A          ]
+            x1 = _mm_mul_ps(x1, h1);                               // x1 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            h2 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(3, 3, 3, 0));     // h2 <- [V           |V           |V           |A          ]
+            h3 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(3, 3, 3, 0));     // h3 <- [V           |V           |V           |A          ]
 
             x2 = _mm_mul_ps(x2, a0);                               // x2 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x3 = _mm_mul_ps(x3, a1);                               // x3 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x0 = _mm_add_ps(x0, h0);                               // x0 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            x2 = _mm_mul_ps(x2, xS);                               // x2 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x3 = _mm_mul_ps(x3, xV);                               // x3 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x1 = _mm_add_ps(x1, xG);                               // x1 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x2 = _mm_mul_ps(x2, h2);                               // x2 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            x3 = _mm_mul_ps(x3, h3);                               // x3 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            x1 = _mm_add_ps(x1, h1);                               // x1 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            x2 = _mm_add_ps(x2, xS);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
-            x3 = _mm_add_ps(x3, xV);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x2 = _mm_add_ps(x2, h2);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x3 = _mm_add_ps(x3, h3);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
             // Store
             _MM_TRANSPOSE4_PS (x0, x1, x2, x3);
@@ -1892,7 +1898,7 @@ RppStatus hueRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         dstPtrTempPx2 = dstPtr + 6;
         dstPtrTempPx3 = dstPtr + 9;
 
-        Rpp64u alignedLength = bufferLength & ~11;
+        Rpp64u alignedLength = (bufferLength / 12) * 12;
 
         __m128i const zero = _mm_setzero_si128();
         __m128 pZeros = _mm_set1_ps(0.0);
@@ -2005,11 +2011,17 @@ RppStatus hueRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
             _MM_TRANSPOSE4_PS (h0, xG, xS, xV);
 
+            __m128 h1, h2, h3;
+
+            h1 = xG;
+            h2 = xS;
+            h3 = xV;
+
             // Prepare HUE for RGB components (per pixel).
             x0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(1, 1, 1, 3));     // x0 <- [H           |H           |H           |V          ]
-            x1 = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(1, 1, 1, 3));     // x1 <- [H           |H           |H           |V          ]
-            x2 = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(1, 1, 1, 3));     // x2 <- [H           |H           |H           |V          ]
-            x3 = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(1, 1, 1, 3));     // x3 <- [H           |H           |H           |V          ]
+            x1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(1, 1, 1, 3));     // x1 <- [H           |H           |H           |V          ]
+            x2 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(1, 1, 1, 3));     // x2 <- [H           |H           |H           |V          ]
+            x3 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(1, 1, 1, 3));     // x3 <- [H           |H           |H           |V          ]
 
             // Calculate intervals from HUE.
             x0 = _mm_sub_ps(x0, SIMD_GET_PS(p4o6_p2o6_p3o6_p0));   // x0 <- [H-4/6       |H-2/6       |H-3/6       |V          ]
@@ -2045,39 +2057,37 @@ RppStatus hueRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
             // Prepare S/V vectors.
             a0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
-            a1 = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
+            a1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
             h0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(3, 3, 3, 0));     // h0 <- [V           |V           |V           |A          ]
-            xG = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(3, 3, 3, 0));     // xG <- [V           |V           |V           |A          ]
+            h1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(3, 3, 3, 0));     // h1 <- [V           |V           |V           |A          ]
 
             // Multiply with 'S*V' and add 'V'.
             x0 = _mm_mul_ps(x0, a0);                               // x0 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x1 = _mm_mul_ps(x1, a1);                               // x1 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
-            a0 = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
-            a1 = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
+            a0 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
+            a1 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
 
             x0 = _mm_mul_ps(x0, h0);                               // x0 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x1 = _mm_mul_ps(x1, xG);                               // x1 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            xS = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(3, 3, 3, 0));     // xS <- [V           |V           |V           |A          ]
-            xV = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(3, 3, 3, 0));     // xV <- [V           |V           |V           |A          ]
+            x1 = _mm_mul_ps(x1, h1);                               // x1 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            h2 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(3, 3, 3, 0));     // h2 <- [V           |V           |V           |A          ]
+            h3 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(3, 3, 3, 0));     // h3 <- [V           |V           |V           |A          ]
 
             x2 = _mm_mul_ps(x2, a0);                               // x2 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x3 = _mm_mul_ps(x3, a1);                               // x3 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x0 = _mm_add_ps(x0, h0);                               // x0 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            x2 = _mm_mul_ps(x2, xS);                               // x2 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x3 = _mm_mul_ps(x3, xV);                               // x3 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x1 = _mm_add_ps(x1, xG);                               // x1 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x2 = _mm_mul_ps(x2, h2);                               // x2 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            x3 = _mm_mul_ps(x3, h3);                               // x3 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            x1 = _mm_add_ps(x1, h1);                               // x1 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            x2 = _mm_add_ps(x2, xS);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
-            x3 = _mm_add_ps(x3, xV);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x2 = _mm_add_ps(x2, h2);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x3 = _mm_add_ps(x3, h3);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
             // Store
-            x0 = _mm_shuffle_ps(x0,x0, _MM_SHUFFLE(0,1,2,3));
-            x1 = _mm_shuffle_ps(x1,x1, _MM_SHUFFLE(0,1,2,3));
-            x2 = _mm_shuffle_ps(x2,x2, _MM_SHUFFLE(0,1,2,3));
-            x3 = _mm_shuffle_ps(x3,x3, _MM_SHUFFLE(0,1,2,3));
-
-            // _MM_TRANSPOSE4_PS (x0, x1, x2, x3);
+            x0 = _mm_shuffle_ps(x0,x0, _MM_SHUFFLE(0,3,2,1));
+            x1 = _mm_shuffle_ps(x1,x1, _MM_SHUFFLE(0,3,2,1));
+            x2 = _mm_shuffle_ps(x2,x2, _MM_SHUFFLE(0,3,2,1));
+            x3 = _mm_shuffle_ps(x3,x3, _MM_SHUFFLE(0,3,2,1));
 
             x0 = _mm_mul_ps(x0, pFactor);
             x1 = _mm_mul_ps(x1, pFactor);
@@ -2475,7 +2485,7 @@ RppStatus saturationRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPt
         dstPtrTempG = dstPtr + (imageDim);
         dstPtrTempB = dstPtr + (2 * imageDim);
 
-        Rpp64u alignedLength = bufferLength & ~3;
+        Rpp64u alignedLength = (bufferLength / 4) * 4;
 
         __m128i const zero = _mm_setzero_si128();
         __m128 pZeros = _mm_set1_ps(0.0);
@@ -2579,11 +2589,17 @@ RppStatus saturationRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPt
 
             _MM_TRANSPOSE4_PS (h0, xG, xS, xV);
 
+            __m128 h1, h2, h3;
+
+            h1 = xG;
+            h2 = xS;
+            h3 = xV;
+
             // Prepare HUE for RGB components (per pixel).
             x0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(1, 1, 1, 3));     // x0 <- [H           |H           |H           |V          ]
-            x1 = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(1, 1, 1, 3));     // x1 <- [H           |H           |H           |V          ]
-            x2 = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(1, 1, 1, 3));     // x2 <- [H           |H           |H           |V          ]
-            x3 = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(1, 1, 1, 3));     // x3 <- [H           |H           |H           |V          ]
+            x1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(1, 1, 1, 3));     // x1 <- [H           |H           |H           |V          ]
+            x2 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(1, 1, 1, 3));     // x2 <- [H           |H           |H           |V          ]
+            x3 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(1, 1, 1, 3));     // x3 <- [H           |H           |H           |V          ]
 
             // Calculate intervals from HUE.
             x0 = _mm_sub_ps(x0, SIMD_GET_PS(p4o6_p2o6_p3o6_p0));   // x0 <- [H-4/6       |H-2/6       |H-3/6       |V          ]
@@ -2619,31 +2635,31 @@ RppStatus saturationRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPt
 
             // Prepare S/V vectors.
             a0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
-            a1 = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
+            a1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
             h0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(3, 3, 3, 0));     // h0 <- [V           |V           |V           |A          ]
-            xG = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(3, 3, 3, 0));     // xG <- [V           |V           |V           |A          ]
+            h1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(3, 3, 3, 0));     // h1 <- [V           |V           |V           |A          ]
 
             // Multiply with 'S*V' and add 'V'.
             x0 = _mm_mul_ps(x0, a0);                               // x0 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x1 = _mm_mul_ps(x1, a1);                               // x1 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
-            a0 = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
-            a1 = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
+            a0 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
+            a1 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
 
             x0 = _mm_mul_ps(x0, h0);                               // x0 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x1 = _mm_mul_ps(x1, xG);                               // x1 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            xS = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(3, 3, 3, 0));     // xS <- [V           |V           |V           |A          ]
-            xV = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(3, 3, 3, 0));     // xV <- [V           |V           |V           |A          ]
+            x1 = _mm_mul_ps(x1, h1);                               // x1 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            h2 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(3, 3, 3, 0));     // h2 <- [V           |V           |V           |A          ]
+            h3 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(3, 3, 3, 0));     // h3 <- [V           |V           |V           |A          ]
 
             x2 = _mm_mul_ps(x2, a0);                               // x2 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x3 = _mm_mul_ps(x3, a1);                               // x3 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x0 = _mm_add_ps(x0, h0);                               // x0 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            x2 = _mm_mul_ps(x2, xS);                               // x2 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x3 = _mm_mul_ps(x3, xV);                               // x3 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x1 = _mm_add_ps(x1, xG);                               // x1 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x2 = _mm_mul_ps(x2, h2);                               // x2 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            x3 = _mm_mul_ps(x3, h3);                               // x3 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            x1 = _mm_add_ps(x1, h1);                               // x1 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            x2 = _mm_add_ps(x2, xS);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
-            x3 = _mm_add_ps(x3, xV);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x2 = _mm_add_ps(x2, h2);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x3 = _mm_add_ps(x3, h3);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
             // Store
             _MM_TRANSPOSE4_PS (x0, x1, x2, x3);
@@ -2805,7 +2821,7 @@ RppStatus saturationRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPt
         dstPtrTempPx2 = dstPtr + 6;
         dstPtrTempPx3 = dstPtr + 9;
 
-        Rpp64u alignedLength = bufferLength & ~11;
+        Rpp64u alignedLength = (bufferLength / 12) * 12;
 
         __m128i const zero = _mm_setzero_si128();
         __m128 pZeros = _mm_set1_ps(0.0);
@@ -2915,11 +2931,17 @@ RppStatus saturationRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPt
 
             _MM_TRANSPOSE4_PS (h0, xG, xS, xV);
 
+            __m128 h1, h2, h3;
+
+            h1 = xG;
+            h2 = xS;
+            h3 = xV;
+
             // Prepare HUE for RGB components (per pixel).
             x0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(1, 1, 1, 3));     // x0 <- [H           |H           |H           |V          ]
-            x1 = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(1, 1, 1, 3));     // x1 <- [H           |H           |H           |V          ]
-            x2 = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(1, 1, 1, 3));     // x2 <- [H           |H           |H           |V          ]
-            x3 = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(1, 1, 1, 3));     // x3 <- [H           |H           |H           |V          ]
+            x1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(1, 1, 1, 3));     // x1 <- [H           |H           |H           |V          ]
+            x2 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(1, 1, 1, 3));     // x2 <- [H           |H           |H           |V          ]
+            x3 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(1, 1, 1, 3));     // x3 <- [H           |H           |H           |V          ]
 
             // Calculate intervals from HUE.
             x0 = _mm_sub_ps(x0, SIMD_GET_PS(p4o6_p2o6_p3o6_p0));   // x0 <- [H-4/6       |H-2/6       |H-3/6       |V          ]
@@ -2955,37 +2977,37 @@ RppStatus saturationRGB_processBuffer_host(T* srcPtr, RppiSize srcSize, T* dstPt
 
             // Prepare S/V vectors.
             a0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
-            a1 = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
+            a1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
             h0 = SIMD_SHUFFLE_PS(h0, _MM_SHUFFLE(3, 3, 3, 0));     // h0 <- [V           |V           |V           |A          ]
-            xG = SIMD_SHUFFLE_PS(xG, _MM_SHUFFLE(3, 3, 3, 0));     // xG <- [V           |V           |V           |A          ]
+            h1 = SIMD_SHUFFLE_PS(h1, _MM_SHUFFLE(3, 3, 3, 0));     // h1 <- [V           |V           |V           |A          ]
 
             // Multiply with 'S*V' and add 'V'.
             x0 = _mm_mul_ps(x0, a0);                               // x0 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x1 = _mm_mul_ps(x1, a1);                               // x1 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
-            a0 = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
-            a1 = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
+            a0 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(2, 2, 2, 2));     // a0 <- [S           |S           |S           |S          ]
+            a1 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(2, 2, 2, 2));     // a1 <- [S           |S           |S           |S          ]
 
             x0 = _mm_mul_ps(x0, h0);                               // x0 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x1 = _mm_mul_ps(x1, xG);                               // x1 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            xS = SIMD_SHUFFLE_PS(xS, _MM_SHUFFLE(3, 3, 3, 0));     // xS <- [V           |V           |V           |A          ]
-            xV = SIMD_SHUFFLE_PS(xV, _MM_SHUFFLE(3, 3, 3, 0));     // xV <- [V           |V           |V           |A          ]
+            x1 = _mm_mul_ps(x1, h1);                               // x1 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            h2 = SIMD_SHUFFLE_PS(h2, _MM_SHUFFLE(3, 3, 3, 0));     // h2 <- [V           |V           |V           |A          ]
+            h3 = SIMD_SHUFFLE_PS(h3, _MM_SHUFFLE(3, 3, 3, 0));     // h3 <- [V           |V           |V           |A          ]
 
             x2 = _mm_mul_ps(x2, a0);                               // x2 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x3 = _mm_mul_ps(x3, a1);                               // x3 <- [(R-1)*S     |(G-1)*S     |(B-1)*S     |0          ]
             x0 = _mm_add_ps(x0, h0);                               // x0 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            x2 = _mm_mul_ps(x2, xS);                               // x2 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x3 = _mm_mul_ps(x3, xV);                               // x3 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
-            x1 = _mm_add_ps(x1, xG);                               // x1 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x2 = _mm_mul_ps(x2, h2);                               // x2 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            x3 = _mm_mul_ps(x3, h3);                               // x3 <- [(R-1)*S*V   |(G-1)*S*V   |(B-1)*S*V   |0          ]
+            x1 = _mm_add_ps(x1, h1);                               // x1 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            x2 = _mm_add_ps(x2, xS);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
-            x3 = _mm_add_ps(x3, xV);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x2 = _mm_add_ps(x2, h2);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
+            x3 = _mm_add_ps(x3, h3);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
             // Store
-            x0 = _mm_shuffle_ps(x0,x0, _MM_SHUFFLE(0,1,2,3));
-            x1 = _mm_shuffle_ps(x1,x1, _MM_SHUFFLE(0,1,2,3));
-            x2 = _mm_shuffle_ps(x2,x2, _MM_SHUFFLE(0,1,2,3));
-            x3 = _mm_shuffle_ps(x3,x3, _MM_SHUFFLE(0,1,2,3));
+            x0 = _mm_shuffle_ps(x0,x0, _MM_SHUFFLE(0,3,2,1));
+            x1 = _mm_shuffle_ps(x1,x1, _MM_SHUFFLE(0,3,2,1));
+            x2 = _mm_shuffle_ps(x2,x2, _MM_SHUFFLE(0,3,2,1));
+            x3 = _mm_shuffle_ps(x3,x3, _MM_SHUFFLE(0,3,2,1));
 
             // _MM_TRANSPOSE4_PS (x0, x1, x2, x3);
 

@@ -111,7 +111,7 @@ __kernel void colortwist_pkd(   __global  unsigned char *input,
     if(hsv.x > 360.0) {hsv.x = hsv.x - 360.0;}
     else if(hsv.x < 0){hsv.x = hsv.x + 360.0;}
 
-    hsv.y += sat;
+    hsv.y *= sat;
     if(hsv.y > 1.0){hsv.y = 1.0;}
     else if(hsv.y < 0.0){hsv.y = 0.0;}
 
@@ -147,7 +147,7 @@ __kernel void colortwist_pln(   __global  unsigned char *input,
     if(hsv.x > 360.0) {hsv.x = hsv.x - 360.0;}
     else if(hsv.x < 0){hsv.x = hsv.x + 360.0;}
 
-    hsv.y += sat;
+    hsv.y *= sat;
     if(hsv.y > 1.0){hsv.y = 1.0;}
     else if(hsv.y < 0.0){hsv.y = 0.0;}
 
@@ -196,7 +196,7 @@ __kernel void colortwist_batch(  __global unsigned char* input,
         hsv.x += hue[id_z];
         if(hsv.x > 360.0) {hsv.x = hsv.x - 360.0;}
         else if(hsv.x < 0){hsv.x = hsv.x + 360.0;}
-        hsv.y += sat[id_z];
+        hsv.y *= sat[id_z];
         if(hsv.y > 1.0){hsv.y = 1.0;}
         else if(hsv.y < 0.0){hsv.y = 0.0;}
         pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with hue modification
