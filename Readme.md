@@ -21,7 +21,7 @@ RPP is developed for __Linux__ operating system.
 **NOTE:**
 * Boost
 ```
-sudo apt --yes install libblkid-dev e2fslibs-dev libboost-all-dev libaudit-dev
+sudo apt --yes install libboost-all-dev
 ```
 * CLang
 ```
@@ -29,8 +29,9 @@ sudo apt install clang
 ```
 * half.hpp
 ```
-wget https://raw.githubusercontent.com/ARM-software/ComputeLibrary/master/include/half/half.hpp
-sudo mv half.hpp /usr/local/include/
+wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
+unzip half-1.12.0.zip -d half-files
+sudo cp half-files/include/half.hpp /usr/local/include/
 ```
 
 ## Functions Included
