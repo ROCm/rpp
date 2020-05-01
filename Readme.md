@@ -25,7 +25,7 @@ sudo apt --yes install libboost-all-dev
 ```
 * CLang
 ```
-sudo apt install clang
+sudo apt --yes install clang
 ```
 * half.hpp
 ```
