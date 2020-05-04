@@ -242,3 +242,4 @@ data alpha = scalar:FLOAT32,1.0  #contrast control
 data beta = scalar:INT32,30    #brightness control
 node org.rpp.Brightness luma output alpha beta
 ```
+### Modes to test
