@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2015 - 2020 Advanced Micro Devices, Inc. All rights reserved.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,10 +19,31 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-project(amd_rpp VERSION 0.2)
-message("${PROJECT_NAME} - ${PROJECT_VERSION}")
-message("cmake minimum version required: ${CMAKE_MINIMUM_REQUIRED_VERSION}")
-message("cmake version found: ${CMAKE_VERSION}")
+project(amd_rpp)
+set(VERSION "0.3")
+
+# ROCm Path
+set(ROCM_PATH /opt/rocm CACHE PATH "ROCm installation path")
+# need to do this to avoid setting the default path to /usr/local
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH}/rpp CACHE PATH "RPP default ROCm installation path" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
+# set message options
+if(NOT WIN32)
+  string(ASCII 27 Esc)
+  set(ColourReset "${Esc}[m")
+  set(Red         "${Esc}[31m")
+  set(Green       "${Esc}[32m")
+  set(Yellow      "${Esc}[33m")
+  set(Blue        "${Esc}[34m")
+  set(BoldBlue    "${Esc}[1;34m")
+endif()
+
+message("-- ${BoldBlue}Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
+message("-- ${BoldBlue}RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
+message("-- ${Yellow}cmake minimum version required: ${CMAKE_MINIMUM_REQUIRED_VERSION}${ColourReset}")
+message("-- ${Green}cmake version found: ${CMAKE_VERSION}${ColourReset}")
 
 include(CheckCXXCompilerFlag)
 # set default backend to OPENCL
@@ -38,18 +59,15 @@ endif()
 
 # Cmake checks and setups
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-  message(FATAL_ERROR "In-source builds are not allowed. Invoke cmake from build directory")
+  message(FATAL_ERROR "-- ${Red}In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
 endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-
 # Set Compilers
-# set(COMPILER_FOR_OPENCL /opt/rocm/bin/hipcc)
-# set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
-# set(COMPILER_FOR_HIPOC /opt/rocm/bin/hipcc)
-
-set(COMPILER_FOR_HIP /opt/rocm/bin/hipcc)
-# set(COMPILER_FOR_HIPOC /opt/rocm/bin/hipcc)
+# set(COMPILER_FOR_OPENCL ${ROCM_PATH}/bin/hipcc)
+# set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+# set(COMPILER_FOR_HIPOC ${ROCM_PATH}/bin/hipcc)
+set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
 set(COMPILER_FOR_OPENCL clang++)
 
 include(ClangTidy)
@@ -162,36 +180,31 @@ enable_cppcheck(
         MIOPEN_USE_MIOPENGEMM=1
 )
 
-
-
 # Find required packages
 find_package(OpenCL REQUIRED) # OpenCL_INCLUDE_DIRS, OpenCL_LIBRARIES
 
-
 set( MODULES_LIST modules)
-
 
 # look for and register extractkernel
 find_program(EXTRACTKERNEL_BIN extractkernel
     PATH_SUFFIXES bin
-    PATHS /opt/rocm
+    PATHS ${ROCM_PATH}
 )
 if(EXTRACTKERNEL_BIN)
-    message(STATUS "extractkernel found: ${EXTRACTKERNEL_BIN}")
+    message(STATUS "${Green}extractkernel found: ${EXTRACTKERNEL_BIN}${ColourReset}")
     set(EXTRACTKERNEL_BIN "${EXTRACTKERNEL_BIN}")
 else()
-    message(FATAL_ERROR "extractkernel not found")
+    message(FATAL_ERROR "${Red}extractkernel not found${ColourReset}")
 endif()
 
 # Online assembler
 find_program(MIOPEN_AMDGCN_ASSEMBLER
     NAMES clang
-    PATHS ${MIOPEN_AMDGCN_ASSEMBLER_PATH} /opt/rocm
+    PATHS ${MIOPEN_AMDGCN_ASSEMBLER_PATH} ${ROCM_PATH}
     PATH_SUFFIXES /opencl/bin/x86_64
     NO_DEFAULT_PATH
 )
-message(STATUS "AMDGCN assembler: ${MIOPEN_AMDGCN_ASSEMBLER}")
-
+message(STATUS "${Yellow}AMDGCN assembler: ${MIOPEN_AMDGCN_ASSEMBLER}${ColourReset}")
 
 foreach (MOD_NAME ${MODULES_LIST})
     add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
@@ -204,28 +217,28 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
 
-    #set( LINK_LIST  /opt/rocm/lib/libhip_hcc.so  /opt/rocm/lib/libhip_hcc.so ${LINK_LIST})
+    #set( LINK_LIST  ${ROCM_PATH}/lib/libhip_hcc.so  ${ROCM_PATH}/lib/libhip_hcc.so ${LINK_LIST})
    find_program(HIP_OC_COMPILER clang-ocl
         PATH_SUFFIXES bin
-        PATHS /opt/rocm
+        PATHS ${ROCM_PATH}
     )
     if(HIP_OC_COMPILER)
-        message(STATUS "hip compiler: ${HIP_OC_COMPILER}")
+        message(STATUS "${Green}hip compiler: ${HIP_OC_COMPILER}${ColourReset}")
         set(HIP_OC_COMPILER "${HIP_OC_COMPILER}")
     else()
-        message(FATAL_ERROR "clang-ocl not found")
+        message(FATAL_ERROR "${Red}clang-ocl not found${ColourReset}")
     endif()
 
     set(RPP_BACKEND_HIP 1)
     find_program(HIP_OC_COMPILER clang-ocl
         PATH_SUFFIXES bin
-        PATHS /opt/rocm
+        PATHS ${ROCM_PATH}
     )
     if(HIP_OC_COMPILER)
-        message(STATUS "hip compiler: ${HIP_OC_COMPILER}")
+        message(STATUS "${Green}hip compiler: ${HIP_OC_COMPILER}${ColourReset}")
         set(HIP_OC_COMPILER "${HIP_OC_COMPILER}")
     else()
-        message(FATAL_ERROR "clang-ocl not found")
+        message(FATAL_ERROR "${Red}clang-ocl not found${ColourReset}")
     endif()
 
     link_libraries(stdc++)
@@ -239,7 +252,6 @@ if( "${BACKEND}" STREQUAL "HIP")
     # end hack
 
     set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-
 
     link_libraries(stdc++)
 
@@ -275,10 +287,10 @@ endif()
 add_library(${PROJECT_NAME} SHARED include/rpp.h $<TARGET_OBJECTS:modules>)
 if( "${SIMD_ENABLE}" STREQUAL "1")
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=1)
-    message("-- ${Green}${PROJECT_NAME} built with ENABLE_SIMD_INTRINSICS")
+    message("-- ${Green}${PROJECT_NAME} built with ENABLE_SIMD_INTRINSICS${ColourReset}")
 else()
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=0)
-    message("-- ${Green}${PROJECT_NAME} not built with ENABLE_SIMD_INTRINSICS")
+    message("-- ${Red}${PROJECT_NAME} not built with ENABLE_SIMD_INTRINSICS${ColourReset}")
 endif()
 
 # target setting
@@ -291,11 +303,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 find_package(OpenMP)
 
-
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        /opt/rocm/include
+        ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${INCLUDE_LIST}
@@ -304,9 +315,5 @@ target_include_directories(${PROJECT_NAME}
 add_subdirectory(addkernels)
 
 # Installation
-install (TARGETS amd_rpp
-         LIBRARY DESTINATION /opt/rocm/rpp/lib
-)
-install (DIRECTORY include
-         DESTINATION /opt/rocm/rpp/
-)
+install (TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install (DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
