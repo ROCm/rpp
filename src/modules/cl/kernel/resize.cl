@@ -371,7 +371,6 @@ __kernel void resize_crop_mirror_batch(    __global unsigned char* srcPtr,
             dst_pixIdx += dest_inc[id_z];
         }
     }
-
     else {
         dst_pixIdx = dest_batch_index[id_z]   + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;
         for(indextmp = 0; indextmp < channel; indextmp++){
@@ -379,5 +378,5 @@ __kernel void resize_crop_mirror_batch(    __global unsigned char* srcPtr,
             dst_pixIdx += dest_inc[id_z];
         }
     }
-    
+
 }

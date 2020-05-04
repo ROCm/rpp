@@ -90,7 +90,7 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         dstPtrTempB = dstPtr + (2 * imageDim);
 
         Rpp64u bufferLength = srcSize.height * srcSize.width;
-        Rpp64u alignedLength = (bufferLength / 4) * 4;
+        Rpp64u alignedLength = bufferLength & ~3;
 
         __m128i const zero = _mm_setzero_si128();
         __m128 pZeros = _mm_set1_ps(0.0);
