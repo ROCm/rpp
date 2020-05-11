@@ -83,7 +83,7 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
 
     // Threads should be launched w.r.t Destinalton Sizes
     std::vector<size_t> vld{16, 16, 1};
-    std::vector<size_t> vgd{(max_width +15)/16 * 16 + 1, (max_height + 15)/16 * 16 + 1, handle.GetBatchSize()};
+    std::vector<size_t> vgd{max_width, max_height , handle.GetBatchSize()};
     handle.AddKernel("", "", "crop_mirror_normalize.cl", "crop_mirror_normalize_batch", vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.width,       
@@ -121,7 +121,7 @@ crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat 
 
     // Threads should be launched w.r.t Destinalton Sizes
     std::vector<size_t> vld{16, 16, 1};
-    std::vector<size_t> vgd{(max_width +15)/16 * 16 + 1, (max_height + 15)/16 * 16 + 1, handle.GetBatchSize()};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     handle.AddKernel("", "", "crop.cl", "crop_batch", vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.width,       
@@ -159,7 +159,7 @@ resize_crop_mirror_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, 
 
     // Threads should be launched w.r.t Destinalton Sizes
     std::vector<size_t> vld{16, 16, 1};
-    std::vector<size_t> vgd{(max_width +15)/16 * 16, (max_height + 15)/16 * 16, handle.GetBatchSize()};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     handle.AddKernel("", "", "resize.cl", "resize_crop_mirror_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height, 
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,                                                                                                                                                                                                                                                                              
