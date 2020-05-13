@@ -1,6 +1,6 @@
 language: cpp
 sudo: required
-dist: trusty
+dist: xenial
 os:
   - linux
 compiler:
@@ -13,7 +13,6 @@ branches:
   - master
 
 install:
-  - sudo apt-key update
   - sudo apt update
   - sudo apt --yes install cmake git wget unzip libnuma-dev
   - wget -qO - http://repo.radeon.com/rocm/apt/debian/rocm.gpg.key | sudo apt-key add -
