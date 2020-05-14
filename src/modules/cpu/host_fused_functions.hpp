@@ -2320,6 +2320,87 @@ RppStatus crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
     return RPP_SUCCESS;
 }
 
+RppStatus crop_f32_host_batch(Rpp32f* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, Rpp32f* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+                                     Rpp32u *batch_crop_pos_x, Rpp32u *batch_crop_pos_y,
+                                     Rpp32u nbatchSize,
+                                     RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            Rpp32u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
+
+            Rpp32u x1 = batch_crop_pos_x[batchCount];
+            Rpp32u y1 = batch_crop_pos_y[batchCount];
+            Rpp32u x2 = x1 + batch_dstSize[batchCount].width - 1;
+            Rpp32u y2 = y1 + batch_dstSize[batchCount].height - 1;
+
+            Rpp32f *srcPtrImage, *dstPtrImage;
+            Rpp32u srcLoc = 0, dstLoc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
+            compute_image_location_host(batch_dstSizeMax, batchCount, &dstLoc, channel);
+            srcPtrImage = srcPtr + srcLoc;
+            dstPtrImage = dstPtr + dstLoc;
+
+            for(int c = 0; c < channel; c++)
+            {
+                Rpp32f *dstPtrChannel, *srcPtrChannelROI;
+                dstPtrChannel = dstPtrImage + (c * dstImageDimMax);
+                srcPtrChannelROI = srcPtrImage + (c * srcImageDimMax) + (y1 * batch_srcSizeMax[batchCount].width) + x1;
+
+                for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+                {
+                    memcpy(dstPtrChannel, srcPtrChannelROI, batch_dstSize[batchCount].width * sizeof(Rpp32f));
+                    dstPtrChannel += batch_dstSizeMax[batchCount].width;
+                    srcPtrChannelROI += batch_srcSizeMax[batchCount].width;
+                }
+            }           
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            Rpp32u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
+            
+            Rpp32u x1 = batch_crop_pos_x[batchCount];
+            Rpp32u y1 = batch_crop_pos_y[batchCount];
+            Rpp32u x2 = x1 + batch_dstSize[batchCount].width - 1;
+            Rpp32u y2 = y1 + batch_dstSize[batchCount].height - 1;
+
+            Rpp32f *srcPtrImage, *dstPtrImage;
+            Rpp32u srcLoc = 0, dstLoc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
+            compute_image_location_host(batch_dstSizeMax, batchCount, &dstLoc, channel);
+            srcPtrImage = srcPtr + srcLoc;
+            dstPtrImage = dstPtr + dstLoc;
+
+            Rpp32u srcElementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
+            Rpp32u dstElementsInRowMax = channel * batch_dstSizeMax[batchCount].width;
+            Rpp32u elementsInRowROI = channel * batch_dstSize[batchCount].width;
+                
+            Rpp32f *srcPtrImageROI, *dstPtrImageTemp;
+            srcPtrImageROI = srcPtrImage + (y1 * srcElementsInRowMax) + (x1 * channel);
+            dstPtrImageTemp = dstPtrImage;
+
+            for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+            {
+                memcpy(dstPtrImageTemp, srcPtrImageROI, elementsInRowROI * sizeof(Rpp32f));
+                dstPtrImageTemp += dstElementsInRowMax;
+                srcPtrImageROI += srcElementsInRowMax;
+            }
+        }
+    }
+    return RPP_SUCCESS;
+}
+
 // /**************** resize_crop_mirror ***************/
 
 template <typename T>
