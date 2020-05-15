@@ -3805,7 +3805,61 @@ rppi_color_twist_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
+RppStatus  
+rppi_color_twist_f32_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{ 
+	Rpp32u paramIndex = 0;
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	copy_host_roi(roiPoints, rpp::deref(rppHandle));
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	color_twist_f32_host_batch<Rpp32f>(
+		static_cast<Rpp32f*>(srcPtr),
+		srcSize,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+		static_cast<Rpp32f*>(dstPtr),
+		alpha,
+		beta,
+		hueShift,
+		saturationFactor,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 3
+	);
 
+	return RPP_SUCCESS;
+}
+
+RppStatus  
+rppi_color_twist_f32_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{ 
+	Rpp32u paramIndex = 0;
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	copy_host_roi(roiPoints, rpp::deref(rppHandle));
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	color_twist_f32_host_batch<Rpp32f>(
+		static_cast<Rpp32f*>(srcPtr),
+		srcSize,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+		static_cast<Rpp32f*>(dstPtr),
+		alpha,
+		beta,
+		hueShift,
+		saturationFactor,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PACKED, 3
+	);
+
+	return RPP_SUCCESS;
+}
 
 RppStatus  
 rppi_crop_mirror_normalize_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiSize dstSize ,Rpp32u crop_pos_x ,Rpp32u crop_pos_y , Rpp32f mean, Rpp32f std_dev, Rpp32u mirrorFlag ,Rpp32u outputFormatToggle ,rppHandle_t rppHandle )
