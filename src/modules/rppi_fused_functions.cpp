@@ -4565,9 +4565,80 @@ rppi_resize_crop_mirror_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-// ----------------------------------------
-// GPU resize_crop_mirror functions declaration 
-// ----------------------------------------
+RppStatus  
+rppi_resize_crop_mirror_f32_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{ 
+	Rpp32u paramIndex = 0;
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
+	resize_crop_mirror_f32_host_batch(
+		static_cast<Rpp32f*>(srcPtr),
+		srcSize,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+		static_cast<Rpp32f*>(dstPtr),
+		dstSize,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize,
+		xRoiBegin,
+		xRoiEnd,
+		yRoiBegin,
+		yRoiEnd,
+		mirrorFlag,
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 1
+	);
+
+	return RPP_SUCCESS;
+}
+
+RppStatus  
+rppi_resize_crop_mirror_f32_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{ 
+	Rpp32u paramIndex = 0;
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
+	resize_crop_mirror_f32_host_batch(
+		static_cast<Rpp32f*>(srcPtr),
+		srcSize,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+		static_cast<Rpp32f*>(dstPtr),
+		dstSize,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize,
+		xRoiBegin,
+		xRoiEnd,
+		yRoiBegin,
+		yRoiEnd,
+		mirrorFlag,
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 3
+	);
+
+	return RPP_SUCCESS;
+}
+
+RppStatus  
+rppi_resize_crop_mirror_f32_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{ 
+	Rpp32u paramIndex = 0;
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
+	resize_crop_mirror_f32_host_batch(
+		static_cast<Rpp32f*>(srcPtr),
+		srcSize,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+		static_cast<Rpp32f*>(dstPtr),
+		dstSize,
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize,
+		xRoiBegin,
+		xRoiEnd,
+		yRoiBegin,
+		yRoiEnd,
+		mirrorFlag,
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PACKED, 3
+	);
+
+	return RPP_SUCCESS;
+}
 
 RppStatus  
 rppi_resize_crop_mirror_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32u *xRoiBegin ,Rpp32u *xRoiEnd ,Rpp32u *yRoiBegin ,Rpp32u *yRoiEnd ,Rpp32u *mirrorFlag ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
