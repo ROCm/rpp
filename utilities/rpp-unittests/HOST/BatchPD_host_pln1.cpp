@@ -288,8 +288,6 @@ int main(int argc, char **argv)
     strcat(funcName,funcType);
     strcat(dst,"/");
     strcat(dst,funcName);
-    mkdir(dst, 0700);
-    strcat(dst,"/");
 
     DIR *dr = opendir(src); 
     while ((de = readdir(dr)) != NULL) 
@@ -2058,6 +2056,8 @@ int main(int argc, char **argv)
 
 	rppDestroyHost(handle);
 
+    mkdir(dst, 0700);
+    strcat(dst,"/");
     count = 0;
     for(j = 0 ; j < noOfImages ; j++)
     {

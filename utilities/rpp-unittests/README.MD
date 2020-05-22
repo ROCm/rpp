@@ -2,6 +2,7 @@
 ## For Host
 * Usage - PKD3 tests:
 ```
+cd HOST
 mkdir build
 cd build
 cmake ..
@@ -10,6 +11,7 @@ make
 ```
 * Usage - PLN1 tests:
 ```
+cd HOST
 mkdir build
 cd build
 cmake ..
