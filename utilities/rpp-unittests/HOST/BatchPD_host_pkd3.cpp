@@ -24,8 +24,8 @@ typedef half Rpp16f;
 
 int main(int argc, char **argv)
 {
-    const int MIN_ARG_COUNT = 7;
-    printf("\nUsage: ./BatchPD_host <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <pln1 = 1 / pkd3 = 3> <u8 = 0 / f16 = 1 / f32 = 2> <case number = 0:50>\n");
+    const int MIN_ARG_COUNT = 6;
+    printf("\nUsage: ./BatchPD_host <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2> <case number = 0:64>\n");
     if(argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -35,26 +35,18 @@ int main(int argc, char **argv)
     printf("\nsrc1 = %s", argv[1]);
     printf("\nsrc2 = %s", argv[2]);
     printf("\ndst = %s", argv[3]);
-    printf("\npln1/pkd3 (1/3) = %s", argv[4]);
     printf("\nu8/f16/f32 (0/1/2) = %s", argv[4]);
-    printf("\ncase number (1:50) = %s", argv[6]);
+    printf("\ncase number (1:64) = %s", argv[5]);
 
     char *src = argv[1];
     char *src_second = argv[2];
     char *dst = argv[3];
-    int ip_channel = atoi(argv[4]);
-    int ip_bitDepth = atoi(argv[5]);
-    int test_case = atoi(argv[6]);
+    int ip_bitDepth = atoi(argv[4]);
+    int test_case = atoi(argv[5]);
 
-    char funcType[1000] = {"BatchPD_HOST"};
-    if (ip_channel == 1)
-    {
-        strcat(funcType,"_PLN");
-    }
-    else if (ip_channel == 3)
-    {
-        strcat(funcType,"_PKD");
-    }
+    int ip_channel = 3;
+
+    char funcType[1000] = {"BatchPD_HOST_PKD3"};
 
     char funcName[1000];
     switch(test_case)
