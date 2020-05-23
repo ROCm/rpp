@@ -887,7 +887,7 @@ int main(int argc, char **argv)
             test_case_name = "warp_affine";
             
             Rpp32f affine_array[6*images];
-            for(i = 0; i < images; i=i+6)
+            for(i = 0; i < 6*images; i=i+6)
             {
                 affine_array[i] = 0.83;
                 affine_array[i+1] = 0.5;
