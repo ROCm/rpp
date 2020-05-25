@@ -13,6 +13,13 @@
 #define __CL_ENABLE_EXCEPTIONS
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 
+enum class RPPTensorDataType
+{
+    U8 = 0,
+    FP32,
+    FP16,
+};
+
 inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSize)
 {
     Rpp32f s, sum = 0.0, multiplier;

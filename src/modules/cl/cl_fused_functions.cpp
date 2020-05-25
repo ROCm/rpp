@@ -106,14 +106,14 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
 } 
 
 RppStatus
-crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
+crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel, RPPTensorDataType dataType)
 {                                                                                                                                                                                   
-     int plnpkdind;
-     int batch_size = handle.GetBatchSize();
+    int plnpkdind;
+    int batch_size = handle.GetBatchSize();
      
-   if(chnFormat == RPPI_CHN_PLANAR)
+    if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
-   else
+    else
         plnpkdind = 3;
 
     Rpp32u max_height, max_width;
@@ -122,7 +122,10 @@ crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat 
     // Threads should be launched w.r.t Destinalton Sizes
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "crop.cl", "crop_batch", vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
+    switch (dataType)
+    {
+    case RPPTensorDataType::U8:
+        handle.AddKernel("", "", "crop.cl", "crop_batch", vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.width,       
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
@@ -137,6 +140,15 @@ crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat 
                                                                         handle.GetInitHandle()->mem.mgpu.inc,
                                                                         handle.GetInitHandle()->mem.mgpu.dstInc,
                                                                         plnpkdind);       
+        break;
+    case RPPTensorDataType::FP32:
+        /*kernel-launch w.r.t fp16 */
+        break;
+    case RPPTensorDataType::FP16:
+        break;
+    default:
+        break;
+    }
     return RPP_SUCCESS;
 } 
 
