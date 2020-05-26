@@ -16,7 +16,7 @@ crop_batch( __global unsigned char* input, // Input Tensor NHCW or NCHW (Dependi
             __global unsigned long *src_batch_index,
             __global unsigned long *dst_batch_index,
             const unsigned int channel,
-            const unsigned int batch_size,
+            //const unsigned int batch_size,
             __global unsigned int *src_inc, // use width * height for pln and 1 for pkd
             __global unsigned int *dst_inc,
             const int plnpkdindex // use 1 pln 3 for pkd
@@ -58,7 +58,7 @@ crop_fp32_batch(__global float* input, // Input Tensor NHCW or NCHW (Depending o
                 __global unsigned long *src_batch_index,
                 __global unsigned long *dst_batch_index,
                 const unsigned int channel,
-                const unsigned int batch_size,
+                //const unsigned int batch_size,
                 __global unsigned int *src_inc, // use width * height for pln and 1 for pkd
                 __global unsigned int *dst_inc,
                 const int plnpkdindex // use 1 pln 3 for pkd
@@ -88,8 +88,8 @@ crop_fp32_batch(__global float* input, // Input Tensor NHCW or NCHW (Depending o
 }
 
 kernel void
-crop_fp16_batch(__global float16* input, // Input Tensor NHCW or NCHW (Depending on Planar or Packed)
-                __global float16* output, // Output Tensor (For now of type RPP8U), FLOAT32 will be given depending on necessity
+crop_fp16_batch(__global half* input, // Input Tensor NHCW or NCHW (Depending on Planar or Packed)
+                __global half* output, // Output Tensor (For now of type RPP8U), FLOAT32 will be given depending on necessity
                 __global unsigned int *dst_height,
                 __global unsigned int *dst_width,
                 __global unsigned int *src_width,
@@ -100,7 +100,7 @@ crop_fp16_batch(__global float16* input, // Input Tensor NHCW or NCHW (Depending
                 __global unsigned long *src_batch_index,
                 __global unsigned long *dst_batch_index,
                 const unsigned int channel,
-                const unsigned int batch_size,
+                //const unsigned int batch_size,
                 __global unsigned int *src_inc, // use width * height for pln and 1 for pkd
                 __global unsigned int *dst_inc,
                 const int plnpkdindex // use 1 pln 3 for pkd
