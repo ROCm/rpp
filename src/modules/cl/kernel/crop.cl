@@ -46,7 +46,7 @@ crop_batch( __global unsigned char* input, // Input Tensor NHCW or NCHW (Dependi
 }
 
 kernel void
-crop_fp32_batch(__global float* input, // Input Tensor NHCW or NCHW (Depending on Planar or Packed)
+crop_batch_fp32(__global float* input, // Input Tensor NHCW or NCHW (Depending on Planar or Packed)
                 __global float* output, // Output Tensor (For now of type RPP8U), FLOAT32 will be given depending on necessity
                 __global unsigned int *dst_height,
                 __global unsigned int *dst_width,
@@ -88,7 +88,7 @@ crop_fp32_batch(__global float* input, // Input Tensor NHCW or NCHW (Depending o
 }
 
 kernel void
-crop_fp16_batch(__global half* input, // Input Tensor NHCW or NCHW (Depending on Planar or Packed)
+crop_batch_fp16(__global half* input, // Input Tensor NHCW or NCHW (Depending on Planar or Packed)
                 __global half* output, // Output Tensor (For now of type RPP8U), FLOAT32 will be given depending on necessity
                 __global unsigned int *dst_height,
                 __global unsigned int *dst_width,

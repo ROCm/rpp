@@ -605,8 +605,9 @@ RppStatus
 crop_mirror_normalize_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize, Rpp32u crop_pox_x,
                                         Rpp32u crop_pos_y, Rpp32f mean, Rpp32f std_dev, Rpp32u mirrorFlag, Rpp32u outputFormatToggle, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
-crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);
-
+crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, 
+                                RppiChnFormat chnFormat = RPPI_CHN_PACKED, unsigned int channel = 3,
+                                RPPTensorDataType dataType = RPPTensorDataType::U8);
 RppStatus
 crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat = RPPI_CHN_PACKED, unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8 );
 RppStatus
