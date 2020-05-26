@@ -478,20 +478,35 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
 }
 RppStatus
 rotate_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                RppiChnFormat chnFormat, unsigned int channel)
+                RppiChnFormat chnFormat, unsigned int channel, RPPTensorDataType dataType)
 {
     int plnpkdind;
-
-    if (chnFormat == RPPI_CHN_PLANAR)
+    int batch_size = handle.GetBatchSize();
+     
+    if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
+    InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
-    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-        
+    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width , max_height, handle.GetBatchSize()};
+    std::string kernel_file  = "rotate.cl";
+    std::string kernel_name = "rotate_batch";
+    switch (dataType)
+    {
+    case RPPTensorDataType::U8:
+        break;
+    case RPPTensorDataType::FP32:
+        kernel_name = kernel_name + "_fp32";
+        break;   
+    case RPPTensorDataType::FP16:
+        kernel_name = kernel_name + "_fp16";
+        break;
+    default:
+        break;
+    }      
     handle.AddKernel("", "", "rotate.cl", "rotate_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,

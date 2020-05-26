@@ -580,7 +580,8 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
                 rpp::Handle& handle);
 RppStatus
 rotate_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel);
+                        RppiChnFormat chnFormat = RPPI_CHN_PACKED, 
+                        unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8);
 
 RppStatus
 histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);            

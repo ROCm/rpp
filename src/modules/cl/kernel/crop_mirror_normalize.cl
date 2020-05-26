@@ -1,76 +1,7 @@
 #pragma OPENCL EXTENSION cl_amd_media_ops : enable
 #pragma OPENCL EXTENSION cl_amd_media_ops2 : enable
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
-
-
-// kernel void
-// mirror_normalize_pln(global unsigned char *input,
-//                    global unsigned char *output, // Can be made to FP32 based on the requirement
-//                    const float mean,
-//                    const float std_dev,
-//                    const uint flip,
-//                    //const uint format_toggle,// Can be done outside to avoid branch
-//                    const unsigned int width,
-//                    const unsigned int height,
-//                    const unsigned int channel
-//                    )
-// {
-//     unsigned int id_x = get_global_id(0);
-//     unsigned int id_y = get_global_id(1);
-//     unsigned int id_z = get_global_id(2);
-//         //Condition should be put depending on the flip or no-flip for this
-//     unsigned int pixId =  (width-1 - id_x) + id_y * width + id_z * width * height;
-//     // 
-//     unsigned int oPixId =  id_x + id_y * width + id_z * width * height; // output pix id will change according to format as well //TODO
-//     if(flip)
-//     {
-//         output[oPixId] = (unsigned char)saturate_8u(255.0 * ((input[pixId] - mean) / std_dev));
-//     }
-//     else
-//     {
-//         output[oPixId] = (unsigned char)saturate_8u(255.0 * ((input[oPixId] - mean) / std_dev));
-
-//     }
-    
-// }
-
-// kernel void
-// mirror_normalize_pkd(global unsigned char *input,
-//                    global unsigned char *output, // Can be made to FP32 based on the requirement
-//                    const float mean,
-//                    const float std_dev,
-//                    const uint flip,
-//                    //const uint format_toggle,// Can be done outside to avoid branch
-//                    const unsigned int width,
-//                    const unsigned int height,
-//                    const unsigned int channel
-//                    )
-// {
-//     unsigned int id_x = get_global_id(0);
-//     unsigned int id_y = get_global_id(1);
-//     unsigned int id_z = get_global_id(2);
-//     unsigned int pixId =  ((width-1 - id_x) + id_y * width) * channel + id_z; 
-//     unsigned int oPixId =  (id_x + id_y * width) * channel + id_z; // output pix id will change according to format as well //TODO
-//     if(flip)
-//     {
-//         output[oPixId] = (unsigned char)saturate_8u(255.0 * ((input[pixId] - mean) / std_dev));
-//     }
-//     else
-//     {
-//         output[oPixId] = (unsigned char)saturate_8u(255.0 * ((input[oPixId] - mean) / std_dev));
-
-//     }
-// }
-
-// uchar4 normalize(uchar4 in_pixel, float mean, float std_dev)
-// {
-//     uchar4 out_pixel;
-//     out_pix.x = saturate_8u((255.0 * ((in_pixel.x - mean) / std_dev)));
-//     out_pix.y = saturate_8u((255.0 * ((in_pixel.y - mean) / std_dev)));
-//     out_pix.z = saturate_8u((255.0 * ((in_pixel.z - mean) / std_dev)));
-//     out_pix.x =  0.0; //(255.0 * ((in_pixel.x - mean) / std_dev));
-// }
-
 
 kernel void
 crop_mirror_normalize_batch (   __global unsigned char* input, // Input Tensor NHCW or NCHW (Depending on Planar or Packed)

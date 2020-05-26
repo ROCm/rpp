@@ -15445,6 +15445,266 @@ rppi_rotate_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
+RppStatus
+ rppi_rotate_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_dstSize(dstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize (maxDstSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	get_dstBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	copy_param_float (angleDeg, rpp::deref(rppHandle), paramIndex++);
+
+#ifdef OCL_COMPILE
+	{
+		rotate_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		rotate_hip_batch(
+			static_cast<Rpp32f*>(srcPtr),
+			static_cast<Rpp32f*>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PACKED, 3
+		);
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+ rppi_rotate_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_dstSize(dstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize (maxDstSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	get_dstBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	copy_param_float (angleDeg, rpp::deref(rppHandle), paramIndex++);
+
+#ifdef OCL_COMPILE
+	{
+		rotate_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		rotate_hip_batch(
+			static_cast<Rpp16f*>(srcPtr),
+			static_cast<Rpp16f*>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PACKED, 3
+		);
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+ rppi_rotate_f32_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_dstSize(dstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize (maxDstSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+	get_dstBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+	copy_param_float (angleDeg, rpp::deref(rppHandle), paramIndex++);
+
+#ifdef OCL_COMPILE
+	{
+		rotate_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		rotate_hip_batch(
+			static_cast<Rpp32f*>(srcPtr),
+			static_cast<Rpp32f*>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 1
+		);
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+ rppi_rotate_f16_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_dstSize(dstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize (maxDstSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+	get_dstBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+	copy_param_float (angleDeg, rpp::deref(rppHandle), paramIndex++);
+
+#ifdef OCL_COMPILE
+	{
+		rotate_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		rotate_hip_batch(
+			static_cast<Rpp16f*>(srcPtr),
+			static_cast<Rpp16f*>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 1
+		);
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_rotate_f32_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_dstSize(dstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize (maxDstSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+	get_dstBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+	copy_param_float (angleDeg, rpp::deref(rppHandle), paramIndex++);
+
+#ifdef OCL_COMPILE
+	{
+		rotate_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		rotate_hip_batch(
+			static_cast<Rpp32f*>(srcPtr),
+			static_cast<Rpp32f*>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 3
+		);
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+ rppi_rotate_f16_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_dstSize(dstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize (maxDstSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	get_dstBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	copy_param_float (angleDeg, rpp::deref(rppHandle), paramIndex++);
+
+#ifdef OCL_COMPILE
+	{
+		rotate_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		rotate_hip_batch(
+			static_cast<Rpp16f*>(srcPtr),
+			static_cast<Rpp16f*>(dstPtr),
+			rpp::deref(rppHandle),
+			RPPI_CHN_PACKED, 3
+		);
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+
+
 RppStatus  
 rppi_rotate_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 { 

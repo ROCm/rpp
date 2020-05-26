@@ -150,7 +150,6 @@ crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat 
     default:
         break;
     }   
-    
 
     handle.AddKernel("", "",kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                         handle_obj->mem.mgpu.dstSize.height,
