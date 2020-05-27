@@ -95,10 +95,9 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
     max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
     std::vector<size_t> vld{16, 16, 1};
-    std::vector<size_t> vgd{max_width + vld[0] ,max_height , handle.GetBatchSize()};
-    std::cout << "max width" << max_width << "   "<< vgd[0] << std::endl;
-    std::cout << "max_height" << max_height << "   " <<  vgd[1] << std::endl;
-    std::string kernel_file  = "crop_mirro_normalize.cl";
+    std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
+    
+    std::string kernel_file  = "crop_mirror_normalize.cl";
     std::string kernel_name = "crop_mirror_normalize_batch";
 
     switch (dataType)
@@ -114,6 +113,7 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
     default:
         break;
     }
+        std::cout << "comes - here" << std::endl;
 
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                     handle_obj->mem.mgpu.dstSize.height,
@@ -129,10 +129,11 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
                                                                     handle_obj->mem.mgpu.srcBatchIndex,
                                                                     handle_obj->mem.mgpu.dstBatchIndex,
                                                                     channel,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-                                                                    handle.GetBatchSize(),
+                                                                    //handle.GetBatchSize(),
                                                                     handle_obj->mem.mgpu.inc,
                                                                     handle_obj->mem.mgpu.dstInc,
                                                                     plnpkdind);
+    std::cout << "comes - here" << std::endl;
     return RPP_SUCCESS;
 } 
 
