@@ -238,7 +238,7 @@ typedef struct{
 #else
 typedef struct{
     Rpp32f* floatmem;
-}hipMemRll
+}hipMemRpp32f;
 
 typedef struct{
     Rpp64f* doublemem;
