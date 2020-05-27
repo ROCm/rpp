@@ -2516,6 +2516,25 @@ RppStatus
 RppStatus
  rppi_warp_perspective_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,RppiSize maxDstSize ,Rpp32f *perspectiveMatrix ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
 
+// Float based Calls
+RppStatus
+rppi_resize_f32_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                            RppiSize maxDstSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
+rppi_resize_f16_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                            RppiSize maxDstSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
+rppi_resize_f32_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                            RppiSize maxDstSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
+rppi_resize_f16_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                            RppiSize maxDstSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
+rppi_resize_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                            RppiSize maxDstSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
+rppi_resize_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                            RppiSize maxDstSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
 #ifdef __cplusplus
 }
 #endif

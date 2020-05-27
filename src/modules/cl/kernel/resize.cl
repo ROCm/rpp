@@ -363,8 +363,8 @@ __kernel void resize_crop_batch_fp16( __global  half* srcPtr,
         }
     }
 }
-__kernel void resize_crop_batch_fp32(    __global unsigned float* srcPtr,
-                                    __global unsigned float* dstPtr,
+__kernel void resize_crop_batch_fp32(    __global float* srcPtr,
+                                    __global float* dstPtr,
                                     __global unsigned int *source_height,
                                     __global unsigned int *source_width,
                                     __global unsigned int *dest_height,
@@ -519,7 +519,8 @@ __kernel void resize_crop_mirror_batch_fp16(__global half* srcPtr,
                                     )
 {
     int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
-    int A, B, C, D, x, y, index, pixVal ;
+    int  x, y, index;
+    float A, B, C, D, pixVal;
     float x_ratio = ((float)(xroi_end[id_z] - xroi_begin[id_z] -1 ))/dest_width[id_z] ;
     float y_ratio = ((float)(yroi_end[id_z] - yroi_begin[id_z] -1 ))/dest_height[id_z];
     float x_diff, y_diff, ya, yb ;
@@ -550,7 +551,7 @@ __kernel void resize_crop_mirror_batch_fp16(__global half* srcPtr,
 
             pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
                         C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)) ;
-            dstPtr[dst_pixIdx] =  saturate_8u(pixVal);
+            dstPtr[dst_pixIdx] =  (half)(pixVal;
             dst_pixIdx += dest_inc[id_z];
         }
     }
@@ -584,7 +585,8 @@ __kernel void resize_crop_mirror_batch_fp32(    __global float* srcPtr,
                                     )
 {
     int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
-    int A, B, C, D, x, y, index, pixVal ;
+    int  x, y, index;
+    float A, B, C, D, pixVal;
     float x_ratio = ((float)(xroi_end[id_z] - xroi_begin[id_z] -1 ))/dest_width[id_z] ;
     float y_ratio = ((float)(yroi_end[id_z] - yroi_begin[id_z] -1 ))/dest_height[id_z];
     float x_diff, y_diff, ya, yb ;
@@ -592,10 +594,8 @@ __kernel void resize_crop_mirror_batch_fp32(    __global float* srcPtr,
     int indextmp=0;
     unsigned long src_pixIdx = 0, dst_pixIdx = 0;
 
-    
     if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z]) return;
 
-    
     x = (int)(x_ratio * id_x) ;
     y = (int)(y_ratio * id_y) ;
 
@@ -615,7 +615,7 @@ __kernel void resize_crop_mirror_batch_fp32(    __global float* srcPtr,
 
             pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
                         C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)) ;
-            dstPtr[dst_pixIdx] =  saturate_8u(pixVal);
+            dstPtr[dst_pixIdx] =  pixVal;
             dst_pixIdx += dest_inc[id_z];
         }
     }

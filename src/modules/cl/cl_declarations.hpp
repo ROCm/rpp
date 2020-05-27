@@ -474,7 +474,8 @@ resize_cl(cl_mem srcPtr, RppiSize srcSize,
                 rpp::Handle& handle);
 RppStatus
 resize_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel);
+                        RppiChnFormat chnFormat, unsigned int channel = 3,
+                        RPPTensorDataType dataType = RPPTensorDataType::U8);
 RppStatus
 resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiSize dstSize,
@@ -483,7 +484,8 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
                 rpp::Handle& handle);
 RppStatus
 resize_crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                     RppiChnFormat chnFormat, unsigned int channel);
+                     RppiChnFormat chnFormat, unsigned int channel = 3,
+                     RPPTensorDataType dataType = RPPTensorDataType::U8);
 
 RppStatus
 warp_affine_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, float *affine,
