@@ -330,7 +330,6 @@ resize_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     default:
         break;
     }  
-  
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
@@ -417,7 +416,7 @@ resize_crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                      RppiChnFormat chnFormat, unsigned int channel, RPPTensorDataType dataType)
 {
     unsigned int padding = 10;
-    unsigned int type = 1;
+    unsigned int type =  1;
     int plnpkdind;
     int batch_size = handle.GetBatchSize();
      
@@ -445,7 +444,6 @@ resize_crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     default:
         break;
     }  
-  
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
