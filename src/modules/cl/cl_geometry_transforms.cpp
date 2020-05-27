@@ -499,7 +499,7 @@ rotate_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     case RPPTensorDataType::U8:
         break;
     case RPPTensorDataType::FP32:
-        std::cout <<  "comes here" << std::endl;
+        kernel_name = kernel_name + "_fp32";
         break;   
     case RPPTensorDataType::FP16:
         kernel_name = kernel_name + "_fp16";
