@@ -39,7 +39,7 @@ color_twist_cl_batch ( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width , max_height, handle.GetBatchSize()};
     std::string kernel_file  = "colortwist.cl";
-    std::string kernel_name = "colortwisth_batch";
+    std::string kernel_name = "colortwist_batch";
     switch (dataType)
     {
     case RPPTensorDataType::U8:

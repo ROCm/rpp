@@ -159,8 +159,6 @@ __kernel void colortwist_pln(   __global  unsigned char *input,
     output[pixIdx + 2*width*height] = saturate_8u(alpha * pixel.z + beta);
 }
 
-
-
 __kernel void colortwist_batch(  __global unsigned char* input,
                                     __global unsigned char* output,
                                     __global float *alpha,
@@ -212,7 +210,7 @@ __kernel void colortwist_batch(  __global unsigned char* input,
     }
 }
 
-__kernel void colortwist_batch_fp32(__global float* input,
+__kernel void colortwist_batch_fp32(  __global float* input,
                                     __global float* output,
                                     __global float *alpha,
                                     __global float *beta,
@@ -232,13 +230,13 @@ __kernel void colortwist_batch_fp32(__global float* input,
 {
     int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
     if (id_x >= width[id_z] || id_y >= height[id_z]) return;
-    float4 pixel; float4 hsv;
+    uchar4 pixel; float4 hsv;
     
     unsigned int l_inc = inc[id_z]; // for local increment
     int pixIdx = batch_index[id_z]  + (id_y * max_width[id_z] + id_x) * plnpkdindex;
-    pixel.x = input[pixIdx];
-    pixel.y = input[pixIdx + l_inc];
-    pixel.z = input[pixIdx + 2*l_inc];
+    pixel.x = (uchar)(input[pixIdx] * 255);
+    pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
+    pixel.z = (uchar)(input[pixIdx + 2*l_inc] * 255);
     pixel.w = 0.0;
     float alpha1 = alpha[id_z], beta1 = beta[id_z];
 
@@ -257,13 +255,13 @@ __kernel void colortwist_batch_fp32(__global float* input,
         output[pixIdx + 2*l_inc] = saturate_8u(alpha1 * pixel.z + beta1);
     }
      else {
-        output[pixIdx] = pixel.x;
-        output[pixIdx + l_inc] =  pixel.y;
-        output[pixIdx + 2*l_inc] = pixel.z;
+        output[pixIdx] = (float) (pixel.x / 255.0);
+        output[pixIdx + l_inc] =  (float) (pixel.y / 255.0);
+        output[pixIdx + 2*l_inc] = (float) (pixel.z / 255.0);
     }
-
 }
-__kernel void colortwist_batch_fp16(__global half* input,
+
+__kernel void colortwist_batch_fp16(  __global half* input,
                                     __global half* output,
                                     __global float *alpha,
                                     __global float *beta,
@@ -287,9 +285,9 @@ __kernel void colortwist_batch_fp16(__global half* input,
     
     unsigned int l_inc = inc[id_z]; // for local increment
     int pixIdx = batch_index[id_z]  + (id_y * max_width[id_z] + id_x) * plnpkdindex;
-    pixel.x = input[pixIdx];
-    pixel.y = input[pixIdx + l_inc];
-    pixel.z = input[pixIdx + 2*l_inc];
+    pixel.x = (uchar)(input[pixIdx] * 255);
+    pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
+    pixel.z = (uchar)(input[pixIdx + 2*l_inc] * 255);
     pixel.w = 0.0;
     float alpha1 = alpha[id_z], beta1 = beta[id_z];
 
@@ -308,10 +306,10 @@ __kernel void colortwist_batch_fp16(__global half* input,
         output[pixIdx + 2*l_inc] = saturate_8u(alpha1 * pixel.z + beta1);
     }
      else {
-        output[pixIdx] = pixel.x;
-        output[pixIdx + l_inc] =  pixel.y;
-        output[pixIdx + 2*l_inc] = pixel.z;
+        output[pixIdx] = (half) (pixel.x / 255.0);
+        output[pixIdx + l_inc] =  (half) (pixel.y / 255.0);
+        output[pixIdx + 2*l_inc] = (half) (pixel.z / 255.0);
     }
-
 }
+
 

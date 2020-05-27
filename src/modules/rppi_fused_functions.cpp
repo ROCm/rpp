@@ -20,6 +20,50 @@ using namespace std::chrono;
 
 #include "cpu/host_fused_functions.hpp" 
 
+RppStatus color_twist_helper(RppiChnFormat chn_format, Rpp32u   num_of_channels,
+								RPPTensorDataType tensor_type,
+	RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,
+	Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	make_data_type(tensor_type);
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), num_of_channels, chn_format);
+	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
+	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
+	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
+	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
+
+	#ifdef OCL_COMPILE
+		{
+			color_twist_cl_batch(
+				static_cast<cl_mem>(srcPtr),
+				static_cast<cl_mem>(dstPtr),
+				rpp::deref(rppHandle),
+				chn_format, num_of_channels, tensor_type
+			);
+		}
+	#elif defined (HIP_COMPILE)
+		{
+			color_twist_hip_batch(
+				static_cast<data_type_t*>(srcPtr),
+				static_cast<data_type_t*>(dstPtr),
+				rpp::deref(rppHandle),
+				RPPI_CHN_PLANAR, 1
+			);
+		}
+	#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
 RppStatus  
 rppi_color_twist_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f alpha ,Rpp32f beta ,Rpp32f hueShift ,Rpp32f saturationFactor ,rppHandle_t rppHandle )
 { 
@@ -299,42 +343,9 @@ rppi_color_twist_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 RppStatus  
 rppi_color_twist_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 { 
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			RPPI_CHN_PLANAR, 1
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<Rpp8u*>(srcPtr),
-			static_cast<Rpp8u*>(dstPtr),
-			rpp::deref(rppHandle),
-			RPPI_CHN_PLANAR, 1
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 RppStatus  
@@ -1048,42 +1059,9 @@ rppi_color_twist_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 RppStatus  
 rppi_color_twist_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 { 
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			RPPI_CHN_PLANAR, 3
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<Rpp8u*>(srcPtr),
-			static_cast<Rpp8u*>(dstPtr),
-			rpp::deref(rppHandle),
-			RPPI_CHN_PLANAR, 3
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 RppStatus  
@@ -1797,42 +1775,9 @@ rppi_color_twist_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 RppStatus  
 rppi_color_twist_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 { 
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			RPPI_CHN_PACKED, 3
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<Rpp8u*>(srcPtr),
-			static_cast<Rpp8u*>(dstPtr),
-			rpp::deref(rppHandle),
-			RPPI_CHN_PACKED, 3
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 RppStatus  
@@ -3921,277 +3866,49 @@ rppi_color_twist_f32_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 RppStatus  
 rppi_color_twist_f32_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
-	RppiChnFormat chn_format = RPPI_CHN_PLANAR;
-	Rpp32u   num_of_channels = 1;
-	typedef  Rpp32f data_type_t;
-	RPPTensorDataType tensor_type = RPPTensorDataType::FP32;
-
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), num_of_channels, chn_format);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels, tensor_type
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<data_type_t*>(srcPtr),
-			static_cast<data_type_t*>(dstPtr),
-			rpp::deref(rppHandle),
-			RPPI_CHN_PLANAR, 1
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 RppStatus  
 rppi_color_twist_f32_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
-	RppiChnFormat chn_format = RPPI_CHN_PLANAR;
-	Rpp32u   num_of_channels = 3;
-	typedef  Rpp32f data_type_t;
-	RPPTensorDataType tensor_type = RPPTensorDataType::FP32;
-
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), num_of_channels, chn_format);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels, tensor_type
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<data_type_t*>(srcPtr),
-			static_cast<data_type_t*>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 RppStatus  
 rppi_color_twist_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
-	RppiChnFormat chn_format = RPPI_CHN_PACKED;
-	Rpp32u   num_of_channels = 3;
-	typedef  Rpp32f data_type_t;
-	RPPTensorDataType tensor_type = RPPTensorDataType::FP32;
-
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), num_of_channels, chn_format);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels, tensor_type
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<data_type_t*>(srcPtr),
-			static_cast<data_type_t*>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 RppStatus  
 rppi_color_twist_f16_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
-	RppiChnFormat chn_format = RPPI_CHN_PLANAR;
-	Rpp32u   num_of_channels = 1;
-	typedef  Rpp16f data_type_t;
-	RPPTensorDataType tensor_type = RPPTensorDataType::FP16;
-
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), num_of_channels, chn_format);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels, tensor_type
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<data_type_t*>(srcPtr),
-			static_cast<data_type_t*>(dstPtr),
-			rpp::deref(rppHandle),
-			RPPI_CHN_PLANAR, 1
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 RppStatus  
 rppi_color_twist_f16_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
-	RppiChnFormat chn_format = RPPI_CHN_PLANAR;
-	Rpp32u   num_of_channels = 3;
-	typedef  Rpp16f data_type_t;
-	RPPTensorDataType tensor_type = RPPTensorDataType::FP16;
-
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), num_of_channels, chn_format);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels, tensor_type
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<data_type_t*>(srcPtr),
-			static_cast<data_type_t*>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 RppStatus  
 rppi_color_twist_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *alpha ,Rpp32f *beta ,Rpp32f *hueShift ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
-	RppiChnFormat chn_format = RPPI_CHN_PACKED;
-	Rpp32u   num_of_channels = 3;
-	typedef  Rpp16f data_type_t;
-	RPPTensorDataType tensor_type = RPPTensorDataType::FP16;
-
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex (rpp::deref(rppHandle), num_of_channels, chn_format);
-	copy_param_float (alpha, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (beta, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
-	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
-
-#ifdef OCL_COMPILE
-	{
-		color_twist_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels, tensor_type
-		);
-	}
-#elif defined (HIP_COMPILE)
-	{
-		color_twist_hip_batch(
-			static_cast<data_type_t*>(srcPtr),
-			static_cast<data_type_t*>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels
-		);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
+	return(color_twist_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16,
+		srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+		hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
 
