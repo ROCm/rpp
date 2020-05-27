@@ -600,7 +600,8 @@ color_twist_cl( cl_mem srcPtr,RppiSize srcSize,
                 cl_mem dstPtr, const float alpha/*contrast*/, const float beta /*brightness*/, const float hue_factor /*hue factor*/, const float sat /* saturation_factor*/,
                 RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
-color_twist_cl_batch ( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,  RppiChnFormat chnFormat, unsigned int channel);
+color_twist_cl_batch ( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,  RppiChnFormat chnFormat = RPPI_CHN_PACKED, 
+                unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8);
 
 RppStatus
 crop_mirror_normalize_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize, Rpp32u crop_pox_x,
@@ -612,7 +613,8 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
 RppStatus
 crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat = RPPI_CHN_PACKED, unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8 );
 RppStatus
-resize_crop_mirror_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);
+resize_crop_mirror_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat = RPPI_CHN_PACKED,
+                                         unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8);
 /* Fused Functions End*/
 
 #endif //CL_DECLATAIONS_H
