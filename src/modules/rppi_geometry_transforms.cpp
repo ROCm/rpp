@@ -15482,7 +15482,8 @@ rotate_helper(	RppiChnFormat chn_format,
 	#elif defined (HIP_COMPILE)
 		{
 			rotate_hip_batch(
-				static_cast<data_type_t*>(srcPtr),
+				static_cast<data_type_t*>(
+					srcPtr),
 				static_cast<data_type_t*>(dstPtr),
 				rpp::deref(rppHandle),
 				chn_format, num_of_channels

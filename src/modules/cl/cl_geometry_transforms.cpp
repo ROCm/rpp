@@ -499,15 +499,15 @@ rotate_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     case RPPTensorDataType::U8:
         break;
     case RPPTensorDataType::FP32:
-        kernel_name = kernel_name + "_fp32";
+        std::cout <<  "comes here" << std::endl;
         break;   
     case RPPTensorDataType::FP16:
         kernel_name = kernel_name + "_fp16";
         break;
     default:
         break;
-    }      
-    handle.AddKernel("", "", "rotate.cl", "rotate_batch", vld, vgd, "")(srcPtr, dstPtr,
+    }  
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,

@@ -145,7 +145,7 @@ __kernel void rotate_batch(         __global unsigned char* srcPtr,
     }
 }
 
-__kernel void rotate_batch_f16( __global half* srcPtr,
+__kernel void rotate_batch_fp16( __global half* srcPtr,
                                 __global half* dstPtr,
                                 __global float *angleDeg,
                                 __global unsigned int *source_height,
@@ -191,7 +191,7 @@ __kernel void rotate_batch_f16( __global half* srcPtr,
         src_pixIdx = source_batch_index[id_z] + (k  + l * max_source_width[id_z] ) * plnpkdindex;
         dst_pixIdx = dest_batch_index[id_z]   + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;   
         for(indextmp = 0; indextmp < channel; indextmp++){
-             dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
+            dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
             src_pixIdx += source_inc[id_z];
             dst_pixIdx += dest_inc[id_z];
         }
@@ -206,7 +206,7 @@ __kernel void rotate_batch_f16( __global half* srcPtr,
     }
 }
 
-__kernel void rotate_batch_f32( __global float* srcPtr,
+__kernel void rotate_batch_fp32( __global float* srcPtr,
                                 __global float* dstPtr,
                                 __global float *angleDeg,
                                 __global unsigned int *source_height,
@@ -252,7 +252,7 @@ __kernel void rotate_batch_f32( __global float* srcPtr,
         src_pixIdx = source_batch_index[id_z] + (k  + l * max_source_width[id_z] ) * plnpkdindex;
         dst_pixIdx = dest_batch_index[id_z]   + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;   
         for(indextmp = 0; indextmp < channel; indextmp++){
-             dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
+            dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
             src_pixIdx += source_inc[id_z];
             dst_pixIdx += dest_inc[id_z];
         }

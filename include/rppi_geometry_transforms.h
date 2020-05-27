@@ -1652,23 +1652,23 @@ RppStatus
                 RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
                 RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
 RppStatus
+ rppi_rotate_f16_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
+ rppi_rotate_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
+ rppi_rotate_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
+ rppi_rotate_f32_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
+                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
+                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus
  rppi_rotate_f32_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
-                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
-                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_rotate_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
-                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
-                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_rotate_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
-                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
-                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_rotate_f16_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
-                RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
-                RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_rotate_f16_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize, 
                 RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiSize *dstSize ,
                 RppiSize maxDstSize ,Rpp32f *angleDeg ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
 // ----------------------------------------
