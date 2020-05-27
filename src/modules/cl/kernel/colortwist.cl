@@ -1,5 +1,6 @@
 #pragma OPENCL EXTENSION cl_amd_media_ops : enable
 #pragma OPENCL EXTENSION cl_amd_media_ops2 : enable
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 
 uchar4 convert_one_pixel_to_rgb(float4 pixel) {
@@ -158,8 +159,6 @@ __kernel void colortwist_pln(   __global  unsigned char *input,
     output[pixIdx + 2*width*height] = saturate_8u(alpha * pixel.z + beta);
 }
 
-
-
 __kernel void colortwist_batch(  __global unsigned char* input,
                                     __global unsigned char* output,
                                     __global float *alpha,
@@ -209,5 +208,108 @@ __kernel void colortwist_batch(  __global unsigned char* input,
         output[pixIdx + l_inc] =  pixel.y;
         output[pixIdx + 2*l_inc] = pixel.z;
     }
-
 }
+
+__kernel void colortwist_batch_fp32(  __global float* input,
+                                    __global float* output,
+                                    __global float *alpha,
+                                    __global float *beta,
+                                    __global float *hue,
+                                    __global float *sat,
+                                    __global int *xroi_begin,
+                                    __global int *xroi_end,
+                                    __global int *yroi_begin,
+                                    __global int *yroi_end,
+                                    __global unsigned int *height,
+                                    __global unsigned int *width,
+                                    __global unsigned int *max_width,
+                                    __global unsigned long *batch_index,
+                                    __global unsigned int *inc, // use width * height for pln and 1 for pkd
+                                    const int plnpkdindex // use 1 pln 3 for pkd
+                                    )
+{
+    int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+    if (id_x >= width[id_z] || id_y >= height[id_z]) return;
+    uchar4 pixel; float4 hsv;
+    
+    unsigned int l_inc = inc[id_z]; // for local increment
+    int pixIdx = batch_index[id_z]  + (id_y * max_width[id_z] + id_x) * plnpkdindex;
+    pixel.x = (uchar)(input[pixIdx] * 255);
+    pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
+    pixel.z = (uchar)(input[pixIdx + 2*l_inc] * 255);
+    pixel.w = 0.0;
+    float alpha1 = alpha[id_z], beta1 = beta[id_z];
+
+    if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
+    {
+        hsv = convert_one_pixel_to_hsv(pixel); // Converting to HSV
+        hsv.x += hue[id_z];
+        if(hsv.x > 360.0) {hsv.x = hsv.x - 360.0;}
+        else if(hsv.x < 0){hsv.x = hsv.x + 360.0;}
+        hsv.y *= sat[id_z];
+        if(hsv.y > 1.0){hsv.y = 1.0;}
+        else if(hsv.y < 0.0){hsv.y = 0.0;}
+        pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with hue modification
+        output[pixIdx] = saturate_8u(alpha1 * pixel.x + beta1);
+        output[pixIdx + l_inc] = saturate_8u(alpha1 * pixel.y + beta1);
+        output[pixIdx + 2*l_inc] = saturate_8u(alpha1 * pixel.z + beta1);
+    }
+     else {
+        output[pixIdx] = (float) (pixel.x / 255.0);
+        output[pixIdx + l_inc] =  (float) (pixel.y / 255.0);
+        output[pixIdx + 2*l_inc] = (float) (pixel.z / 255.0);
+    }
+}
+
+__kernel void colortwist_batch_fp16(  __global half* input,
+                                    __global half* output,
+                                    __global float *alpha,
+                                    __global float *beta,
+                                    __global float *hue,
+                                    __global float *sat,
+                                    __global int *xroi_begin,
+                                    __global int *xroi_end,
+                                    __global int *yroi_begin,
+                                    __global int *yroi_end,
+                                    __global unsigned int *height,
+                                    __global unsigned int *width,
+                                    __global unsigned int *max_width,
+                                    __global unsigned long *batch_index,
+                                    __global unsigned int *inc, // use width * height for pln and 1 for pkd
+                                    const int plnpkdindex // use 1 pln 3 for pkd
+                                    )
+{
+    int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+    if (id_x >= width[id_z] || id_y >= height[id_z]) return;
+    uchar4 pixel; float4 hsv;
+    
+    unsigned int l_inc = inc[id_z]; // for local increment
+    int pixIdx = batch_index[id_z]  + (id_y * max_width[id_z] + id_x) * plnpkdindex;
+    pixel.x = (uchar)(input[pixIdx] * 255);
+    pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
+    pixel.z = (uchar)(input[pixIdx + 2*l_inc] * 255);
+    pixel.w = 0.0;
+    float alpha1 = alpha[id_z], beta1 = beta[id_z];
+
+    if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
+    {
+        hsv = convert_one_pixel_to_hsv(pixel); // Converting to HSV
+        hsv.x += hue[id_z];
+        if(hsv.x > 360.0) {hsv.x = hsv.x - 360.0;}
+        else if(hsv.x < 0){hsv.x = hsv.x + 360.0;}
+        hsv.y *= sat[id_z];
+        if(hsv.y > 1.0){hsv.y = 1.0;}
+        else if(hsv.y < 0.0){hsv.y = 0.0;}
+        pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with hue modification
+        output[pixIdx] = saturate_8u(alpha1 * pixel.x + beta1);
+        output[pixIdx + l_inc] = saturate_8u(alpha1 * pixel.y + beta1);
+        output[pixIdx + 2*l_inc] = saturate_8u(alpha1 * pixel.z + beta1);
+    }
+     else {
+        output[pixIdx] = (half) (pixel.x / 255.0);
+        output[pixIdx + l_inc] =  (half) (pixel.y / 255.0);
+        output[pixIdx + 2*l_inc] = (half) (pixel.z / 255.0);
+    }
+}
+
+

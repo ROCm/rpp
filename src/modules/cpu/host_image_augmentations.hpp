@@ -1629,7 +1629,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                             srcPtrTemp3 = srcPtrTemp2;
 
                             int bufferLength = roiWidthToCompute;
-                            int alignedLength = bufferLength & ~11;
+                            int alignedLength = (bufferLength / 12) * 12;
 
                             __m128i const zero = _mm_setzero_si128();
                             __m128i px0, px1, px2, qx0, qx1;
@@ -1917,7 +1917,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                         srcPtrTemp3b = srcPtrTemp3a + 16;
 
                         int bufferLength = roiWidthToCompute * channel;
-                        int alignedLength = bufferLength & ~14;
+                        int alignedLength = (bufferLength / 15) * 15;
 
                         __m128i const zero = _mm_setzero_si128();
                         __m128i px0a, px1a, px2a;
@@ -2001,96 +2001,15 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                             srcPtrTemp = srcPtrTemp + 15;
                             dstPtrTemp = dstPtrTemp + 15;
                         }
-
-                        if (vectorLoopCount < bufferLength)
-                        {
-                            srcPtrTemp3R = srcPtrTemp3a;
-                            srcPtrTemp3G = srcPtrTemp3R + 1;
-                            srcPtrTemp3B = srcPtrTemp3R + 2;
-
-                            srcPtrTemp4R = srcPtrTemp3R;
-                            srcPtrTemp4G = srcPtrTemp3G;
-                            srcPtrTemp4B = srcPtrTemp3B;
-
-                            pixelR = 0;
-                            pixelG = 0;
-                            pixelB = 0;
-                            for (int m = 0; m < kernelSize; m++)
-                            {
-                                sumsR[m] = 0;
-                                sumsG[m] = 0;
-                                sumsB[m] = 0;
-                                for (int n = 0; n < elementsInKernelRow; n += channel)
-                                {
-                                    sumsR[m] += *(srcPtrTemp3R + n);
-                                    sumsG[m] += *(srcPtrTemp3G + n);
-                                    sumsB[m] += *(srcPtrTemp3B + n);
-                                }
-                                srcPtrTemp3R += elementsInRowMax;
-                                srcPtrTemp3G += elementsInRowMax;
-                                srcPtrTemp3B += elementsInRowMax;
-                            }
-                            for (int m = 0; m < kernelSize; m++)
-                            {
-                                pixelR += sumsR[m];
-                                pixelG += sumsG[m];
-                                pixelB += sumsB[m];
-                            }
-
-                            *dstPtrTemp++ = (T) RPPPIXELCHECK(pixelR * multiplier);
-                            *dstPtrTemp++ = (T) RPPPIXELCHECK(pixelG * multiplier);
-                            *dstPtrTemp++ = (T) RPPPIXELCHECK(pixelB * multiplier);
-                            srcPtrTemp += channel;
-                            vectorLoopCount += channel;
-
-                            srcPtrTemp4R = srcPtrTemp3R + elementsInKernelRow;
-                            srcPtrTemp4G = srcPtrTemp3G + elementsInKernelRow;
-                            srcPtrTemp4B = srcPtrTemp3B + elementsInKernelRow;
-
-                            for(; vectorLoopCount < bufferLength; vectorLoopCount += channel)
-                            {
-                                pixelR = 0;
-                                pixelG = 0;
-                                pixelB = 0;
-                                for (int m = 0; m < kernelSize; m++)
-                                {
-                                    sumsR[m] = sumsR[m] - (Rpp32f) *srcPtrTemp3R + (Rpp32f) *srcPtrTemp4R;
-                                    sumsG[m] = sumsG[m] - (Rpp32f) *srcPtrTemp3G + (Rpp32f) *srcPtrTemp4G;
-                                    sumsB[m] = sumsB[m] - (Rpp32f) *srcPtrTemp3B + (Rpp32f) *srcPtrTemp4B;
-                                    srcPtrTemp3R += elementsInRowMax;
-                                    srcPtrTemp3G += elementsInRowMax;
-                                    srcPtrTemp3B += elementsInRowMax;
-                                    srcPtrTemp4R += elementsInRowMax;
-                                    srcPtrTemp4G += elementsInRowMax;
-                                    srcPtrTemp4B += elementsInRowMax;
-                                }
-                                for (int m = 0; m < kernelSize; m++)
-                                {
-                                    pixelR += sumsR[m];
-                                    pixelG += sumsG[m];
-                                    pixelB += sumsB[m];
-                                }
-
-                                *dstPtrTemp++ = (T) RPPPIXELCHECK(pixelR * multiplier);
-                                *dstPtrTemp++ = (T) RPPPIXELCHECK(pixelG * multiplier);
-                                *dstPtrTemp++ = (T) RPPPIXELCHECK(pixelB * multiplier);
-                                srcPtrTemp += channel;
-                                srcPtrTemp3R -= incrementToNextKernel;
-                                srcPtrTemp3G -= incrementToNextKernel;
-                                srcPtrTemp3B -= incrementToNextKernel;
-                                srcPtrTemp4R -= incrementToNextKernel;
-                                srcPtrTemp4G -= incrementToNextKernel;
-                                srcPtrTemp4B -= incrementToNextKernel;
-                            }
-                        }
+                        Rpp32u remainingPixels = bufferLength - vectorLoopCount + 1;
 
                         srcPtrTemp2R += elementsInRowMax;
                         srcPtrTemp2G += elementsInRowMax;
                         srcPtrTemp2B += elementsInRowMax;
 
-                        memcpy(dstPtrTemp, srcPtrTemp, channeledFirstColumn * sizeof(T));
-                        dstPtrTemp += channeledFirstColumn;
-                        srcPtrTemp += channeledFirstColumn;
+                        memcpy(dstPtrTemp, srcPtrTemp, channeledFirstColumn + remainingPixels * sizeof(T));
+                        dstPtrTemp += channeledFirstColumn + remainingPixels;
+                        srcPtrTemp += channeledFirstColumn + remainingPixels;
                     }
                 }
             }
@@ -2262,7 +2181,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         srcPtrTemp3 = srcPtrTemp2;
 
                         int bufferLength = widthToCompute;
-                        int alignedLength = bufferLength & ~11;
+                        int alignedLength = (bufferLength / 12) * 12;
 
                         __m128i const zero = _mm_setzero_si128();
                         __m128i px0, px1, px2, qx0, qx1;
@@ -2504,7 +2423,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     srcPtrTemp3b = srcPtrTemp3a + 16;
 
                     int bufferLength = widthToCompute * channel;
-                    int alignedLength = bufferLength & ~14;
+                    int alignedLength = (bufferLength / 15) * 15;
 
                     __m128i const zero = _mm_setzero_si128();
                     __m128i px0a, px1a, px2a;
