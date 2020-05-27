@@ -350,7 +350,7 @@ __kernel void resize_crop_batch_fp16( __global  half* srcPtr,
 
             pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
                         C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)) ;
-            dstPtr[dst_pixIdx] =  saturate_8u(pixVal);
+            dstPtr[dst_pixIdx] =  (half) pixVal;
             dst_pixIdx += dest_inc[id_z];
         }
     }
@@ -417,7 +417,7 @@ __kernel void resize_crop_batch_fp32(    __global float* srcPtr,
 
             pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
                         C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)) ;
-            dstPtr[dst_pixIdx] =  saturate_8u(pixVal);
+            dstPtr[dst_pixIdx] =  pixVal;
             dst_pixIdx += dest_inc[id_z];
         }
     }
@@ -551,7 +551,7 @@ __kernel void resize_crop_mirror_batch_fp16(__global half* srcPtr,
 
             pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
                         C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)) ;
-            dstPtr[dst_pixIdx] =  (half)(pixVal;
+            dstPtr[dst_pixIdx] =  (half)pixVal;
             dst_pixIdx += dest_inc[id_z];
         }
     }
