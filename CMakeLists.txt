@@ -142,7 +142,6 @@ enable_clang_tidy(
     HEADER_FILTER
         ".*hpp"
     EXTRA_ARGS
-        -DMIOPEN_USE_CLANG_TIDY
 
 )
 include(CppCheck)
@@ -176,8 +175,7 @@ enable_cppcheck(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_BINARY_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-    DEFINE
-        MIOPEN_USE_MIOPENGEMM=1
+
 )
 
 # Find required packages
@@ -196,15 +194,6 @@ if(EXTRACTKERNEL_BIN)
 else()
     message(FATAL_ERROR "${Red}extractkernel not found${ColourReset}")
 endif()
-
-# Online assembler
-find_program(MIOPEN_AMDGCN_ASSEMBLER
-    NAMES clang
-    PATHS ${MIOPEN_AMDGCN_ASSEMBLER_PATH} ${ROCM_PATH}
-    PATH_SUFFIXES /opencl/bin/x86_64
-    NO_DEFAULT_PATH
-)
-message(STATUS "${Yellow}AMDGCN assembler: ${MIOPEN_AMDGCN_ASSEMBLER}${ColourReset}")
 
 foreach (MOD_NAME ${MODULES_LIST})
     add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
