@@ -250,14 +250,14 @@ __kernel void colortwist_batch_fp32(  __global float* input,
         if(hsv.y > 1.0){hsv.y = 1.0;}
         else if(hsv.y < 0.0){hsv.y = 0.0;}
         pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with hue modification
-        output[pixIdx] = saturate_8u(alpha1 * pixel.x + beta1);
-        output[pixIdx + l_inc] = saturate_8u(alpha1 * pixel.y + beta1);
-        output[pixIdx + 2*l_inc] = saturate_8u(alpha1 * pixel.z + beta1);
+        output[pixIdx] =         = (alpha1 * pixel.x  + beta1) / 255.0;
+        output[pixIdx + l_inc]   = (alpha1 * pixel.y  + beta1) / 255.0;
+        output[pixIdx + 2*l_inc] = (alpha1 * pixel.z  + beta1) / 255.0;
     }
      else {
-        output[pixIdx] = (float) (pixel.x / 255.0);
-        output[pixIdx + l_inc] =  (float) (pixel.y / 255.0);
-        output[pixIdx + 2*l_inc] = (float) (pixel.z / 255.0);
+        output[pixIdx] = input[pixIdx];
+        output[pixIdx + l_inc] =  input[pixIdx + l_inc];
+        output[pixIdx + 2*l_inc] =input[pixIdx + 2*l_inc];
     }
 }
 
@@ -285,9 +285,9 @@ __kernel void colortwist_batch_fp16(  __global half* input,
     
     unsigned int l_inc = inc[id_z]; // for local increment
     int pixIdx = batch_index[id_z]  + (id_y * max_width[id_z] + id_x) * plnpkdindex;
-    pixel.x = (uchar)(input[pixIdx] * 255);
-    pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
-    pixel.z = (uchar)(input[pixIdx + 2*l_inc] * 255);
+    pixel.x = (uchar)(input[pixIdx] );
+    pixel.y = (uchar)(input[pixIdx + l_inc] );
+    pixel.z = (uchar)(input[pixIdx + 2*l_inc]);
     pixel.w = 0.0;
     float alpha1 = alpha[id_z], beta1 = beta[id_z];
 
@@ -301,14 +301,14 @@ __kernel void colortwist_batch_fp16(  __global half* input,
         if(hsv.y > 1.0){hsv.y = 1.0;}
         else if(hsv.y < 0.0){hsv.y = 0.0;}
         pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with hue modification
-        output[pixIdx] = saturate_8u(alpha1 * pixel.x + beta1);
-        output[pixIdx + l_inc] = saturate_8u(alpha1 * pixel.y + beta1);
-        output[pixIdx + 2*l_inc] = saturate_8u(alpha1 * pixel.z + beta1);
+        output[pixIdx] =         = (half)((alpha1 * pixel.x  + beta1) / 255.0);
+        output[pixIdx + l_inc]   = (half)((alpha1 * pixel.y  + beta1) / 255.0);
+        output[pixIdx + 2*l_inc] = (half)((alpha1 * pixel.z  + beta1) / 255.0);
     }
      else {
-        output[pixIdx] = (half) (pixel.x / 255.0);
-        output[pixIdx + l_inc] =  (half) (pixel.y / 255.0);
-        output[pixIdx + 2*l_inc] = (half) (pixel.z / 255.0);
+         output[pixIdx] = input[pixIdx];
+         output[pixIdx + l_inc] =  input[pixIdx + l_inc];
+         output[pixIdx + 2*l_inc] =input[pixIdx + 2*l_inc];
     }
 }
 
