@@ -9,9 +9,20 @@
 #include <math.h>
 #include <algorithm>
 #include <rppdefs.h>
+#include <half.hpp>
+#include <half.hpp>
+using half_float::half;
+typedef half    Rpp16f;
 
 #define __CL_ENABLE_EXCEPTIONS
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+
+enum class RPPTensorDataType
+{
+    U8 = 0,
+    FP32,
+    FP16,
+};
 
 inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSize)
 {
