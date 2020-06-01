@@ -24,3 +24,13 @@ make
 ## For HIP
 
 
+## Run
+Have this in run.sh file
+```
+for i in $(seq 0 2); do 
+for j in $(seq 1 7); do
+./BatchPD_ocl /path/to/first/input/folder/ /path/to/second/input/folder/ /path/to/output/folder $i $j
+    done
+done
+
+```
