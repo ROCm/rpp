@@ -307,7 +307,8 @@ __kernel void resize_crop_batch_fp16(
     const int plnpkdindex // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
-  int A, B, C, D, x, y, index, pixVal;
+  float A, B, C, D, pixVal;
+  int x, y, index;
   float x_ratio =
       ((float)(xroi_end[id_z] - xroi_begin[id_z] - 1)) / dest_width[id_z];
   float y_ratio =
@@ -346,15 +347,12 @@ __kernel void resize_crop_batch_fp16(
                  ((x + 1) + (y + 1) * max_source_width[id_z]) * plnpkdindex +
                  indextmp * source_inc[id_z]];
 
-      pixVal =
-          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
-                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+      pixVal = A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+               C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff);
       dstPtr[dst_pixIdx] = (half)pixVal;
       dst_pixIdx += dest_inc[id_z];
     }
-  }
-
-  else {
+  } else {
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
     for (indextmp = 0; indextmp < channel; indextmp++) {
@@ -372,14 +370,13 @@ __kernel void resize_crop_batch_fp32(
     __global int *xroi_end, __global int *yroi_begin, __global int *yroi_end,
     __global unsigned long *source_batch_index,
     __global unsigned long *dest_batch_index, const unsigned int channel,
-    __global unsigned int
-        *source_inc, // use width * height for pln and 1 for pkd
-    __global unsigned int *dest_inc, const unsigned int padding,
-    const unsigned int type,
+    __global unsigned int *source_inc, __global unsigned int *dest_inc,
+    const unsigned int padding, const unsigned int type,
     const int plnpkdindex // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
-  int A, B, C, D, x, y, index, pixVal;
+  float A, B, C, D, pixVal;
+  int x, y, index;
   float x_ratio =
       ((float)(xroi_end[id_z] - xroi_begin[id_z] - 1)) / dest_width[id_z];
   float y_ratio =
@@ -418,15 +415,12 @@ __kernel void resize_crop_batch_fp32(
                  ((x + 1) + (y + 1) * max_source_width[id_z]) * plnpkdindex +
                  indextmp * source_inc[id_z]];
 
-      pixVal =
-          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
-                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+      pixVal = A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+               C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff);
       dstPtr[dst_pixIdx] = pixVal;
       dst_pixIdx += dest_inc[id_z];
     }
-  }
-
-  else {
+  } else {
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
     for (indextmp = 0; indextmp < channel; indextmp++) {
@@ -563,9 +557,8 @@ __kernel void resize_crop_mirror_batch_fp16(
                  ((x + 1) + (y + 1) * max_source_width[id_z]) * plnpkdindex +
                  indextmp * source_inc[id_z]];
 
-      pixVal =
-          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
-                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+      pixVal = A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+               C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff);
       dstPtr[dst_pixIdx] = (half)pixVal;
       dst_pixIdx += dest_inc[id_z];
     }
@@ -634,9 +627,8 @@ __kernel void resize_crop_mirror_batch_fp32(
                  ((x + 1) + (y + 1) * max_source_width[id_z]) * plnpkdindex +
                  indextmp * source_inc[id_z]];
 
-      pixVal =
-          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
-                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+      pixVal = A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+               C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff);
       dstPtr[dst_pixIdx] = pixVal;
       dst_pixIdx += dest_inc[id_z];
     }
