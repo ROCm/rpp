@@ -522,7 +522,7 @@ __kernel void resize_crop_mirror_batch_fp16(
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   float A, B, C, D, pixVal;
-  int  x, y, index,;
+  int  x, y, index;
   float x_ratio =
       ((float)(xroi_end[id_z] - xroi_begin[id_z] - 1)) / dest_width[id_z];
   float y_ratio =
