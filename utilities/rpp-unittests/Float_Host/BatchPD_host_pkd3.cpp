@@ -317,7 +317,6 @@ int main(int argc, char **argv)
 
             break;
         }
-        }
         case 2:
         {
             test_case_name = "resize";
