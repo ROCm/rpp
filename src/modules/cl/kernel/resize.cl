@@ -348,8 +348,8 @@ __kernel void resize_crop_batch_fp16(
                  indextmp * source_inc[id_z]];
 
       pixVal =
-          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
-                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+          A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff);
       dstPtr[dst_pixIdx] = (half)pixVal;
       dst_pixIdx += dest_inc[id_z];
     }
@@ -378,7 +378,8 @@ __kernel void resize_crop_batch_fp32(
     const int plnpkdindex // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
-  int A, B, C, D, x, y, index, pixVal;
+  float A, B, C, D, pixVal;
+  int x, y, index;
   float x_ratio =
       ((float)(xroi_end[id_z] - xroi_begin[id_z] - 1)) / dest_width[id_z];
   float y_ratio =
@@ -418,13 +419,12 @@ __kernel void resize_crop_batch_fp32(
                  indextmp * source_inc[id_z]];
 
       pixVal =
-          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
-                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+          A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff);
       dstPtr[dst_pixIdx] = pixVal;
       dst_pixIdx += dest_inc[id_z];
     }
   }
-
   else {
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
@@ -521,8 +521,8 @@ __kernel void resize_crop_mirror_batch_fp16(
     const int plnpkdindex // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+  int x, y, index;
   float A, B, C, D, pixVal;
-  int  x, y, index;
   float x_ratio =
       ((float)(xroi_end[id_z] - xroi_begin[id_z] - 1)) / dest_width[id_z];
   float y_ratio =
@@ -563,9 +563,9 @@ __kernel void resize_crop_mirror_batch_fp16(
                  indextmp * source_inc[id_z]];
 
       pixVal =
-          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
-                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
-      dstPtr[dst_pixIdx] = (half)(pixVal);
+          A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff);
+      dstPtr[dst_pixIdx] = (half)pixVal;
       dst_pixIdx += dest_inc[id_z];
     }
   } else {
@@ -634,8 +634,8 @@ __kernel void resize_crop_mirror_batch_fp32(
                  indextmp * source_inc[id_z]];
 
       pixVal =
-          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
-                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+          A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff);
       dstPtr[dst_pixIdx] = pixVal;
       dst_pixIdx += dest_inc[id_z];
     }

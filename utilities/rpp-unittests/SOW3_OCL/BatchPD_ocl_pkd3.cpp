@@ -321,7 +321,7 @@ int main(int argc, char **argv)
         Rpp32f angle[images];
         for (i = 0; i < images; i++)
         {
-            angle[i] = 50;
+            angle[i] = 200;
         }
 
         start = clock();
@@ -379,8 +379,8 @@ int main(int argc, char **argv)
         {
             x1[i] = 0;
             y1[i] = 0;
-            x2[i] = 50;
-            y2[i] = 50;
+            x2[i] = 200;
+            y2[i] = 200;
             dstSize[i].height = image.rows / 3;
             dstSize[i].width = image.cols / 1.1;
             if (maxDstHeight < dstSize[i].height)
@@ -419,8 +419,8 @@ int main(int argc, char **argv)
         {
             x1[i] = 0;
             y1[i] = 0;
-            x2[i] = 50;
-            y2[i] = 50;
+            x2[i] = 200;
+            y2[i] = 200;
             dstSize[i].height = image.rows / 3;
             dstSize[i].width = image.cols / 1.1;
             if (maxDstHeight < dstSize[i].height)
@@ -465,8 +465,8 @@ int main(int argc, char **argv)
                 minDstHeight = dstSize[i].height;
             if (minDstWidth > dstSize[i].width)
                 minDstWidth = dstSize[i].width;
-            crop_pos_x[i] = 50;
-            crop_pos_y[i] = 50;
+            crop_pos_x[i] = 200;
+            crop_pos_y[i] = 200;
         }
 
         start = clock();
@@ -501,8 +501,8 @@ int main(int argc, char **argv)
                 minDstHeight = dstSize[i].height;
             if (minDstWidth > dstSize[i].width)
                 minDstWidth = dstSize[i].width;
-            crop_pos_x[i] = 50;
-            crop_pos_y[i] = 50;
+            crop_pos_x[i] = 200;
+            crop_pos_y[i] = 200;
             mean[i] = 0.0;
             stdDev[i] = 1.0;
             mirrorFlag[i] = 1;
