@@ -2270,7 +2270,7 @@ RppStatus color_twist_f16_host(Rpp16f* srcPtr, RppiSize srcSize, Rpp16f* dstPtr,
             _mm_storeu_ps(dstPtrTempPx2ps, x2);
             _mm_storeu_ps(dstPtrTempPx3ps, x3);
 
-            for(int cnt = 0; cnt < 4; cnt++)
+            for(int cnt = 0; cnt < 3; cnt++)
             {
                 *(dstPtrTempPx0 + cnt) = (Rpp16f) (*(dstPtrTempPx0ps + cnt));
                 *(dstPtrTempPx1 + cnt) = (Rpp16f) (*(dstPtrTempPx1ps + cnt));
