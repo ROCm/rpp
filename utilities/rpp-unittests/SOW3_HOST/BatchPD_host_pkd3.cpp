@@ -26,7 +26,7 @@ typedef half Rpp16f;
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 6;
-    printf("\nUsage: ./BatchPD_host <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4> <case number = 1:7>\n");
+    printf("\nUsage: ./BatchPD_host <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5> <case number = 1:7>\n");
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     printf("\nsrc1 = %s", argv[1]);
     printf("\nsrc2 = %s", argv[2]);
     printf("\ndst = %s", argv[3]);
-    printf("\nu8/f16/f32/u8->f16/u8->f32 (0/1/2/3/4) = %s", argv[4]);
+    printf("\nu8/f16/f32/u8->f16/u8->f32/i8 (0/1/2/3/4/5) = %s", argv[4]);
     printf("\ncase number (1:7) = %s", argv[5]);
 
     char *src = argv[1];
@@ -94,6 +94,10 @@ int main(int argc, char **argv)
     else if (ip_bitDepth == 4)
     {
         strcat(funcName, "_u8_f32_");
+    }
+    else if (ip_bitDepth == 5)
+    {
+        strcat(funcName, "_i8_");
     }
 
     char func[1000];
@@ -196,6 +200,10 @@ int main(int argc, char **argv)
     Rpp32f *inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
     Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
 
+    Rpp8s *inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+    Rpp8s *inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+    Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+
     RppiSize maxSize, maxDstSize;
     maxSize.height = maxHeight;
     maxSize.width = maxWidth;
@@ -291,6 +299,27 @@ int main(int argc, char **argv)
             inputf32_secondTemp++;
         }
     }
+    else if (ip_bitDepth == 5)
+    {
+        Rpp8u *inputTemp, *input_secondTemp;
+        Rpp8s *inputi8Temp, *inputi8_secondTemp;
+
+        inputTemp = input;
+        input_secondTemp = input_second;
+
+        inputi8Temp = inputi8;
+        inputi8_secondTemp = inputi8_second;
+
+        for (int i = 0; i < ioBufferSize; i++)
+        {
+            *inputi8Temp = (Rpp8s) (((Rpp32s) *inputTemp) - 128);
+            *inputi8_secondTemp = (Rpp8s) (((Rpp32s) *input_secondTemp) - 128);
+            inputTemp++;
+            inputi8Temp++;
+            input_secondTemp++;
+            inputi8_secondTemp++;
+        }
+    }
 
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, noOfImages);
@@ -321,6 +350,12 @@ int main(int argc, char **argv)
             rppi_rotate_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, angle, noOfImages, handle);
         else if (ip_bitDepth == 2)
             rppi_rotate_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, angle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_rotate_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, angle, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -358,6 +393,8 @@ int main(int argc, char **argv)
             rppi_resize_u8_f16_pkd3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, noOfImages, handle);
         else if (ip_bitDepth == 4)
             rppi_resize_u8_f32_pkd3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, noOfImages, handle);
+        else if (ip_bitDepth == 5)
+            rppi_resize_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -399,6 +436,12 @@ int main(int argc, char **argv)
             rppi_resize_crop_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
         else if (ip_bitDepth == 2)
             rppi_resize_crop_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_resize_crop_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -442,6 +485,12 @@ int main(int argc, char **argv)
             rppi_resize_crop_mirror_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, noOfImages, handle);
         else if (ip_bitDepth == 2)
             rppi_resize_crop_mirror_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_resize_crop_mirror_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -481,6 +530,8 @@ int main(int argc, char **argv)
             rppi_crop_u8_f16_pkd3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
         else if (ip_bitDepth == 4)
             rppi_crop_u8_f32_pkd3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+        else if (ip_bitDepth == 5)
+            rppi_crop_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -527,6 +578,8 @@ int main(int argc, char **argv)
             rppi_crop_mirror_normalize_u8_f16_pkd3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 4)
             rppi_crop_mirror_normalize_u8_f32_pkd3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 5)
+            rppi_crop_mirror_normalize_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -556,6 +609,12 @@ int main(int argc, char **argv)
             rppi_color_twist_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, alpha, beta, hueShift, saturationFactor, noOfImages, handle);
         else if (ip_bitDepth == 2)
             rppi_color_twist_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, alpha, beta, hueShift, saturationFactor, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_color_twist_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, alpha, beta, hueShift, saturationFactor, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -583,12 +642,6 @@ int main(int argc, char **argv)
 
     if (ip_bitDepth == 0)
     {
-        // string fileName = std::to_string(ip_bitDepth);
-        // ofstream outputFile (fileName + ".csv");
-        // ofstream outputFileF16 (fileName + "_f16.csv");
-        // ofstream outputFileF32 (fileName + "_f32.csv");
-
-        // int valCount = 0;
         Rpp8u *outputTemp;
         outputTemp = output;
 
@@ -597,8 +650,6 @@ int main(int argc, char **argv)
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << (Rpp32u) *outputTemp << ",";
-                // *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * 255.0);
-                // outputf16Temp++;
                 outputTemp++;
             }
             outputFile.close();
@@ -609,10 +660,6 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 1) || (ip_bitDepth == 3))
     {
-        // string fileName = std::to_string(ip_bitDepth);
-        // ofstream outputFile (fileName + ".csv");
-
-        // int valCount = 0;
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp16f *outputf16Temp;
@@ -635,10 +682,6 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 2) || (ip_bitDepth == 4))
     {
-        // string fileName = std::to_string(ip_bitDepth);
-        // ofstream outputFile (fileName + ".csv");
-
-        // int valCount = 0;
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp32f *outputf32Temp;
@@ -651,6 +694,27 @@ int main(int argc, char **argv)
                 outputFile << *outputf32Temp << ",";
                 *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * 255.0);
                 outputf32Temp++;
+                outputTemp++;
+            }
+            outputFile.close();
+        }
+        else
+            cout << "Unable to open file!";
+    }
+    else if (ip_bitDepth == 5)
+    {
+        Rpp8u *outputTemp;
+        outputTemp = output;
+        Rpp8s *outputi8Temp;
+        outputi8Temp = outputi8;
+        
+        if (outputFile.is_open())
+        {
+            for (int i = 0; i < oBufferSize; i++)
+            {
+                outputFile << (Rpp32s) *outputi8Temp << ",";
+                *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *outputi8Temp) + 128);
+                outputi8Temp++;
                 outputTemp++;
             }
             outputFile.close();
