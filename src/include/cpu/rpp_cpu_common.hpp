@@ -618,8 +618,27 @@ inline RppStatus accumulate_kernel_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize
 
 }
 
-template<typename T>
-inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+template <typename U>
+inline RppStatus normalize_kernel_host(U* dstPtrROI, RppiSize dstSize, Rpp32u channel)
+{
+    U* dstPtrROITemp;
+    dstPtrROITemp = dstPtrROI;
+
+    U multiplier = (U) (1.0 / 255.0);
+
+    Rpp32u imageDim = dstSize.height * dstSize.width * channel;
+
+    for (int i = 0; i < imageDim; i++)
+    {
+        *dstPtrROITemp = *dstPtrROITemp * multiplier;
+        dstPtrROITemp++;
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T, typename U>
+inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, U* dstPtr, RppiSize dstSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (chnFormat == RPPI_CHN_PLANAR)
@@ -633,11 +652,12 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rppi
         Rpp32f wRatio = (((Rpp32f) (dstSize.width - 1)) / ((Rpp32f) (srcSize.width - 1)));
         Rpp32f srcLocationRow, srcLocationColumn, pixel;
         Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
-        T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+        T *srcPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+        U *dstPtrTemp;
         srcPtrTemp = srcPtr;
         dstPtrTemp = dstPtr;
 
-        if (typeid(Rpp16f) == typeid(T))
+        if ((typeid(Rpp16f) == typeid(T)) || (typeid(Rpp16f) == typeid(U)))
         {
             for (int c = 0; c < channel; c++)
             {
@@ -669,7 +689,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rppi
                                 + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                                 + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
 
-                        *dstPtrTemp = (T) pixel;
+                        *dstPtrTemp = (U) pixel;
                         dstPtrTemp ++;
                     }
                 }
@@ -708,7 +728,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rppi
                                 + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                                 + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
 
-                        *dstPtrTemp = (T) pixel;
+                        *dstPtrTemp = (U) pixel;
                         dstPtrTemp ++;
                     }
                 }
@@ -727,7 +747,8 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rppi
         Rpp32f wRatio = (((Rpp32f) (dstSize.width - 1)) / ((Rpp32f) (srcSize.width - 1)));
         Rpp32f srcLocationRow, srcLocationColumn, pixel;
         Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
-        T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+        T *srcPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+        U *dstPtrTemp;
         srcPtrTemp = srcPtr;
         dstPtrTemp = dstPtr;
 
@@ -796,7 +817,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rppi
 
                     for (int c = 0; c < channel; c++)
                     {
-                        *dstPtrTemp++ = (T) ((*(srcPtrTopRow + c + srcLocCF[pos])) * param1[pos])
+                        *dstPtrTemp++ = (U) ((*(srcPtrTopRow + c + srcLocCF[pos])) * param1[pos])
                                             + ((*(srcPtrTopRow + c + srcLocCF[pos] + channel)) * param2[pos])
                                             + ((*(srcPtrBottomRow + c + srcLocCF[pos])) * param3[pos])
                                             + ((*(srcPtrBottomRow + c + srcLocCF[pos] + channel)) * param4[pos]);
@@ -823,7 +844,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, Rppi
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
 
-                    *dstPtrTemp = (T) pixel;
+                    *dstPtrTemp = (U) pixel;
                     dstPtrTemp ++;
                 }
             }

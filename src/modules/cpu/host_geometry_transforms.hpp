@@ -2952,8 +2952,8 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 
 /**************** resize ***************/
 
-template <typename T>
-RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+template <typename T, typename U>
+RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
                             RppiROI *roiPoints, Rpp32u nbatchSize,
                             RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -2984,7 +2984,8 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             Rpp32f hRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].height - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].height - 1)));
             Rpp32f wRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].width - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].width - 1)));
             
-            T *srcPtrImage, *dstPtrImage;
+            T *srcPtrImage;
+            U *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
             compute_image_location_host(batch_dstSizeMax, batchCount, &dstLoc, channel);
@@ -2998,7 +2999,7 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             dstSize.width = batch_dstSize[batchCount].width;
             
             T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
-            T *dstPtrROI = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
+            U *dstPtrROI = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
             T *srcPtrImageTemp, *srcPtrROITemp;
             srcPtrROITemp = srcPtrROI;
             for (int c = 0; c < channel; c++)
@@ -3013,6 +3014,11 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             }
 
             resize_kernel_host(srcPtrROI, srcSizeROI, dstPtrROI, dstSize, chnFormat, channel);
+
+            if ((typeid(Rpp8u) == typeid(T)) && (typeid(Rpp8u) != typeid(U)))
+            {
+                normalize_kernel_host(dstPtrROI, dstSize, channel);
+            }
 
             compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
 
@@ -3044,7 +3050,8 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             Rpp32f hRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].height - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].height - 1)));
             Rpp32f wRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].width - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].width - 1)));
 
-            T *srcPtrImage, *dstPtrImage;
+            T *srcPtrImage;
+            U *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
             compute_image_location_host(batch_dstSizeMax, batchCount, &dstLoc, channel);
@@ -3062,7 +3069,7 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
             
             T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
-            T *dstPtrROI = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
+            U *dstPtrROI = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
             T *srcPtrImageTemp, *srcPtrROITemp;
             srcPtrROITemp = srcPtrROI;
 
@@ -3075,6 +3082,11 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             }
 
             resize_kernel_host(srcPtrROI, srcSizeROI, dstPtrROI, dstSize, chnFormat, channel);
+
+            if ((typeid(Rpp8u) == typeid(T)) && (typeid(Rpp8u) != typeid(U)))
+            {
+                normalize_kernel_host(dstPtrROI, dstSize, channel);
+            }
 
             compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
 
