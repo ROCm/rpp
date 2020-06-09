@@ -427,8 +427,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp = (Rpp16f)*inputTemp;
-            *inputf16_secondTemp = (Rpp16f)*input_secondTemp;
+            *inputf16Temp = ((Rpp16f)*inputTemp) / 255.0;
+            *inputf16_secondTemp = ((Rpp16f)*input_secondTemp) / 255.0;
             inputTemp++;
             inputf16Temp++;
             input_secondTemp++;
@@ -448,8 +448,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf32Temp = (Rpp32f)*inputTemp;
-            *inputf32_secondTemp = (Rpp32f)*input_secondTemp;
+            *inputf32Temp = ((Rpp32f)*inputTemp) / 255.0;
+            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / 255.0;
             inputTemp++;
             inputf32Temp++;
             input_secondTemp++;
@@ -2034,7 +2034,7 @@ int main(int argc, char **argv)
         outputf16Temp = outputf16;
         for (int i = 0; i < oBufferSize; i++)
         {
-            *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp);
+            *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * 255.0);
             outputf16Temp++;
             outputTemp++;
         }
@@ -2048,7 +2048,7 @@ int main(int argc, char **argv)
         outputf32Temp = outputf32;
         for (int i = 0; i < oBufferSize; i++)
         {
-            *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp);
+            *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * 255.0);
             outputf32Temp++;
             outputTemp++;
         }
