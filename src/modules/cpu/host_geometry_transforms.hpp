@@ -3098,6 +3098,172 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
     return RPP_SUCCESS;
 }
 
+template <typename T, typename U>
+RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+                            RppiROI *roiPoints, Rpp32u nbatchSize,
+                            RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u x1 = roiPoints[batchCount].x;
+            Rpp32u y1 = roiPoints[batchCount].y;
+            Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth - 1;
+            Rpp32u y2 = y1 + roiPoints[batchCount].roiHeight - 1;
+            if (x2 == -1)
+            {
+                x2 = batch_srcSize[batchCount].width - 1;
+                roiPoints[batchCount].roiWidth = batch_srcSize[batchCount].width;
+            }
+            if (y2 == -1)
+            {
+                y2 = batch_srcSize[batchCount].height - 1;
+                roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
+            }
+
+            Rpp64u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            Rpp64u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
+            
+            Rpp32f hRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].height - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].height - 1)));
+            Rpp32f wRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].width - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].width - 1)));
+            
+            T *srcPtrImage;
+            U *dstPtrImage;
+            Rpp32u srcLoc = 0, dstLoc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
+            compute_image_location_host(batch_dstSizeMax, batchCount, &dstLoc, channel);
+            srcPtrImage = srcPtr + srcLoc;
+            dstPtrImage = dstPtr + dstLoc;
+
+            RppiSize srcSizeROI, dstSize;
+            srcSizeROI.height = roiPoints[batchCount].roiHeight;
+            srcSizeROI.width = roiPoints[batchCount].roiWidth;
+            dstSize.height = batch_dstSize[batchCount].height;
+            dstSize.width = batch_dstSize[batchCount].width;
+            
+            T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
+            T *dstPtrROIipType = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
+            U *dstPtrROI = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
+            T *srcPtrImageTemp, *srcPtrROITemp;
+            srcPtrROITemp = srcPtrROI;
+            for (int c = 0; c < channel; c++)
+            {
+                srcPtrImageTemp = srcPtrImage + (c * srcImageDimMax) + ((Rpp32u) y1 * batch_srcSizeMax[batchCount].width) + (Rpp32u) x1;
+                for (int i = 0; i < srcSizeROI.height; i++)
+                {
+                    memcpy(srcPtrROITemp, srcPtrImageTemp, srcSizeROI.width * sizeof(T));
+                    srcPtrImageTemp += batch_srcSizeMax[batchCount].width;
+                    srcPtrROITemp += srcSizeROI.width;
+                }
+            }
+
+            resize_kernel_host(srcPtrROI, srcSizeROI, dstPtrROIipType, dstSize, chnFormat, channel);
+
+            T *dstPtrROIipTypeTemp;
+            dstPtrROIipTypeTemp = dstPtrROIipType;
+            
+            U *dstPtrROITemp;
+            dstPtrROITemp = dstPtrROI;
+
+            for (int i = 0; i < (dstSize.height * dstSize.width * channel); i++)
+            {
+                *dstPtrROITemp = (U) (((Rpp32s) *dstPtrROIipTypeTemp) - 128);
+                dstPtrROITemp++;
+                dstPtrROIipTypeTemp++;
+            }
+
+            compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
+
+            free(srcPtrROI);
+            free(dstPtrROI);
+            free(dstPtrROIipType);
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u x1 = roiPoints[batchCount].x;
+            Rpp32u y1 = roiPoints[batchCount].y;
+            Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth - 1;
+            Rpp32u y2 = y1 + roiPoints[batchCount].roiHeight - 1;
+            if (x2 == -1)
+            {
+                x2 = batch_srcSize[batchCount].width - 1;
+                roiPoints[batchCount].roiWidth = batch_srcSize[batchCount].width;
+            }
+            if (y2 == -1)
+            {
+                y2 = batch_srcSize[batchCount].height - 1;
+                roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
+            }
+
+            Rpp32f hRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].height - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].height - 1)));
+            Rpp32f wRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].width - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].width - 1)));
+
+            T *srcPtrImage;
+            U *dstPtrImage;
+            Rpp32u srcLoc = 0, dstLoc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
+            compute_image_location_host(batch_dstSizeMax, batchCount, &dstLoc, channel);
+            srcPtrImage = srcPtr + srcLoc;
+            dstPtrImage = dstPtr + dstLoc;
+
+            RppiSize srcSizeROI, dstSize;
+            srcSizeROI.height = roiPoints[batchCount].roiHeight;
+            srcSizeROI.width = roiPoints[batchCount].roiWidth;
+            dstSize.height = batch_dstSize[batchCount].height;
+            dstSize.width = batch_dstSize[batchCount].width;
+
+            Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
+            Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
+            Rpp32u elementsInRowROI = channel * srcSizeROI.width;
+            
+            T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
+            T *dstPtrROIipType = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
+            U *dstPtrROI = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
+            T *srcPtrImageTemp, *srcPtrROITemp;
+            srcPtrROITemp = srcPtrROI;
+
+            srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
+            for (int i = 0; i < srcSizeROI.height; i++)
+            {
+                memcpy(srcPtrROITemp, srcPtrImageTemp, elementsInRowROI * sizeof(T));
+                srcPtrImageTemp += elementsInRowMax;
+                srcPtrROITemp += elementsInRowROI;
+            }
+
+            resize_kernel_host(srcPtrROI, srcSizeROI, dstPtrROIipType, dstSize, chnFormat, channel);
+
+            T *dstPtrROIipTypeTemp;
+            dstPtrROIipTypeTemp = dstPtrROIipType;
+            
+            U *dstPtrROITemp;
+            dstPtrROITemp = dstPtrROI;
+
+            for (int i = 0; i < (dstSize.height * dstSize.width * channel); i++)
+            {
+                *dstPtrROITemp = (U) (((Rpp32s) *dstPtrROIipTypeTemp) - 128);
+                dstPtrROITemp++;
+                dstPtrROIipTypeTemp++;
+            }
+
+            compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
+
+            free(srcPtrROI);
+            free(dstPtrROI);
+            free(dstPtrROIipType);
+        }
+    }
+    
+    return RPP_SUCCESS;
+}
+
 template <typename T>
 RppStatus resize_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
