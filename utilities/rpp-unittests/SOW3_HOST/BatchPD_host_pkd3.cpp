@@ -274,8 +274,14 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
+<<<<<<< HEAD
             *inputf16Temp = ((Rpp16f)*inputTemp) / 255.0;
             *inputf16_secondTemp = ((Rpp16f)*input_secondTemp) / 255.0;
+=======
+
+            *inputf16Temp = (Rpp16f) *inputTemp / 255.0;
+            *inputf16_secondTemp = (Rpp16f) *input_secondTemp / 255.0;
+>>>>>>> 0b5f0643f00b7203da124e50273e8870fec1af40
             inputTemp++;
             inputf16Temp++;
             input_secondTemp++;
@@ -295,8 +301,13 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
+<<<<<<< HEAD
             *inputf32Temp = ((Rpp32f)*inputTemp) / 255.0;
             *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / 255.0;
+=======
+            *inputf32Temp = (Rpp32f) *inputTemp / 255.0;
+            *inputf32_secondTemp = (Rpp32f) *input_secondTemp / 255.0;
+>>>>>>> 0b5f0643f00b7203da124e50273e8870fec1af40
             inputTemp++;
             inputf32Temp++;
             input_secondTemp++;
@@ -327,7 +338,6 @@ int main(int argc, char **argv)
 
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, noOfImages);
-
     clock_t start, end;
     double start_omp, end_omp;
     double cpu_time_used, omp_time_used;
@@ -685,6 +695,7 @@ int main(int argc, char **argv)
 
         if (outputFile.is_open())
         {
+<<<<<<< HEAD
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << *outputf16Temp << ",";
@@ -693,6 +704,11 @@ int main(int argc, char **argv)
                 outputTemp++;
             }
             outputFile.close();
+=======
+            *outputTemp = (Rpp8u) RPPPIXELCHECK(*outputf16Temp * 255.0);
+            outputf16Temp++;
+            outputTemp++;
+>>>>>>> 0b5f0643f00b7203da124e50273e8870fec1af40
         }
         else
             cout << "Unable to open file!";
@@ -707,6 +723,7 @@ int main(int argc, char **argv)
         
         if (outputFile.is_open())
         {
+<<<<<<< HEAD
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << *outputf32Temp << ",";
@@ -715,6 +732,12 @@ int main(int argc, char **argv)
                 outputTemp++;
             }
             outputFile.close();
+=======
+
+            *outputTemp = (Rpp8u) RPPPIXELCHECK(*outputf32Temp * 255.0);
+	    outputf32Temp++;
+            outputTemp++;
+>>>>>>> 0b5f0643f00b7203da124e50273e8870fec1af40
         }
         else
             cout << "Unable to open file!";
