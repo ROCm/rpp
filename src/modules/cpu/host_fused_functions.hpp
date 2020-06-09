@@ -2419,6 +2419,125 @@ RppStatus color_twist_f16_host(Rpp16f* srcPtr, RppiSize srcSize, Rpp16f* dstPtr,
     return RPP_SUCCESS;
 }
 
+template <typename T>
+RppStatus color_twist_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+                         Rpp32f *batch_alpha, Rpp32f *batch_beta, 
+                         Rpp32f *batch_hueShift, Rpp32f *batch_saturationFactor, 
+                         RppiROI *roiPoints, Rpp32u nbatchSize,
+                         RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp64u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+
+            Rpp32f hueShift = batch_hueShift[batchCount];
+            Rpp32f saturationFactor = batch_saturationFactor[batchCount];
+            Rpp32f alpha = batch_alpha[batchCount];
+            Rpp32f beta = batch_beta[batchCount];
+
+            T *srcPtrImage, *dstPtrImage;
+            Rpp32u loc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
+            srcPtrImage = srcPtr + loc;
+            dstPtrImage = dstPtr + loc;
+
+            Rpp8u *srcPtrImage8u = (Rpp8u*) calloc(channel * imageDimMax, sizeof(Rpp8u));
+            Rpp8u *dstPtrImage8u = (Rpp8u*) calloc(channel * imageDimMax, sizeof(Rpp8u));
+            
+            T *srcPtrImageTemp;
+            srcPtrImageTemp = srcPtrImage;
+
+            Rpp8u *srcPtrImage8uTemp;
+            srcPtrImage8uTemp = srcPtrImage8u;
+
+            for (int i = 0; i < channel * imageDimMax; i++)
+            {
+                *srcPtrImage8uTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *srcPtrImageTemp) + 128);
+                srcPtrImageTemp++;
+                srcPtrImage8uTemp++;
+            }
+            
+            color_twist_host(srcPtrImage8u, batch_srcSizeMax[batchCount], dstPtrImage8u, alpha, beta, hueShift, saturationFactor, chnFormat, channel);
+
+            T *dstPtrImageTemp;
+            dstPtrImageTemp = dstPtrImage;
+
+            Rpp8u *dstPtrImage8uTemp;
+            dstPtrImage8uTemp = dstPtrImage8u;
+
+            for (int i = 0; i < channel * imageDimMax; i++)
+            {
+                *dstPtrImageTemp = (Rpp8s) (((Rpp32s) *dstPtrImage8uTemp) - 128);
+                dstPtrImageTemp++;
+                dstPtrImage8uTemp++;
+            }
+
+            free(srcPtrImage8u);
+            free(dstPtrImage8u);
+        }
+    }
+    else if(chnFormat == RPPI_CHN_PACKED)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp64u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+
+            Rpp32f hueShift = batch_hueShift[batchCount];
+            Rpp32f saturationFactor = batch_saturationFactor[batchCount];
+            Rpp32f alpha = batch_alpha[batchCount];
+            Rpp32f beta = batch_beta[batchCount];
+            
+            T *srcPtrImage, *dstPtrImage;
+            Rpp32u loc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
+            srcPtrImage = srcPtr + loc;
+            dstPtrImage = dstPtr + loc;
+
+            Rpp8u *srcPtrImage8u = (Rpp8u*) calloc(channel * imageDimMax, sizeof(Rpp8u));
+            Rpp8u *dstPtrImage8u = (Rpp8u*) calloc(channel * imageDimMax, sizeof(Rpp8u));
+
+            T *srcPtrImageTemp;
+            srcPtrImageTemp = srcPtrImage;
+
+            Rpp8u *srcPtrImage8uTemp;
+            srcPtrImage8uTemp = srcPtrImage8u;
+
+            for (int i = 0; i < channel * imageDimMax; i++)
+            {
+                *srcPtrImage8uTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *srcPtrImageTemp) + 128);
+                srcPtrImageTemp++;
+                srcPtrImage8uTemp++;
+            }
+
+            color_twist_host(srcPtrImage8u, batch_srcSizeMax[batchCount], dstPtrImage8u, alpha, beta, hueShift, saturationFactor, chnFormat, channel);
+
+            T *dstPtrImageTemp;
+            dstPtrImageTemp = dstPtrImage;
+
+            Rpp8u *dstPtrImage8uTemp;
+            dstPtrImage8uTemp = dstPtrImage8u;
+
+            for (int i = 0; i < channel * imageDimMax; i++)
+            {
+                *dstPtrImageTemp = (Rpp8s) (((Rpp32s) *dstPtrImage8uTemp) - 128);
+                dstPtrImageTemp++;
+                dstPtrImage8uTemp++;
+            }
+
+            free(srcPtrImage8u);
+            free(dstPtrImage8u);
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
 /**************** crop_mirror ***************/
 
 template <typename T, typename U>

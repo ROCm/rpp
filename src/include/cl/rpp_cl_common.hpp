@@ -22,6 +22,7 @@ enum class RPPTensorDataType
     U8 = 0,
     FP32,
     FP16,
+    I8,
 };
 
 inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSize)
