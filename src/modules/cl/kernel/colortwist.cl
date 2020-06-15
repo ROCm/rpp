@@ -259,7 +259,7 @@ __kernel void colortwist_batch_fp32(
     } else if (hsv.y < 0.0) {
       hsv.y = 0.0;
     }
-    pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with hue modification
+    pixel = convert_one_pixel_to_rgb(hsv); 
     output[pixIdx] = (alpha1 * pixel.x + beta1) / 255.0;
     output[pixIdx + l_inc] = (alpha1 * pixel.y + beta1) / 255.0;
     output[pixIdx + 2 * l_inc] = (alpha1 * pixel.z + beta1) / 255.0;
@@ -310,8 +310,7 @@ __kernel void colortwist_batch_fp16(
     } else if (hsv.y < 0.0) {
       hsv.y = 0.0;
     }
-    pixel = convert_one_pixel_to_rgb(
-        hsv); // Converting to RGB back with hue modification
+    pixel = convert_one_pixel_to_rgb(hsv); 
     output[pixIdx] = (half)((alpha1 * pixel.x + beta1) / 255.0);
     output[pixIdx + l_inc] = (half)((alpha1 * pixel.y + beta1) / 255.0);
     output[pixIdx + 2 * l_inc] = (half)((alpha1 * pixel.z + beta1) / 255.0);

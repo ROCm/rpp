@@ -22,7 +22,7 @@ enum class RPPTensorDataType
     U8 = 0,
     FP32,
     FP16,
-    INT8,
+    I8,
 };
 
 struct RPPTensorFunctionMetaData
