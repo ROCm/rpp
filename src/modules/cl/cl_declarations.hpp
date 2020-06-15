@@ -21,6 +21,7 @@ cl_int CreateProgramFromBinary(rpp::Handle& handle, const std::string kernelFile
                                 cl_program& theProgram, cl_kernel& theKernel);
 void max_size(Rpp32u *height, Rpp32u *width, unsigned int batch_size, unsigned int *max_height, unsigned int *max_width);
 
+void get_kernel_name(std::string &kernel_name, RPPTensorFunctionMetaData &tensor_info);
 //===== Internal CL functions
 
 RppStatus
@@ -610,8 +611,7 @@ crop_mirror_normalize_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSi
                                         Rpp32u crop_pos_y, Rpp32f mean, Rpp32f std_dev, Rpp32u mirrorFlag, Rpp32u outputFormatToggle, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
 crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, 
-                                RppiChnFormat chnFormat = RPPI_CHN_PACKED, unsigned int channel = 3,
-                                RPPTensorDataType dataType = RPPTensorDataType::U8);
+                                RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat = RPPI_CHN_PACKED, unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8 );
 RppStatus

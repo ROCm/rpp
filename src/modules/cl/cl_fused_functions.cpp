@@ -81,40 +81,23 @@ crop_mirror_normalize_cl( cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSi
 }
 
 RppStatus
-crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel, RPPTensorDataType dataType)
+crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {                                                                                                                                                                                   
-    int plnpkdind;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
     int batch_size = handle.GetBatchSize();
-     
-    if(chnFormat == RPPI_CHN_PLANAR)
-        plnpkdind = 1;
-    else
-        plnpkdind = 3;
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
+    
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
-    
     std::string kernel_file  = "crop_mirror_normalize.cl";
     std::string kernel_name = "crop_mirror_normalize_batch";
-
-    switch (dataType)
-    {
-    case RPPTensorDataType::U8:
-        break;
-    case RPPTensorDataType::FP32:
-        kernel_name = kernel_name + "_fp32";
-        break;   
-    case RPPTensorDataType::FP16:
-        kernel_name = kernel_name + "_fp16";
-        break;
-    default:
-        break;
-    }
-        std::cout << "comes - here" << std::endl;
-
+    get_kernel_name(kernel_name, tensor_info);
+    
+    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
+    std::cout << kernel_name << std::endl;
+    
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                     handle_obj->mem.mgpu.dstSize.height,
                                                                     handle_obj->mem.mgpu.dstSize.width,       
@@ -128,12 +111,12 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
                                                                     handle_obj->mem.mgpu.maxDstSize.width,
                                                                     handle_obj->mem.mgpu.srcBatchIndex,
                                                                     handle_obj->mem.mgpu.dstBatchIndex,
-                                                                    channel,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+                                                                    tensor_info._in_channels,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
                                                                     //handle.GetBatchSize(),
                                                                     handle_obj->mem.mgpu.inc,
                                                                     handle_obj->mem.mgpu.dstInc,
-                                                                    plnpkdind);
-    std::cout << "comes - here" << std::endl;
+                                                                    in_plnpkdind,
+                                                                    out_plnpkdind);
     return RPP_SUCCESS;
 } 
 

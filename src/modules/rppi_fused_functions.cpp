@@ -3777,7 +3777,7 @@ rppi_crop_mirror_normalize_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr
 
 RppStatus
 crop_mirror_normalize_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
-							 RPPTensorDataType tensor_type,
+							 RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type,
 							 RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize,
 							 RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize,
 							 Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev,
@@ -3785,18 +3785,21 @@ crop_mirror_normalize_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 							 Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	Rpp32u paramIndex = 0;
+
+	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
+							(bool)outputFormatToggle);
+	
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format);
 	copy_param_uint(crop_pos_x, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(crop_pos_y, rpp::deref(rppHandle), paramIndex++);
 	copy_param_float(mean, rpp::deref(rppHandle), paramIndex++);
 	copy_param_float(std_dev, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(mirrorFlag, rpp::deref(rppHandle), paramIndex++);
-	//copy_param_uint (outputFormatToggle, rpp::deref(rppHandle), paramIndex++);
 
 #ifdef OCL_COMPILE
 	{
@@ -3804,7 +3807,7 @@ crop_mirror_normalize_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
-			chn_format, num_of_channels, tensor_type);
+		    tensor_info);
 	}
 #elif defined(HIP_COMPILE)
 	{
@@ -3840,7 +3843,7 @@ crop_mirror_normalize_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 RppStatus
 rppi_crop_mirror_normalize_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
@@ -3850,7 +3853,7 @@ rppi_crop_mirror_normalize_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSiz
 RppStatus
 rppi_crop_mirror_normalize_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
@@ -3860,7 +3863,7 @@ rppi_crop_mirror_normalize_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSi
 RppStatus
 rppi_crop_mirror_normalize_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
@@ -3870,7 +3873,7 @@ rppi_crop_mirror_normalize_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSi
 RppStatus
 rppi_crop_mirror_normalize_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
@@ -3880,7 +3883,7 @@ rppi_crop_mirror_normalize_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSiz
 RppStatus
 rppi_crop_mirror_normalize_f32_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
@@ -3890,7 +3893,7 @@ rppi_crop_mirror_normalize_f32_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSi
 RppStatus
 rppi_crop_mirror_normalize_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
@@ -3901,7 +3904,7 @@ rppi_crop_mirror_normalize_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSi
 RppStatus
 rppi_crop_mirror_normalize_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::U8,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
@@ -3911,7 +3914,7 @@ rppi_crop_mirror_normalize_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSiz
 RppStatus
 rppi_crop_mirror_normalize_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
@@ -3921,7 +3924,7 @@ rppi_crop_mirror_normalize_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSi
 RppStatus
 rppi_crop_mirror_normalize_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16,
+	return (crop_mirror_normalize_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
 										 srcPtr, srcSize, maxSrcSize,
 										 dstPtr, dstSize, maxDstSize,
 										 crop_pos_x, crop_pos_y, mean,
