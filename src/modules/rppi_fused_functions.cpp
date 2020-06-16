@@ -2161,6 +2161,31 @@ rppi_color_twist_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSi
 							   hueShift, saturationFactor, nbatchSize, rppHandle));
 }
 
+RppStatus
+rppi_color_twist_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (color_twist_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::I8,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+							   hueShift, saturationFactor, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_color_twist_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (color_twist_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+							   hueShift, saturationFactor, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_color_twist_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (color_twist_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
+							   hueShift, saturationFactor, nbatchSize, rppHandle));
+}
+
+
 RppStatus color_twist_host_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 								  RPPTensorDataType tensor_type,
 								  RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta,

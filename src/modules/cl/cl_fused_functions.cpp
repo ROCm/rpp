@@ -40,19 +40,7 @@ color_twist_cl_batch ( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
     std::vector<size_t> vgd{max_width , max_height, handle.GetBatchSize()};
     std::string kernel_file  = "colortwist.cl";
     std::string kernel_name = "colortwist_batch";
-    switch (dataType)
-    {
-    case RPPTensorDataType::U8:
-        break;
-    case RPPTensorDataType::FP32:
-        kernel_name = kernel_name + "_fp32";
-        break;   
-    case RPPTensorDataType::FP16:
-        kernel_name = kernel_name + "_fp16";
-        break;
-    default:
-        break;
-    }   
+    get_kernel_name_simple(kernel_name, dataType);
     handle.AddKernel("", "", kernel_file , kernel_name , vld, vgd, "")(srcPtr, dstPtr,
                                                                                         handle_obj->mem.mgpu.floatArr[0].floatmem,
                                                                                         handle_obj->mem.mgpu.floatArr[1].floatmem,
