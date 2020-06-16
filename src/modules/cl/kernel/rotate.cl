@@ -181,7 +181,7 @@ __kernel void rotate_batch_int8(
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      dstPtr[dst_pixIdx] = 0;
+      dstPtr[dst_pixIdx] = -128;
       dst_pixIdx += dest_inc[id_z];
     }
   }

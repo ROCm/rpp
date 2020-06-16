@@ -261,9 +261,9 @@ __kernel void colortwist_batch_int8(
     }
     pixel = convert_one_pixel_to_rgb(
         hsv); // Converting to RGB back with hue modification
-    output[pixIdx] = (char)saturate_8u(alpha1 * pixel.x + beta1) - 128;
-    output[pixIdx + l_inc] = (char)saturate_8u(alpha1 * pixel.y + beta1) - 128;
-    output[pixIdx + 2 * l_inc] = (char)saturate_8u(alpha1 * pixel.z + beta1) - 128;
+    output[pixIdx] = (char)(saturate_8u(alpha1 * pixel.x + beta1) - 128);
+    output[pixIdx + l_inc] = (char)(saturate_8u(alpha1 * pixel.y + beta1) - 128);
+    output[pixIdx + 2 * l_inc] = (char)(saturate_8u(alpha1 * pixel.z + beta1) - 128);
   } else {
     output[pixIdx] = pixel.x;
     output[pixIdx + l_inc] = pixel.y;
