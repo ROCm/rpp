@@ -322,7 +322,7 @@ kernel void crop_mirror_normalize_batch_u8_int8(
       (id_x + id_y * max_dst_width[id_z]) * in_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[dst_pixIdx] = (char)((input[src_pixIdx] - local_mean ) /  local_std_dev);
+      output[dst_pixIdx] = (char)((input[src_pixIdx] - 128 - local_mean ) /  local_std_dev);
       src_pixIdx += src_inc[id_z];
       dst_pixIdx += dst_inc[id_z];
     }
