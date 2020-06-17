@@ -614,7 +614,7 @@ RppStatus
 crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, 
                                 RPPTensorFunctionMetaData &tensor_info);
 RppStatus
-crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat = RPPI_CHN_PACKED, unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8 );
+crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info );
 RppStatus
 resize_crop_mirror_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat = RPPI_CHN_PACKED,
                                          unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8);

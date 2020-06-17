@@ -4421,12 +4421,14 @@ rppi_crop_mirror_normalize_u8_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *sr
 
 RppStatus
 crop_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
-			RPPTensorDataType tensor_type,
+			RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type,
 			RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize,
 			RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize,
-			Rpp32u *crop_pos_x, Rpp32u *crop_pos_y,
+			Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u outputFormatToggle,
 			Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
+	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
+							(bool)outputFormatToggle);
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
@@ -4443,7 +4445,7 @@ crop_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
-			chn_format, num_of_channels, tensor_type);
+			tensor_info);
 	}
 #elif defined(HIP_COMPILE)
 	{
@@ -4478,52 +4480,194 @@ crop_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 }
 
 RppStatus
-rppi_crop_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle)
+rppi_crop_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, srcPtr, srcSize, maxSrcSize,
-						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y,
+	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::U8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
 }
 
 RppStatus
-rppi_crop_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle)
+rppi_crop_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, srcPtr, srcSize, maxSrcSize,
-						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y,
+	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
 }
 
 RppStatus
-rppi_crop_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle)
+rppi_crop_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, srcPtr, srcSize, maxSrcSize,
-						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y,
+	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
 }
 
 RppStatus
-rppi_crop_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle)
+rppi_crop_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, srcPtr, srcSize, maxSrcSize,
-						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y,
+	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
 }
 
 RppStatus
-rppi_crop_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle)
+rppi_crop_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, srcPtr, srcSize, maxSrcSize,
-						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y,
+	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
 }
 
 RppStatus
-rppi_crop_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle)
+rppi_crop_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, srcPtr, srcSize, maxSrcSize,
-						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y,
+	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
 }
+
+RppStatus
+rppi_crop_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_f32_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::I8, RPPTensorDataType::I8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8, RPPTensorDataType::I8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_u8_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::I8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_u8_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::I8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_u8_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::I8,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_u8_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::FP32,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_u8_f32_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::FP32,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_u8_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::FP32,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+RppStatus
+rppi_crop_u8_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_u8_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_crop_u8_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+						srcPtr, srcSize, maxSrcSize,
+						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
+						nbatchSize, rppHandle));
+}
+
+
 
 RppStatus
 crop_host_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,

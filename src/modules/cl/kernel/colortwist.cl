@@ -265,9 +265,9 @@ __kernel void colortwist_batch_int8(
     output[pixIdx + l_inc] = (char)(saturate_8u(alpha1 * pixel.y + beta1) - 128);
     output[pixIdx + 2 * l_inc] = (char)(saturate_8u(alpha1 * pixel.z + beta1) - 128);
   } else {
-    output[pixIdx] = pixel.x;
-    output[pixIdx + l_inc] = pixel.y;
-    output[pixIdx + 2 * l_inc] = pixel.z;
+    output[pixIdx] = pixel.x - 128;
+    output[pixIdx + l_inc] = pixel.y - 128;
+    output[pixIdx + 2 * l_inc] = pixel.z - 128;
   }
 }
 

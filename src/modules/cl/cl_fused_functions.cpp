@@ -109,15 +109,10 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
 } 
 
 RppStatus
-crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel, RPPTensorDataType dataType)
+crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {                                                                                                                                                                                   
-    int plnpkdind;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
     int batch_size = handle.GetBatchSize();
-     
-    if(chnFormat == RPPI_CHN_PLANAR)
-        plnpkdind = 1;
-    else
-        plnpkdind = 3;
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -125,20 +120,10 @@ crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat 
     std::vector<size_t> vgd{max_width , max_height, handle.GetBatchSize()};
     std::string kernel_file  = "crop.cl";
     std::string kernel_name = "crop_batch";
-    switch (dataType)
-    {
-    case RPPTensorDataType::U8:
-        break;
-    case RPPTensorDataType::FP32:
-        kernel_name = kernel_name + "_fp32";
-        break;   
-    case RPPTensorDataType::FP16:
-        kernel_name = kernel_name + "_fp16";
-        break;
-    default:
-        break;
-    }   
-
+    get_kernel_name(kernel_name, tensor_info);
+    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
+    std::cout << kernel_name << std::endl;
+    
     handle.AddKernel("", "",kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                         handle_obj->mem.mgpu.dstSize.height,
                                                                         handle_obj->mem.mgpu.dstSize.width,       
@@ -149,11 +134,11 @@ crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat 
                                                                         handle_obj->mem.mgpu.maxDstSize.width,
                                                                         handle_obj->mem.mgpu.srcBatchIndex,
                                                                         handle_obj->mem.mgpu.dstBatchIndex,
-                                                                        channel,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+                                                                        tensor_info._in_channels,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
                                                                        // handle.GetBatchSize(),
                                                                         handle_obj->mem.mgpu.inc,
                                                                         handle_obj->mem.mgpu.dstInc,
-                                                                        plnpkdind);     
+                                                                        in_plnpkdind, out_plnpkdind);     
     
     return RPP_SUCCESS;
 } 
@@ -177,7 +162,7 @@ resize_crop_mirror_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     std::string kernel_file  = "resize.cl";
     std::string kernel_name = "resize_crop_mirror_batch";
     get_kernel_name_simple(kernel_name, dataType);  
-    
+   
     handle.AddKernel("", "", kernel_file , kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle_obj->mem.mgpu.srcSize.height, 
                                                                         handle_obj->mem.mgpu.srcSize.width,                                                                                                                                                                                                                                                                              
