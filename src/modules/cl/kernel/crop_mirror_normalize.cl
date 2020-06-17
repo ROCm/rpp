@@ -138,7 +138,7 @@ kernel void crop_mirror_normalize_batch_int8(
     }
   } else {
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[dst_pixIdx] = 0;
+      output[dst_pixIdx] = -128;
       dst_pixIdx += dst_inc[id_z];
     }
   }

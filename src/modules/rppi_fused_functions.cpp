@@ -4806,6 +4806,30 @@ rppi_resize_crop_mirror_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, 
 }
 
 RppStatus
+rppi_resize_crop_mirror_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (resize_crop_mirror_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::I8,
+									  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
+									  xRoiBegin, yRoiEnd, yRoiBegin, yRoiEnd, mirrorFlag, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_resize_crop_mirror_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (resize_crop_mirror_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8,
+									  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
+									  xRoiBegin, xRoiEnd, yRoiBegin, yRoiEnd, mirrorFlag, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_resize_crop_mirror_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (resize_crop_mirror_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8,
+									  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
+									  xRoiBegin, xRoiEnd, yRoiBegin, yRoiEnd, mirrorFlag, nbatchSize, rppHandle));
+}
+
+RppStatus
 rppi_resize_crop_mirror_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (resize_crop_mirror_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16,
