@@ -24,9 +24,7 @@ kernel void crop_batch(
       (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) *
           in_plnpkdind; 
   unsigned long dst_pixIdx =
-      dst_batch_index[id_z] +
-      (id_x + id_y * max_dst_width[id_z]) *
-          out_plnpkdind; 
+      dst_batch_index[id_z] + (id_x + id_y * max_dst_width[id_z]) * out_plnpkdind; 
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pixIdx] = input[src_pixIdx];
@@ -153,7 +151,7 @@ kernel void crop_batch_int8(
   }
 }
 
-kernel void crop_batch_u8_f32(
+kernel void crop_batch_u8_fp32(
     __global unsigned char *input, __global float *output,
     __global unsigned int *dst_height, __global unsigned int *dst_width,
     __global unsigned int *src_width, __global unsigned int *start_x,
@@ -186,7 +184,7 @@ kernel void crop_batch_u8_f32(
   }
 }
 
-kernel void crop_batch_u8_f16(
+kernel void crop_batch_u8_fp16(
     __global unsigned char *input, __global half *output,
     __global unsigned int *dst_height, __global unsigned int *dst_width,
     __global unsigned int *src_width, __global unsigned int *start_x,
@@ -219,7 +217,7 @@ kernel void crop_batch_u8_f16(
   }
 }
 
-kernel void crop_batch_u8_i8(
+kernel void crop_batch_u8_int8(
     __global unsigned char *input, __global char *output,
     __global unsigned int *dst_height, __global unsigned int *dst_width,
     __global unsigned int *src_width, __global unsigned int *start_x,

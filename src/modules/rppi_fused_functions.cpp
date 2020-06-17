@@ -4643,7 +4643,7 @@ rppi_crop_u8_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize m
 RppStatus
 rppi_crop_u8_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+	return (crop_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::FP16,
 						srcPtr, srcSize, maxSrcSize,
 						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
@@ -4652,7 +4652,7 @@ rppi_crop_u8_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize m
 RppStatus
 rppi_crop_u8_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+	return (crop_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::FP16,
 						srcPtr, srcSize, maxSrcSize,
 						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
@@ -4661,7 +4661,7 @@ rppi_crop_u8_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize m
 RppStatus
 rppi_crop_u8_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u output_format_toggle,  Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16,
+	return (crop_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::FP16,
 						srcPtr, srcSize, maxSrcSize,
 						dstPtr, dstSize, maxDstSize, crop_pos_x, crop_pos_y, output_format_toggle,
 						nbatchSize, rppHandle));
