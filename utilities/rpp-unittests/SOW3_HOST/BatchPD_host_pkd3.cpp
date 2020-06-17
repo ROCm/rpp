@@ -23,10 +23,134 @@ typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 
+// template <typename T>
+// inline RppStatus compute_unpadded_from_padded_host(T* srcPtrPadded, RppiSize srcSize, RppiSize srcSizeMax, T* dstPtrUnpadded,
+//                                                    RppiChnFormat chnFormat, Rpp32u channel)
+// {
+//     T *srcPtrPaddedChannel, *srcPtrPaddedRow, *dstPtrUnpaddedRow;
+//     Rpp32u imageDimMax = srcSizeMax.height * srcSizeMax.width;
+//     dstPtrUnpaddedRow = dstPtrUnpadded;
+
+//     if (chnFormat == RPPI_CHN_PLANAR)
+//     {
+//         for (int c = 0; c < channel; c++)
+//         {
+//             srcPtrPaddedChannel = srcPtrPadded + (c * imageDimMax);
+//             for (int i = 0; i < srcSize.height; i++)
+//             {
+//                 srcPtrPaddedRow = srcPtrPaddedChannel + (i * srcSizeMax.width);
+//                 memcpy(dstPtrUnpaddedRow, srcPtrPaddedRow, srcSize.width * sizeof(T));
+//                 dstPtrUnpaddedRow += srcSize.width;
+//             }
+//         }
+//     }
+//     else if (chnFormat == RPPI_CHN_PACKED)
+//     {
+//         Rpp32u elementsInRowMax = channel * srcSizeMax.width;
+//         Rpp32u elementsInRow = channel * srcSize.width;
+//         for (int i = 0; i < srcSize.height; i++)
+//         {
+//             srcPtrPaddedRow = srcPtrPadded + (i * elementsInRowMax);
+//             memcpy(dstPtrUnpaddedRow, srcPtrPaddedRow, elementsInRow * sizeof(T));
+//             dstPtrUnpaddedRow += elementsInRow;
+//         }
+//     }
+
+//     return RPP_SUCCESS;
+// }
+
+// template <typename T>
+// inline RppStatus compute_padded_from_unpadded_host(T* srcPtrUnpadded, RppiSize srcSize, RppiSize dstSizeMax, T* dstPtrPadded,
+//                                                    RppiChnFormat chnFormat, Rpp32u channel)
+// {
+//     T *dstPtrPaddedChannel, *dstPtrPaddedRow, *srcPtrUnpaddedRow;
+//     Rpp32u imageDimMax = dstSizeMax.height * dstSizeMax.width;
+//     srcPtrUnpaddedRow = srcPtrUnpadded;
+
+//     if (chnFormat == RPPI_CHN_PLANAR)
+//     {
+//         for (int c = 0; c < channel; c++)
+//         {
+//             dstPtrPaddedChannel = dstPtrPadded + (c * imageDimMax);
+//             for (int i = 0; i < srcSize.height; i++)
+//             {
+//                 dstPtrPaddedRow = dstPtrPaddedChannel + (i * dstSizeMax.width);
+//                 memcpy(dstPtrPaddedRow, srcPtrUnpaddedRow, srcSize.width * sizeof(T));
+//                 srcPtrUnpaddedRow += srcSize.width;
+//             }
+//         }
+//     }
+//     else if (chnFormat == RPPI_CHN_PACKED)
+//     {
+//         Rpp32u elementsInRowMax = channel * dstSizeMax.width;
+//         Rpp32u elementsInRow = channel * srcSize.width;
+//         for (int i = 0; i < srcSize.height; i++)
+//         {
+//             dstPtrPaddedRow = dstPtrPadded + (i * elementsInRowMax);
+//             memcpy(dstPtrPaddedRow, srcPtrUnpaddedRow, elementsInRow * sizeof(T));
+//             srcPtrUnpaddedRow += elementsInRow;
+//         }
+//     }
+
+//     return RPP_SUCCESS;
+// }
+
+// template <typename T>
+// inline RppStatus compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+//                                         Rpp32u channel)
+// {
+//     T *srcPtrTemp, *dstPtrTemp;
+//     srcPtrTemp = srcPtr;
+//     dstPtrTemp = dstPtr;
+
+//     for (int c = 0; c < channel; c++)
+//     {
+//         dstPtrTemp += c;
+//         for (int i = 0; i < srcSize.height; i++)
+//         {
+//             for (int j = 0; j < srcSize.width; j++)
+//             {
+//                 *dstPtrTemp = *srcPtrTemp;
+//                 srcPtrTemp++;
+//                 dstPtrTemp += 3;
+//             }
+//         }
+//         dstPtrTemp = dstPtr;
+//     }
+
+//     return RPP_SUCCESS;
+// }
+
+// template <typename T>
+// inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+//                                         Rpp32u channel)
+// {
+//     T *srcPtrTemp, *dstPtrTemp;
+//     srcPtrTemp = srcPtr;
+//     dstPtrTemp = dstPtr;
+
+//     for (int c = 0; c < channel; c++)
+//     {
+//         srcPtrTemp += c;
+//         for (int i = 0; i < srcSize.height; i++)
+//         {
+//             for (int j = 0; j < srcSize.width; j++)
+//             {
+//                 *dstPtrTemp = *srcPtrTemp;
+//                 dstPtrTemp++;
+//                 srcPtrTemp += 3;
+//             }
+//         }
+//         srcPtrTemp = srcPtr;
+//     }
+
+//     return RPP_SUCCESS;
+// }
+
 int main(int argc, char **argv)
 {
-    const int MIN_ARG_COUNT = 6;
-    printf("\nUsage: ./BatchPD_host <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 1:7>\n");
+    const int MIN_ARG_COUNT = 7;
+    printf("\nUsage: ./BatchPD_host <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 1:7>\n");
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -36,14 +160,16 @@ int main(int argc, char **argv)
     printf("\nsrc1 = %s", argv[1]);
     printf("\nsrc2 = %s", argv[2]);
     printf("\ndst = %s", argv[3]);
-    printf("\nu8/f16/f32/u8->f16/u8->f32/i8/u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
-    printf("\ncase number (1:7) = %s", argv[5]);
+    printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
+    printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
+    printf("\ncase number (1:7) = %s", argv[6]);
 
     char *src = argv[1];
     char *src_second = argv[2];
     char *dst = argv[3];
     int ip_bitDepth = atoi(argv[4]);
-    int test_case = atoi(argv[5]);
+    unsigned int outputFormatToggle = atoi(argv[5]);
+    int test_case = atoi(argv[6]);
 
     int ip_channel = 3;
 
@@ -391,17 +517,17 @@ int main(int argc, char **argv)
         if (ip_bitDepth == 0)
             rppi_resize_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_resize_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_resize_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
-            rppi_resize_u8_f16_pkd3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_u8_f16_pkd3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 4)
-            rppi_resize_u8_f32_pkd3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_u8_f32_pkd3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 5)
-            rppi_resize_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
-            rppi_resize_u8_i8_pkd3_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_u8_i8_pkd3_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -739,6 +865,143 @@ int main(int argc, char **argv)
         else
             cout << "Unable to open file!";
     }
+
+    // NOT WORKING V1
+    if(outputFormatToggle == 1)
+    {
+        Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
+        memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
+        
+        Rpp8u *outputTemp, *outputCopyTemp;
+        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
+        outputTemp = output;
+        outputCopyTemp = outputCopy;
+
+        Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
+        Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
+        Rpp32u imageDimMax = maxDstSize.width * maxDstSize.height;
+
+        for (int count = 0; count < noOfImages; count++)
+        {
+            colIncrementPln = maxDstSize.width - dstSize[count].width;
+            rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
+            colIncrementPkd = colIncrementPln * ip_channel;
+            rowIncrementPkd = rowIncrementPln * ip_channel;
+
+            outputCopyTempR = outputCopyTemp;
+            outputCopyTempG = outputCopyTempR + imageDimMax;
+            outputCopyTempB = outputCopyTempG + imageDimMax;
+
+            for (int i = 0; i < dstSize[count].height; i++)
+            {
+                for (int j = 0; j < dstSize[count].width; j++)
+                {
+                    *outputTemp = *outputCopyTempR;
+                    outputTemp++;
+                    outputCopyTempR++;
+                    *outputTemp = *outputCopyTempG;
+                    outputTemp++;
+                    outputCopyTempG++;
+                    *outputTemp = *outputCopyTempB;
+                    outputTemp++;
+                    outputCopyTempB++;
+                }
+                memset(outputTemp, (Rpp8u) 0, colIncrementPkd * sizeof(Rpp8u));
+                outputTemp += colIncrementPkd;
+                outputCopyTempR += colIncrementPln;
+                outputCopyTempG += colIncrementPln;
+                outputCopyTempB += colIncrementPln;
+            }
+            memset(outputTemp, (Rpp8u) 0, rowIncrementPkd * sizeof(Rpp8u));
+            outputTemp += rowIncrementPkd;
+            outputCopyTemp += (imageDimMax * ip_channel);
+        }
+
+        free(outputCopy);
+    }
+
+    // NOT WORKING V2
+    // if(outputFormatToggle == 1)
+    // {
+    //     Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
+    //     memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
+        
+    //     Rpp8u *outputTemp, *outputCopyTemp;
+    //     Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
+    //     outputTemp = output;
+    //     outputCopyTemp = outputCopy;
+
+    //     // Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
+    //     // Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
+    //     Rpp32u imageDim = maxDstSize.width * maxDstSize.height;
+
+    //     for (int count = 0; count < noOfImages; count++)
+    //     {
+    //         // colIncrementPln = maxDstSize.width - dstSize[count].width;
+    //         // rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
+    //         // colIncrementPkd = colIncrementPln * ip_channel;
+    //         // rowIncrementPkd = rowIncrementPln * ip_channel;
+
+    //         outputCopyTempR = outputCopyTemp;
+    //         outputCopyTempG = outputCopyTempR + imageDim;
+    //         outputCopyTempB = outputCopyTempG + imageDim;
+
+    //         for (int i = 0; i < maxDstSize.height; i++)
+    //         {
+    //             for (int j = 0; j < maxDstSize.width; j++)
+    //             {
+    //                 *outputTemp = *outputCopyTempR;
+    //                 outputTemp++;
+    //                 outputCopyTempR++;
+    //                 *outputTemp = *outputCopyTempG;
+    //                 outputTemp++;
+    //                 outputCopyTempG++;
+    //                 *outputTemp = *outputCopyTempB;
+    //                 outputTemp++;
+    //                 outputCopyTempB++;
+    //             }
+    //             // outputTemp += colIncrementPkd;
+    //             // outputCopyTempR += colIncrementPln;
+    //             // outputCopyTempG += colIncrementPln;
+    //             // outputCopyTempB += colIncrementPln;
+    //         }
+    //         // outputTemp += rowIncrementPkd;
+    //         outputCopyTemp += (imageDim * ip_channel);
+    //     }
+
+    //     free(outputCopy);
+    // }
+
+    // WORKING V3
+    // if(outputFormatToggle == 1)
+    // {
+    //     Rpp32u imageDimMax = maxDstSize.width * maxDstSize.height;
+    //     // Rpp32u imageDim = 0;
+    //     Rpp8u *outputImageUnpaddedPln = (Rpp8u *)calloc(imageDimMax * ip_channel, sizeof(Rpp8u));
+    //     Rpp8u *outputImageUnpaddedPkd = (Rpp8u *)calloc(imageDimMax * ip_channel, sizeof(Rpp8u));
+        
+    //     Rpp8u *outputImage;
+    //     outputImage = output;
+
+    //     for (int count = 0; count < noOfImages; count++)
+    //     {
+    //         // imageDim = dstSize[count].width * dstSize[count].height;
+    //         // Rpp8u *outputImageUnpaddedPln = (Rpp8u *)calloc(imageDim * ip_channel, sizeof(Rpp8u));
+    //         // Rpp8u *outputImageUnpaddedPkd = (Rpp8u *)calloc(imageDim * ip_channel, sizeof(Rpp8u));
+
+    //         compute_unpadded_from_padded_host(outputImage, dstSize[count], maxDstSize, outputImageUnpaddedPln, RPPI_CHN_PLANAR, ip_channel);
+    //         compute_planar_to_packed_host(outputImageUnpaddedPln, dstSize[count], outputImageUnpaddedPkd, ip_channel);
+    //         compute_padded_from_unpadded_host(outputImageUnpaddedPkd, dstSize[count], maxDstSize, outputImage, RPPI_CHN_PACKED, ip_channel);
+
+    //         outputImage += (imageDimMax * ip_channel);
+
+    //         // free(outputImageUnpaddedPln);
+    //         // free(outputImageUnpaddedPkd);
+    //     }
+
+    //     free(outputImageUnpaddedPln);
+    //     free(outputImageUnpaddedPkd);
+    // }
 
     rppDestroyHost(handle);
 
