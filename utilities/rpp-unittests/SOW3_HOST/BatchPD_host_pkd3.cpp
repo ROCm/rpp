@@ -634,15 +634,15 @@ int main(int argc, char **argv)
         if (ip_bitDepth == 0)
             rppi_color_twist_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, alpha, beta, hueShift, saturationFactor, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_color_twist_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, alpha, beta, hueShift, saturationFactor, noOfImages, handle);
+            rppi_color_twist_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_color_twist_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, alpha, beta, hueShift, saturationFactor, noOfImages, handle);
+            rppi_color_twist_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_color_twist_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, alpha, beta, hueShift, saturationFactor, noOfImages, handle);
+            rppi_color_twist_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else

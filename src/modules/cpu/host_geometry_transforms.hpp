@@ -2692,6 +2692,23 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                     }
                 }
             }
+
+            if (outputFormatToggle == 1)
+            {
+                T *dstPtrImageUnpadded = (T*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(T));
+                T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(T));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width * sizeof(T));
+
+                compute_planar_to_packed_host(dstPtrImageUnpaddedCopy, batch_dstSize[batchCount], dstPtrImageUnpadded, channel);
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
+            }
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -3032,20 +3049,25 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             if (outputFormatToggle == 1)
             {
-                resize_kernel_host(srcPtrROI, srcSizeROI, dstPtrImage, dstSize, chnFormat, channel);
-                compute_planar_to_packed_host(dstPtrImage, dstSize, dstPtrROI, channel);
+                U *dstPtrROICopy = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
+                resize_kernel_host(srcPtrROI, srcSizeROI, dstPtrROICopy, dstSize, chnFormat, channel);
+                compute_planar_to_packed_host(dstPtrROICopy, dstSize, dstPtrROI, channel);
+                if ((typeid(Rpp8u) == typeid(T)) && (typeid(Rpp8u) != typeid(U)))
+                {
+                    normalize_kernel_host(dstPtrROI, dstSize, channel);
+                }
+                compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
+                free(dstPtrROICopy);
             }
             else
             {
                 resize_kernel_host(srcPtrROI, srcSizeROI, dstPtrROI, dstSize, chnFormat, channel);
+                if ((typeid(Rpp8u) == typeid(T)) && (typeid(Rpp8u) != typeid(U)))
+                {
+                    normalize_kernel_host(dstPtrROI, dstSize, channel);
+                }
+                compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
             }
-
-            if ((typeid(Rpp8u) == typeid(T)) && (typeid(Rpp8u) != typeid(U)))
-            {
-                normalize_kernel_host(dstPtrROI, dstSize, channel);
-            }
-
-            compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
 
             free(srcPtrROI);
             free(dstPtrROI);
@@ -3217,7 +3239,7 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             {
                 U *dstPtrROI2 = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
                 compute_planar_to_packed_host(dstPtrROI, dstSize, dstPtrROI2, channel);
-                compute_padded_from_unpadded_host(dstPtrROI2, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
+                compute_padded_from_unpadded_host(dstPtrROI2, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
                 free(dstPtrROI2);
             }
             else
@@ -3386,7 +3408,17 @@ RppStatus resize_crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 
             resize_kernel_host(srcPtrROI, srcSizeROI, dstPtrROI, dstSize, chnFormat, channel);
 
-            compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
+            if (outputFormatToggle == 1)
+            {
+                T *dstPtrROICopy = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
+                compute_planar_to_packed_host(dstPtrROI, dstSize, dstPtrROICopy, channel);
+                compute_padded_from_unpadded_host(dstPtrROICopy, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
+                free(dstPtrROICopy);
+            }
+            else
+            {
+                compute_padded_from_unpadded_host(dstPtrROI, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
+            }
 
             free(srcPtrROI);
             free(dstPtrROI);
