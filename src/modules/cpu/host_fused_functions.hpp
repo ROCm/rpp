@@ -3224,7 +3224,7 @@ RppStatus crop_mirror_normalize_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
 
                 compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_dstSize[batchCount], dstPtrImageUnpadded, channel);
 
-                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
 
                 free(dstPtrImageUnpadded);
                 free(dstPtrImageUnpaddedCopy);
@@ -3746,188 +3746,19 @@ RppStatus crop_mirror_normalize_f32_host_batch(Rpp32f* srcPtr, RppiSize *batch_s
             }
             if (outputFormatToggle == 1)
             {
-                // Add
-            }
-        }
-    }
+                Rpp32f *dstPtrImageUnpadded = (Rpp32f*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(Rpp32f));
+                Rpp32f *dstPtrImageUnpaddedCopy = (Rpp32f*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(Rpp32f));
 
-    return RPP_SUCCESS;
-}
-
-RppStatus crop_mirror_normalize_f32_host(Rpp32f* srcPtr, RppiSize srcSize, Rpp32f* dstPtr, RppiSize dstSize,
-                                         Rpp32u crop_pos_x, Rpp32u crop_pos_y,
-                                         Rpp32f mean, Rpp32f stdDev,
-                                         Rpp32u mirrorFlag, Rpp32u outputFormatToggle,
-                                         RppiChnFormat chnFormat, Rpp32u channel)
-{
-    Rpp32f *dstPtrTemp;
-    dstPtrTemp = dstPtr;
-
-    Rpp32u srcImageDim = srcSize.height * srcSize.width;
-
-    if(chnFormat == RPPI_CHN_PLANAR)
-    {
-        if (mirrorFlag == 0)
-        {
-            Rpp32u srcROIIncrement = srcSize.width - dstSize.width;
-
-            Rpp32u bufferLength = dstSize.width;
-            Rpp32u alignedLength = (bufferLength / 4) * 4;
-
-            __m128 p0;
-            __m128 vMean = _mm_set1_ps(mean);
-            __m128 vInvStdDev = _mm_set1_ps(1.0 / stdDev);
-
-            for(int c = 0; c < channel; c++)
-            {
-                Rpp32f *srcPtrChannelROI;
-                srcPtrChannelROI = srcPtr + (c * srcImageDim) + (crop_pos_y * srcSize.width) + crop_pos_x;
+                compute_unpadded_from_padded_host(dstPtrImage, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
                 
-                for(int i = 0; i < dstSize.height; i++)
-                {
-                    int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
-                    {
-                        p0 = _mm_loadu_ps(srcPtrChannelROI);
-                        p0 = _mm_sub_ps(p0, vMean);
-                        p0 = _mm_mul_ps(p0, vInvStdDev);
-                        _mm_storeu_ps(dstPtrTemp, p0);
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width * sizeof(Rpp32f));
 
-                        srcPtrChannelROI += 4;
-                        dstPtrTemp += 4;
-                    }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                    {
-                        *dstPtrTemp = (*srcPtrChannelROI - mean) / stdDev;
-                        dstPtrTemp++;
-                        srcPtrChannelROI++;
-                    }
+                compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_dstSize[batchCount], dstPtrImageUnpadded, channel);
 
-                    srcPtrChannelROI += srcROIIncrement;
-                }
-            }
-        }
-        else if (mirrorFlag == 1)
-        {
-            Rpp32u srcROIIncrement = srcSize.width + dstSize.width;
-            for(int c = 0; c < channel; c++)
-            {
-                Rpp32f *srcPtrChannelROI;
-                srcPtrChannelROI = srcPtr + (c * srcImageDim) + (crop_pos_y * srcSize.width) + crop_pos_x + dstSize.width - 1;
-                
-                for(int i = 0; i < dstSize.height; i++)
-                {
-                    Rpp32u bufferLength = dstSize.width;
-                    Rpp32u alignedLength = (bufferLength / 4) * 4;
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
 
-                    __m128 p0;
-                    __m128 vMean = _mm_set1_ps(mean);
-                    __m128 vInvStdDev = _mm_set1_ps(1.0 / stdDev);
-
-                    int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
-                    {
-                        srcPtrChannelROI -= 3;
-                        p0 = _mm_loadu_ps(srcPtrChannelROI);
-                        p0 = _mm_shuffle_ps(p0, p0, _MM_SHUFFLE(0,1,2,3));
-                        p0 = _mm_sub_ps(p0, vMean);
-                        p0 = _mm_mul_ps(p0, vInvStdDev);
-                        _mm_storeu_ps(dstPtrTemp, p0);
-
-                        srcPtrChannelROI -= 1;
-                        dstPtrTemp += 4;
-                    }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                    {
-                        *dstPtrTemp = (*srcPtrChannelROI - mean) / stdDev;
-                        dstPtrTemp++;
-                        srcPtrChannelROI--;
-                    }
-
-                    srcPtrChannelROI += srcROIIncrement;
-                }
-            }
-        }
-    }
-    else if(chnFormat == RPPI_CHN_PACKED)
-    {
-        Rpp32u srcElementsInRow = channel * srcSize.width;
-        Rpp32u dstElementsInRow = channel * dstSize.width;
-
-        if (mirrorFlag == 0)
-        {
-            Rpp32f *srcPtrROI;
-            srcPtrROI = srcPtr + (crop_pos_y * srcElementsInRow) + (crop_pos_x * channel);
-
-            Rpp32u srcROIIncrement = srcElementsInRow - dstElementsInRow;
-            
-            for(int i = 0; i < dstSize.height; i++)
-            {
-                Rpp32u bufferLength = dstElementsInRow;
-                Rpp32u alignedLength = (bufferLength / 4) * 4;
-
-                __m128 p0;
-                __m128 vMean = _mm_set1_ps(mean);
-                __m128 vInvStdDev = _mm_set1_ps(1.0 / stdDev);
-
-                int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
-                {
-                    p0 = _mm_loadu_ps(srcPtrROI);
-                    p0 = _mm_sub_ps(p0, vMean);
-                    p0 = _mm_mul_ps(p0, vInvStdDev);
-                    _mm_storeu_ps(dstPtrTemp, p0);
-
-                    srcPtrROI += 4;
-                    dstPtrTemp += 4;
-                }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                {
-                    *dstPtrTemp = (*srcPtrROI - mean) / stdDev;
-                    dstPtrTemp++;
-                    srcPtrROI++;
-                }
-
-                srcPtrROI += srcROIIncrement;
-            }
-        }
-        else if (mirrorFlag == 1)
-        {
-            Rpp32f *srcPtrROI;
-            srcPtrROI = srcPtr + (crop_pos_y * srcElementsInRow) + ((crop_pos_x + dstSize.width - 1) * channel);
-
-            Rpp32u srcROIIncrement = srcElementsInRow + dstElementsInRow;
-            
-            for(int i = 0; i < dstSize.height; i++)
-            {
-                Rpp32u bufferLength = dstElementsInRow;
-                __m128 p0;
-                __m128 vMean = _mm_set1_ps(mean);
-                __m128 vInvStdDev = _mm_set1_ps(1.0 / stdDev);
-
-                int vectorLoopCount = 0;
-                for (; vectorLoopCount < 3; vectorLoopCount+=3)
-                {
-                    for(int c = 0; c < channel; c++)
-                    {
-                        *dstPtrTemp = (*srcPtrROI - mean) / stdDev;
-                        dstPtrTemp++;
-                        srcPtrROI++;
-                    }
-                    srcPtrROI -= (2 * channel);
-                }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
-                {
-                    p0 = _mm_loadu_ps(srcPtrROI);
-                    p0 = _mm_sub_ps(p0, vMean);
-                    p0 = _mm_mul_ps(p0, vInvStdDev);
-                    _mm_storeu_ps(dstPtrTemp, p0);
-
-                    srcPtrROI -= 3;
-                    dstPtrTemp += 3;
-                }
-
-                srcPtrROI += srcROIIncrement;
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
             }
         }
     }
@@ -4224,7 +4055,19 @@ RppStatus crop_mirror_normalize_f16_host_batch(Rpp16f* srcPtr, RppiSize *batch_s
             }
             if (outputFormatToggle == 1)
             {
-                // Add
+                Rpp16f *dstPtrImageUnpadded = (Rpp16f*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(Rpp16f));
+                Rpp16f *dstPtrImageUnpaddedCopy = (Rpp16f*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(Rpp16f));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width * sizeof(Rpp16f));
+
+                compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_dstSize[batchCount], dstPtrImageUnpadded, channel);
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
             }
         }
     }
@@ -4625,7 +4468,7 @@ RppStatus crop_mirror_normalize_u8_f_host_batch(T* srcPtr, RppiSize *batch_srcSi
 
                 compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_dstSize[batchCount], dstPtrImageUnpadded, channel);
 
-                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
 
                 free(dstPtrImageUnpadded);
                 free(dstPtrImageUnpaddedCopy);
