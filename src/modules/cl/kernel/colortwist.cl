@@ -219,6 +219,58 @@ __kernel void colortwist_batch(
   }
 }
 
+__kernel void colortwist_batch_int8(
+    __global char  *input, __global char *output,
+    __global float *alpha, __global float *beta, __global float *hue,
+    __global float *sat, __global int *xroi_begin, __global int *xroi_end,
+    __global int *yroi_begin, __global int *yroi_end,
+    __global unsigned int *height, __global unsigned int *width,
+    __global unsigned int *max_width, __global unsigned long *batch_index,
+    __global unsigned int *inc, // use width * height for pln and 1 for pkd
+    const int plnpkdindex       // use 1 pln 3 for pkd
+) {
+  int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+  if (id_x >= width[id_z] || id_y >= height[id_z])
+    return;
+  uchar4 pixel;
+  float4 hsv;
+
+  unsigned int l_inc = inc[id_z]; // for local increment
+  int pixIdx =
+      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * plnpkdindex;
+  pixel.x = (uchar)(input[pixIdx] + 128);
+  pixel.y = (uchar)(input[pixIdx + l_inc] + 128);
+  pixel.z = (uchar)(input[pixIdx + 2 * l_inc] + 128);
+  pixel.w = 0.0;
+  float alpha1 = alpha[id_z], beta1 = beta[id_z];
+
+  if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
+      (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
+    hsv = convert_one_pixel_to_hsv(pixel); // Converting to HSV
+    hsv.x += hue[id_z];
+    if (hsv.x > 360.0) {
+      hsv.x = hsv.x - 360.0;
+    } else if (hsv.x < 0) {
+      hsv.x = hsv.x + 360.0;
+    }
+    hsv.y *= sat[id_z];
+    if (hsv.y > 1.0) {
+      hsv.y = 1.0;
+    } else if (hsv.y < 0.0) {
+      hsv.y = 0.0;
+    }
+    pixel = convert_one_pixel_to_rgb(
+        hsv); // Converting to RGB back with hue modification
+    output[pixIdx] = (char)(saturate_8u(alpha1 * pixel.x + beta1) - 128);
+    output[pixIdx + l_inc] = (char)(saturate_8u(alpha1 * pixel.y + beta1) - 128);
+    output[pixIdx + 2 * l_inc] = (char)(saturate_8u(alpha1 * pixel.z + beta1) - 128);
+  } else {
+    output[pixIdx] = pixel.x - 128;
+    output[pixIdx + l_inc] = pixel.y - 128;
+    output[pixIdx + 2 * l_inc] = pixel.z - 128;
+  }
+}
+
 __kernel void colortwist_batch_fp32(
     __global float *input, __global float *output, __global float *alpha,
     __global float *beta, __global float *hue, __global float *sat,

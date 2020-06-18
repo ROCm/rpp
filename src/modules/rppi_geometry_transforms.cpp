@@ -14818,6 +14818,35 @@ rppi_rotate_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
 }
 
 RppStatus
+rppi_rotate_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
+								 RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (rotate_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
+						  angleDeg, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_rotate_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
+								 RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (rotate_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::I8,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
+						  angleDeg, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_rotate_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
+								 RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (rotate_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
+						  angleDeg, nbatchSize, rppHandle));
+}
+
+
+RppStatus
 rppi_rotate_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	RppiROI roiPoints;
