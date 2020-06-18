@@ -660,17 +660,17 @@ int main(int argc, char **argv)
         if (ip_bitDepth == 0)
             rppi_crop_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_crop_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_crop_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
-            rppi_crop_u8_f16_pkd3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_u8_f16_pkd3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 4)
-            rppi_crop_u8_f32_pkd3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_u8_f32_pkd3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 5)
-            rppi_crop_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
-            rppi_crop_u8_i8_pkd3_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_u8_i8_pkd3_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -866,7 +866,6 @@ int main(int argc, char **argv)
             cout << "Unable to open file!";
     }
 
-    // NOT WORKING V1
     if(outputFormatToggle == 1)
     {
         Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
@@ -919,89 +918,6 @@ int main(int argc, char **argv)
 
         free(outputCopy);
     }
-
-    // NOT WORKING V2
-    // if(outputFormatToggle == 1)
-    // {
-    //     Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
-    //     memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
-        
-    //     Rpp8u *outputTemp, *outputCopyTemp;
-    //     Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
-    //     outputTemp = output;
-    //     outputCopyTemp = outputCopy;
-
-    //     // Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
-    //     // Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
-    //     Rpp32u imageDim = maxDstSize.width * maxDstSize.height;
-
-    //     for (int count = 0; count < noOfImages; count++)
-    //     {
-    //         // colIncrementPln = maxDstSize.width - dstSize[count].width;
-    //         // rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
-    //         // colIncrementPkd = colIncrementPln * ip_channel;
-    //         // rowIncrementPkd = rowIncrementPln * ip_channel;
-
-    //         outputCopyTempR = outputCopyTemp;
-    //         outputCopyTempG = outputCopyTempR + imageDim;
-    //         outputCopyTempB = outputCopyTempG + imageDim;
-
-    //         for (int i = 0; i < maxDstSize.height; i++)
-    //         {
-    //             for (int j = 0; j < maxDstSize.width; j++)
-    //             {
-    //                 *outputTemp = *outputCopyTempR;
-    //                 outputTemp++;
-    //                 outputCopyTempR++;
-    //                 *outputTemp = *outputCopyTempG;
-    //                 outputTemp++;
-    //                 outputCopyTempG++;
-    //                 *outputTemp = *outputCopyTempB;
-    //                 outputTemp++;
-    //                 outputCopyTempB++;
-    //             }
-    //             // outputTemp += colIncrementPkd;
-    //             // outputCopyTempR += colIncrementPln;
-    //             // outputCopyTempG += colIncrementPln;
-    //             // outputCopyTempB += colIncrementPln;
-    //         }
-    //         // outputTemp += rowIncrementPkd;
-    //         outputCopyTemp += (imageDim * ip_channel);
-    //     }
-
-    //     free(outputCopy);
-    // }
-
-    // WORKING V3
-    // if(outputFormatToggle == 1)
-    // {
-    //     Rpp32u imageDimMax = maxDstSize.width * maxDstSize.height;
-    //     // Rpp32u imageDim = 0;
-    //     Rpp8u *outputImageUnpaddedPln = (Rpp8u *)calloc(imageDimMax * ip_channel, sizeof(Rpp8u));
-    //     Rpp8u *outputImageUnpaddedPkd = (Rpp8u *)calloc(imageDimMax * ip_channel, sizeof(Rpp8u));
-        
-    //     Rpp8u *outputImage;
-    //     outputImage = output;
-
-    //     for (int count = 0; count < noOfImages; count++)
-    //     {
-    //         // imageDim = dstSize[count].width * dstSize[count].height;
-    //         // Rpp8u *outputImageUnpaddedPln = (Rpp8u *)calloc(imageDim * ip_channel, sizeof(Rpp8u));
-    //         // Rpp8u *outputImageUnpaddedPkd = (Rpp8u *)calloc(imageDim * ip_channel, sizeof(Rpp8u));
-
-    //         compute_unpadded_from_padded_host(outputImage, dstSize[count], maxDstSize, outputImageUnpaddedPln, RPPI_CHN_PLANAR, ip_channel);
-    //         compute_planar_to_packed_host(outputImageUnpaddedPln, dstSize[count], outputImageUnpaddedPkd, ip_channel);
-    //         compute_padded_from_unpadded_host(outputImageUnpaddedPkd, dstSize[count], maxDstSize, outputImage, RPPI_CHN_PACKED, ip_channel);
-
-    //         outputImage += (imageDimMax * ip_channel);
-
-    //         // free(outputImageUnpaddedPln);
-    //         // free(outputImageUnpaddedPkd);
-    //     }
-
-    //     free(outputImageUnpaddedPln);
-    //     free(outputImageUnpaddedPkd);
-    // }
 
     rppDestroyHost(handle);
 

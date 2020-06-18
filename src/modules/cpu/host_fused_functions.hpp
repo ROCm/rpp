@@ -4688,7 +4688,7 @@ RppStatus crop_mirror_normalize_u8_i8_host_batch(Rpp8u* srcPtr, RppiSize *batch_
 template <typename T, typename U>
 RppStatus crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
                                      Rpp32u *batch_crop_pos_x, Rpp32u *batch_crop_pos_y,
-                                     Rpp32u nbatchSize,
+                                     Rpp32u outputFormatToggle, Rpp32u nbatchSize,
                                      RppiChnFormat chnFormat, Rpp32u channel)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
@@ -4756,12 +4756,49 @@ RppStatus crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             srcPtrImageROI = srcPtrImage + (y1 * srcElementsInRowMax) + (x1 * channel);
             dstPtrImageTemp = dstPtrImage;
 
-            for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+            if (outputFormatToggle == 1)
             {
-                memcpy(dstPtrImageTemp, srcPtrImageROI, elementsInRowROI * sizeof(T));
-                dstPtrImageTemp += dstElementsInRowMax;
-                srcPtrImageROI += srcElementsInRowMax;
+                T *srcPtrImageROITemp;
+
+                T *dstPtrImageTempG, *dstPtrImageTempB;
+                dstPtrImageTempG = dstPtrImageTemp + (batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width);
+                dstPtrImageTempB = dstPtrImageTempG + (batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width);
+
+                Rpp32u increment = batch_dstSizeMax[batchCount].width - batch_dstSize[batchCount].width;
+                
+                for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+                {
+                    srcPtrImageROITemp = srcPtrImageROI;
+                    for(int j = 0; j < batch_dstSize[batchCount].width; j++)
+                    {
+                        *dstPtrImageTemp = *srcPtrImageROITemp;
+                        srcPtrImageROITemp++;
+                        dstPtrImageTemp++;
+                        
+                        *dstPtrImageTempG = *srcPtrImageROITemp;
+                        srcPtrImageROITemp++;
+                        dstPtrImageTempG++;
+                        
+                        *dstPtrImageTempB = *srcPtrImageROITemp;
+                        srcPtrImageROITemp++;
+                        dstPtrImageTempB++;
+                    }
+                    dstPtrImageTemp += increment;
+                    dstPtrImageTempG += increment;
+                    dstPtrImageTempB += increment;
+                    srcPtrImageROI += srcElementsInRowMax;
+                }
             }
+            else
+            {
+                for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+                {
+                    memcpy(dstPtrImageTemp, srcPtrImageROI, elementsInRowROI * sizeof(T));
+                    dstPtrImageTemp += dstElementsInRowMax;
+                    srcPtrImageROI += srcElementsInRowMax;
+                }
+            }
+
         }
     }
     return RPP_SUCCESS;
@@ -4770,7 +4807,7 @@ RppStatus crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
 template <typename T, typename U>
 RppStatus crop_host_u_f_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
                                      Rpp32u *batch_crop_pos_x, Rpp32u *batch_crop_pos_y,
-                                     Rpp32u nbatchSize,
+                                     Rpp32u outputFormatToggle, Rpp32u nbatchSize,
                                      RppiChnFormat chnFormat, Rpp32u channel)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
@@ -4856,20 +4893,56 @@ RppStatus crop_host_u_f_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
             srcPtrImageROI = srcPtrImage + (y1 * srcElementsInRowMax) + (x1 * channel);
             dstPtrImageRow = dstPtrImage;
 
-            for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+            if (outputFormatToggle == 1)
             {
-                srcPtrImageROITemp = srcPtrImageROI;
-                dstPtrImageRowTemp = dstPtrImageRow;
+                T *srcPtrImageROITemp;
 
-                for (int j = 0; j < elementsInRowROI; j++)
+                U *dstPtrImageTempG, *dstPtrImageTempB;
+                dstPtrImageTempG = dstPtrImageRow + (batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width);
+                dstPtrImageTempB = dstPtrImageTempG + (batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width);
+
+                Rpp32u increment = batch_dstSizeMax[batchCount].width - batch_dstSize[batchCount].width;
+                
+                for(int i = 0; i < batch_dstSize[batchCount].height; i++)
                 {
-                    *dstPtrImageRowTemp = (U) *srcPtrImageROITemp * multiplier;
-                    dstPtrImageRowTemp++;
-                    srcPtrImageROITemp++;
+                    srcPtrImageROITemp = srcPtrImageROI;
+                    for(int j = 0; j < batch_dstSize[batchCount].width; j++)
+                    {
+                        *dstPtrImageRow = (U) *srcPtrImageROITemp * multiplier;
+                        srcPtrImageROITemp++;
+                        dstPtrImageRow++;
+                        
+                        *dstPtrImageTempG = (U) *srcPtrImageROITemp * multiplier;
+                        srcPtrImageROITemp++;
+                        dstPtrImageTempG++;
+                        
+                        *dstPtrImageTempB = (U) *srcPtrImageROITemp * multiplier;
+                        srcPtrImageROITemp++;
+                        dstPtrImageTempB++;
+                    }
+                    dstPtrImageRow += increment;
+                    dstPtrImageTempG += increment;
+                    dstPtrImageTempB += increment;
+                    srcPtrImageROI += srcElementsInRowMax;
                 }
+            }
+            else
+            {
+                for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+                {
+                    srcPtrImageROITemp = srcPtrImageROI;
+                    dstPtrImageRowTemp = dstPtrImageRow;
 
-                dstPtrImageRow += dstElementsInRowMax;
-                srcPtrImageROI += srcElementsInRowMax;
+                    for (int j = 0; j < elementsInRowROI; j++)
+                    {
+                        *dstPtrImageRowTemp = (U) *srcPtrImageROITemp * multiplier;
+                        dstPtrImageRowTemp++;
+                        srcPtrImageROITemp++;
+                    }
+
+                    dstPtrImageRow += dstElementsInRowMax;
+                    srcPtrImageROI += srcElementsInRowMax;
+                }
             }
         }
     }
@@ -4879,7 +4952,7 @@ RppStatus crop_host_u_f_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
 template <typename T, typename U>
 RppStatus crop_host_u_i_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
                                      Rpp32u *batch_crop_pos_x, Rpp32u *batch_crop_pos_y,
-                                     Rpp32u nbatchSize,
+                                     Rpp32u outputFormatToggle, Rpp32u nbatchSize,
                                      RppiChnFormat chnFormat, Rpp32u channel)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
@@ -4961,20 +5034,56 @@ RppStatus crop_host_u_i_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
             srcPtrImageROI = srcPtrImage + (y1 * srcElementsInRowMax) + (x1 * channel);
             dstPtrImageRow = dstPtrImage;
 
-            for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+            if (outputFormatToggle == 1)
             {
-                srcPtrImageROITemp = srcPtrImageROI;
-                dstPtrImageRowTemp = dstPtrImageRow;
+                T *srcPtrImageROITemp;
 
-                for (int j = 0; j < elementsInRowROI; j++)
+                U *dstPtrImageTempG, *dstPtrImageTempB;
+                dstPtrImageTempG = dstPtrImageRow + (batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width);
+                dstPtrImageTempB = dstPtrImageTempG + (batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width);
+
+                Rpp32u increment = batch_dstSizeMax[batchCount].width - batch_dstSize[batchCount].width;
+                
+                for(int i = 0; i < batch_dstSize[batchCount].height; i++)
                 {
-                    *dstPtrImageRowTemp = (U) (((Rpp32s) *srcPtrImageROITemp) - 128);
-                    dstPtrImageRowTemp++;
-                    srcPtrImageROITemp++;
+                    srcPtrImageROITemp = srcPtrImageROI;
+                    for(int j = 0; j < batch_dstSize[batchCount].width; j++)
+                    {
+                        *dstPtrImageRow = (U) (((Rpp32s) *srcPtrImageROITemp) - 128);
+                        srcPtrImageROITemp++;
+                        dstPtrImageRow++;
+                        
+                        *dstPtrImageTempG = (U) (((Rpp32s) *srcPtrImageROITemp) - 128);
+                        srcPtrImageROITemp++;
+                        dstPtrImageTempG++;
+                        
+                        *dstPtrImageTempB = (U) (((Rpp32s) *srcPtrImageROITemp) - 128);
+                        srcPtrImageROITemp++;
+                        dstPtrImageTempB++;
+                    }
+                    dstPtrImageRow += increment;
+                    dstPtrImageTempG += increment;
+                    dstPtrImageTempB += increment;
+                    srcPtrImageROI += srcElementsInRowMax;
                 }
+            }
+            else
+            {
+                for(int i = 0; i < batch_dstSize[batchCount].height; i++)
+                {
+                    srcPtrImageROITemp = srcPtrImageROI;
+                    dstPtrImageRowTemp = dstPtrImageRow;
 
-                dstPtrImageRow += dstElementsInRowMax;
-                srcPtrImageROI += srcElementsInRowMax;
+                    for (int j = 0; j < elementsInRowROI; j++)
+                    {
+                        *dstPtrImageRowTemp = (U) (((Rpp32s) *srcPtrImageROITemp) - 128);
+                        dstPtrImageRowTemp++;
+                        srcPtrImageROITemp++;
+                    }
+
+                    dstPtrImageRow += dstElementsInRowMax;
+                    srcPtrImageROI += srcElementsInRowMax;
+                }
             }
         }
     }

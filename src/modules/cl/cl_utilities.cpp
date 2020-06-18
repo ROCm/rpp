@@ -280,7 +280,7 @@ void get_kernel_name(std::string &kernel_name, RPPTensorFunctionMetaData &tensor
         case RPPTensorDataType::FP16:
             kernel_name = kernel_name + "_u8_fp16";
             break;
-        case RPPTensorDataType::INT8:
+        case RPPTensorDataType::I8:
             kernel_name = kernel_name + "_u8_int8";
             break;
         default:
