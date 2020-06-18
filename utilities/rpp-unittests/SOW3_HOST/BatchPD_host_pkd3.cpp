@@ -23,130 +23,6 @@ typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 
-// template <typename T>
-// inline RppStatus compute_unpadded_from_padded_host(T* srcPtrPadded, RppiSize srcSize, RppiSize srcSizeMax, T* dstPtrUnpadded,
-//                                                    RppiChnFormat chnFormat, Rpp32u channel)
-// {
-//     T *srcPtrPaddedChannel, *srcPtrPaddedRow, *dstPtrUnpaddedRow;
-//     Rpp32u imageDimMax = srcSizeMax.height * srcSizeMax.width;
-//     dstPtrUnpaddedRow = dstPtrUnpadded;
-
-//     if (chnFormat == RPPI_CHN_PLANAR)
-//     {
-//         for (int c = 0; c < channel; c++)
-//         {
-//             srcPtrPaddedChannel = srcPtrPadded + (c * imageDimMax);
-//             for (int i = 0; i < srcSize.height; i++)
-//             {
-//                 srcPtrPaddedRow = srcPtrPaddedChannel + (i * srcSizeMax.width);
-//                 memcpy(dstPtrUnpaddedRow, srcPtrPaddedRow, srcSize.width * sizeof(T));
-//                 dstPtrUnpaddedRow += srcSize.width;
-//             }
-//         }
-//     }
-//     else if (chnFormat == RPPI_CHN_PACKED)
-//     {
-//         Rpp32u elementsInRowMax = channel * srcSizeMax.width;
-//         Rpp32u elementsInRow = channel * srcSize.width;
-//         for (int i = 0; i < srcSize.height; i++)
-//         {
-//             srcPtrPaddedRow = srcPtrPadded + (i * elementsInRowMax);
-//             memcpy(dstPtrUnpaddedRow, srcPtrPaddedRow, elementsInRow * sizeof(T));
-//             dstPtrUnpaddedRow += elementsInRow;
-//         }
-//     }
-
-//     return RPP_SUCCESS;
-// }
-
-// template <typename T>
-// inline RppStatus compute_padded_from_unpadded_host(T* srcPtrUnpadded, RppiSize srcSize, RppiSize dstSizeMax, T* dstPtrPadded,
-//                                                    RppiChnFormat chnFormat, Rpp32u channel)
-// {
-//     T *dstPtrPaddedChannel, *dstPtrPaddedRow, *srcPtrUnpaddedRow;
-//     Rpp32u imageDimMax = dstSizeMax.height * dstSizeMax.width;
-//     srcPtrUnpaddedRow = srcPtrUnpadded;
-
-//     if (chnFormat == RPPI_CHN_PLANAR)
-//     {
-//         for (int c = 0; c < channel; c++)
-//         {
-//             dstPtrPaddedChannel = dstPtrPadded + (c * imageDimMax);
-//             for (int i = 0; i < srcSize.height; i++)
-//             {
-//                 dstPtrPaddedRow = dstPtrPaddedChannel + (i * dstSizeMax.width);
-//                 memcpy(dstPtrPaddedRow, srcPtrUnpaddedRow, srcSize.width * sizeof(T));
-//                 srcPtrUnpaddedRow += srcSize.width;
-//             }
-//         }
-//     }
-//     else if (chnFormat == RPPI_CHN_PACKED)
-//     {
-//         Rpp32u elementsInRowMax = channel * dstSizeMax.width;
-//         Rpp32u elementsInRow = channel * srcSize.width;
-//         for (int i = 0; i < srcSize.height; i++)
-//         {
-//             dstPtrPaddedRow = dstPtrPadded + (i * elementsInRowMax);
-//             memcpy(dstPtrPaddedRow, srcPtrUnpaddedRow, elementsInRow * sizeof(T));
-//             srcPtrUnpaddedRow += elementsInRow;
-//         }
-//     }
-
-//     return RPP_SUCCESS;
-// }
-
-// template <typename T>
-// inline RppStatus compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-//                                         Rpp32u channel)
-// {
-//     T *srcPtrTemp, *dstPtrTemp;
-//     srcPtrTemp = srcPtr;
-//     dstPtrTemp = dstPtr;
-
-//     for (int c = 0; c < channel; c++)
-//     {
-//         dstPtrTemp += c;
-//         for (int i = 0; i < srcSize.height; i++)
-//         {
-//             for (int j = 0; j < srcSize.width; j++)
-//             {
-//                 *dstPtrTemp = *srcPtrTemp;
-//                 srcPtrTemp++;
-//                 dstPtrTemp += 3;
-//             }
-//         }
-//         dstPtrTemp = dstPtr;
-//     }
-
-//     return RPP_SUCCESS;
-// }
-
-// template <typename T>
-// inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-//                                         Rpp32u channel)
-// {
-//     T *srcPtrTemp, *dstPtrTemp;
-//     srcPtrTemp = srcPtr;
-//     dstPtrTemp = dstPtr;
-
-//     for (int c = 0; c < channel; c++)
-//     {
-//         srcPtrTemp += c;
-//         for (int i = 0; i < srcSize.height; i++)
-//         {
-//             for (int j = 0; j < srcSize.width; j++)
-//             {
-//                 *dstPtrTemp = *srcPtrTemp;
-//                 dstPtrTemp++;
-//                 srcPtrTemp += 3;
-//             }
-//         }
-//         srcPtrTemp = srcPtr;
-//     }
-
-//     return RPP_SUCCESS;
-// }
-
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 7;
@@ -566,15 +442,15 @@ int main(int argc, char **argv)
         if (ip_bitDepth == 0)
             rppi_resize_crop_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_resize_crop_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+            rppi_resize_crop_f16_pkd3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_resize_crop_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+            rppi_resize_crop_f32_pkd3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_resize_crop_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+            rppi_resize_crop_i8_pkd3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         end_omp = omp_get_wtime();
