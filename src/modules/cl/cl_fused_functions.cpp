@@ -68,7 +68,7 @@ color_twist_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
     std::string kernel_file  = "colortwist.cl";
-    std::string kernel_name = "colortiwst_batch";
+    std::string kernel_name = "colortwist_batch";
     get_kernel_name(kernel_name, tensor_info);
     
     std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
