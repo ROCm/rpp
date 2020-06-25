@@ -300,23 +300,3 @@ void get_kernel_name(std::string &kernel_name, const RPPTensorFunctionMetaData &
         break;
     }
 }
-
-void get_kernel_name_simple( std::string &kernel_name, const RPPTensorDataType &data_type)
-{
-    switch (data_type)
-    {
-    case RPPTensorDataType::U8:
-        break;
-    case RPPTensorDataType::FP32:
-        kernel_name = kernel_name + "_fp32";
-        break;   
-    case RPPTensorDataType::FP16:
-        kernel_name = kernel_name + "_fp16";
-        break;
-    case RPPTensorDataType::I8:
-        kernel_name = kernel_name + "_int8";
-        break;
-    default:
-        break;
-    }
-}
