@@ -2120,7 +2120,7 @@ rppi_color_twist_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, Rp
 
 RppStatus
 rppi_color_twist_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, 
-													Rpp8u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+													Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (color_twist_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
 							   srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
@@ -2129,7 +2129,7 @@ rppi_color_twist_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSi
 
 RppStatus
 rppi_color_twist_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, 
-													Rpp8u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+													Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (color_twist_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
 							   srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
@@ -2138,7 +2138,7 @@ rppi_color_twist_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSi
 
 RppStatus
 rppi_color_twist_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, 
-													Rpp8u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+													Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (color_twist_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
 							   srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
@@ -4981,7 +4981,7 @@ rppi_crop_u8_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize m
 RppStatus
 resize_crop_mirror_helper(
 	RppiChnFormat chn_format, Rpp32u num_of_channels,
-	RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp8u outputFormatToggle,
+	RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp32u outputFormatToggle,
 	RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize,
 	RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize,
 	Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin,
