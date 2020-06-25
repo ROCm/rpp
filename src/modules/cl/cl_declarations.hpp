@@ -22,7 +22,6 @@ cl_int CreateProgramFromBinary(rpp::Handle &handle, const std::string kernelFile
 void max_size(Rpp32u *height, Rpp32u *width, unsigned int batch_size, unsigned int *max_height, unsigned int *max_width);
 
 void get_kernel_name(std::string &kernel_name, const RPPTensorFunctionMetaData &tensor_info);
-void get_kernel_name_simple(std::string &kernel_name, const RPPTensorDataType &data_type);
 //===== Internal CL functions
 
 RppStatus

@@ -1024,7 +1024,7 @@ rppi_color_twist_u8_pln3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_
 
 RppStatus
 rppi_color_twist_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, 
-				Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp8u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+				Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (color_twist_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle, 
 							   srcPtr, srcSize, maxSrcSize, dstPtr, alpha, beta,
