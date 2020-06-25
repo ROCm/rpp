@@ -1746,8 +1746,9 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pln1_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
-    RppStatus
+    rppi_resize_crop_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, 
+                            Rpp32u *yRoiEnd, Rpp32u outputChannelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    RppStatusf
     rppi_resize_crop_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
@@ -1786,7 +1787,8 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pln3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, 
+                                        Rpp32u outputChnnelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1826,7 +1828,9 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, 
+        RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, 
+        Rpp32u outputChannelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
