@@ -175,7 +175,7 @@ __kernel void colortwist_batch(
     __global unsigned int *height, __global unsigned int *width,
     __global unsigned int *max_width, __global unsigned long *batch_index,
     __global unsigned int *inc, // use width * height for pln and 1 for pkd
-    const int plnpkdindex       // use 1 pln 3 for pkd
+    const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= width[id_z] || id_y >= height[id_z])
@@ -185,7 +185,7 @@ __kernel void colortwist_batch(
 
   unsigned int l_inc = inc[id_z]; // for local increment
   int pixIdx =
-      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * plnpkdindex;
+      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
   pixel.x = input[pixIdx];
   pixel.y = input[pixIdx + l_inc];
   pixel.z = input[pixIdx + 2 * l_inc];
@@ -227,7 +227,7 @@ __kernel void colortwist_batch_int8(
     __global unsigned int *height, __global unsigned int *width,
     __global unsigned int *max_width, __global unsigned long *batch_index,
     __global unsigned int *inc, // use width * height for pln and 1 for pkd
-    const int plnpkdindex       // use 1 pln 3 for pkd
+    const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= width[id_z] || id_y >= height[id_z])
@@ -237,7 +237,8 @@ __kernel void colortwist_batch_int8(
 
   unsigned int l_inc = inc[id_z]; // for local increment
   int pixIdx =
-      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * plnpkdindex;
+      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
+  
   pixel.x = (uchar)(input[pixIdx] + 128);
   pixel.y = (uchar)(input[pixIdx + l_inc] + 128);
   pixel.z = (uchar)(input[pixIdx + 2 * l_inc] + 128);
@@ -279,7 +280,7 @@ __kernel void colortwist_batch_fp32(
     __global unsigned int *width, __global unsigned int *max_width,
     __global unsigned long *batch_index,
     __global unsigned int *inc, // use width * height for pln and 1 for pkd
-    const int plnpkdindex       // use 1 pln 3 for pkd
+    const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= width[id_z] || id_y >= height[id_z])
@@ -289,7 +290,7 @@ __kernel void colortwist_batch_fp32(
 
   unsigned int l_inc = inc[id_z]; // for local increment
   int pixIdx =
-      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * plnpkdindex;
+      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
   pixel.x = (uchar)(input[pixIdx] * 255);
   pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
   pixel.z = (uchar)(input[pixIdx + 2 * l_inc] * 255);
@@ -330,7 +331,7 @@ __kernel void colortwist_batch_fp16(
     __global unsigned int *width, __global unsigned int *max_width,
     __global unsigned long *batch_index,
     __global unsigned int *inc, // use width * height for pln and 1 for pkd
-    const int plnpkdindex       // use 1 pln 3 for pkd
+    const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= width[id_z] || id_y >= height[id_z])
@@ -340,7 +341,7 @@ __kernel void colortwist_batch_fp16(
 
   unsigned int l_inc = inc[id_z]; // for local increment
   int pixIdx =
-      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * plnpkdindex;
+      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
   pixel.x = (uchar)(input[pixIdx] * 255);
   pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
   pixel.z = (uchar)(input[pixIdx + 2 * l_inc] * 255);

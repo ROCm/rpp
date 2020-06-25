@@ -258,7 +258,7 @@ __kernel void resize_crop_batch(
 
   if ((x + 1) < source_width[id_z] && (y + 1) < source_height[id_z]) {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       A = srcPtr[source_batch_index[id_z] +
                  (x + y * max_source_width[id_z]) * in_plnpkdind +
@@ -283,7 +283,7 @@ __kernel void resize_crop_batch(
 
   else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -356,7 +356,7 @@ __kernel void resize_crop_batch_int8(
 
   else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -428,7 +428,7 @@ __kernel void resize_crop_batch_fp16(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -496,7 +496,7 @@ __kernel void resize_crop_batch_fp32(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -565,7 +565,7 @@ __kernel void resize_crop_batch_u8_fp32(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -634,7 +634,7 @@ __kernel void resize_crop_batch_u8_fp16(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -703,7 +703,7 @@ __kernel void resize_crop_batch_u8_int8(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = -128;
       dst_pixIdx += dest_inc[id_z];
@@ -752,7 +752,7 @@ __kernel void resize_crop_mirror_batch(
   if ((x + 1) < source_width[id_z] && (y + 1) < source_height[id_z]) {
     dst_pixIdx = dest_batch_index[id_z] +
                  ((dest_width[id_z] - 1 - id_x) + id_y * max_dest_width[id_z]) *
-                     in_plnpkdind;
+                     out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       A = srcPtr[source_batch_index[id_z] +
                  (x + y * max_source_width[id_z]) * in_plnpkdind +
@@ -775,7 +775,7 @@ __kernel void resize_crop_mirror_batch(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -823,7 +823,7 @@ __kernel void resize_crop_mirror_batch_int8(
   if ((x + 1) < source_width[id_z] && (y + 1) < source_height[id_z]) {
     dst_pixIdx = dest_batch_index[id_z] +
                  ((dest_width[id_z] - 1 - id_x) + id_y * max_dest_width[id_z]) *
-                     in_plnpkdind;
+                     out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       A = srcPtr[source_batch_index[id_z] +
                  (x + y * max_source_width[id_z]) * in_plnpkdind +
@@ -846,7 +846,7 @@ __kernel void resize_crop_mirror_batch_int8(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = -128;
       dst_pixIdx += dest_inc[id_z];
@@ -894,7 +894,7 @@ __kernel void resize_crop_mirror_batch_fp16(
   if ((x + 1) < source_width[id_z] && (y + 1) < source_height[id_z]) {
     dst_pixIdx = dest_batch_index[id_z] +
                  ((dest_width[id_z] - 1 - id_x) + id_y * max_dest_width[id_z]) *
-                     in_plnpkdind;
+                     out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       A = srcPtr[source_batch_index[id_z] +
                  (x + y * max_source_width[id_z]) * in_plnpkdind +
@@ -916,7 +916,7 @@ __kernel void resize_crop_mirror_batch_fp16(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -964,7 +964,7 @@ __kernel void resize_crop_mirror_batch_fp32(
   if ((x + 1) < source_width[id_z] && (y + 1) < source_height[id_z]) {
     dst_pixIdx = dest_batch_index[id_z] +
                  ((dest_width[id_z] - 1 - id_x) + id_y * max_dest_width[id_z]) *
-                     in_plnpkdind;
+                    out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       A = srcPtr[source_batch_index[id_z] +
                  (x + y * max_source_width[id_z]) * in_plnpkdind +
@@ -986,7 +986,7 @@ __kernel void resize_crop_mirror_batch_fp32(
     }
   } else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * in_plnpkdind;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
