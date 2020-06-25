@@ -475,9 +475,8 @@ resize_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 rpp::Handle& handle);
 RppStatus
-resize_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel = 3,
-                        RPPTensorDataType dataType = RPPTensorDataType::U8);
+resize_cl_batch (  cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
+                        RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
 resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
                 cl_mem dstPtr, RppiSize dstSize,
@@ -486,8 +485,14 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
                 rpp::Handle& handle);
 RppStatus
 resize_crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                     RppiChnFormat chnFormat, unsigned int channel = 3,
-                     RPPTensorDataType dataType = RPPTensorDataType::U8);
+                     RppiChnFormat chnFormat, unsigned int channel = 3);
+
+RppStatus
+resize_crop_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+resize_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+rotate_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 
 RppStatus
 warp_affine_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, float *affine,
@@ -583,9 +588,9 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 rpp::Handle& handle);
 RppStatus
-rotate_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
+rotate_cl_batch ( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat = RPPI_CHN_PACKED, 
-                        unsigned int channel = 3, RPPTensorDataType dataType = RPPTensorDataType::U8);
+                        unsigned int channel = 3);
 
 RppStatus
 histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);            
