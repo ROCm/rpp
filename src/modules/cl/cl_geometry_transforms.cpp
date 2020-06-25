@@ -449,6 +449,7 @@ rotate_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTen
     std::string kernel_name = "rotate_batch";
     get_kernel_name(kernel_name, tensor_info);
     std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
+    std::cout << "chaneeks " << tensor_info._in_channels  << std::endl;
     std::cout << kernel_name << std::endl;
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,

@@ -14750,8 +14750,8 @@ rotate_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format);
 	copy_param_float(angleDeg, rpp::deref(rppHandle), paramIndex++);
 
 #ifdef OCL_COMPILE
