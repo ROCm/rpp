@@ -13,6 +13,7 @@ DST_FOLDER="/home/abishek/abishek/tests/Output_Images"
 
 
 
+rm -rvf $DST_FOLDER/*
 shopt -s extglob
 cd build
 

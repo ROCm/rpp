@@ -3327,7 +3327,7 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             {
                 U *dstPtrROI2 = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
                 compute_packed_to_planar_host(dstPtrROI, dstSize, dstPtrROI2, channel);
-                compute_padded_from_unpadded_host(dstPtrROI2, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, chnFormat, channel);
+                compute_padded_from_unpadded_host(dstPtrROI2, dstSize, batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
                 free(dstPtrROI2);
             }
             else

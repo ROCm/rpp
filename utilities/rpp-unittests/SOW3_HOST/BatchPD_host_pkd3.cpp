@@ -765,7 +765,7 @@ int main(int argc, char **argv)
             cout << "Unable to open file!";
     }
 
-    if(outputFormatToggle == 1)
+    if ((outputFormatToggle == 1) && (ip_bitDepth != 0))
     {
         Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
         memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
