@@ -35,7 +35,7 @@ RppStatus color_twist_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
 	copy_param_float(alpha, rpp::deref(rppHandle), paramIndex++);
 	copy_param_float(beta, rpp::deref(rppHandle), paramIndex++);
 	copy_param_float(hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -4507,8 +4507,8 @@ crop_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format);
 	copy_param_uint(crop_pos_x, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(crop_pos_y, rpp::deref(rppHandle), paramIndex++);
 
@@ -4995,8 +4995,8 @@ resize_crop_mirror_helper(
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format);
 	copy_param_uint(xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(xRoiEnd, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(yRoiBegin, rpp::deref(rppHandle), paramIndex++);

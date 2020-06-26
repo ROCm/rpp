@@ -9471,8 +9471,8 @@ resize_crop_helper(
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels,  tensor_info._out_format);
 	copy_param_uint(xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(xRoiEnd, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(yRoiBegin, rpp::deref(rppHandle), paramIndex++);
@@ -9539,8 +9539,8 @@ resize_helper(RppiChnFormat chn_format,
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, chn_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format);
 
 #ifdef OCL_COMPILE
 	{
