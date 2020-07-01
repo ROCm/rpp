@@ -16,7 +16,7 @@ RPP is developed for __Linux__ operating system.
 * [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
 * CMake Version `3.5` or higher
 * Boost
-* Clang 6.0
+* Clang: minimum version required: 6.0
 * IEEE 754-based half-precision floating-point library - half.hpp
 
 **NOTE:**
@@ -26,7 +26,7 @@ sudo apt --yes install libboost-all-dev
 ```
 * CLang
 ```
-sudo apt --yes install clang-6.0
+sudo apt --yes install clang
 ```
 * half.hpp
 ```
