@@ -174,8 +174,8 @@ __kernel void colortwist_batch(
     __global int *yroi_begin, __global int *yroi_end,
     __global unsigned int *height, __global unsigned int *width,
     __global unsigned int *max_width, __global unsigned long *batch_index,
-    __global unsigned int *inc, // use width * height for pln and 1 for pkd
-    const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
+    __global unsigned int *inc, __global unsigned int *dst_inc,
+    const int in_plnpkdind , const int out_plnpkdind
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= width[id_z] || id_y >= height[id_z])
@@ -184,8 +184,10 @@ __kernel void colortwist_batch(
   float4 hsv;
 
   unsigned int l_inc = inc[id_z]; // for local increment
+  unsigned int d_inc  = dst_inc[id_z];
   int pixIdx =
       batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
+  int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
   pixel.x = input[pixIdx];
   pixel.y = input[pixIdx + l_inc];
   pixel.z = input[pixIdx + 2 * l_inc];
@@ -209,13 +211,13 @@ __kernel void colortwist_batch(
     }
     pixel = convert_one_pixel_to_rgb(
         hsv); // Converting to RGB back with hue modification
-    output[pixIdx] = saturate_8u(alpha1 * pixel.x + beta1);
-    output[pixIdx + l_inc] = saturate_8u(alpha1 * pixel.y + beta1);
-    output[pixIdx + 2 * l_inc] = saturate_8u(alpha1 * pixel.z + beta1);
+    output[out_pixIdx] = saturate_8u(alpha1 * pixel.x + beta1);
+    output[out_pixIdx + d_inc] = saturate_8u(alpha1 * pixel.y + beta1);
+    output[out_pixIdx + 2 * d_inc] = saturate_8u(alpha1 * pixel.z + beta1);
   } else {
-    output[pixIdx] = pixel.x;
-    output[pixIdx + l_inc] = pixel.y;
-    output[pixIdx + 2 * l_inc] = pixel.z;
+    output[out_pixIdx] = pixel.x;
+    output[out_pixIdx + d_inc] = pixel.y;
+    output[out_pixIdx + 2 * d_inc] = pixel.z;
   }
 }
 

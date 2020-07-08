@@ -9467,12 +9467,13 @@ resize_crop_helper(
 	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
 										  (bool)outputFormatToggle);
 	Rpp32u paramIndex = 0;
+	bool is_padded = true;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels,  tensor_info._out_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels,  tensor_info._out_format, is_padded);
 	copy_param_uint(xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(xRoiEnd, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint(yRoiBegin, rpp::deref(rppHandle), paramIndex++);
@@ -9529,6 +9530,7 @@ resize_helper(RppiChnFormat chn_format,
 	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
 										  (bool)outputFormatToggle);
 	RppiROI roiPoints;
+	bool is_padded = true;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
 	roiPoints.roiHeight = 0;
@@ -9539,8 +9541,8 @@ resize_helper(RppiChnFormat chn_format,
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format, is_padded);
 
 #ifdef OCL_COMPILE
 	{
@@ -14740,6 +14742,7 @@ rotate_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
 										  (bool)outputFormatToggle);
 	RppiROI roiPoints;
+	bool is_padded = true;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
 	roiPoints.roiHeight = 0;
@@ -14750,8 +14753,8 @@ rotate_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format);
-	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format, is_padded);
 	copy_param_float(angleDeg, rpp::deref(rppHandle), paramIndex++);
 
 #ifdef OCL_COMPILE

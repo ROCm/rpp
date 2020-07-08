@@ -544,8 +544,9 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         Rpp32u crop_pos_y[images];
         for (i = 0; i < images; i++)
         {
+            
             dstSize[i].height = 100;
-            dstSize[i].width = 100;
+            dstSize[i].width =  150; 
             if (maxDstHeight < dstSize[i].height)
                 maxDstHeight = dstSize[i].height;
             if (maxDstWidth < dstSize[i].width)
@@ -554,12 +555,11 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
                 minDstHeight = dstSize[i].height;
             if (minDstWidth > dstSize[i].width)
                 minDstWidth = dstSize[i].width;
-            crop_pos_x[i] = 50;
-            crop_pos_y[i] = 50;
+            cout << maxDstHeight << maxDstWidth << endl;
+            crop_pos_x[i] = 100;
+            crop_pos_y[i] = 150;
             
         }
-        Rpp32u outputFormatToggle = 0;
-
         start = clock();
         if (ip_bitDepth == 0)
             rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y,outputFormatToggle, noOfImages, handle);
@@ -772,60 +772,30 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         else
             cout << "Unable to open file!";
     }
-
-    if(outputFormatToggle == 1)
-    {
         Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
-        memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
-        
-        Rpp8u *outputTemp, *outputCopyTemp;
-        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
-        outputTemp = output;
-        outputCopyTemp = outputCopy;
 
-        Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
-        Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
-        Rpp32u imageDimMax = maxDstSize.width * maxDstSize.height;
-
-        for (int count = 0; count < noOfImages; count++)
+     if(outputFormatToggle == 1)
+    {
+        for(int i = 0; i < noOfImages; i++)
         {
-            colIncrementPln = maxDstSize.width - dstSize[count].width;
-            rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
-            colIncrementPkd = colIncrementPln * ip_channel;
-            rowIncrementPkd = rowIncrementPln * ip_channel;
-
-            outputCopyTempR = outputCopyTemp;
-            outputCopyTempG = outputCopyTempR + imageDimMax;
-            outputCopyTempB = outputCopyTempG + imageDimMax;
-
-            for (int i = 0; i < dstSize[count].height; i++)
+            for(int j = 0; j < maxDstHeight; j++)
             {
-                for (int j = 0; j < dstSize[count].width; j++)
+                for(int k = 0; k < maxDstWidth ; k++)
                 {
-                    *outputTemp = *outputCopyTempR;
-                    outputTemp++;
-                    outputCopyTempR++;
-                    *outputTemp = *outputCopyTempG;
-                    outputTemp++;
-                    outputCopyTempG++;
-                    *outputTemp = *outputCopyTempB;
-                    outputTemp++;
-                    outputCopyTempB++;
+                    for(int c = 0; c < ip_channel; c++)
+                    {
+                        int dstpix = i* maxDstHeight * maxDstWidth * ip_channel + j * maxDstWidth * ip_channel + k * ip_channel + c;
+                        int srcpix = i* maxDstHeight * maxDstWidth * ip_channel + (j * maxDstWidth + k)  + c * maxDstHeight * maxDstWidth;
+                        if(j == 0 && k == 0)
+                            cout << dstpix << " " << srcpix << endl;
+                        outputCopy[dstpix] = output[srcpix];
+                    }
                 }
-                memset(outputTemp, (Rpp8u) 0, colIncrementPkd * sizeof(Rpp8u));
-                outputTemp += colIncrementPkd;
-                outputCopyTempR += colIncrementPln;
-                outputCopyTempG += colIncrementPln;
-                outputCopyTempB += colIncrementPln;
             }
-            memset(outputTemp, (Rpp8u) 0, rowIncrementPkd * sizeof(Rpp8u));
-            outputTemp += rowIncrementPkd;
-            outputCopyTemp += (imageDimMax * ip_channel);
         }
-
-        free(outputCopy);
     }
-
+       
+    output = outputCopy;
     rppDestroyGPU(handle);
 
     mkdir(dst, 0700);

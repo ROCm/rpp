@@ -87,6 +87,7 @@ color_twist_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
                                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                        handle.GetInitHandle()->mem.mgpu.dstInc,
                                                                                         in_plnpkdind, out_plnpkdind
                                                                                         );
      return RPP_SUCCESS;

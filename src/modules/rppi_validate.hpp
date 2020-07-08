@@ -513,7 +513,7 @@ inline void copy_dstMaxSize(RppiSize maxDstSize, rpp::Handle& handle)
 }
 
 
-inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat)
+inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = false)
 {
     int i;
     handle.GetInitHandle()->mem.mcpu.srcBatchIndex[0] = 0;
@@ -529,7 +529,10 @@ inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
         }
         else
         {
-            handle.GetInitHandle()->mem.mcpu.inc[i] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
+            if(!is_padded)
+                handle.GetInitHandle()->mem.mcpu.inc[i] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
+            else
+                handle.GetInitHandle()->mem.mcpu.inc[i] = handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width[i];
         }
     }
 
@@ -547,7 +550,7 @@ inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
 #endif
 }
 
-inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat)
+inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = false)
 {
     int i;
     handle.GetInitHandle()->mem.mcpu.dstBatchIndex[0] = 0;
@@ -563,7 +566,10 @@ inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
         }
         else
         {
-            handle.GetInitHandle()->mem.mcpu.dstInc[i] = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
+            if(!is_padded)
+                handle.GetInitHandle()->mem.mcpu.dstInc[i] = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
+            else
+                handle.GetInitHandle()->mem.mcpu.dstInc[i] = handle.GetInitHandle()->mem.mgpu.cmaxDstSize.height[i] * handle.GetInitHandle()->mem.mgpu.cmaxDstSize.width[i];
         }
     }
 
