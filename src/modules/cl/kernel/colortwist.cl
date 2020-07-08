@@ -183,7 +183,7 @@ __kernel void colortwist_batch(
   uchar4 pixel;
   float4 hsv;
 
-  unsigned int l_inc = inc[id_z]; // for local increment
+  unsigned int l_inc = inc[id_z]; 
   unsigned int d_inc  = dst_inc[id_z];
   int pixIdx =
       batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
@@ -228,7 +228,7 @@ __kernel void colortwist_batch_int8(
     __global int *yroi_begin, __global int *yroi_end,
     __global unsigned int *height, __global unsigned int *width,
     __global unsigned int *max_width, __global unsigned long *batch_index,
-    __global unsigned int *inc, // use width * height for pln and 1 for pkd
+    __global unsigned int *inc,  __global unsigned int *dst_inc,// use width * height for pln and 1 for pkd
     const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
@@ -237,10 +237,12 @@ __kernel void colortwist_batch_int8(
   uchar4 pixel;
   float4 hsv;
 
-  unsigned int l_inc = inc[id_z]; // for local increment
+  unsigned int l_inc = inc[id_z];
+  unsigned int d_inc  = dst_inc[id_z];
   int pixIdx =
       batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
-  
+  int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
+
   pixel.x = (uchar)(input[pixIdx] + 128);
   pixel.y = (uchar)(input[pixIdx + l_inc] + 128);
   pixel.z = (uchar)(input[pixIdx + 2 * l_inc] + 128);
@@ -264,13 +266,13 @@ __kernel void colortwist_batch_int8(
     }
     pixel = convert_one_pixel_to_rgb(
         hsv); // Converting to RGB back with hue modification
-    output[pixIdx] = (char)(saturate_8u(alpha1 * pixel.x + beta1) - 128);
-    output[pixIdx + l_inc] = (char)(saturate_8u(alpha1 * pixel.y + beta1) - 128);
-    output[pixIdx + 2 * l_inc] = (char)(saturate_8u(alpha1 * pixel.z + beta1) - 128);
+    output[out_pixIdx] = (char)(saturate_8u(alpha1 * pixel.x + beta1) - 128);
+    output[out_pixIdx + d_inc] = (char)(saturate_8u(alpha1 * pixel.y + beta1) - 128);
+    output[out_pixIdx + 2 * d_inc] = (char)(saturate_8u(alpha1 * pixel.z + beta1) - 128);
   } else {
-    output[pixIdx] = pixel.x - 128;
-    output[pixIdx + l_inc] = pixel.y - 128;
-    output[pixIdx + 2 * l_inc] = pixel.z - 128;
+    output[out_pixIdx] = pixel.x - 128;
+    output[out_pixIdx + d_inc] = pixel.y - 128;
+    output[out_pixIdx + 2 * d_inc] = pixel.z - 128;
   }
 }
 
@@ -281,7 +283,7 @@ __kernel void colortwist_batch_fp32(
     __global int *yroi_end, __global unsigned int *height,
     __global unsigned int *width, __global unsigned int *max_width,
     __global unsigned long *batch_index,
-    __global unsigned int *inc, // use width * height for pln and 1 for pkd
+    __global unsigned int *inc, __global unsigned int *dst_inc, // use width * height for pln and 1 for pkd
     const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
@@ -290,9 +292,12 @@ __kernel void colortwist_batch_fp32(
   uchar4 pixel;
   float4 hsv;
 
-  unsigned int l_inc = inc[id_z]; // for local increment
+  unsigned int l_inc = inc[id_z];
+  unsigned int d_inc  = dst_inc[id_z];
   int pixIdx =
       batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
+  int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
+
   pixel.x = (uchar)(input[pixIdx] * 255);
   pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
   pixel.z = (uchar)(input[pixIdx + 2 * l_inc] * 255);
@@ -315,13 +320,13 @@ __kernel void colortwist_batch_fp32(
       hsv.y = 0.0;
     }
     pixel = convert_one_pixel_to_rgb(hsv); 
-    output[pixIdx] = (alpha1 * pixel.x + beta1) / 255.0;
-    output[pixIdx + l_inc] = (alpha1 * pixel.y + beta1) / 255.0;
-    output[pixIdx + 2 * l_inc] = (alpha1 * pixel.z + beta1) / 255.0;
+    output[out_pixIdx] = (alpha1 * pixel.x + beta1) / 255.0;
+    output[out_pixIdx + d_inc] = (alpha1 * pixel.y + beta1) / 255.0;
+    output[out_pixIdx + 2 * d_inc] = (alpha1 * pixel.z + beta1) / 255.0;
   } else {
-    output[pixIdx] = input[pixIdx];
-    output[pixIdx + l_inc] = input[pixIdx + l_inc];
-    output[pixIdx + 2 * l_inc] = input[pixIdx + 2 * l_inc];
+    output[out_pixIdx] = input[pixIdx];
+    output[out_pixIdx + d_inc] = input[pixIdx + l_inc];
+    output[out_pixIdx + 2 * d_inc] = input[pixIdx + 2 * l_inc];
   }
 }
 
@@ -332,7 +337,7 @@ __kernel void colortwist_batch_fp16(
     __global int *yroi_end, __global unsigned int *height,
     __global unsigned int *width, __global unsigned int *max_width,
     __global unsigned long *batch_index,
-    __global unsigned int *inc, // use width * height for pln and 1 for pkd
+    __global unsigned int *inc, __global unsigned int *dst_inc, // use width * height for pln and 1 for pkd
     const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
@@ -341,9 +346,11 @@ __kernel void colortwist_batch_fp16(
   uchar4 pixel;
   float4 hsv;
 
-  unsigned int l_inc = inc[id_z]; // for local increment
+  unsigned int l_inc = inc[id_z];
+  unsigned int d_inc  = dst_inc[id_z];
   int pixIdx =
       batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
+  int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
   pixel.x = (uchar)(input[pixIdx] * 255);
   pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
   pixel.z = (uchar)(input[pixIdx + 2 * l_inc] * 255);
@@ -366,12 +373,12 @@ __kernel void colortwist_batch_fp16(
       hsv.y = 0.0;
     }
     pixel = convert_one_pixel_to_rgb(hsv); 
-    output[pixIdx] = (half)((alpha1 * pixel.x + beta1) / 255.0);
-    output[pixIdx + l_inc] = (half)((alpha1 * pixel.y + beta1) / 255.0);
-    output[pixIdx + 2 * l_inc] = (half)((alpha1 * pixel.z + beta1) / 255.0);
+    output[out_pixIdx] = (half)((alpha1 * pixel.x + beta1) / 255.0);
+    output[out_pixIdx + d_inc] = (half)((alpha1 * pixel.y + beta1) / 255.0);
+    output[out_pixIdx + 2 * d_inc] = (half)((alpha1 * pixel.z + beta1) / 255.0);
   } else {
-    output[pixIdx] = input[pixIdx];
-    output[pixIdx + l_inc] = input[pixIdx + l_inc];
-    output[pixIdx + 2 * l_inc] = input[pixIdx + 2 * l_inc];
+    output[out_pixIdx] = input[pixIdx];
+    output[out_pixIdx + d_inc] = input[pixIdx + l_inc];
+    output[out_pixIdx + 2 * d_inc] = input[pixIdx + 2 * l_inc];
   }
 }
