@@ -793,9 +793,9 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
                 }
             }
         }
+        output = outputCopy;
     }
-       
-    output = outputCopy;
+
     rppDestroyGPU(handle);
 
     mkdir(dst, 0700);
