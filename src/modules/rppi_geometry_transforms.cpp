@@ -14863,7 +14863,7 @@ rppi_rotate_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
 								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (rotate_helper(RPPI_CHN_PLANAR, 3,
-						  RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
 						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
 						  angleDeg, nbatchSize, rppHandle));
 }

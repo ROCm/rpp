@@ -82,8 +82,8 @@ __kernel void rotate_batch(
     __global unsigned long *dest_batch_index, const unsigned int channel,
     __global unsigned int
         *source_inc, // use width * height for pln and 1 for pkd
-    __global unsigned int *dest_inc,
-    const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
+    __global unsigned int *dest_inc, const int in_plnpkdind,
+    const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
@@ -130,17 +130,16 @@ __kernel void rotate_batch(
 }
 
 __kernel void rotate_batch_int8(
-    __global char *srcPtr, __global char *dstPtr,
-    __global float *angleDeg, __global unsigned int *source_height,
-    __global unsigned int *source_width, __global unsigned int *dest_height,
-    __global unsigned int *dest_width, __global unsigned int *xroi_begin,
-    __global unsigned int *xroi_end, __global unsigned int *yroi_begin,
-    __global unsigned int *yroi_end, __global unsigned int *max_source_width,
+    __global char *srcPtr, __global char *dstPtr, __global float *angleDeg,
+    __global unsigned int *source_height, __global unsigned int *source_width,
+    __global unsigned int *dest_height, __global unsigned int *dest_width,
+    __global unsigned int *xroi_begin, __global unsigned int *xroi_end,
+    __global unsigned int *yroi_begin, __global unsigned int *yroi_end,
+    __global unsigned int *max_source_width,
     __global unsigned int *max_dest_width,
     __global unsigned long *source_batch_index,
     __global unsigned long *dest_batch_index, const unsigned int channel,
-    __global unsigned int *source_inc, 
-    __global unsigned int *dest_inc,
+    __global unsigned int *source_inc, __global unsigned int *dest_inc,
     const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
@@ -196,8 +195,7 @@ __kernel void rotate_batch_fp16(
     __global unsigned int *max_dest_width,
     __global unsigned long *source_batch_index,
     __global unsigned long *dest_batch_index, const unsigned int channel,
-    __global unsigned int *source_inc, 
-    __global unsigned int *dest_inc,
+    __global unsigned int *source_inc, __global unsigned int *dest_inc,
     const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
@@ -238,7 +236,7 @@ __kernel void rotate_batch_fp16(
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      dstPtr[dst_pixIdx] = 0;
+      dstPtr[dst_pixIdx] = -128;
       dst_pixIdx += dest_inc[id_z];
     }
   }
@@ -254,8 +252,7 @@ __kernel void rotate_batch_fp32(
     __global unsigned int *max_dest_width,
     __global unsigned long *source_batch_index,
     __global unsigned long *dest_batch_index, const unsigned int channel,
-    __global unsigned int *source_inc, 
-    __global unsigned int *dest_inc,
+    __global unsigned int *source_inc, __global unsigned int *dest_inc,
     const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
