@@ -289,22 +289,22 @@ int main(int argc, char **argv)
     Rpp32u imageDimMax = maxSize.width * maxSize.height;
 
     for(int i = 0; i < noOfImages; i++)
+    {
+        for(int j = 0; j < maxDstHeight; j++)
         {
-            for(int j = 0; j < maxDstHeight; j++)
+            for(int k = 0; k < maxDstWidth ; k++)
             {
-                for(int k = 0; k < maxDstWidth ; k++)
+                for(int c = 0; c < ip_channel; c++)
                 {
-                    for(int c = 0; c < ip_channel; c++)
-                    {
-                        int dstpix = i* maxDstHeight * maxDstWidth * ip_channel + j * maxDstWidth * ip_channel + k * ip_channel + c;
-                        int srcpix = i* maxDstHeight * maxDstWidth * ip_channel + (j * maxDstWidth + k)  + c * maxDstHeight * maxDstWidth;
-                        if(j == 0 && k == 0)
-                            cout << dstpix << " " << srcpix << endl;
-                        inputCopy[srcpix] = input[dstpix];
-                    }
+                    int dstpix = i* maxDstHeight * maxDstWidth * ip_channel + j * maxDstWidth * ip_channel + k * ip_channel + c;
+                    int srcpix = i* maxDstHeight * maxDstWidth * ip_channel + (j * maxDstWidth + k)  + c * maxDstHeight * maxDstWidth;
+                    if(j == 0 && k == 0)
+                        cout << dstpix << " " << srcpix << endl;
+                    inputCopy[srcpix] = input[dstpix];
                 }
             }
         }
+    }
     input = inputCopy;
     if (ip_bitDepth == 1)
     {
@@ -821,7 +821,7 @@ int main(int argc, char **argv)
                         int srcpix = i* maxDstHeight * maxDstWidth * ip_channel + (j * maxDstWidth + k)  + c * maxDstHeight * maxDstWidth;
                         if(j == 0 && k == 0)
                             cout << dstpix << " " << srcpix << endl;
-                        outputCopy[dstpix] = output[srcpix];
+                        outputCopy[srcpix] = output[dstpix];
                     }
                 }
             }
