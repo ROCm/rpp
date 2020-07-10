@@ -288,48 +288,24 @@ int main(int argc, char **argv)
     Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
     Rpp32u imageDimMax = maxSize.width * maxSize.height;
 
-    for (int count = 0; count < noOfImages; count++)
-    {
-        colIncrementPln = maxSize.width - srcSize[count].width;
-        rowIncrementPln = (maxSize.height - srcSize[count].height) * maxSize.width;
-        colIncrementPkd = colIncrementPln * ip_channel;
-        rowIncrementPkd = rowIncrementPln * ip_channel;
-
-        inputTempR = inputTemp;
-        inputTempG = inputTempR + imageDimMax;
-        inputTempB = inputTempG + imageDimMax;
-
-        for (int i = 0; i < srcSize[count].height; i++)
+    for(int i = 0; i < noOfImages; i++)
         {
-            for (int j = 0; j < srcSize[count].width; j++)
+            for(int j = 0; j < maxDstHeight; j++)
             {
-                *inputTempR = *inputCopyTemp;
-                inputCopyTemp++;
-                inputTempR++;
-                *inputTempG = *inputCopyTemp;
-                inputCopyTemp++;
-                inputTempG++;
-                *inputTempB = *inputCopyTemp;
-                inputCopyTemp++;
-                inputTempB++;
+                for(int k = 0; k < maxDstWidth ; k++)
+                {
+                    for(int c = 0; c < ip_channel; c++)
+                    {
+                        int dstpix = i* maxDstHeight * maxDstWidth * ip_channel + j * maxDstWidth * ip_channel + k * ip_channel + c;
+                        int srcpix = i* maxDstHeight * maxDstWidth * ip_channel + (j * maxDstWidth + k)  + c * maxDstHeight * maxDstWidth;
+                        if(j == 0 && k == 0)
+                            cout << dstpix << " " << srcpix << endl;
+                        inputCopy[srcpix] = input[dstpix];
+                    }
+                }
             }
-            memset(inputTempR, (Rpp8u) 0, colIncrementPln * sizeof(Rpp8u));
-            memset(inputTempG, (Rpp8u) 0, colIncrementPln * sizeof(Rpp8u));
-            memset(inputTempB, (Rpp8u) 0, colIncrementPln * sizeof(Rpp8u));
-            inputTempR += colIncrementPln;
-            inputTempG += colIncrementPln;
-            inputTempB += colIncrementPln;
-            inputCopyTemp += colIncrementPkd;
         }
-        memset(inputTempR, (Rpp8u) 0, rowIncrementPln * sizeof(Rpp8u));
-        memset(inputTempG, (Rpp8u) 0, rowIncrementPln * sizeof(Rpp8u));
-        memset(inputTempB, (Rpp8u) 0, rowIncrementPln * sizeof(Rpp8u));
-        inputCopyTemp += rowIncrementPkd;
-        inputTemp += (imageDimMax * ip_channel);
-    }
-
-    free(inputCopy);
-
+    input = inputCopy;
     if (ip_bitDepth == 1)
     {
         Rpp8u *inputTemp, *input_secondTemp;
@@ -830,60 +806,28 @@ int main(int argc, char **argv)
         else
             cout << "Unable to open file!";
     }
-
+    Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
     if(outputFormatToggle == 0)
     {
-        Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
-        memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
-        
-        Rpp8u *outputTemp, *outputCopyTemp;
-        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
-        outputTemp = output;
-        outputCopyTemp = outputCopy;
-
-        Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
-        Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
-        Rpp32u imageDimMax = maxDstSize.width * maxDstSize.height;
-
-        for (int count = 0; count < noOfImages; count++)
+        for(int i = 0; i < noOfImages; i++)
         {
-            colIncrementPln = maxDstSize.width - dstSize[count].width;
-            rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
-            colIncrementPkd = colIncrementPln * ip_channel;
-            rowIncrementPkd = rowIncrementPln * ip_channel;
-
-            outputCopyTempR = outputCopyTemp;
-            outputCopyTempG = outputCopyTempR + imageDimMax;
-            outputCopyTempB = outputCopyTempG + imageDimMax;
-
-            for (int i = 0; i < dstSize[count].height; i++)
+            for(int j = 0; j < maxDstHeight; j++)
             {
-                for (int j = 0; j < dstSize[count].width; j++)
+                for(int k = 0; k < maxDstWidth ; k++)
                 {
-                    *outputTemp = *outputCopyTempR;
-                    outputTemp++;
-                    outputCopyTempR++;
-                    *outputTemp = *outputCopyTempG;
-                    outputTemp++;
-                    outputCopyTempG++;
-                    *outputTemp = *outputCopyTempB;
-                    outputTemp++;
-                    outputCopyTempB++;
+                    for(int c = 0; c < ip_channel; c++)
+                    {
+                        int dstpix = i* maxDstHeight * maxDstWidth * ip_channel + j * maxDstWidth * ip_channel + k * ip_channel + c;
+                        int srcpix = i* maxDstHeight * maxDstWidth * ip_channel + (j * maxDstWidth + k)  + c * maxDstHeight * maxDstWidth;
+                        if(j == 0 && k == 0)
+                            cout << dstpix << " " << srcpix << endl;
+                        outputCopy[dstpix] = output[srcpix];
+                    }
                 }
-                memset(outputTemp, (Rpp8u) 0, colIncrementPkd * sizeof(Rpp8u));
-                outputTemp += colIncrementPkd;
-                outputCopyTempR += colIncrementPln;
-                outputCopyTempG += colIncrementPln;
-                outputCopyTempB += colIncrementPln;
             }
-            memset(outputTemp, (Rpp8u) 0, rowIncrementPkd * sizeof(Rpp8u));
-            outputTemp += rowIncrementPkd;
-            outputCopyTemp += (imageDimMax * ip_channel);
         }
-
-        free(outputCopy);
+        output = outputCopy;
     }
-
     rppDestroyGPU(handle);
 
     mkdir(dst, 0700);
