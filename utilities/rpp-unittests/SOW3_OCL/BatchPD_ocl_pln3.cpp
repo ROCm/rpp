@@ -821,7 +821,7 @@ int main(int argc, char **argv)
                         int srcpix = i* maxDstHeight * maxDstWidth * ip_channel + (j * maxDstWidth + k)  + c * maxDstHeight * maxDstWidth;
                         if(j == 0 && k == 0)
                             cout << dstpix << " " << srcpix << endl;
-                        outputCopy[srcpix] = output[dstpix];
+                        outputCopy[dstpix] = output[srcpix];
                     }
                 }
             }
