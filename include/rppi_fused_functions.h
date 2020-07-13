@@ -183,7 +183,7 @@ extern "C"
     RppStatus
     rppi_color_twist_u8_pln1_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_color_twist_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_color_twist_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_color_twist_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f alpha, Rpp32f beta, Rpp32f hueShift, Rpp32f saturationFactor, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -223,7 +223,7 @@ extern "C"
     RppStatus
     rppi_color_twist_u8_pln3_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_color_twist_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_color_twist_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_color_twist_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f alpha, Rpp32f beta, Rpp32f hueShift, Rpp32f saturationFactor, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -263,7 +263,7 @@ extern "C"
     RppStatus
     rppi_color_twist_u8_pkd3_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_color_twist_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_color_twist_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32f *hueShift, Rpp32f *saturationFactor, Rpp32u nbatchSize, Rpp32u outputFormatToggle, rppHandle_t rppHandle);
     RppStatus
     rppi_color_twist_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, Rpp32f alpha, Rpp32f beta, Rpp32f hueShift, Rpp32f saturationFactor, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -538,11 +538,11 @@ extern "C"
     // Does not take care care of out of boundary cases
 
     RppStatus
-    rppi_crop_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_crop_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_crop_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_crop_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_crop_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_crop_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
     RppStatus
     rppi_crop_f16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
@@ -632,11 +632,11 @@ extern "C"
     // ----------------------------------------
 
     RppStatus
-    rppi_resize_crop_mirror_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_mirror_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_mirror_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_mirror_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle,Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_mirror_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_mirror_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
     RppStatus
     rppi_resize_crop_mirror_f16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);

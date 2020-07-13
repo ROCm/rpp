@@ -1106,8 +1106,8 @@ extern "C"
     RppStatus
     rppi_resize_u8_pln1_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, 
-                        RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
+                                    RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1147,7 +1147,7 @@ extern "C"
     RppStatus
     rppi_resize_u8_pln3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u outputFomatToggle, 
+    rppi_resize_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u outputFomatToggle,
                                     Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
@@ -1188,8 +1188,8 @@ extern "C"
     RppStatus
     rppi_resize_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, 
-                            RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
+                                    RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1242,7 +1242,7 @@ extern "C"
     RppStatus
     rppi_resize_u8_pln1_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1282,7 +1282,7 @@ extern "C"
     RppStatus
     rppi_resize_u8_pln3_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1322,7 +1322,7 @@ extern "C"
     RppStatus
     rppi_resize_u8_pkd3_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1553,7 +1553,7 @@ extern "C"
     RppStatus
     rppi_rotate_u8_pln1_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_rotate_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_rotate_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_rotate_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32f angleDeg, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1593,7 +1593,7 @@ extern "C"
     RppStatus
     rppi_rotate_u8_pln3_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_rotate_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_rotate_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_rotate_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32f angleDeg, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1633,7 +1633,7 @@ extern "C"
     RppStatus
     rppi_rotate_u8_pkd3_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_rotate_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_rotate_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *angleDeg, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_rotate_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32f angleDeg, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1746,8 +1746,8 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pln1_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, 
-                            Rpp32u *yRoiEnd, Rpp32u outputChannelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin,
+                                         Rpp32u *yRoiEnd, Rpp32u outputChannelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1787,8 +1787,8 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pln3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, 
-                                        Rpp32u outputChnnelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd,
+                                         Rpp32u outputChnnelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1828,9 +1828,9 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, 
-        RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, 
-        Rpp32u outputChannelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
+                                         RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd,
+                                         Rpp32u outputChannelToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1887,7 +1887,7 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pln1_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1927,7 +1927,7 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pln3_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -1967,7 +1967,7 @@ extern "C"
     RppStatus
     rppi_resize_crop_u8_pkd3_batchDD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstPtr, RppiSize *dstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
-    rppi_resize_crop_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+    rppi_resize_crop_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32u xRoiBegin, Rpp32u xRoiEnd, Rpp32u yRoiBegin, Rpp32u yRoiEnd, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
@@ -2588,44 +2588,43 @@ extern "C"
                                      RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                    RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                    RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                    RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                       RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                       RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
-    
+                                       RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
     RppStatus
     rppi_resize_u8_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                        RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_f32_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                        RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
-    
+                                        RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
     RppStatus
     rppi_resize_u8_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                        RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                        RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_u8_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize,
-                                     RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
-    
-    
+                                        RppiSize maxDstSize, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
     RppStatus
     rppi_resize_crop_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd,
                                           Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
@@ -2646,13 +2645,13 @@ extern "C"
                                           Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd,
-                                          Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                         Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd,
-                                          Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                         Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
     RppStatus
     rppi_resize_crop_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd,
-                                          Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+                                         Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u outputFomatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }
