@@ -1,11 +1,11 @@
 #!/bin/bash
 # <<<<<<<<<<<<<< JUST CHANGE SOURCE AND DESTINATION FOLDERS >>>>>>>>>>>>>>
-SRC_FOLDER_1="/home/lokesh/AMD/sample/"
-SRC_FOLDER_2="/home/lokesh/AMD/sample"
+SRC_FOLDER_1="~/Lokesh/fol1/"
+SRC_FOLDER_2="~/Lokesh/fol1/"
 DST_FOLDER="./"
 
-SRC_FOLDER_1_pln="/home/svcbuild/ulagammai/Input_Images_grey1/RGB"
-SRC_FOLDER_2_pln="/home/svcbuild/ulagammai/Input_Images_grey1/RGB1"
+SRC_FOLDER_1_pln="~/Lokesh/fol1/"
+SRC_FOLDER_2_pln="~/Lokesh/fol1/"
 
 # <<<<<<<<<<<<<< JUST CHANGE SOURCE AND DESTINATION FOLDERS >>>>>>>>>>>>>>
 shopt -s extglob

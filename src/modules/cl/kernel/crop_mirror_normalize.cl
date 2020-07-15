@@ -81,7 +81,7 @@ kernel void crop_mirror_normalize_batch_fp16(
   }
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
-      (id_x + id_y * max_dst_width[id_z]) * in_plnpkdind;
+      (id_x + id_y * max_dst_width[id_z]) * out_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pixIdx] = (input[src_pixIdx] - local_mean) / local_std_dev;
@@ -129,7 +129,7 @@ kernel void crop_mirror_normalize_batch_int8(
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
       (id_x + id_y * max_dst_width[id_z]) *
-          in_plnpkdind;
+          out_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pixIdx] = (char) ((input[src_pixIdx] - local_mean) / local_std_dev);
@@ -177,8 +177,7 @@ kernel void crop_mirror_normalize_batch_fp32(
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
       (id_x + id_y * max_dst_width[id_z]) *
-          out_plnpkdind; // output pix id will change according to format as well
-                       // //TODO
+          out_plnpkdind; 
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pixIdx] = (input[src_pixIdx] - local_mean) / local_std_dev;
@@ -225,7 +224,7 @@ kernel void crop_mirror_normalize_batch_u8_fp16(
   }
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
-      (id_x + id_y * max_dst_width[id_z]) * in_plnpkdind;
+      (id_x + id_y * max_dst_width[id_z]) * out_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pixIdx] = (half)((input[src_pixIdx] - local_mean) / 255.0 * local_std_dev);
@@ -272,7 +271,7 @@ kernel void crop_mirror_normalize_batch_u8_fp32(
   }
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
-      (id_x + id_y * max_dst_width[id_z]) * in_plnpkdind;
+      (id_x + id_y * max_dst_width[id_z]) * out_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pixIdx] = (float)((input[src_pixIdx] - local_mean) / 255.0 * local_std_dev);
@@ -319,7 +318,7 @@ kernel void crop_mirror_normalize_batch_u8_int8(
   }
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
-      (id_x + id_y * max_dst_width[id_z]) * in_plnpkdind;
+      (id_x + id_y * max_dst_width[id_z]) * out_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pixIdx] = (char)((input[src_pixIdx] - 128 - local_mean ) /  local_std_dev);
