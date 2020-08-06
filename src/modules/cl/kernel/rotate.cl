@@ -82,8 +82,8 @@ __kernel void rotate_batch(
     __global unsigned long *dest_batch_index, const unsigned int channel,
     __global unsigned int
         *source_inc, // use width * height for pln and 1 for pkd
-    __global unsigned int *dest_inc,
-    const int plnpkdindex // use 1 pln 3 for pkd
+    __global unsigned int *dest_inc, const int in_plnpkdind,
+    const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
@@ -109,9 +109,9 @@ __kernel void rotate_batch(
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
     src_pixIdx = source_batch_index[id_z] +
-                 (k + l * max_source_width[id_z]) * plnpkdindex;
+                 (k + l * max_source_width[id_z]) * in_plnpkdind;
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
       src_pixIdx += source_inc[id_z];
@@ -121,7 +121,7 @@ __kernel void rotate_batch(
 
   else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];
@@ -129,6 +129,62 @@ __kernel void rotate_batch(
   }
 }
 
+__kernel void rotate_batch_int8(
+    __global char *srcPtr, __global char *dstPtr, __global float *angleDeg,
+    __global unsigned int *source_height, __global unsigned int *source_width,
+    __global unsigned int *dest_height, __global unsigned int *dest_width,
+    __global unsigned int *xroi_begin, __global unsigned int *xroi_end,
+    __global unsigned int *yroi_begin, __global unsigned int *yroi_end,
+    __global unsigned int *max_source_width,
+    __global unsigned int *max_dest_width,
+    __global unsigned long *source_batch_index,
+    __global unsigned long *dest_batch_index, const unsigned int channel,
+    __global unsigned int *source_inc, __global unsigned int *dest_inc,
+    const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
+) {
+  int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+  if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
+    return;
+
+  int indextmp = 0;
+  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  float angleRad = RAD(angleDeg[id_z]);
+  float rotate[4];
+  rotate[0] = cos(angleRad);
+  rotate[1] = -1 * sin(angleRad);
+  rotate[2] = sin(angleRad);
+  rotate[3] = cos(angleRad);
+
+  int xc = id_x - dest_width[id_z] / 2;
+  int yc = id_y - dest_height[id_z] / 2;
+
+  int k = (int)((rotate[0] * xc) + (rotate[1] * yc));
+  int l = (int)((rotate[2] * xc) + (rotate[3] * yc));
+  k = k + source_width[id_z] / 2;
+  l = l + source_height[id_z] / 2;
+
+  if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
+      (k >= xroi_begin[id_z])) {
+    src_pixIdx = source_batch_index[id_z] +
+                 (k + l * max_source_width[id_z]) * in_plnpkdind;
+    dst_pixIdx = dest_batch_index[id_z] +
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+    for (indextmp = 0; indextmp < channel; indextmp++) {
+      dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
+      src_pixIdx += source_inc[id_z];
+      dst_pixIdx += dest_inc[id_z];
+    }
+  }
+
+  else {
+    dst_pixIdx = dest_batch_index[id_z] +
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+    for (indextmp = 0; indextmp < channel; indextmp++) {
+      dstPtr[dst_pixIdx] = -128;
+      dst_pixIdx += dest_inc[id_z];
+    }
+  }
+}
 __kernel void rotate_batch_fp16(
     __global half *srcPtr, __global half *dstPtr, __global float *angleDeg,
     __global unsigned int *source_height, __global unsigned int *source_width,
@@ -139,10 +195,8 @@ __kernel void rotate_batch_fp16(
     __global unsigned int *max_dest_width,
     __global unsigned long *source_batch_index,
     __global unsigned long *dest_batch_index, const unsigned int channel,
-    __global unsigned int
-        *source_inc, // use width * height for pln and 1 for pkd
-    __global unsigned int *dest_inc,
-    const int plnpkdindex // use 1 pln 3 for pkd
+    __global unsigned int *source_inc, __global unsigned int *dest_inc,
+    const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
@@ -168,9 +222,9 @@ __kernel void rotate_batch_fp16(
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
     src_pixIdx = source_batch_index[id_z] +
-                 (k + l * max_source_width[id_z]) * plnpkdindex;
+                 (k + l * max_source_width[id_z]) * in_plnpkdind;
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
       src_pixIdx += source_inc[id_z];
@@ -180,9 +234,9 @@ __kernel void rotate_batch_fp16(
 
   else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      dstPtr[dst_pixIdx] = 0;
+      dstPtr[dst_pixIdx] = -128;
       dst_pixIdx += dest_inc[id_z];
     }
   }
@@ -198,10 +252,8 @@ __kernel void rotate_batch_fp32(
     __global unsigned int *max_dest_width,
     __global unsigned long *source_batch_index,
     __global unsigned long *dest_batch_index, const unsigned int channel,
-    __global unsigned int
-        *source_inc, // use width * height for pln and 1 for pkd
-    __global unsigned int *dest_inc,
-    const int plnpkdindex // use 1 pln 3 for pkd
+    __global unsigned int *source_inc, __global unsigned int *dest_inc,
+    const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
@@ -227,9 +279,9 @@ __kernel void rotate_batch_fp32(
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
     src_pixIdx = source_batch_index[id_z] +
-                 (k + l * max_source_width[id_z]) * plnpkdindex;
+                 (k + l * max_source_width[id_z]) * in_plnpkdind;
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
       src_pixIdx += source_inc[id_z];
@@ -239,7 +291,7 @@ __kernel void rotate_batch_fp32(
 
   else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];

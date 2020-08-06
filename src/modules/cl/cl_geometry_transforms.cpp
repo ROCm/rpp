@@ -299,38 +299,23 @@ resize_cl(cl_mem srcPtr, RppiSize srcSize,
 
 RppStatus
 resize_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                RppiChnFormat chnFormat, unsigned int channel, RPPTensorDataType dataType)
+                RppiChnFormat chnFormat, unsigned int channel)
 {
     int plnpkdind;
-    unsigned int padding = 0;
-    unsigned int type = 0;
-    int batch_size = handle.GetBatchSize();
-     
-    if(chnFormat == RPPI_CHN_PLANAR)
+    if (chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
-        plnpkdind = 3;
-    InitHandle *handle_obj = handle.GetInitHandle();
+        plnpkdind = channel;
+    unsigned int padding = 0;
+    unsigned int type = 0;
+
     Rpp32u max_height, max_width;
-    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    std::vector<size_t> vld{16, 16, 1};
-    std::vector<size_t> vgd{max_width , max_height, handle.GetBatchSize()};
-    std::string kernel_file  = "resize.cl";
-    std::string kernel_name = "resize_crop_batch";
-    switch (dataType)
-    {
-    case RPPTensorDataType::U8:
-        break;
-    case RPPTensorDataType::FP32:
-        kernel_name = kernel_name + "_fp32";
-        break;   
-    case RPPTensorDataType::FP16:
-        kernel_name = kernel_name + "_fp16";
-        break;
-    default:
-        break;
-    }  
-    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
+    handle.AddKernel("", "", "resize.cl", "resize_crop_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.height,
@@ -348,7 +333,7 @@ resize_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                         handle.GetInitHandle()->mem.mgpu.dstInc,
                                                                         padding,
                                                                         type,
-                                                                        plnpkdind);
+                                                                        plnpkdind, plnpkdind);
     return RPP_SUCCESS;
 }
 
@@ -413,38 +398,21 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
 }
 RppStatus
 resize_crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                     RppiChnFormat chnFormat, unsigned int channel, RPPTensorDataType dataType)
+                     RppiChnFormat chnFormat, unsigned int channel)
 {
-    unsigned int padding = 10;
-    unsigned int type =  1;
     int plnpkdind;
-    int batch_size = handle.GetBatchSize();
-     
-    if(chnFormat == RPPI_CHN_PLANAR)
+    if (chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
-        plnpkdind = 3;
-    InitHandle *handle_obj = handle.GetInitHandle();
+        plnpkdind = channel;
+    unsigned int padding = 10;
+    unsigned int type = 1;
+
     Rpp32u max_height, max_width;
-    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    std::vector<size_t> vld{16, 16, 1};
-    std::vector<size_t> vgd{max_width , max_height, handle.GetBatchSize()};
-    std::string kernel_file  = "resize.cl";
-    std::string kernel_name = "resize_crop_batch";
-    switch (dataType)
-    {
-    case RPPTensorDataType::U8:
-        break;
-    case RPPTensorDataType::FP32:
-        kernel_name = kernel_name + "_fp32";
-        break;   
-    case RPPTensorDataType::FP16:
-        kernel_name = kernel_name + "_fp16";
-        break;
-    default:
-        break;
-    }  
-    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+    handle.AddKernel("", "", "resize.cl", "resize_crop_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.height,
@@ -462,9 +430,120 @@ resize_crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                         handle.GetInitHandle()->mem.mgpu.dstInc,
                                                                         padding,
                                                                         type,
-                                                                        plnpkdind);
+                                                                        plnpkdind, plnpkdind);
     return RPP_SUCCESS;
 }
+
+RppStatus
+rotate_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    int batch_size = handle.GetBatchSize();
+    InitHandle *handle_obj = handle.GetInitHandle();
+    Rpp32u max_height, max_width;
+    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
+    std::string kernel_file  = "rotate.cl";
+    std::string kernel_name = "rotate_batch";
+    get_kernel_name(kernel_name, tensor_info);
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+                                                                        handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                        tensor_info._in_channels,
+                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                        in_plnpkdind, out_plnpkdind);
+    return RPP_SUCCESS;
+}
+RppStatus
+resize_crop_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type =  1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    int batch_size = handle.GetBatchSize();
+    InitHandle *handle_obj = handle.GetInitHandle();
+    Rpp32u max_height, max_width;
+    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
+    std::string kernel_file  = "resize.cl";
+    std::string kernel_name = "resize_crop_batch";
+    get_kernel_name(kernel_name, tensor_info);
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                        tensor_info._in_channels,
+                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                        padding,
+                                                                        type,
+                                                                        in_plnpkdind, out_plnpkdind);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 0;
+    unsigned int type = 0;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    int batch_size = handle.GetBatchSize();
+    InitHandle *handle_obj = handle.GetInitHandle();
+    Rpp32u max_height, max_width;
+    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
+    std::string kernel_file  = "resize.cl";
+    std::string kernel_name = "resize_crop_batch";
+    get_kernel_name(kernel_name, tensor_info);
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, 
+                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                        tensor_info._in_channels,
+                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                        padding,
+                                                                        type,
+                                                                        in_plnpkdind, out_plnpkdind);
+    return RPP_SUCCESS;
+}
+
 /*************Rotate ******************/
 RppStatus
 rotate_cl(cl_mem srcPtr, RppiSize srcSize,
@@ -472,7 +551,6 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
           RppiChnFormat chnFormat, unsigned int channel,
           rpp::Handle &handle)
 {
-    // std::cerr << "\n dstSize" << dstSize.width << "\t " << dstSize.height;
     if (chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -503,36 +581,21 @@ rotate_cl(cl_mem srcPtr, RppiSize srcSize,
 }
 RppStatus
 rotate_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                RppiChnFormat chnFormat, unsigned int channel, RPPTensorDataType dataType)
+                RppiChnFormat chnFormat, unsigned int channel)
 {
     int plnpkdind;
-    int batch_size = handle.GetBatchSize();
-     
-    if(chnFormat == RPPI_CHN_PLANAR)
+
+    if (chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
-        plnpkdind = 3;
-    InitHandle *handle_obj = handle.GetInitHandle();
+        plnpkdind = channel;
+
     Rpp32u max_height, max_width;
-    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    std::vector<size_t> vld{16, 16, 1};
-    std::vector<size_t> vgd{max_width , max_height, handle.GetBatchSize()};
-    std::string kernel_file  = "rotate.cl";
-    std::string kernel_name = "rotate_batch";
-    switch (dataType)
-    {
-    case RPPTensorDataType::U8:
-        break;
-    case RPPTensorDataType::FP32:
-        kernel_name = kernel_name + "_fp32";
-        break;   
-    case RPPTensorDataType::FP16:
-        kernel_name = kernel_name + "_fp16";
-        break;
-    default:
-        break;
-    }  
-    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+        
+    handle.AddKernel("", "", "rotate.cl", "rotate_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
@@ -549,7 +612,7 @@ rotate_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                         channel,
                                                                         handle.GetInitHandle()->mem.mgpu.inc,
                                                                         handle.GetInitHandle()->mem.mgpu.dstInc,
-                                                                        plnpkdind);
+                                                                        plnpkdind, plnpkdind);
     return RPP_SUCCESS;
 }
 
