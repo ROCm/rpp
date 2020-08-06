@@ -70,9 +70,7 @@ color_twist_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
     std::string kernel_file  = "colortwist.cl";
     std::string kernel_name = "colortwist_batch";
     get_kernel_name(kernel_name, tensor_info);
-    
-    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
-    std::cout << kernel_name << std::endl;
+
     handle.AddKernel("", "",  kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
@@ -116,9 +114,6 @@ crop_mirror_normalize_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
     std::string kernel_name = "crop_mirror_normalize_batch";
     get_kernel_name(kernel_name, tensor_info);
     
-    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
-    std::cout << kernel_name << std::endl;
-    
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                     handle_obj->mem.mgpu.dstSize.height,
                                                                     handle_obj->mem.mgpu.dstSize.width,       
@@ -154,8 +149,6 @@ crop_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunct
     std::string kernel_file  = "crop.cl";
     std::string kernel_name = "crop_batch";
     get_kernel_name(kernel_name, tensor_info);
-    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
-    std::cout << kernel_name << std::endl;
     
     handle.AddKernel("", "",kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,                                                                                                                                                                                                                                                                               
                                                                         handle_obj->mem.mgpu.dstSize.height,
@@ -191,9 +184,6 @@ resize_crop_mirror_cl_batch( cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     std::string kernel_file  = "resize.cl";
     std::string kernel_name = "resize_crop_mirror_batch";
     get_kernel_name(kernel_name, tensor_info);
-    
-    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
-    std::cout << kernel_name << std::endl;
     
     handle.AddKernel("", "", kernel_file , kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle_obj->mem.mgpu.srcSize.height, 

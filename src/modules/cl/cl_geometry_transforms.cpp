@@ -448,9 +448,6 @@ rotate_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTen
     std::string kernel_file  = "rotate.cl";
     std::string kernel_name = "rotate_batch";
     get_kernel_name(kernel_name, tensor_info);
-    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
-    std::cout << "chaneeks " << tensor_info._in_channels  << std::endl;
-    std::cout << kernel_name << std::endl;
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
@@ -487,8 +484,6 @@ resize_crop_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
     std::string kernel_file  = "resize.cl";
     std::string kernel_name = "resize_crop_batch";
     get_kernel_name(kernel_name, tensor_info);
-    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
-    std::cout << kernel_name << std::endl;
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
@@ -527,8 +522,6 @@ resize_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTen
     std::string kernel_file  = "resize.cl";
     std::string kernel_name = "resize_crop_batch";
     get_kernel_name(kernel_name, tensor_info);
-    std::cout << "in_plnindex " << in_plnpkdind  << "  out_plnpkdindex " << out_plnpkdind << std::endl;
-    std::cout << kernel_name << std::endl;
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
