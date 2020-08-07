@@ -277,21 +277,22 @@ int main(int argc, char **argv)
     memcpy(inputCopy, input, ioBufferSize * sizeof(Rpp8u));
     
     Rpp8u *inputTemp, *inputCopyTemp;
-    Rpp8u *inputTempR, *inputTempG, *inputTempB;
+    // Rpp8u *inputTempR, *inputTempG, *inputTempB;
     inputTemp = input;
     inputCopyTemp = inputCopy;
 
-    Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
-    Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
+    // Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
+    // Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
     Rpp32u imageDimMax = maxSize.width * maxSize.height;
 
     for (int count = 0; count < noOfImages; count++)
     {
-        colIncrementPln = maxSize.width - srcSize[count].width;
-        rowIncrementPln = (maxSize.height - srcSize[count].height) * maxSize.width;
-        colIncrementPkd = colIncrementPln * ip_channel;
-        rowIncrementPkd = rowIncrementPln * ip_channel;
+        Rpp32u colIncrementPln = maxSize.width - srcSize[count].width;
+        Rpp32u rowIncrementPln = (maxSize.height - srcSize[count].height) * maxSize.width;
+        Rpp32u colIncrementPkd = colIncrementPln * ip_channel;
+        Rpp32u rowIncrementPkd = rowIncrementPln * ip_channel;
 
+        Rpp8u *inputTempR, *inputTempG, *inputTempB;
         inputTempR = inputTemp;
         inputTempG = inputTempR + imageDimMax;
         inputTempB = inputTempG + imageDimMax;
@@ -890,16 +891,16 @@ int main(int argc, char **argv)
         strcpy(temp, dst);
         strcat(temp, imageNames[j]);
         Mat mat_op_image;
-        if (ip_channel == 3)
-        {
+        // if (ip_channel == 3)
+        // {
             mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
             imwrite(temp, mat_op_image);
-        }
-        if (ip_channel == 1)
-        {
-            mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
-            imwrite(temp, mat_op_image);
-        }
+        // }
+        // if (ip_channel == 1)
+        // {
+        //     mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+        //     imwrite(temp, mat_op_image);
+        // }
         free(temp_output);
     }
 
