@@ -826,21 +826,22 @@ int main(int argc, char **argv)
         memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
         
         Rpp8u *outputTemp, *outputCopyTemp;
-        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
+        // Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
         outputTemp = output;
         outputCopyTemp = outputCopy;
 
-        Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
-        Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
+        // Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
+        // Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
         Rpp32u imageDimMax = maxDstSize.width * maxDstSize.height;
 
         for (int count = 0; count < noOfImages; count++)
         {
-            colIncrementPln = maxDstSize.width - dstSize[count].width;
-            rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
-            colIncrementPkd = colIncrementPln * ip_channel;
-            rowIncrementPkd = rowIncrementPln * ip_channel;
+            Rpp32u colIncrementPln = maxDstSize.width - dstSize[count].width;
+            Rpp32u rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
+            Rpp32u colIncrementPkd = colIncrementPln * ip_channel;
+            Rpp32u rowIncrementPkd = rowIncrementPln * ip_channel;
 
+            Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
             outputCopyTempR = outputCopyTemp;
             outputCopyTempG = outputCopyTempR + imageDimMax;
             outputCopyTempB = outputCopyTempG + imageDimMax;

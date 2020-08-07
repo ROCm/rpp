@@ -2050,7 +2050,6 @@ rppDestroyGPU(handle);
 
     if (ip_bitDepth == 1)
     {
-        int valCount = 0;
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp16f *outputf16Temp;
@@ -2064,7 +2063,6 @@ rppDestroyGPU(handle);
     }
     else if (ip_bitDepth == 2)
     {
-        int valCount = 0;
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp32f *outputf32Temp;
@@ -2094,16 +2092,16 @@ rppDestroyGPU(handle);
         strcpy(temp,dst);
         strcat(temp, imageNames[j]);
         Mat mat_op_image;
-        if(ip_channel == 3)
-        {
+        // if(ip_channel == 3)
+        // {
             mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
             imwrite(temp, mat_op_image);
-        }
-        if(ip_channel == 1)
-        {
-            mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
-            imwrite(temp, mat_op_image);
-        }
+        // }
+        // if(ip_channel == 1)
+        // {
+        //     mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+        //     imwrite(temp, mat_op_image);
+        // }
         free(temp_output);
     }
 
