@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(amd_rpp)
-set(VERSION "0.4")
+set(VERSION "0.5")
 
 # ROCm Path
 set(ROCM_PATH /opt/rocm CACHE PATH "ROCm installation path")
@@ -306,3 +306,44 @@ add_subdirectory(addkernels)
 # Installation
 install (TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 install (DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# set package information
+set(CPACK_PACKAGE_VERSION       ${VERSION})
+set(CPACK_PACKAGE_NAME          "rpp")
+set(CPACK_PACKAGE_RELEASE       1)
+set(CPACK_PACKAGE_LICENSE       "MIT")
+set(CPACK_PACKAGE_CONTACT       "Kiriti Gowda <Kiriti.NageshGowda@amd.com>")
+set(CPACK_PACKAGE_VENDOR        "AMD Radeon")
+set(CPACK_PACKAGE_ICON          "${CMAKE_SOURCE_DIR}/docs/images/MIVisionX.bmp")
+set(CPACK_PACKAGE_GROUP         "Development/Tools")
+set(CPACK_PACKAGE_HOMEPAGE      "https://gpuopen-professionalcompute-libraries.github.io/rpp/")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY   "Radeon Performance Primitives (RPP) library is a comprehensive high performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends.")
+
+# find linux distribution
+find_program(LSB_RELEASE_EXEC lsb_release)
+execute_process(COMMAND ${LSB_RELEASE_EXEC} -is
+                OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                )
+
+# generate .deb or .rpm package
+if(LSB_RELEASE_ID_SHORT STREQUAL "Ubuntu" AND NOT APPLE)
+    message("-- Ubuntu detected   -- .deb package will be created")
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE   ${CPACK_PACKAGE_HOMEPAGE})
+    set(CPACK_GENERATOR                 "DEB")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS    "libboost-all-dev, clang")
+elseif(APPLE)
+    message("-- Apple detected    -- OSX package will be created")
+    set(CPACK_BUNDLE_PACKAGE_HOMEPAGE   ${CPACK_PACKAGE_HOMEPAGE})
+    set(CPACK_GENERATOR                 "Bundle")
+else()
+    message("-- CentOS detected   -- .rpm package will be created")
+    set(CPACK_RPM_PACKAGE_URL           ${CPACK_PACKAGE_HOMEPAGE})
+    set(CPACK_GENERATOR                 "RPM")
+    set(CPACK_RPM_PACKAGE_REQUIRES      "libboost-all-dev, clang")
+    set(CPACK_RPM_PACKAGE_AUTOREQPROV   "no")
+endif()
+
+set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
+include(CPack)
