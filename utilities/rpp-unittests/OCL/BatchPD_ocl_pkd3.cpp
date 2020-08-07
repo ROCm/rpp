@@ -311,14 +311,14 @@ int main(int argc, char **argv)
         char temp[1000];
         strcpy(temp,src1);
         strcat(temp, imageNames[count]);
-        if(ip_channel == 3)
-        {
+        // if(ip_channel == 3)
+        // {
             image = imread(temp, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-        }
+        // }
+        // else
+        // {
+        //     image = imread(temp, 0);
+        // }
         srcSize[count].height = image.rows;
         srcSize[count].width = image.cols;
         if(maxHeight < srcSize[count].height)
