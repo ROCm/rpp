@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 	RppiSize *dstSize = (RppiSize *)calloc(noOfImages, sizeof(RppiSize));
 	char imageNames[images][1000];
 
-	unsigned long long count1; = 0;
+	unsigned long long count1 = 0;
 	
 	DIR *dr1 = opendir(src);
 	while ((de = readdir(dr1)) != NULL) 

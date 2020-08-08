@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 
     int i = 0, j = 0;
     int minHeight = 30000, minWidth = 30000, maxHeight = 0, maxWidth = 0;
-    unsigned long long count;
+    
     unsigned long long ioBufferSize = 0;
 
     static int noOfImages = 0;
@@ -84,17 +84,17 @@ int main(int argc, char **argv)
     //const int images = noOfImages;
     char imageNames[images][1000];
 
-    count = 0;
+    unsigned long long count1 = 0;
 
     DIR *dr1 = opendir(src);
     while ((de = readdir(dr1)) != NULL)
     {
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
-        strcpy(imageNames[count], de->d_name);
+        strcpy(imageNames[count1], de->d_name);
         char temp[1000];
         strcpy(temp, src1);
-        strcat(temp, imageNames[count]);
+        strcat(temp, imageNames[count1]);
         if (ip_channel == 3)
         {
             image = imread(temp, 1);
@@ -103,11 +103,11 @@ int main(int argc, char **argv)
         {
             image = imread(temp, 0);
         }
-        srcSize[count].height = image.rows;
-        srcSize[count].width = image.cols;
-        ioBufferSize += (unsigned long long)srcSize[count].height * (unsigned long long)srcSize[count].width * (unsigned long long)ip_channel;
+        srcSize[count1].height = image.rows;
+        srcSize[count1].width = image.cols;
+        ioBufferSize += (unsigned long long)srcSize[count1].height * (unsigned long long)srcSize[count1].width * (unsigned long long)ip_channel;
 
-        count++;
+        count1++;
         break;
     }
     closedir(dr1);
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
     /* Read the input image */
     DIR *dr2 = opendir(src);
     DIR *dr2_second = opendir(src_second);
-    count = 0;
+    unsigned long long count2 = 0;
     i = 0;
     while ((de = readdir(dr2)) != NULL)
     {
@@ -145,9 +145,9 @@ int main(int argc, char **argv)
         Rpp8u *ip_image_second = image_second.data;
         for (j = 0; j < srcSize[i].height * srcSize[i].width * ip_channel; j++)
         {
-            input[count] = ip_image[j];
-            input_second[count] = ip_image_second[j];
-            count++;
+            input[count2] = ip_image[j];
+            input_second[count2] = ip_image_second[j];
+            count2++;
         }
         i++;
         break;
@@ -543,15 +543,15 @@ int main(int argc, char **argv)
 
     rppDestroyHost(handle);
 
-    count = 0;
+    unsigned long long count3 = 0;
     for (j = 0; j < noOfImages; j++)
     {
         int op_size = srcSize[j].height * srcSize[j].width * ip_channel;
         Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
         for (i = 0; i < op_size; i++)
         {
-            temp_output[i] = output[count];
-            count++;
+            temp_output[i] = output[count3];
+            count3++;
         }
         char temp[1000];
         strcpy(temp, dst);

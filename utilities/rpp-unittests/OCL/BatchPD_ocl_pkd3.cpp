@@ -385,16 +385,16 @@ int main(int argc, char **argv)
         strcpy(temp_second,src1_second);
         strcat(temp_second, de->d_name);    
        
-        if(ip_channel == 3)
-        {
+        // if(ip_channel == 3)
+        // {
             image = imread(temp, 1);
-       image_second = imread(temp_second, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-            image_second = imread(temp_second, 0);
-        }
+            image_second = imread(temp_second, 1);
+        // }
+        // else
+        // {
+        //     image = imread(temp, 0);
+        //     image_second = imread(temp_second, 0);
+        // }
        
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
