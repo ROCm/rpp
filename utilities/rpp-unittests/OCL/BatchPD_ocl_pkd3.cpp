@@ -311,14 +311,14 @@ int main(int argc, char **argv)
         char temp[1000];
         strcpy(temp,src1);
         strcat(temp, imageNames[count]);
-        if(ip_channel == 3)
-        {
+        // if(ip_channel == 3)
+        // {
             image = imread(temp, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-        }
+        // }
+        // else
+        // {
+        //     image = imread(temp, 0);
+        // }
         srcSize[count].height = image.rows;
         srcSize[count].width = image.cols;
         if(maxHeight < srcSize[count].height)
@@ -385,16 +385,16 @@ int main(int argc, char **argv)
         strcpy(temp_second,src1_second);
         strcat(temp_second, de->d_name);    
        
-        if(ip_channel == 3)
-        {
+        // if(ip_channel == 3)
+        // {
             image = imread(temp, 1);
-       image_second = imread(temp_second, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-            image_second = imread(temp_second, 0);
-        }
+            image_second = imread(temp_second, 1);
+        // }
+        // else
+        // {
+        //     image = imread(temp, 0);
+        //     image_second = imread(temp_second, 0);
+        // }
        
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
@@ -2050,7 +2050,6 @@ rppDestroyGPU(handle);
 
     if (ip_bitDepth == 1)
     {
-        int valCount = 0;
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp16f *outputf16Temp;
@@ -2064,7 +2063,6 @@ rppDestroyGPU(handle);
     }
     else if (ip_bitDepth == 2)
     {
-        int valCount = 0;
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp32f *outputf32Temp;
@@ -2094,16 +2092,16 @@ rppDestroyGPU(handle);
         strcpy(temp,dst);
         strcat(temp, imageNames[j]);
         Mat mat_op_image;
-        if(ip_channel == 3)
-        {
+        // if(ip_channel == 3)
+        // {
             mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
             imwrite(temp, mat_op_image);
-        }
-        if(ip_channel == 1)
-        {
-            mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
-            imwrite(temp, mat_op_image);
-        }
+        // }
+        // if(ip_channel == 1)
+        // {
+        //     mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+        //     imwrite(temp, mat_op_image);
+        // }
         free(temp_output);
     }
 

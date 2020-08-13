@@ -748,7 +748,8 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, U* dstPtr, Rppi
         Rpp32f wRatio = (((Rpp32f) (dstSize.width - 1)) / ((Rpp32f) (srcSize.width - 1)));
         Rpp32f srcLocationRow, srcLocationColumn, pixel;
         Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
-        T *srcPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+        // T *srcPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+        T *srcPtrTemp;
         U *dstPtrTemp;
         srcPtrTemp = srcPtr;
         dstPtrTemp = dstPtr;
@@ -768,6 +769,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, U* dstPtr, Rppi
                 srcLocationRowFloor = heightLimit;
             }
 
+            T *srcPtrTopRow, *srcPtrBottomRow;
             srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * elementsInRow;
             srcPtrBottomRow  = srcPtrTopRow + elementsInRow;
 
