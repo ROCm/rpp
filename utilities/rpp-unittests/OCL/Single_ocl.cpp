@@ -16,9 +16,9 @@ using namespace std;
 #define images 100
 int G_IP_CHANNEL = 3;
 int G_MODE = 1;
-char src[1000] = {"/home/neel/Ulagammai/Input_Images_16/RGB"};
-char src_second[1000] = {"/home/neel/Ulagammai/Input_Images_16/RGB1"};
-char dst[1000] = {"/home/neel/Ulagammai/Output"};
+char src[1000] = {""};
+char src_second[1000] = {""};
+char dst[1000] = {""};
 char funcType[1000] = {"Single"};
 
 int main(int argc, char **argv)
@@ -161,14 +161,14 @@ int main(int argc, char **argv)
 	cl_command_queue theQueue;
 	cl_int err;
 	err = clGetPlatformIDs(1, &platform_id, NULL);
-	err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
+	err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
 	theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
 	theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
 	d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
 	d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
 	d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-	err = clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
-	err = clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
+	err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+	err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
 	rppHandle_t handle;
 
 	rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
