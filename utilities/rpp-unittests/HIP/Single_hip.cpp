@@ -27,9 +27,9 @@ void check_hip_error(void)
 int G_IP_CHANNEL = 3;
 int G_MODE = 2;
 char funcType[1000] = {"Single"};
-char src[1000] = {"/home/ulagammai/ulagammai/TESTSUITE_RPP/Input_Images/RGB"};
-char src_second[1000] = {"/home/ulagammai/ulagammai/TESTSUITE_RPP/Input_Images/RGBS1"};
-char dst[1000] = {"/home/ulagammai/Hip-Unit-Testing/output"};
+char src[1000] = {""};
+char src_second[1000] = {""};
+char dst[1000] = {""};
 
 int main(int argc, char **argv)
 {
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 	
 	unsigned long long ioBufferSize = 0, oBufferSize = 0;
 	
-	static int noOfImages = 0;
+	static int noOfImages = 128;
 
 	Mat image,image_second;
 	

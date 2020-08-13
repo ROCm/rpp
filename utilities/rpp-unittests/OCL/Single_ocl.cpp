@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	
 	unsigned long long ioBufferSize = 0;
 
-	static int noOfImages = 0;
+	static int noOfImages = 128;
 
 	Mat image, image_second;
 

@@ -16,9 +16,9 @@ using namespace std;
 #define images 100
 int G_IP_CHANNEL = 3;
 int G_MODE = 1;
-char src[1000] = {"/home/neel/Ulagammai/Input_Images_16/RGB"};
-char src_second[1000] = {"/home/neel/Ulagammai/Input_Images_16/RGB1"};
-char dst[1000] = {"/home/neel/Ulagammai/Output"};
+char src[1000] = {""};
+char src_second[1000] = {""};
+char dst[1000] = {""};
 char funcType[1000] = {"Single"};
 
 int main(int argc, char **argv)
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     
     unsigned long long ioBufferSize = 0;
 
-    static int noOfImages = 0;
+    static int noOfImages = 128;
 
     Mat image, image_second;
 
