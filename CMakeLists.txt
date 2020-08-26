@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(amd_rpp)
-set(VERSION "0.5")
+set(VERSION "0.6")
 
 # ROCm Path
 set(ROCM_PATH /opt/rocm CACHE PATH "ROCm installation path")
