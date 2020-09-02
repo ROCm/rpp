@@ -24,7 +24,7 @@ __kernel void non_linear_blend_batch(
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   unsigned char valuergb1, valuergb2;
-  float tempstd_dev = width[id_z] / 2;
+  float tempstd_dev = width[id_z] / 8;
   int indextmp = 0;
   unsigned long pixIdx = 0;
 
