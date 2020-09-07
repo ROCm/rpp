@@ -85,6 +85,9 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
     case 7:
         strcpy(funcName, "color_twist");
         break;
+    case 8:
+        strcpy(funcName, "non_linear_blend");
+        break;
     }
 
     if (ip_bitDepth == 0)
@@ -337,7 +340,7 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         }
     }
 
-    cl_mem d_input, d_inputf16, d_inputf32,d_inputi8, d_input_second, d_output, d_outputf16, d_outputf32,d_outputi8;
+    cl_mem d_input, d_input2, d_inputf16, d_inputf32,d_inputi8, d_input_second, d_output, d_outputf16, d_outputf32,d_outputi8;
     cl_platform_id platform_id;
     cl_device_id device_id;
     cl_context theContext;
@@ -348,6 +351,7 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
     theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
     theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
     d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+    d_input2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
     d_inputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
     d_inputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
     d_inputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
@@ -357,6 +361,7 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
     d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
     d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
     err = clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(theQueue, d_input2, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
     err = clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
     err = clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
     err = clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
@@ -663,6 +668,37 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
             rppi_color_twist_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle,noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
+        end = clock();
+        break;
+    }
+    case 8:
+    {
+        test_case_name = "non_linear_blend";
+
+        Rpp32f alpha[images];
+        Rpp32f beta[images];
+        Rpp32f hueShift[images];
+        Rpp32f saturationFactor[images];
+        for (i = 0; i < images; i++)
+        {
+            alpha[i] = 1.4;
+        }
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_non_linear_blend_u8_pkd3_batchPD_gpu(d_input, d_input2, srcSize, maxSize, d_output, alpha, outputFormatToggle,noOfImages, handle);
+        // else if (ip_bitDepth == 1)
+        //     rppi_color_twist_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle,noOfImages, handle);
+        // else if (ip_bitDepth == 2)
+        //     rppi_color_twist_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, alpha, beta, hueShift, saturationFactor, outputFormatToggle,noOfImages, handle);
+        // else if (ip_bitDepth == 3)
+        //     missingFuncFlag = 1;
+        // else if (ip_bitDepth == 4)
+        //     missingFuncFlag = 1;
+        // else if (ip_bitDepth == 5)
+        //     rppi_color_twist_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle,noOfImages, handle);
+        // else if (ip_bitDepth == 6)
+        //     missingFuncFlag = 1;
         end = clock();
 
         break;

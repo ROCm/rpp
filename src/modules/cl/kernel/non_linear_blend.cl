@@ -2,7 +2,7 @@
 
 float gaussian(int x, int y, float std_dev) {
   float res, pi = 3.14;
-  res = 1 / (2 * pi * stdDev * std_dev);
+  res = 1 / (2 * pi * std_dev * std_dev);
   float exp1, exp2;
   exp1 = -(x * x) / (2 * std_dev * std_dev);
   exp2 = -(y * y) / (2 * std_dev * std_dev);
@@ -24,7 +24,7 @@ __kernel void non_linear_blend_batch(
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   unsigned char valuergb1, valuergb2;
-  float tempstd_dev = width[id_z] / 8;
+  float temp_std_dev = width[id_z] / 8;
   int indextmp = 0;
   unsigned long pixIdx = 0;
 
@@ -35,7 +35,7 @@ __kernel void non_linear_blend_batch(
     int x = (id_x - (width[id_z] / 2));
     int y = (id_y - (height[id_z] / 2));
     float gaussianvalue =
-        gaussian(x, y, tempstdDev) / gaussian(0.0, 0.0, tempstdDev);
+        gaussian(x, y, temp_std_dev/) / gaussian(0.0, 0.0, temp_std_dev);
     for (indextmp = 0; indextmp < channel; indextmp++) {
       valuergb1 = input1[pixIdx];
       valuergb2 = input2[pixIdx];

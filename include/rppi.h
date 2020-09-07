@@ -17,6 +17,7 @@ extern "C" {
 #include "rppi_morphological_transforms.h"
 #include "rppi_computer_vision.h"
 #include "rppi_fused_functions.h"
+#include "rppi_advanced_augmentations.h"
 
 
 #ifdef __cplusplus
