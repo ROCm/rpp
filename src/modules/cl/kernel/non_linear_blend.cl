@@ -42,8 +42,9 @@ __kernel void non_linear_blend_batch(
       valuergb1 = input1[src_pix_idx];
       valuergb2 = input2[src_pix_idx];
       output[dst_pix_idx] = gaussianvalue * input1[src_pix_idx] +
-                           (1 - gaussianvalue) * input2[src_pix_idx];
+                            (1 - gaussianvalue) * (255 - input1[src_pix_idx]);
       src_pix_idx += inc[id_z];
+      dst_pix_idx += inc[id_z];
     }
   } else {
     for (indextmp = 0; indextmp < channel; indextmp++) {

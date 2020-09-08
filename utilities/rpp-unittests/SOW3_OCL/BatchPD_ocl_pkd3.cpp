@@ -46,7 +46,6 @@ int main(int argc, char **argv)
     int ip_bitDepth = atoi(argv[4]);
     unsigned int outputFormatToggle = atoi(argv[5]);
     int test_case = atoi(argv[6]);
-
     int ip_channel = 3;
 
     char funcType[1000] = {"BatchPD_GPU_PKD3"};
@@ -146,6 +145,7 @@ int main(int argc, char **argv)
     strcat(funcName, funcType);
     strcat(dst, "/");
     strcat(dst, funcName);
+                 std::cout << "comes here"<< src_second << std::endl;
 
     DIR *dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
