@@ -30,6 +30,6 @@ non_linear_blend_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Ha
                                                                      handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                      tensor_info._in_channels,
                                                                      handle.GetInitHandle()->mem.mgpu.inc,
-                                                                     tensor_info._in_format);
+                                                                     in_plnpkdind);
     return RPP_SUCCESS;
 }

@@ -20,38 +20,35 @@ __kernel void non_linear_blend_batch(
     __global unsigned int *width, __global unsigned int *max_width,
     __global unsigned long *batch_index, const unsigned int channel,
     __global unsigned int *inc, // use width * height for pln and 1 for pkd
-    const int plnpkdindex       // use 1 pln 3 for pkd
+    int in_plnpkdind            // use 1 pln 3 for pkd
 ) {
+  int out_plnpkdind = in_plnpkdind;
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   unsigned char valuergb1, valuergb2;
   float temp_std_dev = width[id_z] / 8;
   int indextmp = 0;
-  unsigned long pixIdx = 0;
-
-  pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
+  unsigned long src_pix_idx =
+      batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
+  unsigned long dst_pix_idx =
+      batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
 
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
     int x = (id_x - (width[id_z] / 2));
     int y = (id_y - (height[id_z] / 2));
     float gaussianvalue =
-        gaussian(x, y, temp_std_dev/) / gaussian(0.0, 0.0, temp_std_dev);
+        gaussian(x, y, temp_std_dev) / gaussian(0.0, 0.0, temp_std_dev);
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      valuergb1 = input1[pixIdx];
-      valuergb2 = input2[pixIdx];
-      output[pixIdx] =
-          gaussianvalue * input1[pixIdx] + (1 - gaussianvalue) * input2[pixIdx];
-      pixIdx += inc[id_z];
-    }
-  } else if ((id_x < width[id_z]) && (id_y < height[id_z])) {
-    for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[pixIdx] = input1[pixIdx];
-      pixIdx += inc[id_z];
+      valuergb1 = input1[src_pix_idx];
+      valuergb2 = input2[src_pix_idx];
+      output[dst_pix_idx] = gaussianvalue * input1[src_pix_idx] +
+                           (1 - gaussianvalue) * input2[src_pix_idx];
+      src_pix_idx += inc[id_z];
     }
   } else {
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[pixIdx] = 0;
-      pixIdx += inc[id_z];
+      output[dst_pix_idx] = 0;
+      dst_pix_idx += inc[id_z];
     }
   }
 }
