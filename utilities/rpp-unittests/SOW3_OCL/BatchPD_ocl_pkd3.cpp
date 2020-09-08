@@ -145,7 +145,6 @@ int main(int argc, char **argv)
     strcat(funcName, funcType);
     strcat(dst, "/");
     strcat(dst, funcName);
-                 std::cout << "comes here"<< src_second << std::endl;
 
     DIR *dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
@@ -206,6 +205,7 @@ int main(int argc, char **argv)
 
     ioBufferSize = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
     oBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
+                         std::cout << "comes here"<< src_second << std::endl;
 
     Rpp8u *input = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
