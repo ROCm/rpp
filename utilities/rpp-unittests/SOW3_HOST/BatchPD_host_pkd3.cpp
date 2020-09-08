@@ -167,14 +167,14 @@ int main(int argc, char **argv)
         char temp[1000];
         strcpy(temp, src1);
         strcat(temp, imageNames[count]);
-        if (ip_channel == 3)
-        {
+        // if (ip_channel == 3)
+        // {
             image = imread(temp, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-        }
+        // }
+        // else
+        // {
+        //     image = imread(temp, 0);
+        // }
         srcSize[count].height = image.rows;
         srcSize[count].width = image.cols;
         if (maxHeight < srcSize[count].height)
@@ -245,16 +245,16 @@ int main(int argc, char **argv)
         strcpy(temp_second, src1_second);
         strcat(temp_second, de->d_name);
 
-        if (ip_channel == 3)
-        {
+        // if (ip_channel == 3)
+        // {
             image = imread(temp, 1);
             image_second = imread(temp_second, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-            image_second = imread(temp_second, 0);
-        }
+        // }
+        // else
+        // {
+        //     image = imread(temp, 0);
+        //     image_second = imread(temp_second, 0);
+        // }
 
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
@@ -771,21 +771,22 @@ int main(int argc, char **argv)
         memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
         
         Rpp8u *outputTemp, *outputCopyTemp;
-        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
+        // Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
         outputTemp = output;
         outputCopyTemp = outputCopy;
 
-        Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
-        Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
+        // Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
+        // Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
         Rpp32u imageDimMax = maxDstSize.width * maxDstSize.height;
 
         for (int count = 0; count < noOfImages; count++)
         {
-            colIncrementPln = maxDstSize.width - dstSize[count].width;
-            rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
-            colIncrementPkd = colIncrementPln * ip_channel;
-            rowIncrementPkd = rowIncrementPln * ip_channel;
+            Rpp32u colIncrementPln = maxDstSize.width - dstSize[count].width;
+            Rpp32u rowIncrementPln = (maxDstSize.height - dstSize[count].height) * maxDstSize.width;
+            Rpp32u colIncrementPkd = colIncrementPln * ip_channel;
+            Rpp32u rowIncrementPkd = rowIncrementPln * ip_channel;
 
+            Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
             outputCopyTempR = outputCopyTemp;
             outputCopyTempG = outputCopyTempR + imageDimMax;
             outputCopyTempB = outputCopyTempG + imageDimMax;
@@ -836,16 +837,16 @@ int main(int argc, char **argv)
         strcpy(temp, dst);
         strcat(temp, imageNames[j]);
         Mat mat_op_image;
-        if (ip_channel == 3)
-        {
+        // if (ip_channel == 3)
+        // {
             mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
             imwrite(temp, mat_op_image);
-        }
-        if (ip_channel == 1)
-        {
-            mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
-            imwrite(temp, mat_op_image);
-        }
+        // }
+        // if (ip_channel == 1)
+        // {
+        //     mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+        //     imwrite(temp, mat_op_image);
+        // }
         free(temp_output);
     }
 

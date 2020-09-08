@@ -167,14 +167,14 @@ int main(int argc, char **argv)
         char temp[1000];
         strcpy(temp, src1);
         strcat(temp, imageNames[count]);
-        if (ip_channel == 3)
-        {
+        // if (ip_channel == 3)
+        // {
             image = imread(temp, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-        }
+        // }
+        // else
+        // {
+        //     image = imread(temp, 0);
+        // }
         srcSize[count].height = image.rows;
         srcSize[count].width = image.cols;
         if (maxHeight < srcSize[count].height)
@@ -245,16 +245,16 @@ int main(int argc, char **argv)
         strcpy(temp_second, src1_second);
         strcat(temp_second, de->d_name);
 
-        if (ip_channel == 3)
-        {
+        // if (ip_channel == 3)
+        // {
             image = imread(temp, 1);
             image_second = imread(temp_second, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-            image_second = imread(temp_second, 0);
-        }
+        // }
+        // else
+        // {
+        //     image = imread(temp, 0);
+        //     image_second = imread(temp_second, 0);
+        // }
 
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
@@ -376,7 +376,7 @@ int main(int argc, char **argv)
     cl_command_queue theQueue;
     cl_int err;
     err = clGetPlatformIDs(1, &platform_id, NULL);
-    err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
+    err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
     theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
     theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
     d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
@@ -388,11 +388,11 @@ int main(int argc, char **argv)
     d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
     d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
     d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
-    err = clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
     rppHandle_t handle;
 
     rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
@@ -840,16 +840,16 @@ int main(int argc, char **argv)
         strcpy(temp, dst);
         strcat(temp, imageNames[j]);
         Mat mat_op_image;
-        if (ip_channel == 3)
-        {
+        // if (ip_channel == 3)
+        // {
             mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
             imwrite(temp, mat_op_image);
-        }
-        if (ip_channel == 1)
-        {
-            mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
-            imwrite(temp, mat_op_image);
-        }
+        // }
+        // if (ip_channel == 1)
+        // {
+        //     mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+        //     imwrite(temp, mat_op_image);
+        // }
         free(temp_output);
     }
 

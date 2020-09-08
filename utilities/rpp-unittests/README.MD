@@ -40,7 +40,8 @@ make
     SRC_FOLDER_2="/home/abishek/abishek/tests/Input_Images/temp224x224"
     DST_FOLDER="/home/abishek/abishek/tests/Output_Images"
     # <<<<<<<<<<<<<< JUST CHANGE SOURCE AND DESTINATION FOLDERS >>>>>>>>>>>>>>
-    ```
+
+```
   * Run the script:
     ```
     ./testAllScript.sh

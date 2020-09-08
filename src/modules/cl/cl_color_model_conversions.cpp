@@ -215,7 +215,6 @@ hueRGB_cl ( cl_mem srcPtr,RppiSize srcSize,
     float sat = 0.0;
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{((srcSize.width + 15)/16) * 16, ((srcSize.height + 15)/16) * 16, 1};
-    std::cout << "coming INto HUE RPP till here"  << std::endl;
     if (chnFormat == RPPI_CHN_PLANAR)
     {
        handle.AddKernel("", "", "hue.cl", "huergb_pln", vld, vgd, "")(srcPtr, dstPtr, hue_factor, sat, srcSize.height, srcSize.width);
