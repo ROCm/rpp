@@ -40,7 +40,6 @@ RppStatus non_linear_blend_helper(RppiChnFormat chn_format, Rpp32u num_of_channe
 	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
 	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format, is_padded);
 	copy_param_float(std_dev, rpp::deref(rppHandle), paramIndex++);
-	
 
 #ifdef OCL_COMPILE
 	{
@@ -89,3 +88,68 @@ rppi_non_linear_blend_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rp
 	return ( non_linear_blend_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
 							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
 }
+
+RppStatus
+rppi_non_linear_blend_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *std_dev,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( non_linear_blend_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_non_linear_blend_f32_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *std_dev,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( non_linear_blend_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_non_linear_blend_f16_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *std_dev,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( non_linear_blend_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_non_linear_blend_i8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *std_dev,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( non_linear_blend_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_non_linear_blend_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *std_dev,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( non_linear_blend_helper(RPPI_CHN_PLANAR,13, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_non_linear_blend_f32_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *std_dev,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( non_linear_blend_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_non_linear_blend_f16_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *std_dev,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( non_linear_blend_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_non_linear_blend_i8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *std_dev,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( non_linear_blend_helper(RPPI_CHN_PLANAR,13, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, std_dev, nbatchSize, rppHandle));
+}
+
