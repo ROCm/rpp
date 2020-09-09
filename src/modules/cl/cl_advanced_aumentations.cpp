@@ -11,7 +11,6 @@ non_linear_blend_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Ha
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     std::string kernel_file = "non_linear_blend.cl";
@@ -19,17 +18,18 @@ non_linear_blend_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Ha
     get_kernel_name(kernel_name, tensor_info);
 
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
-                                                                     handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                     handle_obj->mem.mgpu.floatArr[0].floatmem,
+                                                                     handle_obj->mem.mgpu.roiPoints.x,
+                                                                     handle_obj->mem.mgpu.roiPoints.roiWidth,
+                                                                     handle_obj->mem.mgpu.roiPoints.y,
+                                                                     handle_obj->mem.mgpu.roiPoints.roiHeight,
+                                                                     handle_obj->mem.mgpu.srcSize.height,
+                                                                     handle_obj->mem.mgpu.srcSize.width,
+                                                                     handle_obj->mem.mgpu.maxSrcSize.width,
+                                                                     handle_obj->mem.mgpu.srcBatchIndex,
                                                                      tensor_info._in_channels,
-                                                                     handle.GetInitHandle()->mem.mgpu.inc,
-                                                                     in_plnpkdind);
+                                                                     handle_obj->mem.mgpu.inc,
+                                                                     handle_obj->mem.mgpu.dstInc,
+                                                                     in_plnpkdind, out_plnpkdind);
     return RPP_SUCCESS;
 }
