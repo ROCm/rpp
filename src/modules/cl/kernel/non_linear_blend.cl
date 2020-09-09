@@ -19,13 +19,13 @@ __kernel void non_linear_blend_batch(
     __global int *yroi_end, __global unsigned int *height,
     __global unsigned int *width, __global unsigned int *max_width,
     __global unsigned long *batch_index, const unsigned int channel,
-    __global unsigned int *inc, // use width * height for pln and 1 for pkd
-    int in_plnpkdind            // use 1 pln 3 for pkd
+    __global unsigned int *src_inc,
+    __global unsigned int *dst_inc, // use width * height for pln and 1 for pkd
+    const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
-  int out_plnpkdind = in_plnpkdind;
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
   unsigned char valuergb1, valuergb2;
-  float temp_std_dev = width[id_z] / 8;
+  float temp_std_dev = height[id_z] >> 3;
   int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
@@ -34,8 +34,8 @@ __kernel void non_linear_blend_batch(
 
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-    int x = (id_x - (width[id_z] / 2));
-    int y = (id_y - (height[id_z] / 2));
+    int x = (id_x - (width[id_z] >> 1));
+    int y = (id_y - (height[id_z] >> 1));
     float gaussianvalue =
         gaussian(x, y, temp_std_dev) / gaussian(0.0, 0.0, temp_std_dev);
     for (indextmp = 0; indextmp < channel; indextmp++) {
@@ -43,13 +43,13 @@ __kernel void non_linear_blend_batch(
       valuergb2 = input2[src_pix_idx];
       output[dst_pix_idx] = gaussianvalue * input1[src_pix_idx] +
                             (1 - gaussianvalue) * input2[src_pix_idx];
-      src_pix_idx += inc[id_z];
-      dst_pix_idx += inc[id_z];
+      src_pix_idx += src_inc[id_z];
+      dst_pix_idx += dst_inc[id_z];
     }
   } else {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pix_idx] = 0;
-      dst_pix_idx += inc[id_z];
+      dst_pix_idx += dst_inc[id_z];
     }
   }
 }
