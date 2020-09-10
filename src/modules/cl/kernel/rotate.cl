@@ -97,14 +97,13 @@ __kernel void rotate_batch(
   rotate[1] = -1 * sin(angleRad);
   rotate[2] = sin(angleRad);
   rotate[3] = cos(angleRad);
-
-  int xc = id_x - dest_width[id_z] / 2;
-  int yc = id_y - dest_height[id_z] / 2;
+  int xc = id_x - (dest_width[id_z] >> 1);
+  int yc = id_y - (dest_height[id_z] >> 1);
 
   int k = (int)((rotate[0] * xc) + (rotate[1] * yc));
   int l = (int)((rotate[2] * xc) + (rotate[3] * yc));
-  k = k + source_width[id_z] / 2;
-  l = l + source_height[id_z] / 2;
+  k = k + (source_width[id_z] >> 1);
+  l = l + (source_height[id_z] >> 1);
 
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
@@ -155,13 +154,13 @@ __kernel void rotate_batch_int8(
   rotate[2] = sin(angleRad);
   rotate[3] = cos(angleRad);
 
-  int xc = id_x - dest_width[id_z] / 2;
-  int yc = id_y - dest_height[id_z] / 2;
+  int xc = id_x - (dest_width[id_z] >> 1);
+  int yc = id_y - (dest_height[id_z] >> 1);
 
   int k = (int)((rotate[0] * xc) + (rotate[1] * yc));
   int l = (int)((rotate[2] * xc) + (rotate[3] * yc));
-  k = k + source_width[id_z] / 2;
-  l = l + source_height[id_z] / 2;
+  k = k + (source_width[id_z] >> 1);
+  l = l + (source_height[id_z] >> 1);
 
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
@@ -211,13 +210,13 @@ __kernel void rotate_batch_fp16(
   rotate[2] = sin(angleRad);
   rotate[3] = cos(angleRad);
 
-  int xc = id_x - dest_width[id_z] / 2;
-  int yc = id_y - dest_height[id_z] / 2;
+  int xc = id_x - (dest_width[id_z] >> 1);
+  int yc = id_y - (dest_height[id_z] >> 1);
 
   int k = (int)((rotate[0] * xc) + (rotate[1] * yc));
   int l = (int)((rotate[2] * xc) + (rotate[3] * yc));
-  k = k + source_width[id_z] / 2;
-  l = l + source_height[id_z] / 2;
+  k = k + (source_width[id_z] >> 1);
+  l = l + (source_height[id_z] >> 1);
 
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
@@ -268,13 +267,13 @@ __kernel void rotate_batch_fp32(
   rotate[2] = sin(angleRad);
   rotate[3] = cos(angleRad);
 
-  int xc = id_x - dest_width[id_z] / 2;
-  int yc = id_y - dest_height[id_z] / 2;
+  int xc = id_x - (dest_width[id_z] >> 1);
+  int yc = id_y - (dest_height[id_z] >> 1);
 
   int k = (int)((rotate[0] * xc) + (rotate[1] * yc));
   int l = (int)((rotate[2] * xc) + (rotate[3] * yc));
-  k = k + source_width[id_z] / 2;
-  l = l + source_height[id_z] / 2;
+  k = k + (source_width[id_z] >> 1);
+  l = l + (source_height[id_z] >> 1);
 
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
