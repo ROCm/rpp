@@ -1,4 +1,6 @@
-#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
+#pragma OPENCL EXTENSION cl_amd_media_ops : enable
+#pragma OPENCL EXTENSION cl_amd_media_ops2 : enable
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
 
 float gaussian(int x, int y, float std_dev) {
   float res, pi = 3.14;
