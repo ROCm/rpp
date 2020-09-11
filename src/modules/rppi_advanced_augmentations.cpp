@@ -35,7 +35,7 @@ RppStatus non_linear_blend_helper(RppiChnFormat chn_format, Rpp32u num_of_channe
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
-	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));
 	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
 	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format, is_padded);
@@ -307,6 +307,5 @@ rppi_water_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 	return ( water_helper(RPPI_CHN_PLANAR,13, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
 							   srcPtr, srcSize, maxSrcSize, dstPtr, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, nbatchSize, rppHandle));
 }
-
 
 

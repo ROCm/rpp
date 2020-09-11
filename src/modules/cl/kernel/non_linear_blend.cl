@@ -57,13 +57,12 @@ __kernel void non_linear_blend_batch(
 }
 
 __kernel void non_linear_blend_batch_fp16(
-    __global half *input1, __global half *input2,
-    __global unsigned char *output, __global float *std_dev,
-    __global int *xroi_begin, __global int *xroi_end, __global int *yroi_begin,
-    __global int *yroi_end, __global unsigned int *height,
-    __global unsigned int *width, __global unsigned int *max_width,
-    __global unsigned long *batch_index, const unsigned int channel,
-    __global unsigned int *src_inc,
+    __global half *input1, __global half *input2, __global half *output,
+    __global float *std_dev, __global int *xroi_begin, __global int *xroi_end,
+    __global int *yroi_begin, __global int *yroi_end,
+    __global unsigned int *height, __global unsigned int *width,
+    __global unsigned int *max_width, __global unsigned long *batch_index,
+    const unsigned int channel, __global unsigned int *src_inc,
     __global unsigned int *dst_inc, // use width * height for pln and 1 for pkd
     const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
@@ -99,13 +98,12 @@ __kernel void non_linear_blend_batch_fp16(
 }
 
 __kernel void non_linear_blend_batch_fp32(
-    __global float *input1, __global float *input2,
-    __global unsigned char *output, __global float *std_dev,
-    __global int *xroi_begin, __global int *xroi_end, __global int *yroi_begin,
-    __global int *yroi_end, __global unsigned int *height,
-    __global unsigned int *width, __global unsigned int *max_width,
-    __global unsigned long *batch_index, const unsigned int channel,
-    __global unsigned int *src_inc,
+    __global float *input1, __global float *input2, __global float *output,
+    __global float *std_dev, __global int *xroi_begin, __global int *xroi_end,
+    __global int *yroi_begin, __global int *yroi_end,
+    __global unsigned int *height, __global unsigned int *width,
+    __global unsigned int *max_width, __global unsigned long *batch_index,
+    const unsigned int channel, __global unsigned int *src_inc,
     __global unsigned int *dst_inc, // use width * height for pln and 1 for pkd
     const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
@@ -127,7 +125,8 @@ __kernel void non_linear_blend_batch_fp32(
     for (indextmp = 0; indextmp < channel; indextmp++) {
       valuergb1 = input1[src_pix_idx];
       valuergb2 = input2[src_pix_idx];
-      output[dst_pix_idx] = gaussianvalue * input1[src_pix_idx] +
+
+      output[dst_pix_idx] = (half)gaussianvalue * input1[src_pix_idx] +
                             (1 - gaussianvalue) * input2[src_pix_idx];
       src_pix_idx += src_inc[id_z];
       dst_pix_idx += dst_inc[id_z];
@@ -141,13 +140,12 @@ __kernel void non_linear_blend_batch_fp32(
 }
 
 __kernel void non_linear_blend_batch_int8(
-    __global char *input1, __global char *input2,
-    __global unsigned char *output, __global float *std_dev,
-    __global int *xroi_begin, __global int *xroi_end, __global int *yroi_begin,
-    __global int *yroi_end, __global unsigned int *height,
-    __global unsigned int *width, __global unsigned int *max_width,
-    __global unsigned long *batch_index, const unsigned int channel,
-    __global unsigned int *src_inc,
+    __global char *input1, __global char *input2, __global char *output,
+    __global float *std_dev, __global int *xroi_begin, __global int *xroi_end,
+    __global int *yroi_begin, __global int *yroi_end,
+    __global unsigned int *height, __global unsigned int *width,
+    __global unsigned int *max_width, __global unsigned long *batch_index,
+    const unsigned int channel, __global unsigned int *src_inc,
     __global unsigned int *dst_inc, // use width * height for pln and 1 for pkd
     const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
