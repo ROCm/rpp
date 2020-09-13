@@ -685,7 +685,7 @@ int main(int argc, char **argv)
 
         start = clock();
         if (ip_bitDepth == 0)
-            rppi_non_linear_blend_u8_pkd3_batchPD_gpu(d_input, d_input2, srcSize, maxSize, d_output, alpha, outputFormatToggle,noOfImages, handle);
+           // rppi_non_linear_blend_u8_pkd3_batchPD_gpu(d_input, d_input2, srcSize, maxSize, d_output, alpha, outputFormatToggle,noOfImages, handle);
         // else if (ip_bitDepth == 1)
         //     rppi_color_twist_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle,noOfImages, handle);
         // else if (ip_bitDepth == 2)

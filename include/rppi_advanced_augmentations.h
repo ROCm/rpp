@@ -116,6 +116,21 @@ RppStatus
 rppi_water_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
                                      Rpp32f *ampl_x, Rpp32f *ampl_y, Rpp32f *freq_x, Rpp32f *freq_y, Rpp32f *phase_x, Rpp32f *phase_y,
 									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+// Erase.
+/// \param srcPtr1
+/// \param srcSize - Array of it
+/// \param dstPtr
+/// \param anchor_box_info - array of anchor boxes to be erase (m1 + m2 + m3 + ...+ mn)
+/// \param colors - array of colors to be filled in anchor boxes
+/// \param num_of_boxes - number of anchor boxes corresponding to each image
+/// \param outputForamtToggle - NCHW to NHWC toggling and Vice Versa
+/// \param rppHandle
+/// \return									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
