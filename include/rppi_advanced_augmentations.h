@@ -125,13 +125,13 @@ rppi_water_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 /// \param num_of_boxes - number of anchor boxes corresponding to each image
 /// \param outputForamtToggle - NCHW to NHWC toggling and Vice Versa
 /// \param rppHandle
-/// \return									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+/// \return				
 RppStatus
 rppi_erase_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
-                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, Rpp32u *num_of_boxes, 
 									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
-#ifdef __cpluspluss
+#ifdef __cplusplus
 }
 #endif
 #endif // RPPI_ADVANCED_AUGMENTATIONS
