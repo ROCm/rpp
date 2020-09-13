@@ -86,6 +86,7 @@ erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colo
     std::string kernel_file = "erase.cl";
     std::string kernel_name = "erase_batch";
     get_kernel_name(kernel_name, tensor_info);
+    std::cout << kernel_file << "\t" << kernel_name << std::endl;
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr, anchor_box_info, colors, box_offset,
                                                                      handle_obj->mem.mgpu.uintArr[0].uintmem,
                                                                      handle_obj->mem.mgpu.srcSize.height,
