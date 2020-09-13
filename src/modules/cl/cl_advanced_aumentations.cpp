@@ -71,3 +71,31 @@ water_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                      in_plnpkdind, out_plnpkdind);
     return RPP_SUCCESS;
 }
+
+// RppStatus
+// erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colors, cl_mem box_offset,
+//                              rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+// {
+//     // int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+//     // int batch_size = handle.GetBatchSize();
+//     // InitHandle *handle_obj = handle.GetInitHandle();
+//     // Rpp32u max_height, max_width;
+//     // max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+//     // std::vector<size_t> vld{16, 16, 1};
+//     // std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+//     // std::string kernel_file = "erase.cl";
+//     // std::string kernel_name = "erase_batch";
+//     // get_kernel_name(kernel_name, tensor_info);
+//     // handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr, anchor_box_info, colors, box_offset,
+//     //                                                                  handle_obj->mem.mgpu.uintArr[0].uintmem,
+//     //                                                                  handle_obj->mem.mgpu.srcSize.height,
+//     //                                                                  handle_obj->mem.mgpu.srcSize.width,
+//     //                                                                  handle_obj->mem.mgpu.maxSrcSize.width,
+//     //                                                                  handle_obj->mem.mgpu.srcBatchIndex,
+//     //                                                                  tensor_info._in_channels,
+//     //                                                                  handle_obj->mem.mgpu.inc,
+//     //                                                                  handle_obj->mem.mgpu.dstInc,
+//     //                                                                  in_plnpkdind, out_plnpkdind);
+
+//     return RPP_SUCCESS;
+// }
