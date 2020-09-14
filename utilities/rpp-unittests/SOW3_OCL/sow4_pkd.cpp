@@ -478,29 +478,46 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
        
         for (i = 0; i < images; i++)
         {
-            no_of_boxes[i] = i % 3 + 1;
+            // no_of_boxes[i] = i % 3 + 3;
+            // if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
+            // for(int j = 0; j < no_of_boxes[i]; j++)
+            // {
+            //    crop_params[4 * offset] = 100  + j * 100;
+            //    crop_params[4 * offset + 1] = 100 + j * 50;
+            //    crop_params[4 * offset + 2] = 700 + j * 120;
+            //    crop_params[4 * offset + 3]  = 200 + j * 60;
+            //    colors[3 * offset] = 155 - j * 5;
+            //    colors[3 * offset + 1] = 155 - j * 10;
+            //    colors[3 * offset + 2] = j * 20;
+            //    offset++;
+            // }
+            no_of_boxes[i] = 2;
             if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
-            for(int j = 0; j < no_of_boxes[i]; j++)
-            {
-               crop_params[4 * offset] = 100 + j * 100;
-               crop_params[4 * offset + 1] = 100 + j * 50;
-               crop_params[4 * offset + 2] = 200 + j * 120;
-               crop_params[4 * offset + 3]  = 200 + j * 60;
-               colors[3 * offset] = 255 - j * 5;
-               colors[3 * offset + 1] = 255 - j * 10;
-               colors[3 * offset + 2] = j * 20;
-               offset++;
-            }
+            crop_params[4 * offset] = 100;
+            crop_params[4 * offset + 1] = 100;
+            crop_params[4 * offset + 2] = 700;
+            crop_params[4 * offset + 3]  = 200;
+            colors[3 * offset] = 121;
+            colors[3 * offset + 1] = 200;
+            colors[3 * offset + 2] = 99;
+            offset++;
+            crop_params[4 * offset] = 800;
+            crop_params[4 * offset + 1] = 300;
+            crop_params[4 * offset + 2] = 1000;
+            crop_params[4 * offset + 3]  = 800;
+            colors[3 * offset] = 155;
+            colors[3 * offset + 1] = 100;    
+            colors[3 * offset + 2] =  20;
+            offset++;
         }
         int offset2 = 0;
         for (i = 0; i < images; i++)
         {
             std::cout << i <<"\t" << "number of boxes" << no_of_boxes[i] << "\t" << box_offset[i] <<
               "images \t" <<  images <<  std::endl; 
-            if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
             for(int j = 0; j < no_of_boxes[i]; j++)
             {
-               std::cout << "crop_params" << crop_params[4 * offset2] << "\t" << 
+                std::cout << "crop_params" << crop_params[4 * offset2] << "\t" << 
                 crop_params[4 * offset2 + 1]<< "\t" <<crop_params[4 * offset2 + 2]<< "\t" << 
                 crop_params[4 * offset2 + 3]<< std::endl;
             
@@ -509,18 +526,19 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
                 offset2++;
             }
         }
+    
         std::cout << "offset is" << offset << std::endl;
         cl_mem d_colors, d_offset, d_boxes;
-        d_boxes =  clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 4 * sizeof(Rpp32u), NULL, NULL);
-        d_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(Rpp32u), NULL, NULL);
+        d_boxes =  clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 4 * sizeof(int), NULL, NULL);
+        d_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(int), NULL, NULL);
         d_colors = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(Rpp8u), NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_boxes, CL_TRUE, 0, offset * 4 * sizeof(Rpp32u), crop_params, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_offset, CL_TRUE, 0, images * sizeof(Rpp32u), box_offset, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_boxes, CL_TRUE, 0, offset * 4 * sizeof(int), crop_params, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_offset, CL_TRUE, 0, images * sizeof(int), box_offset, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_colors, CL_TRUE, 0, offset * 3 * sizeof(Rpp8u), colors, 0, NULL, NULL);
         std::cout << "err is " << err << std::endl;
         start = clock();
         if (ip_bitDepth == 0)
-            rppi_erase_u8_pkd3_batchPD_gpu(d_input,srcSize, maxSize, d_output, d_boxes, d_offset, d_colors, no_of_boxes, outputFormatToggle,noOfImages, handle);
+            rppi_erase_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_boxes, d_colors, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
         end = clock();
         clReleaseMemObject(d_boxes);
         clReleaseMemObject(d_offset);
