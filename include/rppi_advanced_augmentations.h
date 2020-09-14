@@ -130,6 +130,51 @@ RppStatus
 rppi_erase_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
                                      RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
 									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_f32_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_erase_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
 
 #ifdef __cplusplus
 }
