@@ -93,21 +93,9 @@ erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colo
                                                                      handle_obj->mem.mgpu.srcSize.width,
                                                                      handle_obj->mem.mgpu.maxSrcSize.width,
                                                                      handle_obj->mem.mgpu.srcBatchIndex,
-                                                                     tensor_info._in_channels,
                                                                      handle_obj->mem.mgpu.inc,
                                                                      handle_obj->mem.mgpu.dstInc,
                                                                      in_plnpkdind, out_plnpkdind);
 
     return RPP_SUCCESS;
 }
-
-// kernel void
-// erase_batch(__global unsigned char *input, __global unsigned char *output,
-//             __global unsigned int *box_info, __global unsigned char *colors,
-//             __global unsigned int *box_offset,
-//             __global unsigned int *no_of_boxes,
-//             __global unsigned int *src_height, __global unsigned int *src_width,
-//             __global unsigned int *max_src_width,
-//             __global unsigned long *src_batch_index, const unsigned int channel,
-//             __global unsigned int *src_inc, __global unsigned int *dst_inc,
-//             const int in_plnpkdind, const int out_plnpkdind)
