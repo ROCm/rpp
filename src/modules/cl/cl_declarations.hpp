@@ -627,5 +627,10 @@ resize_crop_mirror_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
 RppStatus
 non_linear_blend_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle,
                           RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+water_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colors, cl_mem box_offset,
+                             rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 
 #endif //CL_DECLATAIONS_H

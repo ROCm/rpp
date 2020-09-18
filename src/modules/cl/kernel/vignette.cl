@@ -74,8 +74,8 @@ __kernel void vignette_batch(  __global unsigned char* input,
     pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
     if((id_y >= 0 ) && (id_y < height[id_z]) && (id_x >= 0) && (id_x < width[id_z]))
     {   
-        int x = (id_x - (width[id_z] / 2));
-        int y = (id_y - (height[id_z] / 2));
+        int x = (id_x - (width[id_z] >> 1));
+        int y = (id_y - (height[id_z] >> 1));
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
             float gaussianvalue=gaussian(x, y, tempstdDev) / gaussian(0.0, 0.0, tempstdDev);
