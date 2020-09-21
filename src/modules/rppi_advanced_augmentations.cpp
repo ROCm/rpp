@@ -458,7 +458,9 @@ rppi_erase_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 							   num_of_boxes, nbatchSize, rppHandle));
 }
 
-//COLOR CAST STARTS HERE
+
+
+/************************************************    COLOR CAST STARTS HERE   ************************************************/
 
 RppStatus color_cast_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 							 RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp8u outputFormatToggle,

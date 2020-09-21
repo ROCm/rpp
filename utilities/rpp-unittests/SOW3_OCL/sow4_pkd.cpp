@@ -567,11 +567,11 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         if (ip_bitDepth == 0)
             rppi_color_cast_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
          else if (ip_bitDepth == 1)
-             rppi_color_cast_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+            rppi_color_cast_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
          else if (ip_bitDepth == 2)
-             rppi_color_cast_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+            rppi_color_cast_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
          else if (ip_bitDepth == 3)
-	    rppi_color_cast_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+            rppi_color_cast_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
 	else
             missingFuncFlag = 1;
         end = clock();

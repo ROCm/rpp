@@ -10,9 +10,7 @@ __kernel void color_cast_batch(
     __global unsigned char* user_input_r,  //which color to cast for red
     __global unsigned char* user_input_g,  //which color to cast for green
     __global unsigned char* user_input_b,  //which color to cast for blue
-
     __global float *alpha,
-
     __global int *xroi_begin,
     __global int *xroi_end,
     __global int *yroi_begin,
@@ -24,13 +22,13 @@ __kernel void color_cast_batch(
     const unsigned int channel,
     __global unsigned int *inc,  // use width * height for pln and 1 for pkd
     __global unsigned int *dstinc , // use width * height for pln and 1 for pkd
-    int in_plnpkdind   ,         // use 1 pln 3 for pkd
-     int out_plnpkdind 
+    int in_plnpkdind,         // use 1 pln 3 for pkd
+    int out_plnpkdind 
 ) {
 
-int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+ int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
 
-unsigned char user_input[3]={user_input_r[id_z],user_input_g[id_z],user_input_b[id_z]};
+  unsigned char user_input[3]={user_input_r[id_z],user_input_g[id_z],user_input_b[id_z]};
   int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
@@ -67,9 +65,7 @@ __kernel void color_cast_batch_fp16(
     __global unsigned char* user_input_r,  //which color to cast for red
     __global unsigned char* user_input_g,  //which color to cast for green
     __global unsigned char* user_input_b,  //which color to cast for blue
-
     __global float *alpha,
-
     __global int *xroi_begin,
     __global int *xroi_end,
     __global int *yroi_begin,
@@ -81,13 +77,13 @@ __kernel void color_cast_batch_fp16(
     const unsigned int channel,
     __global unsigned int *inc,  // use width * height for pln and 1 for pkd
     __global unsigned int *dstinc , // use width * height for pln and 1 for pkd
-    int in_plnpkdind   ,         // use 1 pln 3 for pkd
-     int out_plnpkdind 
+    int in_plnpkdind,         // use 1 pln 3 for pkd
+    int out_plnpkdind 
 ) {
 
-int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+  int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
 
-half user_input[3]={(half)(user_input_r[id_z]/255.0 ),(half)(user_input_g[id_z]/255.0) ,(half)(user_input_b[id_z]/255.0) };
+  half user_input[3]={(half)(user_input_r[id_z]/255.0 ),(half)(user_input_g[id_z]/255.0) ,(half)(user_input_b[id_z]/255.0) };
   int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
@@ -117,15 +113,14 @@ half user_input[3]={(half)(user_input_r[id_z]/255.0 ),(half)(user_input_g[id_z]/
 }
 
 
+
 __kernel void color_cast_batch_fp32(
     __global float *input,
     __global float *output,
     __global unsigned char* user_input_r,  //which color to cast for red
     __global unsigned char* user_input_g,  //which color to cast for green
     __global unsigned char* user_input_b,  //which color to cast for blue
-
     __global float *alpha,
-
     __global int *xroi_begin,
     __global int *xroi_end,
     __global int *yroi_begin,
@@ -137,13 +132,13 @@ __kernel void color_cast_batch_fp32(
     const unsigned int channel,
     __global unsigned int *inc,  // use width * height for pln and 1 for pkd
     __global unsigned int *dstinc , // use width * height for pln and 1 for pkd
-    int in_plnpkdind   ,         // use 1 pln 3 for pkd
-     int out_plnpkdind
+    int in_plnpkdind,         // use 1 pln 3 for pkd
+    int out_plnpkdind
 ) {
 
-int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+  int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
 
-float user_input[3]={user_input_r[id_z]/255.0 ,user_input_g[id_z]/255.0 ,user_input_b[id_z]/255.0};
+  float user_input[3]={user_input_r[id_z]/255.0 ,user_input_g[id_z]/255.0 ,user_input_b[id_z]/255.0};
   int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
@@ -180,9 +175,7 @@ __kernel void color_cast_batch_int8(
     __global unsigned char* user_input_r,  //which color to cast for red
     __global unsigned char* user_input_g,  //which color to cast for green
     __global unsigned char* user_input_b,  //which color to cast for blue
-
     __global float *alpha,
-
     __global int *xroi_begin,
     __global int *xroi_end,
     __global int *yroi_begin,
@@ -194,13 +187,13 @@ __kernel void color_cast_batch_int8(
     const unsigned int channel,
     __global unsigned int *inc,  // use width * height for pln and 1 for pkd
     __global unsigned int *dstinc , // use width * height for pln and 1 for pkd
-    int in_plnpkdind   ,         // use 1 pln 3 for pkd
-     int out_plnpkdind
+    int in_plnpkdind,         // use 1 pln 3 for pkd
+    int out_plnpkdind
 ) {
 
-int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+  int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
 
-char user_input[3]={user_input_r[id_z]-128 ,user_input_g[id_z]-128 ,user_input_b[id_z]-128};
+  char user_input[3]={user_input_r[id_z]-128 ,user_input_g[id_z]-128 ,user_input_b[id_z]-128};
   int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
