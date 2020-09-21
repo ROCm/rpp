@@ -29769,3 +29769,24 @@ rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t 
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+
+RppStatus
+rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+ 	 tensor_table_look_up_cl( 
+            static_cast<cl_mem>(srcPtr), 
+			static_cast<cl_mem>(dstPtr),
+			look_up_table, 
+			tensorDimension,
+			static_cast<Rpp32u *>(tensorDimensionValues),
+			rpp::deref(rppHandle)); 	 
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+return RPP_SUCCESS;
+}

@@ -456,5 +456,3 @@ rppi_erase_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
 							   num_of_boxes, nbatchSize, rppHandle));
 }
-
->>>>>>> origin/lokesh-rpp-rali-4

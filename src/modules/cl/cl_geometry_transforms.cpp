@@ -677,8 +677,6 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
     {
         std::cerr << "Internal error: Unknown Channel format";
     }
-
-   
     return RPP_SUCCESS;
 }
 

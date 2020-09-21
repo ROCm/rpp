@@ -615,6 +615,63 @@ tensor_matrix_multiply_cl(cl_mem srcPtr1, cl_mem srcPtr2, Rpp32u *tensorDimensio
     return RPP_SUCCESS;
 }
 
+RppStatus
+tensor_table_look_up_cl( cl_mem srcPtr, cl_mem dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, rpp::Handle &handle)
+{
+
+    size_t gDim3[3];
+    if (tensorDimension == 1)
+    {
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = 1;
+        gDim3[2] = 1;
+    }
+    else if (tensorDimension == 2)
+    {
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = tensorDimensionValues[1];
+        gDim3[2] = 1;
+    }
+    else
+    {
+        gDim3[0] = tensorDimensionValues[0];
+        gDim3[1] = tensorDimensionValues[1];
+        int value = 1;
+        for (int i = 2; i < tensorDimension; i++)
+        {
+            value *= tensorDimensionValues[i];
+        }
+        gDim3[2] = value;
+    }
+
+    unsigned int dim1, dim2, dim3;
+    dim1 = gDim3[0];
+    dim2 = gDim3[1];
+    dim3 = gDim3[2];
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
+    cl_context theContext;
+    clGetCommandQueueInfo(handle.GetStream(),
+                          CL_QUEUE_CONTEXT,
+                          sizeof(cl_context), &theContext, NULL);
+    cl_mem d_lut_array = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                         256 * sizeof(Rpp8u), NULL, NULL);
+    cl_int err = clEnqueueWriteBuffer(handle.GetStream(), d_lut_array, CL_TRUE, 0,
+                               256 * sizeof(Rpp8u),
+                               look_up_table, 0, NULL, NULL);
+    handle.AddKernel("", "", "tensor.cl", "tensor_look_up_table", vld, vgd, "")(
+                                                                           srcPtr,
+                                                                           dstPtr,
+                                                                           d_lut_array,
+                                                                           dim1,
+                                                                           dim2,
+                                                                           dim3
+                                                                           );
+    clReleaseMemObject(d_lut_array);
+    return RPP_SUCCESS;
+}
+
+
 // RppStatus
 // mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 // {

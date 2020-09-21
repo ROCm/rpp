@@ -73,7 +73,7 @@ int main(int argc, char **argv)
         strcpy(funcName, "tensor_mul");
         break;
     case 4:
-        strcpy(funcName, "resize_crop_mirror");
+        strcpy(funcName, "tensor_table_look_up");
         break;
     case 5:
         strcpy(funcName, "crop");
@@ -231,8 +231,8 @@ int main(int argc, char **argv)
 
     for(int i = 0; i < TENSOR_SIZE; i++)
     {
-        tensor_input[i] = 9;
-        tensor_input2[i] = 8; 
+        tensor_input[i] = i % 256; 
+        tensor_input2[i] = 0; 
     }
 
     RppiSize maxSize, maxDstSize;
@@ -458,53 +458,30 @@ int main(int argc, char **argv)
     }
     case 4:
     {
-        test_case_name = "resize_crop_mirror";
-
-        Rpp32u x1[images];
-        Rpp32u y1[images];
-        Rpp32u x2[images];
-        Rpp32u y2[images];
-        Rpp32u mirrorFlag[images];
-        for (i = 0; i < images; i++)
-        {
-            x1[i] = 0;
-            y1[i] = 0;
-            x2[i] = 50;
-            y2[i] = 50;
-            dstSize[i].height = image.rows / 3;
-            dstSize[i].width = image.cols / 1.1;
-            if (maxDstHeight < dstSize[i].height)
-                maxDstHeight = dstSize[i].height;
-            if (maxDstWidth < dstSize[i].width)
-                maxDstWidth = dstSize[i].width;
-            if (minDstHeight > dstSize[i].height)
-                minDstHeight = dstSize[i].height;
-            if (minDstWidth > dstSize[i].width)
-                minDstWidth = dstSize[i].width;
-            mirrorFlag[i] = 1;
-        }
-        maxDstSize.height = maxDstHeight;
-        maxDstSize.width = maxDstWidth;
-
+        test_case_name = "tensor_table_look_up";
         start = clock();
+        Rpp8u lut[256];
+        for(int i = 0; i < 256; i++)
+        {
+            if(i % 25 == 0) lut[i] = 255 - i;
+            else lut[i] = i;
+        }
         if (ip_bitDepth == 0)
-            rppi_resize_crop_mirror_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag,outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            rppi_resize_crop_mirror_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 2)
-            rppi_resize_crop_mirror_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            rppi_resize_crop_mirror_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
+            rppi_tensor_table_look_up_u8_gpu(d_tensor_input, d_tensor_output, lut, 4, tensor_dims, handle);
         end = clock();
-
+        for(int i = 0; i < TENSOR_SIZE; i++)
+            tensor_compare[i] = lut[tensor_input[i]];
+        clEnqueueReadBuffer(theQueue, d_tensor_output, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), tensor_output, 0, NULL, NULL);
+        bool pass = true;
+        for(int i = 0; i < TENSOR_SIZE; i++)
+             pass &= (tensor_compare[i] == tensor_output[i]);
+        if(pass)
+            std::cout << "----------PASS -------------" << std::endl;
+        else
+            std::cout << "----------FAIL -------------" << std::endl;
         break;
     }
+
     case 5:
     {
         test_case_name = "crop";
