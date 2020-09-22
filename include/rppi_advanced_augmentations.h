@@ -225,6 +225,34 @@ RppStatus
 rppi_color_cast_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u *r, Rpp8u *g, Rpp8u *b, Rpp32f *alpha,
 									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
+/// Look Up table
+/// \param srcPtr1
+/// \param srcSize - Array of it
+/// \param dstPtr
+/// \param lut - Look up table
+/// \param outputForamtToggle - NCHW to NHWC toggling and Vice Versa
+/// \param rppHandle
+/// \return
+RppStatus
+rppi_lut_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppPtr_t lut, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_lut_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppPtr_t lut, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+RppStatus
+rppi_lut_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppPtr_t lut, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_lut_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppPtr_t lut, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+RppStatus
+rppi_lut_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppPtr_t lut, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_lut_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppPtr_t lut, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
 
 #ifdef __cplusplus

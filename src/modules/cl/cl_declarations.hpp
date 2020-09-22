@@ -635,5 +635,6 @@ erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colo
 RppStatus
 color_cast_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, 
                                                             RPPTensorFunctionMetaData &tensor_info);
-
+RppStatus
+lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 #endif //CL_DECLATAIONS_H
