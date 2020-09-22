@@ -76,7 +76,7 @@ int main(int argc, char **argv)
         strcpy(funcName, "tensor_table_look_up");
         break;
     case 5:
-        strcpy(funcName, "crop");
+        strcpy(funcName, "control-flow");
         break;
     case 6:
         strcpy(funcName, "crop_mirror_normalize");
@@ -484,50 +484,20 @@ int main(int argc, char **argv)
 
     case 5:
     {
-        test_case_name = "crop";
-
-        Rpp32u crop_pos_x[images];
-        Rpp32u crop_pos_y[images];
-        for (i = 0; i < images; i++)
-        {
-            
-            dstSize[i].height = 100;
-            dstSize[i].width =  150; 
-            if (maxDstHeight < dstSize[i].height)
-                maxDstHeight = dstSize[i].height;
-            if (maxDstWidth < dstSize[i].width)
-                maxDstWidth = dstSize[i].width;
-            if (minDstHeight > dstSize[i].height)
-                minDstHeight = dstSize[i].height;
-            if (minDstWidth > dstSize[i].width)
-                minDstWidth = dstSize[i].width;
-            cout << maxDstHeight << maxDstWidth << endl;
-            crop_pos_x[i] = 100;
-            crop_pos_y[i] = 150;
-            
-        }
+        test_case_name = "control flow";
+        bool b1 = true, b2 = false;
+        bool b3 =  true;
+        Rpp8u u1 = 120, u2 = 100;
+        Rpp8u u3 = 20;
+        //RPP_SCALAR_OP_AND = 1,
         start = clock();
-        if (ip_bitDepth == 0)
-            rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y,outputFormatToggle, noOfImages, handle);
-        if (ip_bitDepth == 1)
-            rppi_crop_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize,
-                            crop_pos_x, crop_pos_y, outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 2)
-            rppi_crop_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize,
-                    maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 3)
-            rppi_crop_u8_f16_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf16, dstSize,
-                        maxDstSize, crop_pos_x, crop_pos_y,  outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 4)
-            rppi_crop_u8_f32_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf32, dstSize,
-                        maxDstSize, crop_pos_x, crop_pos_y,outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 5)
-            rppi_crop_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize,
-                                 maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 6)
-            rppi_crop_u8_i8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize,
-                                    crop_pos_x, crop_pos_y, outputFormatToggle,noOfImages, handle);        
+        rpp_bool_control_flow(b1, b2, &b3, RPP_SCALAR_OP_AND, handle );
+        rpp_u8_control_flow(u1, u2, &u3, RPP_SCALAR_OP_ADD, handle );
         end = clock();
+        if(u3 == 220) std::cout << "---PASS---" << std::endl;
+        else std::cout << "---FAIL---" << std::endl;
+        if(b3 == false) std::cout << "---PASS--" << std::endl;
+        else std::cout << "---FAIL---" << std::endl;
         break;
     }
     case 6:
