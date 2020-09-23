@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-// #include <CL/cl.hpp>     // Not required for host
 #include <half.hpp>
 #include <fstream>
 
@@ -167,14 +166,9 @@ int main(int argc, char **argv)
         char temp[1000];
         strcpy(temp, src1);
         strcat(temp, imageNames[count]);
-        // if (ip_channel == 3)
-        // {
-            image = imread(temp, 1);
-        // }
-        // else
-        // {
-        //     image = imread(temp, 0);
-        // }
+        
+        image = imread(temp, 1);
+        
         srcSize[count].height = image.rows;
         srcSize[count].width = image.cols;
         if (maxHeight < srcSize[count].height)
@@ -245,16 +239,8 @@ int main(int argc, char **argv)
         strcpy(temp_second, src1_second);
         strcat(temp_second, de->d_name);
 
-        // if (ip_channel == 3)
-        // {
-            image = imread(temp, 1);
-            image_second = imread(temp_second, 1);
-        // }
-        // else
-        // {
-        //     image = imread(temp, 0);
-        //     image_second = imread(temp_second, 0);
-        // }
+        image = imread(temp, 1);
+        image_second = imread(temp_second, 1);
 
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
@@ -277,12 +263,9 @@ int main(int argc, char **argv)
     memcpy(inputCopy, input, ioBufferSize * sizeof(Rpp8u));
     
     Rpp8u *inputTemp, *inputCopyTemp;
-    // Rpp8u *inputTempR, *inputTempG, *inputTempB;
     inputTemp = input;
     inputCopyTemp = inputCopy;
 
-    // Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
-    // Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
     Rpp32u imageDimMax = maxSize.width * maxSize.height;
 
     for (int count = 0; count < noOfImages; count++)
@@ -327,6 +310,58 @@ int main(int argc, char **argv)
     }
 
     free(inputCopy);
+
+    Rpp8u *inputSecondCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
+    memcpy(inputSecondCopy, input_second, ioBufferSize * sizeof(Rpp8u));
+    
+    Rpp8u *inputSecondTemp, *inputSecondCopyTemp;
+    inputSecondTemp = input_second;
+    inputSecondCopyTemp = inputSecondCopy;
+
+    Rpp32u imageSecondDimMax = maxSize.width * maxSize.height;
+
+    for (int count = 0; count < noOfImages; count++)
+    {
+        Rpp32u colIncrementPln = maxSize.width - srcSize[count].width;
+        Rpp32u rowIncrementPln = (maxSize.height - srcSize[count].height) * maxSize.width;
+        Rpp32u colIncrementPkd = colIncrementPln * ip_channel;
+        Rpp32u rowIncrementPkd = rowIncrementPln * ip_channel;
+
+        Rpp8u *inputSecondTempR, *inputSecondTempG, *inputSecondTempB;
+        inputSecondTempR = inputSecondTemp;
+        inputSecondTempG = inputSecondTempR + imageSecondDimMax;
+        inputSecondTempB = inputSecondTempG + imageSecondDimMax;
+
+        for (int i = 0; i < srcSize[count].height; i++)
+        {
+            for (int j = 0; j < srcSize[count].width; j++)
+            {
+                *inputSecondTempR = *inputSecondCopyTemp;
+                inputSecondCopyTemp++;
+                inputSecondTempR++;
+                *inputSecondTempG = *inputSecondCopyTemp;
+                inputSecondCopyTemp++;
+                inputSecondTempG++;
+                *inputSecondTempB = *inputSecondCopyTemp;
+                inputSecondCopyTemp++;
+                inputSecondTempB++;
+            }
+            memset(inputSecondTempR, (Rpp8u) 0, colIncrementPln * sizeof(Rpp8u));
+            memset(inputSecondTempG, (Rpp8u) 0, colIncrementPln * sizeof(Rpp8u));
+            memset(inputSecondTempB, (Rpp8u) 0, colIncrementPln * sizeof(Rpp8u));
+            inputSecondTempR += colIncrementPln;
+            inputSecondTempG += colIncrementPln;
+            inputSecondTempB += colIncrementPln;
+            inputSecondCopyTemp += colIncrementPkd;
+        }
+        memset(inputSecondTempR, (Rpp8u) 0, rowIncrementPln * sizeof(Rpp8u));
+        memset(inputSecondTempG, (Rpp8u) 0, rowIncrementPln * sizeof(Rpp8u));
+        memset(inputSecondTempB, (Rpp8u) 0, rowIncrementPln * sizeof(Rpp8u));
+        inputSecondCopyTemp += rowIncrementPkd;
+        inputSecondTemp += (imageSecondDimMax * ip_channel);
+    }
+
+    free(inputSecondCopy);
 
     if (ip_bitDepth == 1)
     {
@@ -827,12 +862,9 @@ int main(int argc, char **argv)
         memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
         
         Rpp8u *outputTemp, *outputCopyTemp;
-        // Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
         outputTemp = output;
         outputCopyTemp = outputCopy;
 
-        // Rpp32u colIncrementPln = 0, rowIncrementPln = 0;
-        // Rpp32u colIncrementPkd = 0, rowIncrementPkd = 0;
         Rpp32u imageDimMax = maxDstSize.width * maxDstSize.height;
 
         for (int count = 0; count < noOfImages; count++)
@@ -893,16 +925,8 @@ int main(int argc, char **argv)
         strcpy(temp, dst);
         strcat(temp, imageNames[j]);
         Mat mat_op_image;
-        // if (ip_channel == 3)
-        // {
-            mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
-            imwrite(temp, mat_op_image);
-        // }
-        // if (ip_channel == 1)
-        // {
-        //     mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
-        //     imwrite(temp, mat_op_image);
-        // }
+        mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
+        imwrite(temp, mat_op_image);
         free(temp_output);
     }
 

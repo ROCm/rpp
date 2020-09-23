@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-// #include <CL/cl.hpp>     // Not required for host
 #include <half.hpp>
 #include <fstream>
 
@@ -780,16 +779,8 @@ int main(int argc, char **argv)
         strcpy(temp, dst);
         strcat(temp, imageNames[j]);
         Mat mat_op_image;
-        // if (ip_channel == 3)
-        // {
-        //     mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
-        //     imwrite(temp, mat_op_image);
-        // }
-        // if (ip_channel == 1)
-        // {
-            mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
-            imwrite(temp, mat_op_image);
-        // }
+        mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+        imwrite(temp, mat_op_image);
         free(temp_output);
     }
 
