@@ -69,9 +69,9 @@ int main(int argc, char **argv)
     case 2:
         strcpy(funcName, "non_linear_blend");
         break;
-    // case 3:
-    //     strcpy(funcName, "resize_crop");
-    //     break;
+    case 3:
+        strcpy(funcName, "color_cast");
+        break;
     // case 4:
     //     strcpy(funcName, "resize_crop_mirror");
     //     break;
@@ -514,57 +514,45 @@ int main(int argc, char **argv)
 
         break;
     }
-    // case 3:
-    // {
-    //     test_case_name = "resize_crop";
+    case 3:
+    {
+        test_case_name = "color_cast";
 
-    //     Rpp32u x1[images];
-    //     Rpp32u y1[images];
-    //     Rpp32u x2[images];
-    //     Rpp32u y2[images];
-    //     for (i = 0; i < images; i++)
-    //     {
-    //         x1[i] = 0;
-    //         y1[i] = 0;
-    //         x2[i] = 50;
-    //         y2[i] = 50;
-    //         dstSize[i].height = image.rows / 3;
-    //         dstSize[i].width = image.cols / 1.1;
-    //         if (maxDstHeight < dstSize[i].height)
-    //             maxDstHeight = dstSize[i].height;
-    //         if (maxDstWidth < dstSize[i].width)
-    //             maxDstWidth = dstSize[i].width;
-    //         if (minDstHeight > dstSize[i].height)
-    //             minDstHeight = dstSize[i].height;
-    //         if (minDstWidth > dstSize[i].width)
-    //             minDstWidth = dstSize[i].width;
-    //     }
-    //     maxDstSize.height = maxDstHeight;
-    //     maxDstSize.width = maxDstWidth;
+        Rpp8u r[images];
+        Rpp8u g[images];
+        Rpp8u b[images];
+        Rpp32f alpha[images];
+        for (i = 0; i < images; i++)
+        {
+            r[i] = 0;
+            g[i] = 0;
+            b[i] = 100;
+            alpha[i] = 0.5;
+        }
 
-    //     start = clock();
-    //     start_omp = omp_get_wtime();
-    //     if (ip_bitDepth == 0)
-    //         rppi_resize_crop_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 1)
-    //         rppi_resize_crop_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 2)
-    //         rppi_resize_crop_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 3)
-    //         missingFuncFlag = 1;
-    //     else if (ip_bitDepth == 4)
-    //         missingFuncFlag = 1;
-    //     else if (ip_bitDepth == 5)
-    //         rppi_resize_crop_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 6)
-    //         missingFuncFlag = 1;
-    //     else
-    //         missingFuncFlag = 1;
-    //     end_omp = omp_get_wtime();
-    //     end = clock();
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_color_cast_u8_pln3_batchPD_host(input, srcSize, maxSize, output, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_color_cast_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_color_cast_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_color_cast_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
 
-    //     break;
-    // }
+        break;
+    }
     // case 4:
     // {
     //     test_case_name = "resize_crop_mirror";

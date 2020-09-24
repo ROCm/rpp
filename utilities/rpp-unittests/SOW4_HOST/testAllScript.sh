@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # <<<<<<<<<<<<<< JUST CHANGE SOURCE AND DESTINATION FOLDERS >>>>>>>>>>>>>>
-SRC_FOLDER_1="/home/abishek/abishek/tests/Input_Images/single1920x1080"
-SRC_FOLDER_2="/home/abishek/abishek/tests/Input_Images/single1920x1080_1"
+SRC_FOLDER_1="/home/abishek/abishek/tests/Input_Images/tempMix1"
+SRC_FOLDER_2="/home/abishek/abishek/tests/Input_Images/tempMix1"
 DST_FOLDER="/home/abishek/abishek/tests/Output_Images"
 # <<<<<<<<<<<<<< JUST CHANGE SOURCE AND DESTINATION FOLDERS >>>>>>>>>>>>>>
 
@@ -22,7 +22,7 @@ echo "##########################################################################
 echo "Running all PKD3 Inputs..."
 echo "##########################################################################################"
 
-for ((case=2;case<3;case++))
+for ((case=1;case<4;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"
@@ -50,7 +50,7 @@ echo "##########################################################################
 echo "Running all PLN1 Inputs..."
 echo "##########################################################################################"
 
-for ((case=2;case<3;case++))
+for ((case=1;case<4;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"
@@ -78,7 +78,7 @@ echo "##########################################################################
 echo "Running all PLN3 Inputs..."
 echo "##########################################################################################"
 
-for ((case=2;case<3;case++))
+for ((case=1;case<4;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"

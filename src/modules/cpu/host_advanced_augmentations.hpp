@@ -1140,4 +1140,691 @@ RppStatus non_linear_blend_i8_host_batch(Rpp8s* srcPtr1, Rpp8s* srcPtr2, RppiSiz
     return RPP_SUCCESS;
 }
 
+/**************** color_cast ***************/
+
+template <typename T>
+RppStatus color_cast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+                         Rpp8u *batch_r, Rpp8u *batch_g, Rpp8u *batch_b, Rpp32f *batch_alpha,
+                         Rpp32u outputFormatToggle, Rpp32u nbatchSize,
+                         RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            
+            Rpp8u r = batch_r[batchCount];
+            Rpp8u g = batch_g[batchCount];
+            Rpp8u b = batch_b[batchCount];
+            Rpp32f alpha = batch_alpha[batchCount];
+
+            Rpp32f userPixel[3] = {(Rpp32f) b, (Rpp32f) g, (Rpp32f) r};
+            
+            T *srcPtrImage, *dstPtrImage;
+            Rpp32u loc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
+            srcPtrImage = srcPtr + loc;
+            dstPtrImage = dstPtr + loc;
+
+            Rpp32u elementsInRowMax = batch_srcSizeMax[batchCount].width;
+
+            for (int c = 0; c < channel; c++)
+            {
+                T *srcPtrChannel, *dstPtrChannel;
+                srcPtrChannel = srcPtrImage + (c * imageDimMax);
+                dstPtrChannel = dstPtrImage + (c * imageDimMax);
+
+                __m128i const zero = _mm_setzero_si128();
+                __m128 pZero = _mm_set1_ps(0.0);
+                __m128 pOne = _mm_set1_ps(1.0);
+                __m128 pUserPixel = _mm_set1_ps(userPixel[c]);
+                __m128 pAlpha = _mm_set1_ps(alpha);
+
+                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
+                {
+                    T *srcPtrTemp, *dstPtrTemp;
+                    srcPtrTemp = srcPtrChannel + (i * elementsInRowMax);
+                    dstPtrTemp = dstPtrChannel + (i * elementsInRowMax);
+
+                    Rpp32u bufferLength = batch_srcSize[batchCount].width;
+                    Rpp32u alignedLength = (bufferLength & ~3) - 4;
+
+                    __m128i px0, px1, px2, px3;
+                    __m128 p0, p1;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                    {
+                        px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
+                        px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
+                        p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
+
+                        p0 = _mm_mul_ps(pAlpha, p0);
+                        p1 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixel);
+                        p0 = _mm_add_ps(p0, p1);
+
+                        px0 = _mm_cvtps_epi32(p0);
+                        px1 = _mm_cvtps_epi32(pZero);
+                        px2 = _mm_cvtps_epi32(pZero);
+                        px3 = _mm_cvtps_epi32(pZero);
+
+                        px0 = _mm_packus_epi32(px0, px1);
+                        px1 = _mm_packus_epi32(px2, px3);
+
+                        px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
+
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
+
+                        srcPtrTemp += 4;
+                        dstPtrTemp += 4;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        *dstPtrTemp = (T) RPPPIXELCHECK((alpha * ((Rpp32f) *srcPtrTemp)) + ((1 - alpha) * userPixel[c]));
+
+                        srcPtrTemp++;
+                        dstPtrTemp++;
+                    }
+                }
+            }
+            if (outputFormatToggle == 1)
+            {
+                T *dstPtrImageUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
+                T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(T));
+
+                compute_planar_to_packed_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
+
+                memset(dstPtrImage, (T) 0, imageDimMax * channel * sizeof(T));
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            
+            Rpp8u r = batch_r[batchCount];
+            Rpp8u g = batch_g[batchCount];
+            Rpp8u b = batch_b[batchCount];
+            Rpp32f alpha = batch_alpha[batchCount];
+
+            Rpp32f userPixel[3] = {(Rpp32f) b, (Rpp32f) g, (Rpp32f) r};
+            
+            T *srcPtrImage, *dstPtrImage;
+            Rpp32u loc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
+            srcPtrImage = srcPtr + loc;
+            dstPtrImage = dstPtr + loc;
+
+            Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
+
+            for(int i = 0; i < batch_srcSize[batchCount].height; i++)
+            {
+                T *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
+                dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
+
+                Rpp32u bufferLength = batch_srcSize[batchCount].width;
+                Rpp32u alignedLength = bufferLength & ~3;
+
+                __m128i const zero = _mm_setzero_si128();
+                __m128 pZero = _mm_set1_ps(0.0);
+                __m128 pOne = _mm_set1_ps(1.0);
+                __m128 pAlpha = _mm_set1_ps(alpha);
+                __m128 pUserPixelPartialVector1 = _mm_setr_ps(userPixel[0], userPixel[1], userPixel[2], userPixel[0]);
+                __m128 pUserPixelPartialVector2 = _mm_setr_ps(userPixel[1], userPixel[2], userPixel[0], userPixel[1]);
+                __m128 pUserPixelPartialVector3 = _mm_setr_ps(userPixel[2], userPixel[0], userPixel[1], userPixel[2]);
+                __m128i px0, px1, px2, px3;
+                __m128 p0, p1, p2, p3, p4, p5, p6, p7;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                {
+                    px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
+                    px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
+                    px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
+                    p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
+                    p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
+                    p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
+                    p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
+
+                    p0 = _mm_mul_ps(pAlpha, p0);
+                    p4 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector1);
+                    p0 = _mm_add_ps(p0, p4);
+
+                    p1 = _mm_mul_ps(pAlpha, p1);
+                    p5 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector2);
+                    p1 = _mm_add_ps(p1, p5);
+
+                    p2 = _mm_mul_ps(pAlpha, p2);
+                    p6 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector3);
+                    p2 = _mm_add_ps(p2, p6);
+
+                    px0 = _mm_cvtps_epi32(p0);
+                    px1 = _mm_cvtps_epi32(p1);
+                    px2 = _mm_cvtps_epi32(p2);
+                    px3 = _mm_cvtps_epi32(pZero);
+
+                    px0 = _mm_packus_epi32(px0, px1);
+                    px1 = _mm_packus_epi32(px2, px3);
+
+                    px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
+
+                    _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
+
+                    srcPtrTemp += 12;
+                    dstPtrTemp += 12;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    for (int c = 0; c < channel; c++)
+                    {
+                        *dstPtrTemp = (T) RPPPIXELCHECK((alpha * ((Rpp32f) *srcPtrTemp)) + ((1 - alpha) * userPixel[c]));
+                        srcPtrTemp++;
+                        dstPtrTemp++;
+                    }
+                }
+            }
+            if (outputFormatToggle == 1)
+            {
+                T *dstPtrImageUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
+                T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(T));
+
+                compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
+
+                memset(dstPtrImage, (T) 0, imageDimMax * channel * sizeof(T));
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+RppStatus color_cast_f32_host_batch(Rpp32f* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, Rpp32f* dstPtr, 
+                         Rpp8u *batch_r, Rpp8u *batch_g, Rpp8u *batch_b, Rpp32f *batch_alpha,
+                         Rpp32u outputFormatToggle, Rpp32u nbatchSize,
+                         RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            
+            Rpp8u r = batch_r[batchCount];
+            Rpp8u g = batch_g[batchCount];
+            Rpp8u b = batch_b[batchCount];
+            Rpp32f alpha = batch_alpha[batchCount];
+
+            Rpp32f userPixel[3] = {((Rpp32f) b) / 255, ((Rpp32f) g) / 255, ((Rpp32f) r) / 255};
+            
+            Rpp32f *srcPtrImage, *dstPtrImage;
+            Rpp32u loc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
+            srcPtrImage = srcPtr + loc;
+            dstPtrImage = dstPtr + loc;
+
+            Rpp32u elementsInRowMax = batch_srcSizeMax[batchCount].width;
+
+            for (int c = 0; c < channel; c++)
+            {
+                Rpp32f *srcPtrChannel, *dstPtrChannel;
+                srcPtrChannel = srcPtrImage + (c * imageDimMax);
+                dstPtrChannel = dstPtrImage + (c * imageDimMax);
+
+                __m128i const zero = _mm_setzero_si128();
+                __m128 pZero = _mm_set1_ps(0.0);
+                __m128 pOne = _mm_set1_ps(1.0);
+                __m128 pUserPixel = _mm_set1_ps(userPixel[c]);
+                __m128 pAlpha = _mm_set1_ps(alpha);
+
+                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
+                {
+                    Rpp32f *srcPtrTemp, *dstPtrTemp;
+                    srcPtrTemp = srcPtrChannel + (i * elementsInRowMax);
+                    dstPtrTemp = dstPtrChannel + (i * elementsInRowMax);
+
+                    Rpp32u bufferLength = batch_srcSize[batchCount].width;
+                    Rpp32u alignedLength = (bufferLength & ~3) - 4;
+
+                    __m128i px0, px1, px2, px3;
+                    __m128 p0, p1;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                    {
+                        p0 = _mm_loadu_ps(srcPtrTemp);
+                        
+                        p0 = _mm_mul_ps(pAlpha, p0);
+                        p1 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixel);
+                        p0 = _mm_add_ps(p0, p1);
+
+                        _mm_storeu_ps(dstPtrTemp, p0);
+
+                        srcPtrTemp += 4;
+                        dstPtrTemp += 4;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        *dstPtrTemp = (Rpp32f) ((alpha * ((Rpp32f) *srcPtrTemp)) + ((1 - alpha) * userPixel[c]));
+
+                        srcPtrTemp++;
+                        dstPtrTemp++;
+                    }
+                }
+            }
+            if (outputFormatToggle == 1)
+            {
+                Rpp32f *dstPtrImageUnpadded = (Rpp32f*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(Rpp32f));
+                Rpp32f *dstPtrImageUnpaddedCopy = (Rpp32f*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(Rpp32f));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(Rpp32f));
+
+                compute_planar_to_packed_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
+
+                memset(dstPtrImage, (Rpp32f) 0, imageDimMax * channel * sizeof(Rpp32f));
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            
+            Rpp8u r = batch_r[batchCount];
+            Rpp8u g = batch_g[batchCount];
+            Rpp8u b = batch_b[batchCount];
+            Rpp32f alpha = batch_alpha[batchCount];
+
+            Rpp32f userPixel[3] = {((Rpp32f) b) / 255, ((Rpp32f) g) / 255, ((Rpp32f) r) / 255};
+            
+            Rpp32f *srcPtrImage, *dstPtrImage;
+            Rpp32u loc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
+            srcPtrImage = srcPtr + loc;
+            dstPtrImage = dstPtr + loc;
+
+            Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
+
+            for(int i = 0; i < batch_srcSize[batchCount].height; i++)
+            {
+                Rpp32f *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
+                dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
+
+                Rpp32u bufferLength = batch_srcSize[batchCount].width;
+                Rpp32u alignedLength = bufferLength & ~3;
+
+                __m128i const zero = _mm_setzero_si128();
+                __m128 pZero = _mm_set1_ps(0.0);
+                __m128 pOne = _mm_set1_ps(1.0);
+                __m128 pAlpha = _mm_set1_ps(alpha);
+                __m128 pUserPixelPartialVector1 = _mm_setr_ps(userPixel[0], userPixel[1], userPixel[2], userPixel[0]);
+                __m128 pUserPixelPartialVector2 = _mm_setr_ps(userPixel[1], userPixel[2], userPixel[0], userPixel[1]);
+                __m128 pUserPixelPartialVector3 = _mm_setr_ps(userPixel[2], userPixel[0], userPixel[1], userPixel[2]);
+                __m128i px0, px1, px2, px3;
+                __m128 p0, p1, p2, p4, p5, p6;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                {
+                    p0 = _mm_loadu_ps(srcPtrTemp);
+                    p1 = _mm_loadu_ps(srcPtrTemp + 4);
+                    p2 = _mm_loadu_ps(srcPtrTemp + 8);
+                    
+                    p0 = _mm_mul_ps(pAlpha, p0);
+                    p4 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector1);
+                    p0 = _mm_add_ps(p0, p4);
+
+                    p1 = _mm_mul_ps(pAlpha, p1);
+                    p5 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector2);
+                    p1 = _mm_add_ps(p1, p5);
+
+                    p2 = _mm_mul_ps(pAlpha, p2);
+                    p6 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector3);
+                    p2 = _mm_add_ps(p2, p6);
+
+                    _mm_storeu_ps(dstPtrTemp, p0);
+                    _mm_storeu_ps(dstPtrTemp + 4, p1);
+                    _mm_storeu_ps(dstPtrTemp + 8, p2);
+
+                    srcPtrTemp += 12;
+                    dstPtrTemp += 12;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    for (int c = 0; c < channel; c++)
+                    {
+                        *dstPtrTemp = (Rpp32f) ((alpha * ((Rpp32f) *srcPtrTemp)) + ((1 - alpha) * userPixel[c]));
+                        srcPtrTemp++;
+                        dstPtrTemp++;
+                    }
+                }
+            }
+            if (outputFormatToggle == 1)
+            {
+                Rpp32f *dstPtrImageUnpadded = (Rpp32f*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(Rpp32f));
+                Rpp32f *dstPtrImageUnpaddedCopy = (Rpp32f*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(Rpp32f));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(Rpp32f));
+
+                compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
+
+                memset(dstPtrImage, (Rpp32f) 0, imageDimMax * channel * sizeof(Rpp32f));
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+RppStatus color_cast_f16_host_batch(Rpp16f* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, Rpp16f* dstPtr, 
+                         Rpp8u *batch_r, Rpp8u *batch_g, Rpp8u *batch_b, Rpp32f *batch_alpha,
+                         Rpp32u outputFormatToggle, Rpp32u nbatchSize,
+                         RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            
+            Rpp8u r = batch_r[batchCount];
+            Rpp8u g = batch_g[batchCount];
+            Rpp8u b = batch_b[batchCount];
+            Rpp32f alpha = batch_alpha[batchCount];
+
+            Rpp32f userPixel[3] = {((Rpp32f) b) / 255, ((Rpp32f) g) / 255, ((Rpp32f) r) / 255};
+            
+            Rpp16f *srcPtrImage, *dstPtrImage;
+            Rpp32u loc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
+            srcPtrImage = srcPtr + loc;
+            dstPtrImage = dstPtr + loc;
+
+            Rpp32u elementsInRowMax = batch_srcSizeMax[batchCount].width;
+
+            Rpp32f srcPtrTempps[4], dstPtrTempps[4];
+
+            for (int c = 0; c < channel; c++)
+            {
+                Rpp16f *srcPtrChannel, *dstPtrChannel;
+                srcPtrChannel = srcPtrImage + (c * imageDimMax);
+                dstPtrChannel = dstPtrImage + (c * imageDimMax);
+
+                __m128i const zero = _mm_setzero_si128();
+                __m128 pZero = _mm_set1_ps(0.0);
+                __m128 pOne = _mm_set1_ps(1.0);
+                __m128 pUserPixel = _mm_set1_ps(userPixel[c]);
+                __m128 pAlpha = _mm_set1_ps(alpha);
+
+                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
+                {
+                    Rpp16f *srcPtrTemp, *dstPtrTemp;
+                    srcPtrTemp = srcPtrChannel + (i * elementsInRowMax);
+                    dstPtrTemp = dstPtrChannel + (i * elementsInRowMax);
+
+                    Rpp32u bufferLength = batch_srcSize[batchCount].width;
+                    Rpp32u alignedLength = (bufferLength & ~3) - 4;
+
+                    __m128i px0, px1, px2, px3;
+                    __m128 p0, p1;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                    {
+                        for(int cnt = 0; cnt < 4; cnt++)
+                        {
+                            *(srcPtrTempps + cnt) = (Rpp32f) (*(srcPtrTemp + cnt));
+                        }
+                        
+                        p0 = _mm_loadu_ps(srcPtrTempps);
+                        
+                        p0 = _mm_mul_ps(pAlpha, p0);
+                        p1 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixel);
+                        p0 = _mm_add_ps(p0, p1);
+
+                        _mm_storeu_ps(dstPtrTempps, p0);
+
+                        for(int cnt = 0; cnt < 4; cnt++)
+                        {
+                            *(dstPtrTemp + cnt) = (Rpp16f) (*(dstPtrTempps + cnt));
+                        }
+
+                        srcPtrTemp += 4;
+                        dstPtrTemp += 4;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        *dstPtrTemp = (Rpp16f) ((alpha * ((Rpp32f) *srcPtrTemp)) + ((1 - alpha) * userPixel[c]));
+
+                        srcPtrTemp++;
+                        dstPtrTemp++;
+                    }
+                }
+            }
+            if (outputFormatToggle == 1)
+            {
+                Rpp16f *dstPtrImageUnpadded = (Rpp16f*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(Rpp16f));
+                Rpp16f *dstPtrImageUnpaddedCopy = (Rpp16f*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(Rpp16f));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(Rpp16f));
+
+                compute_planar_to_packed_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
+
+                memset(dstPtrImage, (Rpp16f) 0, imageDimMax * channel * sizeof(Rpp16f));
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+            
+            Rpp8u r = batch_r[batchCount];
+            Rpp8u g = batch_g[batchCount];
+            Rpp8u b = batch_b[batchCount];
+            Rpp32f alpha = batch_alpha[batchCount];
+
+            Rpp32f userPixel[3] = {((Rpp32f) b) / 255, ((Rpp32f) g) / 255, ((Rpp32f) r) / 255};
+            
+            Rpp16f *srcPtrImage, *dstPtrImage;
+            Rpp32u loc = 0;
+            compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
+            srcPtrImage = srcPtr + loc;
+            dstPtrImage = dstPtr + loc;
+
+            Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
+
+            Rpp32f srcPtrTempps[12], dstPtrTempps[12];
+
+            for(int i = 0; i < batch_srcSize[batchCount].height; i++)
+            {
+                Rpp16f *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
+                dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
+
+                Rpp32u bufferLength = batch_srcSize[batchCount].width;
+                Rpp32u alignedLength = bufferLength & ~3;
+
+                __m128i const zero = _mm_setzero_si128();
+                __m128 pZero = _mm_set1_ps(0.0);
+                __m128 pOne = _mm_set1_ps(1.0);
+                __m128 pAlpha = _mm_set1_ps(alpha);
+                __m128 pUserPixelPartialVector1 = _mm_setr_ps(userPixel[0], userPixel[1], userPixel[2], userPixel[0]);
+                __m128 pUserPixelPartialVector2 = _mm_setr_ps(userPixel[1], userPixel[2], userPixel[0], userPixel[1]);
+                __m128 pUserPixelPartialVector3 = _mm_setr_ps(userPixel[2], userPixel[0], userPixel[1], userPixel[2]);
+                __m128i px0, px1, px2, px3;
+                __m128 p0, p1, p2, p4, p5, p6;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                {
+                    for(int cnt = 0; cnt < 12; cnt++)
+                    {
+                        *(srcPtrTempps + cnt) = (Rpp32f) (*(srcPtrTemp + cnt));
+                    }
+                    
+                    p0 = _mm_loadu_ps(srcPtrTempps);
+                    p1 = _mm_loadu_ps(srcPtrTempps + 4);
+                    p2 = _mm_loadu_ps(srcPtrTempps + 8);
+                    
+                    p0 = _mm_mul_ps(pAlpha, p0);
+                    p4 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector1);
+                    p0 = _mm_add_ps(p0, p4);
+
+                    p1 = _mm_mul_ps(pAlpha, p1);
+                    p5 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector2);
+                    p1 = _mm_add_ps(p1, p5);
+
+                    p2 = _mm_mul_ps(pAlpha, p2);
+                    p6 = _mm_mul_ps(_mm_sub_ps(pOne, pAlpha), pUserPixelPartialVector3);
+                    p2 = _mm_add_ps(p2, p6);
+
+                    _mm_storeu_ps(dstPtrTempps, p0);
+                    _mm_storeu_ps(dstPtrTempps + 4, p1);
+                    _mm_storeu_ps(dstPtrTempps + 8, p2);
+
+                    for(int cnt = 0; cnt < 12; cnt++)
+                    {
+                        *(dstPtrTemp + cnt) = (Rpp16f) (*(dstPtrTempps + cnt));
+                    }
+
+                    srcPtrTemp += 12;
+                    dstPtrTemp += 12;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    for (int c = 0; c < channel; c++)
+                    {
+                        *dstPtrTemp = (Rpp16f) ((alpha * ((Rpp32f) *srcPtrTemp)) + ((1 - alpha) * userPixel[c]));
+                        srcPtrTemp++;
+                        dstPtrTemp++;
+                    }
+                }
+            }
+            if (outputFormatToggle == 1)
+            {
+                Rpp16f *dstPtrImageUnpadded = (Rpp16f*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(Rpp16f));
+                Rpp16f *dstPtrImageUnpaddedCopy = (Rpp16f*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(Rpp16f));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(Rpp16f));
+
+                compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
+
+                memset(dstPtrImage, (Rpp16f) 0, imageDimMax * channel * sizeof(Rpp16f));
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+RppStatus color_cast_i8_host_batch(Rpp8s* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, Rpp8s* dstPtr, 
+                         Rpp8u *batch_r, Rpp8u *batch_g, Rpp8u *batch_b, Rpp32f *batch_alpha,
+                         Rpp32u outputFormatToggle, Rpp32u nbatchSize,
+                         RppiChnFormat chnFormat, Rpp32u channel)
+{
+    Rpp64u bufferLength = batch_srcSizeMax[0].height * batch_srcSizeMax[0].width * channel * nbatchSize;
+
+    Rpp8u *srcPtr_8u = (Rpp8u*) calloc(bufferLength, sizeof(Rpp8u));
+    Rpp8u *dstPtr_8u = (Rpp8u*) calloc(bufferLength, sizeof(Rpp8u));
+
+    Rpp8s *srcPtrTemp;
+    srcPtrTemp = srcPtr;
+
+    Rpp8u *srcPtr_8uTemp;
+    srcPtr_8uTemp = srcPtr_8u;
+
+    for (int i = 0; i < bufferLength; i++)
+    {
+        *srcPtr_8uTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *srcPtrTemp) + 128);
+        srcPtrTemp++;
+        srcPtr_8uTemp++;
+    }
+
+    color_cast_host_batch<Rpp8u>(srcPtr_8u, batch_srcSize, batch_srcSizeMax, dstPtr_8u, batch_r, batch_g, batch_b, batch_alpha, outputFormatToggle, nbatchSize, chnFormat, channel);
+
+    Rpp8s *dstPtrTemp;
+    dstPtrTemp = dstPtr;
+
+    Rpp8u *dstPtr_8uTemp;
+    dstPtr_8uTemp = dstPtr_8u;
+
+    for (int i = 0; i < bufferLength; i++)
+    {
+        *dstPtrTemp = (Rpp8s) (((Rpp32s) *dstPtr_8uTemp) - 128);
+        dstPtrTemp++;
+        dstPtr_8uTemp++;
+    }
+
+    free(srcPtr_8u);
+    free(dstPtr_8u);
+
+    return RPP_SUCCESS;
+}
+
+
 #endif
