@@ -155,7 +155,7 @@ __kernel void occlusion_batch (  __global unsigned char* srcPtr1,
         y =  (int)(y_ratio * (id_y - y21[id_z]));
         
         x_diff = (x_ratio * (id_x - x21[id_z])) - x ;
-        y_diff = (y_ratio * (id_y - x21[id_z])) - y ;
+        y_diff = (y_ratio * (id_y - y21[id_z])) - y ;
 
          for(indextmp = 0; indextmp < channel; indextmp++){
             A = srcPtr1[source_batch_index[id_z] + ((x + x11[id_z])  + (y + y11[id_z]) * max_source_width[id_z]) * plnpkdindex+ indextmp*source_inc[id_z]]; 
