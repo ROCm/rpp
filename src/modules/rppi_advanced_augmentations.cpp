@@ -182,7 +182,7 @@ RppStatus non_linear_blend_host_helper(RppiChnFormat chn_format, Rpp32u num_of_c
 	{
 		if (out_tensor_type == RPPTensorDataType::FP16)
 		{
-			non_linear_blend_host_batch<Rpp16f>(
+			non_linear_blend_f16_host_batch(
 				static_cast<Rpp16f *>(srcPtr1),
 				static_cast<Rpp16f *>(srcPtr2),
 				srcSize,
@@ -198,7 +198,7 @@ RppStatus non_linear_blend_host_helper(RppiChnFormat chn_format, Rpp32u num_of_c
 	{
 		if (out_tensor_type == RPPTensorDataType::FP32)
 		{
-			non_linear_blend_host_batch<Rpp32f>(
+			non_linear_blend_f32_host_batch(
 				static_cast<Rpp32f *>(srcPtr1),
 				static_cast<Rpp32f *>(srcPtr2),
 				srcSize,
@@ -214,7 +214,7 @@ RppStatus non_linear_blend_host_helper(RppiChnFormat chn_format, Rpp32u num_of_c
 	{
 		if (out_tensor_type == RPPTensorDataType::I8)
 		{
-			non_linear_blend_host_batch<Rpp8s>(
+			non_linear_blend_i8_host_batch(
 				static_cast<Rpp8s *>(srcPtr1),
 				static_cast<Rpp8s *>(srcPtr2),
 				srcSize,
