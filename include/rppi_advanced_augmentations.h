@@ -319,10 +319,10 @@ rppi_erase_i8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize max
 /// \param srcPtr1
 /// \param srcSize - Array of it
 /// \param dstPtr
-/// \param r - color cast parameter
-/// \param g - color cast parameter
-/// \param b - color cast parameter
-/// \param alpha - color cast parameter
+/// \param r - color cast red value from user
+/// \param g - color cast green value from user
+/// \param b - color cast blue value from user
+/// \param alpha - color cast alpha value to blend input image and user pixel value
 /// \param outputForamtToggle - NCHW to NHWC toggling and Vice Versa
 /// \param rppHandle
 /// \return
