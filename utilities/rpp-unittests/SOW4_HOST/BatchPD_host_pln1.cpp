@@ -71,9 +71,9 @@ int main(int argc, char **argv)
     case 4:
         strcpy(funcName, "erase");
         break;
-    // case 5:
-    //     strcpy(funcName, "crop");
-    //     break;
+    case 5:
+        strcpy(funcName, "warp_affine");
+        break;
     // case 6:
     //     strcpy(funcName, "crop_mirror_normalize");
     //     break;
@@ -532,51 +532,44 @@ int main(int argc, char **argv)
 
         break;
     }
-    // case 5:
-    // {
-    //     test_case_name = "crop";
+    case 5:
+    {
+        test_case_name = "warp_affine";
 
-    //     Rpp32u crop_pos_x[images];
-    //     Rpp32u crop_pos_y[images];
-    //     for (i = 0; i < images; i++)
-    //     {
-    //         dstSize[i].height = 100;
-    //         dstSize[i].width = 100;
-    //         if (maxDstHeight < dstSize[i].height)
-    //             maxDstHeight = dstSize[i].height;
-    //         if (maxDstWidth < dstSize[i].width)
-    //             maxDstWidth = dstSize[i].width;
-    //         if (minDstHeight > dstSize[i].height)
-    //             minDstHeight = dstSize[i].height;
-    //         if (minDstWidth > dstSize[i].width)
-    //             minDstWidth = dstSize[i].width;
-    //         crop_pos_x[i] = 50;
-    //         crop_pos_y[i] = 50;
-    //     }
+        Rpp32f affine_array[6 * images];
+        for (i = 0; i < 6 * images; i = i + 6)
+        {
+            affine_array[i] = 1.23;
+            affine_array[i + 1] = 0.5;
+            affine_array[i + 2] = 0.0;
+            affine_array[i + 3] = -0.8;
+            affine_array[i + 4] = 0.83;
+            affine_array[i + 5] = 0.0;
+        }
 
-    //     start = clock();
-    //     start_omp = omp_get_wtime();
-    //     if (ip_bitDepth == 0)
-    //         rppi_crop_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 1)
-    //         rppi_crop_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 2)
-    //         rppi_crop_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 3)
-    //         rppi_crop_u8_f16_pln1_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 4)
-    //         rppi_crop_u8_f32_pln1_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 5)
-    //         rppi_crop_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 6)
-    //         rppi_crop_u8_i8_pln1_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else
-    //         missingFuncFlag = 1;
-    //     end_omp = omp_get_wtime();
-    //     end = clock();
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_warp_affine_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_warp_affine_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_warp_affine_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_warp_affine_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
 
-    //     break;
-    // }
+        break;
+    }
     // case 6:
     // {
     //     test_case_name = "crop_mirror_normalize";
