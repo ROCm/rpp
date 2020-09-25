@@ -497,6 +497,54 @@ rppi_crop_and_patch_i8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rppi
 									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
 
+RppStatus
+rppi_crop_and_patch_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_f32_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_f16_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_i8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_u8_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_f32_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_f16_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_i8_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_u8_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_f32_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_f16_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_crop_and_patch_i8_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+ 									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }
