@@ -139,6 +139,7 @@ color_cast_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
 
 RppStatus
 lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+
 {
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
     int batch_size = handle.GetBatchSize();
@@ -163,3 +164,47 @@ lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPT
 
     return RPP_SUCCESS;
 }
+
+RppStatus
+crop_and_patch_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle, 
+                                                            RPPTensorFunctionMetaData &tensor_info)
+{
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    int batch_size = handle.GetBatchSize();
+    InitHandle *handle_obj = handle.GetInitHandle();
+    Rpp32u max_height, max_width;
+    max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
+    std::string kernel_file = "crop_and_patch.cl";
+    std::string kernel_name = "crop_and_patch_batch";
+    get_kernel_name(kernel_name, tensor_info);
+
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr1, srcPtr2 , dstPtr,
+                                                                    handle_obj->mem.mgpu.srcSize.height,
+                                                                    handle_obj->mem.mgpu.srcSize.width,
+                                                                    handle_obj->mem.mgpu.dstSize.height,
+                                                                    handle_obj->mem.mgpu.dstSize.width,
+                                                                    handle_obj->mem.mgpu.uintArr[0].uintmem,
+                                                                    handle_obj->mem.mgpu.uintArr[1].uintmem,
+                                                                    handle_obj->mem.mgpu.uintArr[2].uintmem,
+                                                                    handle_obj->mem.mgpu.uintArr[3].uintmem,
+                                                                    handle_obj->mem.mgpu.uintArr[4].uintmem,
+                                                                    handle_obj->mem.mgpu.uintArr[5].uintmem,
+                                                                    handle_obj->mem.mgpu.uintArr[6].uintmem,
+                                                                    handle_obj->mem.mgpu.uintArr[7].uintmem,
+                                                                    handle_obj->mem.mgpu.maxSrcSize.width,
+                                                                    handle_obj->mem.mgpu.maxDstSize.width,
+                                                                    handle_obj->mem.mgpu.srcBatchIndex,
+                                                                    handle_obj->mem.mgpu.dstBatchIndex,
+                                                                    tensor_info._in_channels,
+                                                                    handle_obj->mem.mgpu.inc,
+                                                                    handle_obj->mem.mgpu.dstInc,
+                                                                    in_plnpkdind, out_plnpkdind);
+    return RPP_SUCCESS;
+}
+
+
+
+

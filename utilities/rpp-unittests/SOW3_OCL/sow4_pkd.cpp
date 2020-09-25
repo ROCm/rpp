@@ -80,6 +80,9 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
     case 5:
         strcpy(funcName, "color_cast");
         break;
+    case 6:
+        strcpy(funcName, "crop_and_patch");
+        break;
     }
 
     if (ip_bitDepth == 0)
@@ -577,6 +580,53 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         end = clock();
 	break;
     }
+
+    case 6:
+    {
+        test_case_name = "crop_and_patch";
+        Rpp32u x11[images];
+        Rpp32u y11[images];
+        Rpp32u x12[images];
+        Rpp32u y12[images];
+        Rpp32u x21[images];
+        Rpp32u y21[images];
+        Rpp32u x22[images];
+        Rpp32u y22[images];
+
+
+       
+    for (i = 0; i < images; i++)
+    {
+        x11[i] = 10;
+        y11[i] = 10;
+        x12[i] = 700;
+        y12[i] = 700;
+        x21[i] = 100;
+        y21[i] = 100;
+        x22[i] = 500;
+        y22[i] = 500;
+       
+    }
+        
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_crop_and_patch_u8_pkd3_batchPD_gpu(d_input,d_input_second, srcSize, maxSize, d_output,
+            x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 1)
+            rppi_crop_and_patch_f16_pkd3_batchPD_gpu(d_inputf16,d_inputf16_second, srcSize, maxSize, d_outputf16,
+            x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 2)
+            rppi_crop_and_patch_f32_pkd3_batchPD_gpu(d_inputf32,d_inputf32_second, srcSize, maxSize, d_outputf32,
+            x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 3)
+            rppi_crop_and_patch_i8_pkd3_batchPD_gpu(d_inputi8,d_inputi8_second, srcSize, maxSize, d_outputi8,
+            x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+	else
+            missingFuncFlag = 1;
+        end = clock();
+	break;
+    }
+    
   default:
         missingFuncFlag = 1;
         break;
