@@ -68,12 +68,12 @@ int main(int argc, char **argv)
     case 3:
         strcpy(funcName, "color_cast");
         break;
-    // case 4:
-    //     strcpy(funcName, "resize_crop_mirror");
-    //     break;
-    // case 5:
-    //     strcpy(funcName, "crop");
-    //     break;
+    case 4:
+        strcpy(funcName, "erase");
+        break;
+    case 5:
+        strcpy(funcName, "warp_affine");
+        break;
     // case 6:
     //     strcpy(funcName, "crop_mirror_normalize");
     //     break;
@@ -458,104 +458,118 @@ int main(int argc, char **argv)
 
         break;
     }
-    // case 4:
-    // {
-    //     test_case_name = "resize_crop_mirror";
+    case 4:
+    {
+        test_case_name = "erase";
 
-    //     Rpp32u x1[images];
-    //     Rpp32u y1[images];
-    //     Rpp32u x2[images];
-    //     Rpp32u y2[images];
-    //     Rpp32u mirrorFlag[images];
-    //     for (i = 0; i < images; i++)
-    //     {
-    //         x1[i] = 0;
-    //         y1[i] = 0;
-    //         x2[i] = 50;
-    //         y2[i] = 50;
-    //         dstSize[i].height = image.rows / 3;
-    //         dstSize[i].width = image.cols / 1.1;
-    //         if (maxDstHeight < dstSize[i].height)
-    //             maxDstHeight = dstSize[i].height;
-    //         if (maxDstWidth < dstSize[i].width)
-    //             maxDstWidth = dstSize[i].width;
-    //         if (minDstHeight > dstSize[i].height)
-    //             minDstHeight = dstSize[i].height;
-    //         if (minDstWidth > dstSize[i].width)
-    //             minDstWidth = dstSize[i].width;
-    //         mirrorFlag[i] = 1;
-    //     }
-    //     maxDstSize.height = maxDstHeight;
-    //     maxDstSize.width = maxDstWidth;
+        Rpp32u boxesInEachImage = 3;
+        
+        Rpp32u anchor_box_info[images * boxesInEachImage * 4];
+        Rpp32u box_offset[images];
+        Rpp32u num_of_boxes[images];
+        Rpp8u colorsu8[images * boxesInEachImage];
+        Rpp32f colorsf32[images * boxesInEachImage];
+        Rpp16f colorsf16[images * boxesInEachImage];
+        Rpp8s colorsi8[images * boxesInEachImage];
+        
+        for (i = 0; i < images; i++)
+        {
+            box_offset[i] = i * boxesInEachImage;
+            num_of_boxes[i] = boxesInEachImage;
 
-    //     start = clock();
-    //     start_omp = omp_get_wtime();
-    //     if (ip_bitDepth == 0)
-    //         rppi_resize_crop_mirror_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 1)
-    //         rppi_resize_crop_mirror_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 2)
-    //         rppi_resize_crop_mirror_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 3)
-    //         missingFuncFlag = 1;
-    //     else if (ip_bitDepth == 4)
-    //         missingFuncFlag = 1;
-    //     else if (ip_bitDepth == 5)
-    //         rppi_resize_crop_mirror_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 6)
-    //         missingFuncFlag = 1;
-    //     else
-    //         missingFuncFlag = 1;
-    //     end_omp = omp_get_wtime();
-    //     end = clock();
+            anchor_box_info[(boxesInEachImage * 4 * i)] = 0.125 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 1] = 0.125 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 2] = 0.375 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 3] = 0.375 * srcSize[i].height;
 
-    //     break;
-    // }
-    // case 5:
-    // {
-    //     test_case_name = "crop";
+            anchor_box_info[(boxesInEachImage * 4 * i) + 4] = 0.125 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 5] = 0.625 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 6] = 0.875 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 7] = 0.875 * srcSize[i].height;
 
-    //     Rpp32u crop_pos_x[images];
-    //     Rpp32u crop_pos_y[images];
-    //     for (i = 0; i < images; i++)
-    //     {
-    //         dstSize[i].height = 100;
-    //         dstSize[i].width = 100;
-    //         if (maxDstHeight < dstSize[i].height)
-    //             maxDstHeight = dstSize[i].height;
-    //         if (maxDstWidth < dstSize[i].width)
-    //             maxDstWidth = dstSize[i].width;
-    //         if (minDstHeight > dstSize[i].height)
-    //             minDstHeight = dstSize[i].height;
-    //         if (minDstWidth > dstSize[i].width)
-    //             minDstWidth = dstSize[i].width;
-    //         crop_pos_x[i] = 50;
-    //         crop_pos_y[i] = 50;
-    //     }
+            anchor_box_info[(boxesInEachImage * 4 * i) + 8] = 0.75 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 9] = 0.125 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 10] = 0.875 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 11] = 0.5 * srcSize[i].height;
 
-    //     start = clock();
-    //     start_omp = omp_get_wtime();
-    //     if (ip_bitDepth == 0)
-    //         rppi_crop_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 1)
-    //         rppi_crop_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 2)
-    //         rppi_crop_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 3)
-    //         rppi_crop_u8_f16_pln1_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 4)
-    //         rppi_crop_u8_f32_pln1_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 5)
-    //         rppi_crop_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 6)
-    //         rppi_crop_u8_i8_pln1_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
-    //     else
-    //         missingFuncFlag = 1;
-    //     end_omp = omp_get_wtime();
-    //     end = clock();
+            colorsu8[(boxesInEachImage * i)] = (Rpp8u) 240;
+            colorsu8[(boxesInEachImage * i) + 1] = (Rpp8u) 120;
+            colorsu8[(boxesInEachImage * i) + 2] = (Rpp8u) 60;
 
-    //     break;
-    // }
+            colorsf32[(boxesInEachImage * i)] = (Rpp32f) (240.0 / 255.0);
+            colorsf32[(boxesInEachImage * i) + 1] = (Rpp32f) (120.0 / 255.0);
+            colorsf32[(boxesInEachImage * i) + 2] = (Rpp32f) (60.0 / 255.0);
+
+            colorsf16[(boxesInEachImage * i)] = (Rpp16f) (240.0 / 255.0);
+            colorsf16[(boxesInEachImage * i) + 1] = (Rpp16f) (120.0 / 255.0);
+            colorsf16[(boxesInEachImage * i) + 2] = (Rpp16f) (60.0 / 255.0);
+
+            colorsi8[(boxesInEachImage * i)] = (Rpp8s) (240 - 128);
+            colorsi8[(boxesInEachImage * i) + 1] = (Rpp8s) (120 - 128);
+            colorsi8[(boxesInEachImage * i) + 2] = (Rpp8s) (60 - 128);
+        }
+
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_erase_u8_pln1_batchPD_host(input, srcSize, maxSize, output, anchor_box_info, colorsu8, box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_erase_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, anchor_box_info, colorsf16, box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_erase_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, anchor_box_info, colorsf32, box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_erase_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, anchor_box_info, colorsi8, box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
+
+        break;
+    }
+    case 5:
+    {
+        test_case_name = "warp_affine";
+
+        Rpp32f affine_array[6 * images];
+        for (i = 0; i < 6 * images; i = i + 6)
+        {
+            affine_array[i] = 1.23;
+            affine_array[i + 1] = 0.5;
+            affine_array[i + 2] = 0.0;
+            affine_array[i + 3] = -0.8;
+            affine_array[i + 4] = 0.83;
+            affine_array[i + 5] = 0.0;
+        }
+
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_warp_affine_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_warp_affine_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_warp_affine_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_warp_affine_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
+
+        break;
+    }
     // case 6:
     // {
     //     test_case_name = "crop_mirror_normalize";

@@ -835,6 +835,202 @@ rppi_erase_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 }
 
 
+RppStatus erase_host_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
+							 RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp8u outputFormatToggle,
+							 RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, 
+							 RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes,
+							 Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	if (in_tensor_type == RPPTensorDataType::U8)
+	{
+		if (out_tensor_type == RPPTensorDataType::U8)
+		{
+			erase_host_batch<Rpp8u>(
+				static_cast<Rpp8u *>(srcPtr),
+				srcSize,
+				rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+				static_cast<Rpp8u *>(dstPtr),
+				static_cast<Rpp32u *>(anchor_box_info),
+				static_cast<Rpp8u *>(colors),
+				static_cast<Rpp32u *>(box_offset),
+				static_cast<Rpp32u *>(num_of_boxes),
+				outputFormatToggle,
+				rpp::deref(rppHandle).GetBatchSize(),
+				chn_format, num_of_channels);
+		}
+	}
+	else if (in_tensor_type == RPPTensorDataType::FP16)
+	{
+		if (out_tensor_type == RPPTensorDataType::FP16)
+		{
+			erase_host_batch<Rpp16f>(
+				static_cast<Rpp16f *>(srcPtr),
+				srcSize,
+				rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+				static_cast<Rpp16f *>(dstPtr),
+				static_cast<Rpp32u *>(anchor_box_info),
+				static_cast<Rpp16f *>(colors),
+				static_cast<Rpp32u *>(box_offset),
+				static_cast<Rpp32u *>(num_of_boxes),
+				outputFormatToggle,
+				rpp::deref(rppHandle).GetBatchSize(),
+				chn_format, num_of_channels);
+		}
+	}
+	else if (in_tensor_type == RPPTensorDataType::FP32)
+	{
+		if (out_tensor_type == RPPTensorDataType::FP32)
+		{
+			erase_host_batch<Rpp32f>(
+				static_cast<Rpp32f *>(srcPtr),
+				srcSize,
+				rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+				static_cast<Rpp32f *>(dstPtr),
+				static_cast<Rpp32u *>(anchor_box_info),
+				static_cast<Rpp32f *>(colors),
+				static_cast<Rpp32u *>(box_offset),
+				static_cast<Rpp32u *>(num_of_boxes),
+				outputFormatToggle,
+				rpp::deref(rppHandle).GetBatchSize(),
+				chn_format, num_of_channels);
+		}
+	}
+	else if (in_tensor_type == RPPTensorDataType::I8)
+	{
+		if (out_tensor_type == RPPTensorDataType::I8)
+		{
+			erase_host_batch<Rpp8s>(
+				static_cast<Rpp8s *>(srcPtr),
+				srcSize,
+				rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+				static_cast<Rpp8s *>(dstPtr),
+				static_cast<Rpp32u *>(anchor_box_info),
+				static_cast<Rpp8s *>(colors),
+				static_cast<Rpp32u *>(box_offset),
+				static_cast<Rpp32u *>(num_of_boxes),
+				outputFormatToggle,
+				rpp::deref(rppHandle).GetBatchSize(),
+				chn_format, num_of_channels);
+		}
+	}
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_erase_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_erase_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_erase_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_erase_f32_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_erase_f32_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_erase_f32_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_erase_f16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_erase_f16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_erase_f16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_erase_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_erase_i8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_erase_i8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+                                     RppPtr_t anchor_box_info, RppPtr_t colors, RppPtr_t box_offset, Rpp32u *num_of_boxes, 
+									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return ( erase_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+							   srcPtr, srcSize, maxSrcSize, dstPtr, anchor_box_info, colors, box_offset, 
+							   num_of_boxes, nbatchSize, rppHandle));
+}
+
 
 /*************************************** Color Cast ************************************/
 
