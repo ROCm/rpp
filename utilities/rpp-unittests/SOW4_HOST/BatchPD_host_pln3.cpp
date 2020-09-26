@@ -81,9 +81,9 @@ int main(int argc, char **argv)
     case 6:
         strcpy(funcName, "crop_and_patch");
         break;
-    // case 7:
-    //     strcpy(funcName, "color_twist");
-    //     break;
+    case 7:
+        strcpy(funcName, "lut");
+        break;
     }
 
     if (ip_bitDepth == 0)
@@ -745,45 +745,46 @@ int main(int argc, char **argv)
 
         break;
     }
-    // case 7:
-    // {
-    //     test_case_name = "color_twist";
+    case 7:
+    {
+        test_case_name = "lut";
 
-    //     Rpp32f alpha[images];
-    //     Rpp32f beta[images];
-    //     Rpp32f hueShift[images];
-    //     Rpp32f saturationFactor[images];
-    //     for (i = 0; i < images; i++)
-    //     {
-    //         alpha[i] = 1.4;
-    //         beta[i] = 0;
-    //         hueShift[i] = 60;
-    //         saturationFactor[i] = 1.9;
-    //     }
+        Rpp8u lut8u[images * 256];
+        Rpp8s lut8s[images * 256];
 
-    //     start = clock();
-    //     start_omp = omp_get_wtime();
-    //     if (ip_bitDepth == 0)
-    //         rppi_color_twist_u8_pln3_batchPD_host(input, srcSize, maxSize, output, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 1)
-    //         rppi_color_twist_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 2)
-    //         rppi_color_twist_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 3)
-    //         missingFuncFlag = 1;
-    //     else if (ip_bitDepth == 4)
-    //         missingFuncFlag = 1;
-    //     else if (ip_bitDepth == 5)
-    //         rppi_color_twist_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 6)
-    //         missingFuncFlag = 1;
-    //     else
-    //         missingFuncFlag = 1;
-    //     end_omp = omp_get_wtime();
-    //     end = clock();
+        for (i = 0; i < images; i++)
+        {
+            for (j = 0; j < 256; j++)
+            {
+                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
+                lut8s[(i * 256) + j] = (Rpp8u)(255 - j - 128);
+            }
+            
+        }
 
-    //     break;
-    // }
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_lut_u8_pln3_batchPD_host(input, srcSize, maxSize, output, lut8u, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_lut_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, lut8s, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
+
+        break;
+    }
     default:
         missingFuncFlag = 1;
         break;
