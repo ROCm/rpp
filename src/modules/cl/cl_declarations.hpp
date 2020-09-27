@@ -634,4 +634,21 @@ erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colo
                              rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
+
+RppStatus
+optical_flow_pyramid_cl(cl_mem srcPtr1,
+                        cl_mem srcPtr2,
+                        RppiSize srcSize,
+                        Rpp32u *oldPoints,
+                        Rpp32u *newPointsEstimates,
+                        Rpp32f *newPoints,
+                        Rpp32u numPoints,
+                        Rpp32f threshold,
+                        Rpp32u numIterations,
+                        Rpp32u kernelSize,
+                        RppiChnFormat chnFormat,
+                        unsigned int channel,
+                        rpp::Handle &handle);
+RppStatus
+hog_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u *dstPtr, RppiSize Kernelsize, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
 #endif //CL_DECLATAIONS_H
