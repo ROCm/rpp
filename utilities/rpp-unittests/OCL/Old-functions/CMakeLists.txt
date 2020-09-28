@@ -19,6 +19,8 @@ add_executable(BatchPD BatchPD.cpp)
 add_executable(BatchPD_ROID_Center BatchPD_ROID_Center.cpp)
 
 add_executable(BatchSD BatchSD.cpp)
+add_executable(BatchDS BatchDS.cpp)
+
 add_executable(BatchSS_ROIS_Center BatchSS_ROIS_Center.cpp)
 add_executable(BatchDD_ROID_Center BatchDD_ROID_Center.cpp)
 add_executable(BatchPS_ROID_Center BatchPS_ROID_Center.cpp)
@@ -63,3 +65,4 @@ target_link_libraries(BatchPD_ROID ${OpenCV_LIBS} -I/opt/rocm/rpp/include -L/opt
 target_link_libraries(Single ${OpenCV_LIBS} -I/opt/rocm/rpp/include -L/opt/rocm/rpp/lib/ -lamd_rpp -L/opt/rocm/opencl/lib/x86_64/ -lOpenCL pthread  -lboost_filesystem -lboost_system )
 target_link_libraries(BatchDD_ROID ${OpenCV_LIBS} -I/opt/rocm/rpp/include -L/opt/rocm/rpp/lib/ -lamd_rpp -L/opt/rocm/opencl/lib/x86_64/ -lOpenCL pthread  -lboost_filesystem -lboost_system )
 target_link_libraries(BatchPD_ROIS ${OpenCV_LIBS} -I/opt/rocm/rpp/include -L/opt/rocm/rpp/lib/ -lamd_rpp -L/opt/rocm/opencl/lib/x86_64/ -lOpenCL pthread  -lboost_filesystem -lboost_system )
+target_link_libraries(BatchDS ${OpenCV_LIBS} -I/opt/rocm/rpp/include -L/opt/rocm/rpp/lib/ -lamd_rpp -L/opt/rocm/opencl/lib/x86_64/ -lOpenCL pthread  -lboost_filesystem -lboost_system )

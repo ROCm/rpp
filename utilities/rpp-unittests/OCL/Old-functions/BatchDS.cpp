@@ -298,8 +298,6 @@ int main(int argc, char **argv)
         i++;
     }
     closedir(dr2); 
-    
-    }
 
 
 	cl_mem d_input,d_input_second, d_output;
