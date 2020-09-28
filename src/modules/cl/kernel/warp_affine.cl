@@ -65,18 +65,18 @@ __kernel void warp_affine_batch(
     __global unsigned int *max_dest_width,
     __global unsigned long *source_batch_index,
     __global unsigned long *dest_batch_index, const unsigned int channel,
-    __global unsigned int
-        *source_inc, // use width * height for pln and 1 for pkd
-    __global unsigned int *dest_inc, const int plnpkdindex
+    __global unsigned int *source_inc, __global unsigned int *dest_inc,
+    const int in_plnpkdind, const int out_plnpkdind
     // const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+  if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
+    return;
+
   int indextmp = 0;
   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
-
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
-  int affine_index = id_z * 6;
 
   int k =
       (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) +
@@ -90,18 +90,19 @@ __kernel void warp_affine_batch(
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
     src_pixIdx = source_batch_index[id_z] +
-                 (k + l * max_source_width[id_z]) * plnpkdindex;
+                 (k + l * max_source_width[id_z]) * in_plnpkdind;
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
-
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
       src_pixIdx += source_inc[id_z];
       dst_pixIdx += dest_inc[id_z];
     }
-  } else {
+  }
+
+  else {
     dst_pixIdx = dest_batch_index[id_z] +
-                 (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
       dstPtr[dst_pixIdx] = 0;
       dst_pixIdx += dest_inc[id_z];

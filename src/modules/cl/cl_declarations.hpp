@@ -651,4 +651,6 @@ optical_flow_pyramid_cl(cl_mem srcPtr1,
                         rpp::Handle &handle);
 RppStatus
 hog_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u *dstPtr, RppiSize Kernelsize, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
+RppStatus
+warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info);
 #endif //CL_DECLATAIONS_H

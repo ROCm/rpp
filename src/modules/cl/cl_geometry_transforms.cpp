@@ -725,7 +725,51 @@ warp_affine_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle, Rpp32f 
                                                                         channel,
                                                                         handle.GetInitHandle()->mem.mgpu.inc,
                                                                         handle.GetInitHandle()->mem.mgpu.dstInc,
-                                                                        plnpkdind);
+                                                                        plnpkdind, plnpkdind);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info)
+{
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    // int batch_size = handle.GetBatchSize();
+    InitHandle *handle_obj = handle.GetInitHandle();
+    Rpp32u max_height, max_width;
+    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    cl_int err;
+    cl_context theContext;
+    clGetCommandQueueInfo(handle.GetStream(),
+                          CL_QUEUE_CONTEXT,
+                          sizeof(cl_context), &theContext, NULL);
+    cl_mem affine_array = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                         sizeof(float) * 6 * handle.GetBatchSize(), NULL, NULL);
+    err = clEnqueueWriteBuffer(handle.GetStream(), affine_array, CL_TRUE, 0,
+                               sizeof(float) * 6 *handle.GetBatchSize(),
+                               affine, 0, NULL, NULL);
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
+    std::string kernel_file  = "warp_affine.cl";
+    std::string kernel_name = "warp_affine_batch";
+    get_kernel_name(kernel_name, tensor_info);
+    handle.AddKernel("", "", "kernel_file", "kernel_name", vld, vgd, "")(srcPtr, dstPtr,
+                                                                        affine_array,
+                                                                        handle_obj->mem.mgpu.srcSize.height,
+                                                                        handle_obj->mem.mgpu.srcSize.width,
+                                                                        handle_obj->mem.mgpu.dstSize.height,
+                                                                        handle_obj->mem.mgpu.dstSize.width,
+                                                                        handle_obj->mem.mgpu.roiPoints.x,
+                                                                        handle_obj->mem.mgpu.roiPoints.roiWidth,
+                                                                        handle_obj->mem.mgpu.roiPoints.y,
+                                                                        handle_obj->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle_obj->mem.mgpu.maxSrcSize.width,
+                                                                        handle_obj->mem.mgpu.maxDstSize.width,
+                                                                        handle_obj->mem.mgpu.srcBatchIndex,
+                                                                        handle_obj->mem.mgpu.dstBatchIndex,
+                                                                        tensor_info._in_channels,
+                                                                        handle_obj->mem.mgpu.inc,
+                                                                        handle_obj->mem.mgpu.dstInc,
+                                                                        in_plnpkdind, out_plnpkdind);
     return RPP_SUCCESS;
 }
 
