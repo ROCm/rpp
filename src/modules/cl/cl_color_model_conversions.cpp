@@ -325,24 +325,22 @@ channel_combine_cl(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem srcPtr3, RppiSize srcS
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, srcSize.height, 1};
-        handle.AddKernel("", "", "channel_combine.cl", "channel_combine_pln", vld, vgd, "")(srcPtr1,
+        handle.AddKernel("", "", "channel_combine.cl", "channel_combine_pln", vld, vgd, "")(srcPtr1, srcPtr2, srcPtr3,
                                                                                             dstPtr,
                                                                                             srcSize.height,
                                                                                             srcSize.width,
                                                                                             channel
-                                                                                           // adjustmentValue
                                                                                             );
     }
     else
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, srcSize.height, 1};
-        handle.AddKernel("", "", "channel_combine.cl", "channel_combine_pkd", vld, vgd, "")(srcPtr1,
+        handle.AddKernel("", "", "channel_combine.cl", "channel_combine_pkd", vld, vgd, "")(srcPtr1, srcPtr2, srcPtr3,
                                                                                             dstPtr,
                                                                                             srcSize.height,
                                                                                             srcSize.width,
                                                                                             channel
-                                                                                            //adjustmentValue
                                                                                             );
     }
     return RPP_SUCCESS;      
