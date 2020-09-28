@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> 
 #include <dirent.h>
 #include <string.h>
 #include <opencv2/core/core.hpp>
@@ -13,39 +13,234 @@
 using namespace cv;
 using namespace std;
 #include <CL/cl.hpp>
-#define images 100
-int G_IP_CHANNEL = 3;
-int G_MODE = 1;
-char src[1000] = {"/home/ulagammai/ulagammai/Input_Images/RGBS"};
-char src_second[1000] = {"/home/ulagammai/ulagammai/Input_Images/RGBS1"};
-char dst[1000] = {"/home/ulagammai/ulagammai/images"};
-char funcType[1000] = {"Single"};
-
 int main(int argc, char **argv)
 {
-	int ip_channel = G_IP_CHANNEL;
-	int mode = G_MODE;
-	char *funcName = argv[1];
-	if (mode == 0)
-	{
-		strcat(funcType, "_CPU");
-	}
-	else if (mode == 1)
-	{
-		strcat(funcType, "_GPU");
-	}
-	else
-	{
-		strcat(funcType, "_HIP");
-	}
-	if (ip_channel == 1)
-	{
-		strcat(funcType, "_PLN");
-	}
-	else
-	{
-		strcat(funcType, "_PKD");
-	}
+    const int MIN_ARG_COUNT = 5;
+    printf("\nUsage: ./batchPD_ocl <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <case number = 0:64>\n");
+    if (argc < MIN_ARG_COUNT)
+    {
+        printf("\nImproper Usage! Needs all arguments!\n");
+        return -1;
+    }
+
+    printf("\nsrc1 = %s", argv[1]);
+    printf("\nsrc2 = %s", argv[2]);
+    printf("\ndst = %s", argv[3]);
+    printf("\ncase number (1:64) = %s", argv[4]);
+
+    char *src = argv[1];
+    char *src_second = argv[2];
+    char *dst = argv[3];
+    int test_case = atoi(argv[4]);
+    int ip_channel = 3;
+
+    char funcType[1000] = {"batchSD_OCL_PKD3"};
+
+    char funcName[1000];
+    switch (test_case)
+    {
+    case 0:
+        strcpy(funcName, "brightness");
+        break;
+    case 1:
+        strcpy(funcName, "contrast");
+        break;
+    case 2:
+        strcpy(funcName, "blur");
+        break;
+    case 3:
+        strcpy(funcName, "jitter");
+        break;
+    case 4:
+        strcpy(funcName, "blend");
+        break;
+    case 5:
+        strcpy(funcName, "color_temperature");
+        break;
+    case 6:
+        strcpy(funcName, "gamma_correction");
+        break;
+    case 7:
+        strcpy(funcName, "fog");
+        break;
+    case 8:
+        strcpy(funcName, "snow");
+        break;
+    case 9:
+        strcpy(funcName, "lens_correction");
+        break;
+    case 10:
+        strcpy(funcName, "noise");
+        break;
+    case 11:
+        strcpy(funcName, "pixelate");
+        break;
+    case 12:
+        strcpy(funcName, "exposure");
+        break;
+    case 13:
+        strcpy(funcName, "fisheye");
+        break;
+    case 14:
+        strcpy(funcName, "vignette");
+        break;
+    case 15:
+        strcpy(funcName, "flip");
+        break;
+    case 16:
+        strcpy(funcName, "rain");
+        break;
+    case 17:
+        strcpy(funcName, "rotate");
+        break;
+    case 18:
+        strcpy(funcName, "warp_affine");
+        break;
+    case 19:
+        strcpy(funcName, "resize");
+        break;
+    case 20:
+        strcpy(funcName, "resize_crop");
+        break;
+    case 21:
+        strcpy(funcName, "hueRGB");
+        break;
+    case 22:
+        strcpy(funcName, "saturationRGB");
+        break;
+    case 23:
+        strcpy(funcName, "histogram_balance");
+        break;
+    case 24:
+        strcpy(funcName, "random_shadow");
+        break;
+    case 25:
+        strcpy(funcName, "random_crop_letterbox");
+        break;
+    case 26:
+        strcpy(funcName, "absolute_difference");
+        break;
+    case 27:
+        strcpy(funcName, "accumulate");
+        break;
+    case 28:
+        strcpy(funcName, "accumulate_squared");
+        break;
+    case 29:
+        strcpy(funcName, "accumulate_weighted");
+        break;
+    case 30:
+        strcpy(funcName, "add");
+        break;
+    case 31:
+        strcpy(funcName, "subtract");
+        break;
+    case 32:
+        strcpy(funcName, "bitwise_AND");
+        break;
+    case 33:
+        strcpy(funcName, "exclusive_OR");
+        break;
+    case 34:
+        strcpy(funcName, "inclusive_OR");
+        break;
+    case 35:
+        strcpy(funcName, "bitwise_NOT");
+        break;
+    case 36:
+        strcpy(funcName, "box_filter");
+        break;
+    case 37:
+        strcpy(funcName, "canny_edge_detector");
+        break;
+    case 38:
+        strcpy(funcName, "channel_extract");
+        break;
+    case 39:
+        strcpy(funcName, "data_object_copy");
+        break;
+    case 40:
+        strcpy(funcName, "dilate");
+        break;
+    case 41:
+        strcpy(funcName, "histogram_equalization");
+        break;
+    case 42:
+        strcpy(funcName, "erode");
+        break;
+    case 43:
+        strcpy(funcName, "fast_corner_detector");
+        break;
+    case 44:
+        strcpy(funcName, "gaussian_filter");
+        break;
+    case 45:
+        strcpy(funcName, "gaussian_image_pyramid");
+        break;
+    case 46:
+        strcpy(funcName, "harris_corner_detector");
+        break;
+    case 47:
+        strcpy(funcName, "local_binary_pattern");
+        break;
+    case 48:
+        strcpy(funcName, "laplacian_image_pyramid");
+        break;
+    case 49:
+        strcpy(funcName, "magnitude");
+        break;
+    case 50:
+        strcpy(funcName, "max");
+        break;
+    case 51:
+        strcpy(funcName, "median_filter");
+        break;
+    case 52:
+        strcpy(funcName, "min");
+        break;
+    case 53:
+        strcpy(funcName, "nonlinear_filter");
+        break;
+    case 54:
+        strcpy(funcName, "non_max_suppression");
+        break;
+    case 55:
+        strcpy(funcName, "phase");
+        break;
+    case 56:
+        strcpy(funcName, "multiply");
+        break;
+    case 57:
+        strcpy(funcName, "scale");
+        break;
+    case 58:
+        strcpy(funcName, "sobel_filter");
+        break;
+    case 59:
+        strcpy(funcName, "thresholding");
+        break;
+    case 60:
+        strcpy(funcName, "warp_perspective");
+        break;
+    case 61:
+        strcpy(funcName, "resize_crop_mirror");
+        break;
+    case 62:
+        strcpy(funcName, "crop");
+        break;
+    case 63:
+        strcpy(funcName, "crop_mirror_normalize");
+        break;
+    case 64:
+        strcpy(funcName, "color_twist");
+        break;
+    }
+
+
+    char func[1000];
+    strcpy(func, funcName);
+    strcat(func, funcType);
+    printf("\n\nRunning %s...", func);
 
 	int i = 0, j = 0;
 	int minHeight = 30000, minWidth = 30000, maxHeight = 0, maxWidth = 0;
@@ -81,7 +276,7 @@ int main(int argc, char **argv)
 
 	RppiSize *srcSize = (RppiSize *)calloc(noOfImages, sizeof(RppiSize));
 	RppiSize *dstSize = (RppiSize *)calloc(noOfImages, sizeof(RppiSize));
-	//const int images = noOfImages;
+	const int images = noOfImages;
 	char imageNames[images][1000];
 
 	unsigned long long count1 = 0;
@@ -115,6 +310,10 @@ int main(int argc, char **argv)
 	Rpp8u *input = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
 	Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
 	Rpp8u *output = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
+       Rpp8u *output1 = (Rpp8u *)calloc(ioBufferSize/3, sizeof(Rpp8u));
+        Rpp8u *output2 = (Rpp8u *)calloc(ioBufferSize/3, sizeof(Rpp8u));
+        Rpp8u *output3 = (Rpp8u *)calloc(ioBufferSize/3, sizeof(Rpp8u));
+    
 
 	/* Read the input image */
 	DIR *dr2 = opendir(src);
@@ -154,7 +353,7 @@ int main(int argc, char **argv)
 	}
 
 	closedir(dr2);
-	cl_mem d_input, d_input_second, d_output;
+	cl_mem d_input, d_input_second, d_output,d_output1,d_output2,d_output3;
 	cl_platform_id platform_id;
 	cl_device_id device_id;
 	cl_context theContext;
@@ -167,6 +366,9 @@ int main(int argc, char **argv)
 	d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
 	d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
 	d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_output1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize/3 * sizeof(Rpp8u), NULL, NULL);
+        d_output2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize/3 * sizeof(Rpp8u), NULL, NULL);
+        d_output3 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize/3 * sizeof(Rpp8u), NULL, NULL);
 	err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
 	err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
 	rppHandle_t handle;
@@ -178,50 +380,899 @@ int main(int argc, char **argv)
 	start = clock();
 
 	string test_case_name;
-	int test_case = atoi(argv[1]);
-	Rpp32u newMin = 30;
-	Rpp32u newMax = 100;
-	uint kernelSize = 3;
-	Rpp32f alpha = 0.5;
+	switch (test_case)
+	{
+   case 0:
+    {
+        test_case_name = "brightness";
+
+        Rpp32f alpha = 0.5;
 	Rpp32f beta = 100;
-	Rpp32s adjustmentValue = 100;
-	Rpp32f exposureFactor = 0.5;
-	Rpp32u flipAxis = 0;
-	Rpp32f fogValue = 1;
-	Rpp32f gamma = 0.5;
-	Rpp32f strength = 1.5;
+
+        start = clock();
+        
+            rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0],  d_output, alpha, beta,  handle);
+                end = clock();
+
+        break;
+    }
+    case 1:
+    {
+        test_case_name = "contrast";
+
+        Rpp32u newMin = 30;
+	Rpp32u newMax = 100;
+
+
+        start = clock();
+
+        
+            rppi_contrast_u8_pkd3_gpu(d_input, srcSize[0],  d_output, newMin, newMax,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 2:
+    {
+        test_case_name = "blur";
+
+        uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_blur_u8_pkd3_gpu(d_input, srcSize[0],  d_output, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 3:
+    {
+        test_case_name = "jitter";
+
+        uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_jitter_u8_pkd3_gpu(d_input, srcSize[0],  d_output, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 4:
+    {
+        test_case_name = "blend";
+
+        Rpp32f alpha = 0.5;
+        start = clock();
+
+        
+            rppi_blend_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output, alpha,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 5:
+    {
+        test_case_name = "color_temperature";
+
+        Rpp32s adjustmentValue = 100;
+
+        start = clock();
+
+        
+            rppi_color_temperature_u8_pkd3_gpu(d_input, srcSize[0],  d_output, adjustmentValue,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 6:
+    {
+        test_case_name = "gamma_correction";
+
+        Rpp32f gamma = 0.5;
+
+        start = clock();
+
+        
+            rppi_gamma_correction_u8_pkd3_gpu(d_input, srcSize[0],  d_output, gamma,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 7:
+    {
+        test_case_name = "fog";
+
+        Rpp32f fogValue = 1;
+
+        start = clock();
+
+        
+            rppi_fog_u8_pkd3_gpu(d_input, srcSize[0],  d_output, fogValue,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 8:
+    {
+        test_case_name = "snow";
+
+        Rpp32f snowPercentage = 0.4;
+
+        start = clock();
+
+        
+            rppi_snow_u8_pkd3_gpu(d_input, srcSize[0],  d_output, snowPercentage,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 9:
+    {
+        test_case_name = "lens_correction";
+
+        Rpp32f strength = 1.5;
 	Rpp32f zoom = 0;
-	Rpp32f noiseProbability = 0.5;
-	Rpp32f rainPercentage = 0.5;
+
+        start = clock();
+
+        
+            rppi_lens_correction_u8_pkd3_gpu(d_input, srcSize[0],  d_output, strength, zoom,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 10:
+    {
+        test_case_name = "noise";
+
+        Rpp32f noiseProbability = 0.5;
+
+        start = clock();
+
+        
+            rppi_noise_u8_pkd3_gpu(d_input, srcSize[0],  d_output, noiseProbability,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 11:
+    {
+        test_case_name = "pixelate";
+
+        start = clock();
+
+        
+            rppi_pixelate_u8_pkd3_gpu(d_input, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 12:
+    {
+        test_case_name = "exposure";
+
+        Rpp32f exposureFactor = 0.5;
+
+        start = clock();
+
+        
+            rppi_exposure_u8_pkd3_gpu(d_input, srcSize[0],  d_output, exposureFactor,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 13:
+    {
+        test_case_name = "fisheye";
+
+        start = clock();
+
+        
+            rppi_fisheye_u8_pkd3_gpu(d_input, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 14:
+    {
+        test_case_name = "vignette";
+
+        Rpp32f stdDev = 20;
+        start = clock();
+
+        
+            rppi_vignette_u8_pkd3_gpu(d_input, srcSize[0],  d_output, stdDev,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 15:
+    {
+        test_case_name = "flip";
+
+        Rpp32u flipAxis = 0;
+
+        start = clock();
+
+        
+            rppi_flip_u8_pkd3_gpu(d_input, srcSize[0],  d_output, flipAxis,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 16:
+    {
+        test_case_name = "rain";
+
+        Rpp32f rainPercentage = 0.5;
 	Rpp32u rainWidth = 3;
 	Rpp32u rainHeight = 6;
 	Rpp32f transparency = 0.5;
-	Rpp32f stdDev = 20;
-	Rpp32f snowPercentage = 0.4;
-	Rpp32f angle = 135.0;
-	Rpp32f affine[6] = {1.0, 2.0, 1.0, 1.0, 1.0, 2.0};
-	Rpp32f coordinates[4] = {100, 200, 200, 400};
-	Rpp32f hueShift = 10;
-	Rpp32f saturationFactor = 10;
-	Rpp8u minThreshold = 10;
+
+        start = clock();
+
+        
+            rppi_rain_u8_pkd3_gpu(d_input, srcSize[0],  d_output, rainPercentage, rainWidth, rainHeight, transparency,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 17:
+    {
+        test_case_name = "rotate";
+
+        	Rpp32f angle = 135.0;
+
+        start = clock();
+
+        
+            rppi_rotate_u8_pkd3_gpu(d_input, srcSize[0],  d_output, dstSize[0],  angle,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 18:
+    {
+        test_case_name = "warp_affine";
+
+        Rpp32f affine[6] = {1.0, 2.0, 1.0, 1.0, 1.0, 2.0};
+
+        start = clock();
+
+        
+            rppi_warp_affine_u8_pkd3_gpu(d_input, srcSize[0],  d_output, dstSize[0],  affine,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 19:
+    {
+        test_case_name = "resize";
+
+        
+        start = clock();
+
+        
+            rppi_resize_u8_pkd3_gpu(d_input, srcSize[0],  d_output, dstSize[0],   handle);
+       
+        end = clock();
+
+        break;
+    }
+    case 20:
+    {
+        test_case_name = "resize_crop";
+
+        Rpp32u x1 = 50;
+	Rpp32u y1 = 50;
+	Rpp32u x2 = 200;
+	Rpp32u y2 = 200;
+        
+        start = clock();
+
+        
+            rppi_resize_crop_u8_pkd3_gpu(d_input, srcSize[0],  d_output, dstSize[0],  x1, x2, y1, y2,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 21:
+    {
+        test_case_name = "hueRGB";
+
+        Rpp32f hueShift = 10;
+	
+
+        start = clock();
+
+        
+            rppi_hueRGB_u8_pkd3_gpu(d_input, srcSize[0],  d_output, hueShift,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 22:
+    {
+        test_case_name = "saturationRGB";
+
+        Rpp32f saturationFactor = 10;
+
+        start = clock();
+
+        
+            rppi_saturationRGB_u8_pkd3_gpu(d_input, srcSize[0],  d_output, saturationFactor,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 23:
+    {
+        test_case_name = "histogram_balance";
+
+        start = clock();
+
+        
+            rppi_histogram_balance_u8_pkd3_gpu(d_input, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 24:
+    {
+        test_case_name = "random_shadow";
+
+        Rpp32u x1 = 50;
+	Rpp32u y1 = 50;
+	Rpp32u x2 = 200;
+	Rpp32u y2 = 200;
+        Rpp32u numbeoOfShadows = 12;
+	Rpp32u maxSizeX = 12;
+	Rpp32u maxSizey = 15;
+        start = clock();
+
+        
+            rppi_random_shadow_u8_pkd3_gpu(d_input, srcSize[0],  d_output, x1, y1, x2, y2, numbeoOfShadows, maxSizeX, maxSizey,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 25:
+    {
+        test_case_name = "random_crop_letterbox";
+
+        Rpp32u x1 = 50;
+	Rpp32u y1 = 50;
+	Rpp32u x2 = 200;
+	Rpp32u y2 = 200;
+        start = clock();
+
+        
+            rppi_random_crop_letterbox_u8_pkd3_gpu(d_input, srcSize[0],  d_output, dstSize[0],  x1, x2, y1, y2,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 26:
+    {
+        test_case_name = "absolute_difference";
+
+        start = clock();
+
+        
+            rppi_absolute_difference_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 27:
+    {
+        test_case_name = "accumulate";
+
+        start = clock();
+
+        
+            rppi_accumulate_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],   handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 28:
+    {
+        test_case_name = "accumulate_squared";
+
+        start = clock();
+
+        
+            rppi_accumulate_squared_u8_pkd3_gpu(d_input, srcSize[0],   handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 29:
+    {
+        test_case_name = "accumulate_weighted";
+
+        Rpp32f alpha = 0.5;
+
+        start = clock();
+
+        
+            rppi_accumulate_weighted_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  alpha,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 30:
+    {
+        test_case_name = "add";
+
+        start = clock();
+
+        
+            rppi_add_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 31:
+    {
+        test_case_name = "subtract";
+
+        start = clock();
+
+        
+            rppi_subtract_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 32:
+    {
+        test_case_name = "bitwise_AND";
+
+        start = clock();
+
+        
+            rppi_bitwise_AND_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 33:
+    {
+        test_case_name = "exclusive_OR";
+
+        start = clock();
+
+        
+            rppi_exclusive_OR_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 34:
+    {
+        test_case_name = "inclusive_OR";
+
+        start = clock();
+
+        
+            rppi_inclusive_OR_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 35:
+    {
+        test_case_name = "bitwise_NOT";
+
+        start = clock();
+
+        
+            rppi_bitwise_NOT_u8_pkd3_gpu(d_input, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 36:
+    {
+        test_case_name = "box_filter";
+
+        uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_box_filter_u8_pkd3_gpu(d_input, srcSize[0],  d_output, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 37:
+    {
+        test_case_name = "canny_edge_detector";
+
+        Rpp8u minThreshold = 10;
 	Rpp8u maxThreshold = 30;
-	Rpp32u numOfPixels = 4;
-	Rpp32u gaussianKernelSize = 7;
+
+        start = clock();
+
+        
+            rppi_canny_edge_detector_u8_pkd3_gpu(d_input, srcSize[0],  d_output, minThreshold, maxThreshold,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 38:
+    {
+        //Rpp32u extractChannelNumber = 1;
+
+        start = clock();
+
+        
+       rppi_channel_extract_u8_pkd3_gpu(d_input, srcSize[0],  d_output1, 0,  handle);
+       rppi_channel_extract_u8_pkd3_gpu(d_input, srcSize[0],  d_output2, 1,  handle);
+	rppi_channel_extract_u8_pkd3_gpu(d_input, srcSize[0],  d_output3, 2,  handle);
+	rppi_channel_combine_u8_pkd3_gpu(d_output1, d_output2, d_output3, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 39:
+    {
+        test_case_name = "data_object_copy";
+
+        start = clock();
+
+        
+            rppi_data_object_copy_u8_pkd3_gpu(d_input, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 40:
+    {
+        test_case_name = "dilate";
+
+        uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_dilate_u8_pkd3_gpu(d_input, srcSize[0],  d_output, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 41:
+    {
+        test_case_name = "histogram_equalization";
+
+        start = clock();
+
+        
+            rppi_histogram_equalization_u8_pkd3_gpu(d_input, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 42:
+    {
+        test_case_name = "erode";
+
+        uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_erode_u8_pkd3_gpu(d_input, srcSize[0],  d_output, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 43:
+    {
+        test_case_name = "fast_corner_detector";
+
+        Rpp32f threshold = 15;
+	Rpp32u nonmaxKernelSize = 5;
+        Rpp32u numOfPixels = 4;
+
+        start = clock();
+
+        
+            rppi_fast_corner_detector_u8_pkd3_gpu(d_input, srcSize[0],  d_output, numOfPixels, threshold, nonmaxKernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 44:
+    {
+        test_case_name = "gaussian_filter";
+
+        Rpp32f stdDev = 20;
+uint kernelSize = 3;
+        start = clock();
+
+        
+            rppi_gaussian_filter_u8_pkd3_gpu(d_input, srcSize[0],  d_output, stdDev, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 45:
+    {
+        test_case_name = "gaussian_image_pyramid";
+
+        Rpp32f stdDev = 20;
+uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_gaussian_image_pyramid_u8_pkd3_gpu(d_input, srcSize[0],  d_output, stdDev, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 46:
+    {
+        test_case_name = "harris_corner_detector";
+
+        Rpp32u gaussianKernelSize = 7;
 	Rpp32f kValue = 1;
 	Rpp32f threshold = 15;
 	Rpp32u nonmaxKernelSize = 5;
-	Rpp32u sobelType = 1;
-	Rpp8u min = 10;
-	Rpp8u max = 30;
-	Rpp32u crop_pos_x = 100;
-	Rpp32u crop_pos_y = 100;
-	Rpp32u xRoiBegin = 50;
-	Rpp32u yRoiBegin = 50;
-	Rpp32u xRoiEnd = 200;
-	Rpp32u yRoiEnd = 200;
-	Rpp32u mirrorFlag = 0;
+        Rpp32f stdDev = 20;
+	uint kernelSize = 3;
 
-	Rpp32f perspective[9];
+        start = clock();
+
+        
+            rppi_harris_corner_detector_u8_pkd3_gpu(d_input, srcSize[0],  d_output, gaussianKernelSize, stdDev, kernelSize, kValue, threshold, nonmaxKernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 47:
+    {
+        test_case_name = "local_binary_pattern";
+
+        start = clock();
+
+        
+            rppi_local_binary_pattern_u8_pkd3_gpu(d_input, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 48:
+    {
+        test_case_name = "laplacian_image_pyramid";
+
+        Rpp32f stdDev = 20;
+uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_laplacian_image_pyramid_u8_pkd3_gpu(d_input, srcSize[0],  d_output, stdDev, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 49:
+    {
+        test_case_name = "magnitude";
+
+        start = clock();
+
+        
+            rppi_magnitude_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 50:
+    {
+        test_case_name = "max";
+
+        start = clock();
+
+        
+            rppi_max_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 51:
+    {
+        test_case_name = "median_filter";
+
+        
+uint kernelSize = 3;
+        start = clock();
+
+        
+            rppi_median_filter_u8_pkd3_gpu(d_input, srcSize[0],  d_output, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 52:
+    {
+        test_case_name = "min";
+
+        start = clock();
+
+        
+            rppi_min_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 53:
+    {
+        test_case_name = "nonlinear_filter";
+
+       
+uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_nonlinear_filter_u8_pkd3_gpu(d_input, srcSize[0],  d_output, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 54:
+    {
+        test_case_name = "non_max_suppression";
+
+        
+uint kernelSize = 3;
+
+        start = clock();
+
+        
+            rppi_non_max_suppression_u8_pkd3_gpu(d_input, srcSize[0],  d_output, kernelSize,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 55:
+    {
+        test_case_name = "phase";
+
+        start = clock();
+
+        
+            rppi_phase_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 56:
+    {
+        test_case_name = "multiply";
+
+        start = clock();
+
+        
+            rppi_multiply_u8_pkd3_gpu(d_input, d_input_second, srcSize[0],  d_output,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 57:
+    {
+        test_case_name = "scale";
+
+        Rpp32f percentage = 100;
+        start = clock();
+
+        
+            rppi_scale_u8_pkd3_gpu(d_input, srcSize[0],  d_output, dstSize[0],  percentage,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 58:
+    {
+        test_case_name = "sobel_filter";
+
+        Rpp32u sobelType = 1;
+
+        start = clock();
+
+        
+            rppi_sobel_filter_u8_pkd3_gpu(d_input, srcSize[0],  d_output, sobelType,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 59:
+    {
+        test_case_name = "thresholding";
+
+        Rpp8u min = 10;
+	Rpp8u max = 30;
+
+        start = clock();
+
+        
+            rppi_thresholding_u8_pkd3_gpu(d_input, srcSize[0],  d_output, min, max,  handle);
+        
+        end = clock();
+
+        break;
+    }
+    case 60:
+    {
+        test_case_name = "warp_perspective";
+
+        Rpp32f perspective[9];
 
 	perspective[0] = 1;
 	perspective[1] = 0;
@@ -232,322 +1283,17 @@ int main(int argc, char **argv)
 	perspective[6] = 1;
 	perspective[7] = 0;
 	perspective[8] = 0.5;
-	Rpp32f percentage = 100;
-	Rpp32u numbeoOfShadows = 12;
-	Rpp32u maxSizeX = 12;
-	Rpp32u maxSizey = 15;
-	Rpp32u extractChannelNumber = 1;
 
-	switch (test_case)
-	{
-		case 0:
-			test_case_name = "contrast";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_contrast_u8_pkd3_gpu(d_input, srcSize[0], d_output, newMin, newMax, handle);
-			break;
-		case 1:
-			test_case_name = "jitter";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_jitter_u8_pkd3_gpu(d_input, srcSize[0], d_output, kernelSize, handle);
-			break;
-		case 2:
-			test_case_name = "blur";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_blur_u8_pkd3_gpu(d_input, srcSize[0], d_output, kernelSize, handle);
-			break;
-		case 3:
-			test_case_name = "brightness";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_brightness_u8_pkd3_gpu(d_input, srcSize[0], d_output, alpha, beta, handle);
-			break;
-		case 4:
-			test_case_name = "blend";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_blend_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, alpha, handle);
-			break;
-		case 5:
-			test_case_name = "color_temperature";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_color_temperature_u8_pkd3_gpu(d_input, srcSize[0], d_output, adjustmentValue, handle);
-			break;
-		case 6:
-			test_case_name = "gamma_correction";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_gamma_correction_u8_pkd3_gpu(d_input, srcSize[0], d_output, gamma, handle);
-			break;
-		case 7:
-			test_case_name = "fog";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_fog_u8_pkd3_gpu(d_input, srcSize[0], d_output, fogValue, handle);
-			break;
-		case 8:
-			test_case_name = "snow";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_snow_u8_pkd3_gpu(d_input, srcSize[0], d_output, snowPercentage, handle);
-			break;
-		case 9:
-			test_case_name = "lens_correction";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_lens_correction_u8_pkd3_gpu(d_input, srcSize[0], d_output, strength, zoom, handle);
-			break;
-		case 10:
-			test_case_name = "noise";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_noise_u8_pkd3_gpu(d_input, srcSize[0], d_output, noiseProbability, handle);
-			break;
-		case 11:
-			test_case_name = "pixelate";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_pixelate_u8_pkd3_gpu(d_input, srcSize[0], d_output, handle);
-			break;
-		case 12:
-			test_case_name = "exposure";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_exposure_u8_pkd3_gpu(d_input, srcSize[0], d_output, exposureFactor, handle);
-			break;
-		case 13:
-			test_case_name = "fisheye";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_fisheye_u8_pkd3_gpu(d_input, srcSize[0], d_output, handle);
-			break;
-		case 14:
-			test_case_name = "vignette";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_vignette_u8_pkd3_gpu(d_input, srcSize[0], d_output, stdDev, handle);
-			break;
-		case 15:
-			test_case_name = "flip";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_flip_u8_pkd3_gpu(d_input, srcSize[0], d_output, flipAxis, handle);
-			break;
-		case 16:
-			test_case_name = "rain";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_rain_u8_pkd3_gpu(d_input, srcSize[0], d_output, rainPercentage, rainWidth, rainHeight, transparency, handle);
-			break;
-		case 17:
-			test_case_name = "rotate";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_rotate_u8_pkd3_gpu(d_input, srcSize[0], d_output, dstSize[0], angle, handle);
-			break;
-		case 18:
-			test_case_name = "warp-affine";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_warp_affine_u8_pkd3_gpu(d_input, srcSize[0], d_output, dstSize[0], affine, handle);
-			break;
-		case 19:
-			test_case_name = "resize";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_resize_u8_pkd3_gpu(d_input, srcSize[0], d_output, dstSize[0], handle);
-			break;
-		case 20:
-			test_case_name = "resize_crop";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_resize_crop_u8_pkd3_gpu(d_input, srcSize[0], d_output, dstSize[0], coordinates[0], coordinates[1],
-										coordinates[2], coordinates[3], handle);
-			break;
-		case 21:
-			test_case_name = "Hue modification";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_hueRGB_u8_pkd3_gpu(d_input, srcSize[0], d_output, hueShift, handle);
-			break;
-		case 22:
-			test_case_name = "Saturation";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_saturationRGB_u8_pkd3_gpu(d_input, srcSize[0], d_output, saturationFactor, handle);
-			break;
-		case 23:
-			test_case_name = "Histogram Balance";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_histogram_balance_u8_pkd3_gpu(d_input, srcSize[0], d_output, handle);
-			break;
-		case 24:
-			test_case_name = "RandomShadow";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_random_shadow_u8_pkd3_gpu(d_input, srcSize[0], d_output, coordinates[0], coordinates[1],
-										coordinates[2], coordinates[3], numbeoOfShadows, maxSizeX, maxSizey, handle);
-			break;
-		case 25:
-			test_case_name = "RandomCropLetterBox";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_random_crop_letterbox_u8_pkd3_gpu(d_input, srcSize[0], d_output, dstSize[0], coordinates[0], coordinates[1],
-												coordinates[2], coordinates[3], handle);
-			break;
-		case 26:
-			test_case_name = "Absolute Difference";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_absolute_difference_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 27:
-			test_case_name = "Accumulate";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_accumulate_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], handle);
-			break;
-		case 28:
-			test_case_name = "Accumulate Squared";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_accumulate_squared_u8_pkd3_gpu(d_input, srcSize[0], handle);
-			break;
-		case 29:
-			test_case_name = "Accumulate Weighted";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_accumulate_weighted_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], alpha, handle);
-			break;
-		case 30:
-			test_case_name = "Arithmetic Addition";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_add_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 31:
-			test_case_name = "Arithmetic Subtraction";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_subtract_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 32:
-			test_case_name = "Bitwise AND";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_bitwise_AND_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 33:
-			test_case_name = "Bitwise EXCLUSIVE OR";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_exclusive_OR_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 34:
-			test_case_name = "Bitwise INCLUSIVE OR";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_inclusive_OR_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 35:
-			test_case_name = "Bitwise NOT";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_bitwise_NOT_u8_pkd3_gpu(d_input, srcSize[0], d_output, handle);
-			break;
-		case 36:
-			test_case_name = "Box Filter";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_box_filter_u8_pkd3_gpu(d_input, srcSize[0], d_output, kernelSize, handle);
-			break;
-		case 37:
-			test_case_name = "Canny Edge Detector";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_canny_edge_detector_u8_pkd3_gpu(d_input, srcSize[0], d_output, minThreshold, maxThreshold, handle);
-			break;
-		case 38:
-			test_case_name = "Channel Extract";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_channel_extract_u8_pkd3_gpu(d_input, srcSize[0], d_output, extractChannelNumber, handle);
-			break;
-		case 39:
-			test_case_name = "Data Object Copy";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_data_object_copy_u8_pkd3_gpu(d_input, srcSize[0], d_output, handle);
-			break;
-		case 40:
-			test_case_name = "Dilate Image";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_dilate_u8_pkd3_gpu(d_input, srcSize[0], d_output, kernelSize, handle);
-			break;
-		case 41:
-			test_case_name = "Equalize Histogram";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_histogram_equalization_u8_pkd3_gpu(d_input, srcSize[0], d_output, handle);
-			break;
-		case 42:
-			test_case_name = "Erode Image";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_erode_u8_pkd3_gpu(d_input, srcSize[0], d_output, kernelSize, handle);
-			break;
-		case 43:
-			test_case_name = "Fast Corners";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_fast_corner_detector_u8_pkd3_gpu(d_input, srcSize[0], d_output, numOfPixels, threshold, nonmaxKernelSize, handle);
-			break;
-		case 44:
-			test_case_name = "Gaussian Filter";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_gaussian_filter_u8_pkd3_gpu(d_input, srcSize[0], d_output, stdDev, kernelSize, handle);
-			break;
-		case 45:
-			test_case_name = "Gaussian Image Pyramid";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_gaussian_image_pyramid_u8_pkd3_gpu(d_input, srcSize[0], d_output, stdDev, kernelSize, handle);
-			break;
-		case 46:
-			test_case_name = "Harris Corners";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_harris_corner_detector_u8_pkd3_gpu(d_input, srcSize[0], d_output, gaussianKernelSize, stdDev, kernelSize, kValue, threshold, nonmaxKernelSize, handle);
-			break;
-		case 47:
-			test_case_name = "LBP";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_local_binary_pattern_u8_pkd3_gpu(d_input, srcSize[0], d_output, handle);
-			break;
-		case 48:
-			test_case_name = "Laplacian Image Pyramid";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_laplacian_image_pyramid_u8_pkd3_gpu(d_input, srcSize[0], d_output, stdDev, kernelSize, handle);
-			break;
-		case 49:
-			test_case_name = "Magnitude";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_magnitude_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 50:
-			test_case_name = "Max";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_max_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 51:
-			test_case_name = "Median Filter";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_median_filter_u8_pkd3_gpu(d_input, srcSize[0], d_output, kernelSize, handle);
-			break;
-		case 52:
-			test_case_name = "Min";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_min_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 53:
-			test_case_name = "Non Linear Filter";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_nonlinear_filter_u8_pkd3_gpu(d_input, srcSize[0], d_output, kernelSize, handle);
-			break;
-		case 54:
-			test_case_name = "Non-Maxima Suppression";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_non_max_suppression_u8_pkd3_gpu(d_input, srcSize[0], d_output, kernelSize, handle);
-			break;
-		case 55:
-			test_case_name = "Phase";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_phase_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 56:
-			test_case_name = "Pixel-wise Multiplication";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_multiply_u8_pkd3_gpu(d_input, d_input_second, srcSize[0], d_output, handle);
-			break;
-		case 57:
-			test_case_name = "Scale Image";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_scale_u8_pkd3_gpu(d_input, srcSize[0], d_output, dstSize[0], percentage, handle);
-			break;
-		case 58:
-			test_case_name = "Sobel 3x3";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_sobel_filter_u8_pkd3_gpu(d_input, srcSize[0], d_output, sobelType, handle);
-			break;
-		case 59:
-			test_case_name = "Thresholding";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_thresholding_u8_pkd3_gpu(d_input, srcSize[0], d_output, min, max, handle);
-			break;
-		case 60:
-			test_case_name = "Warp Perspective";
-			std::cout << "\n"<< test_case_name << "\n";
-			rppi_warp_perspective_u8_pkd3_gpu(d_input, srcSize[0], d_output, dstSize[0], perspective, handle);
-			break;
+        start = clock();
+
+        
+            rppi_warp_perspective_u8_pkd3_gpu(d_input, srcSize[0],  d_output, dstSize[0],  perspective,  handle);
+        
+        end = clock();
+
+        break;
+    }
+
 		default:
 			break;
 	}
@@ -557,6 +1303,10 @@ int main(int argc, char **argv)
 	cout << " Single : " << cpu_time_used << endl;
 
 	clEnqueueReadBuffer(theQueue, d_output, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
+        clEnqueueReadBuffer(theQueue, d_output1, CL_TRUE, 0, ioBufferSize/3  * sizeof(Rpp8u), output, 0, NULL, NULL);
+        clEnqueueReadBuffer(theQueue, d_output2, CL_TRUE, 0, ioBufferSize/3 * sizeof(Rpp8u), output, 0, NULL, NULL);
+        clEnqueueReadBuffer(theQueue, d_output3, CL_TRUE, 0, ioBufferSize/3 * sizeof(Rpp8u), output, 0, NULL, NULL);
+
 
 	rppDestroyGPU(handle);
 
