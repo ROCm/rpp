@@ -21924,44 +21924,6 @@ rppi_warp_affine_u8_pln1_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_
 }
 
 RppStatus
-rppi_warp_affine_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u nbatchSize, rppHandle_t rppHandle)
-{
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
-	copy_dstSize(dstSize, rpp::deref(rppHandle));
-	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
-	get_dstBatchIndex(rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
-
-#ifdef OCL_COMPILE
-	{
-		warp_affine_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle), affineMatrix,
-			RPPI_CHN_PLANAR, 1);
-	}
-#elif defined(HIP_COMPILE)
-	{
-		warp_affine_hip_batch(
-			static_cast<Rpp8u *>(srcPtr),
-			static_cast<Rpp8u *>(dstPtr),
-			rpp::deref(rppHandle), affineMatrix,
-			RPPI_CHN_PLANAR, 1);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
-}
-
-RppStatus
 rppi_warp_affine_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32f *affineMatrix, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	Rpp32u paramIndex = 0;
@@ -22582,44 +22544,6 @@ rppi_warp_affine_u8_pln3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_
 	copy_srcMaxSize(rpp::deref(rppHandle));
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(rpp::deref(rppHandle));
-	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
-	get_dstBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
-
-#ifdef OCL_COMPILE
-	{
-		warp_affine_cl_batch(
-			static_cast<cl_mem>(srcPtr),
-			static_cast<cl_mem>(dstPtr),
-			rpp::deref(rppHandle), affineMatrix,
-			RPPI_CHN_PLANAR, 3);
-	}
-#elif defined(HIP_COMPILE)
-	{
-		warp_affine_hip_batch(
-			static_cast<Rpp8u *>(srcPtr),
-			static_cast<Rpp8u *>(dstPtr),
-			rpp::deref(rppHandle), affineMatrix,
-			RPPI_CHN_PLANAR, 3);
-	}
-#endif //BACKEND
-
-	return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_warp_affine_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u nbatchSize, rppHandle_t rppHandle)
-{
-	RppiROI roiPoints;
-	roiPoints.x = 0;
-	roiPoints.y = 0;
-	roiPoints.roiHeight = 0;
-	roiPoints.roiWidth = 0;
-	Rpp32u paramIndex = 0;
-	copy_srcSize(srcSize, rpp::deref(rppHandle));
-	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
-	copy_dstSize(dstSize, rpp::deref(rppHandle));
-	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));
 	get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
 	get_dstBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
@@ -23291,10 +23215,16 @@ rppi_warp_affine_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_warp_affine_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u nbatchSize, rppHandle_t rppHandle)
+RppStatus warp_affine_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
+			  RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp32u outputFormatToggle,
+		RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, 
+		RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, 
+		Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
+	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
+										  (bool)outputFormatToggle);
 	RppiROI roiPoints;
+	bool is_padded = true;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
 	roiPoints.roiHeight = 0;
@@ -23305,29 +23235,122 @@ rppi_warp_affine_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSiz
 	copy_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));
-	get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
-	get_dstBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format, is_padded);
 
 #ifdef OCL_COMPILE
 	{
-		warp_affine_cl_batch(
+		warp_affine_cl_batch_tensor(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle), affineMatrix,
-			RPPI_CHN_PACKED, 3);
+			tensor_info);
 	}
 #elif defined(HIP_COMPILE)
 	{
-		warp_affine_hip_batch(
-			static_cast<Rpp8u *>(srcPtr),
-			static_cast<Rpp8u *>(dstPtr),
-			rpp::deref(rppHandle), affineMatrix,
-			RPPI_CHN_PACKED, 3);
 	}
 #endif //BACKEND
 
 	return RPP_SUCCESS;
+
 }
+
+RppStatus
+rppi_warp_affine_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_f32_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_warp_affine_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (warp_affine_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, affineMatrix,
+						nbatchSize, rppHandle));
+}
+
 
 RppStatus
 rppi_warp_affine_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiSize dstSize, Rpp32f *affineMatrix, RppiROI roiPoints, Rpp32u nbatchSize, rppHandle_t rppHandle)
