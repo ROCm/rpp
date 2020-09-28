@@ -951,8 +951,8 @@ int main(int argc, char **argv)
         
        rppi_channel_extract_u8_pkd3_gpu(d_input, srcSize[0],  d_output1, 0,  handle);
        rppi_channel_extract_u8_pkd3_gpu(d_input, srcSize[0],  d_output2, 1,  handle);
-	rppi_channel_extract_u8_pkd3_gpu(d_input, srcSize[0],  d_output3, 2,  handle);
-	rppi_channel_combine_u8_pkd3_gpu(d_output1, d_output2, d_output3, srcSize[0],  d_output,  handle);
+	   rppi_channel_extract_u8_pkd3_gpu(d_input, srcSize[0],  d_output3, 2,  handle);
+	   rppi_channel_combine_u8_pkd3_gpu(d_output1, d_output2, d_output3, srcSize[0],  d_output,  handle);
         
         end = clock();
 
@@ -1303,9 +1303,9 @@ uint kernelSize = 3;
 	cout << " Single : " << cpu_time_used << endl;
 
 	clEnqueueReadBuffer(theQueue, d_output, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-        clEnqueueReadBuffer(theQueue, d_output1, CL_TRUE, 0, ioBufferSize/3  * sizeof(Rpp8u), output, 0, NULL, NULL);
-        clEnqueueReadBuffer(theQueue, d_output2, CL_TRUE, 0, ioBufferSize/3 * sizeof(Rpp8u), output, 0, NULL, NULL);
-        clEnqueueReadBuffer(theQueue, d_output3, CL_TRUE, 0, ioBufferSize/3 * sizeof(Rpp8u), output, 0, NULL, NULL);
+        // clEnqueueReadBuffer(theQueue, d_output1, CL_TRUE, 0, ioBufferSize/3  * sizeof(Rpp8u), output, 0, NULL, NULL);
+        // clEnqueueReadBuffer(theQueue, d_output2, CL_TRUE, 0, ioBufferSize/3 * sizeof(Rpp8u), output, 0, NULL, NULL);
+        // clEnqueueReadBuffer(theQueue, d_output3, CL_TRUE, 0, ioBufferSize/3 * sizeof(Rpp8u), output, 0, NULL, NULL);
 
 
 	rppDestroyGPU(handle);
