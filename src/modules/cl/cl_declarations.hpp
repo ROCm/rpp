@@ -641,5 +641,6 @@ lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPT
 RppStatus
 crop_and_patch_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle,
                           RPPTensorFunctionMetaData &tensor_info);
-
+RppStatus
+warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info);
 #endif //CL_DECLATAIONS_H
