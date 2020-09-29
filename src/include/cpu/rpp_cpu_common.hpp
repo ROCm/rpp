@@ -507,6 +507,45 @@ inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
     return RPP_SUCCESS;
 }
 
+inline RppStatus generate_scharr_kernel_host(Rpp32f* kernel, Rpp32u type)
+{
+    Rpp32f* kernelTemp;
+    kernelTemp = kernel;
+
+    if (type == 1)
+    {
+        Rpp32f kernelX[9] = {3, 0, -3, 10, 0, -10, 3, 0, -3};
+        Rpp32f* kernelXTemp;
+        kernelXTemp = kernelX;
+
+        for (int i = 0; i < 9; i++)
+        {
+            *kernelTemp = *kernelXTemp;
+            kernelTemp++;
+            kernelXTemp++;
+        }
+    }
+    else if (type == 2)
+    {
+        Rpp32f kernelY[9] = {3, 10, 3, 0, 0, 0, -3, -10, -3};
+        Rpp32f* kernelYTemp;
+        kernelYTemp = kernelY;
+
+        for (int i = 0; i < 9; i++)
+        {
+            *kernelTemp = *kernelYTemp;
+            kernelTemp++;
+            kernelYTemp++;
+        }
+    }
+    else
+    {
+        return RPP_ERROR;
+    }
+
+    return RPP_SUCCESS;
+}
+
 
 
 
@@ -1672,6 +1711,85 @@ inline RppStatus hog_three_channel_gradient_computations_kernel_host(T* srcPtr, 
 
     compute_magnitude_host(gradientX, gradientY, srcSize, gradientMagnitude, RPPI_CHN_PLANAR, 1);
     compute_gradient_direction_host(gradientX, gradientY, srcSize, gradientDirection, RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+inline RppStatus lucas_kanade_matrix_kernel_host(T* srcPtrWindowX, T* srcPtrWindowY, RppiSize srcSize, Rpp32f* VxIntermediate, Rpp32f* VyIntermediate, 
+                                          Rpp32u kernelSize, Rpp32u remainingElementsInRow, Rpp32u lostTrackFlag)
+{
+    Rpp32f* Ginverse = (Rpp32f*) calloc(4, sizeof(Rpp32f));
+
+    T *srcPtrWindowTempX, *srcPtrWindowTempY;
+    srcPtrWindowTempX = srcPtrWindowX;
+    srcPtrWindowTempY = srcPtrWindowY;
+
+    Rpp32f sumXX = 0, sumYY = 0, sumXY = 0, valX = 0, valY = 0, sumX = 0, sumY = 0;
+    
+    for (int m = 0; m < kernelSize; m++)
+    {
+        for (int n = 0; n < kernelSize; n++)
+        {
+            valX = (Rpp32f) *srcPtrWindowTempX;
+            valY = (Rpp32f) *srcPtrWindowTempY;
+            sumXX += (valX * valX);
+            sumYY += (valY * valY);
+            sumXY += (valX * valY);
+            sumX += valX;
+            sumY += valY;
+
+            srcPtrWindowTempX++;
+            srcPtrWindowTempY++;
+        }
+        srcPtrWindowTempX += remainingElementsInRow;
+        srcPtrWindowTempY += remainingElementsInRow;
+    }
+
+    Rpp32f det = (sumXX * sumYY) - (sumXY * sumXY);
+
+    if (det < 0.0000001)
+    {
+        lostTrackFlag = 1;
+        return RPP_SUCCESS;
+    }
+    
+    *Ginverse = sumYY / det;
+    *(Ginverse + 1) = -sumXY / det;
+    *(Ginverse + 2) = -sumXY / det;
+    *(Ginverse + 3) = sumXX / det;
+
+    *VxIntermediate = *Ginverse * (-sumX) + *(Ginverse + 1) * (-sumY);
+    *VyIntermediate = *(Ginverse + 2) * (-sumX) + *(Ginverse + 3) * (-sumY);
+
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+inline RppStatus lucas_kanade_residual_kernel_host(T* srcPtr1Window, T* srcPtr2Window, RppiSize srcSize, Rpp32f* residual, 
+                                            Rpp32u kernelSize, Rpp32u remainingElementsInRow)
+{
+    T *srcPtr1WindowTemp, *srcPtr2WindowTemp;
+    srcPtr1WindowTemp = srcPtr1Window;
+    srcPtr2WindowTemp = srcPtr2Window;
+
+    Rpp32f sum, val;
+    
+    for (int m = 0; m < kernelSize; m++)
+    {
+        for (int n = 0; n < kernelSize; n++)
+        {
+            val = (Rpp32f) *srcPtr1WindowTemp - (Rpp32f) *srcPtr2WindowTemp;
+            sum += (val * val);
+
+            srcPtr1WindowTemp++;
+            srcPtr2WindowTemp++;
+        }
+        srcPtr1WindowTemp += remainingElementsInRow;
+        srcPtr2WindowTemp += remainingElementsInRow;
+    }
+
+    *residual = sum;
 
     return RPP_SUCCESS;
 }
@@ -3066,6 +3184,56 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             dstPtrTempG += 3;
             dstPtrTempB += 3;
         }
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T>
+inline RppStatus compute_rgb_to_greyscale_host(T* srcPtr, RppiSize srcSize, T* srcPtrGreyscale, RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T *srcPtrGreyscaleTemp;
+    srcPtrGreyscaleTemp = srcPtrGreyscale;
+    Rpp32u imageDim = srcSize.height * srcSize.width;
+
+    if (channel == 3)
+    {
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+            srcPtrTempR = srcPtr;
+            srcPtrTempG = srcPtr + imageDim;
+            srcPtrTempB = srcPtrTempG + imageDim;
+
+            for (int i = 0; i < imageDim; i++)
+            {
+                *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
+                srcPtrGreyscaleTemp++;
+                srcPtrTempR++;
+                srcPtrTempG++;
+                srcPtrTempB++;
+            }
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+            srcPtrTempR = srcPtr;
+            srcPtrTempG = srcPtr + 1;
+            srcPtrTempB = srcPtrTempG + 1;
+            
+            for (int i = 0; i < imageDim; i++)
+            {
+                *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
+                srcPtrGreyscaleTemp++;
+                srcPtrTempR += channel;
+                srcPtrTempG += channel;
+                srcPtrTempB += channel;
+            }
+        }
+    }
+    else if (channel == 1)
+    {
+        memcpy(srcPtrGreyscale, srcPtr, imageDim * sizeof(T));
     }
 
     return RPP_SUCCESS;

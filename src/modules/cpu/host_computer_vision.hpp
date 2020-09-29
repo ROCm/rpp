@@ -3670,7 +3670,7 @@ RppStatus tensor_transpose_host(T* srcPtr, T* dstPtr, Rpp32u dimension1, Rpp32u 
 
 }
 /**************** hog ***************/
-/*
+
 template <typename T, typename U>
 RppStatus hog_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* batch_binsTensor, Rpp32u *batch_binsTensorLength, 
                          RppiSize *batch_kernelSize, RppiSize *batch_windowSize,  Rpp32u *batch_windowStride, Rpp32u *batch_numOfBins, 
@@ -3681,6 +3681,8 @@ RppStatus hog_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize *bat
 #pragma omp parallel for num_threads(nbatchSize)
     for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
     {
+        Rpp32u exitFlag = 0;
+        
         RppiSize kernelSize = batch_kernelSize[batchCount];
         RppiSize windowSize = batch_windowSize[batchCount];
         Rpp32u windowStride = batch_windowStride[batchCount];
@@ -3773,127 +3775,132 @@ RppStatus hog_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize *bat
 
         // For sliding window on image
 
-        for(int i = 0; i < numOfPositionsAlongImageHeight; i++)
+        exitLabel:
+        if (exitFlag != 1)
         {
-            gradientMagnitudeTemp = gradientMagnitude + (i * windowStride * srcSize.width);
-            gradientDirectionTemp = gradientDirection + (i * windowStride * srcSize.width);
-            for(int j = 0; j < numOfPositionsAlongImageWidth; j++)
+            for(int i = 0; i < numOfPositionsAlongImageHeight; i++)
             {
-                // For each window
-
-                // Layer 1
-                for (int m = 0; m < numOfPositionsAlongWindowHeight; m++)
+                gradientMagnitudeTemp = gradientMagnitude + (i * windowStride * srcSize.width);
+                gradientDirectionTemp = gradientDirection + (i * windowStride * srcSize.width);
+                for(int j = 0; j < numOfPositionsAlongImageWidth; j++)
                 {
-                    gradientMagnitudeTemp2 = gradientMagnitudeTemp + (m * kernelSize.height * srcSize.width);
-                    gradientDirectionTemp2 = gradientDirectionTemp + (m * kernelSize.height * srcSize.width);
-                    for (int n = 0; n < numOfPositionsAlongWindowWidth; n++)
+                    // For each window
+
+                    // Layer 1
+                    for (int m = 0; m < numOfPositionsAlongWindowHeight; m++)
                     {
-                        U *kernelHistogram = (U*) calloc(numOfBins, sizeof(U));
-                        
-                        // For each kernel
-                        for (int p = 0; p < kernelSize.height; p++)
+                        gradientMagnitudeTemp2 = gradientMagnitudeTemp + (m * kernelSize.height * srcSize.width);
+                        gradientDirectionTemp2 = gradientDirectionTemp + (m * kernelSize.height * srcSize.width);
+                        for (int n = 0; n < numOfPositionsAlongWindowWidth; n++)
                         {
-                            gradientMagnitudeTemp3 = gradientMagnitudeTemp2 + (p * srcSize.width);
-                            gradientDirectionTemp3 = gradientDirectionTemp2 + (p * srcSize.width);
-                            for (int q = 0; q < kernelSize.width; q++)
-                            {
-                                bin = (Rpp32u) ((*gradientDirectionTemp3 + adder) / rangeInBin);
-                                if (bin > (numOfBins - 1))
-                                {
-                                    bin = numOfBins - 1;
-                                }
-                                *(kernelHistogram + bin) += *gradientMagnitudeTemp3;
-                                gradientMagnitudeTemp3++;
-                                gradientDirectionTemp3++;
-                            }
-                        }
-                        U *kernelHistogramTemp;
-                        kernelHistogramTemp = kernelHistogram;
-                        for (int r = 0; r < numOfBins; r++)
-                        {
-                            if (elementCount < (binsTensorLength - 1))
-                            {
-                                *binsTensorTemp = *kernelHistogramTemp;
-                                binsTensorTemp++;
-                                kernelHistogramTemp++;
-                                elementCount++;
-                            }
-                            else
-                            {
-                                return RPP_SUCCESS;
-                            }
+                            U *kernelHistogram = (U*) calloc(numOfBins, sizeof(U));
                             
+                            // For each kernel
+                            for (int p = 0; p < kernelSize.height; p++)
+                            {
+                                gradientMagnitudeTemp3 = gradientMagnitudeTemp2 + (p * srcSize.width);
+                                gradientDirectionTemp3 = gradientDirectionTemp2 + (p * srcSize.width);
+                                for (int q = 0; q < kernelSize.width; q++)
+                                {
+                                    bin = (Rpp32u) ((*gradientDirectionTemp3 + adder) / rangeInBin);
+                                    if (bin > (numOfBins - 1))
+                                    {
+                                        bin = numOfBins - 1;
+                                    }
+                                    *(kernelHistogram + bin) += *gradientMagnitudeTemp3;
+                                    gradientMagnitudeTemp3++;
+                                    gradientDirectionTemp3++;
+                                }
+                            }
+                            U *kernelHistogramTemp;
+                            kernelHistogramTemp = kernelHistogram;
+                            for (int r = 0; r < numOfBins; r++)
+                            {
+                                if (elementCount < (binsTensorLength - 1))
+                                {
+                                    *binsTensorTemp = *kernelHistogramTemp;
+                                    binsTensorTemp++;
+                                    kernelHistogramTemp++;
+                                    elementCount++;
+                                }
+                                else
+                                {
+                                    exitFlag = 1;
+                                    goto exitLabel;
+                                }
+                                
+                            }
+                            gradientMagnitudeTemp2 += kernelSize.width;
+                            gradientDirectionTemp2 += kernelSize.width;
+
+                            free(kernelHistogram);
                         }
-                        gradientMagnitudeTemp2 += kernelSize.width;
-                        gradientDirectionTemp2 += kernelSize.width;
-
-                        free(kernelHistogram);
                     }
-                }
 
-                // Layer 2
-                for (int m = 0; m < numOfPositionsAlongWindowHeight - 1; m++)
-                {
-                    gradientMagnitudeTemp2 = gradientMagnitudeTemp + (kernelSize.height / 2 * srcSize.width) + (m * kernelSize.height * srcSize.width) + (kernelSize.width / 2);
-                    gradientDirectionTemp2 = gradientDirectionTemp + (kernelSize.height / 2 * srcSize.width)+ (m * kernelSize.height * srcSize.width) + (kernelSize.width / 2);
-                    for (int n = 0; n < numOfPositionsAlongWindowWidth - 1; n++)
+                    // Layer 2
+                    for (int m = 0; m < numOfPositionsAlongWindowHeight - 1; m++)
                     {
-                        U *kernelHistogram = (U*) calloc(numOfBins, sizeof(U));
-                        
-                        // For each kernel
-                        
-                        for (int p = 0; p < kernelSize.height; p++)
+                        gradientMagnitudeTemp2 = gradientMagnitudeTemp + (kernelSize.height / 2 * srcSize.width) + (m * kernelSize.height * srcSize.width) + (kernelSize.width / 2);
+                        gradientDirectionTemp2 = gradientDirectionTemp + (kernelSize.height / 2 * srcSize.width)+ (m * kernelSize.height * srcSize.width) + (kernelSize.width / 2);
+                        for (int n = 0; n < numOfPositionsAlongWindowWidth - 1; n++)
                         {
-                            gradientMagnitudeTemp3 = gradientMagnitudeTemp2 + (p * srcSize.width);
-                            gradientDirectionTemp3 = gradientDirectionTemp2 + (p * srcSize.width);
-                            for (int q = 0; q < kernelSize.width; q++)
-                            {
-                                bin = (Rpp32u) ((*gradientDirectionTemp3 + adder) / rangeInBin);
-                                if (bin > (numOfBins - 1))
-                                {
-                                    bin = numOfBins - 1;
-                                }
-                                *(kernelHistogram + bin) += *gradientMagnitudeTemp3;
-                                gradientMagnitudeTemp3++;
-                                gradientDirectionTemp3++;
-                            }
-                        }
-                        U *kernelHistogramTemp;
-                        kernelHistogramTemp = kernelHistogram;
-                        for (int r = 0; r < numOfBins; r++)
-                        {
-                            if (elementCount < (binsTensorLength - 1))
-                            {
-                                *binsTensorTemp = *kernelHistogramTemp;
-                                binsTensorTemp++;
-                                kernelHistogramTemp++;
-                                elementCount++;
-                            }
-                            else
-                            {
-                                return RPP_SUCCESS;
-                            }
+                            U *kernelHistogram = (U*) calloc(numOfBins, sizeof(U));
                             
+                            // For each kernel
+                            
+                            for (int p = 0; p < kernelSize.height; p++)
+                            {
+                                gradientMagnitudeTemp3 = gradientMagnitudeTemp2 + (p * srcSize.width);
+                                gradientDirectionTemp3 = gradientDirectionTemp2 + (p * srcSize.width);
+                                for (int q = 0; q < kernelSize.width; q++)
+                                {
+                                    bin = (Rpp32u) ((*gradientDirectionTemp3 + adder) / rangeInBin);
+                                    if (bin > (numOfBins - 1))
+                                    {
+                                        bin = numOfBins - 1;
+                                    }
+                                    *(kernelHistogram + bin) += *gradientMagnitudeTemp3;
+                                    gradientMagnitudeTemp3++;
+                                    gradientDirectionTemp3++;
+                                }
+                            }
+                            U *kernelHistogramTemp;
+                            kernelHistogramTemp = kernelHistogram;
+                            for (int r = 0; r < numOfBins; r++)
+                            {
+                                if (elementCount < (binsTensorLength - 1))
+                                {
+                                    *binsTensorTemp = *kernelHistogramTemp;
+                                    binsTensorTemp++;
+                                    kernelHistogramTemp++;
+                                    elementCount++;
+                                }
+                                else
+                                {
+                                    exitFlag = 1;
+                                    goto exitLabel;
+                                }
+                                
+                            }
+
+                            gradientMagnitudeTemp2 += kernelSize.width;
+                            gradientDirectionTemp2 += kernelSize.width;
+
+                            free(kernelHistogram);
                         }
-
-                        gradientMagnitudeTemp2 += kernelSize.width;
-                        gradientDirectionTemp2 += kernelSize.width;
-
-                        free(kernelHistogram);
                     }
-                }
 
-                gradientMagnitudeTemp += windowStride;
-                gradientDirectionTemp += windowStride;
+                    gradientMagnitudeTemp += windowStride;
+                    gradientDirectionTemp += windowStride;
+                }
             }
+
+            free(srcPtr);
+            free(gradientX);
+            free(gradientY);
+            free(gradientMagnitude);
+            free(gradientDirection);
         }
-
-        free(srcPtr);
-        free(gradientX);
-        free(gradientY);
-        free(gradientMagnitude);
-        free(gradientDirection);
-
     }
 
     return RPP_SUCCESS;
@@ -4095,11 +4102,11 @@ RppStatus hog_host(T* srcPtr, RppiSize srcSize, U* binsTensor, Rpp32u binsTensor
 
     return RPP_SUCCESS;
 }
-*/
-/**************** optical_flow_pyramid ***************/
-/*
+
+/**************** optical_flow ***************/
+
 template <typename T>
-RppStatus optical_flow_pyramid_host_batch(T* batch_srcPtr1, T* batch_srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
+RppStatus optical_flow_host_batch(T* batch_srcPtr1, T* batch_srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
                                           Rpp32u *batch_oldPoints, Rpp32u *batch_newPointsEstimates, Rpp32u *batch_newPoints, 
                                           Rpp32u* batch_numPoints, Rpp32f *batch_threshold, Rpp32u *batch_numIterations, Rpp32u *batch_kernelSize, 
                                           Rpp32u nbatchSize, 
@@ -4130,7 +4137,7 @@ RppStatus optical_flow_pyramid_host_batch(T* batch_srcPtr1, T* batch_srcPtr2, Rp
         srcSize.width = batch_srcSize[batchCount].width;
 
         Rpp32u locPointList = 0;
-        compute_point_list_location_host(batch_numPoints, batchCount, &locPointList);
+        // compute_point_list_location_host(batch_numPoints, batchCount, &locPointList);
         Rpp32u *oldPoints, *newPointsEstimates, *newPoints;
         oldPoints = batch_oldPoints + locPointList;
         newPointsEstimates = batch_newPointsEstimates + locPointList;
@@ -4275,27 +4282,26 @@ RppStatus optical_flow_pyramid_host_batch(T* batch_srcPtr1, T* batch_srcPtr2, Rp
             *newPointsTemp = (Rpp32u) rowNewEst;
             newPointsTemp++;
         }
+        free(srcPtr1);
+        free(srcPtr2);
+        free(srcPtr1Greyscale);
+        free(srcPtr2Greyscale);
+        free(srcPtrModScharr);
+        free(kernelX);
+        free(srcPtrDerivativeX);
+        free(kernelY);
+        free(srcPtrDerivativeY);
+        free(srcPtrDerivativeXmod);
+        free(srcPtrDerivativeYmod);
+        free(srcPtr1Mod);
+        free(srcPtr2Mod);
     }
-
-    free(srcPtr1);
-    free(srcPtr2);
-    free(srcPtr1Greyscale);
-    free(srcPtr2Greyscale);
-    free(srcPtrModScharr);
-    free(kernelX);
-    free(srcPtrDerivativeX);
-    free(kernelY);
-    free(srcPtrDerivativeY);
-    free(srcPtrDerivativeXmod);
-    free(srcPtrDerivativeYmod);
-    free(srcPtr1Mod);
-    free(srcPtr2Mod);
 
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus optical_flow_pyramid_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, 
+RppStatus optical_flow_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, 
                                     Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
                                     Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize, 
                                     RppiChnFormat chnFormat, Rpp32u channel)
@@ -4454,7 +4460,7 @@ RppStatus optical_flow_pyramid_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
 
     return RPP_SUCCESS;
 }
-*/
+
 /**************** match_template ***************/
 /*
 template <typename T, typename U>

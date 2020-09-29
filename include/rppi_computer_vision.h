@@ -1611,6 +1611,72 @@ RppStatus
 RppStatus
     rpp_f32_control_flow(Rpp32f num1, Rpp32f num2, Rpp32f *output, RppOp operation, rppHandle_t rppHandle);
 
+
+// ----------------------------------------
+// CPU HOG functions declaration 
+// ----------------------------------------
+
+RppStatus
+rppi_hog_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
+
+RppStatus
+rppi_hog_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
+
+RppStatus
+rppi_hog_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
+
+// ----------------------------------------
+// Host optical_flow_pyramid functions calls 
+// ----------------------------------------
+
+RppStatus
+rppi_optical_flow_pyramid_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
+                                       Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
+                                       Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
+
+RppStatus
+rppi_optical_flow_u8_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, 
+									Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
+									Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, 
+									Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+RppStatus
+rppi_optical_flow_pyramid_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
+                                       Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
+                                       Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
+
+RppStatus
+rppi_optical_flow_u8_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, 
+									Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
+									Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, 
+									Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+RppStatus
+rppi_optical_flow_pyramid_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
+                                       Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
+                                       Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
+
+RppStatus
+rppi_optical_flow_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, 
+									Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
+									Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, 
+									Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+// ----------------------------------------
+// Host hough_lines functions declaration
+// ----------------------------------------
+
+RppStatus
+rppi_hough_lines_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t lines, 
+                              Rpp32f rho, Rpp32f theta, Rpp32u threshold, 
+                              Rpp32u minLineLength, Rpp32u maxLineGap, Rpp32u linesMax);
+
+RppStatus
+rppi_hough_lines_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t lines, 
+									Rpp32f* rho, Rpp32f* theta, Rpp32u *threshold, 
+                                    Rpp32u *minLineLength, Rpp32u *maxLineGap, Rpp32u *linesMax, 
+									Rpp32u nbatchSize, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 
 }
