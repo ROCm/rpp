@@ -872,11 +872,11 @@ int main(int argc, char **argv)
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            rppi_rotate_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, angle, noOfImages, handle);
+            rppi_rotate_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, angle, 0, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_rotate_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, angle, noOfImages, handle);
+            rppi_rotate_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, angle, 0, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_rotate_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, angle, noOfImages, handle);
+            rppi_rotate_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, angle, 0, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -889,10 +889,10 @@ int main(int argc, char **argv)
         Rpp32f affine_array[6 * images];
         for (i = 0; i < 6 * images; i = i + 6)
         {
-            affine_array[i] = 0.83;
+            affine_array[i] = 1.23;
             affine_array[i + 1] = 0.5;
             affine_array[i + 2] = 0.0;
-            affine_array[i + 3] = -0.5;
+            affine_array[i + 3] = -0.8;
             affine_array[i + 4] = 0.83;
             affine_array[i + 5] = 0.0;
         }
@@ -933,11 +933,11 @@ int main(int argc, char **argv)
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            rppi_resize_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, 0, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_resize_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, 0, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_resize_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, noOfImages, handle);
+            rppi_resize_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, 0, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -974,11 +974,11 @@ int main(int argc, char **argv)
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            rppi_resize_crop_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+            rppi_resize_crop_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, 0, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_resize_crop_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+            rppi_resize_crop_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, 0, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_resize_crop_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+            rppi_resize_crop_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, 0, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -1892,11 +1892,11 @@ int main(int argc, char **argv)
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            rppi_resize_crop_mirror_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, noOfImages, handle);
+            rppi_resize_crop_mirror_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, 0, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_resize_crop_mirror_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, noOfImages, handle);
+            rppi_resize_crop_mirror_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, 0, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_resize_crop_mirror_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, noOfImages, handle);
+            rppi_resize_crop_mirror_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, 0, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 
@@ -1927,11 +1927,11 @@ int main(int argc, char **argv)
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            rppi_crop_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, 0, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_crop_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, 0, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_crop_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, noOfImages, handle);
+            rppi_crop_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, 0, noOfImages, handle);
         end_omp = omp_get_wtime();
         end = clock();
 

@@ -1733,6 +1733,25 @@ RppStatus
  rppi_remap_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
 RppStatus
  rppi_remap_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+
+// ----------------------------------------
+// CPU tensor_transpose functions declaration 
+// ----------------------------------------
+/* Tensor transpose takes a srcPtr and transposes its dimensions according to the passed dimension-permutation vector.
+*param[in] srcPtr input tensor
+*param[out] dstPtr output transposed tensor
+param[in] dimension1 The dimension that is to be transposed against dimension2
+param[in] dimension2 The dimension that is to be transposed against dimension1
+param[in] tensorDimension Number of dimensions the input tensor has
+*param[in] tensorDimensionValues Shape of the tensor
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error  
+*/
+
+RppStatus
+ rppi_tensor_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u dimension1, Rpp32u dimension2, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues);
+
 #ifdef __cplusplus
 }
 #endif

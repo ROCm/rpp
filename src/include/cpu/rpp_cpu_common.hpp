@@ -1696,6 +1696,85 @@ inline RppStatus hog_three_channel_gradient_computations_kernel_host(T* srcPtr, 
     return RPP_SUCCESS;
 }
 
+template<typename T>
+inline RppStatus lucas_kanade_matrix_kernel_host(T* srcPtrWindowX, T* srcPtrWindowY, RppiSize srcSize, Rpp32f* VxIntermediate, Rpp32f* VyIntermediate, 
+                                          Rpp32u kernelSize, Rpp32u remainingElementsInRow, Rpp32u lostTrackFlag)
+{
+    Rpp32f* Ginverse = (Rpp32f*) calloc(4, sizeof(Rpp32f));
+
+    T *srcPtrWindowTempX, *srcPtrWindowTempY;
+    srcPtrWindowTempX = srcPtrWindowX;
+    srcPtrWindowTempY = srcPtrWindowY;
+
+    Rpp32f sumXX = 0, sumYY = 0, sumXY = 0, valX = 0, valY = 0, sumX = 0, sumY = 0;
+    
+    for (int m = 0; m < kernelSize; m++)
+    {
+        for (int n = 0; n < kernelSize; n++)
+        {
+            valX = (Rpp32f) *srcPtrWindowTempX;
+            valY = (Rpp32f) *srcPtrWindowTempY;
+            sumXX += (valX * valX);
+            sumYY += (valY * valY);
+            sumXY += (valX * valY);
+            sumX += valX;
+            sumY += valY;
+
+            srcPtrWindowTempX++;
+            srcPtrWindowTempY++;
+        }
+        srcPtrWindowTempX += remainingElementsInRow;
+        srcPtrWindowTempY += remainingElementsInRow;
+    }
+
+    Rpp32f det = (sumXX * sumYY) - (sumXY * sumXY);
+
+    if (det < 0.0000001)
+    {
+        lostTrackFlag = 1;
+        return RPP_SUCCESS;
+    }
+    
+    *Ginverse = sumYY / det;
+    *(Ginverse + 1) = -sumXY / det;
+    *(Ginverse + 2) = -sumXY / det;
+    *(Ginverse + 3) = sumXX / det;
+
+    *VxIntermediate = *Ginverse * (-sumX) + *(Ginverse + 1) * (-sumY);
+    *VyIntermediate = *(Ginverse + 2) * (-sumX) + *(Ginverse + 3) * (-sumY);
+
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+inline RppStatus lucas_kanade_residual_kernel_host(T* srcPtr1Window, T* srcPtr2Window, RppiSize srcSize, Rpp32f* residual, 
+                                            Rpp32u kernelSize, Rpp32u remainingElementsInRow)
+{
+    T *srcPtr1WindowTemp, *srcPtr2WindowTemp;
+    srcPtr1WindowTemp = srcPtr1Window;
+    srcPtr2WindowTemp = srcPtr2Window;
+
+    Rpp32f sum, val;
+    
+    for (int m = 0; m < kernelSize; m++)
+    {
+        for (int n = 0; n < kernelSize; n++)
+        {
+            val = (Rpp32f) *srcPtr1WindowTemp - (Rpp32f) *srcPtr2WindowTemp;
+            sum += (val * val);
+
+            srcPtr1WindowTemp++;
+            srcPtr2WindowTemp++;
+        }
+        srcPtr1WindowTemp += remainingElementsInRow;
+        srcPtr2WindowTemp += remainingElementsInRow;
+    }
+
+    *residual = sum;
+
+    return RPP_SUCCESS;
+}
+
 
 
 

@@ -18,6 +18,8 @@ using namespace std::chrono;
 
 #include "cpu/host_computer_vision.hpp" 
 
+/*************************************** Data Object Copy ************************************/
+
 RppStatus  
 rppi_data_object_copy_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle )
 { 
@@ -998,6 +1000,8 @@ rppi_data_object_copy_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 
 	return RPP_SUCCESS;
 }
+
+/*************************************** Local Binary Pattern ************************************/
 
 RppStatus  
 rppi_local_binary_pattern_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle )
@@ -4173,7 +4177,7 @@ rppi_local_binary_pattern_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *s
 	return RPP_SUCCESS;
 }
 
-
+/*************************************** Gaussian Image Pyramid ************************************/
 
 // RppStatus  
 // rppi_gaussian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp8u kernelSize ,rppHandle_t rppHandle )
@@ -5263,6 +5267,8 @@ rppi_local_binary_pattern_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *s
 
 // 	return RPP_SUCCESS;
 // }
+
+/*************************************** Laplacian Image Pyramid ************************************/
 
 // RppStatus  
 // rppi_laplacian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp8u kernelSize ,rppHandle_t rppHandle )
@@ -6357,6 +6363,8 @@ rppi_local_binary_pattern_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *s
 // 	return RPP_SUCCESS;
 // }
 
+/*************************************** Canny Edge Detector ************************************/
+
 RppStatus  
 rppi_canny_edge_detector_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,rppHandle_t rppHandle )
 { 
@@ -7445,6 +7453,8 @@ rppi_canny_edge_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize
 
 	return RPP_SUCCESS;
 }
+
+/*************************************** Harris Corner Detector ************************************/
 
 RppStatus  
 rppi_harris_corner_detector_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle )
@@ -8751,6 +8761,8 @@ rppi_harris_corner_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
+/*************************************** Fast Corner Detector ************************************/
+
 RppStatus  
 rppi_fast_corner_detector_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle )
 { 
@@ -9893,6 +9905,8 @@ rppi_fast_corner_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSiz
 
 	return RPP_SUCCESS;
 }
+
+/*************************************** Control Flow ************************************/
 
 /*RppStatus  
 rppi_control_flow_u8_pln1_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u type ,rppHandle_t rppHandle )
@@ -13460,6 +13474,8 @@ rppi_control_flow_u8_pln1_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppiSize srcS
 }
 */
 
+/*************************************** Gaussian Image Pyramid ************************************/
+
 RppStatus  
 rppi_gaussian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle )
 { 
@@ -14548,6 +14564,8 @@ rppi_gaussian_image_pyramid_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcS
 
 	return RPP_SUCCESS;
 }
+
+/*************************************** Laplacian Image Pyramid ************************************/
 
 RppStatus  
 rppi_laplacian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle )
@@ -15638,6 +15656,7 @@ rppi_laplacian_image_pyramid_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *src
 	return RPP_SUCCESS;
 }
 
+/*************************************** Remap ************************************/
 
 RppStatus  
 rppi_remap_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,rppHandle_t rppHandle )
@@ -16629,6 +16648,23 @@ rppi_remap_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize max
 		static_cast<Rpp8u*>(dstPtr), rowRemapTable, colRemapTable,
 		rpp::deref(rppHandle).GetBatchSize(),
 		RPPI_CHN_PACKED, 3
+	);
+
+	return RPP_SUCCESS;
+}
+
+/*************************************** Tensor Transpose ************************************/
+
+RppStatus
+rppi_tensor_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u dimension1, Rpp32u dimension2, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
+{
+	tensor_transpose_host<Rpp8u>(
+		static_cast<Rpp8u*>(srcPtr), 
+		static_cast<Rpp8u*>(dstPtr), 
+		dimension1, 
+		dimension2, 
+		tensorDimension, 
+		tensorDimensionValues
 	);
 
 	return RPP_SUCCESS;
