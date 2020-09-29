@@ -565,6 +565,24 @@ rppi_crop_and_patch_i8_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rpp
  									 Rpp32u *x11, Rpp32u *y11, Rpp32u *x12, Rpp32u *y12, Rpp32u *x21, Rpp32u *y21, Rpp32u *x22, Rpp32u *y22,
 									 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
+/// Transpose
+/// \param srcPtr
+/// \param dstPtr
+/// \param perm - Permutation of the required dimensions in the 4D transposed tensor
+/// \param shape - Input tensor shape
+/// \param rppHandle
+/// \return
+
+RppStatus
+rppi_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape);
+RppStatus
+rppi_transpose_f16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape);
+RppStatus
+rppi_transpose_f32_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape);
+RppStatus
+rppi_transpose_i8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape);
+
+
 #ifdef __cplusplus
 }
 #endif

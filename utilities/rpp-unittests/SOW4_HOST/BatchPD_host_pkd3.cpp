@@ -24,21 +24,25 @@ typedef half Rpp16f;
 
 int main(int argc, char **argv)
 {
-    const int MIN_ARG_COUNT = 7;
-    printf("\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 1:7>\n");
+    const int MIN_ARG_COUNT = 8;
+    
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
+        printf("\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 1:7> <verbosity = 0/1>\n");
         return -1;
     }
 
-    printf("\nInputs for this test case are:");
-    printf("\nsrc1 = %s", argv[1]);
-    printf("\nsrc2 = %s", argv[2]);
-    printf("\ndst = %s", argv[3]);
-    printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
-    printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-    printf("\ncase number (1:7) = %s", argv[6]);
+    if (atoi(argv[7]) == 1)
+    {
+        printf("\nInputs for this test case are:");
+        printf("\nsrc1 = %s", argv[1]);
+        printf("\nsrc2 = %s", argv[2]);
+        printf("\ndst = %s", argv[3]);
+        printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
+        printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
+        printf("\ncase number (1:7) = %s", argv[6]);
+    }
 
     char *src = argv[1];
     char *src_second = argv[2];
@@ -118,7 +122,7 @@ int main(int argc, char **argv)
     char func[1000];
     strcpy(func, funcName);
     strcat(func, funcType);
-    printf("\n\nRunning %s...", func);
+    printf("\nRunning %s...", func);
 
     int missingFuncFlag = 0;
 
@@ -653,7 +657,7 @@ int main(int argc, char **argv)
             for (j = 0; j < 256; j++)
             {
                 lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
-                lut8s[(i * 256) + j] = (Rpp8u)(255 - j - 128);
+                lut8s[(i * 256) + j] = (Rpp8s)(255 - j - 128);
             }
             
         }

@@ -1903,3 +1903,37 @@ rppi_crop_and_patch_i8_pln1_batchPD_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2, Rppi
 	return ( crop_and_patch_host_helper(RPPI_CHN_PLANAR,1, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
 							   srcPtr1, srcPtr2, srcSize, maxSrcSize, dstPtr, x11, y11, x12, y12, x21, y21, x22, y22, nbatchSize, rppHandle));
 }
+
+/*************************************** Transpose ************************************/
+
+RppStatus
+rppi_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape)
+{
+	transpose_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), perm, shape);
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_transpose_f16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape)
+{
+	transpose_host<Rpp16f>(static_cast<Rpp16f*>(srcPtr), static_cast<Rpp16f*>(dstPtr), perm, shape);
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_transpose_f32_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape)
+{
+	transpose_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), static_cast<Rpp32f*>(dstPtr), perm, shape);
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_transpose_i8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape)
+{
+	transpose_host<Rpp8s>(static_cast<Rpp8s*>(srcPtr), static_cast<Rpp8s*>(dstPtr), perm, shape);
+
+	return RPP_SUCCESS;
+}
