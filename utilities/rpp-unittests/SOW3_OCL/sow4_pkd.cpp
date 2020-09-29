@@ -630,7 +630,7 @@ int main(int argc, char **argv)
     }
     case 7:
     {
-        test_case_name = "crop_and_patch"; 
+        test_case_name = "warp-affine"; 
         Rpp32f affine_array[6 * images];
         for (i = 0; i < images; i = i + 6)
         {
@@ -656,6 +656,7 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
 
         end = clock();
+        break;
     }
   default:
         missingFuncFlag = 1;

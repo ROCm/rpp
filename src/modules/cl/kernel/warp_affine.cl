@@ -77,7 +77,7 @@ __kernel void warp_affine_batch(
   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
-
+  int affine_index = id_z * 6;
   int k =
       (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) +
       affine[affine_index + 2];
@@ -130,6 +130,7 @@ __kernel void warp_affine_batch_fp32(
   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
+  int affine_index = id_z * 6;
 
   int k =
       (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) +
@@ -183,6 +184,7 @@ __kernel void warp_affine_batch_fp16(
   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
+  int affine_index = id_z * 6;
 
   int k =
       (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) +
@@ -236,6 +238,7 @@ __kernel void warp_affine_batch_int8(
   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
+  int affine_index = id_z * 6;
 
   int k =
       (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) +

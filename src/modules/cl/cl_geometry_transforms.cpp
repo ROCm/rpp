@@ -754,7 +754,7 @@ warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
     std::string kernel_file  = "warp_affine.cl";
     std::string kernel_name = "warp_affine_batch";
     get_kernel_name(kernel_name, tensor_info);
-    handle.AddKernel("", "", "kernel_file", "kernel_name", vld, vgd, "")(srcPtr, dstPtr,
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
                                                                         affine_array,
                                                                         handle_obj->mem.mgpu.srcSize.height,
                                                                         handle_obj->mem.mgpu.srcSize.width,
