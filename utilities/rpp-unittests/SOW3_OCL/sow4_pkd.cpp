@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
     int ip_channel = 3;
 
-char funcType[1000] = {"BatchPD_GPU_PKD3"};
+    char funcType[1000] = {"BatchPD_GPU_PKD3"};
 
     if (outputFormatToggle == 0)
     {
@@ -83,8 +83,10 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
     case 6:
         strcpy(funcName, "crop_and_patch");
         break;
+    case 7:
+        strcpy(funcName, "warp_affine");
+        break;
     }
-
     if (ip_bitDepth == 0)
     {
         strcat(funcName, "_u8_");
@@ -459,15 +461,15 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         }
     }
         start = clock();
-        if (ip_bitDepth == 0)
-            rppi_look_up_table_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, luptr, noOfImages, handle);
+        //if (ip_bitDepth == 0)
+            //rppi_look_up_table_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, luptr, noOfImages, handle);
     //     else if (ip_bitDepth == 1)
     //         rppi_glitch_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
     //     else if (ip_bitDepth == 2)
     //         rppi_glitch_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
     //     else if (ip_bitDepth == 3)
 	//    rppi_glitch_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-	else
+	//else
             missingFuncFlag = 1;
         end = clock();
 	break;
@@ -626,7 +628,36 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         end = clock();
 	break;
     }
-    
+    case 7:
+    {
+        test_case_name = "warp-affine"; 
+        Rpp32f affine_array[6 * images];
+        for (i = 0; i < images; i = i + 6)
+        {
+            affine_array[i] = 0.83;
+            affine_array[i + 1] = 0.5;
+            affine_array[i + 2] = 0.0;
+            affine_array[i + 3] = -0.5;
+            affine_array[i + 4] = 0.83;
+            affine_array[i + 5] = 0.0;
+        }
+
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_warp_affine_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_warp_affine_f16_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_warp_affine_f32_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            rppi_warp_affine_i8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else
+            missingFuncFlag = 1;
+
+        end = clock();
+        break;
+    }
   default:
         missingFuncFlag = 1;
         break;

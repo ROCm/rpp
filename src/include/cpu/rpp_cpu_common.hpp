@@ -12,21 +12,22 @@ using half_float::half;
 typedef half                Rpp16f;
 #include "rpp_cpu_simd.hpp"
 
-#define PI 3.14159265
-#define RAD(deg)                (deg * PI / 180)
-#define RPPABS(a)               ((a < 0) ? (-a) : (a))
-#define RPPMIN2(a,b)            ((a < b) ? a : b)
-#define RPPMIN3(a,b,c)          ((a < b) && (a < c) ?  a : ((b < c) ? b : c))
-#define RPPMAX2(a,b)            ((a > b) ? a : b)
-#define RPPMAX3(a,b,c)          ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
-#define RPPINRANGE(a, x, y)     ((a >= x) && (a <= y) ? 1 : 0)
-#define RPPFLOOR(a)             ((int) a)
-#define RPPCEIL(a)              ((int) (a + 1.0))
-#define RPPISEVEN(a)            ((a % 2 == 0) ? 1 : 0)
-#define RPPPIXELCHECK(pixel)    (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
-#define RPPPIXELCHECKI8(pixel)    (pixel < (Rpp32f) -128) ? ((Rpp32f) -128) : ((pixel < (Rpp32f) 127) ? pixel : ((Rpp32f) 127))
-#define RPPISGREATER(pixel, value)  ((pixel > value) ? 1 : 0)
-#define RPPISLESSER(pixel, value)  ((pixel < value) ? 1 : 0)
+#define PI                              3.14159265
+#define RAD(deg)                        (deg * PI / 180)
+#define RPPABS(a)                       ((a < 0) ? (-a) : (a))
+#define RPPMIN2(a,b)                    ((a < b) ? a : b)
+#define RPPMIN3(a,b,c)                  ((a < b) && (a < c) ?  a : ((b < c) ? b : c))
+#define RPPMAX2(a,b)                    ((a > b) ? a : b)
+#define RPPMAX3(a,b,c)                  ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
+#define RPPINRANGE(a, x, y)             ((a >= x) && (a <= y) ? 1 : 0)
+#define RPPPRANGECHECK(value, a, b)     (value < (Rpp32f) a) ? ((Rpp32f) a) : ((value < (Rpp32f) b) ? value : ((Rpp32f) b))
+#define RPPFLOOR(a)                     ((int) a)
+#define RPPCEIL(a)                      ((int) (a + 1.0))
+#define RPPISEVEN(a)                    ((a % 2 == 0) ? 1 : 0)
+#define RPPPIXELCHECK(pixel)            (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
+#define RPPPIXELCHECKI8(pixel)          (pixel < (Rpp32f) -128) ? ((Rpp32f) -128) : ((pixel < (Rpp32f) 127) ? pixel : ((Rpp32f) 127))
+#define RPPISGREATER(pixel, value)      ((pixel > value) ? 1 : 0)
+#define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 
 static uint16_t wyhash16_x; 
 
@@ -103,6 +104,25 @@ RppStatus exclusive_OR_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSiz
                               RppiChnFormat chnFormat, Rpp32u channel);
 
 
+// Specific Helper Functions
+
+inline Rpp32f gaussian_2d_relative(Rpp32s locI, Rpp32s locJ, Rpp32f std_dev)
+{
+    // Rpp32f res, pi = 3.14;
+    Rpp32f relativeGaussian;
+    // res = 1 / (2 * pi * std_dev * std_dev);
+    Rpp32f exp1, exp2;
+    exp1 = -(locJ * locJ) / (2 * std_dev * std_dev);
+    exp2 = -(locI * locI) / (2 * std_dev * std_dev);
+    // exp1 = exp1 + exp2;
+    // exp1 = exp(exp1);
+    // res *= exp1;
+    // res = exp1;
+    relativeGaussian = exp(exp1 + exp2);
+
+    // return res;
+    return relativeGaussian;
+}
 
 // Generate Functions
 
@@ -1672,6 +1692,85 @@ inline RppStatus hog_three_channel_gradient_computations_kernel_host(T* srcPtr, 
 
     compute_magnitude_host(gradientX, gradientY, srcSize, gradientMagnitude, RPPI_CHN_PLANAR, 1);
     compute_gradient_direction_host(gradientX, gradientY, srcSize, gradientDirection, RPPI_CHN_PLANAR, 1);
+
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+inline RppStatus lucas_kanade_matrix_kernel_host(T* srcPtrWindowX, T* srcPtrWindowY, RppiSize srcSize, Rpp32f* VxIntermediate, Rpp32f* VyIntermediate, 
+                                          Rpp32u kernelSize, Rpp32u remainingElementsInRow, Rpp32u lostTrackFlag)
+{
+    Rpp32f* Ginverse = (Rpp32f*) calloc(4, sizeof(Rpp32f));
+
+    T *srcPtrWindowTempX, *srcPtrWindowTempY;
+    srcPtrWindowTempX = srcPtrWindowX;
+    srcPtrWindowTempY = srcPtrWindowY;
+
+    Rpp32f sumXX = 0, sumYY = 0, sumXY = 0, valX = 0, valY = 0, sumX = 0, sumY = 0;
+    
+    for (int m = 0; m < kernelSize; m++)
+    {
+        for (int n = 0; n < kernelSize; n++)
+        {
+            valX = (Rpp32f) *srcPtrWindowTempX;
+            valY = (Rpp32f) *srcPtrWindowTempY;
+            sumXX += (valX * valX);
+            sumYY += (valY * valY);
+            sumXY += (valX * valY);
+            sumX += valX;
+            sumY += valY;
+
+            srcPtrWindowTempX++;
+            srcPtrWindowTempY++;
+        }
+        srcPtrWindowTempX += remainingElementsInRow;
+        srcPtrWindowTempY += remainingElementsInRow;
+    }
+
+    Rpp32f det = (sumXX * sumYY) - (sumXY * sumXY);
+
+    if (det < 0.0000001)
+    {
+        lostTrackFlag = 1;
+        return RPP_SUCCESS;
+    }
+    
+    *Ginverse = sumYY / det;
+    *(Ginverse + 1) = -sumXY / det;
+    *(Ginverse + 2) = -sumXY / det;
+    *(Ginverse + 3) = sumXX / det;
+
+    *VxIntermediate = *Ginverse * (-sumX) + *(Ginverse + 1) * (-sumY);
+    *VyIntermediate = *(Ginverse + 2) * (-sumX) + *(Ginverse + 3) * (-sumY);
+
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+inline RppStatus lucas_kanade_residual_kernel_host(T* srcPtr1Window, T* srcPtr2Window, RppiSize srcSize, Rpp32f* residual, 
+                                            Rpp32u kernelSize, Rpp32u remainingElementsInRow)
+{
+    T *srcPtr1WindowTemp, *srcPtr2WindowTemp;
+    srcPtr1WindowTemp = srcPtr1Window;
+    srcPtr2WindowTemp = srcPtr2Window;
+
+    Rpp32f sum, val;
+    
+    for (int m = 0; m < kernelSize; m++)
+    {
+        for (int n = 0; n < kernelSize; n++)
+        {
+            val = (Rpp32f) *srcPtr1WindowTemp - (Rpp32f) *srcPtr2WindowTemp;
+            sum += (val * val);
+
+            srcPtr1WindowTemp++;
+            srcPtr2WindowTemp++;
+        }
+        srcPtr1WindowTemp += remainingElementsInRow;
+        srcPtr2WindowTemp += remainingElementsInRow;
+    }
+
+    *residual = sum;
 
     return RPP_SUCCESS;
 }
