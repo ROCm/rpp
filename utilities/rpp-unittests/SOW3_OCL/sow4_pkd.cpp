@@ -479,6 +479,9 @@ int main(int argc, char **argv)
         test_case_name = "Erase";
         Rpp32u crop_params[240];
         Rpp8u colors[180];
+        Rpp32f colors_f32[180];
+        half colors_f16[180];
+        char colors_i8[180];
         Rpp32u no_of_boxes[20];
         Rpp32u box_offset[20];
         int offset = 0;
@@ -486,37 +489,46 @@ int main(int argc, char **argv)
        
         for (i = 0; i < images; i++)
         {
-            // no_of_boxes[i] = i % 3 + 3;
-            // if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
-            // for(int j = 0; j < no_of_boxes[i]; j++)
-            // {
-            //    crop_params[4 * offset] = 100  + j * 100;
-            //    crop_params[4 * offset + 1] = 100 + j * 50;
-            //    crop_params[4 * offset + 2] = 700 + j * 120;
-            //    crop_params[4 * offset + 3]  = 200 + j * 60;
-            //    colors[3 * offset] = 155 - j * 5;
-            //    colors[3 * offset + 1] = 155 - j * 10;
-            //    colors[3 * offset + 2] = j * 20;
-            //    offset++;
-            // }
-            no_of_boxes[i] = 2;
+            no_of_boxes[i] = i % 3 + 3;
             if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
-            crop_params[4 * offset] = 100;
-            crop_params[4 * offset + 1] = 100;
-            crop_params[4 * offset + 2] = 700;
-            crop_params[4 * offset + 3]  = 200;
-            colors[3 * offset] = 121;
-            colors[3 * offset + 1] = 200;
-            colors[3 * offset + 2] = 99;
-            offset++;
-            crop_params[4 * offset] = 800;
-            crop_params[4 * offset + 1] = 300;
-            crop_params[4 * offset + 2] = 1000;
-            crop_params[4 * offset + 3]  = 800;
-            colors[3 * offset] = 155;
-            colors[3 * offset + 1] = 100;    
-            colors[3 * offset + 2] =  20;
-            offset++;
+            for(int j = 0; j < no_of_boxes[i]; j++)
+            {
+               crop_params[4 * offset] = 100  + j * 100;
+               crop_params[4 * offset + 1] = 100 + j * 50;
+               crop_params[4 * offset + 2] = 700 + j * 120;
+               crop_params[4 * offset + 3]  = 200 + j * 60;
+               colors[3 * offset] = 155 - j * 5;
+               colors[3 * offset + 1] = 155 - j * 10;
+               colors[3 * offset + 2] = j * 20;
+               colors_f32[3 * offset] = (155 - j * 5) / 255.0;
+               colors_f32[3 * offset + 1] = (155 - j * 10) / 255.0;
+               colors_f32[3 * offset + 2] = (j * 20) / 255.0;
+               colors_f16[3 * offset] = (155 - j * 5) / 255.0;
+               colors_f16[3 * offset + 1] = (155 - j * 10) / 255.0;
+               colors_f16[3 * offset + 2] = (j * 20) / 255.0;
+               colors_i8[3 * offset] = (155 - j * 5) - 128;
+               colors_i8[3 * offset + 1] = (155 - j * 10) - 128;
+               colors_i8[3 * offset + 2] = (j * 20) - 128;
+               offset++;
+            }
+            // no_of_boxes[i] = 2;
+            // if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
+            // crop_params[4 * offset] = 100;
+            // crop_params[4 * offset + 1] = 100;
+            // crop_params[4 * offset + 2] = 700;
+            // crop_params[4 * offset + 3]  = 200;
+            // colors[3 * offset] = 121;
+            // colors[3 * offset + 1] = 200;
+            // colors[3 * offset + 2] = 99;
+            // offset++;
+            // crop_params[4 * offset] = 800;
+            // crop_params[4 * offset + 1] = 300;
+            // crop_params[4 * offset + 2] = 1000;
+            // crop_params[4 * offset + 3]  = 800;
+            // colors[3 * offset] = 155;
+            // colors[3 * offset + 1] = 100;    
+            // colors[3 * offset + 2] =  20;
+            // offset++;
         }
         int offset2 = 0;
         for (i = 0; i < images; i++)
@@ -536,21 +548,39 @@ int main(int argc, char **argv)
         }
     
         std::cout << "offset is" << offset << std::endl;
-        cl_mem d_colors, d_offset, d_boxes;
+        cl_mem d_colors, d_offset, d_boxes, d_colors_f16, d_colors_f32, d_colors_i8;
         d_boxes =  clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 4 * sizeof(int), NULL, NULL);
         d_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(int), NULL, NULL);
         d_colors = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(Rpp8u), NULL, NULL);
+        d_colors_f32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(Rpp32f), NULL, NULL);
+        d_colors_f16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(half), NULL, NULL);
+        d_colors_i8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(char), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_boxes, CL_TRUE, 0, offset * 4 * sizeof(int), crop_params, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_offset, CL_TRUE, 0, images * sizeof(int), box_offset, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_colors, CL_TRUE, 0, offset * 3 * sizeof(Rpp8u), colors, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colors_f32, CL_TRUE, 0, offset * 3 * sizeof(Rpp32f), colors, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colors_f16, CL_TRUE, 0, offset * 3 * sizeof(half), colors, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colors_i8, CL_TRUE, 0, offset * 3 * sizeof(char), colors, 0, NULL, NULL);
         std::cout << "err is " << err << std::endl;
         start = clock();
         if (ip_bitDepth == 0)
             rppi_erase_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_boxes, d_colors, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_erase_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, d_boxes, d_colors_f16, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_erase_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, d_boxes, d_colors_f16, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            rppi_erase_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_boxes, d_colors_i8, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
+        else
+            missingFuncFlag = 1;
         end = clock();
         clReleaseMemObject(d_boxes);
         clReleaseMemObject(d_offset);
         clReleaseMemObject(d_colors);
+        clReleaseMemObject(d_colors_f32);
+        clReleaseMemObject(d_colors_i8);
+        clReleaseMemObject(d_colors_f16);
+
 	break;
     }
     case 5:
