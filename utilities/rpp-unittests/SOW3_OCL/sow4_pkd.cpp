@@ -19,7 +19,7 @@
 using namespace cv;
 using namespace std;
 using half_float::half;
-
+//#define images 100;
 typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
@@ -369,33 +369,14 @@ int main(int argc, char **argv)
 
     switch (test_case)
     {
-//     case 1:
-//     {
-//         test_case_name = "Erase";
-
-        
-//         start = clock();
-//         if (ip_bitDepth == 0)
-//             rppi_erase_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, angle, outputFormatToggle,noOfImages, handle);
-//         else if (ip_bitDepth == 1)
-//             rppi_erase_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-//         else if (ip_bitDepth == 2)
-//             rppi_erase_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-//         else if (ip_bitDepth == 3)
-// 	   rppi_erase_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-// 	else
-//             missingFuncFlag = 1;
-//         end = clock();
-// 	break;
-//     }
    case 1:
     {
         test_case_name = "non-linear blend";
         Rpp32f stdDev[images];
-    for (i = 0; i < images; i++)
-    {
-        stdDev[i] = 0.2;
-    }
+        for (i = 0; i < images; i++)
+        {
+            stdDev[i] = 0.2;
+        }
         
         start = clock();
         if (ip_bitDepth == 0)
@@ -449,30 +430,38 @@ int main(int argc, char **argv)
    
     case 3:
     {
-        test_case_name = "look_up_table";
+        test_case_name = "lut";
 
-
-	const int luptrCount = images * 256 * ip_channel;
-    Rpp8u luptr[luptrCount];
-	int counter = 0;
-    for(i = 0 ; i < images ; i++)
-	{
-        for(int x = 0 ; x < ip_channel * 256 ; x++)
-        {    
-            luptr[counter] = 255 - (x % 256);
-            counter++;
+        Rpp8u lut8u[100 * 256];
+        Rpp8s lut8s[100 * 256];
+        
+        for (i = 0; i < images; i++)
+        {
+            for (j = 0; j < 256; j++)
+            {
+                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
+                lut8s[(i * 256) + j] = (Rpp8s)(255 - j - 128);
+            }
+            
         }
-    }
+        cl_mem d_lut8u, d_lut8s;
+        d_lut8u = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(uchar), NULL, NULL);
+        err |=    clEnqueueWriteBuffer(theQueue, d_lut8u, CL_TRUE, 0, images * 256 * sizeof(uchar), lut8u, 0, NULL, NULL);       
+        
+        d_lut8s = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(char), NULL, NULL);
+        err |=    clEnqueueWriteBuffer(theQueue, d_lut8s, CL_TRUE, 0, images * 256 * sizeof(char), lut8s, 0, NULL, NULL);  
         start = clock();
-        //if (ip_bitDepth == 0)
-            //rppi_look_up_table_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, luptr, noOfImages, handle);
+        if (ip_bitDepth == 0)
+            rppi_lut_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_lut8u, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            rppi_lut_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_lut8s, outputFormatToggle,noOfImages, handle);
     //     else if (ip_bitDepth == 1)
     //         rppi_glitch_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
     //     else if (ip_bitDepth == 2)
     //         rppi_glitch_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
     //     else if (ip_bitDepth == 3)
 	//    rppi_glitch_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-	//else
+	    else
             missingFuncFlag = 1;
         end = clock();
 	break;

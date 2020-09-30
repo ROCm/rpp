@@ -149,9 +149,8 @@ lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPT
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     std::string kernel_file = "look_up_table.cl";
-    std::string kernel_name = "look_up_table_tensor";
+    std::string kernel_name = "look_up_table_batch_tensor";
     get_kernel_name(kernel_name, tensor_info);
-    std::cout << kernel_file << "\t" << kernel_name << std::endl;
     handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr, lut,
                                                                      handle_obj->mem.mgpu.srcSize.height,
                                                                      handle_obj->mem.mgpu.srcSize.width,
