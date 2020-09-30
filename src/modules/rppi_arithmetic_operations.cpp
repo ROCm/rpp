@@ -29790,3 +29790,24 @@ rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_u
 #endif //BACKEND 
 return RPP_SUCCESS;
 }
+
+RppStatus
+rppi_tensor_convert_bit_depth_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+ 	 tensor_convert_bit_depth_cl( 
+            tensorDimension, 
+            static_cast<Rpp32u*>(tensorDimensionValues),
+            static_cast<cl_mem>(srcPtr), 
+			static_cast<cl_mem>(dstPtr),
+			convert_mode, 
+			rpp::deref(rppHandle)); 	 
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+return RPP_SUCCESS;
+
+}

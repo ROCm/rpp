@@ -562,7 +562,7 @@ RppStatus
 tensor_table_look_up_cl( cl_mem srcPtr1, cl_mem dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, rpp::Handle &handle);
 RppStatus
 tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
-                            cl_mem dstPtr, Rpp32u type, rpp::Handle &handle);
+                            cl_mem dstPtr, RppConvertBitDepthMode convert_mode, rpp::Handle &handle);
 RppStatus
 occlusion_cl(cl_mem srcPtr1, RppiSize srcSize1,
              cl_mem srcPtr2, RppiSize srcSize2, cl_mem dstPtr, //Destiation Size is Same as the Second Image's Dimensions

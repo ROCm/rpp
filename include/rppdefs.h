@@ -126,6 +126,11 @@ typedef enum{
 } RppiPad;
 
 typedef enum{
+    U8_S8,
+    S8_U8,
+} RppConvertBitDepthMode;
+
+typedef enum{
     RGB,
     HSV
 } RppiFormat;

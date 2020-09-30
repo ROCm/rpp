@@ -74,8 +74,7 @@ __kernel void tensor_matrix_multiply(
   }
 }
 
-__kernel void tensor_convert_bit_depth_u8s8(const unsigned int tensorDimension,
-                                            __global unsigned char *input,
+__kernel void tensor_convert_bit_depth_u8s8(__global unsigned char *input,
                                             __global char *output,
                                             const unsigned int a,
                                             const unsigned int b,
@@ -90,6 +89,23 @@ __kernel void tensor_convert_bit_depth_u8s8(const unsigned int tensorDimension,
   int pixIdx = id_y * c * a + id_x * c + id_z;
 
   output[pixIdx] = (char)(input[pixIdx] - 128);
+}
+
+__kernel void tensor_convert_bit_depth_s8u8(__global char *input,
+                                            __global unsigned char *output,
+                                            const unsigned int a,
+                                            const unsigned int b,
+                                            const unsigned int c) {
+  int id_x = get_global_id(0);
+  int id_y = get_global_id(1);
+  int id_z = get_global_id(2);
+
+  if (id_x >= a || id_y >= b || id_z >= c)
+    return;
+
+  int pixIdx = id_y * c * a + id_x * c + id_z;
+
+  output[pixIdx] = (unsigned char)(input[pixIdx] + 128);
 }
 
 __kernel void tensor_convert_bit_depth_u8u16(const unsigned int tensorDimension,
