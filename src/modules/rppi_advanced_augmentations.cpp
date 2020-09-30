@@ -1937,3 +1937,531 @@ rppi_transpose_i8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *s
 
 	return RPP_SUCCESS;
 }
+
+
+
+/*************************************** Glitch ************************************/
+
+RppStatus glitch_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
+						RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp8u outputFormatToggle,
+						RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+						Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+						Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+						Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+						Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	RppiROI roiPoints;
+	bool is_padded = true;
+	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
+										  (bool)outputFormatToggle);
+	RppiSize maxDstSize = maxSrcSize;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_dstMaxSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format, is_padded);
+	copy_param_uint(x_offset_r, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint(y_offset_r, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint(x_offset_g, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint(y_offset_g, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint(x_offset_b, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint(y_offset_b, rpp::deref(rppHandle), paramIndex++);
+
+#ifdef OCL_COMPILE
+	{
+		glitch_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			rpp::deref(rppHandle),
+			tensor_info);
+	}
+#elif defined(HIP_COMPILE)
+// Yet to be done
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_glitch_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f32_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_i8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f32_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_i8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus glitch_host_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
+						RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp8u outputFormatToggle,
+						RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+						Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+						Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+						Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+						Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	if (in_tensor_type == RPPTensorDataType::U8)
+	{
+		if (out_tensor_type == RPPTensorDataType::U8)
+		{
+			glitch_host_batch<Rpp8u>(
+				static_cast<Rpp8u *>(srcPtr),
+				srcSize,
+				rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+				static_cast<Rpp8u *>(dstPtr),
+				x_offset_r,
+				y_offset_r,
+				x_offset_g,
+				y_offset_g,
+				x_offset_b,
+				y_offset_b,
+				outputFormatToggle,
+				rpp::deref(rppHandle).GetBatchSize(),
+				chn_format, num_of_channels);
+		}
+	}
+	else if (in_tensor_type == RPPTensorDataType::FP16)
+	{
+		if (out_tensor_type == RPPTensorDataType::FP16)
+		{
+			glitch_host_batch<Rpp16f>(
+				static_cast<Rpp16f *>(srcPtr),
+				srcSize,
+				rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+				static_cast<Rpp16f *>(dstPtr),
+				x_offset_r,
+				y_offset_r,
+				x_offset_g,
+				y_offset_g,
+				x_offset_b,
+				y_offset_b,
+				outputFormatToggle,
+				rpp::deref(rppHandle).GetBatchSize(),
+				chn_format, num_of_channels);
+		}
+	}
+	else if (in_tensor_type == RPPTensorDataType::FP32)
+	{
+		if (out_tensor_type == RPPTensorDataType::FP32)
+		{
+			glitch_host_batch<Rpp32f>(
+				static_cast<Rpp32f *>(srcPtr),
+				srcSize,
+				rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+				static_cast<Rpp32f *>(dstPtr),
+				x_offset_r,
+				y_offset_r,
+				x_offset_g,
+				y_offset_g,
+				x_offset_b,
+				y_offset_b,
+				outputFormatToggle,
+				rpp::deref(rppHandle).GetBatchSize(),
+				chn_format, num_of_channels);
+		}
+	}
+	else if (in_tensor_type == RPPTensorDataType::I8)
+	{
+		if (out_tensor_type == RPPTensorDataType::I8)
+		{
+			glitch_host_batch<Rpp8s>(
+				static_cast<Rpp8s *>(srcPtr),
+				srcSize,
+				rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+				static_cast<Rpp8s *>(dstPtr),
+				x_offset_r,
+				y_offset_r,
+				x_offset_g,
+				y_offset_g,
+				x_offset_b,
+				y_offset_b,
+				outputFormatToggle,
+				rpp::deref(rppHandle).GetBatchSize(),
+				chn_format, num_of_channels);
+		}
+	}
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_glitch_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f32_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f32_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_i8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f32_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_f16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								 RppiSize maxSrcSize, RppPtr_t dstPtr,
+								 Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								 Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								 Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								 Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
+
+RppStatus
+rppi_glitch_i8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
+								RppiSize maxSrcSize, RppPtr_t dstPtr,
+								Rpp32u *x_offset_r, Rpp32u *y_offset_r,
+								Rpp32u *x_offset_g, Rpp32u *y_offset_g,
+								Rpp32u *x_offset_b, Rpp32u *y_offset_b,
+								Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (glitch_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle,
+						  srcPtr, srcSize, maxSrcSize, dstPtr,
+						  x_offset_r, y_offset_r,
+						  x_offset_g, y_offset_g,
+						  x_offset_b, y_offset_b,
+						  nbatchSize, rppHandle));
+}
