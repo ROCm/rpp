@@ -678,13 +678,13 @@ int main(int argc, char **argv)
 
         start = clock();
         if (ip_bitDepth == 0)
-            rppi_warp_affine_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+            rppi_warp_affine_u8_pkd3_batchPD_gpu( d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_warp_affine_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+            rppi_warp_affine_f16_pkd3_batchPD_gpu( d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_warp_affine_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+            rppi_warp_affine_f32_pkd3_batchPD_gpu( d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
-            rppi_warp_affine_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+            rppi_warp_affine_i8_pkd3_batchPD_gpu( d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
         else
             missingFuncFlag = 1;
 
