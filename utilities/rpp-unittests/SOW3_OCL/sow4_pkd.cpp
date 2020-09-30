@@ -86,6 +86,9 @@ int main(int argc, char **argv)
     case 7:
         strcpy(funcName, "warp_affine");
         break;
+    case 8:
+        strcpy(funcName, "glitch");
+        break;
     }
     if (ip_bitDepth == 0)
     {
@@ -688,10 +691,69 @@ int main(int argc, char **argv)
         end = clock();
         break;
     }
+
+        case 8:
+    {
+        test_case_name = "glitch";
+        Rpp32u x_offset_r[images];
+        Rpp32u y_offset_r[images];
+        Rpp32u x_offset_g[images];
+        Rpp32u y_offset_g[images];
+        Rpp32u x_offset_b[images];
+        Rpp32u y_offset_b[images];
+        
+
+
+       
+    for (i = 0; i < images; i++)
+    {
+        x_offset_r[i] = 0;
+        y_offset_r[i] = 0;
+        x_offset_g[i] = 10;
+        y_offset_g[i] = 10;
+        x_offset_b[i] = 30;
+        y_offset_b[i] = 30;
+       
+       
+    }
+        
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_glitch_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output,
+            x_offset_r, y_offset_r,
+            x_offset_g, y_offset_g,
+            x_offset_b, y_offset_b, 
+            outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 1)
+            rppi_glitch_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16,
+            x_offset_r, y_offset_r,
+            x_offset_g, y_offset_g,
+            x_offset_b, y_offset_b, 
+            outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 2)
+            rppi_glitch_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32,
+            x_offset_r, y_offset_r,
+            x_offset_g, y_offset_g,
+            x_offset_b, y_offset_b, 
+            outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 3)
+            rppi_glitch_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8,
+            x_offset_r, y_offset_r,
+            x_offset_g, y_offset_g,
+            x_offset_b, y_offset_b,
+            outputFormatToggle, noOfImages, handle);
+	else
+            missingFuncFlag = 1;
+        end = clock();
+	break;
+    }
+
   default:
         missingFuncFlag = 1;
         break;
     }
+
+    
 
 
     if (missingFuncFlag == 1)
