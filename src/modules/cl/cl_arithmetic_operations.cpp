@@ -644,6 +644,29 @@ tensor_matrix_multiply_cl(cl_mem srcPtr1, cl_mem srcPtr2, Rpp32u* tensorDimensio
     return RPP_SUCCESS;    
 }
 
+RppStatus
+tensor_transpose_cl( cl_mem srcPtr, cl_mem dstPtr,  Rpp32u* in_tensor_dims, Rpp32u *perm,  RPPTensorFunctionMetaData &tensor_info, rpp::Handle& handle)
+{ 
+    // unsigned short counter=0;
+    size_t gDim3[3];
+    gDim3[0] = in_tensor_dims[perm[0]];
+    gDim3[1] = in_tensor_dims[perm[1]];
+    gDim3[1] = in_tensor_dims[perm[2]] * in_tensor_dims[perm[3]];
+      
+    unsigned int dim1,dim2,dim3;
+    dim1 = gDim3[0];
+    dim2 = gDim3[1];
+    dim3 = gDim3[2];
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
+    handle.AddKernel("", "", "tensor.cl", "tensor_transpose", vld, vgd, "")(
+                                                                    srcPtr,
+                                                                    dstPtr
+                                                                    );
+    return RPP_SUCCESS;
+}
+
+
 
 // RppStatus
 // mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)

@@ -29769,3 +29769,17 @@ rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t 
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+RppStatus
+rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+ 	 
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
