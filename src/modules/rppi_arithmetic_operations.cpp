@@ -29775,7 +29775,8 @@ rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tenso
 {
 #ifdef OCL_COMPILE
  	 {
- 	 
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::U8, rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
  	 { 

@@ -21,7 +21,7 @@ using namespace std;
 using half_float::half;
 //#define images 100;
 typedef half Rpp16f;
-
+#define TENSOR_SIZE 120
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 
 int main(int argc, char **argv)
@@ -88,6 +88,9 @@ int main(int argc, char **argv)
         break;
     case 8:
         strcpy(funcName, "glitch");
+        break;
+    case 9:
+        strcpy(funcName, "transpose");
         break;
     }
     if (ip_bitDepth == 0)
@@ -702,8 +705,7 @@ int main(int argc, char **argv)
         y_offset_g[i] = 10;
         x_offset_b[i] = 30;
         y_offset_b[i] = 30;
-       
-       
+      
     }
         
         start = clock();
@@ -736,13 +738,68 @@ int main(int argc, char **argv)
         end = clock();
 	break;
     }
+    case 9:
+    {
+        test_case_name = "transpose"; 
+         Rpp32u totalNumberOfElements = 120;
+        Rpp32u perm[4] = {0, 3, 1, 2};
+        Rpp32u shape[4] = {2, 4, 5, 3};
+        Rpp8u srcPtr[120] = {
+            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0, 
+            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110, 
+            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135, 
+            70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 15, 14, 13, 12, 11, 10
+        };
+        Rpp8u dstPtr[120] = {0};
+        Rpp16f srcPtr16f[120], dstPtr16f[120];
+        Rpp32f srcPtr32f[120], dstPtr32f[120];
+        Rpp8s srcPtr8s[120], dstPtr8s[120];
+        Rpp8u dst_comp[120] = {255 , 252 , 249 , 246 , 190 , 127 , 124 , 121 , 5 , 190 , 27 , 24 ,
+         21 , 18 , 190 , 52 , 49 , 46 , 115 , 190 , 254 , 251 , 248 , 231 , 190 , 126 , 123 , 120 ,
+          4 , 190 , 26 , 23 , 20 , 17 , 190 , 51 , 48 , 45 , 114 , 190 , 253 , 250 , 
+          247 , 230 , 190 , 125 , 122 , 119 , 3 , 190 , 25 , 22 , 19 , 16 , 190 , 
+          50 , 47 , 44 , 113 , 190 , 240 , 237 , 234 , 229 , 190 , 197 , 194 , 191 , 140 , 
+          190 , 70 , 67 , 64 , 61 , 190 , 167 , 164 , 161 , 15 , 190 , 239 , 236 , 
+          233 , 190 , 190 , 196 , 193 , 190 , 139 , 190 , 69 , 66 , 63 , 60 , 190 , 
+          166 , 163 , 160 , 14 , 190 , 238 , 235 , 232 , 190 , 190 , 195 , 192 , 189 , 138 , 190 , 68 , 65 , 62 , 59 , 190 ,
+        165 , 162 , 159 , 13 , 190};
+        for (int i = 0; i < totalNumberOfElements; i++)
+        {
+            srcPtr16f[i] = (Rpp16f) srcPtr[i];
+            srcPtr32f[i] = (Rpp32f) srcPtr[i];
+            srcPtr8s[i] = (Rpp8s) (((Rpp32s) srcPtr[i]) - 128);
+        }
+        cl_mem d_tensor_input, d_tensor_input2, d_tensor_output;
+        d_tensor_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, TENSOR_SIZE * sizeof(Rpp8u), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_tensor_input, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), srcPtr, 0, NULL, NULL);
+        // d_tensor_input2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, TENSOR_SIZE * sizeof(Rpp8u), NULL, NULL);
+        // err |= clEnqueueWriteBuffer(theQueue, d_tensor_input2, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), tensor_input2, 0, NULL, NULL);
+        d_tensor_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, TENSOR_SIZE * sizeof(Rpp8u), NULL, NULL);
+        int tensor_dims[4] = {2, 3, 4, 5};
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_tensor_transpose_u8_gpu( d_tensor_input, d_tensor_output, shape, perm, handle);
+        end = clock();
+        clEnqueueReadBuffer(theQueue, d_tensor_output, CL_TRUE, 0, 120 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
+        bool is_pass = true;
+
+        for(int i = 0; i < 120; i++)
+        {
+        std::cout <<(int) dst_comp[i] << "\t" << std::endl;
+
+        }
+        if(is_pass)
+            std::cout << "----------------PASS-----------------" << std::endl;
+        else
+            std::cout << "---------------fail----------------------" << std::endl;
+        break;
+    }
 
   default:
         missingFuncFlag = 1;
         break;
     }
-
-    
 
 
     if (missingFuncFlag == 1)
