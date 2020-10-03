@@ -74,6 +74,12 @@ typedef enum
 
 typedef enum
 {
+    RGB_HSV = 1,
+    HSV_RGB
+} RppiColorConvertMode;
+
+typedef enum
+{
     RPPI_LOW,
     RPPI_MEDIUM,
     RPPI_HIGH
