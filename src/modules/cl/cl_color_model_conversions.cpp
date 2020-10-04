@@ -249,6 +249,74 @@ saturationRGB_cl ( cl_mem srcPtr,RppiSize srcSize,
 }
 
 RppStatus
+color_convert_cl ( cl_mem srcPtr,RppiSize srcSize,
+                 cl_mem dstPtr,  RppiColorConvertMode convert_mode,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 rpp::Handle& handle){
+    unsigned int plnpkdind, inc;
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        plnpkdind = 1;
+        inc = srcSize.height * srcSize.width;
+    }
+    else
+    {
+        plnpkdind = 3;
+        inc = 1;
+    }
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{((srcSize.width + 15)/16) * 16, ((srcSize.height + 15)/16) * 16, 1};
+    if (convert_mode == RGB_HSV)
+    {
+       handle.AddKernel("", "", "hue.cl", "convert_rgb_hsv", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width, inc, plnpkdind);
+    }
+    else if ((convert_mode == HSV_RGB))
+    {
+        handle.AddKernel("", "", "hue.cl", "convert_hsv_rgb", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width,  inc, plnpkdind);
+    }
+   
+    return RPP_SUCCESS;
+}
+
+RppStatus
+color_convert_cl_batch ( cl_mem srcPtr,RppiSize srcSize,
+                 cl_mem dstPtr,  RppiColorConvertMode convert_mode,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 rpp::Handle& handle){
+    int plnpkdind;
+
+    if(chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+
+    Rpp32u max_height, max_width;
+    std::string kernel_name ;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    if (convert_mode == RGB_HSV)
+        kernel_name = "convet_batch_rgb_hsv";
+    if (convert_mode == HSV_RGB)
+        kernel_name = "convet_batch_hsv_rgb";
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+    handle.AddKernel("", "", "hue.cl", kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+                                                                                    
+                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                        plnpkdind
+                                                                                        );
+    return RPP_SUCCESS;
+}
+
+
+RppStatus
 hueRGB_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel)
 
@@ -262,7 +330,6 @@ hueRGB_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-        std::cout << "coming INto HUE RPP till here"  << std::endl;
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};

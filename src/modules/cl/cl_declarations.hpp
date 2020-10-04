@@ -653,4 +653,14 @@ RppStatus
 hog_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u *dstPtr, RppiSize Kernelsize, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
 RppStatus
 warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+color_convert_cl_batch ( cl_mem srcPtr,RppiSize srcSize,
+                 cl_mem dstPtr,  RppiColorConvertMode convert_mode,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 rpp::Handle& handle);
+RppStatus
+color_convert_cl ( cl_mem srcPtr,RppiSize srcSize,
+                 cl_mem dstPtr,  RppiColorConvertMode convert_mode,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 rpp::Handle& handle);
 #endif //CL_DECLATAIONS_H
