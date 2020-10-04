@@ -659,7 +659,7 @@ color_convert_cl_batch ( cl_mem srcPtr,RppiSize srcSize,
                  RppiChnFormat chnFormat, unsigned int channel,
                  rpp::Handle& handle);
 RppStatus
-color_convert_cl ( cl_mem srcPtr,RppiSize srcSize,
+color_convert_cl ( cl_mem srcPtr,
                  cl_mem dstPtr,  RppiColorConvertMode convert_mode,
                  RppiChnFormat chnFormat, unsigned int channel,
                  rpp::Handle& handle);

@@ -268,18 +268,18 @@ color_convert_cl ( cl_mem srcPtr,RppiSize srcSize,
     std::vector<size_t> vgd{((srcSize.width + 15)/16) * 16, ((srcSize.height + 15)/16) * 16, 1};
     if (convert_mode == RGB_HSV)
     {
-       handle.AddKernel("", "", "hue.cl", "convert_rgb_hsv", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width, inc, plnpkdind);
+       handle.AddKernel("", "", "hue.cl", "convert_single_rgb_hsv", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width, inc, plnpkdind);
     }
     else if ((convert_mode == HSV_RGB))
     {
-        handle.AddKernel("", "", "hue.cl", "convert_hsv_rgb", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width,  inc, plnpkdind);
+        handle.AddKernel("", "", "hue.cl", "convert_single__hsv_rgb", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width,  inc, plnpkdind);
     }
    
     return RPP_SUCCESS;
 }
 
 RppStatus
-color_convert_cl_batch ( cl_mem srcPtr,RppiSize srcSize,
+color_convert_cl_batch ( cl_mem srcPtr,
                  cl_mem dstPtr,  RppiColorConvertMode convert_mode,
                  RppiChnFormat chnFormat, unsigned int channel,
                  rpp::Handle& handle){
@@ -294,9 +294,9 @@ color_convert_cl_batch ( cl_mem srcPtr,RppiSize srcSize,
     std::string kernel_name ;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
     if (convert_mode == RGB_HSV)
-        kernel_name = "convet_batch_rgb_hsv";
+        kernel_name = "convert_batch_rgb_hsv";
     if (convert_mode == HSV_RGB)
-        kernel_name = "convet_batch_hsv_rgb";
+        kernel_name = "convert_batch_hsv_rgb";
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     handle.AddKernel("", "", "hue.cl", kernel_name, vld, vgd, "")(srcPtr, dstPtr,
