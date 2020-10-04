@@ -2512,6 +2512,17 @@ rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t 
 
 RppStatus
 rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
+
+RppStatus
+rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
+
+RppStatus
+rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
+
+RppStatus
+rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
+
+
 #ifdef __cplusplus
 }
 #endif
