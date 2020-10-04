@@ -18702,6 +18702,11 @@ rppi_color_convert_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 RppStatus
  rppi_color_convert_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
 	copy_roi(roiPoints, rpp::deref(rppHandle));

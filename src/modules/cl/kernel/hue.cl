@@ -250,7 +250,7 @@ __kernel void saturation_batch(
 }
 
 __kernel void convert_single_rgb_hsv(__global unsigned char *input,
-                                     __global unsigned float *output,
+                                     __global float  *output,
                                      const unsigned int height,
                                      const unsigned int width,
                                      const unsigned int inc,
@@ -273,7 +273,7 @@ __kernel void convert_single_rgb_hsv(__global unsigned char *input,
   output[pixIdx + 2 * inc] = hsv.z;
 }
 
-__kernel void convert_single_hsv_rgb(__global unsigned float *input,
+__kernel void convert_single_hsv_rgb(__global  float *input,
                                      __global unsigned char *output,
                                      const unsigned int height,
                                      const unsigned int width,
@@ -284,7 +284,7 @@ __kernel void convert_single_hsv_rgb(__global unsigned float *input,
     return;
 
   int pixIdx = (id_y * width + id_x) * plnpkdindex;
-  flaot4 pixel;
+  float4 pixel;
   pixel.x = input[pixIdx];
   pixel.y = input[pixIdx + inc];
   pixel.z = input[pixIdx + 2 * inc];
@@ -356,7 +356,7 @@ __kernel void convert_batch_hsv_rgb(
 
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-    rgb = convert_one_pixel_to_hsv(pixel); // Converting to HSV
+    rgb = convert_one_pixel_to_rgb(pixel); // Converting to HSV
     output[pixIdx] = rgb.x;
     output[pixIdx + inc[id_z]] = rgb.y;
     output[pixIdx + 2 * inc[id_z]] = rgb.z;

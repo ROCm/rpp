@@ -16837,12 +16837,11 @@ rppi_scale_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl(
+		resize_cl(
 			static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
 			dstSize,
-			percentage,
 			RPPI_CHN_PLANAR, 1, rpp::deref(rppHandle));
 	}
 #elif defined(HIP_COMPILE)
@@ -16875,7 +16874,7 @@ rppi_scale_u8_pln1_ROI_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -16914,7 +16913,7 @@ rppi_scale_u8_pln1_batchSS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -16953,7 +16952,7 @@ rppi_scale_u8_pln1_batchDS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstP
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -16992,7 +16991,7 @@ rppi_scale_u8_pln1_batchPS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17031,7 +17030,7 @@ rppi_scale_u8_pln1_batchSD_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17070,7 +17069,7 @@ rppi_scale_u8_pln1_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstP
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17109,7 +17108,7 @@ rppi_scale_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17143,7 +17142,7 @@ rppi_scale_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17177,7 +17176,7 @@ rppi_scale_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17211,7 +17210,7 @@ rppi_scale_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17245,7 +17244,7 @@ rppi_scale_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17279,7 +17278,7 @@ rppi_scale_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17313,7 +17312,7 @@ rppi_scale_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17347,7 +17346,7 @@ rppi_scale_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17381,7 +17380,7 @@ rppi_scale_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17415,7 +17414,7 @@ rppi_scale_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17449,7 +17448,7 @@ rppi_scale_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17483,7 +17482,7 @@ rppi_scale_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17517,7 +17516,7 @@ rppi_scale_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17542,12 +17541,11 @@ rppi_scale_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl(
+		resize_cl(
 			static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
 			dstSize,
-			percentage,
 			RPPI_CHN_PLANAR, 1, rpp::deref(rppHandle));
 	}
 #elif defined(HIP_COMPILE)
@@ -17580,7 +17578,7 @@ rppi_scale_u8_pln3_ROI_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17619,7 +17617,7 @@ rppi_scale_u8_pln3_batchSS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17658,7 +17656,7 @@ rppi_scale_u8_pln3_batchDS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstP
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17697,7 +17695,7 @@ rppi_scale_u8_pln3_batchPS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17736,7 +17734,7 @@ rppi_scale_u8_pln3_batchSD_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17775,7 +17773,7 @@ rppi_scale_u8_pln3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstP
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17814,7 +17812,7 @@ rppi_scale_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17848,7 +17846,7 @@ rppi_scale_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17882,7 +17880,7 @@ rppi_scale_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17916,7 +17914,7 @@ rppi_scale_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17950,7 +17948,7 @@ rppi_scale_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17984,7 +17982,7 @@ rppi_scale_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18018,7 +18016,7 @@ rppi_scale_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18052,7 +18050,7 @@ rppi_scale_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18086,7 +18084,7 @@ rppi_scale_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18120,7 +18118,7 @@ rppi_scale_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18154,7 +18152,7 @@ rppi_scale_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18188,7 +18186,7 @@ rppi_scale_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18222,7 +18220,7 @@ rppi_scale_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18247,12 +18245,11 @@ rppi_scale_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl(
+		resize_cl(
 			static_cast<cl_mem>(srcPtr),
 			srcSize,
 			static_cast<cl_mem>(dstPtr),
 			dstSize,
-			percentage,
 			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle));
 	}
 #elif defined(HIP_COMPILE)
@@ -18285,7 +18282,7 @@ rppi_scale_u8_pkd3_ROI_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, R
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18324,7 +18321,7 @@ rppi_scale_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18363,7 +18360,7 @@ rppi_scale_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstP
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18402,7 +18399,7 @@ rppi_scale_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18441,7 +18438,7 @@ rppi_scale_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPt
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18480,7 +18477,7 @@ rppi_scale_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t dstP
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18519,7 +18516,7 @@ rppi_scale_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18553,7 +18550,7 @@ rppi_scale_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18587,7 +18584,7 @@ rppi_scale_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18621,7 +18618,7 @@ rppi_scale_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18655,7 +18652,7 @@ rppi_scale_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18689,7 +18686,7 @@ rppi_scale_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18723,7 +18720,7 @@ rppi_scale_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18757,7 +18754,7 @@ rppi_scale_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18791,7 +18788,7 @@ rppi_scale_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18825,7 +18822,7 @@ rppi_scale_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18859,7 +18856,7 @@ rppi_scale_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t 
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18893,7 +18890,7 @@ rppi_scale_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_t
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18927,7 +18924,7 @@ rppi_scale_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize
 
 #ifdef OCL_COMPILE
 	{
-		scale_cl_batch(
+		resize_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
