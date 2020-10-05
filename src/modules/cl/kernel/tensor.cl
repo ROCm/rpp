@@ -1,4 +1,8 @@
+#pragma OPENCL EXTENSION cl_amd_media_ops : enable
+#pragma OPENCL EXTENSION cl_amd_media_ops2 : enable
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
+
 __kernel void tensor_add(const unsigned int tensorDimension,
                          __global unsigned char *input1,
                          __global unsigned char *input2,
