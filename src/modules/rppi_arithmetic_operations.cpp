@@ -29769,3 +29769,63 @@ rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t 
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+RppStatus
+rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::U8, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP16, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP32, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::I8, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}

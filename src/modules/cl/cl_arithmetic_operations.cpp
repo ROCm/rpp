@@ -644,6 +644,76 @@ tensor_matrix_multiply_cl(cl_mem srcPtr1, cl_mem srcPtr2, Rpp32u* tensorDimensio
     return RPP_SUCCESS;    
 }
 
+RppStatus
+tensor_transpose_cl( cl_mem srcPtr, cl_mem dstPtr,  Rpp32u* in_dims, Rpp32u *perm, RPPTensorDataType data_type, rpp::Handle& handle)
+{ 
+    // unsigned short counter=0;
+    unsigned int out_dims[4];
+    out_dims[0] = in_dims[perm[0]];
+    out_dims[1] = in_dims[perm[1]];    
+    out_dims[2] = in_dims[perm[2]];
+    out_dims[3] = in_dims[perm[3]];
+
+    unsigned int in_strides[4], out_strides[4];
+    in_strides[0] = in_dims[1] * in_dims[2] * in_dims[3];
+    in_strides[1] = in_dims[2] * in_dims[3];
+    in_strides[2] = in_dims[3];
+    in_strides[3] = 1;
+    
+    out_strides[0] = out_dims[1] * out_dims[2] * out_dims[3];
+    out_strides[1] = out_dims[2] * out_dims[3];
+    out_strides[2] = out_dims[3];
+    out_strides[3] = 1;
+
+    cl_mem d_perm, d_out_strides, d_in_strides, d_out_dims;
+    cl_context theContext;
+    cl_int err;
+    clGetCommandQueueInfo(handle.GetStream(),
+                          CL_QUEUE_CONTEXT,
+                          sizeof(cl_context), &theContext, NULL);
+    d_perm = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                         sizeof(unsigned int) * 4, NULL, NULL);
+    d_in_strides = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                         sizeof(unsigned int) * 4, NULL, NULL);
+    d_out_strides = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                         sizeof(unsigned int) * 4, NULL, NULL);
+    d_out_dims = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                         sizeof(unsigned int) * 4, NULL, NULL);
+    err = clEnqueueWriteBuffer(handle.GetStream(), d_perm, CL_TRUE, 0,
+                               sizeof(unsigned int) * 4,
+                               perm, 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(handle.GetStream(), d_in_strides, CL_TRUE, 0,
+                               sizeof(unsigned int) * 4,
+                               in_strides, 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(handle.GetStream(), d_out_strides, CL_TRUE, 0,
+                               sizeof(unsigned int) * 4,
+                               out_strides, 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(handle.GetStream(), d_out_dims, CL_TRUE, 0,
+                               sizeof(unsigned int) * 4,
+                               out_dims, 0, NULL, NULL);
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{out_dims[0], out_dims[1], out_dims[2] * out_dims[3]};
+    std::string kernel_name = "tensor_transpose";
+    if(data_type == RPPTensorDataType::U8)
+        kernel_name = "tensor_transpose";
+    if(data_type == RPPTensorDataType::FP32)
+        kernel_name = "tensor_transpose_fp32";
+    if(data_type == RPPTensorDataType::FP16)
+        kernel_name = "tensor_transpose_fp16";
+    if(data_type == RPPTensorDataType::I8)
+        kernel_name = "tensor_transpose_int8";
+    handle.AddKernel("", "", "tensor.cl", kernel_name, vld, vgd, "")(
+                                                                    srcPtr,
+                                                                    dstPtr,
+                                                                    d_out_dims,
+                                                                    d_perm,
+                                                                    d_out_strides,
+                                                                    d_in_strides
+                                                                    );
+    return RPP_SUCCESS;
+}
+
+
 
 // RppStatus
 // mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
