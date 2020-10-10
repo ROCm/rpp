@@ -12,7 +12,6 @@
 #include <time.h>
 using namespace cv;
 using namespace std;
-#include <CL/cl.hpp>
 #define images 100
 int G_IP_CHANNEL = 3;
 int G_MODE = 1;
