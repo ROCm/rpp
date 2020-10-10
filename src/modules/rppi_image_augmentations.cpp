@@ -42716,6 +42716,7 @@ rppi_random_crop_letterbox_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSi
 	roiPoints.roiWidth = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -42810,6 +42811,7 @@ rppi_random_crop_letterbox_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSi
 	roiPoints.roiWidth = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
@@ -42894,6 +42896,7 @@ rppi_random_crop_letterbox_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -42973,6 +42976,7 @@ rppi_random_crop_letterbox_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
@@ -43054,6 +43058,7 @@ rppi_random_crop_letterbox_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *
 { 
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -43130,6 +43135,7 @@ rppi_random_crop_letterbox_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *
 { 
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
@@ -43278,6 +43284,7 @@ rppi_random_crop_letterbox_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSi
 	roiPoints.roiWidth = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -43372,6 +43379,7 @@ rppi_random_crop_letterbox_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSi
 	roiPoints.roiWidth = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
@@ -43456,6 +43464,7 @@ rppi_random_crop_letterbox_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -43535,6 +43544,7 @@ rppi_random_crop_letterbox_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
@@ -43616,6 +43626,7 @@ rppi_random_crop_letterbox_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *
 { 
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -43692,6 +43703,7 @@ rppi_random_crop_letterbox_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *
 { 
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
@@ -43840,6 +43852,7 @@ rppi_random_crop_letterbox_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSi
 	roiPoints.roiWidth = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -43934,6 +43947,7 @@ rppi_random_crop_letterbox_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSi
 	roiPoints.roiWidth = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
@@ -44018,6 +44032,7 @@ rppi_random_crop_letterbox_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -44097,6 +44112,7 @@ rppi_random_crop_letterbox_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
@@ -44178,6 +44194,7 @@ rppi_random_crop_letterbox_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *
 { 
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	copy_host_dstSize(dstSize, rpp::deref(rppHandle));
 	copy_param_uint (xRoiBegin, rpp::deref(rppHandle), paramIndex++);
 	copy_param_uint (xRoiEnd, rpp::deref(rppHandle), paramIndex++);
@@ -44254,6 +44271,7 @@ rppi_random_crop_letterbox_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *
 { 
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 	random_crop_letterbox_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
