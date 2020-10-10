@@ -1,4 +1,8 @@
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
+#pragma OPENCL EXTENSION cl_amd_media_ops : enable
+#pragma OPENCL EXTENSION cl_amd_media_ops2 : enable
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
+
 __kernel void tensor_add(const unsigned int tensorDimension,
                          __global unsigned char *input1,
                          __global unsigned char *input2,
@@ -160,4 +164,98 @@ __kernel void tensor_look_up_table(__global unsigned char *input,
   int index = input[pixIdx];
   unsigned char pixel = lutPtr[index];
   output[pixIdx] = pixel;
+}
+
+__kernel void tensor_transpose(__global unsigned char *input,
+                               __global unsigned char *output,
+                               __global unsigned int *out_dims,
+                               __global unsigned int *perm,
+                               __global unsigned int *dst_strides,
+                               __global unsigned int *src_strides) {
+
+  int id_x = get_global_id(0);
+  int id_y = get_global_id(1);
+  int id_z = get_global_id(2);
+
+  if (id_x >= out_dims[0] || id_y >= out_dims[1] ||
+      id_z >= (out_dims[2] * out_dims[3]))
+    return;
+
+  int dst_idx = id_x * dst_strides[0] + id_y * dst_strides[1] +
+                (id_z / out_dims[2]) * dst_strides[2] +
+                (id_z % out_dims[2]) * dst_strides[3];
+  int src_idx = id_x * src_strides[perm[0]] + id_y * src_strides[perm[1]] +
+                (id_z / out_dims[2]) * src_strides[perm[2]] +
+                (id_z % out_dims[2]) * src_strides[perm[3]];
+  output[dst_idx] = input[src_idx];
+}
+
+__kernel void tensor_transpose_fp16(__global half *input, __global half *output,
+                                    __global unsigned int *out_dims,
+                                    __global unsigned int *perm,
+                                    __global unsigned int *dst_strides,
+                                    __global unsigned int *src_strides) {
+
+  int id_x = get_global_id(0);
+  int id_y = get_global_id(1);
+  int id_z = get_global_id(2);
+
+  if (id_x >= out_dims[0] || id_y >= out_dims[1] ||
+      id_z >= (out_dims[2] * out_dims[3]))
+    return;
+
+  int dst_idx = id_x * dst_strides[0] + id_y * dst_strides[1] +
+                (id_z / out_dims[2]) * dst_strides[2] +
+                (id_z % out_dims[2]) * dst_strides[3];
+  int src_idx = id_x * src_strides[perm[0]] + id_y * src_strides[perm[1]] +
+                (id_z / out_dims[2]) * src_strides[perm[2]] +
+                (id_z % out_dims[2]) * src_strides[perm[3]];
+  output[dst_idx] = input[src_idx];
+}
+
+__kernel void tensor_transpose_fp32(__global float *input,
+                                    __global float *output,
+                                    __global unsigned int *out_dims,
+                                    __global unsigned int *perm,
+                                    __global unsigned int *dst_strides,
+                                    __global unsigned int *src_strides) {
+
+  int id_x = get_global_id(0);
+  int id_y = get_global_id(1);
+  int id_z = get_global_id(2);
+
+  if (id_x >= out_dims[0] || id_y >= out_dims[1] ||
+      id_z >= (out_dims[2] * out_dims[3]))
+    return;
+
+  int dst_idx = id_x * dst_strides[0] + id_y * dst_strides[1] +
+                (id_z / out_dims[2]) * dst_strides[2] +
+                (id_z % out_dims[2]) * dst_strides[3];
+  int src_idx = id_x * src_strides[perm[0]] + id_y * src_strides[perm[1]] +
+                (id_z / out_dims[2]) * src_strides[perm[2]] +
+                (id_z % out_dims[2]) * src_strides[perm[3]];
+  output[dst_idx] = input[src_idx];
+}
+
+__kernel void tensor_transpose_int8(__global char *input, __global char *output,
+                                    __global unsigned int *out_dims,
+                                    __global unsigned int *perm,
+                                    __global unsigned int *dst_strides,
+                                    __global unsigned int *src_strides) {
+
+  int id_x = get_global_id(0);
+  int id_y = get_global_id(1);
+  int id_z = get_global_id(2);
+
+  if (id_x >= out_dims[0] || id_y >= out_dims[1] ||
+      id_z >= (out_dims[2] * out_dims[3]))
+    return;
+
+  int dst_idx = id_x * dst_strides[0] + id_y * dst_strides[1] +
+                (id_z / out_dims[2]) * dst_strides[2] +
+                (id_z % out_dims[2]) * dst_strides[3];
+  int src_idx = id_x * src_strides[perm[0]] + id_y * src_strides[perm[1]] +
+                (id_z / out_dims[2]) * src_strides[perm[2]] +
+                (id_z % out_dims[2]) * src_strides[perm[3]];
+  output[dst_idx] = input[src_idx];
 }

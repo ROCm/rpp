@@ -83,8 +83,8 @@ __kernel void look_up_table_batch_tensor(
         batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_pln_pkd_ind;
     int luptrIndex = id_z << 8;
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      luptrIndex += input[in_pix_index];
-      output[out_pln_pkd_ind] = lutPtr[luptrIndex];
+      int lutIndex = luptrIndex + input[in_pix_index];
+      output[out_pix_index] = lutPtr[lutIndex];
       in_pix_index += inc[id_z];
       out_pix_index += dst_inc[id_z];
     }
@@ -109,8 +109,8 @@ __kernel void look_up_table_batch_tensor_int8(
         batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_pln_pkd_ind;
     int luptrIndex = id_z << 8;
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      luptrIndex += input[in_pix_index];
-      output[out_pln_pkd_ind] = lutPtr[luptrIndex];
+      int lutIndex = luptrIndex + input[in_pix_index] + 128;
+      output[out_pix_index] = lutPtr[lutIndex];
       in_pix_index += inc[id_z];
       out_pix_index += dst_inc[id_z];
     }

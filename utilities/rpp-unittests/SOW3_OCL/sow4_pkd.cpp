@@ -19,9 +19,9 @@
 using namespace cv;
 using namespace std;
 using half_float::half;
-
+//#define images 100;
 typedef half Rpp16f;
-
+#define TENSOR_SIZE 120
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 
 int main(int argc, char **argv)
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
     int ip_channel = 3;
 
-char funcType[1000] = {"BatchPD_GPU_PKD3"};
+    char funcType[1000] = {"BatchPD_GPU_PKD3"};
 
     if (outputFormatToggle == 0)
     {
@@ -77,8 +77,22 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
     case 4:
         strcpy(funcName, "erase");
         break;
+    case 5:
+        strcpy(funcName, "color_cast");
+        break;
+    case 6:
+        strcpy(funcName, "crop_and_patch");
+        break;
+    case 7:
+        strcpy(funcName, "warp_affine");
+        break;
+    case 8:
+        strcpy(funcName, "glitch");
+        break;
+    case 9:
+        strcpy(funcName, "transpose");
+        break;
     }
-
     if (ip_bitDepth == 0)
     {
         strcat(funcName, "_u8_");
@@ -358,33 +372,14 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
 
     switch (test_case)
     {
-//     case 1:
-//     {
-//         test_case_name = "Erase";
-
-        
-//         start = clock();
-//         if (ip_bitDepth == 0)
-//             rppi_erase_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, angle, outputFormatToggle,noOfImages, handle);
-//         else if (ip_bitDepth == 1)
-//             rppi_erase_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-//         else if (ip_bitDepth == 2)
-//             rppi_erase_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-//         else if (ip_bitDepth == 3)
-// 	   rppi_erase_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-// 	else
-//             missingFuncFlag = 1;
-//         end = clock();
-// 	break;
-//     }
    case 1:
     {
         test_case_name = "non-linear blend";
         Rpp32f stdDev[images];
-    for (i = 0; i < images; i++)
-    {
-        stdDev[i] = 0.2;
-    }
+        for (i = 0; i < images; i++)
+        {
+            stdDev[i] = 0.2;
+        }
         
         start = clock();
         if (ip_bitDepth == 0)
@@ -438,30 +433,38 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
    
     case 3:
     {
-        test_case_name = "look_up_table";
+        test_case_name = "lut";
 
-
-	const int luptrCount = images * 256 * ip_channel;
-    Rpp8u luptr[luptrCount];
-	int counter = 0;
-    for(i = 0 ; i < images ; i++)
-	{
-        for(int x = 0 ; x < ip_channel * 256 ; x++)
-        {    
-            luptr[counter] = 255 - (x % 256);
-            counter++;
+        Rpp8u lut8u[100 * 256];
+        Rpp8s lut8s[100 * 256];
+        
+        for (i = 0; i < images; i++)
+        {
+            for (j = 0; j < 256; j++)
+            {
+                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
+                lut8s[(i * 256) + j] = (Rpp8s)(255 - j - 128);
+            }
+            
         }
-    }
+        cl_mem d_lut8u, d_lut8s;
+        d_lut8u = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(uchar), NULL, NULL);
+        err |=    clEnqueueWriteBuffer(theQueue, d_lut8u, CL_TRUE, 0, images * 256 * sizeof(uchar), lut8u, 0, NULL, NULL);       
+        
+        d_lut8s = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(char), NULL, NULL);
+        err |=    clEnqueueWriteBuffer(theQueue, d_lut8s, CL_TRUE, 0, images * 256 * sizeof(char), lut8s, 0, NULL, NULL);  
         start = clock();
         if (ip_bitDepth == 0)
-            rppi_look_up_table_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, luptr, noOfImages, handle);
+            rppi_lut_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_lut8u, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            rppi_lut_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_lut8s, outputFormatToggle,noOfImages, handle);
     //     else if (ip_bitDepth == 1)
     //         rppi_glitch_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
     //     else if (ip_bitDepth == 2)
     //         rppi_glitch_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
     //     else if (ip_bitDepth == 3)
 	//    rppi_glitch_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, angle,outputFormatToggle, noOfImages, handle);
-	else
+	    else
             missingFuncFlag = 1;
         end = clock();
 	break;
@@ -471,6 +474,9 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         test_case_name = "Erase";
         Rpp32u crop_params[240];
         Rpp8u colors[180];
+        Rpp32f colors_f32[180];
+        half colors_f16[180];
+        char colors_i8[180];
         Rpp32u no_of_boxes[20];
         Rpp32u box_offset[20];
         int offset = 0;
@@ -478,37 +484,46 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
        
         for (i = 0; i < images; i++)
         {
-            // no_of_boxes[i] = i % 3 + 3;
-            // if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
-            // for(int j = 0; j < no_of_boxes[i]; j++)
-            // {
-            //    crop_params[4 * offset] = 100  + j * 100;
-            //    crop_params[4 * offset + 1] = 100 + j * 50;
-            //    crop_params[4 * offset + 2] = 700 + j * 120;
-            //    crop_params[4 * offset + 3]  = 200 + j * 60;
-            //    colors[3 * offset] = 155 - j * 5;
-            //    colors[3 * offset + 1] = 155 - j * 10;
-            //    colors[3 * offset + 2] = j * 20;
-            //    offset++;
-            // }
-            no_of_boxes[i] = 2;
+            no_of_boxes[i] = i % 3 + 3;
             if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
-            crop_params[4 * offset] = 100;
-            crop_params[4 * offset + 1] = 100;
-            crop_params[4 * offset + 2] = 700;
-            crop_params[4 * offset + 3]  = 200;
-            colors[3 * offset] = 121;
-            colors[3 * offset + 1] = 200;
-            colors[3 * offset + 2] = 99;
-            offset++;
-            crop_params[4 * offset] = 800;
-            crop_params[4 * offset + 1] = 300;
-            crop_params[4 * offset + 2] = 1000;
-            crop_params[4 * offset + 3]  = 800;
-            colors[3 * offset] = 155;
-            colors[3 * offset + 1] = 100;    
-            colors[3 * offset + 2] =  20;
-            offset++;
+            for(int j = 0; j < no_of_boxes[i]; j++)
+            {
+               crop_params[4 * offset] = 100  + j * 100;
+               crop_params[4 * offset + 1] = 100 + j * 50;
+               crop_params[4 * offset + 2] = 700 + j * 120;
+               crop_params[4 * offset + 3]  = 200 + j * 60;
+               colors[3 * offset] = 155 - j * 5;
+               colors[3 * offset + 1] = 155 - j * 10;
+               colors[3 * offset + 2] = j * 20;
+               colors_f32[3 * offset] = (155 - j * 5) / 255.0;
+               colors_f32[3 * offset + 1] = (155 - j * 10) / 255.0;
+               colors_f32[3 * offset + 2] = (j * 20) / 255.0;
+               colors_f16[3 * offset] = (155 - j * 5) / 255.0;
+               colors_f16[3 * offset + 1] = (155 - j * 10) / 255.0;
+               colors_f16[3 * offset + 2] = (j * 20) / 255.0;
+               colors_i8[3 * offset] = (155 - j * 5) - 128;
+               colors_i8[3 * offset + 1] = (155 - j * 10) - 128;
+               colors_i8[3 * offset + 2] = (j * 20) - 128;
+               offset++;
+            }
+            // no_of_boxes[i] = 2;
+            // if (i != images - 1) box_offset[i+1] = box_offset[i] + no_of_boxes[i]; 
+            // crop_params[4 * offset] = 100;
+            // crop_params[4 * offset + 1] = 100;
+            // crop_params[4 * offset + 2] = 700;
+            // crop_params[4 * offset + 3]  = 200;
+            // colors[3 * offset] = 121;
+            // colors[3 * offset + 1] = 200;
+            // colors[3 * offset + 2] = 99;
+            // offset++;
+            // crop_params[4 * offset] = 800;
+            // crop_params[4 * offset + 1] = 300;
+            // crop_params[4 * offset + 2] = 1000;
+            // crop_params[4 * offset + 3]  = 800;
+            // colors[3 * offset] = 155;
+            // colors[3 * offset + 1] = 100;    
+            // colors[3 * offset + 2] =  20;
+            // offset++;
         }
         int offset2 = 0;
         for (i = 0; i < images; i++)
@@ -528,23 +543,259 @@ char funcType[1000] = {"BatchPD_GPU_PKD3"};
         }
     
         std::cout << "offset is" << offset << std::endl;
-        cl_mem d_colors, d_offset, d_boxes;
+        cl_mem d_colors, d_offset, d_boxes, d_colors_f16, d_colors_f32, d_colors_i8;
         d_boxes =  clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 4 * sizeof(int), NULL, NULL);
         d_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(int), NULL, NULL);
         d_colors = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(Rpp8u), NULL, NULL);
+        d_colors_f32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(Rpp32f), NULL, NULL);
+        d_colors_f16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(half), NULL, NULL);
+        d_colors_i8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  offset * 3 * sizeof(char), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_boxes, CL_TRUE, 0, offset * 4 * sizeof(int), crop_params, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_offset, CL_TRUE, 0, images * sizeof(int), box_offset, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_colors, CL_TRUE, 0, offset * 3 * sizeof(Rpp8u), colors, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colors_f32, CL_TRUE, 0, offset * 3 * sizeof(Rpp32f), colors, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colors_f16, CL_TRUE, 0, offset * 3 * sizeof(half), colors, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colors_i8, CL_TRUE, 0, offset * 3 * sizeof(char), colors, 0, NULL, NULL);
         std::cout << "err is " << err << std::endl;
         start = clock();
         if (ip_bitDepth == 0)
             rppi_erase_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_boxes, d_colors, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_erase_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, d_boxes, d_colors_f16, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_erase_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, d_boxes, d_colors_f16, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            rppi_erase_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_boxes, d_colors_i8, d_offset, no_of_boxes, outputFormatToggle,noOfImages, handle);
+        else
+            missingFuncFlag = 1;
         end = clock();
         clReleaseMemObject(d_boxes);
         clReleaseMemObject(d_offset);
         clReleaseMemObject(d_colors);
+        clReleaseMemObject(d_colors_f32);
+        clReleaseMemObject(d_colors_i8);
+        clReleaseMemObject(d_colors_f16);
+
 	break;
     }
+    case 5:
+    {
+        test_case_name = "color_cast";
+        Rpp8u r[images];
+        Rpp8u g[images];
+        Rpp8u b[images];
+        Rpp32f alpha[images];
+    for (i = 0; i < images; i++)
+    {
+        r[i] = 225;
+        g[i] = 235;
+        b[i] = 52;
+        alpha[i] = 0.5;
+    }
+        
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_color_cast_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 1)
+            rppi_color_cast_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 2)
+            rppi_color_cast_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 3)
+            rppi_color_cast_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8,r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+	else
+            missingFuncFlag = 1;
+        end = clock();
+	break;
+    }
+
+    case 6:
+    {
+        test_case_name = "crop_and_patch";
+        Rpp32u x11[images];
+        Rpp32u y11[images];
+        Rpp32u x12[images];
+        Rpp32u y12[images];
+        Rpp32u x21[images];
+        Rpp32u y21[images];
+        Rpp32u x22[images];
+        Rpp32u y22[images];
+
+
+       
+    for (i = 0; i < images; i++)
+    {
+        x11[i] = 10;
+        y11[i] = 10;
+        x12[i] = 700;
+        y12[i] = 700;
+        x21[i] = 100;
+        y21[i] = 100;
+        x22[i] = 500;
+        y22[i] = 500;
+       
+    }
+        
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_crop_and_patch_u8_pkd3_batchPD_gpu(d_input,d_input_second, srcSize, maxSize, d_output,
+            x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 1)
+            rppi_crop_and_patch_f16_pkd3_batchPD_gpu(d_inputf16,d_inputf16_second, srcSize, maxSize, d_outputf16,
+            x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 2)
+            rppi_crop_and_patch_f32_pkd3_batchPD_gpu(d_inputf32,d_inputf32_second, srcSize, maxSize, d_outputf32,
+            x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 3)
+            rppi_crop_and_patch_i8_pkd3_batchPD_gpu(d_inputi8,d_inputi8_second, srcSize, maxSize, d_outputi8,
+            x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+	else
+            missingFuncFlag = 1;
+        end = clock();
+	break;
+    }
+    case 7:
+    {
+        test_case_name = "warp-affine"; 
+        Rpp32f affine_array[6 * images];
+        for (i = 0; i < images; i = i + 6)
+        {
+            affine_array[i] = 0.83;
+            affine_array[i + 1] = 0.5;
+            affine_array[i + 2] = 0.0;
+            affine_array[i + 3] = -0.5;
+            affine_array[i + 4] = 0.83;
+            affine_array[i + 5] = 0.0;
+        }
+
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_warp_affine_u8_pkd3_batchPD_gpu( d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_warp_affine_f16_pkd3_batchPD_gpu( d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_warp_affine_f32_pkd3_batchPD_gpu( d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            rppi_warp_affine_i8_pkd3_batchPD_gpu( d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+        else
+            missingFuncFlag = 1;
+
+        end = clock();
+        break;
+    }
+
+        case 8:
+    {
+        test_case_name = "glitch";
+        Rpp32u x_offset_r[images];
+        Rpp32u y_offset_r[images];
+        Rpp32u x_offset_g[images];
+        Rpp32u y_offset_g[images];
+        Rpp32u x_offset_b[images];
+        Rpp32u y_offset_b[images];
+        
+
+
+       
+    for (i = 0; i < images; i++)
+    {
+        x_offset_r[i] = 0;
+        y_offset_r[i] = 0;
+        x_offset_g[i] = 10;
+        y_offset_g[i] = 10;
+        x_offset_b[i] = 30;
+        y_offset_b[i] = 30;
+      
+    }
+        
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_glitch_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output,
+            x_offset_r, y_offset_r,
+            x_offset_g, y_offset_g,
+            x_offset_b, y_offset_b, 
+            outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 1)
+            rppi_glitch_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16,
+            x_offset_r, y_offset_r,
+            x_offset_g, y_offset_g,
+            x_offset_b, y_offset_b, 
+            outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 2)
+            rppi_glitch_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32,
+            x_offset_r, y_offset_r,
+            x_offset_g, y_offset_g,
+            x_offset_b, y_offset_b, 
+            outputFormatToggle, noOfImages, handle);
+         else if (ip_bitDepth == 3)
+            rppi_glitch_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8,
+            x_offset_r, y_offset_r,
+            x_offset_g, y_offset_g,
+            x_offset_b, y_offset_b,
+            outputFormatToggle, noOfImages, handle);
+	else
+            missingFuncFlag = 1;
+        end = clock();
+	break;
+    }
+    case 9:
+    {
+        test_case_name = "transpose"; 
+         Rpp32u totalNumberOfElements = 120;
+        Rpp32u perm[4] = {0, 3, 1, 2};
+        Rpp32u shape[4] = {2, 4, 5, 3};
+        Rpp8u srcPtr[120] = {
+            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0, 
+            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110, 
+            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135, 
+            70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 15, 14, 13, 12, 11, 10
+        };
+        Rpp8u dstPtr[120] = {0};
+        Rpp16f srcPtr16f[120], dstPtr16f[120];
+        Rpp32f srcPtr32f[120], dstPtr32f[120];
+        Rpp8s srcPtr8s[120], dstPtr8s[120];
+        Rpp8u dst_comp[120] = {255 , 252 , 249 , 246 , 190 , 127 , 124 , 121 , 5 , 190 , 27 , 24 ,
+         21 , 18 , 190 , 52 , 49 , 46 , 115 , 190 , 254 , 251 , 248 , 231 , 190 , 126 , 123 , 120 ,
+          4 , 190 , 26 , 23 , 20 , 17 , 190 , 51 , 48 , 45 , 114 , 190 , 253 , 250 , 
+          247 , 230 , 190 , 125 , 122 , 119 , 3 , 190 , 25 , 22 , 19 , 16 , 190 , 
+          50 , 47 , 44 , 113 , 190 , 240 , 237 , 234 , 229 , 190 , 197 , 194 , 191 , 140 , 
+          190 , 70 , 67 , 64 , 61 , 190 , 167 , 164 , 161 , 15 , 190 , 239 , 236 , 
+          233 , 190 , 190 , 196 , 193 , 190 , 139 , 190 , 69 , 66 , 63 , 60 , 190 , 
+          166 , 163 , 160 , 14 , 190 , 238 , 235 , 232 , 190 , 190 , 195 , 192 , 189 , 138 , 190 , 68 , 65 , 62 , 59 , 190 ,
+        165 , 162 , 159 , 13 , 190};
+        for (int i = 0; i < totalNumberOfElements; i++)
+        {
+            srcPtr16f[i] = (Rpp16f) srcPtr[i];
+            srcPtr32f[i] = (Rpp32f) srcPtr[i];
+            srcPtr8s[i] = (Rpp8s) (((Rpp32s) srcPtr[i]) - 128);
+        }
+        cl_mem d_tensor_input, d_tensor_input2, d_tensor_output;
+        d_tensor_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, TENSOR_SIZE * sizeof(Rpp8u), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_tensor_input, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), srcPtr, 0, NULL, NULL);
+        // d_tensor_input2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, TENSOR_SIZE * sizeof(Rpp8u), NULL, NULL);
+        // err |= clEnqueueWriteBuffer(theQueue, d_tensor_input2, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), tensor_input2, 0, NULL, NULL);
+        d_tensor_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, TENSOR_SIZE * sizeof(Rpp8u), NULL, NULL);
+        int tensor_dims[4] = {2, 3, 4, 5};
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_tensor_transpose_u8_gpu( d_tensor_input, d_tensor_output, shape, perm, handle);
+        end = clock();
+        clEnqueueReadBuffer(theQueue, d_tensor_output, CL_TRUE, 0, 120 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
+        bool is_pass = true;
+
+        for(int i = 0; i < 120; i++)
+        {
+        std::cout <<(int) dst_comp[i] << "\t" << std::endl;
+
+        }
+        if(is_pass)
+            std::cout << "----------------PASS-----------------" << std::endl;
+        else
+            std::cout << "---------------fail----------------------" << std::endl;
+        break;
+    }
+
   default:
         missingFuncFlag = 1;
         break;

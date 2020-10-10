@@ -2516,6 +2516,19 @@ rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_u
 RppStatus
 rppi_tensor_convert_bit_depth_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
 
+RppStatus
+rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
+
+RppStatus
+rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
+
+RppStatus
+rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
+
+RppStatus
+rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
+
+
 // ----------------------------------------
 // GPU Image Bit Depth functions declaration 
 // ----------------------------------------

@@ -29782,13 +29782,66 @@ rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_u
 			look_up_table, 
 			tensorDimension,
 			static_cast<Rpp32u *>(tensorDimensionValues),
-			rpp::deref(rppHandle)); 	 
+			rpp::deref(rppHandle)); 	
+	  }
+} 
+RppStatus
+rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::U8, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP16, rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
 #endif //BACKEND 
 return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP32, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND
+}
+
+RppStatus
+rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::I8, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 { 
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
 }
 
 RppStatus
@@ -29803,11 +29856,7 @@ rppi_tensor_convert_bit_depth_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppConver
 			static_cast<cl_mem>(dstPtr),
 			convert_mode, 
 			rpp::deref(rppHandle)); 	 
- 	 } 
-#elif defined (HIP_COMPILE) 
- 	 { 
- 	 } 
-#endif //BACKEND 
-return RPP_SUCCESS;
-
+	  }
+	return RPP_SUCCESS;
 }
+
