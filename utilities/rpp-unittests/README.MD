@@ -1,23 +1,34 @@
 # RPP UNITTESTS
-## For HOST - all functionalities
-* Usage - PKD3 tests:
+## For HOST - Test all functionalities with default images
+
 ```
-cd HOST
+cd utilities/rpp-unittests/HOST
 mkdir build
 cd build
 cmake ..
 make
-./BatchPD_host_pkd3 <src1 folder> <src2 folder (same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2> <case number = 0:64>
+cd ..
+./testAllScript.sh
 ```
-* Usage - PLN1 tests:
+
+## For HOST - Test all functionalities with 
+
+Edit "testAllScript.sh" to set the correct SRC1, SRC2 and DST paths.
+
 ```
-cd HOST
-mkdir build
-cd build
-cmake ..
-make
-./BatchPD_host_pln1 <src1 folder> <src2 folder (same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2> <case number = 0:64>
+# <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
+SRC_FOLDER_1="<your complete folder path that containes images for  srcPtr1>"
+SRC_FOLDER_2="<your complete folder path that containes images for  srcPtr2 (can be same as SRC_FOLDER_1 for trials)>"
+DST_FOLDER="<your complete folder path where the dstPtr images can be dumped>"
+# <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
 ```
+
+Run the script
+
+```
+./testAllScript.sh
+```
+
 
 ## For HOST - 7 specific tensor-support functionalities with output format toggling options
 * Running all cases using testAllScript.sh:
@@ -69,9 +80,9 @@ make
     ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 1:7>
   ```
 
-## For OCL - all functionalities
+## For OCL - Test all functionalities
 
-## For HIP - all functionalities
+## For HIP - Test all functionalities
 
 
 ## Run
