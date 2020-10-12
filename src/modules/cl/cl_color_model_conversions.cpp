@@ -272,7 +272,7 @@ color_convert_cl ( cl_mem srcPtr,RppiSize srcSize,
     }
     else if ((convert_mode == HSV_RGB))
     {
-        handle.AddKernel("", "", "hue.cl", "convert_single__hsv_rgb", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width,  inc, plnpkdind);
+        handle.AddKernel("", "", "hue.cl", "convert_single_hsv_rgb", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width,  inc, plnpkdind);
     }
    
     return RPP_SUCCESS;
