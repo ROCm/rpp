@@ -440,6 +440,7 @@ int main(int argc, char **argv)
     case 3:
     {
        test_case_name = "tensor_multiply";
+       U8_S8,
         start = clock();
         if (ip_bitDepth == 0)
             rppi_tensor_multiply_u8_gpu(d_tensor_input, d_tensor_input2, d_tensor_output, 4, tensor_dims, handle);
@@ -500,53 +501,26 @@ int main(int argc, char **argv)
         else std::cout << "---FAIL---" << std::endl;
         break;
     }
-    case 6:
+     case 6:
     {
-        test_case_name = "crop_mirror_normalize";
-
-        Rpp32u crop_pos_x[images];
-        Rpp32u crop_pos_y[images];
-        Rpp32f mean[images];
-        Rpp32f stdDev[images];
-        Rpp32u mirrorFlag[images];
-        for (i = 0; i < images; i++)
-        {
-            dstSize[i].height = 100;
-            dstSize[i].width = 100;
-            if (maxDstHeight < dstSize[i].height)
-                maxDstHeight = dstSize[i].height;
-            if (maxDstWidth < dstSize[i].width)
-                maxDstWidth = dstSize[i].width;
-            if (minDstHeight > dstSize[i].height)
-                minDstHeight = dstSize[i].height;
-            if (minDstWidth > dstSize[i].width)
-                minDstWidth = dstSize[i].width;
-            crop_pos_x[i] = 50;
-            crop_pos_y[i] = 50;
-            mean[i] = 0.0;
-            stdDev[i] = 1.0;
-            mirrorFlag[i] = 1;
-        }
-        //Rpp32u outputFormatToggle = 0;
-
+       test_case_name = "tensor_multiply";
+       U8_S8,
         start = clock();
         if (ip_bitDepth == 0)
-            rppi_crop_mirror_normalize_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            rppi_crop_mirror_normalize_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 2)
-            rppi_crop_mirror_normalize_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag,  outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 3)
-            rppi_crop_mirror_normalize_u8_f16_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag,outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 4)
-            rppi_crop_mirror_normalize_u8_f32_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag,  outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 5)
-            rppi_crop_mirror_normalize_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag,  outputFormatToggle,noOfImages, handle);
-        else if (ip_bitDepth == 6)
-            rppi_crop_mirror_normalize_u8_i8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag,  outputFormatToggle,noOfImages, handle);
+            rppi_tensor_convert_bit_depth_u8_gpu(d_tensor_input, d_tensor_input2, d_tensor_output, 4, tensor_dims, handle);
         end = clock();
-
+        for(int i = 0; i < TENSOR_SIZE; i++)
+            tensor_compare[i] = tensor_input[i] * tensor_input2[i];
+        clEnqueueReadBuffer(theQueue, d_tensor_output, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), tensor_output, 0, NULL, NULL);
+        bool pass = true;
+        for(int i = 0; i < TENSOR_SIZE; i++)
+             pass &= (tensor_compare[i] == tensor_output[i]);
+        if(pass)
+            std::cout << "----------PASS -------------" << std::endl;
+        else
+            std::cout << "----------FAIL -------------" << std::endl;
         break;
+    //Rpp32u outputFormatToggle = 0;
     }
     case 7:
     {

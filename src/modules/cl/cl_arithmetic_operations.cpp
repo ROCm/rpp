@@ -791,6 +791,56 @@ tensor_transpose_cl( cl_mem srcPtr, cl_mem dstPtr,  Rpp32u* in_dims, Rpp32u *per
     return RPP_SUCCESS;
 }
 
+RppStatus
+image_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppConvertBitDepthMode convert_mode,
+                     RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+{
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+    std::string kernel_name;
+    if(convert_mode == U8_S8)
+        kernel_name = "convert_image_u8_i8";
+    else if(convert_mode == S8_U8)
+        kernel_name = "convert_image_i8_u8";
+    handle.AddKernel("", "", "add.cl", kernel_name, vld, vgd, "")(srcPtr,
+                                                            dstPtr,
+                                                            srcSize.height,
+                                                            srcSize.width,
+                                                            channel);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+image_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
+                           RppConvertBitDepthMode convert_mode,
+                           RppiChnFormat chnFormat, unsigned int channel,  rpp::Handle &handle)
+{
+     int plnpkdind;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::string kernel_name;
+    if(convert_mode == U8_S8)
+        kernel_name = "convert_image_u8_i8_batch";
+    else if(convert_mode == S8_U8)
+        kernel_name = "convert_image_i8_u8_batch";
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+    handle.AddKernel("", "", "add.cl", kernel_name, vld, vgd, "")(srcPtr,  dstPtr,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                  handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                  channel,
+                                                                  handle.GetInitHandle()->mem.mgpu.inc,
+                                                                  plnpkdind);
+    return RPP_SUCCESS;
+}
 
 
 // RppStatus

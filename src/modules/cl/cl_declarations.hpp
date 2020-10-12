@@ -51,12 +51,12 @@ RppStatus
 control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type, rpp::Handle &handle,
                       RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
-convert_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u type,
+image_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppConvertBitDepthMode convert_mode,
                      RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
 RppStatus
-convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
-                           Rpp32u type, rpp::Handle &handle,
-                           RppiChnFormat chnFormat, unsigned int channel);
+image_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
+                           RppConvertBitDepthMode convert_mode, 
+                           RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
 RppStatus
 laplacian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                            Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat,
