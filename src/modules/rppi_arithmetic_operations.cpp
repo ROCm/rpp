@@ -29784,6 +29784,8 @@ rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_u
 			static_cast<Rpp32u *>(tensorDimensionValues),
 			rpp::deref(rppHandle)); 	
 	  }
+#endif //BACKEND 
+		return RPP_SUCCESS;
 } 
 RppStatus
 rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
