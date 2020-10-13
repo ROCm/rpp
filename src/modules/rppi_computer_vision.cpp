@@ -7722,6 +7722,7 @@ rppi_fast_corner_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSiz
 }
 
 /*************************************** Gaussian Image Pyramid ************************************/
+RppStatus  
 rppi_gaussian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle )
 { 
 
@@ -11092,122 +11093,6 @@ rppi_hog_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSr
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_optical_flow_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
-                                       Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
-                                       Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize)
-{
-    optical_flow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, 
-                                     oldPoints, newPointsEstimates, newPoints, 
-                                     numPoints, threshold, numIterations, kernelSize, 
-                                     RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_optical_flow_u8_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, 
-									Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
-									Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, 
-									Rpp32u nbatchSize, rppHandle_t rppHandle)
-{
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-	optical_flow_host_batch<Rpp8u>(
-		static_cast<Rpp8u*>(srcPtr1), 
-		static_cast<Rpp8u*>(srcPtr2), 
-		srcSize, 
-		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
-		oldPoints, 
-		newPointsEstimates, 
-		newPoints,
-		numPoints, 
-		threshold, 
-		numIterations, 
-		kernelSize, 
-		rpp::deref(rppHandle).GetBatchSize(),
-		RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_optical_flow_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
-                                       Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
-                                       Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize)
-{
-    optical_flow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, 
-                                     oldPoints, newPointsEstimates, newPoints, 
-                                     numPoints, threshold, numIterations, kernelSize, 
-                                     RPPI_CHN_PLANAR, 3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_optical_flow_u8_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, 
-									Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
-									Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, 
-									Rpp32u nbatchSize, rppHandle_t rppHandle)
-{
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-	optical_flow_host_batch<Rpp8u>(
-		static_cast<Rpp8u*>(srcPtr1), 
-		static_cast<Rpp8u*>(srcPtr2), 
-		srcSize, 
-		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
-		oldPoints, 
-		newPointsEstimates, 
-		newPoints,
-		numPoints, 
-		threshold, 
-		numIterations, 
-		kernelSize, 
-		rpp::deref(rppHandle).GetBatchSize(),
-		RPPI_CHN_PLANAR, 3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_optical_flow_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, 
-                                       Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
-                                       Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize)
-{
-    optical_flow_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), srcSize, 
-                                     oldPoints, newPointsEstimates, newPoints, 
-                                     numPoints, threshold, numIterations, kernelSize, 
-                                     RPPI_CHN_PACKED, 3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_optical_flow_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, 
-									Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
-									Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, 
-									Rpp32u nbatchSize, rppHandle_t rppHandle)
-{
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-	optical_flow_host_batch<Rpp8u>(
-		static_cast<Rpp8u*>(srcPtr1), 
-		static_cast<Rpp8u*>(srcPtr2), 
-		srcSize, 
-		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
-		oldPoints, 
-		newPointsEstimates, 
-		newPoints,
-		numPoints, 
-		threshold, 
-		numIterations, 
-		kernelSize, 
-		rpp::deref(rppHandle).GetBatchSize(),
-		RPPI_CHN_PACKED, 3);
-
-    return RPP_SUCCESS;
-}
 
 RppStatus
 rppi_hough_lines_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t lines, 
@@ -11280,20 +11165,20 @@ rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_host(
 	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
 	Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-    copy_host_maxSrcSize(maxSrcSize2, rpp::deref(rppHandle));
-	copy_host_maxDstSize(maxSrcSize1, rpp::deref(rppHandle));
+    // copy_host_maxSrcSize(maxSrcSize2, rpp::deref(rppHandle));
+	// copy_host_maxDstSize(maxSrcSize1, rpp::deref(rppHandle));
 
-	reconstruction_laplacian_image_pyramid_host_batch<Rpp8u>(
-		static_cast<Rpp8u*>(srcPtr1), 
-		srcSize1, 
-		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize, 
-		static_cast<Rpp8u*>(srcPtr2), 
-		srcSize2, 
-		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
-		stdDev, 
-		kernelSize, 
-		rpp::deref(rppHandle).GetBatchSize(),
-		RPPI_CHN_PLANAR, 1);
+	// reconstruction_laplacian_image_pyramid_host_batch<Rpp8u>(
+	// 	static_cast<Rpp8u*>(srcPtr1), 
+	// 	srcSize1, 
+	// 	rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize, 
+	// 	static_cast<Rpp8u*>(srcPtr2), 
+	// 	srcSize2, 
+	// 	rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+	// 	stdDev, 
+	// 	kernelSize, 
+	// 	rpp::deref(rppHandle).GetBatchSize(),
+	// 	RPPI_CHN_PLANAR, 1);
 
     return RPP_SUCCESS;
 }

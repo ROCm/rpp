@@ -1384,52 +1384,6 @@ RppStatus
 rppi_hog_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t binsTensor, Rpp32u *binsTensorLength, RppiSize *kernelSize, RppiSize *windowSize, Rpp32u *windowStride, Rpp32u *numOfBins, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
 // ----------------------------------------
-// GPU optical_flow functions declaration 
-// ----------------------------------------
-/* Runs optical flow
-*param[in] srcPtr1 input tensor 1
-*param[in] srcPtr2 input tensor 2
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_optical_flow_pyramid_u8_pln1_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
-RppStatus
-rppi_optical_flow_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_optical_flow_pyramid_u8_pln3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
-RppStatus
-rppi_optical_flow_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_optical_flow_pyramid_u8_pkd3_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
-RppStatus
-rppi_optical_flow_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-
-// ----------------------------------------
-// CPU optical_flow functions declaration 
-// ----------------------------------------
-/* Runs optical flow
-*param[in] srcPtr1 input tensor 1
-*param[in] srcPtr2 input tensor 2
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_optical_flow_pyramid_u8_pln1_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
-RppStatus
-rppi_optical_flow_u8_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_optical_flow_pyramid_u8_pln3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
-RppStatus
-rppi_optical_flow_u8_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_optical_flow_pyramid_u8_pkd3_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize srcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize);
-RppStatus
-rppi_optical_flow_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, Rpp32u *numPoints, Rpp32f *threshold, Rpp32u *numIterations, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-
-// ----------------------------------------
 // GPU hough_lines functions declaration
 // ----------------------------------------
 /* Runs hough lines algorithm to find lines in inputs (the inputs must be outputs from a canny edge detector)
