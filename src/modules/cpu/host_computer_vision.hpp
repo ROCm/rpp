@@ -790,7 +790,7 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
             Rpp32u *rowRemapTableImage, *colRemapTableImage;
             loc = 0;
-            compute_image_location_host(batch_srcSize, batchCount, &loc, channel);
+            compute_image_location_host(batch_srcSize, batchCount, &loc, 1);
             rowRemapTableImage = batch_rowRemapTable + loc;
             colRemapTableImage = batch_colRemapTable + loc;
 
@@ -801,8 +801,8 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 dstPtrChannel = dstPtrImage + (c * imageDimMax);
 
                 Rpp32u *rowRemapTableChannel, *colRemapTableChannel;
-                rowRemapTableChannel = rowRemapTableImage + (c * imageDim);
-                colRemapTableChannel = colRemapTableImage + (c * imageDim);
+                rowRemapTableChannel = rowRemapTableImage;
+                colRemapTableChannel = colRemapTableImage;
 
 
                 for(int i = 0; i < batch_srcSize[batchCount].height; i++)
@@ -844,11 +844,11 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
             Rpp32u *rowRemapTableImage, *colRemapTableImage;
             loc = 0;
-            compute_image_location_host(batch_srcSize, batchCount, &loc, channel);
+            compute_image_location_host(batch_srcSize, batchCount, &loc, 1);
             rowRemapTableImage = batch_rowRemapTable + loc;
             colRemapTableImage = batch_colRemapTable + loc;
 
-            Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
+            Rpp32u elementsInRemapTableRow = batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
 
 
@@ -858,8 +858,8 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
 
                 Rpp32u *rowRemapTableTemp, *colRemapTableTemp;
-                rowRemapTableTemp = rowRemapTableImage + (i * elementsInRow);
-                colRemapTableTemp = colRemapTableImage + (i * elementsInRow);
+                rowRemapTableTemp = rowRemapTableImage + (i * elementsInRemapTableRow);
+                colRemapTableTemp = colRemapTableImage + (i * elementsInRemapTableRow);
 
                 for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                 {
@@ -870,9 +870,9 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
                         dstPtrTemp++;
                         srcPtrTemp++;
-                        rowRemapTableTemp++;
-                        colRemapTableTemp++;
                     }
+                    rowRemapTableTemp++;
+                    colRemapTableTemp++;
                 }
             }
         }
@@ -1941,7 +1941,7 @@ RppStatus harris_corner_detector_host_batch(T* batch_srcPtr, RppiSize *batch_src
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
-            dstPtrGreyscaleFloatTemp = dstPtrGreyscaleFloat + (channel * ((bound * srcSize.width) + bound));
+            dstPtrGreyscaleFloatTemp = dstPtrGreyscaleFloat + (newChannel * ((bound * srcSize.width) + bound));
             dstPtrWindow = dstPtr;
             Rpp32u remainingElementsInRow = channel * (srcSize.width - kernelSize);
             Rpp32u increment = channel * (kernelSize - 1);
@@ -2299,10 +2299,6 @@ RppStatus reconstruction_laplacian_image_pyramid_host_batch(T* batch_srcPtr1, Rp
         
         resize_kernel_host(srcPtr2, srcSize2, srcPtr2Upsampled, srcSize1, chnFormat, channel);
 
-        // if (kernelSize % 2 == 0)
-        // {
-        //     return RPP_ERROR;
-        // }
         Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
         int bound = ((kernelSize - 1) / 2);
 
@@ -2642,8 +2638,9 @@ RppStatus hough_lines_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiS
                 linesTemp++;
 
                 numofLines++;
-                // if(numofLines >= linesMax)
-                //     return RPP_SUCCESS;
+                if(numofLines >= linesMax)
+                    // return RPP_SUCCESS;
+                    break;
             }
         }
 
@@ -3161,7 +3158,7 @@ RppStatus fast_corner_detector_host_batch(T* batch_srcPtr, RppiSize *batch_srcSi
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
-            dstPtrGreyscale32uTemp = dstPtrGreyscale32u + (channel * ((bound * srcSize.width) + bound));
+            dstPtrGreyscale32uTemp = dstPtrGreyscale32u + (newChannel * ((bound * srcSize.width) + bound));
             dstPtrWindow = dstPtr;
             Rpp32u remainingElementsInRow = channel * (srcSize.width - kernelSize);
             Rpp32u increment = channel * (kernelSize - 1);
@@ -3491,43 +3488,36 @@ RppStatus control_flow_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSiz
         switch(type)
         {
             case 1:
-                bitwise_AND_host_batch(static_cast<Rpp8u*>(srcPtr1),
-                                        static_cast<Rpp8u*>(srcPtr2),
-                                        batch_srcSize,
-                                        batch_srcSizeMax,
-                                        static_cast<Rpp8u*>(dstPtr),
-                                        batch_roiPoints,
-                                        nbatchSize,
-                                        chnFormat,
-                                        channel);
+                bitwise_AND_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr), 
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 2:
                 inclusive_OR_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 3:
                 exclusive_OR_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 4:
                 add_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 5:
                 subtract_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 6:
                 multiply_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 7:
                 min_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 8:
                 max_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
         }
 

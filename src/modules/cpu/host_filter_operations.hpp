@@ -1911,7 +1911,7 @@ RppStatus sobel_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                                        Rpp32f *kernel, RppiSize rppiKernelSize, 
+                                        Rpp32f *batch_kernel, RppiSize *batch_rppiKernelSize, 
                                         RppiROI *roiPoints, Rpp32u nbatchSize,
                                         RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1936,6 +1936,17 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
             {
                 y2 = batch_srcSize[batchCount].height - 1;
                 roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
+            }
+
+            RppiSize rppiKernelSize;
+            rppiKernelSize.height = batch_rppiKernelSize[batchCount].height;
+            rppiKernelSize.width = batch_rppiKernelSize[batchCount].width;
+
+            Rpp32u numOfElements = rppiKernelSize.height * rppiKernelSize.width;
+            Rpp32f *kernel = (Rpp32f*) calloc(numOfElements, sizeof(Rpp32f));
+            for (int i = 0; i < numOfElements; i++)
+            {
+                kernel[i] = batch_kernel[(batchCount * numOfElements) + i];
             }
 
             int boundY = ((rppiKernelSize.height - 1) / 2);
@@ -2009,6 +2020,7 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
                                       chnFormat, channel);
             
             free(srcPtrBoundedROI);
+            free(kernel);
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -2032,6 +2044,17 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
             {
                 y2 = batch_srcSize[batchCount].height - 1;
                 roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
+            }
+
+            RppiSize rppiKernelSize;
+            rppiKernelSize.height = batch_rppiKernelSize[batchCount].height;
+            rppiKernelSize.width = batch_rppiKernelSize[batchCount].width;
+
+            Rpp32u numOfElements = rppiKernelSize.height * rppiKernelSize.width;
+            Rpp32f *kernel = (Rpp32f*) calloc(numOfElements, sizeof(Rpp32f));
+            for (int i = 0; i < numOfElements; i++)
+            {
+                kernel[i] = batch_kernel[(batchCount * numOfElements) + i];
             }
 
             int boundY = ((rppiKernelSize.height - 1) / 2);
@@ -2105,6 +2128,7 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
                                       chnFormat, channel);
             
             free(srcPtrBoundedROI);
+            free(kernel);
         }
     }
     

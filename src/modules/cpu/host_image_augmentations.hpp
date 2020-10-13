@@ -2995,7 +2995,7 @@ RppStatus histogram_balance_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
 template <typename T>
 RppStatus random_crop_letterbox_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
-                                           Rpp32u *batch_x1, Rpp32u *batch_y1, Rpp32u *batch_x2, Rpp32u *batch_y2, RppiROI *roiPoints,
+                                           Rpp32u *batch_x1, Rpp32u *batch_x2, Rpp32u *batch_y1, Rpp32u *batch_y2, RppiROI *roiPoints,
                                            Rpp32u nbatchSize,
                                            RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -3003,6 +3003,19 @@ RppStatus random_crop_letterbox_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
 #pragma omp parallel for num_threads(nbatchSize)
     for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
     {
+        printf("\nbatch_x1[batchCount] = %d", batch_x1[batchCount]);
+        printf("\nbatch_y1[batchCount] = %d", batch_y1[batchCount]);
+        printf("\nbatch_x2[batchCount] = %d", batch_x2[batchCount]);
+        printf("\nbatch_y2[batchCount] = %d", batch_y2[batchCount]);
+        
+        printf("\nbatch_srcSize[batchCount].height x batch_srcSize[batchCount].width = %d x %d", batch_srcSize[batchCount].height, batch_srcSize[batchCount].width);
+        printf("\nbatch_srcSizeMax[batchCount].height x batch_srcSizeMax[batchCount].width = %d x %d", batch_srcSizeMax[batchCount].height, batch_srcSizeMax[batchCount].width);
+        
+        printf("\nbatch_dstSize[batchCount].height x batch_dstSize[batchCount].width = %d x %d", batch_dstSize[batchCount].height, batch_dstSize[batchCount].width);
+        printf("\nbatch_dstSizeMax[batchCount].height x batch_dstSizeMax[batchCount].width = %d x %d", batch_dstSizeMax[batchCount].height, batch_dstSizeMax[batchCount].width);
+
+        printf("\nnbatchSize = %d", nbatchSize);
+
         Rpp32u x1 = batch_x1[batchCount];
         Rpp32u y1 = batch_y1[batchCount];
         Rpp32u x2 = batch_x2[batchCount];
@@ -3050,7 +3063,7 @@ RppStatus random_crop_letterbox_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
 
 template <typename T>
 RppStatus random_crop_letterbox_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
-                                     Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
+                                     Rpp32u x1, Rpp32u x2, Rpp32u y1, Rpp32u y2, 
                                      RppiChnFormat chnFormat, Rpp32u channel)
 {
     if ((RPPINRANGE(x1, 0, srcSize.width - 1) == 0) 

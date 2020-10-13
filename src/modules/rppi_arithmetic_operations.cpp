@@ -29787,6 +29787,7 @@ rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_u
 #endif //BACKEND 
 		return RPP_SUCCESS;
 } 
+
 RppStatus
 rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
 {
@@ -29814,7 +29815,7 @@ rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tens
  	 { 
  	 } 
 #endif //BACKEND 
-return RPP_SUCCESS;
+	return RPP_SUCCESS;
 }
 
 RppStatus
@@ -29828,7 +29829,8 @@ rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tens
 #elif defined (HIP_COMPILE) 
  	 { 
  	 } 
-#endif //BACKEND
+#endif //BACKEND 
+	return RPP_SUCCESS;
 }
 
 RppStatus
