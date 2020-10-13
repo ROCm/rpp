@@ -1507,6 +1507,32 @@ rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_host(
 	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
 	Rpp32u nbatchSize, rppHandle_t rppHandle);
 
+
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln3_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 
 }

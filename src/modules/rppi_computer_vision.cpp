@@ -11129,6 +11129,26 @@ rppi_hough_lines_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSi
     return RPP_SUCCESS;
 }
 
+RppStatus
+rppi_hough_lines_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t lines, 
+                              Rpp32f rho, Rpp32f theta, Rpp32u threshold, 
+                              Rpp32u minLineLength, Rpp32u maxLineGap, Rpp32u linesMax)
+{
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_hough_lines_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t lines, 
+									Rpp32f* rho, Rpp32f* theta, Rpp32u *threshold, 
+                                    Rpp32u *minLineLength, Rpp32u *maxLineGap, Rpp32u *linesMax, 
+									Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	
+    return RPP_SUCCESS;
+}
+
+
 /*************************************** Tensor Transpose ************************************/
 
 RppStatus
@@ -11251,6 +11271,71 @@ rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_host(
 		kernelSize, 
 		rpp::deref(rppHandle).GetBatchSize(),
 		RPPI_CHN_PACKED, 3);
+		
+    return RPP_SUCCESS;
+}
+
+// GPU
+
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, 
+                                                        Rpp32f stdDev, Rpp32u kernelSize)
+{
+    
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+  
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, 
+                                                        Rpp32f stdDev, Rpp32u kernelSize)
+{
+   
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln3_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize2, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxSrcSize1, rpp::deref(rppHandle));
+
+	
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, 
+                                                        Rpp32f stdDev, Rpp32u kernelSize)
+{
+   
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    
 		
     return RPP_SUCCESS;
 }
