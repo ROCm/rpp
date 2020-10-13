@@ -2299,10 +2299,6 @@ RppStatus reconstruction_laplacian_image_pyramid_host_batch(T* batch_srcPtr1, Rp
         
         resize_kernel_host(srcPtr2, srcSize2, srcPtr2Upsampled, srcSize1, chnFormat, channel);
 
-        // if (kernelSize % 2 == 0)
-        // {
-        //     return RPP_ERROR;
-        // }
         Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
         int bound = ((kernelSize - 1) / 2);
 
@@ -2642,8 +2638,9 @@ RppStatus hough_lines_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiS
                 linesTemp++;
 
                 numofLines++;
-                // if(numofLines >= linesMax)
-                //     return RPP_SUCCESS;
+                if(numofLines >= linesMax)
+                    // return RPP_SUCCESS;
+                    break;
             }
         }
 
@@ -3491,43 +3488,36 @@ RppStatus control_flow_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSiz
         switch(type)
         {
             case 1:
-                bitwise_AND_host_batch(static_cast<Rpp8u*>(srcPtr1),
-                                        static_cast<Rpp8u*>(srcPtr2),
-                                        batch_srcSize,
-                                        batch_srcSizeMax,
-                                        static_cast<Rpp8u*>(dstPtr),
-                                        batch_roiPoints,
-                                        nbatchSize,
-                                        chnFormat,
-                                        channel);
+                bitwise_AND_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr), 
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 2:
                 inclusive_OR_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 3:
                 exclusive_OR_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 4:
                 add_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 5:
                 subtract_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 6:
                 multiply_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 7:
                 min_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
             case 8:
                 max_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
+                batch_roiPoints, nbatchSize, chnFormat, channel);
                 break;
         }
 

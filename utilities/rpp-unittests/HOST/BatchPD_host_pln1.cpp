@@ -13,6 +13,7 @@
 #include <omp.h>
 #include <half.hpp>
 #include <fstream>
+#include "helpers/testSuite_helper.hpp"
 
 using namespace cv;
 using namespace std;
@@ -3018,27 +3019,100 @@ int main(int argc, char **argv)
     {
         test_case_name = "hough_lines";
 
-        Rpp32u gaussianKernelSize[images];
-        Rpp32f stdDev[images];
-        Rpp32u kernelSize[images];
-        Rpp32f kValue[images];
-        Rpp32f threshold[images];
-        Rpp32u nonmaxKernelSize[images];
+        Rpp32u linesMax[images];
+        Rpp32f rho[images];
+        Rpp32f theta[images];
+        Rpp32u threshold[images];
+        Rpp32u minLineLength[images];
+        Rpp32u maxLineGap[images];
         for (i = 0; i < images; i++)
         {
-            gaussianKernelSize[i] = 7;
-            stdDev[i] = 5.0;
-            kernelSize[i] = 5;
-            kValue[i] = 1;
-            threshold[i] = 10.0;
-            nonmaxKernelSize[i] = 5;
+            linesMax[i] = 200;
+            rho[i] = 1;
+            theta[i] = 3.14 / 180;
+            threshold[i] = 25;
+            minLineLength[i] = 350;
+            maxLineGap[i] = 2;
+        }
+
+        Rpp32u *lines = (Rpp32u*) calloc(noOfImages * linesMax[0] * 4, sizeof(Rpp32u));
+
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_hough_lines_u8_pln1_batchPD_host(input, srcSize, maxSize, lines, rho, theta, threshold, minLineLength, maxLineGap, linesMax, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
+
+        Rpp32u *linesTemp;
+        linesTemp = lines;
+        
+        for(int batchCount = 0; batchCount < noOfImages; batchCount ++)
+        {
+            Rpp32u loc = 0;
+            compute_image_location_host(maxSize, batchCount, &loc, ip_channel);
+
+            Rpp8u *outputImage = (Rpp8u*) calloc(ip_channel * srcSize[batchCount].height * srcSize[batchCount].width, sizeof(Rpp8u));
+            
+            Rpp32u *endpoints = (Rpp32u*)calloc(4, sizeof(Rpp32u));
+            Rpp32u *rasterCoordinates= (Rpp32u *)calloc(2 * (srcSize[batchCount].height + srcSize[batchCount].width), sizeof(Rpp32u));
+            
+            for (Rpp32u i = 0; i < linesMax[batchCount]; i++)
+            {
+                *endpoints = *linesTemp;
+                *(endpoints + 1) = *(linesTemp+1);
+                *(endpoints + 2) = *(linesTemp+2);
+                *(endpoints + 3) = *(linesTemp+3);
+
+                generate_bressenham_line_host(outputImage, srcSize[batchCount], endpoints, rasterCoordinates);
+
+                linesTemp += 4;
+            }
+
+            compute_padded_from_unpadded_host(outputImage, srcSize[batchCount], maxSize, output + loc, RPPI_CHN_PLANAR, ip_channel);
+
+            free(outputImage);
+        }
+        
+        free(lines);
+
+        break;
+    }
+    case 69:
+    {
+        test_case_name = "custom_convolution";
+        
+        RppiSize kernelSize[images];
+        Rpp32f kernel[images * 25];
+        Rpp32f value = (Rpp32f) (1.0 / 25);
+        for (i = 0; i < images; i++)
+        {
+            kernelSize[i].height = 5;
+            kernelSize[i].width = 5;
+            for (j = 0; j < 25; j++)
+            {
+                kernel[(i * 25) + j] = value;
+            }
         }
 
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            // rppi_hough_lines_u8_pln1_batchPD_host(srcPtr, srcSize, maxSize, lines, rho, theta, threshold, (Rpp32u) minLineLength, (Rpp32u) maxLineGap, linesMax);
-            missingFuncFlag = 1;
+            rppi_custom_convolution_u8_pln1_batchPD_host(input, srcSize, maxSize, output, kernel, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3058,17 +3132,61 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 69:
-    {
-        test_case_name = "custom_convolution";
-        missingFuncFlag = 1;
-
-        break;
-    }
     case 70:
     {
         test_case_name = "reconstruction_laplacian_image_pyramid";
-        missingFuncFlag = 1;
+        
+        Rpp32u kernelSize[images];
+        Rpp32f stdDev[images];
+        RppiSize srcSizeHalf[images];
+        for (i = 0; i < images; i++)
+        {
+            kernelSize[i] = 3;
+            stdDev[i] = 20;
+            srcSizeHalf[i].height = srcSize[i].height / 2;
+            srcSizeHalf[i].width = srcSize[i].width / 2;
+        }
+
+        RppiSize srcSize1Max, srcSize2Max;
+        srcSize1Max.height = maxSize.height;
+        srcSize1Max.width = maxSize.width;
+        srcSize2Max.height = maxSize.height / 2;
+        srcSize2Max.width = maxSize.width / 2;
+
+        Rpp8u *srcPtr1 = (Rpp8u*) calloc(noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel, sizeof(Rpp8u));
+        Rpp8u *srcPtr2 = (Rpp8u*) calloc(noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel, sizeof(Rpp8u));
+
+        rppi_resize_u8_pln1_batchPD_host(input, srcSize, srcSize1Max, srcPtr2, srcSizeHalf, srcSize2Max, outputFormatToggle, noOfImages, handle);
+
+        rppi_laplacian_image_pyramid_u8_pln1_batchPD_host(input, srcSize, maxSize, srcPtr1, stdDev, kernelSize, noOfImages, handle);
+        memcpy(input, srcPtr1, ioBufferSize * sizeof(Rpp8u));
+        memset(srcPtr1, 0, ioBufferSize * sizeof(Rpp8u));
+
+        rppi_resize_u8_pln1_batchPD_host(input, srcSizeHalf, srcSize1Max, srcPtr1, srcSize, srcSize1Max, outputFormatToggle, noOfImages, handle);
+
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_host(srcPtr1, srcSize, srcSize1Max, srcPtr2, srcSizeHalf, srcSize2Max, output, stdDev, kernelSize, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
+
+        free(srcPtr1);
+        free(srcPtr2);
 
         break;
     }
@@ -3089,7 +3207,77 @@ int main(int argc, char **argv)
     case 73:
     {
         test_case_name = "hog";
-        missingFuncFlag = 1;
+        
+        Rpp32u binsTensorLength[images];
+        RppiSize kernelSize[images];
+        RppiSize windowSize[images];
+        Rpp32u windowStride[images];
+        Rpp32u numOfBins[images];
+        for (i = 0; i < images; i++)
+        {
+            kernelSize[i].height = 4;
+            kernelSize[i].width = 4;
+
+            windowSize[i].height = 16;
+            windowSize[i].width = 16;
+
+            windowStride[i] = 1;
+            numOfBins[i] = 10;
+
+            Rpp32u windowKernelHeightRatio = windowSize[i].height / kernelSize[i].height;
+            Rpp32u windowKernelWidthRatio = windowSize[i].width / kernelSize[i].width;
+
+            binsTensorLength[i] = 0;
+            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
+            binsTensorLength[i] = ((windowKernelWidthRatio * windowKernelHeightRatio) + ((windowKernelWidthRatio - 1) * (windowKernelHeightRatio - 1)));
+            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
+            binsTensorLength[i] = binsTensorLength[i] * ((srcSize[i].width / windowStride[i] - (windowSize[i].width / windowStride[i] - 1)) * (srcSize[i].height / windowStride[i] - (windowSize[i].height / windowStride[i] - 1)));
+            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
+            binsTensorLength[i] = binsTensorLength[i] * numOfBins[i];
+            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
+        }
+
+        Rpp32u *binsTensor = (Rpp32u*) calloc (binsTensorLength[0] * noOfImages, sizeof(Rpp32u));
+
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_hog_u8_pln1_batchPD_host(input, srcSize, maxSize, binsTensor, binsTensorLength, kernelSize, windowSize, windowStride, numOfBins, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
+
+        free(binsTensor);
+
+        Rpp32u *binsTensorTemp;
+        binsTensorTemp = binsTensor;
+        printf("\nPrinting the bins tensor for hog_pln1:");
+        for (int batchCount  = 0; batchCount < noOfImages; batchCount++)
+        {
+            printf("\n\nImage %d:\n", batchCount);
+            for (Rpp32u i = 0; i < binsTensorLength[batchCount]; i++)
+            {
+                if(i % 8 == 0)
+                {
+                    printf("\n %d    - ", i/8);
+                }
+                printf("%d  ",*binsTensorTemp);
+                binsTensorTemp++;
+            }
+        }
 
         break;
     }

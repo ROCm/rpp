@@ -19,6 +19,7 @@ DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES"
 DEFAULT_FAST_CORNER_DETECTOR_IMAGES="$cwd/../TEST_IMAGES/fast_corner_detector"
 DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES="$cwd/../TEST_IMAGES/harris_corner_detector"
 DEFAULT_HOUGH_LINES_IMAGES="$cwd/../TEST_IMAGES/hough_lines"
+DEFAULT_HOG_IMAGES="$cwd/../TEST_IMAGES/hog"
 
 # <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
@@ -41,6 +42,9 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 rm -rvf $DST_FOLDER/*
 shopt -s extglob
 cd build
+rm -rvf *
+cmake ..
+make
 
 printf "\n\n\n\n\n"
 echo "##########################################################################################"
@@ -73,6 +77,10 @@ elif [[ "$case" -eq 68 ]]
 then
     SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
     SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+elif [[ "$case" -eq 73 ]]
+then
+    SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
+    SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
 else
     SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
     SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
@@ -122,6 +130,10 @@ elif [[ "$case" -eq 68 ]]
 then
     SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
     SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+elif [[ "$case" -eq 73 ]]
+then
+    SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
+    SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
 else
     SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
     SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
@@ -171,6 +183,10 @@ elif [[ "$case" -eq 68 ]]
 then
     SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
     SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+elif [[ "$case" -eq 73 ]]
+then
+    SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
+    SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
 else
     SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
     SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
@@ -194,9 +210,9 @@ echo "##########################################################################
 echo "Running all Unique functionalities..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 1:8>"
+printf "\n\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:8>"
 
-for ((case=1;case<9;case++))
+for ((case=8;case<9;case++))
 do
 printf "\n\n\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
 echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt

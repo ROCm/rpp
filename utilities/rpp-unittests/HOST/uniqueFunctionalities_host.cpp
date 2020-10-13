@@ -97,7 +97,7 @@ void displayPacked(T *pArr, RppiSize size, Rpp32u channel)
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 3;
-    printf("\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 1:8>\n");
+    printf("\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:8>\n");
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 
     switch (test_case)
     {
-    case 1:
+    case 0:
     {
         test_case_name = "tensor_transpose";
 
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 2:
+    case 1:
     {
         test_case_name = "transpose";
 
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
         
         break;
     }
-    case 3:
+    case 2:
     {
         test_case_name = "tensor_add";
 
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
             printf("\n");
         }
     }
-    case 4:
+    case 3:
     {
         test_case_name = "tensor_subtract";
 
@@ -352,7 +352,7 @@ int main(int argc, char **argv)
             printf("\n");
         }
     }
-    case 5:
+    case 4:
     {
         test_case_name = "tensor_multiply";
 
@@ -405,7 +405,7 @@ int main(int argc, char **argv)
             printf("\n");
         }
     }
-    case 6:
+    case 5:
     {
         test_case_name = "tensor_matrix_multiply";
 
@@ -459,7 +459,7 @@ int main(int argc, char **argv)
             printf("\n");
         }
     }
-    case 7:
+    case 6:
     {
         test_case_name = "min_max_loc";
 
@@ -517,7 +517,7 @@ int main(int argc, char **argv)
             }
         }
     }
-    case 8:
+    case 7:
     {
         test_case_name = "mean_stddev";
 
@@ -573,6 +573,39 @@ int main(int argc, char **argv)
                 printf("\n");
             }
         }
+    }
+    case 8:
+    {
+        test_case_name = "control_flow";
+
+        rppHandle_t handle;
+        
+        bool b1 = true, b2 = false;
+        bool b3 =  true;
+        Rpp8u u1 = 120, u2 = 100;
+        Rpp8u u3 = 20;
+        
+        start = clock();
+        rpp_bool_control_flow(b1, b2, &b3, RPP_SCALAR_OP_AND, handle );
+        rpp_u8_control_flow(u1, u2, &u3, RPP_SCALAR_OP_ADD, handle );
+        end = clock();
+
+        if(u3 == 220)
+            std::cout << "---PASS---" << std::endl;
+        else
+            std::cout << "---FAIL---" << std::endl;
+        if(b3 == false)
+            std::cout << "---PASS--" << std::endl;
+        else
+            std::cout << "---FAIL---" << std::endl;
+
+        cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        omp_time_used = end_omp - start_omp;
+        cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+        cout << "\nOMP Time - BatchPD : " << omp_time_used;
+        printf("\n");
+
+        break;
     }
     default:
         missingFuncFlag = 1;
