@@ -335,48 +335,40 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 71:
-        strcpy(funcName, "control_flow");
-        outputFormatToggle = 0;
-        break;
-    case 72:
         strcpy(funcName, "bilateral_filter");
         outputFormatToggle = 0;
         break;
-    case 73:
+    case 72:
         strcpy(funcName, "hog");
         outputFormatToggle = 0;
         break;
-    case 74:
-        strcpy(funcName, "optical_flow");
-        outputFormatToggle = 0;
-        break;
-    case 75:
+    case 73:
         strcpy(funcName, "match_template");
         outputFormatToggle = 0;
         break;
-    case 76:
+    case 74:
         strcpy(funcName, "convert_bit_depth");
         outputFormatToggle = 0;
         break;
-    case 77:
+    case 75:
         strcpy(funcName, "water");
         break;
-    case 78:
+    case 76:
         strcpy(funcName, "non_linear_blend");
         break;
-    case 79:
+    case 77:
         strcpy(funcName, "color_cast");
         break;
-    case 80:
+    case 78:
         strcpy(funcName, "erase");
         break;
-    case 81:
+    case 79:
         strcpy(funcName, "crop_and_patch");
         break;
-    case 82:
+    case 80:
         strcpy(funcName, "lut");
         break;
-    case 83:
+    case 81:
         strcpy(funcName, "glitch");
         break;
     }
@@ -3119,19 +3111,12 @@ int main(int argc, char **argv)
     }
     case 71:
     {
-        test_case_name = "control_flow";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 72:
-    {
         test_case_name = "bilateral_filter";
         missingFuncFlag = 1;
 
         break;
     }
-    case 73:
+    case 72:
     {
         test_case_name = "hog";
         
@@ -3208,28 +3193,21 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 74:
-    {
-        test_case_name = "optical_flow";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 75:
+    case 73:
     {
         test_case_name = "match_template";
         missingFuncFlag = 1;
 
         break;
     }
-    case 76:
+    case 74:
     {
         test_case_name = "convert_bit_depth";
         missingFuncFlag = 1;
 
         break;
     }
-    case 77:
+    case 75:
     {
         test_case_name = "water";
 
@@ -3273,7 +3251,7 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 78:
+    case 76:
     {
         test_case_name = "non_linear_blend";
 
@@ -3306,7 +3284,7 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 79:
+    case 77:
     {
         test_case_name = "color_cast";
 
@@ -3345,7 +3323,7 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 80:
+    case 78:
     {
         test_case_name = "erase";
 
@@ -3451,7 +3429,7 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 81:
+    case 79:
     {
         test_case_name = "crop_and_patch";
 
@@ -3499,7 +3477,7 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 82:
+    case 80:
     {
         test_case_name = "lut";
 
@@ -3539,7 +3517,7 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 83:
+    case 81:
     {
         test_case_name = "glitch";
 

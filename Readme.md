@@ -67,7 +67,6 @@ sudo cp half-files/include/half.hpp /usr/local/include/
 * Resize
 * RandomResizeCrop
 * Blending images
-* Adding Occlusion
 * Pixilation
 * Adding Noise
 * Blurring

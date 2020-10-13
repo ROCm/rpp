@@ -74,7 +74,6 @@ We have divided our test-suite broadly into three categories
 ### Others
 * Warp Affine
 * Warp Perspective
-* Occlusion
 * Histogram
 * Remap
 * etc ...
