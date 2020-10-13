@@ -1427,6 +1427,7 @@ rppi_hough_lines_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t lines,
 RppStatus
 rppi_hough_lines_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t lines, Rpp32f* rho, Rpp32f* theta, Rpp32u *threshold, Rpp32u *minLineLength, Rpp32u *maxLineGap, Rpp32u *linesMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
+
 // ----------------------------------------
 // CPU tensor_transpose functions declaration 
 // ----------------------------------------
