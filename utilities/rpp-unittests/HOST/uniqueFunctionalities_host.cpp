@@ -586,8 +586,10 @@ int main(int argc, char **argv)
         Rpp8u u3 = 20;
         
         start = clock();
+        start_omp = omp_get_wtime();
         rpp_bool_control_flow(b1, b2, &b3, RPP_SCALAR_OP_AND, handle );
         rpp_u8_control_flow(u1, u2, &u3, RPP_SCALAR_OP_ADD, handle );
+        end_omp = omp_get_wtime();
         end = clock();
 
         if(u3 == 220)
@@ -606,6 +608,102 @@ int main(int argc, char **argv)
         printf("\n");
 
         break;
+    }
+    case 9:
+    {
+        test_case_name = "histogram";
+        
+        rppHandle_t handle;
+        int count = 0;
+
+        Rpp8u srcPtr[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
+        Rpp32u bins = 8;
+        RppiSize srcSize;
+        Rpp32u *outputHistogram = (Rpp32u *) calloc (bins, sizeof(Rpp32u));
+        Rpp32u *outputHistogramTemp;
+        
+        memset(outputHistogram, 0, bins * sizeof(Rpp32u));
+        srcSize.height = 6;
+        srcSize.width = 6;
+        start = clock();
+        start_omp = omp_get_wtime();
+        rppi_histogram_u8_pln1_host(srcPtr, srcSize, outputHistogram, bins, handle);
+        end_omp = omp_get_wtime();
+        end = clock();
+        printf("\n\nOutput of histogram_u8_pln1 for %d bins:\n", bins);
+        outputHistogramTemp = outputHistogram;
+        count = 1;
+        for (int i = 0; i < bins; i++, count++)
+        {
+            printf("%d\t", *outputHistogramTemp);
+            outputHistogramTemp++;
+            if (count == 25)
+            {
+                printf("\n");
+                count = 0;
+            }
+        }
+        cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        omp_time_used = end_omp - start_omp;
+        cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+        cout << "\nOMP Time - BatchPD : " << omp_time_used;
+        printf("\n");
+
+
+        memset(outputHistogram, 0, bins * sizeof(Rpp32u));
+        srcSize.height = 3;
+        srcSize.width = 4;
+        start = clock();
+        start_omp = omp_get_wtime();
+        rppi_histogram_u8_pln3_host(srcPtr, srcSize, outputHistogram, bins, handle);
+        end_omp = omp_get_wtime();
+        end = clock();
+        printf("\n\nOutput of histogram_u8_pln3 for %d bins:\n", bins);
+        outputHistogramTemp = outputHistogram;
+        count = 1;
+        for (int i = 0; i < bins; i++, count++)
+        {
+            printf("%d\t", *outputHistogramTemp);
+            outputHistogramTemp++;
+            if (count == 25)
+            {
+                printf("\n");
+                count = 0;
+            }
+        }
+        cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        omp_time_used = end_omp - start_omp;
+        cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+        cout << "\nOMP Time - BatchPD : " << omp_time_used;
+        printf("\n");
+
+
+        memset(outputHistogram, 0, bins * sizeof(Rpp32u));
+        srcSize.height = 3;
+        srcSize.width = 4;
+        start = clock();
+        start_omp = omp_get_wtime();
+        rppi_histogram_u8_pkd3_host(srcPtr, srcSize, outputHistogram, bins, handle);
+        end_omp = omp_get_wtime();
+        end = clock();
+        printf("\n\nOutput of histogram_u8_pkd3 for %d bins:\n", bins);
+        outputHistogramTemp = outputHistogram;
+        count = 1;
+        for (int i = 0; i < bins; i++, count++)
+        {
+            printf("%d\t", *outputHistogramTemp);
+            outputHistogramTemp++;
+            if (count == 25)
+            {
+                printf("\n");
+                count = 0;
+            }
+        }
+        cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        omp_time_used = end_omp - start_omp;
+        cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+        cout << "\nOMP Time - BatchPD : " << omp_time_used;
+        printf("\n");
     }
     default:
         missingFuncFlag = 1;
