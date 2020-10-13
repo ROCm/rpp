@@ -18757,3 +18757,110 @@ RppStatus
 	return RPP_SUCCESS;
 }
 
+RppStatus
+rppi_color_convert_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+	{
+		color_convert_cl(
+			static_cast<cl_mem>(srcPtr),
+			srcSize,
+			static_cast<cl_mem>(dstPtr),
+			convert_mode,
+			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle));
+	}
+#elif defined(HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_color_convert_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+#ifdef OCL_COMPILE
+	{
+		color_convert_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			convert_mode,
+			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+
+}
+	
+RppStatus
+ rppi_color_convert_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3,RPPI_CHN_PACKED);
+#ifdef OCL_COMPILE
+	{
+		color_convert_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			convert_mode,
+			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+ rppi_color_convert_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+#ifdef OCL_COMPILE
+	{
+		color_convert_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			convert_mode,
+			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}

@@ -234,6 +234,9 @@ int main(int argc, char **argv)
     case 64:
         strcpy(funcName, "color_twist");
         break;
+    case 65:
+        strcpy(funcName, "color_convert");
+        break;
     }
 
 
@@ -354,6 +357,7 @@ int main(int argc, char **argv)
 
 	closedir(dr2);
 	cl_mem d_input, d_input_second, d_output,d_output1,d_output2,d_output3;
+    cl_mem d_float;
 	cl_platform_id platform_id;
 	cl_device_id device_id;
 	cl_context theContext;
@@ -369,7 +373,8 @@ int main(int argc, char **argv)
         d_output1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize/3 * sizeof(Rpp8u), NULL, NULL);
         d_output2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize/3 * sizeof(Rpp8u), NULL, NULL);
         d_output3 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize/3 * sizeof(Rpp8u), NULL, NULL);
-	err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+	d_float = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
 	err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
 	rppHandle_t handle;
 
@@ -1294,7 +1299,21 @@ uint kernelSize = 3;
         break;
     }
 
-		default:
+		
+    case 65:
+    {
+        //Rpp32u extractChannelNumber = 1;
+        test_case_name = "color_convert";
+        start = clock();
+
+        
+       rppi_color_convert_u8_pkd3_gpu(d_input, srcSize[0],  d_float, RGB_HSV,  handle);
+       rppi_color_convert_u8_pkd3_gpu(d_float, srcSize[0],  d_output, HSV_RGB,  handle);
+        end = clock();
+
+        break;
+    }
+    default:
 			break;
 	}
 
