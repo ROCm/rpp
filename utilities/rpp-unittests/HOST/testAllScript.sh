@@ -53,7 +53,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=74;case<75;case++))
+for ((case=0;case<81;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"
@@ -106,7 +106,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=74;case<75;case++))
+for ((case=0;case<81;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"
@@ -159,7 +159,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=74;case<75;case++))
+for ((case=0;case<81;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"
@@ -205,26 +205,26 @@ mv $DST_FOLDER/!(PKD3|PLN1|PLN3) $DST_FOLDER/PLN3
 
 
 
-# printf "\n\n\n\n\n"
-# echo "##########################################################################################"
-# echo "Running all Unique functionalities..."
-# echo "##########################################################################################"
+printf "\n\n\n\n\n"
+echo "##########################################################################################"
+echo "Running all Unique functionalities..."
+echo "##########################################################################################"
 
-# printf "\n\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:9>"
+printf "\n\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:9>"
 
-# for ((case=0;case<10;case++))
-# do
-# printf "\n\n\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-# echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-# printf "Running a New Functionality...\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-# echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-# for ((bitDepth=0;bitDepth<7;bitDepth++))
-# do
-# printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-# echo "./uniqueFunctionalities_host 0 $case" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-# ./uniqueFunctionalities_host 0 $case | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-# echo "------------------------------------------------------------------------------------------"
-# done
-# done
+for ((case=0;case<10;case++))
+do
+printf "\n\n\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+printf "Running a New Functionality...\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+for ((bitDepth=0;bitDepth<7;bitDepth++))
+do
+printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+echo "./uniqueFunctionalities_host 0 $case" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+./uniqueFunctionalities_host 0 $case | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+echo "------------------------------------------------------------------------------------------"
+done
+done
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
