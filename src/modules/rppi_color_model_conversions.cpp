@@ -18864,3 +18864,244 @@ RppStatus
 
 	return RPP_SUCCESS;
 }
+
+RppStatus
+rppi_color_convert_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, rppHandle_t rppHandle)
+{
+	if (convert_mode == RppiColorConvertMode::RGB_HSV)
+	{
+		color_convert_rgb_to_hsv_host(
+			static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			static_cast<Rpp32f*>(dstPtr),
+			convert_mode,
+			RPPI_CHN_PLANAR, 3);
+	}
+	else if (convert_mode == RppiColorConvertMode::HSV_RGB)
+	{
+		color_convert_hsv_to_rgb_host(
+			static_cast<Rpp32f*>(srcPtr),
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			convert_mode,
+			RPPI_CHN_PLANAR, 3);
+	}
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_color_convert_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	Rpp32u paramIndex = 0;
+	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
+
+	if (convert_mode == RppiColorConvertMode::RGB_HSV)
+	{
+		color_convert_rgb_to_hsv_host_batch<Rpp8u, Rpp32f>(
+			static_cast<Rpp8u*>(srcPtr),
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.srcSize,
+			static_cast<Rpp32f*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PLANAR, 3);
+	}
+	else if (convert_mode == RppiColorConvertMode::HSV_RGB)
+	{
+		color_convert_hsv_to_rgb_host_batch<Rpp32f, Rpp8u>(
+			static_cast<Rpp32f*>(srcPtr),
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PLANAR, 3);
+	}
+
+	return RPP_SUCCESS;
+}
+	
+RppStatus
+rppi_color_convert_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	Rpp32u paramIndex = 0;
+
+	if (convert_mode == RppiColorConvertMode::RGB_HSV)
+	{
+		color_convert_rgb_to_hsv_host_batch<Rpp8u, Rpp32f>(
+			static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			srcSize,
+			static_cast<Rpp32f*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PLANAR, 3);
+	}
+	else if (convert_mode == RppiColorConvertMode::HSV_RGB)
+	{
+		color_convert_hsv_to_rgb_host_batch<Rpp32f, Rpp8u>(
+			static_cast<Rpp32f*>(srcPtr),
+			srcSize,
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PLANAR, 3);
+	}
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_color_convert_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	Rpp32u paramIndex = 0;
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	if (convert_mode == RppiColorConvertMode::RGB_HSV)
+	{
+		color_convert_rgb_to_hsv_host_batch<Rpp8u, Rpp32f>(
+			static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+			static_cast<Rpp32f*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PLANAR, 3);
+	}
+	else if (convert_mode == RppiColorConvertMode::HSV_RGB)
+	{
+		color_convert_hsv_to_rgb_host_batch<Rpp32f, Rpp8u>(
+			static_cast<Rpp32f*>(srcPtr),
+			srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PLANAR, 3);
+	}
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_color_convert_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, rppHandle_t rppHandle)
+{
+	
+	if (convert_mode == RppiColorConvertMode::RGB_HSV)
+	{
+		color_convert_rgb_to_hsv_host(
+			static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			static_cast<Rpp32f*>(dstPtr),
+			convert_mode,
+			RPPI_CHN_PACKED, 3);
+	}
+	else if (convert_mode == RppiColorConvertMode::HSV_RGB)
+	{
+		color_convert_hsv_to_rgb_host(
+			static_cast<Rpp32f*>(srcPtr),
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			convert_mode,
+			RPPI_CHN_PACKED, 3);
+	}
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_color_convert_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	Rpp32u paramIndex = 0;
+	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
+
+	if (convert_mode == RppiColorConvertMode::RGB_HSV)
+	{
+		color_convert_rgb_to_hsv_host_batch<Rpp8u, Rpp32f>(
+			static_cast<Rpp8u*>(srcPtr),
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.srcSize,
+			static_cast<Rpp32f*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PACKED, 3);
+	}
+	else if (convert_mode == RppiColorConvertMode::HSV_RGB)
+	{
+		color_convert_hsv_to_rgb_host_batch<Rpp32f, Rpp8u>(
+			static_cast<Rpp32f*>(srcPtr),
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PACKED, 3);
+	}
+
+	return RPP_SUCCESS;
+}
+	
+RppStatus
+rppi_color_convert_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	Rpp32u paramIndex = 0;
+
+	if (convert_mode == RppiColorConvertMode::RGB_HSV)
+	{
+		color_convert_rgb_to_hsv_host_batch<Rpp8u, Rpp32f>(
+			static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			srcSize,
+			static_cast<Rpp32f*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PACKED, 3);
+	}
+	else if (convert_mode == RppiColorConvertMode::HSV_RGB)
+	{
+		color_convert_hsv_to_rgb_host_batch<Rpp32f, Rpp8u>(
+			static_cast<Rpp32f*>(srcPtr),
+			srcSize,
+			srcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PACKED, 3);
+	}
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+{
+	Rpp32u paramIndex = 0;
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	if (convert_mode == RppiColorConvertMode::RGB_HSV)
+	{
+		color_convert_rgb_to_hsv_host_batch<Rpp8u, Rpp32f>(
+			static_cast<Rpp8u*>(srcPtr),
+			srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+			static_cast<Rpp32f*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PACKED, 3);
+	}
+	else if (convert_mode == RppiColorConvertMode::HSV_RGB)
+	{
+		color_convert_hsv_to_rgb_host_batch<Rpp32f, Rpp8u>(
+			static_cast<Rpp32f*>(srcPtr),
+			srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+			static_cast<Rpp8u*>(dstPtr),
+			convert_mode,
+			rpp::deref(rppHandle).GetBatchSize(),
+			RPPI_CHN_PACKED, 3);
+	}
+
+	return RPP_SUCCESS;
+}

@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:83> <verbosity = 0/1>\n");
+        printf("\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
         return -1;
     }
     if (atoi(argv[5]) != 0)
@@ -353,7 +353,7 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 74:
-        strcpy(funcName, "convert_bit_depth");
+        strcpy(funcName, "color_convert");
         outputFormatToggle = 0;
         break;
     case 75:
@@ -3275,7 +3275,8 @@ int main(int argc, char **argv)
     }
     case 74:
     {
-        test_case_name = "convert_bit_depth";
+        test_case_name = "color_convert";
+        printf("\ncolor_convert has RGB <-> HSV conversions that only exist for 3 channel images!");
         missingFuncFlag = 1;
 
         break;
@@ -3561,45 +3562,8 @@ int main(int argc, char **argv)
     case 81:
     {
         test_case_name = "glitch";
-
-        Rpp32u x_offset_r[images];
-        Rpp32u y_offset_r[images];
-        Rpp32u x_offset_g[images];
-        Rpp32u y_offset_g[images];
-        Rpp32u x_offset_b[images];
-        Rpp32u y_offset_b[images];
-
-        for (i = 0; i < images; i++)
-        {
-            x_offset_r[i] = 50;
-            y_offset_r[i] = 50;
-            x_offset_g[i] = 0;
-            y_offset_g[i] = 0;
-            x_offset_b[i] = 5;
-            y_offset_b[i] = 5;
-            
-        }
-
-        start = clock();
-        start_omp = omp_get_wtime();
-        if (ip_bitDepth == 0)
-            rppi_glitch_u8_pln1_batchPD_host(input, srcSize, maxSize, output, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            rppi_glitch_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 2)
-            rppi_glitch_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            rppi_glitch_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
-        end = clock();
+        printf("\nThe glitch functionality  does not exist for 1 channel images!");
+        missingFuncFlag = 1;
 
         break;
     }

@@ -669,44 +669,8 @@ int main(int argc, char **argv)
     {
         test_case_name = "glitch";
 
-        Rpp32u x_offset_r[images];
-        Rpp32u y_offset_r[images];
-        Rpp32u x_offset_g[images];
-        Rpp32u y_offset_g[images];
-        Rpp32u x_offset_b[images];
-        Rpp32u y_offset_b[images];
-
-        for (i = 0; i < images; i++)
-        {
-            x_offset_r[i] = 50;
-            y_offset_r[i] = 50;
-            x_offset_g[i] = 0;
-            y_offset_g[i] = 0;
-            x_offset_b[i] = 5;
-            y_offset_b[i] = 5;
-            
-        }
-
-        start = clock();
-        start_omp = omp_get_wtime();
-        if (ip_bitDepth == 0)
-            rppi_glitch_u8_pln1_batchPD_host(input, srcSize, maxSize, output, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            rppi_glitch_f16_pln1_batchPD_host(inputf16, srcSize, maxSize, outputf16, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 2)
-            rppi_glitch_f32_pln1_batchPD_host(inputf32, srcSize, maxSize, outputf32, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            rppi_glitch_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
-        end = clock();
+        printf("\nThe glitch functionality  does not exist for 1 channel images!");
+        missingFuncFlag = 1;
 
         break;
     }

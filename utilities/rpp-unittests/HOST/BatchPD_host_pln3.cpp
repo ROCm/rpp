@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:83> <verbosity = 0/1>\n");
+        printf("\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
         return -1;
     }
 
@@ -347,7 +347,7 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 74:
-        strcpy(funcName, "convert_bit_depth");
+        strcpy(funcName, "color_convert");
         outputFormatToggle = 0;
         break;
     case 75:
@@ -3336,8 +3336,39 @@ int main(int argc, char **argv)
     }
     case 74:
     {
-        test_case_name = "convert_bit_depth";
-        missingFuncFlag = 1;
+        test_case_name = "color_convert";
+        
+        RppiColorConvertMode convert_mode_1 = RppiColorConvertMode::RGB_HSV;
+        RppiColorConvertMode convert_mode_2 = RppiColorConvertMode::HSV_RGB;
+
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+        {
+            rppi_color_convert_u8_pln3_batchPS_host(input, srcSize, maxSize, outputf32, convert_mode_1, noOfImages, handle);
+            rppi_color_convert_u8_pln3_batchPS_host(outputf32, srcSize, maxSize, output, convert_mode_2, noOfImages, handle);
+        }
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
+
+        start /= 2;
+        end /= 2;
+        start_omp /= 2;
+        end_omp /= 2;
 
         break;
     }
