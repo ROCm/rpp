@@ -1859,6 +1859,7 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
 {
     Rpp32u imageDim = srcSize.height * srcSize.width;
     Rpp32u imageDimMax = srcSizeMax.height * srcSizeMax.width;
+    Rpp32u imageDimROI = srcSizeBoundedROI.height * srcSizeBoundedROI.width;
 
     T maxVal = (T)(std::numeric_limits<T>::max());
     T minVal = (T)(std::numeric_limits<T>::min());
@@ -1870,7 +1871,7 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
         for(int c = 0; c < channel; c++)
         {
             T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
-            srcPtrBoundedROIChannel = srcPtrBoundedROI + (c * imageDim);
+            srcPtrBoundedROIChannel = srcPtrBoundedROI + (c * imageDimROI);
             srcPtrChannel = srcPtrImage + (c * imageDimMax);
             dstPtrChannel = dstPtrImage + (c * imageDimMax);
 

@@ -10,11 +10,6 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                            RppiROI *roiPoints, Rpp32u nbatchSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
-    // for (int i = 0; i < nbatchSize; i++)
-    // {
-    //     batch_kernelSize[i] = 5;
-    // }
-    
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -54,6 +49,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
+            Rpp32u imageDimROI = srcSizeBoundedROI.height * srcSizeBoundedROI.width;
             T *srcPtrBoundedROI = (T *)calloc(srcSizeBoundedROI.height * srcSizeBoundedROI.width * channel, sizeof(T));
 
             RppiSize srcSizeROI;
@@ -103,7 +99,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
-                srcPtrBoundedROIChannel = srcPtrBoundedROI + (c * imageDim);
+                srcPtrBoundedROIChannel = srcPtrBoundedROI + (c * imageDimROI);
                 srcPtrChannel = srcPtrImage + (c * imageDimMax);
                 dstPtrChannel = dstPtrImage + (c * imageDimMax);
 
@@ -371,11 +367,6 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                            RppiROI *roiPoints, Rpp32u nbatchSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
-    // for (int i = 0; i < nbatchSize; i++)
-    // {
-    //     batch_kernelSize[i] = 5;
-    // }
-    
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -415,6 +406,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
+            Rpp32u imageDimROI = srcSizeBoundedROI.height * srcSizeBoundedROI.width;
             T *srcPtrBoundedROI = (T *)calloc(srcSizeBoundedROI.height * srcSizeBoundedROI.width * channel, sizeof(T));
 
             RppiSize srcSizeROI;
@@ -464,7 +456,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
-                srcPtrBoundedROIChannel = srcPtrBoundedROI + (c * imageDim);
+                srcPtrBoundedROIChannel = srcPtrBoundedROI + (c * imageDimROI);
                 srcPtrChannel = srcPtrImage + (c * imageDimMax);
                 dstPtrChannel = dstPtrImage + (c * imageDimMax);
 
