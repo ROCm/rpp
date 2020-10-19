@@ -1637,7 +1637,18 @@ RppStatus
 RppStatus
  rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
 
-
+// ----------------------------------------
+// CPU Tensor Look Up Table
+// ----------------------------------------
+/*param[in] srcPtr  input tensor
+*param[out] dstPtr output tensor
+param[in] lutPtr  look up table
+param[in] tensorDimension  input tensor number of dimensions
+param[in] tensorDimensionValues  input tensor shape
+*retval RPP_ERROR : Error 
+*/
+RppStatus
+rppi_tensor_look_up_table_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t lutPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
 
 
 #ifdef __cplusplus

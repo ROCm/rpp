@@ -2510,8 +2510,8 @@ rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr,
 RppStatus
 rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, RppPtr_t tensorDimensionValues1, RppPtr_t tensorDimensionValues2, rppHandle_t rppHandle);
 
-RppStatus
-rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
+// RppStatus
+// rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
 
 // RppStatus
 // rppi_tensor_convert_bit_depth_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);

@@ -459,27 +459,27 @@ int main(int argc, char **argv)
     }
     case 4:
     {
-        test_case_name = "tensor_table_look_up";
-        start = clock();
-        Rpp8u lut[256];
-        for(int i = 0; i < 256; i++)
-        {
-            if(i % 25 == 0) lut[i] = 255 - i;
-            else lut[i] = i;
-        }
-        if (ip_bitDepth == 0)
-            rppi_tensor_table_look_up_u8_gpu(d_tensor_input, d_tensor_output, lut, 4, tensor_dims, handle);
-        end = clock();
-        for(int i = 0; i < TENSOR_SIZE; i++)
-            tensor_compare[i] = lut[tensor_input[i]];
-        clEnqueueReadBuffer(theQueue, d_tensor_output, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), tensor_output, 0, NULL, NULL);
-        bool pass = true;
-        for(int i = 0; i < TENSOR_SIZE; i++)
-             pass &= (tensor_compare[i] == tensor_output[i]);
-        if(pass)
-            std::cout << "----------PASS -------------" << std::endl;
-        else
-            std::cout << "----------FAIL -------------" << std::endl;
+        // test_case_name = "tensor_table_look_up";
+        // start = clock();
+        // Rpp8u lut[256];
+        // for(int i = 0; i < 256; i++)
+        // {
+        //     if(i % 25 == 0) lut[i] = 255 - i;
+        //     else lut[i] = i;
+        // }
+        // if (ip_bitDepth == 0)
+        //     rppi_tensor_table_look_up_u8_gpu(d_tensor_input, d_tensor_output, lut, 4, tensor_dims, handle);
+        // end = clock();
+        // for(int i = 0; i < TENSOR_SIZE; i++)
+        //     tensor_compare[i] = lut[tensor_input[i]];
+        // clEnqueueReadBuffer(theQueue, d_tensor_output, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), tensor_output, 0, NULL, NULL);
+        // bool pass = true;
+        // for(int i = 0; i < TENSOR_SIZE; i++)
+        //      pass &= (tensor_compare[i] == tensor_output[i]);
+        // if(pass)
+        //     std::cout << "----------PASS -------------" << std::endl;
+        // else
+        //     std::cout << "----------FAIL -------------" << std::endl;
         break;
     }
 

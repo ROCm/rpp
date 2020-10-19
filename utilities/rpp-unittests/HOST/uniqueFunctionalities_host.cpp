@@ -97,7 +97,7 @@ void displayPacked(T *pArr, RppiSize size, Rpp32u channel)
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 3;
-    printf("\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:11>\n");
+    printf("\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>\n");
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -883,6 +883,49 @@ int main(int argc, char **argv)
 
         break;
     }
+    case 12:
+    {
+        test_case_name = "tensor_look_up_table";
+
+        Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
+        Rpp8u dstPtr[36];
+
+        Rpp32u tensorDimension = 3;
+        Rpp32u tensorDimensionValues[3] = {3, 4, 3};
+        Rpp8u lutPtr[256];
+
+        for (int i = 0; i < 256; i++)
+        {
+            lutPtr[i] = (Rpp8u)(255 - i);
+        }
+
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_tensor_look_up_table_u8_host(srcPtr, dstPtr, lutPtr, tensorDimension, tensorDimensionValues);
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
+
+        if (missingFuncFlag != 1)
+        {
+            printf("\n\nInput:\n");
+            displayTensor(srcPtr, 36);
+            printf("\n\nInput Shape:\n");
+            printf("[%d x %d x %d]", tensorDimensionValues[0], tensorDimensionValues[1], tensorDimensionValues[2]);
+            printf("\n\nOutput of tensor_look_up_table operation:\n");
+            displayTensor(dstPtr, 36);
+
+            cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+            omp_time_used = end_omp - start_omp;
+            cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+            cout << "\nOMP Time - BatchPD : " << omp_time_used;
+            printf("\n");
+        }
+
+        break;
+    }
     default:
         missingFuncFlag = 1;
         break;
@@ -890,7 +933,7 @@ int main(int argc, char **argv)
 
     if (missingFuncFlag == 1)
     {
-        cout << "\nThis functionality sub-type of" << test_case_name << " doesn't yet exist in RPP\n";
+        cout << "\nThis functionality sub-type of " << test_case_name << " doesn't yet exist in RPP\n";
         return -1;
     }
 

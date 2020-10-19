@@ -19105,3 +19105,15 @@ rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 
 	return RPP_SUCCESS;
 }
+
+// ******************************** tensor look up table ********************************
+
+RppStatus
+rppi_tensor_look_up_table_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t lutPtr, 
+                        Rpp32u tensorDimension, RppPtr_t tensorDimensionValues)
+{
+    tensor_look_up_table_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), static_cast<Rpp8u*>(lutPtr), 
+                           tensorDimension, static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+}

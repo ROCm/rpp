@@ -558,8 +558,8 @@ tensor_multiply_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem
 
 RppStatus
 tensor_matrix_multiply_cl(cl_mem srcPtr1, cl_mem srcPtr2, Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2, cl_mem dstPtr, rpp::Handle &handle);
-RppStatus
-tensor_table_look_up_cl( cl_mem srcPtr1, cl_mem dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, rpp::Handle &handle);
+// RppStatus
+// tensor_table_look_up_cl( cl_mem srcPtr1, cl_mem dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, rpp::Handle &handle);
 // RppStatus
 // tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
 //                             cl_mem dstPtr, RppConvertBitDepthMode convert_mode, rpp::Handle &handle);
