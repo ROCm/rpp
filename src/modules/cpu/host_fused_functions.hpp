@@ -3215,9 +3215,9 @@ RppStatus crop_mirror_normalize_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
             Rpp32u y2 = y1 + batch_dstSize[batchCount].height - 1;
 
             Rpp32u mirrorFlag = batch_mirrorFlag[batchCount];
-            Rpp32f mean = 0;//batch_mean[batchCount];
-            Rpp32f stdDev = 1; //batch_stdDev[batchCount];
-            
+            Rpp32f mean = batch_mean[batchCount];
+            Rpp32f stdDev = batch_stdDev[batchCount];
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
