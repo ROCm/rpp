@@ -2513,8 +2513,8 @@ rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t 
 RppStatus
 rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
 
-RppStatus
-rppi_tensor_convert_bit_depth_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
+// RppStatus
+// rppi_tensor_convert_bit_depth_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
 
 RppStatus
 rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle);
@@ -2540,32 +2540,32 @@ rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tenso
 *retval RPP_SUCCESS : No error succesful completion
 *retval RPP_ERROR : Error 
 */
-RppStatus
- rppi_image_bit_depth_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
 
-RppStatus
- rppi_image_bit_depth_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
 
-RppStatus
- rppi_image_bit_depth_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_image_bit_depth_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// RppStatus
+//  rppi_image_bit_depth_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle );
 
 
 #ifdef __cplusplus

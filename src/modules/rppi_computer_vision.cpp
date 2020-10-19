@@ -11185,20 +11185,21 @@ rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_host(
 	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
 	Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
-    // copy_host_maxSrcSize(maxSrcSize2, rpp::deref(rppHandle));
-	// copy_host_maxDstSize(maxSrcSize1, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize2, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxSrcSize1, rpp::deref(rppHandle));
 
-	// reconstruction_laplacian_image_pyramid_host_batch<Rpp8u>(
-	// 	static_cast<Rpp8u*>(srcPtr1), 
-	// 	srcSize1, 
-	// 	rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize, 
-	// 	static_cast<Rpp8u*>(srcPtr2), 
-	// 	srcSize2, 
-	// 	rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
-	// 	stdDev, 
-	// 	kernelSize, 
-	// 	rpp::deref(rppHandle).GetBatchSize(),
-	// 	RPPI_CHN_PLANAR, 1);
+	reconstruction_laplacian_image_pyramid_host_batch<Rpp8u>(
+		static_cast<Rpp8u*>(srcPtr1), 
+		srcSize1, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize, 
+		static_cast<Rpp8u*>(srcPtr2), 
+		srcSize2, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp8u*>(dstPtr), 
+		stdDev, 
+		kernelSize, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 1);
 
     return RPP_SUCCESS;
 }
@@ -11337,5 +11338,276 @@ rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(
 {
     
 		
+    return RPP_SUCCESS;
+}
+
+// **************************************** convert bit depth ****************************************
+
+RppStatus
+rppi_convert_bit_depth_u8s8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp8s>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8s*>(dstPtr),
+                                         1, 
+                                         RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp16u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp16u*>(dstPtr),
+                                         2, 
+                                         RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp16s>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp16s*>(dstPtr),
+                                         3, 
+                                         RPPI_CHN_PLANAR, 1);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp8s>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp8s*>(dstPtr), 
+		1, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 1);
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp16u>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp16u*>(dstPtr), 
+		2, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 1);
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp16s>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp16s*>(dstPtr), 
+		3, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 1);
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp8s>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8s*>(dstPtr),
+                                         1, 
+                                         RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp16u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp16u*>(dstPtr),
+                                         2, 
+                                         RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp16s>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp16s*>(dstPtr),
+                                         3, 
+                                         RPPI_CHN_PLANAR, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp8s>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp8s*>(dstPtr), 
+		1, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 3);
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp16u>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp16u*>(dstPtr), 
+		2, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 3);
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp16s>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp16s*>(dstPtr), 
+		3, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PLANAR, 3);
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp8s>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp8s*>(dstPtr),
+                                         1, 
+                                         RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp16u>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp16u*>(dstPtr),
+                                         2, 
+                                         RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr)
+{
+    convert_bit_depth_host<Rpp8u, Rpp16s>(static_cast<Rpp8u*>(srcPtr), srcSize, static_cast<Rpp16s*>(dstPtr),
+                                         3, 
+                                         RPPI_CHN_PACKED, 3);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp8s>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp8s*>(dstPtr), 
+		1, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PACKED, 3);
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp16u>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp16u*>(dstPtr), 
+		2, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PACKED, 3);
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	convert_bit_depth_host_batch<Rpp8u, Rpp16s>(
+		static_cast<Rpp8u*>(srcPtr), 
+		srcSize, 
+		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize, 
+		static_cast<Rpp16s*>(dstPtr), 
+		3, 
+		rpp::deref(rppHandle).GetBatchSize(),
+		RPPI_CHN_PACKED, 3);
+		
+    return RPP_SUCCESS;
+}
+
+// **************************************** tensor convert bit depth ****************************************
+
+RppStatus
+rppi_tensor_convert_bit_depth_u8s8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, 
+                                        Rpp32u tensorDimension, RppPtr_t tensorDimensionValues)
+{
+    tensor_convert_bit_depth_host<Rpp8u, Rpp8s>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8s*>(dstPtr), 
+                                                1, 
+                                                tensorDimension, static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_convert_bit_depth_u8u16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, 
+                                        Rpp32u tensorDimension, RppPtr_t tensorDimensionValues)
+{
+    tensor_convert_bit_depth_host<Rpp8u, Rpp16u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp16u*>(dstPtr), 
+                                                2, 
+                                                tensorDimension, static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_convert_bit_depth_u8s16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, 
+                                        Rpp32u tensorDimension, RppPtr_t tensorDimensionValues)
+{
+    tensor_convert_bit_depth_host<Rpp8u, Rpp16s>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp16s*>(dstPtr), 
+                                                3, 
+                                                tensorDimension, static_cast<Rpp32u*>(tensorDimensionValues));
+
     return RPP_SUCCESS;
 }

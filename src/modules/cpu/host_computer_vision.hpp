@@ -446,273 +446,41 @@ RppStatus convert_bit_depth_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiS
                                        Rpp32u nbatchSize,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
+    T *srcPtrTemp;
+    U *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp32u totalBufferSize = nbatchSize * batch_srcSizeMax[0].height * batch_srcSizeMax[0].width * channel;
     if (conversionType == 1)
     {
-        if(chnFormat == RPPI_CHN_PLANAR)
+        Rpp32s val = 128;
+        for (Rpp32u i = 0; i < totalBufferSize; i++)
         {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                for(int c = 0; c < channel; c++)
-                {
-                    T *srcPtrChannel;
-                    U *dstPtrChannel;
-                    srcPtrChannel = srcPtrImage + (c * imageDimMax);
-                    dstPtrChannel = dstPtrImage + (c * imageDimMax);
-
-
-                    for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                    {
-                        Rpp32s val = 128;
-                        
-                        T *srcPtrTemp;
-                        U *dstPtrTemp;
-                        srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-
-                        for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                        {
-                            *dstPtrTemp = (U) ((Rpp32s) *srcPtrTemp - val);
-
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                }
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-                
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
-                Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-                
-
-                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                {
-                    Rpp32s val = 128;
-                    
-                    T *srcPtrTemp;
-                    U *dstPtrTemp;
-                    srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
-                    dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
-
-                    for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                    {
-                        for(int c = 0; c < channel; c++)
-                        {
-                            *dstPtrTemp = (U) ((Rpp32s) *srcPtrTemp - val);
-                            
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                    srcPtrTemp += (elementsInRowMax - elementsInRow);
-                    dstPtrTemp += (elementsInRowMax - elementsInRow);
-                }
-            }
+            *dstPtrTemp = (U) ((Rpp32s) *srcPtrTemp - val);
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
     else if (conversionType == 2)
     {
-        if(chnFormat == RPPI_CHN_PLANAR)
+        Rpp32f multiplier = 65535/255;
+        for (Rpp32u i = 0; i < totalBufferSize; i++)
         {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                for(int c = 0; c < channel; c++)
-                {
-                    T *srcPtrChannel;
-                    U *dstPtrChannel;
-                    srcPtrChannel = srcPtrImage + (c * imageDimMax);
-                    dstPtrChannel = dstPtrImage + (c * imageDimMax);
-
-
-                    for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                    {
-                        Rpp32f multiplier = 65535/255;
-                        
-                        T *srcPtrTemp;
-                        U *dstPtrTemp;
-                        srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-
-                        for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                        {
-                            *dstPtrTemp = (U) ((Rpp32f) *srcPtrTemp * multiplier);
-
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                }
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-                
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
-                Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-                
-
-                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                {
-                    Rpp32f multiplier = 65535/255;
-                    
-                    T *srcPtrTemp;
-                    U *dstPtrTemp;
-                    srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
-                    dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
-
-                    for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                    {
-                        for(int c = 0; c < channel; c++)
-                        {
-                            *dstPtrTemp = (U) ((Rpp32f) *srcPtrTemp * multiplier);
-                            
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                    srcPtrTemp += (elementsInRowMax - elementsInRow);
-                    dstPtrTemp += (elementsInRowMax - elementsInRow);
-                }
-            }
+            *dstPtrTemp = (U) ((Rpp32f) *srcPtrTemp * multiplier);
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
     else if (conversionType == 3)
     {
-        if(chnFormat == RPPI_CHN_PLANAR)
+        Rpp32f multiplier = 65535/255;
+        Rpp32f val = 32768;
+        for (Rpp32u i = 0; i < totalBufferSize; i++)
         {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                for(int c = 0; c < channel; c++)
-                {
-                    T *srcPtrChannel;
-                    U *dstPtrChannel;
-                    srcPtrChannel = srcPtrImage + (c * imageDimMax);
-                    dstPtrChannel = dstPtrImage + (c * imageDimMax);
-
-
-                    for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                    {
-                        Rpp32f multiplier = 65535/255;
-                        Rpp32f val = 32768;
-                        
-                        T *srcPtrTemp;
-                        U *dstPtrTemp;
-                        srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-
-                        for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                        {
-                            *dstPtrTemp = (U) (((Rpp32f) *srcPtrTemp * multiplier) - val);
-
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                }
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-                
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
-                Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-                
-
-                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                {
-                    Rpp32f multiplier = 65535/255;
-                    Rpp32f val = 32768;
-                    
-                    T *srcPtrTemp;
-                    U *dstPtrTemp;
-                    srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
-                    dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
-
-                    for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                    {
-                        for(int c = 0; c < channel; c++)
-                        {
-                            *dstPtrTemp = (U) (((Rpp32f) *srcPtrTemp * multiplier) - val);
-                            
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                    srcPtrTemp += (elementsInRowMax - elementsInRow);
-                    dstPtrTemp += (elementsInRowMax - elementsInRow);
-                }
-            }
+            *dstPtrTemp = (U) (((Rpp32f) *srcPtrTemp * multiplier) - val);
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
 

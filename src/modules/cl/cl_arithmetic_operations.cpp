@@ -589,55 +589,55 @@ tensor_multiply_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem
     return RPP_SUCCESS;
 }
 
-RppStatus
-tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
-                            cl_mem dstPtr, RppConvertBitDepthMode convert_mode, rpp::Handle &handle)
-{
-    size_t gDim3[3];
-    if (tensorDimension == 1)
-    {
-        gDim3[0] = tensorDimensionValues[0];
-        gDim3[1] = 1;
-        gDim3[2] = 1;
-    }
-    else if (tensorDimension == 2)
-    {
-        gDim3[0] = tensorDimensionValues[0];
-        gDim3[1] = tensorDimensionValues[1];
-        gDim3[2] = 1;
-    }
-    else
-    {
-        gDim3[0] = tensorDimensionValues[0];
-        gDim3[1] = tensorDimensionValues[1];
-        int value = 1;
-        for (int i = 2; i < tensorDimension; i++)
-        {
-            value *= tensorDimensionValues[i];
-        }
-        gDim3[2] = value;
-    }
+// RppStatus
+// tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
+//                             cl_mem dstPtr, RppConvertBitDepthMode convert_mode, rpp::Handle &handle)
+// {
+//     size_t gDim3[3];
+//     if (tensorDimension == 1)
+//     {
+//         gDim3[0] = tensorDimensionValues[0];
+//         gDim3[1] = 1;
+//         gDim3[2] = 1;
+//     }
+//     else if (tensorDimension == 2)
+//     {
+//         gDim3[0] = tensorDimensionValues[0];
+//         gDim3[1] = tensorDimensionValues[1];
+//         gDim3[2] = 1;
+//     }
+//     else
+//     {
+//         gDim3[0] = tensorDimensionValues[0];
+//         gDim3[1] = tensorDimensionValues[1];
+//         int value = 1;
+//         for (int i = 2; i < tensorDimension; i++)
+//         {
+//             value *= tensorDimensionValues[i];
+//         }
+//         gDim3[2] = value;
+//     }
 
-    unsigned int dim1, dim2, dim3;
-    dim1 = gDim3[0];
-    dim2 = gDim3[1];
-    dim3 = gDim3[2];
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
-    std::string kernel_name;
-    if(convert_mode == U8_S8)
-        kernel_name = "tensor_convert_bit_depth_u8s8";
-    else if(convert_mode == S8_U8)
-        kernel_name = "tensor_convert_bit_depth_u8s8";
-    handle.AddKernel("", "", "tensor.cl", kernel_name, vld, vgd, "")(
-                                                                           srcPtr,
-                                                                           dstPtr,
-                                                                           dim1,
-                                                                           dim2,
-                                                                           dim3);
-    return RPP_SUCCESS;
+//     unsigned int dim1, dim2, dim3;
+//     dim1 = gDim3[0];
+//     dim2 = gDim3[1];
+//     dim3 = gDim3[2];
+//     std::vector<size_t> vld{32, 32, 1};
+//     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
+//     std::string kernel_name;
+//     if(convert_mode == U8_S8)
+//         kernel_name = "tensor_convert_bit_depth_u8s8";
+//     else if(convert_mode == S8_U8)
+//         kernel_name = "tensor_convert_bit_depth_u8s8";
+//     handle.AddKernel("", "", "tensor.cl", kernel_name, vld, vgd, "")(
+//                                                                            srcPtr,
+//                                                                            dstPtr,
+//                                                                            dim1,
+//                                                                            dim2,
+//                                                                            dim3);
+//     return RPP_SUCCESS;
     
-}
+// }
 
 RppStatus
 tensor_matrix_multiply_cl(cl_mem srcPtr1, cl_mem srcPtr2, Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2, cl_mem dstPtr, rpp::Handle &handle)
@@ -791,56 +791,56 @@ tensor_transpose_cl( cl_mem srcPtr, cl_mem dstPtr,  Rpp32u* in_dims, Rpp32u *per
     return RPP_SUCCESS;
 }
 
-RppStatus
-image_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppConvertBitDepthMode convert_mode,
-                     RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
-{
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-    std::string kernel_name;
-    if(convert_mode == U8_S8)
-        kernel_name = "convert_image_u8_i8";
-    else if(convert_mode == S8_U8)
-        kernel_name = "convert_image_i8_u8";
-    handle.AddKernel("", "", "add.cl", kernel_name, vld, vgd, "")(srcPtr,
-                                                            dstPtr,
-                                                            srcSize.height,
-                                                            srcSize.width,
-                                                            channel);
-    return RPP_SUCCESS;
-}
+// RppStatus
+// image_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppConvertBitDepthMode convert_mode,
+//                      RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+// {
+//     std::vector<size_t> vld{32, 32, 1};
+//     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+//     std::string kernel_name;
+//     if(convert_mode == U8_S8)
+//         kernel_name = "convert_image_u8_i8";
+//     else if(convert_mode == S8_U8)
+//         kernel_name = "convert_image_i8_u8";
+//     handle.AddKernel("", "", "add.cl", kernel_name, vld, vgd, "")(srcPtr,
+//                                                             dstPtr,
+//                                                             srcSize.height,
+//                                                             srcSize.width,
+//                                                             channel);
+//     return RPP_SUCCESS;
+// }
 
-RppStatus
-image_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
-                           RppConvertBitDepthMode convert_mode,
-                           RppiChnFormat chnFormat, unsigned int channel,  rpp::Handle &handle)
-{
-     int plnpkdind;
+// RppStatus
+// image_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
+//                            RppConvertBitDepthMode convert_mode,
+//                            RppiChnFormat chnFormat, unsigned int channel,  rpp::Handle &handle)
+// {
+//      int plnpkdind;
 
-    if (chnFormat == RPPI_CHN_PLANAR)
-        plnpkdind = 1;
-    else
-        plnpkdind = 3;
+//     if (chnFormat == RPPI_CHN_PLANAR)
+//         plnpkdind = 1;
+//     else
+//         plnpkdind = 3;
 
-    Rpp32u max_height, max_width;
-    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    std::string kernel_name;
-    if(convert_mode == U8_S8)
-        kernel_name = "convert_image_u8_i8_batch";
-    else if(convert_mode == S8_U8)
-        kernel_name = "convert_image_i8_u8_batch";
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "add.cl", kernel_name, vld, vgd, "")(srcPtr,  dstPtr,
-                                                                  handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                  handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                  handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                  handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                  channel,
-                                                                  handle.GetInitHandle()->mem.mgpu.inc,
-                                                                  plnpkdind);
-    return RPP_SUCCESS;
-}
+//     Rpp32u max_height, max_width;
+//     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+//     std::string kernel_name;
+//     if(convert_mode == U8_S8)
+//         kernel_name = "convert_image_u8_i8_batch";
+//     else if(convert_mode == S8_U8)
+//         kernel_name = "convert_image_i8_u8_batch";
+//     std::vector<size_t> vld{32, 32, 1};
+//     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+//     handle.AddKernel("", "", "add.cl", kernel_name, vld, vgd, "")(srcPtr,  dstPtr,
+//                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
+//                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
+//                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+//                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+//                                                                   channel,
+//                                                                   handle.GetInitHandle()->mem.mgpu.inc,
+//                                                                   plnpkdind);
+//     return RPP_SUCCESS;
+// }
 
 
 // RppStatus

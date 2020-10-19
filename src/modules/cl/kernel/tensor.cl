@@ -78,75 +78,75 @@ __kernel void tensor_matrix_multiply(
   }
 }
 
-__kernel void tensor_convert_bit_depth_u8s8(__global unsigned char *input,
-                                            __global char *output,
-                                            const unsigned int a,
-                                            const unsigned int b,
-                                            const unsigned int c) {
-  int id_x = get_global_id(0);
-  int id_y = get_global_id(1);
-  int id_z = get_global_id(2);
+// __kernel void tensor_convert_bit_depth_u8s8(__global unsigned char *input,
+//                                             __global char *output,
+//                                             const unsigned int a,
+//                                             const unsigned int b,
+//                                             const unsigned int c) {
+//   int id_x = get_global_id(0);
+//   int id_y = get_global_id(1);
+//   int id_z = get_global_id(2);
 
-  if (id_x >= a || id_y >= b || id_z >= c)
-    return;
+//   if (id_x >= a || id_y >= b || id_z >= c)
+//     return;
 
-  int pixIdx = id_y * c * a + id_x * c + id_z;
+//   int pixIdx = id_y * c * a + id_x * c + id_z;
 
-  output[pixIdx] = (char)(input[pixIdx] - 128);
-}
+//   output[pixIdx] = (char)(input[pixIdx] - 128);
+// }
 
-__kernel void tensor_convert_bit_depth_s8u8(__global char *input,
-                                            __global unsigned char *output,
-                                            const unsigned int a,
-                                            const unsigned int b,
-                                            const unsigned int c) {
-  int id_x = get_global_id(0);
-  int id_y = get_global_id(1);
-  int id_z = get_global_id(2);
+// __kernel void tensor_convert_bit_depth_s8u8(__global char *input,
+//                                             __global unsigned char *output,
+//                                             const unsigned int a,
+//                                             const unsigned int b,
+//                                             const unsigned int c) {
+//   int id_x = get_global_id(0);
+//   int id_y = get_global_id(1);
+//   int id_z = get_global_id(2);
 
-  if (id_x >= a || id_y >= b || id_z >= c)
-    return;
+//   if (id_x >= a || id_y >= b || id_z >= c)
+//     return;
 
-  int pixIdx = id_y * c * a + id_x * c + id_z;
+//   int pixIdx = id_y * c * a + id_x * c + id_z;
 
-  output[pixIdx] = (unsigned char)(input[pixIdx] + 128);
-}
+//   output[pixIdx] = (unsigned char)(input[pixIdx] + 128);
+// }
 
-__kernel void tensor_convert_bit_depth_u8u16(const unsigned int tensorDimension,
-                                             __global unsigned char *input,
-                                             __global unsigned short *output,
-                                             const unsigned int a,
-                                             const unsigned int b,
-                                             const unsigned int c) {
-  int id_x = get_global_id(0);
-  int id_y = get_global_id(1);
-  int id_z = get_global_id(2);
+// __kernel void tensor_convert_bit_depth_u8u16(const unsigned int tensorDimension,
+//                                              __global unsigned char *input,
+//                                              __global unsigned short *output,
+//                                              const unsigned int a,
+//                                              const unsigned int b,
+//                                              const unsigned int c) {
+//   int id_x = get_global_id(0);
+//   int id_y = get_global_id(1);
+//   int id_z = get_global_id(2);
 
-  if (id_x >= a || id_y >= b || id_z >= c)
-    return;
+//   if (id_x >= a || id_y >= b || id_z >= c)
+//     return;
 
-  int pixIdx = id_y * c * a + id_x * c + id_z;
+//   int pixIdx = id_y * c * a + id_x * c + id_z;
 
-  output[pixIdx] = (unsigned short)(input[pixIdx] * 257);
-}
+//   output[pixIdx] = (unsigned short)(input[pixIdx] * 257);
+// }
 
-__kernel void tensor_convert_bit_depth_u8s16(const unsigned int tensorDimension,
-                                             __global unsigned char *input,
-                                             __global short *output,
-                                             const unsigned int a,
-                                             const unsigned int b,
-                                             const unsigned int c) {
-  int id_x = get_global_id(0);
-  int id_y = get_global_id(1);
-  int id_z = get_global_id(2);
+// __kernel void tensor_convert_bit_depth_u8s16(const unsigned int tensorDimension,
+//                                              __global unsigned char *input,
+//                                              __global short *output,
+//                                              const unsigned int a,
+//                                              const unsigned int b,
+//                                              const unsigned int c) {
+//   int id_x = get_global_id(0);
+//   int id_y = get_global_id(1);
+//   int id_z = get_global_id(2);
 
-  if (id_x >= a || id_y >= b || id_z >= c)
-    return;
+//   if (id_x >= a || id_y >= b || id_z >= c)
+//     return;
 
-  int pixIdx = id_y * c * a + id_x * c + id_z;
+//   int pixIdx = id_y * c * a + id_x * c + id_z;
 
-  output[pixIdx] = (short)((input[pixIdx] * 257) - 32768);
-}
+//   output[pixIdx] = (short)((input[pixIdx] * 257) - 32768);
+// }
 
 __kernel void tensor_look_up_table(__global unsigned char *input,
                                    __global unsigned char *output,

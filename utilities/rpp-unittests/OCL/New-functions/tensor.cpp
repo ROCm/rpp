@@ -503,24 +503,24 @@ int main(int argc, char **argv)
     }
      case 6:
     {
-       test_case_name = "tensor_multiply";
-       U8_S8,
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_tensor_convert_bit_depth_u8_gpu(d_tensor_input, d_tensor_input2, d_tensor_output, 4, tensor_dims, handle);
-        end = clock();
-        for(int i = 0; i < TENSOR_SIZE; i++)
-            tensor_compare[i] = tensor_input[i] * tensor_input2[i];
-        clEnqueueReadBuffer(theQueue, d_tensor_output, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), tensor_output, 0, NULL, NULL);
-        bool pass = true;
-        for(int i = 0; i < TENSOR_SIZE; i++)
-             pass &= (tensor_compare[i] == tensor_output[i]);
-        if(pass)
-            std::cout << "----------PASS -------------" << std::endl;
-        else
-            std::cout << "----------FAIL -------------" << std::endl;
+    //    test_case_name = "tensor_multiply";
+    //    U8_S8,
+    //     start = clock();
+    //     if (ip_bitDepth == 0)
+    //         rppi_tensor_convert_bit_depth_u8_gpu(d_tensor_input, d_tensor_input2, d_tensor_output, 4, tensor_dims, handle);
+    //     end = clock();
+    //     for(int i = 0; i < TENSOR_SIZE; i++)
+    //         tensor_compare[i] = tensor_input[i] * tensor_input2[i];
+    //     clEnqueueReadBuffer(theQueue, d_tensor_output, CL_TRUE, 0, TENSOR_SIZE * sizeof(Rpp8u), tensor_output, 0, NULL, NULL);
+    //     bool pass = true;
+    //     for(int i = 0; i < TENSOR_SIZE; i++)
+    //          pass &= (tensor_compare[i] == tensor_output[i]);
+    //     if(pass)
+    //         std::cout << "----------PASS -------------" << std::endl;
+    //     else
+    //         std::cout << "----------FAIL -------------" << std::endl;
         break;
-    //Rpp32u outputFormatToggle = 0;
+        //Rpp32u outputFormatToggle = 0;
     }
     case 7:
     {

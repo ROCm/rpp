@@ -1200,6 +1200,46 @@ RppStatus
     rpp_f32_control_flow(Rpp32f num1, Rpp32f num2, Rpp32f *output, RppOp operation, rppHandle_t rppHandle);
 
 // ----------------------------------------
+// GPU reconstruction_laplacian_image_pyramid functions declaration 
+// ----------------------------------------
+/* Reconstruction of image using lapalacian image pyramid
+*param[in] srcPtr1 Output of Laplacian Image
+*param[in] srcSize1 Size of Laplacian Image
+*param[in] srcPtr2 Input image
+*param[in] srcSize2 Size of Input image
+*param[out] dstPttr Output reconstructed image
+*param[in] stdDev Standard Deviation for Gaussian Kernel
+*param[in] kernelSize Size of Gaussian Kernel
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error  
+*/
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pln3_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
+RppStatus
+rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(
+	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
+	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
+	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
+	Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+// ----------------------------------------
 // CPU reconstruction_laplacian_image_pyramid functions declaration 
 // ----------------------------------------
 /* Reconstruction of image using lapalacian image pyramid
@@ -1239,31 +1279,72 @@ rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_host(
 	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
 	Rpp32u nbatchSize, rppHandle_t rppHandle);
 
+// ----------------------------------------
+// CPU convert_bit_depth functions declaration 
+// ----------------------------------------
+/* Convert Bit-Depth takes a srcPtr and converts bit depth to and from u8/s8/u16/s16
+*param[in] srcPtr input image
+*param[out] dstPtr output image
+param[in] srcSize Size of input/output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error  
+*/
+RppStatus
+rppi_convert_bit_depth_u8s8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8u16_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8s16_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8s8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8u16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8u16_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8s16_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8s8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8u16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8u16_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8s16_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
+RppStatus
+rppi_convert_bit_depth_u8s8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8u16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
+// ----------------------------------------
+// CPU tensor_convert_bit_depth functions declaration 
+// ----------------------------------------
+/* Tensor Convert Bit-Depth takes a srcPtr tensor and converts bit depth to and from u8/s8/u16/s16
+*param[in] srcPtr input tensor
+*param[out] dstPtr output tensor
+param[in] tensorDimension Number of dimensions of input/output tensor
+param[in] tensorDimensionValues Shape of input/output tensor
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error  
+*/
 RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
+rppi_tensor_convert_bit_depth_u8s8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
 RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_gpu(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
+rppi_tensor_convert_bit_depth_u8u16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
 RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln3_batchPD_gpu(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
+rppi_tensor_convert_bit_depth_u8s16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
 
 #ifdef __cplusplus
 

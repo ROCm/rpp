@@ -97,7 +97,7 @@ void displayPacked(T *pArr, RppiSize size, Rpp32u channel)
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 3;
-    printf("\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:9>\n");
+    printf("\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:11>\n");
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -106,6 +106,8 @@ int main(int argc, char **argv)
 
     int ip_bitDepth = atoi(argv[1]);
     int test_case = atoi(argv[2]);
+
+    printf("\nip_bitDepth = %d\ntest_case = %d", ip_bitDepth, test_case);
 
     clock_t start, end;
     double start_omp, end_omp;
@@ -298,6 +300,8 @@ int main(int argc, char **argv)
             cout << "\nOMP Time - BatchPD : " << omp_time_used;
             printf("\n");
         }
+
+        break;
     }
     case 3:
     {
@@ -351,6 +355,8 @@ int main(int argc, char **argv)
             cout << "\nOMP Time - BatchPD : " << omp_time_used;
             printf("\n");
         }
+
+        break;
     }
     case 4:
     {
@@ -404,6 +410,8 @@ int main(int argc, char **argv)
             cout << "\nOMP Time - BatchPD : " << omp_time_used;
             printf("\n");
         }
+
+        break;
     }
     case 5:
     {
@@ -458,6 +466,8 @@ int main(int argc, char **argv)
             cout << "\nOMP Time - BatchPD : " << omp_time_used;
             printf("\n");
         }
+
+        break;
     }
     case 6:
     {
@@ -516,6 +526,8 @@ int main(int argc, char **argv)
                 printf("\n");
             }
         }
+
+        break;
     }
     case 7:
     {
@@ -573,6 +585,8 @@ int main(int argc, char **argv)
                 printf("\n");
             }
         }
+
+        break;
     }
     case 8:
     {
@@ -593,13 +607,13 @@ int main(int argc, char **argv)
         end = clock();
 
         if(u3 == 220)
-            std::cout << "---PASS---" << std::endl;
+            cout << "---PASS---" << endl;
         else
-            std::cout << "---FAIL---" << std::endl;
+            cout << "---FAIL---" << endl;
         if(b3 == false)
-            std::cout << "---PASS--" << std::endl;
+            cout << "---PASS--" << endl;
         else
-            std::cout << "---FAIL---" << std::endl;
+            cout << "---FAIL---" << endl;
 
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
         omp_time_used = end_omp - start_omp;
@@ -649,7 +663,6 @@ int main(int argc, char **argv)
         cout << "\nOMP Time - BatchPD : " << omp_time_used;
         printf("\n");
 
-
         memset(outputHistogram, 0, bins * sizeof(Rpp32u));
         srcSize.height = 3;
         srcSize.width = 4;
@@ -677,7 +690,6 @@ int main(int argc, char **argv)
         cout << "\nOMP Time - BatchPD : " << omp_time_used;
         printf("\n");
 
-
         memset(outputHistogram, 0, bins * sizeof(Rpp32u));
         srcSize.height = 3;
         srcSize.width = 4;
@@ -704,6 +716,172 @@ int main(int argc, char **argv)
         cout << "\nCPU Time - BatchPD : " << cpu_time_used;
         cout << "\nOMP Time - BatchPD : " << omp_time_used;
         printf("\n");
+
+        break;
+    }
+    case 10:
+    {
+        test_case_name = "convert_bit_depth";
+
+        rppHandle_t handle;
+        
+        Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
+        Rpp8s dstPtr8s[36];
+        Rpp16u dstPtr16u[36];
+        Rpp16s dstPtr16s[36];
+
+        RppiSize srcSize1Channel[1], srcSize3Channel[1];
+        srcSize1Channel[0].height = 6;
+        srcSize1Channel[0].width  = 6;
+        srcSize3Channel[0].height = 3;
+        srcSize3Channel[0].width = 4;
+
+        RppiSize srcSizeMax1Channel, srcSizeMax3Channel;
+        srcSizeMax1Channel.height = 6;
+        srcSizeMax1Channel.width  = 6;
+        srcSizeMax3Channel.height = 3;
+        srcSizeMax3Channel.width = 4;
+
+        for (int i = 0; i < 9; i++)
+        {
+            start = clock();
+            start_omp = omp_get_wtime();
+            if (ip_bitDepth == 0)
+            {
+                if (i == 0)
+                    rppi_convert_bit_depth_u8s8_pln1_batchPD_host(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr8s, 1, handle);
+                else if (i == 1)
+                    rppi_convert_bit_depth_u8u16_pln1_batchPD_host(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16u, 1, handle);
+                else if  (i == 2)
+                    rppi_convert_bit_depth_u8s16_pln1_batchPD_host(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16s, 1, handle);
+                else if  (i == 3)
+                    rppi_convert_bit_depth_u8s8_pln3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
+                else if  (i == 4)
+                    rppi_convert_bit_depth_u8u16_pln3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
+                else if  (i == 5)
+                    rppi_convert_bit_depth_u8s16_pln3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
+                else if  (i == 6)
+                    rppi_convert_bit_depth_u8s8_pkd3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
+                else if  (i == 7)
+                    rppi_convert_bit_depth_u8u16_pkd3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
+                else if  (i == 8)
+                    rppi_convert_bit_depth_u8s16_pkd3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
+            }
+            else
+                missingFuncFlag = 1;
+            end_omp = omp_get_wtime();
+            end = clock();
+
+            if (missingFuncFlag != 1)
+            {
+                if ((i == 0) || (i == 1) || (i == 2))
+                {
+                    printf("\n\nInput:\n");
+                    displayPlanar(srcPtr, srcSize1Channel[0], 1);
+                    printf("\n\nInput Shape:\n");
+                    printf("[%d x %d]", srcSize1Channel[0].height, srcSize1Channel[0].width);
+                    printf("\n\nOutput of convert_bit_depth operation:\n");
+                    if (i == 0)
+                        displayPlanar(dstPtr8s, srcSize1Channel[0], 1);
+                    else if (i == 1)
+                        displayPlanar(dstPtr16u, srcSize1Channel[0], 1);
+                    else if (i == 2)
+                        displayPlanar(dstPtr16s, srcSize1Channel[0], 1);
+                }
+                else if ((i == 3) || (i == 4) || (i == 5))
+                {
+                    printf("\n\nInput:\n");
+                    displayPlanar(srcPtr, srcSize3Channel[0], 3);
+                    printf("\n\nInput Shape:\n");
+                    printf("[%d x %d x %d]", 3, srcSize3Channel[0].height, srcSize3Channel[0].width);
+                    printf("\n\nOutput of convert_bit_depth operation:\n");
+                    if (i == 0)
+                        displayPlanar(dstPtr8s, srcSize1Channel[0], 3);
+                    else if (i == 1)
+                        displayPlanar(dstPtr16u, srcSize1Channel[0], 3);
+                    else if (i == 2)
+                        displayPlanar(dstPtr16s, srcSize1Channel[0], 3);
+                }
+                else if ((i == 6) || (i == 7) || (i == 8))
+                {
+                    printf("\n\nInput:\n");
+                    displayPacked(srcPtr, srcSize3Channel[0], 3);
+                    printf("\n\nInput Shape:\n");
+                    printf("[%d x %d x %d]", srcSize3Channel[0].height, srcSize3Channel[0].width, 3);
+                    printf("\n\nOutput of convert_bit_depth operation:\n");
+                    if (i == 0)
+                        displayPacked(dstPtr8s, srcSize1Channel[0], 3);
+                    else if (i == 1)
+                        displayPacked(dstPtr16u, srcSize1Channel[0], 3);
+                    else if (i == 2)
+                        displayPacked(dstPtr16s, srcSize1Channel[0], 3);
+                }
+
+                cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+                omp_time_used = end_omp - start_omp;
+                cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+                cout << "\nOMP Time - BatchPD : " << omp_time_used;
+                printf("\n");
+            }
+        }
+
+        break;
+    }
+    case 11:
+    {
+        test_case_name = "tensor_convert_bit_depth";
+
+        rppHandle_t handle;
+        
+        Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
+        Rpp8s dstPtr8s[36];
+        Rpp16u dstPtr16u[36];
+        Rpp16s dstPtr16s[36];
+
+        Rpp32u tensorDimension = 3;
+        Rpp32u tensorDimensionValues[3] = {3, 4, 3};
+
+        for (int i = 0; i < 3; i++)
+        {
+            start = clock();
+            start_omp = omp_get_wtime();
+            if (ip_bitDepth == 0)
+            {
+                if (i == 0)
+                    rppi_tensor_convert_bit_depth_u8s8_host(srcPtr, dstPtr8s, tensorDimension, tensorDimensionValues);
+                else if (i == 1)
+                    rppi_tensor_convert_bit_depth_u8u16_host(srcPtr, dstPtr16u, tensorDimension, tensorDimensionValues);
+                else if  (i == 2)
+                    rppi_tensor_convert_bit_depth_u8s16_host(srcPtr, dstPtr16s, tensorDimension, tensorDimensionValues);
+            }
+            else
+                missingFuncFlag = 1;
+            end_omp = omp_get_wtime();
+            end = clock();
+
+            if (missingFuncFlag != 1)
+            {
+                printf("\n\nInput:\n");
+                displayTensor(srcPtr, 36);
+                printf("\n\nInput Shape:\n");
+                printf("[%d x %d x %d]", tensorDimensionValues[0], tensorDimensionValues[1], tensorDimensionValues[2]);
+                printf("\n\nOutput of tensor_convert_bit_depth operation:\n");
+                if (i == 0)
+                    displayTensor(dstPtr8s, 36);
+                else if (i == 1)
+                    displayTensor(dstPtr16u, 36);
+                else if (i == 2)
+                    displayTensor(dstPtr16s, 36);
+
+                cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+                omp_time_used = end_omp - start_omp;
+                cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+                cout << "\nOMP Time - BatchPD : " << omp_time_used;
+                printf("\n");
+            }
+        }
+
+        break;
     }
     default:
         missingFuncFlag = 1;
@@ -712,7 +890,7 @@ int main(int argc, char **argv)
 
     if (missingFuncFlag == 1)
     {
-        std::cout << "\nThe functionality " << test_case_name << " doesn't yet exist in RPP\n";
+        cout << "\nThis functionality sub-type of" << test_case_name << " doesn't yet exist in RPP\n";
         return -1;
     }
 

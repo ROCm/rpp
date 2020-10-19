@@ -50,13 +50,13 @@ control_flow_cl(cl_mem srcPtr1, cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr,
 RppStatus
 control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type, rpp::Handle &handle,
                       RppiChnFormat chnFormat, unsigned int channel);
-RppStatus
-image_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppConvertBitDepthMode convert_mode,
-                     RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
-RppStatus
-image_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
-                           RppConvertBitDepthMode convert_mode, 
-                           RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
+// RppStatus
+// image_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppConvertBitDepthMode convert_mode,
+//                      RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
+// RppStatus
+// image_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
+//                            RppConvertBitDepthMode convert_mode, 
+//                            RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
 RppStatus
 laplacian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                            Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat,
@@ -560,9 +560,9 @@ RppStatus
 tensor_matrix_multiply_cl(cl_mem srcPtr1, cl_mem srcPtr2, Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2, cl_mem dstPtr, rpp::Handle &handle);
 RppStatus
 tensor_table_look_up_cl( cl_mem srcPtr1, cl_mem dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, rpp::Handle &handle);
-RppStatus
-tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
-                            cl_mem dstPtr, RppConvertBitDepthMode convert_mode, rpp::Handle &handle);
+// RppStatus
+// tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
+//                             cl_mem dstPtr, RppConvertBitDepthMode convert_mode, rpp::Handle &handle);
 RppStatus
 tensor_transpose_cl( cl_mem srcPtr, cl_mem dstPtr,  Rpp32u* in_dims, Rpp32u *perm, RPPTensorDataType data_type, rpp::Handle& handle);
 
