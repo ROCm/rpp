@@ -3193,6 +3193,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "hog";
         
+        Rpp32u totalBinsTensorLength = 0;
         Rpp32u binsTensorLength[images];
         RppiSize kernelSize[images];
         RppiSize windowSize[images];
@@ -3203,26 +3204,24 @@ int main(int argc, char **argv)
             kernelSize[i].height = 4;
             kernelSize[i].width = 4;
 
-            windowSize[i].height = 16;
-            windowSize[i].width = 16;
+            windowSize[i].height = 32;
+            windowSize[i].width = 32;
 
-            windowStride[i] = 1;
+            windowStride[i] = 16;
             numOfBins[i] = 10;
 
             Rpp32u windowKernelHeightRatio = windowSize[i].height / kernelSize[i].height;
             Rpp32u windowKernelWidthRatio = windowSize[i].width / kernelSize[i].width;
 
             binsTensorLength[i] = 0;
-            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
             binsTensorLength[i] = ((windowKernelWidthRatio * windowKernelHeightRatio) + ((windowKernelWidthRatio - 1) * (windowKernelHeightRatio - 1)));
-            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
             binsTensorLength[i] = binsTensorLength[i] * ((srcSize[i].width / windowStride[i] - (windowSize[i].width / windowStride[i] - 1)) * (srcSize[i].height / windowStride[i] - (windowSize[i].height / windowStride[i] - 1)));
-            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
             binsTensorLength[i] = binsTensorLength[i] * numOfBins[i];
-            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
+            
+            totalBinsTensorLength += binsTensorLength[i];
         }
 
-        Rpp32u *binsTensor = (Rpp32u*) calloc (binsTensorLength[0] * noOfImages, sizeof(Rpp32u));
+        Rpp32u *binsTensor = (Rpp32u*) calloc (totalBinsTensorLength, sizeof(Rpp32u));
 
         start = clock();
         start_omp = omp_get_wtime();
@@ -3245,24 +3244,27 @@ int main(int argc, char **argv)
         end_omp = omp_get_wtime();
         end = clock();
 
-        free(binsTensor);
-
-        Rpp32u *binsTensorTemp;
-        binsTensorTemp = binsTensor;
-        printf("\nPrinting the bins tensor for hog_pln1:");
-        for (int batchCount  = 0; batchCount < noOfImages; batchCount++)
+        if (missingFuncFlag != 1)
         {
-            printf("\n\nImage %d:\n", batchCount);
-            for (Rpp32u i = 0; i < binsTensorLength[batchCount]; i++)
+            Rpp32u *binsTensorTemp;
+            binsTensorTemp = binsTensor;
+            printf("\nPrinting the bins tensor for hog_pln1:");
+            for (int batchCount  = 0; batchCount < noOfImages; batchCount++)
             {
-                if(i % 8 == 0)
+                printf("\n\nImage %d:\n", batchCount);
+                for (Rpp32u i = 0; i < binsTensorLength[batchCount]; i++)
                 {
-                    printf("\n %d    - ", i/8);
+                    if(i % 8 == 0)
+                    {
+                        printf("\n %d    - ", i/8);
+                    }
+                    printf("%d  ",*binsTensorTemp);
+                    binsTensorTemp++;
                 }
-                printf("%d  ",*binsTensorTemp);
-                binsTensorTemp++;
             }
         }
+
+        free(binsTensor);
 
         break;
     }

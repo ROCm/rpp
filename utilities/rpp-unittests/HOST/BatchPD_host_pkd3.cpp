@@ -3120,76 +3120,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "hog";
         
-        Rpp32u binsTensorLength[images];
-        RppiSize kernelSize[images];
-        RppiSize windowSize[images];
-        Rpp32u windowStride[images];
-        Rpp32u numOfBins[images];
-        for (i = 0; i < images; i++)
-        {
-            kernelSize[i].height = 4;
-            kernelSize[i].width = 4;
-
-            windowSize[i].height = 16;
-            windowSize[i].width = 16;
-
-            windowStride[i] = 1;
-            numOfBins[i] = 10;
-
-            Rpp32u windowKernelHeightRatio = windowSize[i].height / kernelSize[i].height;
-            Rpp32u windowKernelWidthRatio = windowSize[i].width / kernelSize[i].width;
-
-            binsTensorLength[i] = 0;
-            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
-            binsTensorLength[i] = ((windowKernelWidthRatio * windowKernelHeightRatio) + ((windowKernelWidthRatio - 1) * (windowKernelHeightRatio - 1)));
-            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
-            binsTensorLength[i] = binsTensorLength[i] * ((srcSize[i].width / windowStride[i] - (windowSize[i].width / windowStride[i] - 1)) * (srcSize[i].height / windowStride[i] - (windowSize[i].height / windowStride[i] - 1)));
-            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
-            binsTensorLength[i] = binsTensorLength[i] * numOfBins[i];
-            // printf("\nbinsTensorLength[i] = %d", binsTensorLength[i]);
-        }
-
-        Rpp32u *binsTensor = (Rpp32u*) calloc (binsTensorLength[0] * noOfImages, sizeof(Rpp32u));
-
-        start = clock();
-        start_omp = omp_get_wtime();
-        if (ip_bitDepth == 0)
-            rppi_hog_u8_pkd3_batchPD_host(input, srcSize, maxSize, binsTensor, binsTensorLength, kernelSize, windowSize, windowStride, numOfBins, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
-        end = clock();
-
-        free(binsTensor);
-
-        Rpp32u *binsTensorTemp;
-        binsTensorTemp = binsTensor;
-        printf("\nPrinting the bins tensor for hog_pkd3:");
-        for (int batchCount  = 0; batchCount < noOfImages; batchCount++)
-        {
-            printf("\n\nImage %d:\n", batchCount);
-            for (Rpp32u i = 0; i < binsTensorLength[batchCount]; i++)
-            {
-                if(i % 8 == 0)
-                {
-                    printf("\n %d    - ", i/8);
-                }
-                printf("%d  ",*binsTensorTemp);
-                binsTensorTemp++;
-            }
-        }
+        missingFuncFlag = 1;
 
         break;
     }

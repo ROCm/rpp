@@ -3356,226 +3356,27 @@ RppStatus hog_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize *bat
 #pragma omp parallel for num_threads(nbatchSize)
     for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
     {
-        Rpp32u exitFlag = 0;
-        
+        Rpp32u binsTensorLength = batch_binsTensorLength[batchCount];
         RppiSize kernelSize = batch_kernelSize[batchCount];
         RppiSize windowSize = batch_windowSize[batchCount];
         Rpp32u windowStride = batch_windowStride[batchCount];
         Rpp32u numOfBins = batch_numOfBins[batchCount];
-        Rpp32u binsTensorLength = batch_binsTensorLength[batchCount];
-        
+
         Rpp32u loc = 0;
         compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
 
         T *srcPtr = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
-
+        
         compute_unpadded_from_padded_host(batch_srcPtr + loc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtr, 
                                           chnFormat, channel);
-        
-        RppiSize srcSize;
-        srcSize.height = batch_srcSize[batchCount].height;
-        srcSize.width = batch_srcSize[batchCount].width;
 
         Rpp32u locHist = 0;
         compute_histogram_location_host(batch_binsTensorLength, batchCount, &locHist);
         U *binsTensor;
         binsTensor = batch_binsTensor + locHist;
 
-        Rpp32u imageDim = srcSize.height * srcSize.width;
-        Rpp32u newChannel = 1;
-
-        Rpp32f gradientKernel[3] = {-1, 0, 1};
-        RppiSize rppiGradientKernelSizeX, rppiGradientKernelSizeY;
-        rppiGradientKernelSizeX.height = 1;
-        rppiGradientKernelSizeX.width = 3;
-        rppiGradientKernelSizeY.height = 3;
-        rppiGradientKernelSizeY.width = 1;
-
-        Rpp32s *gradientX = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientY = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientMagnitude = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32f *gradientDirection = (Rpp32f *)calloc(imageDim * newChannel, sizeof(Rpp32f));
-        
-        if (channel == 1)
-        {
-            hog_single_channel_gradient_computations_kernel_host(srcPtr, srcSize, gradientX, gradientY, gradientMagnitude, gradientDirection, 
-                                                                gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY);
-        }
-        else if (channel == 3)
-        {
-            Rpp32s *gradientX0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientX1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientX2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientY0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientY1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientY2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-
-            T *srcPtrSingleChannel = (T *)calloc(imageDim * newChannel, sizeof(T));
-            
-            hog_three_channel_gradient_computations_kernel_host(srcPtr, srcPtrSingleChannel, srcSize, 
-                                                                gradientX0, gradientY0, gradientX1, gradientY1, gradientX2, gradientY2, 
-                                                                gradientX, gradientY, 
-                                                                gradientMagnitude, gradientDirection, 
-                                                                gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY, chnFormat, channel);
-
-            free(gradientX0);
-            free(gradientX1);
-            free(gradientX2);
-            free(gradientY0);
-            free(gradientY1);
-            free(gradientY2);
-            free(srcPtrSingleChannel);
-        }
-
-        Rpp32s *gradientMagnitudeTemp, *gradientMagnitudeTemp2, *gradientMagnitudeTemp3;
-        Rpp32f *gradientDirectionTemp, *gradientDirectionTemp2, *gradientDirectionTemp3;
-
-        Rpp32u binsTensorTrueLength = 0;
-        Rpp32u windowKernelHeightRatio = windowSize.height / kernelSize.height;
-        Rpp32u windowKernelWidthRatio = windowSize.width / kernelSize.width;
-        binsTensorTrueLength = ((windowKernelWidthRatio * windowKernelHeightRatio) + ((windowKernelWidthRatio - 1) * (windowKernelHeightRatio - 1)));
-        Rpp32u numOfPositionsAlongImageWidth = (srcSize.width / windowStride - (windowSize.width / windowStride - 1));
-        Rpp32u numOfPositionsAlongImageHeight = (srcSize.height / windowStride - (windowSize.height / windowStride - 1));
-        binsTensorTrueLength = binsTensorTrueLength * (numOfPositionsAlongImageWidth * numOfPositionsAlongImageHeight);
-        binsTensorTrueLength = binsTensorTrueLength * numOfBins;
-
-        Rpp32u numOfPositionsAlongWindowWidth = (windowSize.width / kernelSize.width);
-        Rpp32u numOfPositionsAlongWindowHeight = (windowSize.height / kernelSize.height);
-
-        U *binsTensorTemp;
-        binsTensorTemp = binsTensor;
-        Rpp32f rangeInBin = PI / numOfBins;
-        Rpp32u elementCount = 0, bin;
-        Rpp32f adder = PI / 2;
-
-        // For sliding window on image
-
-        exitLabel:
-        if (exitFlag != 1)
-        {
-            for(int i = 0; i < numOfPositionsAlongImageHeight; i++)
-            {
-                gradientMagnitudeTemp = gradientMagnitude + (i * windowStride * srcSize.width);
-                gradientDirectionTemp = gradientDirection + (i * windowStride * srcSize.width);
-                for(int j = 0; j < numOfPositionsAlongImageWidth; j++)
-                {
-                    // For each window
-
-                    // Layer 1
-                    for (int m = 0; m < numOfPositionsAlongWindowHeight; m++)
-                    {
-                        gradientMagnitudeTemp2 = gradientMagnitudeTemp + (m * kernelSize.height * srcSize.width);
-                        gradientDirectionTemp2 = gradientDirectionTemp + (m * kernelSize.height * srcSize.width);
-                        for (int n = 0; n < numOfPositionsAlongWindowWidth; n++)
-                        {
-                            U *kernelHistogram = (U*) calloc(numOfBins, sizeof(U));
-                            
-                            // For each kernel
-                            for (int p = 0; p < kernelSize.height; p++)
-                            {
-                                gradientMagnitudeTemp3 = gradientMagnitudeTemp2 + (p * srcSize.width);
-                                gradientDirectionTemp3 = gradientDirectionTemp2 + (p * srcSize.width);
-                                for (int q = 0; q < kernelSize.width; q++)
-                                {
-                                    bin = (Rpp32u) ((*gradientDirectionTemp3 + adder) / rangeInBin);
-                                    if (bin > (numOfBins - 1))
-                                    {
-                                        bin = numOfBins - 1;
-                                    }
-                                    *(kernelHistogram + bin) += *gradientMagnitudeTemp3;
-                                    gradientMagnitudeTemp3++;
-                                    gradientDirectionTemp3++;
-                                }
-                            }
-                            U *kernelHistogramTemp;
-                            kernelHistogramTemp = kernelHistogram;
-                            for (int r = 0; r < numOfBins; r++)
-                            {
-                                if (elementCount < (binsTensorLength - 1))
-                                {
-                                    *binsTensorTemp = *kernelHistogramTemp;
-                                    binsTensorTemp++;
-                                    kernelHistogramTemp++;
-                                    elementCount++;
-                                }
-                                else
-                                {
-                                    exitFlag = 1;
-                                    goto exitLabel;
-                                }
-                                
-                            }
-                            gradientMagnitudeTemp2 += kernelSize.width;
-                            gradientDirectionTemp2 += kernelSize.width;
-
-                            free(kernelHistogram);
-                        }
-                    }
-
-                    // Layer 2
-                    for (int m = 0; m < numOfPositionsAlongWindowHeight - 1; m++)
-                    {
-                        gradientMagnitudeTemp2 = gradientMagnitudeTemp + (kernelSize.height / 2 * srcSize.width) + (m * kernelSize.height * srcSize.width) + (kernelSize.width / 2);
-                        gradientDirectionTemp2 = gradientDirectionTemp + (kernelSize.height / 2 * srcSize.width)+ (m * kernelSize.height * srcSize.width) + (kernelSize.width / 2);
-                        for (int n = 0; n < numOfPositionsAlongWindowWidth - 1; n++)
-                        {
-                            U *kernelHistogram = (U*) calloc(numOfBins, sizeof(U));
-                            
-                            // For each kernel
-                            
-                            for (int p = 0; p < kernelSize.height; p++)
-                            {
-                                gradientMagnitudeTemp3 = gradientMagnitudeTemp2 + (p * srcSize.width);
-                                gradientDirectionTemp3 = gradientDirectionTemp2 + (p * srcSize.width);
-                                for (int q = 0; q < kernelSize.width; q++)
-                                {
-                                    bin = (Rpp32u) ((*gradientDirectionTemp3 + adder) / rangeInBin);
-                                    if (bin > (numOfBins - 1))
-                                    {
-                                        bin = numOfBins - 1;
-                                    }
-                                    *(kernelHistogram + bin) += *gradientMagnitudeTemp3;
-                                    gradientMagnitudeTemp3++;
-                                    gradientDirectionTemp3++;
-                                }
-                            }
-                            U *kernelHistogramTemp;
-                            kernelHistogramTemp = kernelHistogram;
-                            for (int r = 0; r < numOfBins; r++)
-                            {
-                                if (elementCount < (binsTensorLength - 1))
-                                {
-                                    *binsTensorTemp = *kernelHistogramTemp;
-                                    binsTensorTemp++;
-                                    kernelHistogramTemp++;
-                                    elementCount++;
-                                }
-                                else
-                                {
-                                    exitFlag = 1;
-                                    goto exitLabel;
-                                }
-                                
-                            }
-
-                            gradientMagnitudeTemp2 += kernelSize.width;
-                            gradientDirectionTemp2 += kernelSize.width;
-
-                            free(kernelHistogram);
-                        }
-                    }
-
-                    gradientMagnitudeTemp += windowStride;
-                    gradientDirectionTemp += windowStride;
-                }
-            }
-
-            free(srcPtr);
-            free(gradientX);
-            free(gradientY);
-            free(gradientMagnitude);
-            free(gradientDirection);
-        }
+        hog_host(srcPtr, batch_srcSize[batchCount], binsTensor, binsTensorLength, 
+                kernelSize, windowSize, windowStride, numOfBins, chnFormat, channel);
     }
 
     return RPP_SUCCESS;
@@ -3600,37 +3401,79 @@ RppStatus hog_host(T* srcPtr, RppiSize srcSize, U* binsTensor, Rpp32u binsTensor
     Rpp32s *gradientY = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
     Rpp32s *gradientMagnitude = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
     Rpp32f *gradientDirection = (Rpp32f *)calloc(imageDim * newChannel, sizeof(Rpp32f));
-    
-    if (channel == 1)
-    {
-        hog_single_channel_gradient_computations_kernel_host(srcPtr, srcSize, gradientX, gradientY, gradientMagnitude, gradientDirection, 
-                                                             gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY);
-    }
-    else if (channel == 3)
-    {
-        Rpp32s *gradientX0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientX1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientX2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientY0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientY1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientY2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
 
-        T *srcPtrSingleChannel = (T *)calloc(imageDim * newChannel, sizeof(T));
-        
-        hog_three_channel_gradient_computations_kernel_host(srcPtr, srcPtrSingleChannel, srcSize, 
-                                                             gradientX0, gradientY0, gradientX1, gradientY1, gradientX2, gradientY2, 
-                                                             gradientX, gradientY, 
-                                                             gradientMagnitude, gradientDirection, 
-                                                             gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY, chnFormat, channel);
-        
-        free(gradientX0);
-        free(gradientX1);
-        free(gradientX2);
-        free(gradientY0);
-        free(gradientY1);
-        free(gradientY2);
-        free(srcPtrSingleChannel);
+    T *srcPtrGreyscale = (T *)calloc(imageDim, sizeof(T));
+    T *srcPtrGreyscaleTemp;
+    srcPtrGreyscaleTemp = srcPtrGreyscale;
+
+    if (channel == 3)
+    {
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+            srcPtrTempR = srcPtr;
+            srcPtrTempG = srcPtr + imageDim;
+            srcPtrTempB = srcPtrTempG + imageDim;
+
+            for (int i = 0; i < imageDim; i++)
+            {
+                *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
+                srcPtrGreyscaleTemp++;
+                srcPtrTempR++;
+                srcPtrTempG++;
+                srcPtrTempB++;
+            }
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+            srcPtrTempR = srcPtr;
+            srcPtrTempG = srcPtr + 1;
+            srcPtrTempB = srcPtrTempG + 1;
+            
+            for (int i = 0; i < imageDim; i++)
+            {
+                *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
+                srcPtrGreyscaleTemp++;
+                srcPtrTempR += channel;
+                srcPtrTempG += channel;
+                srcPtrTempB += channel;
+            }
+        }
     }
+    else if (channel == 1)
+    {
+        memcpy(srcPtrGreyscale, srcPtr, imageDim * sizeof(T));
+    }
+    
+    hog_single_channel_gradient_computations_kernel_host(srcPtrGreyscale, srcSize, gradientX, gradientY, gradientMagnitude, gradientDirection, 
+                                                            gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY);
+    
+    // if (channel == 3)
+    // {
+    //     Rpp32s *gradientX0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientX1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientX2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientY0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientY1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientY2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+
+    //     T *srcPtrSingleChannel = (T *)calloc(imageDim * newChannel, sizeof(T));
+        
+    //     hog_three_channel_gradient_computations_kernel_host(srcPtr, srcPtrSingleChannel, srcSize, 
+    //                                                          gradientX0, gradientY0, gradientX1, gradientY1, gradientX2, gradientY2, 
+    //                                                          gradientX, gradientY, 
+    //                                                          gradientMagnitude, gradientDirection, 
+    //                                                          gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY, chnFormat, channel);
+        
+    //     free(gradientX0);
+    //     free(gradientX1);
+    //     free(gradientX2);
+    //     free(gradientY0);
+    //     free(gradientY1);
+    //     free(gradientY2);
+    //     free(srcPtrSingleChannel);
+    // }
 
     Rpp32s *gradientMagnitudeTemp, *gradientMagnitudeTemp2, *gradientMagnitudeTemp3;
     Rpp32f *gradientDirectionTemp, *gradientDirectionTemp2, *gradientDirectionTemp3;
