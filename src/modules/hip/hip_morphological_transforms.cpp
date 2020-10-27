@@ -3,47 +3,47 @@
 RppStatus
 dilate_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
-    if(chnFormat == RPPI_CHN_PACKED)
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
-        handle.AddKernel("", "", "dilate.cpp", "dilate_pkd", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                kernelSize
-                                                                );
-    }
-    else
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
-        handle.AddKernel("", "", "dilate.cpp", "dilate_pln", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                kernelSize
-                                                                );
-    }
+    // int ctr=0;
+    // cl_kernel theKernel;
+    // cl_program theProgram;
+    // if(chnFormat == RPPI_CHN_PACKED)
+    // {
+    //     std::vector<size_t> vld{32, 32, 1};
+    //     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
+    //     handle.AddKernel("", "", "dilate.cpp", "dilate_pkd", vld, vgd, "")(srcPtr,
+    //                                                             dstPtr,
+    //                                                             srcSize.height,
+    //                                                             srcSize.width,
+    //                                                             channel,
+    //                                                             kernelSize
+    //                                                             );
+    // }
+    // else
+    // {
+    //     std::vector<size_t> vld{32, 32, 1};
+    //     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
+    //     handle.AddKernel("", "", "dilate.cpp", "dilate_pln", vld, vgd, "")(srcPtr,
+    //                                                             dstPtr,
+    //                                                             srcSize.height,
+    //                                                             srcSize.width,
+    //                                                             channel,
+    //                                                             kernelSize
+    //                                                             );
+    // }
     
-    // //---- Args Setter
-    // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
-    // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize);
+    // // //---- Args Setter
+    // // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize);
         
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    // // size_t gDim3[3];
+    // // gDim3[0] = srcSize.width;
+    // // gDim3[1] = srcSize.height;
+    // // gDim3[2] = channel;
+    // // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     
     return RPP_SUCCESS;    
 }
@@ -90,47 +90,47 @@ dilate_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 RppStatus
 erode_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
-    if(chnFormat == RPPI_CHN_PACKED)
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
-        handle.AddKernel("", "", "erode.cpp", "erode_pkd", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                kernelSize
-                                                                );
-    }
-    else
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
-        handle.AddKernel("", "", "erode.cpp", "erode_pln", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                kernelSize
-                                                                );
-    }
+    // int ctr=0;
+    // cl_kernel theKernel;
+    // cl_program theProgram;
+    // if(chnFormat == RPPI_CHN_PACKED)
+    // {
+    //     std::vector<size_t> vld{32, 32, 1};
+    //     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
+    //     handle.AddKernel("", "", "erode.cpp", "erode_pkd", vld, vgd, "")(srcPtr,
+    //                                                             dstPtr,
+    //                                                             srcSize.height,
+    //                                                             srcSize.width,
+    //                                                             channel,
+    //                                                             kernelSize
+    //                                                             );
+    // }
+    // else
+    // {
+    //     std::vector<size_t> vld{32, 32, 1};
+    //     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
+    //     handle.AddKernel("", "", "erode.cpp", "erode_pln", vld, vgd, "")(srcPtr,
+    //                                                             dstPtr,
+    //                                                             srcSize.height,
+    //                                                             srcSize.width,
+    //                                                             channel,
+    //                                                             kernelSize
+    //                                                             );
+    // }
     
-    // //---- Args Setter
-    // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
-    // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize);
+    // // //---- Args Setter
+    // // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize);
         
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    // // size_t gDim3[3];
+    // // gDim3[0] = srcSize.width;
+    // // gDim3[1] = srcSize.height;
+    // // gDim3[2] = channel;
+    // // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     
     return RPP_SUCCESS;    
 }
