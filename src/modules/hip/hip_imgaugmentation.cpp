@@ -377,57 +377,57 @@ noise_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
                 RppiChnFormat chnFormat, unsigned int channel,
                 rpp::Handle& handle)
 {
-    srand(time(0));
-    int ctr = 0;
-    hipMemcpy(dstPtr,srcPtr,sizeof(unsigned char) * srcSize.width * srcSize.height * channel,hipMemcpyDeviceToDevice);
-    // clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
-    if(noiseProbability != 0)
-    {
-        Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
-        const Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
-        cl_kernel theKernel;
-        cl_program theProgram;
-        if(chnFormat == RPPI_CHN_PACKED)
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{srcSize.width, srcSize.height, 1};
-            handle.AddKernel("", "", "noise.cpp", "snp_pkd", vld, vgd, "")(srcPtr,
-                                                                        dstPtr,
-                                                                        srcSize.height,
-                                                                        srcSize.width,
-                                                                        channel,
-                                                                        pixelDistance
-                                                                        );
-            // CreateProgramFromBinary(handle, "noise.cpp", "noise.cpp.bin", "snp_pkd", theProgram, theKernel);
-            // clRetainKernel(theKernel);
-        }
-        else if(chnFormat == RPPI_CHN_PLANAR)
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{srcSize.width, srcSize.height, 1};
-            handle.AddKernel("", "", "noise.cpp", "snp_pln", vld, vgd, "")(srcPtr,
-                                                                        dstPtr,
-                                                                        srcSize.height,
-                                                                        srcSize.width,
-                                                                        channel,
-                                                                        pixelDistance
-                                                                        );
-            // CreateProgramFromBinary(handle, "noise.cpp", "noise.cpp.bin", "snp_pln", theProgram, theKernel);
-            // clRetainKernel(theKernel);
-        }
-        // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
-        // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
+    // srand(time(0));
+    // int ctr = 0;
+    // hipMemcpy(dstPtr,srcPtr,sizeof(unsigned char) * srcSize.width * srcSize.height * channel,hipMemcpyDeviceToDevice);
+    // // clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
+    // if(noiseProbability != 0)
+    // {
+    //     Rpp32u noisePixel = (Rpp32u)(noiseProbability * srcSize.width * srcSize.height );
+    //     const Rpp32u pixelDistance = (srcSize.width * srcSize.height) / noisePixel;
+    //     cl_kernel theKernel;
+    //     cl_program theProgram;
+    //     if(chnFormat == RPPI_CHN_PACKED)
+    //     {
+    //         std::vector<size_t> vld{32, 32, 1};
+    //         std::vector<size_t> vgd{srcSize.width, srcSize.height, 1};
+    //         handle.AddKernel("", "", "noise.cpp", "snp_pkd", vld, vgd, "")(srcPtr,
+    //                                                                     dstPtr,
+    //                                                                     srcSize.height,
+    //                                                                     srcSize.width,
+    //                                                                     channel,
+    //                                                                     pixelDistance
+    //                                                                     );
+    //         // CreateProgramFromBinary(handle, "noise.cpp", "noise.cpp.bin", "snp_pkd", theProgram, theKernel);
+    //         // clRetainKernel(theKernel);
+    //     }
+    //     else if(chnFormat == RPPI_CHN_PLANAR)
+    //     {
+    //         std::vector<size_t> vld{32, 32, 1};
+    //         std::vector<size_t> vgd{srcSize.width, srcSize.height, 1};
+    //         handle.AddKernel("", "", "noise.cpp", "snp_pln", vld, vgd, "")(srcPtr,
+    //                                                                     dstPtr,
+    //                                                                     srcSize.height,
+    //                                                                     srcSize.width,
+    //                                                                     channel,
+    //                                                                     pixelDistance
+    //                                                                     );
+    //         // CreateProgramFromBinary(handle, "noise.cpp", "noise.cpp.bin", "snp_pln", theProgram, theKernel);
+    //         // clRetainKernel(theKernel);
+    //     }
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &pixelDistance);
 
-        // size_t gDim3[3];
-        // gDim3[0] = srcSize.width;
-        // gDim3[1] = srcSize.height;
-        // gDim3[2] = 1;
-        // cl_kernel_implementer (handle, gDim3, NULL/*Local*/, theProgram, theKernel);
-    }
+    //     // size_t gDim3[3];
+    //     // gDim3[0] = srcSize.width;
+    //     // gDim3[1] = srcSize.height;
+    //     // gDim3[2] = 1;
+    //     // cl_kernel_implementer (handle, gDim3, NULL/*Local*/, theProgram, theKernel);
+    // }
 
     return RPP_SUCCESS;
 }
@@ -723,60 +723,60 @@ snow_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 RppStatus
 fog_hip( Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * temp, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    if(fogValue == 0)
-    {
-        // clEnqueueCopyBuffer(handle.GetStream(), temp, srcPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
-        hipMemcpy(srcPtr,temp,sizeof(unsigned char) * srcSize.width * srcSize.height * channel,hipMemcpyDeviceToDevice);
+    // if(fogValue == 0)
+    // {
+    //     // clEnqueueCopyBuffer(handle.GetStream(), temp, srcPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
+    //     hipMemcpy(srcPtr,temp,sizeof(unsigned char) * srcSize.width * srcSize.height * channel,hipMemcpyDeviceToDevice);
 
-    }
-    else
-    {
-        int ctr=0;
-        cl_kernel theKernel;
-        cl_program theProgram;
+    // }
+    // else
+    // {
+    //     int ctr=0;
+    //     cl_kernel theKernel;
+    //     cl_program theProgram;
 
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
-            handle.AddKernel("", "", "fog.cpp", "fog_planar", vld, vgd, "")(srcPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                fogValue
-                                                                );
-            // CreateProgramFromBinary(handle,"fog.cpp","fog.cpp.bin","fog_planar",theProgram,theKernel);
-            // clRetainKernel(theKernel);
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
-            handle.AddKernel("", "", "fog.cpp", "fog_pkd", vld, vgd, "")(srcPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                fogValue
-                                                                );
-            // CreateProgramFromBinary(handle,"fog.cpp","fog.cpp.bin","fog_pkd",theProgram,theKernel);
-            // clRetainKernel(theKernel);
-        }
-        else
-        {std::cerr << "Internal error: Unknown Channel format";}
-        //---- Args Setter
-        // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u *), &srcPtr);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(float), &fogValue);
-        // //----
+    //     if (chnFormat == RPPI_CHN_PLANAR)
+    //     {
+    //         std::vector<size_t> vld{32, 32, 1};
+    //         std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
+    //         handle.AddKernel("", "", "fog.cpp", "fog_planar", vld, vgd, "")(srcPtr,
+    //                                                             srcSize.height,
+    //                                                             srcSize.width,
+    //                                                             channel,
+    //                                                             fogValue
+    //                                                             );
+    //         // CreateProgramFromBinary(handle,"fog.cpp","fog.cpp.bin","fog_planar",theProgram,theKernel);
+    //         // clRetainKernel(theKernel);
+    //     }
+    //     else if (chnFormat == RPPI_CHN_PACKED)
+    //     {
+    //         std::vector<size_t> vld{32, 32, 1};
+    //         std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
+    //         handle.AddKernel("", "", "fog.cpp", "fog_pkd", vld, vgd, "")(srcPtr,
+    //                                                             srcSize.height,
+    //                                                             srcSize.width,
+    //                                                             channel,
+    //                                                             fogValue
+    //                                                             );
+    //         // CreateProgramFromBinary(handle,"fog.cpp","fog.cpp.bin","fog_pkd",theProgram,theKernel);
+    //         // clRetainKernel(theKernel);
+    //     }
+    //     else
+    //     {std::cerr << "Internal error: Unknown Channel format";}
+    //     //---- Args Setter
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u *), &srcPtr);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
+    //     // clSetKernelArg(theKernel, ctr++, sizeof(float), &fogValue);
+    //     // //----
 
-        // size_t gDim3[3];
-        // gDim3[0] = srcSize.width;
-        // gDim3[1] = srcSize.height;
-        // gDim3[2] = 1;
-        // cl_kernel_implementer (handle, gDim3, NULL/*Local*/, theProgram, theKernel);
-    }
+    //     // size_t gDim3[3];
+    //     // gDim3[0] = srcSize.width;
+    //     // gDim3[1] = srcSize.height;
+    //     // gDim3[2] = 1;
+    //     // cl_kernel_implementer (handle, gDim3, NULL/*Local*/, theProgram, theKernel);
+    // }
 
     return RPP_SUCCESS;
 }
@@ -818,45 +818,45 @@ pixelate_hip(Rpp8u * srcPtr, RppiSize srcSize,Rpp8u * dstPtr,
             RppiChnFormat chnFormat,
             unsigned int channel,rpp::Handle& handle)
 {
-    unsigned short counter=0;
-    cl_int err;
-    cl_kernel theKernel;
-    cl_program theProgram;
+    // unsigned short counter=0;
+    // cl_int err;
+    // cl_kernel theKernel;
+    // cl_program theProgram;
 
-    if(chnFormat == RPPI_CHN_PACKED)
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{(srcSize.width / 7) + 1,(srcSize.height / 7) + 1, channel};
-        handle.AddKernel("", "", "pixelate.cpp", "pixelate_pkd", vld, vgd, "")(srcPtr,
-                                                                        dstPtr,
-                                                                        srcSize.height,
-                                                                        srcSize.width,
-                                                                        channel
-                                                                        );
-    }
-    else if(chnFormat == RPPI_CHN_PLANAR)
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{(srcSize.width / 7) + 1,(srcSize.height / 7) + 1, channel};
-        handle.AddKernel("", "", "pixelate.cpp", "pixelate_pln", vld, vgd, "")(srcPtr,
-                                                                        dstPtr,
-                                                                        srcSize.height,
-                                                                        srcSize.width,
-                                                                        channel
-                                                                        );
-    }
+    // if(chnFormat == RPPI_CHN_PACKED)
+    // {
+    //     std::vector<size_t> vld{32, 32, 1};
+    //     std::vector<size_t> vgd{(srcSize.width / 7) + 1,(srcSize.height / 7) + 1, channel};
+    //     handle.AddKernel("", "", "pixelate.cpp", "pixelate_pkd", vld, vgd, "")(srcPtr,
+    //                                                                     dstPtr,
+    //                                                                     srcSize.height,
+    //                                                                     srcSize.width,
+    //                                                                     channel
+    //                                                                     );
+    // }
+    // else if(chnFormat == RPPI_CHN_PLANAR)
+    // {
+    //     std::vector<size_t> vld{32, 32, 1};
+    //     std::vector<size_t> vgd{(srcSize.width / 7) + 1,(srcSize.height / 7) + 1, channel};
+    //     handle.AddKernel("", "", "pixelate.cpp", "pixelate_pln", vld, vgd, "")(srcPtr,
+    //                                                                     dstPtr,
+    //                                                                     srcSize.height,
+    //                                                                     srcSize.width,
+    //                                                                     channel
+    //                                                                     );
+    // }
 
-    // //---- Args Setter
-    // err  = clSetKernelArg(theKernel, counter++, sizeof(Rpp8u *), &srcPtr);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(Rpp8u *), &dstPtr);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    // size_t gDim3[3];
-    // gDim3[0] = ceil(srcSize.width / 7) + 1;
-    // gDim3[1] = ceil(srcSize.height / 7) + 1;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
+    // // //---- Args Setter
+    // // err  = clSetKernelArg(theKernel, counter++, sizeof(Rpp8u *), &srcPtr);
+    // // err |= clSetKernelArg(theKernel, counter++, sizeof(Rpp8u *), &dstPtr);
+    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
+    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
+    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    // // size_t gDim3[3];
+    // // gDim3[0] = ceil(srcSize.width / 7) + 1;
+    // // gDim3[1] = ceil(srcSize.height / 7) + 1;
+    // // gDim3[2] = channel;
+    // // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
 
     return RPP_SUCCESS;
 }
