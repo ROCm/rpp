@@ -30,7 +30,7 @@
 #include <hip/rpp/hipoc_kernel.hpp>
 #include <hip/rpp/handle_lock.hpp>
 #include <thread>
-#include <hip/hip_hcc.h>
+#include <hip/hip_ext.h>
 #include <hip/hip_runtime.h>
 
 #if defined(STATIC)

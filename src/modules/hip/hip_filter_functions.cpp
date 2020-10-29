@@ -8,8 +8,7 @@ sobel_filter_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u sobelT
             RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
+    
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -196,8 +195,8 @@ RppStatus
 median_filter_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
+    // cl_kernel theKernel;
+    // cl_program theProgram;
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -281,8 +280,8 @@ RppStatus
 non_max_suppression_hip( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
+    // cl_kernel theKernel;
+    // cl_program theProgram;
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -481,8 +480,8 @@ gaussian_filter_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32f stdDe
     Rpp32f *kernel;
     hipMemcpy(kernel,kernelMain,sizeof(Rpp32f)*kernelSize*kernelSize,hipMemcpyHostToDevice);
     int ctr=0;
-    cl_kernel theKernel;
-    cl_program theProgram;
+    // cl_kernel theKernel;
+    // cl_program theProgram;
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
