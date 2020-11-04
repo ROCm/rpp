@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-#include <omp.h>
+#include <CL/cl.hpp>
 #include <half.hpp>
 #include <fstream>
 
@@ -97,7 +97,7 @@ void displayPacked(T *pArr, RppiSize size, Rpp32u channel)
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 3;
-    printf("\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>\n");
+    printf("\nUsage: ./uniqueFunctionalities_gpu <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>\n");
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -139,9 +139,9 @@ int main(int argc, char **argv)
         // Rpp8u dstPtr[48] = {0};
 
         start = clock();
-        start_omp = omp_get_wtime();
-        rppi_tensor_transpose_u8_host(srcPtr, dstPtr, dimension1, dimension2, tensorDimension, tensorDimensionValues);
-        end_omp = omp_get_wtime();
+        
+        rppi_tensor_transpose_u8_gpu(srcPtr, dstPtr, dimension1, dimension2, tensorDimension, tensorDimensionValues);
+      
         end = clock();
 
         printf("\n\nInput:\n");
@@ -189,24 +189,24 @@ int main(int argc, char **argv)
         }
 
         start = clock();
-        start_omp = omp_get_wtime();
+        
         if (ip_bitDepth == 0)
-            rppi_transpose_u8_host(srcPtr, dstPtr, perm, shape);
+            rppi_transpose_u8_gpu(srcPtr, dstPtr, perm, shape);
         else if (ip_bitDepth == 1)
-            rppi_transpose_f16_host(srcPtr16f, dstPtr16f, perm, shape);
+            rppi_transpose_f16_gpu(srcPtr16f, dstPtr16f, perm, shape);
         else if (ip_bitDepth == 2)
-            rppi_transpose_f32_host(srcPtr32f, dstPtr32f, perm, shape);
+            rppi_transpose_f32_gpu(srcPtr32f, dstPtr32f, perm, shape);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_transpose_i8_host(srcPtr8s, dstPtr8s, perm, shape);
+            rppi_transpose_i8_gpu(srcPtr8s, dstPtr8s, perm, shape);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
+      
         end = clock();
 
         if (ip_bitDepth == 0)
@@ -263,9 +263,9 @@ int main(int argc, char **argv)
         Rpp32u tensorDimensionValues[4] = {3,2,2,3};
 
         start = clock();
-        start_omp = omp_get_wtime();
+        
         if (ip_bitDepth == 0)
-            rppi_tensor_add_u8_host(srcPtr1, srcPtr2, dstPtr, tensorDimension, tensorDimensionValues, handle);
+            rppi_tensor_add_u8_gpu(srcPtr1, srcPtr2, dstPtr, tensorDimension, tensorDimensionValues, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
+      
         end = clock();
 
         if (missingFuncFlag != 1)
@@ -318,9 +318,9 @@ int main(int argc, char **argv)
         Rpp32u tensorDimensionValues[4] = {3,2,2,3};
 
         start = clock();
-        start_omp = omp_get_wtime();
+        
         if (ip_bitDepth == 0)
-            rppi_tensor_subtract_u8_host(srcPtr1, srcPtr2, dstPtr, tensorDimension, tensorDimensionValues, handle);
+            rppi_tensor_subtract_u8_gpu(srcPtr1, srcPtr2, dstPtr, tensorDimension, tensorDimensionValues, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -335,7 +335,7 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
+      
         end = clock();
 
         if (missingFuncFlag != 1)
@@ -373,9 +373,9 @@ int main(int argc, char **argv)
         Rpp32u tensorDimensionValues[4] = {3,2,2,3};
 
         start = clock();
-        start_omp = omp_get_wtime();
+        
         if (ip_bitDepth == 0)
-            rppi_tensor_multiply_u8_host(srcPtr1, srcPtr2, dstPtr, tensorDimension, tensorDimensionValues, handle);
+            rppi_tensor_multiply_u8_gpu(srcPtr1, srcPtr2, dstPtr, tensorDimension, tensorDimensionValues, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -390,7 +390,7 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
+      
         end = clock();
 
         if (missingFuncFlag != 1)
@@ -427,9 +427,9 @@ int main(int argc, char **argv)
         Rpp8u dstPtr[12] = {0};
 
         start = clock();
-        start_omp = omp_get_wtime();
+        
         if (ip_bitDepth == 0)
-            rppi_tensor_matrix_multiply_u8_host(srcPtr1, srcPtr2, dstPtr, tensorDimensionValues1, tensorDimensionValues2, handle);
+            rppi_tensor_matrix_multiply_u8_gpu(srcPtr1, srcPtr2, dstPtr, tensorDimensionValues1, tensorDimensionValues2, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -444,7 +444,7 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
+      
         end = clock();
 
         if (missingFuncFlag != 1)
@@ -489,19 +489,19 @@ int main(int argc, char **argv)
         for (int i = 0; i < 3; i++)
         {
             start = clock();
-            start_omp = omp_get_wtime();
+            
             if (ip_bitDepth == 0)
             {
                 if (i == 0)
-                    rppi_min_max_loc_u8_pln1_host(srcPtr, srcSize1Channel, &min, &max, &minLoc, &maxLoc, handle);
+                    rppi_min_max_loc_u8_pln1_gpu(srcPtr, srcSize1Channel, &min, &max, &minLoc, &maxLoc, handle);
                 else if (i == 1)
-                    rppi_min_max_loc_u8_pln3_host(srcPtr, srcSize3Channel, &min, &max, &minLoc, &maxLoc, handle);
+                    rppi_min_max_loc_u8_pln3_gpu(srcPtr, srcSize3Channel, &min, &max, &minLoc, &maxLoc, handle);
                 else if  (i == 2)
-                    rppi_min_max_loc_u8_pkd3_host(srcPtr, srcSize3Channel, &min, &max, &minLoc, &maxLoc, handle);
+                    rppi_min_max_loc_u8_pkd3_gpu(srcPtr, srcSize3Channel, &min, &max, &minLoc, &maxLoc, handle);
             }
             else
                 missingFuncFlag = 1;
-            end_omp = omp_get_wtime();
+          
             end = clock();
 
             if (missingFuncFlag != 1)
@@ -549,19 +549,19 @@ int main(int argc, char **argv)
         for (int i = 0; i < 3; i++)
         {
             start = clock();
-            start_omp = omp_get_wtime();
+            
             if (ip_bitDepth == 0)
             {
                 if (i == 0)
-                    rppi_mean_stddev_u8_pln1_host(srcPtr, srcSize3Channel, &mean, &stddev, handle);
+                    rppi_mean_stddev_u8_pln1_gpu(srcPtr, srcSize3Channel, &mean, &stddev, handle);
                 else if (i == 1)
-                    rppi_mean_stddev_u8_pln3_host(srcPtr, srcSize3Channel, &mean, &stddev, handle);
+                    rppi_mean_stddev_u8_pln3_gpu(srcPtr, srcSize3Channel, &mean, &stddev, handle);
                 else if  (i == 2)
-                    rppi_mean_stddev_u8_pkd3_host(srcPtr, srcSize3Channel, &mean, &stddev, handle);
+                    rppi_mean_stddev_u8_pkd3_gpu(srcPtr, srcSize3Channel, &mean, &stddev, handle);
             }
             else
                 missingFuncFlag = 1;
-            end_omp = omp_get_wtime();
+          
             end = clock();
 
             if (missingFuncFlag != 1)
@@ -600,10 +600,10 @@ int main(int argc, char **argv)
         Rpp8u u3 = 20;
         
         start = clock();
-        start_omp = omp_get_wtime();
+        
         rpp_bool_control_flow(b1, b2, &b3, RPP_SCALAR_OP_AND, handle );
         rpp_u8_control_flow(u1, u2, &u3, RPP_SCALAR_OP_ADD, handle );
-        end_omp = omp_get_wtime();
+      
         end = clock();
 
         if(u3 == 220)
@@ -640,9 +640,9 @@ int main(int argc, char **argv)
         srcSize.height = 6;
         srcSize.width = 6;
         start = clock();
-        start_omp = omp_get_wtime();
-        rppi_histogram_u8_pln1_host(srcPtr, srcSize, outputHistogram, bins, handle);
-        end_omp = omp_get_wtime();
+        
+        rppi_histogram_u8_pln1_gpu(srcPtr, srcSize, outputHistogram, bins, handle);
+      
         end = clock();
         printf("\n\nOutput of histogram_u8_pln1 for %d bins:\n", bins);
         outputHistogramTemp = outputHistogram;
@@ -667,9 +667,9 @@ int main(int argc, char **argv)
         srcSize.height = 3;
         srcSize.width = 4;
         start = clock();
-        start_omp = omp_get_wtime();
-        rppi_histogram_u8_pln3_host(srcPtr, srcSize, outputHistogram, bins, handle);
-        end_omp = omp_get_wtime();
+        
+        rppi_histogram_u8_pln3_gpu(srcPtr, srcSize, outputHistogram, bins, handle);
+      
         end = clock();
         printf("\n\nOutput of histogram_u8_pln3 for %d bins:\n", bins);
         outputHistogramTemp = outputHistogram;
@@ -694,9 +694,9 @@ int main(int argc, char **argv)
         srcSize.height = 3;
         srcSize.width = 4;
         start = clock();
-        start_omp = omp_get_wtime();
-        rppi_histogram_u8_pkd3_host(srcPtr, srcSize, outputHistogram, bins, handle);
-        end_omp = omp_get_wtime();
+        
+        rppi_histogram_u8_pkd3_gpu(srcPtr, srcSize, outputHistogram, bins, handle);
+      
         end = clock();
         printf("\n\nOutput of histogram_u8_pkd3 for %d bins:\n", bins);
         outputHistogramTemp = outputHistogram;
@@ -745,31 +745,31 @@ int main(int argc, char **argv)
         for (int i = 0; i < 9; i++)
         {
             start = clock();
-            start_omp = omp_get_wtime();
+            
             if (ip_bitDepth == 0)
             {
                 if (i == 0)
-                    rppi_convert_bit_depth_u8s8_pln1_batchPD_host(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr8s, 1, handle);
+                    rppi_convert_bit_depth_u8s8_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr8s, 1, handle);
                 else if (i == 1)
-                    rppi_convert_bit_depth_u8u16_pln1_batchPD_host(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16u, 1, handle);
+                    rppi_convert_bit_depth_u8u16_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16u, 1, handle);
                 else if  (i == 2)
-                    rppi_convert_bit_depth_u8s16_pln1_batchPD_host(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16s, 1, handle);
+                    rppi_convert_bit_depth_u8s16_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16s, 1, handle);
                 else if  (i == 3)
-                    rppi_convert_bit_depth_u8s8_pln3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
+                    rppi_convert_bit_depth_u8s8_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
                 else if  (i == 4)
-                    rppi_convert_bit_depth_u8u16_pln3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
+                    rppi_convert_bit_depth_u8u16_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
                 else if  (i == 5)
-                    rppi_convert_bit_depth_u8s16_pln3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
+                    rppi_convert_bit_depth_u8s16_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
                 else if  (i == 6)
-                    rppi_convert_bit_depth_u8s8_pkd3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
+                    rppi_convert_bit_depth_u8s8_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
                 else if  (i == 7)
-                    rppi_convert_bit_depth_u8u16_pkd3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
+                    rppi_convert_bit_depth_u8u16_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
                 else if  (i == 8)
-                    rppi_convert_bit_depth_u8s16_pkd3_batchPD_host(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
+                    rppi_convert_bit_depth_u8s16_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
             }
             else
                 missingFuncFlag = 1;
-            end_omp = omp_get_wtime();
+          
             end = clock();
 
             if (missingFuncFlag != 1)
@@ -844,19 +844,19 @@ int main(int argc, char **argv)
         for (int i = 0; i < 3; i++)
         {
             start = clock();
-            start_omp = omp_get_wtime();
+            
             if (ip_bitDepth == 0)
             {
                 if (i == 0)
-                    rppi_tensor_convert_bit_depth_u8s8_host(srcPtr, dstPtr8s, tensorDimension, tensorDimensionValues);
+                    rppi_tensor_convert_bit_depth_u8s8_gpu(srcPtr, dstPtr8s, tensorDimension, tensorDimensionValues);
                 else if (i == 1)
-                    rppi_tensor_convert_bit_depth_u8u16_host(srcPtr, dstPtr16u, tensorDimension, tensorDimensionValues);
+                    rppi_tensor_convert_bit_depth_u8u16_gpu(srcPtr, dstPtr16u, tensorDimension, tensorDimensionValues);
                 else if  (i == 2)
-                    rppi_tensor_convert_bit_depth_u8s16_host(srcPtr, dstPtr16s, tensorDimension, tensorDimensionValues);
+                    rppi_tensor_convert_bit_depth_u8s16_gpu(srcPtr, dstPtr16s, tensorDimension, tensorDimensionValues);
             }
             else
                 missingFuncFlag = 1;
-            end_omp = omp_get_wtime();
+          
             end = clock();
 
             if (missingFuncFlag != 1)
@@ -900,12 +900,12 @@ int main(int argc, char **argv)
         }
 
         start = clock();
-        start_omp = omp_get_wtime();
+        
         if (ip_bitDepth == 0)
-            rppi_tensor_look_up_table_u8_host(srcPtr, dstPtr, lutPtr, tensorDimension, tensorDimensionValues);
+            rppi_tensor_look_up_table_u8_gpu(srcPtr, dstPtr, lutPtr, tensorDimension, tensorDimensionValues);
         else
             missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
+      
         end = clock();
 
         if (missingFuncFlag != 1)
@@ -918,8 +918,6 @@ int main(int argc, char **argv)
             displayTensor(dstPtr, 36);
 
             cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-            omp_time_used = end_omp - start_omp;
-            cout << "\nCPU Time - BatchPD : " << cpu_time_used;
             cout << "\nOMP Time - BatchPD : " << omp_time_used;
             printf("\n");
         }

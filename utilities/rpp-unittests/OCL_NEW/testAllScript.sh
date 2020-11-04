@@ -56,7 +56,7 @@ echo "##########################################################################
 echo "Running all PKD3 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_ocl_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
 for ((case=0;case<81;case++))
 do
@@ -91,8 +91,8 @@ else
     SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 fi
 
-printf "\n./BatchPD_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
+printf "\n./BatchPD_ocl_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
+./BatchPD_ocl_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
 echo "------------------------------------------------------------------------------------------"
 done
 done
@@ -109,7 +109,7 @@ echo "##########################################################################
 echo "Running all PLN1 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_ocl_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
 for ((case=0;case<81;case++))
 do
@@ -144,8 +144,8 @@ else
     SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 fi
 
-printf "\n./BatchPD_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
+printf "\n./BatchPD_ocl_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
+./BatchPD_ocl_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
 echo "------------------------------------------------------------------------------------------"
 done
 done
@@ -162,7 +162,7 @@ echo "##########################################################################
 echo "Running all PLN3 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_ocl_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
 for ((case=0;case<81;case++))
 do
@@ -197,8 +197,8 @@ else
     SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 fi
 
-printf "\n./BatchPD_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
+printf "\n./BatchPD_ocl_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
+./BatchPD_ocl_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
 echo "------------------------------------------------------------------------------------------"
 done
 done
@@ -215,19 +215,19 @@ echo "##########################################################################
 echo "Running all Unique functionalities..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>"
+printf "\n\nUsage: ./uniqueFunctionalities_ocl <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>"
 
 for ((case=0;case<13;case++))
 do
-printf "\n\n\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-printf "Running a New Functionality...\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+printf "\n\n\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
+echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
+printf "Running a New Functionality...\n" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
+echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
 for ((bitDepth=0;bitDepth<7;bitDepth++))
 do
-printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-echo "./uniqueFunctionalities_host $bitDepth $case" | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
-./uniqueFunctionalities_host $bitDepth $case | tee -a $DST_FOLDER/uniqueFunctionalities_host_log.txt
+printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
+echo "./uniqueFunctionalities_ocl $bitDepth $case" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
+./uniqueFunctionalities_ocl $bitDepth $case | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
 echo "------------------------------------------------------------------------------------------"
 done
 done
