@@ -118,136 +118,136 @@ int main(int argc, char **argv)
 
     switch (test_case)
     {
-    case 0:
-    {
-        test_case_name = "tensor_transpose";
+    // case 0:
+    // {
+    //     test_case_name = "tensor_transpose";
 
-        // Test Case 1
-        Rpp32u totalNumberOfElements = 36;
-        Rpp32u tensorDimension = 3;
-        Rpp32u tensorDimensionValues[3] = {3, 3, 4};
-        Rpp32u dimension1 = 0, dimension2 = 1;
-        Rpp8u srcPtr[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
-        Rpp8u dstPtr[36] = {0};
+    //     // Test Case 1
+    //     Rpp32u totalNumberOfElements = 36;
+    //     Rpp32u tensorDimension = 3;
+    //     Rpp32u tensorDimensionValues[3] = {3, 3, 4};
+    //     Rpp32u dimension1 = 0, dimension2 = 1;
+    //     Rpp8u srcPtr[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
+    //     Rpp8u dstPtr[36] = {0};
 
-        // Test Case 2
-        // Rpp32u totalNumberOfElements = 48;
-        // Rpp32u tensorDimension = 3;
-        // Rpp32u tensorDimensionValues[3] = {4, 4, 3};
-        // Rpp32u dimension1 = 0, dimension2 = 1;
-        // Rpp8u srcPtr[48] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 91, 95, 92, 98, 65, 66, 67, 68, 69, 70, 71, 72, 49, 47, 55, 51, 41, 39, 38, 34, 13, 24, 15, 16};
-        // Rpp8u dstPtr[48] = {0};
+    //     // Test Case 2
+    //     // Rpp32u totalNumberOfElements = 48;
+    //     // Rpp32u tensorDimension = 3;
+    //     // Rpp32u tensorDimensionValues[3] = {4, 4, 3};
+    //     // Rpp32u dimension1 = 0, dimension2 = 1;
+    //     // Rpp8u srcPtr[48] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 91, 95, 92, 98, 65, 66, 67, 68, 69, 70, 71, 72, 49, 47, 55, 51, 41, 39, 38, 34, 13, 24, 15, 16};
+    //     // Rpp8u dstPtr[48] = {0};
 
-        start = clock();
+    //     start = clock();
         
-        rppi_tensor_transpose_u8_gpu(srcPtr, dstPtr, dimension1, dimension2, tensorDimension, tensorDimensionValues);
+    //     rppi_tensor_transpose_u8_gpu(srcPtr, dstPtr, dimension1, dimension2, tensorDimension, tensorDimensionValues);
       
-        end = clock();
+    //     end = clock();
 
-        printf("\n\nInput:\n");
-        displayTensor(srcPtr, totalNumberOfElements);
-        printf("\n\nOutput of tensor_transpose:\n");
-        displayTensor(dstPtr, totalNumberOfElements);
+    //     printf("\n\nInput:\n");
+    //     displayTensor(srcPtr, totalNumberOfElements);
+    //     printf("\n\nOutput of tensor_transpose:\n");
+    //     displayTensor(dstPtr, totalNumberOfElements);
 
-        break;
-    }
-    case 1:
-    {
-        test_case_name = "transpose";
+    //     break;
+    // }
+    // case 1:
+    // {
+    //     test_case_name = "transpose";
 
-        // Test Case 1
-        // Rpp32u totalNumberOfElements = 24;
-        // Rpp32u perm[4] = {0, 3, 1, 2};
-        // Rpp32u shape[4] = {2, 2, 2, 3};
-        // Rpp8u srcPtr[24] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119};
-        // Rpp8u dstPtr[24] = {0};
-        // Rpp16f srcPtr16f[24], dstPtr16f[24];
-        // Rpp32f srcPtr32f[24], dstPtr32f[24];
-        // Rpp8s srcPtr8s[24], dstPtr8s[24];
+    //     // Test Case 1
+    //     // Rpp32u totalNumberOfElements = 24;
+    //     // Rpp32u perm[4] = {0, 3, 1, 2};
+    //     // Rpp32u shape[4] = {2, 2, 2, 3};
+    //     // Rpp8u srcPtr[24] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119};
+    //     // Rpp8u dstPtr[24] = {0};
+    //     // Rpp16f srcPtr16f[24], dstPtr16f[24];
+    //     // Rpp32f srcPtr32f[24], dstPtr32f[24];
+    //     // Rpp8s srcPtr8s[24], dstPtr8s[24];
 
-        // Test Case 2
-        Rpp32u totalNumberOfElements = 120;
-        Rpp32u perm[4] = {0, 3, 1, 2};
-        Rpp32u shape[4] = {2, 4, 5, 3};
-        Rpp8u srcPtr[120] = {
-            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0, 
-            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110, 
-            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135, 
-            70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 15, 14, 13, 12, 11, 10
-        };
-        Rpp8u dstPtr[120] = {0};
-        Rpp16f srcPtr16f[120], dstPtr16f[120];
-        Rpp32f srcPtr32f[120], dstPtr32f[120];
-        Rpp8s srcPtr8s[120], dstPtr8s[120];
+    //     // Test Case 2
+    //     Rpp32u totalNumberOfElements = 120;
+    //     Rpp32u perm[4] = {0, 3, 1, 2};
+    //     Rpp32u shape[4] = {2, 4, 5, 3};
+    //     Rpp8u srcPtr[120] = {
+    //         255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0, 
+    //         27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110, 
+    //         240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135, 
+    //         70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 15, 14, 13, 12, 11, 10
+    //     };
+    //     Rpp8u dstPtr[120] = {0};
+    //     Rpp16f srcPtr16f[120], dstPtr16f[120];
+    //     Rpp32f srcPtr32f[120], dstPtr32f[120];
+    //     Rpp8s srcPtr8s[120], dstPtr8s[120];
 
 
-        for (int i = 0; i < totalNumberOfElements; i++)
-        {
-            srcPtr16f[i] = (Rpp16f) srcPtr[i];
-            srcPtr32f[i] = (Rpp32f) srcPtr[i];
-            srcPtr8s[i] = (Rpp8s) (((Rpp32s) srcPtr[i]) - 128);
-        }
+    //     for (int i = 0; i < totalNumberOfElements; i++)
+    //     {
+    //         srcPtr16f[i] = (Rpp16f) srcPtr[i];
+    //         srcPtr32f[i] = (Rpp32f) srcPtr[i];
+    //         srcPtr8s[i] = (Rpp8s) (((Rpp32s) srcPtr[i]) - 128);
+    //     }
 
-        start = clock();
+    //     start = clock();
         
-        if (ip_bitDepth == 0)
-            rppi_transpose_u8_gpu(srcPtr, dstPtr, perm, shape);
-        else if (ip_bitDepth == 1)
-            rppi_transpose_f16_gpu(srcPtr16f, dstPtr16f, perm, shape);
-        else if (ip_bitDepth == 2)
-            rppi_transpose_f32_gpu(srcPtr32f, dstPtr32f, perm, shape);
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            rppi_transpose_i8_gpu(srcPtr8s, dstPtr8s, perm, shape);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
+    //     if (ip_bitDepth == 0)
+    //         rppi_transpose_u8_gpu(srcPtr, dstPtr, perm, shape);
+    //     else if (ip_bitDepth == 1)
+    //         rppi_transpose_f16_gpu(srcPtr16f, dstPtr16f, perm, shape);
+    //     else if (ip_bitDepth == 2)
+    //         rppi_transpose_f32_gpu(srcPtr32f, dstPtr32f, perm, shape);
+    //     else if (ip_bitDepth == 3)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 4)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 5)
+    //         rppi_transpose_i8_gpu(srcPtr8s, dstPtr8s, perm, shape);
+    //     else if (ip_bitDepth == 6)
+    //         missingFuncFlag = 1;
+    //     else
+    //         missingFuncFlag = 1;
       
-        end = clock();
+    //     end = clock();
 
-        if (ip_bitDepth == 0)
-        {
-            printf("\n\nInput:\n");
-            displayTensor(srcPtr, totalNumberOfElements);
-            printf("\n\nOutput of transpose_u8:\n");
-            displayTensor(dstPtr, totalNumberOfElements);
-        }
-        else if (ip_bitDepth == 1)
-        {
-            printf("\n\nInput:\n");
-            displayTensorF(srcPtr16f, totalNumberOfElements);
-            printf("\n\nOutput of transpose_f16:\n");
-            displayTensorF(dstPtr16f, totalNumberOfElements);
-        }
-        else if (ip_bitDepth == 2)
-        {
-            printf("\n\nInput:\n");
-            displayTensorF(srcPtr32f, totalNumberOfElements);
-            printf("\n\nOutput of transpose_f32:\n");
-            displayTensorF(dstPtr32f, totalNumberOfElements);
-        }
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-        {
-            printf("\n\nInput:\n");
-            displayTensor(srcPtr8s, totalNumberOfElements);
-            printf("\n\nOutput of transpose_i8:\n");
-            displayTensor(dstPtr8s, totalNumberOfElements);
-        }
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
+    //     if (ip_bitDepth == 0)
+    //     {
+    //         printf("\n\nInput:\n");
+    //         displayTensor(srcPtr, totalNumberOfElements);
+    //         printf("\n\nOutput of transpose_u8:\n");
+    //         displayTensor(dstPtr, totalNumberOfElements);
+    //     }
+    //     else if (ip_bitDepth == 1)
+    //     {
+    //         printf("\n\nInput:\n");
+    //         displayTensorF(srcPtr16f, totalNumberOfElements);
+    //         printf("\n\nOutput of transpose_f16:\n");
+    //         displayTensorF(dstPtr16f, totalNumberOfElements);
+    //     }
+    //     else if (ip_bitDepth == 2)
+    //     {
+    //         printf("\n\nInput:\n");
+    //         displayTensorF(srcPtr32f, totalNumberOfElements);
+    //         printf("\n\nOutput of transpose_f32:\n");
+    //         displayTensorF(dstPtr32f, totalNumberOfElements);
+    //     }
+    //     else if (ip_bitDepth == 3)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 4)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 5)
+    //     {
+    //         printf("\n\nInput:\n");
+    //         displayTensor(srcPtr8s, totalNumberOfElements);
+    //         printf("\n\nOutput of transpose_i8:\n");
+    //         displayTensor(dstPtr8s, totalNumberOfElements);
+    //     }
+    //     else if (ip_bitDepth == 6)
+    //         missingFuncFlag = 1;
+    //     else
+    //         missingFuncFlag = 1;
         
-        break;
-    }
+    //     break;
+    // }
     case 2:
     {
         test_case_name = "tensor_add";
@@ -719,211 +719,211 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 10:
-    {
-        test_case_name = "convert_bit_depth";
+    // case 10:
+    // {
+    //     test_case_name = "convert_bit_depth";
 
-        rppHandle_t handle;
+    //     rppHandle_t handle;
         
-        Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
-        Rpp8s dstPtr8s[36];
-        Rpp16u dstPtr16u[36];
-        Rpp16s dstPtr16s[36];
+    //     Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
+    //     Rpp8s dstPtr8s[36];
+    //     Rpp16u dstPtr16u[36];
+    //     Rpp16s dstPtr16s[36];
 
-        RppiSize srcSize1Channel[1], srcSize3Channel[1];
-        srcSize1Channel[0].height = 6;
-        srcSize1Channel[0].width  = 6;
-        srcSize3Channel[0].height = 3;
-        srcSize3Channel[0].width = 4;
+    //     RppiSize srcSize1Channel[1], srcSize3Channel[1];
+    //     srcSize1Channel[0].height = 6;
+    //     srcSize1Channel[0].width  = 6;
+    //     srcSize3Channel[0].height = 3;
+    //     srcSize3Channel[0].width = 4;
 
-        RppiSize srcSizeMax1Channel, srcSizeMax3Channel;
-        srcSizeMax1Channel.height = 6;
-        srcSizeMax1Channel.width  = 6;
-        srcSizeMax3Channel.height = 3;
-        srcSizeMax3Channel.width = 4;
+    //     RppiSize srcSizeMax1Channel, srcSizeMax3Channel;
+    //     srcSizeMax1Channel.height = 6;
+    //     srcSizeMax1Channel.width  = 6;
+    //     srcSizeMax3Channel.height = 3;
+    //     srcSizeMax3Channel.width = 4;
 
-        for (int i = 0; i < 9; i++)
-        {
-            start = clock();
+    //     for (int i = 0; i < 9; i++)
+    //     {
+    //         start = clock();
             
-            if (ip_bitDepth == 0)
-            {
-                if (i == 0)
-                    rppi_convert_bit_depth_u8s8_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr8s, 1, handle);
-                else if (i == 1)
-                    rppi_convert_bit_depth_u8u16_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16u, 1, handle);
-                else if  (i == 2)
-                    rppi_convert_bit_depth_u8s16_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16s, 1, handle);
-                else if  (i == 3)
-                    rppi_convert_bit_depth_u8s8_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
-                else if  (i == 4)
-                    rppi_convert_bit_depth_u8u16_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
-                else if  (i == 5)
-                    rppi_convert_bit_depth_u8s16_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
-                else if  (i == 6)
-                    rppi_convert_bit_depth_u8s8_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
-                else if  (i == 7)
-                    rppi_convert_bit_depth_u8u16_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
-                else if  (i == 8)
-                    rppi_convert_bit_depth_u8s16_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
-            }
-            else
-                missingFuncFlag = 1;
+    //         if (ip_bitDepth == 0)
+    //         {
+    //             if (i == 0)
+    //                 rppi_convert_bit_depth_u8s8_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr8s, 1, handle);
+    //             else if (i == 1)
+    //                 rppi_convert_bit_depth_u8u16_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16u, 1, handle);
+    //             else if  (i == 2)
+    //                 rppi_convert_bit_depth_u8s16_pln1_batchPD_gpu(srcPtr, srcSize1Channel, srcSizeMax1Channel, dstPtr16s, 1, handle);
+    //             else if  (i == 3)
+    //                 rppi_convert_bit_depth_u8s8_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
+    //             else if  (i == 4)
+    //                 rppi_convert_bit_depth_u8u16_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
+    //             else if  (i == 5)
+    //                 rppi_convert_bit_depth_u8s16_pln3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
+    //             else if  (i == 6)
+    //                 rppi_convert_bit_depth_u8s8_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr8s, 1, handle);
+    //             else if  (i == 7)
+    //                 rppi_convert_bit_depth_u8u16_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16u, 1, handle);
+    //             else if  (i == 8)
+    //                 rppi_convert_bit_depth_u8s16_pkd3_batchPD_gpu(srcPtr, srcSize3Channel, srcSizeMax3Channel, dstPtr16s, 1, handle);
+    //         }
+    //         else
+    //             missingFuncFlag = 1;
           
-            end = clock();
+    //         end = clock();
 
-            if (missingFuncFlag != 1)
-            {
-                if ((i == 0) || (i == 1) || (i == 2))
-                {
-                    printf("\n\nInput:\n");
-                    displayPlanar(srcPtr, srcSize1Channel[0], 1);
-                    printf("\n\nInput Shape:\n");
-                    printf("[%d x %d]", srcSize1Channel[0].height, srcSize1Channel[0].width);
-                    printf("\n\nOutput of convert_bit_depth operation:\n");
-                    if (i == 0)
-                        displayPlanar(dstPtr8s, srcSize1Channel[0], 1);
-                    else if (i == 1)
-                        displayPlanar(dstPtr16u, srcSize1Channel[0], 1);
-                    else if (i == 2)
-                        displayPlanar(dstPtr16s, srcSize1Channel[0], 1);
-                }
-                else if ((i == 3) || (i == 4) || (i == 5))
-                {
-                    printf("\n\nInput:\n");
-                    displayPlanar(srcPtr, srcSize3Channel[0], 3);
-                    printf("\n\nInput Shape:\n");
-                    printf("[%d x %d x %d]", 3, srcSize3Channel[0].height, srcSize3Channel[0].width);
-                    printf("\n\nOutput of convert_bit_depth operation:\n");
-                    if (i == 0)
-                        displayPlanar(dstPtr8s, srcSize1Channel[0], 3);
-                    else if (i == 1)
-                        displayPlanar(dstPtr16u, srcSize1Channel[0], 3);
-                    else if (i == 2)
-                        displayPlanar(dstPtr16s, srcSize1Channel[0], 3);
-                }
-                else if ((i == 6) || (i == 7) || (i == 8))
-                {
-                    printf("\n\nInput:\n");
-                    displayPacked(srcPtr, srcSize3Channel[0], 3);
-                    printf("\n\nInput Shape:\n");
-                    printf("[%d x %d x %d]", srcSize3Channel[0].height, srcSize3Channel[0].width, 3);
-                    printf("\n\nOutput of convert_bit_depth operation:\n");
-                    if (i == 0)
-                        displayPacked(dstPtr8s, srcSize1Channel[0], 3);
-                    else if (i == 1)
-                        displayPacked(dstPtr16u, srcSize1Channel[0], 3);
-                    else if (i == 2)
-                        displayPacked(dstPtr16s, srcSize1Channel[0], 3);
-                }
+    //         if (missingFuncFlag != 1)
+    //         {
+    //             if ((i == 0) || (i == 1) || (i == 2))
+    //             {
+    //                 printf("\n\nInput:\n");
+    //                 displayPlanar(srcPtr, srcSize1Channel[0], 1);
+    //                 printf("\n\nInput Shape:\n");
+    //                 printf("[%d x %d]", srcSize1Channel[0].height, srcSize1Channel[0].width);
+    //                 printf("\n\nOutput of convert_bit_depth operation:\n");
+    //                 if (i == 0)
+    //                     displayPlanar(dstPtr8s, srcSize1Channel[0], 1);
+    //                 else if (i == 1)
+    //                     displayPlanar(dstPtr16u, srcSize1Channel[0], 1);
+    //                 else if (i == 2)
+    //                     displayPlanar(dstPtr16s, srcSize1Channel[0], 1);
+    //             }
+    //             else if ((i == 3) || (i == 4) || (i == 5))
+    //             {
+    //                 printf("\n\nInput:\n");
+    //                 displayPlanar(srcPtr, srcSize3Channel[0], 3);
+    //                 printf("\n\nInput Shape:\n");
+    //                 printf("[%d x %d x %d]", 3, srcSize3Channel[0].height, srcSize3Channel[0].width);
+    //                 printf("\n\nOutput of convert_bit_depth operation:\n");
+    //                 if (i == 0)
+    //                     displayPlanar(dstPtr8s, srcSize1Channel[0], 3);
+    //                 else if (i == 1)
+    //                     displayPlanar(dstPtr16u, srcSize1Channel[0], 3);
+    //                 else if (i == 2)
+    //                     displayPlanar(dstPtr16s, srcSize1Channel[0], 3);
+    //             }
+    //             else if ((i == 6) || (i == 7) || (i == 8))
+    //             {
+    //                 printf("\n\nInput:\n");
+    //                 displayPacked(srcPtr, srcSize3Channel[0], 3);
+    //                 printf("\n\nInput Shape:\n");
+    //                 printf("[%d x %d x %d]", srcSize3Channel[0].height, srcSize3Channel[0].width, 3);
+    //                 printf("\n\nOutput of convert_bit_depth operation:\n");
+    //                 if (i == 0)
+    //                     displayPacked(dstPtr8s, srcSize1Channel[0], 3);
+    //                 else if (i == 1)
+    //                     displayPacked(dstPtr16u, srcSize1Channel[0], 3);
+    //                 else if (i == 2)
+    //                     displayPacked(dstPtr16s, srcSize1Channel[0], 3);
+    //             }
 
-                cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-                omp_time_used = end_omp - start_omp;
-                cout << "\nCPU Time - BatchPD : " << cpu_time_used;
-                cout << "\nOMP Time - BatchPD : " << omp_time_used;
-                printf("\n");
-            }
-        }
+    //             cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    //             omp_time_used = end_omp - start_omp;
+    //             cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+    //             cout << "\nOMP Time - BatchPD : " << omp_time_used;
+    //             printf("\n");
+    //         }
+    //     }
 
-        break;
-    }
-    case 11:
-    {
-        test_case_name = "tensor_convert_bit_depth";
+    //     break;
+    // }
+    // case 11:
+    // {
+    //     test_case_name = "tensor_convert_bit_depth";
 
-        rppHandle_t handle;
+    //     rppHandle_t handle;
         
-        Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
-        Rpp8s dstPtr8s[36];
-        Rpp16u dstPtr16u[36];
-        Rpp16s dstPtr16s[36];
+    //     Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
+    //     Rpp8s dstPtr8s[36];
+    //     Rpp16u dstPtr16u[36];
+    //     Rpp16s dstPtr16s[36];
 
-        Rpp32u tensorDimension = 3;
-        Rpp32u tensorDimensionValues[3] = {3, 4, 3};
+    //     Rpp32u tensorDimension = 3;
+    //     Rpp32u tensorDimensionValues[3] = {3, 4, 3};
 
-        for (int i = 0; i < 3; i++)
-        {
-            start = clock();
+    //     for (int i = 0; i < 3; i++)
+    //     {
+    //         start = clock();
             
-            if (ip_bitDepth == 0)
-            {
-                if (i == 0)
-                    rppi_tensor_convert_bit_depth_u8s8_gpu(srcPtr, dstPtr8s, tensorDimension, tensorDimensionValues);
-                else if (i == 1)
-                    rppi_tensor_convert_bit_depth_u8u16_gpu(srcPtr, dstPtr16u, tensorDimension, tensorDimensionValues);
-                else if  (i == 2)
-                    rppi_tensor_convert_bit_depth_u8s16_gpu(srcPtr, dstPtr16s, tensorDimension, tensorDimensionValues);
-            }
-            else
-                missingFuncFlag = 1;
+    //         if (ip_bitDepth == 0)
+    //         {
+    //             if (i == 0)
+    //                 rppi_tensor_convert_bit_depth_u8s8_gpu(srcPtr, dstPtr8s, tensorDimension, tensorDimensionValues);
+    //             else if (i == 1)
+    //                 rppi_tensor_convert_bit_depth_u8u16_gpu(srcPtr, dstPtr16u, tensorDimension, tensorDimensionValues);
+    //             else if  (i == 2)
+    //                 rppi_tensor_convert_bit_depth_u8s16_gpu(srcPtr, dstPtr16s, tensorDimension, tensorDimensionValues);
+    //         }
+    //         else
+    //             missingFuncFlag = 1;
           
-            end = clock();
+    //         end = clock();
 
-            if (missingFuncFlag != 1)
-            {
-                printf("\n\nInput:\n");
-                displayTensor(srcPtr, 36);
-                printf("\n\nInput Shape:\n");
-                printf("[%d x %d x %d]", tensorDimensionValues[0], tensorDimensionValues[1], tensorDimensionValues[2]);
-                printf("\n\nOutput of tensor_convert_bit_depth operation:\n");
-                if (i == 0)
-                    displayTensor(dstPtr8s, 36);
-                else if (i == 1)
-                    displayTensor(dstPtr16u, 36);
-                else if (i == 2)
-                    displayTensor(dstPtr16s, 36);
+    //         if (missingFuncFlag != 1)
+    //         {
+    //             printf("\n\nInput:\n");
+    //             displayTensor(srcPtr, 36);
+    //             printf("\n\nInput Shape:\n");
+    //             printf("[%d x %d x %d]", tensorDimensionValues[0], tensorDimensionValues[1], tensorDimensionValues[2]);
+    //             printf("\n\nOutput of tensor_convert_bit_depth operation:\n");
+    //             if (i == 0)
+    //                 displayTensor(dstPtr8s, 36);
+    //             else if (i == 1)
+    //                 displayTensor(dstPtr16u, 36);
+    //             else if (i == 2)
+    //                 displayTensor(dstPtr16s, 36);
 
-                cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-                omp_time_used = end_omp - start_omp;
-                cout << "\nCPU Time - BatchPD : " << cpu_time_used;
-                cout << "\nOMP Time - BatchPD : " << omp_time_used;
-                printf("\n");
-            }
-        }
+    //             cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    //             omp_time_used = end_omp - start_omp;
+    //             cout << "\nCPU Time - BatchPD : " << cpu_time_used;
+    //             cout << "\nOMP Time - BatchPD : " << omp_time_used;
+    //             printf("\n");
+    //         }
+    //     }
 
-        break;
-    }
-    case 12:
-    {
-        test_case_name = "tensor_look_up_table";
+    //     break;
+    // }
+    // case 12:
+    // {
+    //     test_case_name = "tensor_look_up_table";
 
-        Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
-        Rpp8u dstPtr[36];
+    //     Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
+    //     Rpp8u dstPtr[36];
 
-        Rpp32u tensorDimension = 3;
-        Rpp32u tensorDimensionValues[3] = {3, 4, 3};
-        Rpp8u lutPtr[256];
+    //     Rpp32u tensorDimension = 3;
+    //     Rpp32u tensorDimensionValues[3] = {3, 4, 3};
+    //     Rpp8u lutPtr[256];
 
-        for (int i = 0; i < 256; i++)
-        {
-            lutPtr[i] = (Rpp8u)(255 - i);
-        }
+    //     for (int i = 0; i < 256; i++)
+    //     {
+    //         lutPtr[i] = (Rpp8u)(255 - i);
+    //     }
 
-        start = clock();
+    //     start = clock();
         
-        if (ip_bitDepth == 0)
-            rppi_tensor_look_up_table_u8_gpu(srcPtr, dstPtr, lutPtr, tensorDimension, tensorDimensionValues);
-        else
-            missingFuncFlag = 1;
+    //     if (ip_bitDepth == 0)
+    //         rppi_tensor_look_up_table_u8_gpu(srcPtr, dstPtr, lutPtr, tensorDimension, tensorDimensionValues);
+    //     else
+    //         missingFuncFlag = 1;
       
-        end = clock();
+    //     end = clock();
 
-        if (missingFuncFlag != 1)
-        {
-            printf("\n\nInput:\n");
-            displayTensor(srcPtr, 36);
-            printf("\n\nInput Shape:\n");
-            printf("[%d x %d x %d]", tensorDimensionValues[0], tensorDimensionValues[1], tensorDimensionValues[2]);
-            printf("\n\nOutput of tensor_look_up_table operation:\n");
-            displayTensor(dstPtr, 36);
+    //     if (missingFuncFlag != 1)
+    //     {
+    //         printf("\n\nInput:\n");
+    //         displayTensor(srcPtr, 36);
+    //         printf("\n\nInput Shape:\n");
+    //         printf("[%d x %d x %d]", tensorDimensionValues[0], tensorDimensionValues[1], tensorDimensionValues[2]);
+    //         printf("\n\nOutput of tensor_look_up_table operation:\n");
+    //         displayTensor(dstPtr, 36);
 
-            cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-            cout << "\nOMP Time - BatchPD : " << omp_time_used;
-            printf("\n");
-        }
+    //         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    //         cout << "\nOMP Time - BatchPD : " << omp_time_used;
+    //         printf("\n");
+    //     }
 
-        break;
-    }
+    //     break;
+    // }
     default:
         missingFuncFlag = 1;
         break;
