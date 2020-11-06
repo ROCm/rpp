@@ -1369,33 +1369,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "hueRGB";
 
-        Rpp32f hueShift[images];
-        for (i = 0; i < images; i++)
-        {
-            hueShift[i] = 60;
-        }
-
-        start = clock();
-        start_omp = omp_get_wtime();
-        if (ip_bitDepth == 0)
-            missingFuncFlag = 1;
-            // rppi_hueRGB_u8_pln1_batchPD_host(input, srcSize, maxSize, output, hueShift, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
-        end = clock();
+        printf("\nhueRGB for PLN1 images doesn't exist!");
 
         break;
     }
@@ -1403,33 +1377,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "saturationRGB";
 
-        Rpp32f saturationFactor[images];
-        for (i = 0; i < images; i++)
-        {
-            saturationFactor[i] = 5;
-        }
-
-        start = clock();
-        start_omp = omp_get_wtime();
-        if (ip_bitDepth == 0)
-            missingFuncFlag = 1;
-            // rppi_saturationRGB_u8_pln1_batchPD_host(input, srcSize, maxSize, output, saturationFactor, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
-        end = clock();
+        printf("\nsaturationRGB for PLN1 images doesn't exist!");
 
         break;
     }

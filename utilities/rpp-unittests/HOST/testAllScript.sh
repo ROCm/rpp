@@ -58,7 +58,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<81;case++))
+for ((case=0;case<82;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"
@@ -111,7 +111,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<81;case++))
+for ((case=0;case<82;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"
@@ -164,7 +164,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<81;case++))
+for ((case=0;case<82;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"

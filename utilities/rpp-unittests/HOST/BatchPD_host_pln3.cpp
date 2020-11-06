@@ -2941,17 +2941,17 @@ int main(int argc, char **argv)
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            missingFuncFlag = 1;
+            rppi_color_twist_u8_pln3_batchPD_gpu(input, srcSize, maxSize, output, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
+            rppi_color_twist_f16_pln3_batchPD_gpu(inputf16, srcSize, maxSize, outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
+            rppi_color_twist_f32_pln3_batchPD_gpu(inputf32, srcSize, maxSize, outputf32, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
+            rppi_color_twist_i8_pln3_batchPD_gpu(inputi8, srcSize, maxSize, outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -3104,44 +3104,9 @@ int main(int argc, char **argv)
     case 68:
     {
         test_case_name = "hough_lines";
-
-        Rpp32u gaussianKernelSize[images];
-        Rpp32f stdDev[images];
-        Rpp32u kernelSize[images];
-        Rpp32f kValue[images];
-        Rpp32f threshold[images];
-        Rpp32u nonmaxKernelSize[images];
-        for (i = 0; i < images; i++)
-        {
-            gaussianKernelSize[i] = 7;
-            stdDev[i] = 5.0;
-            kernelSize[i] = 5;
-            kValue[i] = 1;
-            threshold[i] = 10.0;
-            nonmaxKernelSize[i] = 5;
-        }
-
-        start = clock();
-        start_omp = omp_get_wtime();
-        if (ip_bitDepth == 0)
-            // rppi_hough_lines_u8_pln3_batchPD_host(srcPtr, srcSize, maxSize, lines, rho, theta, threshold, (Rpp32u) minLineLength, (Rpp32u) maxLineGap, linesMax);
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
-        end = clock();
+        
+        printf("\nThe hough_lines algorithm only has a single channel image input. The input must be an output of a canny edge detector!");
+        missingFuncFlag = 1;
 
         break;
     }
