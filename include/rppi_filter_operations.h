@@ -1909,6 +1909,32 @@ RppStatus
 
 
 // ----------------------------------------
+// GPU custom_convolution functions declaration 
+// ----------------------------------------
+/* Applies a N x M convolution on every input pixel and stores it in the destination.
+*param srcPtr [in] srcPtr input image
+*param[in] srcSize  srcSize dimensions of the images
+*param[out] dstPtr dstPtr output image
+*param[in] kernelSize kernelSize dimension of the kernel
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error 
+*/
+
+RppStatus
+rppi_custom_convolution_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle);
+RppStatus
+rppi_custom_convolution_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle);
+RppStatus
+rppi_custom_convolution_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle);
+RppStatus
+rppi_custom_convolution_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle);
+RppStatus
+rppi_custom_convolution_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle);
+RppStatus
+rppi_custom_convolution_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle);
+
+// ----------------------------------------
 // Host custom_convolution functions declaration 
 // ----------------------------------------
 /* Applies a N x M convolution on every input pixel and stores it in the destination.
@@ -1922,15 +1948,15 @@ RppStatus
 */
 
 RppStatus
-rppi_custom_convolution_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize);
+rppi_custom_convolution_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle);
 RppStatus
 rppi_custom_convolution_u8_pln1_batchPD_host(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle);
 RppStatus
-rppi_custom_convolution_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize);
+rppi_custom_convolution_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle);
 RppStatus
 rppi_custom_convolution_u8_pln3_batchPD_host(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle);
 RppStatus
-rppi_custom_convolution_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize);
+rppi_custom_convolution_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle);
 RppStatus
 rppi_custom_convolution_u8_pkd3_batchPD_host(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle);
 

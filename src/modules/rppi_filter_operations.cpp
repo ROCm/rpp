@@ -23654,7 +23654,172 @@ rppi_bilateral_filter_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSiz
 // ********************************** custom convolution ***************************************
 
 RppStatus
-rppi_custom_convolution_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize)
+rppi_custom_convolution_u8_pln1_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+	{
+		custom_convolution_cl(
+			static_cast<cl_mem>(srcPtr),
+			 srcSize,
+			static_cast<cl_mem>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize,
+			RPPI_CHN_PLANAR, 1,
+			rpp::deref(rppHandle));
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_custom_convolution_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle)
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+
+#ifdef OCL_COMPILE
+	{
+		custom_convolution_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize[0],
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 1
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_custom_convolution_u8_pln3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+	{
+		custom_convolution_cl(
+			static_cast<cl_mem>(srcPtr),
+			 srcSize,
+			static_cast<cl_mem>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize,
+			RPPI_CHN_PLANAR, 3,
+			rpp::deref(rppHandle));
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_custom_convolution_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle)
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+
+#ifdef OCL_COMPILE
+	{
+		custom_convolution_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize[0],
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 3
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_custom_convolution_u8_pkd3_gpu(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+	{
+		custom_convolution_cl(
+			static_cast<cl_mem>(srcPtr),
+			 srcSize,
+			static_cast<cl_mem>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize,
+			RPPI_CHN_PACKED, 3,
+			rpp::deref(rppHandle));
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_custom_convolution_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,RppiSize maxSrcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle)
+{
+	RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+
+#ifdef OCL_COMPILE
+	{
+		custom_convolution_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize[0],
+			rpp::deref(rppHandle),
+			RPPI_CHN_PACKED, 3
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_custom_convolution_u8_pln1_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle)
 {
 
  	 validate_image_size(srcSize);
@@ -23692,7 +23857,7 @@ rppi_custom_convolution_u8_pln1_batchPD_host(RppPtr_t srcPtr,RppiSize *srcSize,R
 }
 
 RppStatus
-rppi_custom_convolution_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize)
+rppi_custom_convolution_u8_pln3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle)
 {
 
  	 validate_image_size(srcSize);
@@ -23729,7 +23894,7 @@ rppi_custom_convolution_u8_pln3_batchPD_host(RppPtr_t srcPtr,RppiSize *srcSize,R
 }
 
 RppStatus
-rppi_custom_convolution_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize)
+rppi_custom_convolution_u8_pkd3_host(RppPtr_t srcPtr,RppiSize srcSize,RppPtr_t dstPtr,RppPtr_t kernel,RppiSize kernelSize,rppHandle_t rppHandle)
 {
 
  	 validate_image_size(srcSize);
