@@ -876,7 +876,7 @@ int main(int argc, char **argv)
         Rpp32f alpha[images];
         for (i = 0; i < images; i++)
         {
-            alpha[i] = 0.5;
+            alpha[i] = 0.40;
         }
 
         start = clock();
@@ -1008,7 +1008,7 @@ int main(int argc, char **argv)
         Rpp32f snowPercentage[images];
         for (i = 0; i < images; i++)
         {
-            snowPercentage[i] = 0.6;
+            snowPercentage[i] = 0.15;
         }
 
         start = clock();
@@ -1265,10 +1265,10 @@ int main(int argc, char **argv)
         Rpp32f transparency[images];
         for (i = 0; i < images; i++)
         {
-            rainPercentage[i] = 0.8;
-            rainWidth[i] = 5;
+            rainPercentage[i] = 1.0;
+            rainWidth[i] = 1;
             rainHeight[i] = 12;
-            transparency[i] = 0.5;
+            transparency[i] = 1;
         }
 
         start = clock();
@@ -3115,15 +3115,15 @@ int main(int argc, char **argv)
         test_case_name = "custom_convolution";
         
         RppiSize kernelSize[images];
-        Rpp32f kernel[images * 25];
-        Rpp32f value = (Rpp32f) (1.0 / 25);
+        Rpp32f kernel[images * 225];
+        Rpp32f value = (Rpp32f) (1.0 / 225);
         for (i = 0; i < images; i++)
         {
-            kernelSize[i].height = 5;
-            kernelSize[i].width = 5;
-            for (j = 0; j < 25; j++)
+            kernelSize[i].height = 15;
+            kernelSize[i].width = 15;
+            for (j = 0; j < 225; j++)
             {
-                kernel[(i * 25) + j] = value;
+                kernel[(i * 225) + j] = value;
             }
         }
 
@@ -3281,12 +3281,12 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            ampl_x[i] = 1.0;
-            ampl_y[i] = 1.0;
-            freq_x[i] = 0.8;
+            ampl_x[i] = 2.0;
+            ampl_y[i] = 5.0;
+            freq_x[i] = 5.8;
             freq_y[i] = 1.2;
             phase_x[i] = 10.0;
-            phase_y[i] = 5;
+            phase_y[i] = 15;
         }
 
         start = clock();
