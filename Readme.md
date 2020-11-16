@@ -35,9 +35,15 @@ unzip half-1.12.0.zip -d half-files
 sudo cp half-files/include/half.hpp /usr/local/include/
 ```
 
-## Functions Included
+## Supported Functionalities and Variants
 
-### Image Augmentation Category
+### Supported Functionalities List
+<p align="center"><img width="60%" src="supported_functionalities.png" /></p>
+
+### Supported Functionalities Samples
+<p align="center"><img width="60%" src="supported_functionalities_samples.png" /></p>
+
+<!-- ### Image Augmentation Category
 
 #### Enhancements
 * Brightness modification
@@ -129,15 +135,16 @@ sudo cp half-files/include/half.hpp /usr/local/include/
 * Tensor Transpose
 * Thresholding
 * Warp Affine
-* Warp Perspective
+* Warp Perspective -->
 
-## Variations
-* Support for 3C(RGB) and 1C(Grayscale) images
-* Planar and Packed
-* Host and GPU 
-* Batch Processing with 26 variations
-* ROI variations
-* Padded Variations
+### Supported Variants
+* Packed 3 Channel (RGB) - PKD3 images
+* Planar 3 Channel (RGB) - PLN3 images
+* Planar 1 Channel (Greyscale) - PLN1 images
+* Affinity - Host and GPU
+* Batch Processing with 26 variants
+* ROI variants
+* Padded variants
 
 ## [Instructions to build the library](#rpp-installation)
 
