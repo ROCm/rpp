@@ -38,10 +38,10 @@ sudo cp half-files/include/half.hpp /usr/local/include/
 ## Supported Functionalities and Variants
 
 ### Supported Functionalities List
-<p align="center"><img width="60%" src="docs/images/supported_functionalities.png" /></p>
+<p align="center"><img width="90%" src="docs/images/supported_functionalities.png" /></p>
 
 ### Supported Functionalities Samples
-<p align="center"><img width="60%" src="docs/images/supported_functionalities_samples.png" /></p>
+<p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
 
 <!-- ### Image Augmentation Category
 
