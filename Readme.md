@@ -6,7 +6,7 @@
 Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends.
 
 ## Top level design
-<p align="center"><img width="60%" src="rpp_new.png" /></p>
+<p align="center"><img width="60%" src="docs/images/rpp_structure.png" /></p>
 
 RPP is developed for __Linux__ operating system.
 
@@ -38,10 +38,10 @@ sudo cp half-files/include/half.hpp /usr/local/include/
 ## Supported Functionalities and Variants
 
 ### Supported Functionalities List
-<p align="center"><img width="60%" src="supported_functionalities.png" /></p>
+<p align="center"><img width="60%" src="docs/images/supported_functionalities.png" /></p>
 
 ### Supported Functionalities Samples
-<p align="center"><img width="60%" src="supported_functionalities_samples.png" /></p>
+<p align="center"><img width="60%" src="docs/images/supported_functionalities_samples.png" /></p>
 
 <!-- ### Image Augmentation Category
 
