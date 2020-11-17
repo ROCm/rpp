@@ -18,5 +18,5 @@ set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHIP_COMPILE=1 -DRPP_BACKEND_HIP=1 -fopenmp -std=c++14") 
 
-target_link_libraries(BatchPD_hip ${OpenCV_LIBS} -I/opt/rocm/rpp/include/ -I/opt/rocm/opencl/include/ -I/opt/rocm/include/ -L/opt/rocm/rpp/lib/ -lamd_rpp -lboost_filesystem -lboost_system -L/opt/rocm/hip/lib/ -lhiprtc)
-target_link_libraries(Single_hip ${OpenCV_LIBS} -I/opt/rocm/rpp/include/ -I/opt/rocm/opencl/include/ -I/opt/rocm/include/ -L/opt/rocm/rpp/lib/ -lamd_rpp -lboost_filesystem -lboost_system -L/opt/rocm/hip/lib/ -lhiprtc)
+target_link_libraries(BatchPD_hip ${OpenCV_LIBS} -I/opt/rocm/rpp/include/ -I/opt/rocm/opencl/include/ -I/opt/rocm/include/ -L/opt/rocm/rpp/lib/ -lamd_rpp -lboost_filesystem -lboost_system -L/opt/rocm/hip/lib/ -lamdhip64)
+target_link_libraries(Single_hip ${OpenCV_LIBS} -I/opt/rocm/rpp/include/ -I/opt/rocm/opencl/include/ -I/opt/rocm/include/ -L/opt/rocm/rpp/lib/ -lamd_rpp -lboost_filesystem -lboost_system -L/opt/rocm/hip/lib/ -lamdhip64)

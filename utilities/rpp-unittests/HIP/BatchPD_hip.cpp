@@ -27,15 +27,16 @@ void check_hip_error(void)
 int G_IP_CHANNEL = 3;
 int G_MODE = 2;
 char funcType[1000] = {"BatchPD"};
-char src[1000] = {"/home/ulagammai/ulagammai/TESTSUITE_RPP/Input_Images/RGB"};
-char src_second[1000] = {"/home/ulagammai/ulagammai/TESTSUITE_RPP/Input_Images/RGB1"};
-char dst[1000] = {"/home/ulagammai/Hip-Unit-Testing/output"};
+char src[1000] = {"/home/neel/ulagammai/Input/RGB"};
+char src_second[1000] = {"/home/neel/ulagammai/Input/RGB1"};
+char dst[1000] = {"/home/neel/ulagammai/Input/output"};
 
 int main(int argc, char **argv)
 {
 	int ip_channel = G_IP_CHANNEL;
 	int mode = G_MODE;
 	char *funcName = argv[1];
+         std::cerr<<"\n function name"<<funcName;
 	//char *src = argv[2];
 	//char *dst = argv[3];
 	//char *src2 = argv[4];
@@ -399,6 +400,7 @@ int main(int argc, char **argv)
 	{
 		percentage[i] = 100;
 	}
+	Rpp32u outputFomatToggle;
 
 
 
@@ -425,6 +427,7 @@ int main(int argc, char **argv)
 	start = clock();
 	
 	string test_case_name;
+	rppi_brightness_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, noOfImages, handle);
 	switch (test_case)
 	{
 		case 0:
@@ -515,7 +518,7 @@ int main(int argc, char **argv)
 		case 17:
 			test_case_name = "rotate";
 			std::cout << "\n"<< test_case_name << "\n";
-			rppi_rotate_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxSize, angle, noOfImages, handle);
+			rppi_rotate_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxSize, angle,outputFomatToggle, noOfImages, handle);
 			break;
 		case 18:
 			test_case_name = "warp-affine";
@@ -525,12 +528,12 @@ int main(int argc, char **argv)
 		case 19:
 			test_case_name = "resize";
 			std::cout << "\n"<< test_case_name << "\n";
-			rppi_resize_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, noOfImages, handle);
+			rppi_resize_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize,outputFomatToggle, noOfImages, handle);
 			break;
 		case 20:
 			test_case_name = "resize-crop";
 			std::cout << "\n"<< test_case_name << "\n";
-			rppi_resize_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+			rppi_resize_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2,outputFomatToggle, noOfImages, handle);
 			break;
 		case 21:
 			test_case_name = "Hue modification";
@@ -735,27 +738,27 @@ int main(int argc, char **argv)
 		case 61:
 			test_case_name = "resize-crop-mirror";
 			std::cout << "\n"<< test_case_name << "\n";
-			rppi_resize_crop_mirror_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, xRoiBegin,xRoiEnd, yRoiBegin,yRoiEnd,mirrorFlag, noOfImages, handle);
+			rppi_resize_crop_mirror_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, xRoiBegin,xRoiEnd, yRoiBegin,yRoiEnd,mirrorFlag,outputFomatToggle, noOfImages, handle);
 			break;
 		case 62:
 			test_case_name = "crop";
 			std::cout << "\n"<< test_case_name << "\n";
-			rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, xRoiBegin, yRoiBegin, noOfImages, handle);
+			rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, xRoiBegin, yRoiBegin,outputFomatToggle, noOfImages, handle);
 			break;
 		case 63:
 			test_case_name = "crop - mirror - normalize";
 			std::cout << "\n"<< test_case_name << "\n";
-			rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y,  noOfImages, handle);
+			rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFomatToggle, noOfImages, handle);
 			break;
 		case 64:
 			test_case_name = "color-twist";
 			std::cout << "\n"<< test_case_name << "\n";
-			rppi_color_twist_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, hueShift, saturationFactor, noOfImages, handle);
+			rppi_color_twist_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, hueShift, saturationFactor, outputFomatToggle,noOfImages, handle);
 			break;
 		default:
 			break;
-	}
 	
+	}
 
 	end = clock();
 	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;

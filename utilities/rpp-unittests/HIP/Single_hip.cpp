@@ -39,7 +39,9 @@ int main(int argc, char **argv)
 	//char *src = argv[2];
 	//char *dst = argv[3];
 	//char *src2 = argv[4];
-	
+	char src[1000] = {"/home/neel/ulagammai/Input1/RGBS"};
+char src_second[1000] = {"/home/neel/ulagammai/Input1/RGBS1"};
+char dst[1000] = {"/home/neel/ulagammai/Input/output"};
 	if(mode == 0)
 	{
 		strcat(funcType,"_CPU");
@@ -136,8 +138,8 @@ int main(int argc, char **argv)
 	RppiSize maxSize,maxDstSize;
 	maxSize.height = maxHeight;
 	maxSize.width = maxWidth;
-	maxDstSize.height = maxDstHeight;
-	maxDstSize.width = maxDstWidth;
+	// maxDstSize.height = maxDstHeight;
+	// maxDstSize.width = maxDstWidth;
 	/* Read the input image */
 	DIR *dr2 = opendir(src);
 	DIR *dr2_second = opendir(src_second);
@@ -579,7 +581,7 @@ int main(int argc, char **argv)
 		Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
 		for(i = 0 ; i < op_size ; i++)
 		{
-			temp_output = output[count3];
+			temp_output[i] = output[count3];
 			count3++;
 		}
 		char temp[1000];
