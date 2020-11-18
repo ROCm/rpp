@@ -32,6 +32,7 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 rm -rvf $DST_FOLDER/*
 shopt -s extglob
+mkdir build
 cd build
 rm -rvf *
 cmake ..
