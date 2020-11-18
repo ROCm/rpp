@@ -109,6 +109,12 @@ extern "C" __global__ void noise_batch( unsigned char* input,
     int indextmp=0;
     long pixIdx = 0;
     int rand;
+    pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
+    for(indextmp = 0; indextmp < channel; indextmp++)
+    {
+        output[pixIdx] = input[pixIdx];
+        pixIdx += inc[id_z];
+    }
     if(id_x < width[id_z] && id_y < height[id_z])
     {
         pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
@@ -117,9 +123,9 @@ extern "C" __global__ void noise_batch( unsigned char* input,
             float noisePixel = probTemp * (float)(width[id_z] * height[id_z]);
             float pixelDistance = 1.0;
             pixelDistance /=  probTemp;
-            if((pixIdx - batch_index[id_z]) % (int)pixelDistance == 0)
+            if(((pixIdx - batch_index[id_z]) % (int)pixelDistance) == 0)
             {
-                int rand_id = xorshift(pixIdx) % (9973);
+                int rand_id = xorshift(pixIdx) % (int)(60 * pixelDistance);
                 rand = (rand_id % 2) ? 0 : 255;
                 rand_id = rand_id % (int)pixelDistance;
                 rand_id -= rand_id % 3;
@@ -130,14 +136,22 @@ extern "C" __global__ void noise_batch( unsigned char* input,
                     pixIdx += inc[id_z];
                 }
             }
-        }
-        else if((id_x < width[id_z] ) && (id_y < height[id_z]))
-        {
-            for(indextmp = 0; indextmp < channel; indextmp++)
+            else
             {
-                output[pixIdx] = input[pixIdx];
-                pixIdx += inc[id_z];
+                for(indextmp = 0; indextmp < channel; indextmp++)
+                {
+                    output[pixIdx] = input[pixIdx];
+                    pixIdx += inc[id_z];
+                }
+
             }
+        }
+    }
+    else {
+        pixIdx = batch_index[id_z]   + (id_x  + id_y * max_width[id_z] ) * plnpkdindex;
+        for(indextmp = 0; indextmp < channel; indextmp++){
+            output[pixIdx] = 0;
+            pixIdx +=  inc[id_z];
         }
     }
 }

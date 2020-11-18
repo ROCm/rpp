@@ -244,7 +244,7 @@ int main(int argc, char **argv)
 	Rpp32f noiseProbability[images];
 	for(i = 0 ; i < images ; i++)
 	{
-		noiseProbability[i] = 0.8;
+		noiseProbability[i] = 0.2;
 	}
 	
 	Rpp32f strength[images];

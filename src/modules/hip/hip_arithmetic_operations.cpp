@@ -162,6 +162,7 @@ accumulate_weighted_hip_batch ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,rpp::Handle& handl
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
     handle.AddKernel("", "", "accumulate.cpp", "accumulate_weighted_batch", vld, vgd, "")(srcPtr1, srcPtr2,
+                                                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.y,

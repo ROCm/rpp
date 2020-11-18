@@ -118,5 +118,12 @@ extern "C" __global__ void fisheye_batch(     unsigned char* input,
             }
         }
     }
-    
+    else
+    {
+        for(indextmp = 0; indextmp < channel; indextmp++)
+        {
+            output[dstpixIdx] = (unsigned char) 0;
+            dstpixIdx += inc[id_z];
+        }
+    }
 }
