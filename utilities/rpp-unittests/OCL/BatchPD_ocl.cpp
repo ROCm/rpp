@@ -26,26 +26,26 @@ int main(int argc, char **argv)
 	int ip_channel = G_IP_CHANNEL;
 
 	const int MIN_ARG_COUNT = 6;
-    
-    if (argc < MIN_ARG_COUNT)
-    {
-        printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./BatchPD_hip <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <case number = 0:64> <verbosity = 0/1>\n");
-        return -1;
-    }
+	
+	if (argc < MIN_ARG_COUNT)
+	{
+		printf("\nImproper Usage! Needs all arguments!\n");
+		printf("\nUsage: ./BatchPD_hip <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <case number = 0:64> <verbosity = 0/1>\n");
+		return -1;
+	}
 
 	if (atoi(argv[5]) == 1)
-    {
-        printf("\nInputs for this test case are:");
-        printf("\nsrc1 = %s", argv[1]);
-        printf("\nsrc2 = %s", argv[2]);
-        printf("\ndst = %s", argv[3]);
-        printf("\ncase number (0:64) = %s\n", argv[4]);
-    }
+	{
+		printf("\nInputs for this test case are:");
+		printf("\nsrc1 = %s", argv[1]);
+		printf("\nsrc2 = %s", argv[2]);
+		printf("\ndst = %s", argv[3]);
+		printf("\ncase number (0:64) = %s\n", argv[4]);
+	}
 
 	char *src = argv[1];
-    char *src_second = argv[2];
-    char *dst = argv[3];
+	char *src_second = argv[2];
+	char *dst = argv[3];
 	char *funcName = argv[4];
 	char *funcNameNumber = argv[4];
 	int test_case = atoi(argv[4]);
@@ -383,7 +383,7 @@ int main(int argc, char **argv)
 		max[i] = 30;
 	}
 	const int size_perspective = images * 9;
-    Rpp32f perspective[64 * 9];
+	Rpp32f perspective[64 * 9];
 	for (i = 0; i < images; i++)
 	{
 		perspective[0 + i * 9] = 0.93;
@@ -403,146 +403,129 @@ int main(int argc, char **argv)
 	}
 	Rpp32u outputFomatToggle = 0;
 
-
-
-
-	// int *d_input, *d_input_second, *d_output;
-	// hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-	// hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
-	// hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
-	// check_hip_error();
-	// hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-	// hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-	// check_hip_error();
-
-
-    cl_mem d_input, d_input_second, d_output;
-    cl_platform_id platform_id;
-    cl_device_id device_id;
-    cl_context theContext;
-    cl_command_queue theQueue;
-    cl_int err;
-    err = clGetPlatformIDs(1, &platform_id, NULL);
-    err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
-    theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
-    d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
+	cl_mem d_input, d_input_second, d_output;
+	cl_platform_id platform_id;
+	cl_device_id device_id;
+	cl_context theContext;
+	cl_command_queue theQueue;
+	cl_int err;
+	err = clGetPlatformIDs(1, &platform_id, NULL);
+	err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
+	theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
+	theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
+	d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+	d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+	d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
+	err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+	err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
 
 	rppHandle_t handle;
-	
 	rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
-
+	string test_case_name;
 
 	clock_t start, end;   
 	double cpu_time_used;
 	start = clock();
-	
-	string test_case_name;
-	// rppi_brightness_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, noOfImages, handle);
 	switch (test_case)
 	{
 		case 0:
 			test_case_name = "contrast";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_contrast_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, newMin, newMax, noOfImages, handle);
 			break;
 		case 1:
 			test_case_name = "jitter";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_jitter_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
 			break;
 		case 2:
 			test_case_name = "blur";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_blur_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
 			break;
 		case 3:
 			test_case_name = "brightness";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_brightness_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, noOfImages, handle);
 			break;
 		case 4:
 			test_case_name = "blend";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_blend_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, alpha, noOfImages, handle);
 			break;
 		case 5:
 			test_case_name = "color_temperature";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_color_temperature_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, adjustmentValue, noOfImages, handle);
 			break;
 		case 6:
 			test_case_name = "gamma_correction";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_gamma_correction_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, gamma, noOfImages, handle);
 			break;
 		case 7:
 			test_case_name = "fog";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_fog_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, fogValue, noOfImages, handle);
 			break;
 		case 8:
 			test_case_name = "snow";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_snow_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, snowPercentage, noOfImages, handle);
 			break;
 		case 9:
 			test_case_name = "lens_correction";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_lens_correction_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, strength, zoom, noOfImages, handle);
 			break;
 		case 10:
 			test_case_name = "noise";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_noise_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noiseProbability, noOfImages, handle);
 			break;
 		case 11:
 			test_case_name = "pixelate";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_pixelate_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 12:
 			test_case_name = "exposure";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_exposure_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, exposureFactor, noOfImages, handle);
 			break;
 		case 13:
 			test_case_name = "fisheye";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_fisheye_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 14:
 			test_case_name = "vignette";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_vignette_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, stdDev, noOfImages, handle);
 			break;
 		case 15:
 			test_case_name = "flip";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_flip_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, flipAxis, noOfImages, handle);
 			break;
 		case 16:
 			test_case_name = "rain";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_rain_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, rainPercentage, rainWidth, rainHeight, transparency, noOfImages, handle);
 			break;
 		case 17:
 			test_case_name = "rotate";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_rotate_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxSize, angle,outputFomatToggle, noOfImages, handle);
 			break;
 		case 18:
 			test_case_name = "warp-affine";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_warp_affine_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxSize, affine_array, noOfImages, handle);
 			break;
 		case 19:
 			test_case_name = "resize";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			for(i = 0 ; i < images ; i++)
 			{
 				dstSize[i].height = srcSize[i].height;
@@ -563,7 +546,7 @@ int main(int argc, char **argv)
 			break;
 		case 20:
 			test_case_name = "resize-crop";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			for(i = 0 ; i < images ; i++)
 			{
 				dstSize[i].height = srcSize[i].height;
@@ -584,232 +567,231 @@ int main(int argc, char **argv)
 			break;
 		case 21:
 			test_case_name = "Hue modification";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_hueRGB_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, hueShift, noOfImages, handle);
 			break;
 		case 22:
 			test_case_name = "Saturation";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_saturationRGB_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, saturationFactor, noOfImages, handle);
 			break;
 		case 23:
 			test_case_name = "Histogram Balance";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_histogram_balance_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 24:
 			test_case_name = "RandomShadow";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_random_shadow_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x1, y1, x2, y2, numbeoOfShadows, maxSizeX, maxSizey, noOfImages, handle);
 			break;
 		case 25:
 			test_case_name = "RandomCropLetterBox";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_random_crop_letterbox_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
 			break;
 		case 26:
 			test_case_name = "Absolute Difference";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_absolute_difference_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 27:
 			test_case_name = "Accumulate";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_accumulate_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, noOfImages, handle);
 			err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
 			break;
 		case 28:
 			test_case_name = "Accumulate Squared";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_accumulate_squared_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize,  noOfImages, handle);
 			err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
 			break;
 		case 29:
 			test_case_name = "Accumulate Weighted";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_accumulate_weighted_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize,alpha, noOfImages, handle);
 			err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
 			break;
 		case 30:
 			test_case_name = "Arithmetic Addition";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_add_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 31:
 			test_case_name = "Arithmetic Subtraction";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_subtract_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 32:
 			test_case_name = "Bitwise AND";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_bitwise_AND_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 33:
 			test_case_name = "Bitwise EXCLUSIVE OR";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_exclusive_OR_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 34:
 			test_case_name = "Bitwise INCLUSIVE OR";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_inclusive_OR_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 35:
 			test_case_name = "Bitwise NOT";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_bitwise_NOT_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 36:
 			test_case_name = "Box Filter";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_box_filter_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
 			break;
 		case 37:
 			test_case_name = "Canny Edge Detector";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_canny_edge_detector_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, minThreshold, maxThreshold, noOfImages, handle);
 			break;
 		case 38:
 			test_case_name = "Channel Extract";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_channel_extract_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, extractChannelNumber, noOfImages, handle);
 			break;
 		case 39:
 			test_case_name = "Data Object Copy";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_data_object_copy_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 40:
 			test_case_name = "Dilate Image";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_dilate_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
 			break;
 		case 41:
 			test_case_name = "Equalize Histogram";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_histogram_equalization_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 42:
 			test_case_name = "Erode Image";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_erode_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
 			break;
 		case 43:
 			test_case_name = "Fast Corners";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_fast_corner_detector_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, numOfPixels, threshold, nonmaxKernelSize, noOfImages, handle);
 			break;
 		case 44:
 			test_case_name = "Gaussian Filter";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_gaussian_filter_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, stdDev, kernelSize, noOfImages, handle);
 			break;
 		case 45:
 			test_case_name = "Gaussian Image Pyramid";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_gaussian_image_pyramid_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, stdDev, kernelSize, noOfImages, handle);
 			break;
 		case 46:
 			test_case_name = "Harris Corners";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_harris_corner_detector_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, gaussianKernelSize, stdDev, kernelSize, kValue, threshold1, nonmaxKernelSize, noOfImages, handle);
 			break;
 		case 47:
 			test_case_name = "LBP";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_local_binary_pattern_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 48:
 			test_case_name = "Laplacian Image Pyramid";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, stdDev, kernelSize, noOfImages, handle);
 			break;
 		case 49:
 			test_case_name = "Magnitude";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_magnitude_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 50:
 			test_case_name = "Max";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_max_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 51:
 			test_case_name = "Median Filter";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_median_filter_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
 			break;
 		case 52:
 			test_case_name = "Min";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_min_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 53:
 			test_case_name = "Non Linear Filter";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_nonlinear_filter_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
 			break;
 		case 54:
 			test_case_name = "Non-Maxima Suppression";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_non_max_suppression_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
 			break;
 		case 55:
 			test_case_name = "Phase";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_phase_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 56:
 			test_case_name = "Pixel-wise Multiplication";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_multiply_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 			break;
 		case 57:
 			test_case_name = "Scale Image";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_scale_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, percentage, noOfImages, handle);
 			break;
 		case 58:
 			test_case_name = "Sobel 3x3";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_sobel_filter_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, sobelType, noOfImages, handle);
 			break;
 		case 59:
 			test_case_name = "Thresholding";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_thresholding_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, min, max, noOfImages, handle);
 			break;
 		case 60:
 			test_case_name = "Warp Perspective";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_warp_perspective_u8_pkd3_batchPD_gpu(d_input, srcSize,maxSize, d_output, dstSize,maxDstSize, perspective,noOfImages, handle);
 			break;
 		case 61:
 			test_case_name = "resize-crop-mirror";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_resize_crop_mirror_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, xRoiBegin,xRoiEnd, yRoiBegin,yRoiEnd,mirrorFlag,outputFomatToggle, noOfImages, handle);
 			break;
 		case 62:
 			test_case_name = "crop";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, xRoiBegin, yRoiBegin,outputFomatToggle, noOfImages, handle);
 			break;
 		case 63:
 			test_case_name = "crop - mirror - normalize";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFomatToggle, noOfImages, handle);
 			break;
 		case 64:
 			test_case_name = "color-twist";
-			std::cout << "\n"<< test_case_name << "\n";
+			// std::cout << "\n"<< test_case_name << "\n";
 			rppi_color_twist_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, hueShift, saturationFactor, outputFomatToggle,noOfImages, handle);
 			break;
 		default:
 			break;
 	
 	}
-
 	end = clock();
 	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 	cout<<"\n BatchPD : "<<cpu_time_used<<endl;  
