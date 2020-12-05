@@ -1182,10 +1182,10 @@ extern "C" __global__ void gamma_correction(unsigned char *input,unsigned char *
 
 /* This file was automatically generated.  Do not edit! */
 
-__global__ void histogram_equalize_pkd(unsigned char *input,unsigned char *output,unsigned int *cum_histogram,const unsigned int width,const unsigned int height,const unsigned int channel);
-__global__ void histogram_equalize_pln(unsigned char *input,unsigned char *output,unsigned int *cum_histogram,const unsigned int width,const unsigned int height,const unsigned int channel);
+extern "C" __global__ void histogram_equalize_pkd(unsigned char *input,unsigned char *output,unsigned int *cum_histogram,const unsigned int width,const unsigned int height,const unsigned int channel);
+extern "C" __global__ void histogram_equalize_pln(unsigned char *input,unsigned char *output,unsigned int *cum_histogram,const unsigned int width,const unsigned int height,const unsigned int channel);
 // __global__ void histogram_sum_partial(unsigned int *histogramPartial,unsigned int *histogram,const unsigned int num_groups,const unsigned int channel);
-__global__ void
+extern "C" __global__ void
 histogram_equalize_batch( unsigned char* input,
                                      unsigned char* output,
                                      unsigned int *cum_histogram,
@@ -1198,17 +1198,17 @@ histogram_equalize_batch( unsigned char* input,
                                      unsigned int *inc, // use width * height for pln and 1 for pkd
                                     const int plnpkdindex // use 1 pln 3 for pkd
                    );
-__global__ void
+extern "C" __global__ void
 histogram_sum_partial(unsigned int *histogramPartial,
                       unsigned int *histogram,
                       const unsigned int num_groups);
-__global__ void
+extern "C" __global__ void
 histogram_sum_partial_batch(unsigned int *histogramPartial,
                        unsigned int *histogram,
                       const unsigned int batch_size,
                       const unsigned int num_groups,
                       const unsigned int channel);                      
-__global__
+extern "C" __global__
 void partial_histogram_batch( unsigned char* input,
                                     unsigned int *histogramPartial,
                                      unsigned int *height,
@@ -1221,7 +1221,7 @@ void partial_histogram_batch( unsigned char* input,
                                     unsigned int *inc, // use width * height for pln and 1 for pkd
                                     const int plnpkdindex // use 1 pln 3 for pkd
                                     );
-__global__
+extern "C" __global__
 void partial_histogram_semibatch( unsigned char* input,
                                      unsigned int *histogramPartial,
                                      const unsigned int height,
@@ -1234,8 +1234,8 @@ void partial_histogram_semibatch( unsigned char* input,
                                     const int plnpkdindex // use 1 pln 3 for pkd
                                     );
 
-__global__ void partial_histogram_pkd(unsigned char *input,unsigned int *histogramPartial,const unsigned int width,const unsigned int height,const unsigned int channel);
-__global__ void partial_histogram_pln(unsigned char *input,unsigned int *histogramPartial,const unsigned int width,const unsigned int height,const unsigned int channel);
+extern "C" __global__ void partial_histogram_pkd(unsigned char *input,unsigned int *histogramPartial,const unsigned int width,const unsigned int height,const unsigned int channel);
+extern "C" __global__ void partial_histogram_pln(unsigned char *input,unsigned int *histogramPartial,const unsigned int width,const unsigned int height,const unsigned int channel);
 __device__ unsigned int get_pkd_index(unsigned int id_x,unsigned int id_y,unsigned int id_z,unsigned int width,unsigned int height,unsigned channel);
 unsigned int get_pkd_index(unsigned int id_x,unsigned int id_y,unsigned int id_z,unsigned int width,unsigned int height,unsigned channel);
 __device__ unsigned int get_pln_index(unsigned int id_x,unsigned int id_y,unsigned int id_z,unsigned int width,unsigned int height,unsigned channel);
