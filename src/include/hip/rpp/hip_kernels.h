@@ -774,7 +774,13 @@ extern "C" __global__ void ced_pln3_to_pln1_batch(  unsigned char* input,
                     const unsigned int channel,
                     const unsigned long batchIndex
 );
-extern "C" __global__ void canny_ced_pkd3_to_pln1(   unsigned char* input,
+extern "C" __global__ void ced_pkd3_to_pln1(   unsigned char* input,
+                     unsigned char* output,
+                    const unsigned int height,
+                    const unsigned int width,
+                    const unsigned int channel
+);
+extern "C" __global__ void ced_pln1_to_pkd3(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,
                     const unsigned int width,
