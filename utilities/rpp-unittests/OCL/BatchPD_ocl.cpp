@@ -526,11 +526,14 @@ int main(int argc, char **argv)
 		case 19:
 			test_case_name = "resize";
 			// std::cout << "\n"<< test_case_name << "\n";
+			// dstSize[0].height = srcSize[0].height * 2;
+			// dstSize[0].width = srcSize[0].width * 3;
+			// dstSize[1].height = srcSize[1].height * 2.5;
+			// dstSize[1].width = srcSize[1].width * 3.5;
 			for(i = 0 ; i < noOfImages ; i++)
 			{
-				dstSize[i].height = srcSize[i].height * 2;
-				dstSize[i].width = srcSize[i].width * 2;
-				
+				dstSize[i].height = srcSize[i].height / 2;
+				dstSize[i].width = srcSize[i].width / 3;
 				if(maxDstHeight < dstSize[i].height)
 					maxDstHeight = dstSize[i].height;
 				if(maxDstWidth < dstSize[i].width)
