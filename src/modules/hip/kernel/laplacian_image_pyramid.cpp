@@ -90,7 +90,7 @@ extern "C" __global__ void laplacian_image_pyramid_pkd_batch( unsigned char* inp
     int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-    if (id_x >= ceil((float)(width / 2)) || id_y >= ceil((float)(height / 2)) || id_z >= channel) return;
+    if (id_x >= ceil((float)(width)) || id_y >= ceil((float)(height)) || id_z >= channel) return;
 
     int pixIdx = id_y * channel * width + id_x * channel + id_z;
     int outPixIdx = batchIndex + id_y * channel * width + id_x * channel + id_z;
@@ -98,19 +98,31 @@ extern "C" __global__ void laplacian_image_pyramid_pkd_batch( unsigned char* inp
     int boundy = (kernalheight - 1) / 2;
     int sum = 0;
     int counter = 0;
-    for(int i = -boundy ; i <= boundy ; i++)
+    if ((id_x >= ceil((float)(width / 2)) || id_y >= ceil((float)(height / 2)) || id_z >= channel))
     {
-        for(int j = -boundx ; j <= boundx ; j++)
-        {
-            if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-            {
-                unsigned long index = (unsigned long)pixIdx + ((unsigned long)j * (unsigned long)channel) + ((unsigned long)i * (unsigned long)width * (unsigned long)channel);
-                sum += input[index] * kernal[counter];
-            }
-            counter++;
-        }
+        output[outPixIdx] = 0;
+        // if(channel == 3)
+        // {
+        //     output[outPixIdx + inc[id_z]] = 0;
+        //     output[outPixIdx + inc[id_z] * 2] = 0;
+        // }
     }
-    output[outPixIdx] = input[pixIdx] - saturate_8u(sum); 
+    else
+    {
+        for(int i = -boundy ; i <= boundy ; i++)
+        {
+            for(int j = -boundx ; j <= boundx ; j++)
+            {
+                if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
+                {
+                    unsigned long index = (unsigned long)pixIdx + ((unsigned long)j * (unsigned long)channel) + ((unsigned long)i * (unsigned long)width * (unsigned long)channel);
+                    sum += input[index] * kernal[counter];
+                }
+                counter++;
+            }
+        }
+        output[outPixIdx] = input[pixIdx] - saturate_8u(sum);
+    }
 }
 
 extern "C" __global__ void laplacian_image_pyramid_pln_batch( unsigned char* input,
