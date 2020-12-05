@@ -527,10 +527,14 @@ int main(int argc, char **argv)
 		case 19:
 			test_case_name = "resize";
 			std::cout << "\n"<< test_case_name << "\n";
-			for(i = 0 ; i < images ; i++)
+			// dstSize[0].height = srcSize[0].height * 2;
+			// dstSize[0].width = srcSize[0].width * 3;
+			// dstSize[1].height = srcSize[1].height * 2.5;
+			// dstSize[1].width = srcSize[1].width * 3.5;
+			for(i = 0 ; i < noOfImages ; i++)
 			{
-				dstSize[i].height = srcSize[i].height / 3;
-				dstSize[i].width = srcSize[i].width / 2;
+				dstSize[i].height = srcSize[i].height / 2;
+				dstSize[i].width = srcSize[i].width / 3;
 				
 				if(maxDstHeight < dstSize[i].height)
 					maxDstHeight = dstSize[i].height;
@@ -543,12 +547,15 @@ int main(int argc, char **argv)
 			}
 			maxDstSize.height = maxDstHeight;
 			maxDstSize.width = maxDstWidth;
+			oBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
+			output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
+			hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
 			rppi_resize_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize,outputFomatToggle, noOfImages, handle);
 			break;
 		case 20:
 			test_case_name = "resize-crop";
 			// std::cout << "\n"<< test_case_name << "\n";
-			for(i = 0 ; i < images ; i++)
+			for(i = 0 ; i < noOfImages ; i++)
 			{
 				dstSize[i].height = srcSize[i].height;
 				dstSize[i].width = srcSize[i].width;
@@ -564,6 +571,9 @@ int main(int argc, char **argv)
 			}
 			maxDstSize.height = maxDstHeight;
 			maxDstSize.width = maxDstWidth;
+			oBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
+			output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
+			hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
 			rppi_resize_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2,outputFomatToggle, noOfImages, handle);
 			break;
 		case 21:
