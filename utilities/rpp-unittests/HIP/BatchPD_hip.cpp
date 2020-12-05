@@ -526,11 +526,11 @@ int main(int argc, char **argv)
 			break;
 		case 19:
 			test_case_name = "resize";
-			// std::cout << "\n"<< test_case_name << "\n";
+			std::cout << "\n"<< test_case_name << "\n";
 			for(i = 0 ; i < images ; i++)
 			{
-				dstSize[i].height = srcSize[i].height;
-				dstSize[i].width = srcSize[i].width;
+				dstSize[i].height = srcSize[i].height / 3;
+				dstSize[i].width = srcSize[i].width / 2;
 				
 				if(maxDstHeight < dstSize[i].height)
 					maxDstHeight = dstSize[i].height;
@@ -822,14 +822,24 @@ int main(int argc, char **argv)
 		strcpy(temp,dst);
 		strcat(temp, imageNames[j]);
 		Mat mat_op_image;
+		// if(ip_channel == 3)
+		// {
+		// 	mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
+		// 	imwrite(temp, mat_op_image);
+		// }
+		// if(ip_channel == 1)
+		// {
+		// 	mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+		// 	imwrite(temp, mat_op_image);
+		// }
 		if(ip_channel == 3)
 		{
-			mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
+			mat_op_image = Mat(maxDstHeight, maxDstWidth, CV_8UC3, temp_output);
 			imwrite(temp, mat_op_image);
 		}
 		if(ip_channel == 1)
 		{
-			mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+			mat_op_image = Mat(maxDstHeight, maxDstWidth, CV_8UC1, temp_output);
 			imwrite(temp, mat_op_image);
 		}
 		free(temp_output);

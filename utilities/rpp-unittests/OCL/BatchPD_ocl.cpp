@@ -526,10 +526,10 @@ int main(int argc, char **argv)
 		case 19:
 			test_case_name = "resize";
 			// std::cout << "\n"<< test_case_name << "\n";
-			for(i = 0 ; i < images ; i++)
+			for(i = 0 ; i < noOfImages ; i++)
 			{
-				dstSize[i].height = srcSize[i].height;
-				dstSize[i].width = srcSize[i].width;
+				dstSize[i].height = srcSize[i].height * 2;
+				dstSize[i].width = srcSize[i].width * 2;
 				
 				if(maxDstHeight < dstSize[i].height)
 					maxDstHeight = dstSize[i].height;
@@ -542,12 +542,15 @@ int main(int argc, char **argv)
 			}
 			maxDstSize.height = maxDstHeight;
 			maxDstSize.width = maxDstWidth;
+			oBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
+			output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
+			d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
 			rppi_resize_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize,outputFomatToggle, noOfImages, handle);
 			break;
 		case 20:
 			test_case_name = "resize-crop";
 			// std::cout << "\n"<< test_case_name << "\n";
-			for(i = 0 ; i < images ; i++)
+			for(i = 0 ; i < noOfImages ; i++)
 			{
 				dstSize[i].height = srcSize[i].height;
 				dstSize[i].width = srcSize[i].width;
@@ -563,6 +566,9 @@ int main(int argc, char **argv)
 			}
 			maxDstSize.height = maxDstHeight;
 			maxDstSize.width = maxDstWidth;
+			oBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
+			output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
+			d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
 			rppi_resize_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2,outputFomatToggle, noOfImages, handle);
 			break;
 		case 21:
@@ -821,14 +827,24 @@ int main(int argc, char **argv)
 		strcpy(temp,dst);
 		strcat(temp, imageNames[j]);
 		Mat mat_op_image;
+		// if(ip_channel == 3)
+		// {
+		// 	mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
+		// 	imwrite(temp, mat_op_image);
+		// }
+		// if(ip_channel == 1)
+		// {
+		// 	mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+		// 	imwrite(temp, mat_op_image);
+		// }
 		if(ip_channel == 3)
 		{
-			mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
+			mat_op_image = Mat(maxDstHeight, maxDstWidth, CV_8UC3, temp_output);
 			imwrite(temp, mat_op_image);
 		}
 		if(ip_channel == 1)
 		{
-			mat_op_image = Mat(maxHeight, maxWidth, CV_8UC1, temp_output);
+			mat_op_image = Mat(maxDstHeight, maxDstWidth, CV_8UC1, temp_output);
 			imwrite(temp, mat_op_image);
 		}
 		free(temp_output);
