@@ -11198,7 +11198,7 @@ rppi_resize_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize max
 								RppiSize maxDstSize, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (resize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
-						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxSrcSize,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
 						  nbatchSize, rppHandle));
 }
 RppStatus
