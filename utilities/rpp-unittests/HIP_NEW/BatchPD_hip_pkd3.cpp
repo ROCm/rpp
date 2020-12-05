@@ -12,12 +12,7 @@
 #include <time.h>
 #include <half.hpp>
 #include <fstream>
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-// #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
-
-#include </opt/rocm/opencl/include/CL/cl.h>
-// #include </usr/include/CL/cl.h>
+#include "hip/hip_runtime_api.h"
 
 using namespace cv;
 using namespace std;
@@ -27,6 +22,16 @@ typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 
+void check_hip_error(void)
+{
+	hipError_t err = hipGetLastError();
+	if (err != hipSuccess)
+	{
+		cerr<< "Error: "<< hipGetErrorString(err)<<endl;
+		exit(err);
+	}
+}
+
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 8;
@@ -34,7 +39,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./BatchPD_gpu_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
+        printf("\nUsage: ./BatchPD_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
         return -1;
     }
 
@@ -58,7 +63,7 @@ int main(int argc, char **argv)
 
     int ip_channel = 3;
 
-    char funcType[1000] = {"BatchPD_OCL_PKD3"};
+    char funcType[1000] = {"BatchPD_HIP_PKD3"};
 
     char funcName[1000];
     switch (test_case)
@@ -624,41 +629,75 @@ int main(int argc, char **argv)
             inputi8_secondTemp++;
         }
     }
-    cl_mem d_input, d_input_second, d_inputf16, d_inputf16_second, d_inputf32, d_inputf32_second, d_inputi8, d_inputi8_second;
-    cl_mem d_output, d_outputf16, d_outputf32, d_outputi8;
-    cl_platform_id platform_id;
-    cl_device_id device_id;
-    cl_context theContext;
-    cl_command_queue theQueue;
-    cl_int err;
-    err = clGetPlatformIDs(1, &platform_id, NULL);
-    err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
-    theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
-    d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_inputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_inputf16_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_inputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_inputf32_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_inputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
-    d_inputi8_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
-    d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf16_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf32_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputi8_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8_second, 0, NULL, NULL);
+    // cl_mem d_input, d_input_second, d_inputf16, d_inputf16_second, d_inputf32, d_inputf32_second, d_inputi8, d_inputi8_second;
+    // cl_mem d_output, d_outputf16, d_outputf32, d_outputi8;
+    // cl_platform_id platform_id;
+    // cl_device_id device_id;
+    // cl_context theContext;
+    // cl_command_queue theQueue;
+    // cl_int err;
+    // err = clGetPlatformIDs(1, &platform_id, NULL);
+    // err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
+    // theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
+    // theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
+    // d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+    // d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+    // d_inputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
+    // d_inputf16_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
+    // d_inputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
+    // d_inputf32_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
+    // d_inputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
+    // d_inputi8_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
+    // d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
+    // d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
+    // d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
+    // d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
+    // err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+    // err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
+    // err |= clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
+    // err |= clEnqueueWriteBuffer(theQueue, d_inputf16_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16_second, 0, NULL, NULL);
+    // err |= clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
+    // err |= clEnqueueWriteBuffer(theQueue, d_inputf32_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32_second, 0, NULL, NULL);
+    // err |= clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
+    // err |= clEnqueueWriteBuffer(theQueue, d_inputi8_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8_second, 0, NULL, NULL);
     
-    rppHandle_t handle;
+    // rppHandle_t handle;
 
-    rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
+    // rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
+
+    int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
+	int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
+    hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+	hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+    hipMalloc(&d_inputf16, ioBufferSize * sizeof(Rpp16f));
+	hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(Rpp16f));
+    hipMalloc(&d_inputf32, ioBufferSize * sizeof(Rpp32f));
+	hipMalloc(&d_inputf32_second, ioBufferSize * sizeof(Rpp32f));
+    hipMalloc(&d_inputi8, ioBufferSize * sizeof(Rpp8s));
+	hipMalloc(&d_inputi8_second, ioBufferSize * sizeof(Rpp8s));
+	hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
+	hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
+	hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
+	hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
+	check_hip_error();
+	hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+	hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+    hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+	hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+    hipMemcpy(d_inputf32, inputf32, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+	hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+	hipMemcpy(d_inputi8, inputi8, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+	hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+	hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+	hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+	hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+	hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+    check_hip_error();
+
+    rppHandle_t handle;
+	hipStream_t stream;
+	hipStreamCreate(&stream);
+	rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
 
     clock_t start, end;
     double gpu_time_used;
@@ -1634,7 +1673,9 @@ int main(int argc, char **argv)
        
         end = clock();
     
-        err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        // err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        hipMemcpy(d_output,d_input,oBufferSize * sizeof(Rpp8u),hipMemcpyDeviceToDevice);
+	    check_hip_error();
 
         break;
     }
@@ -1663,7 +1704,9 @@ int main(int argc, char **argv)
        
         end = clock();
 
-        err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        // err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        hipMemcpy(d_output,d_input,oBufferSize * sizeof(Rpp8u),hipMemcpyDeviceToDevice);
+	    check_hip_error();
 
         break;
     }
@@ -1698,7 +1741,9 @@ int main(int argc, char **argv)
        
         end = clock();
 
-        err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        // err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        hipMemcpy(d_output,d_input,oBufferSize * sizeof(Rpp8u),hipMemcpyDeviceToDevice);
+	    check_hip_error();
 
         break;
     }
@@ -1938,10 +1983,15 @@ int main(int argc, char **argv)
 
         Rpp32u extractChannelNumber1[images], extractChannelNumber2[images], extractChannelNumber3[images];
         Rpp32u singleChannelBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)noOfImages;
-        cl_mem d_channel1, d_channel2, d_channel3;
-        d_channel1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
-        d_channel2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
-        d_channel3 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
+        // cl_mem d_channel1, d_channel2, d_channel3;
+        // d_channel1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
+        // d_channel2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
+        // d_channel3 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
+
+        int *d_channel1, *d_channel2, *d_channel3;
+        hipMalloc(&d_channel1, singleChannelBufferSize * sizeof(Rpp8u));
+	    hipMalloc(&d_channel2, singleChannelBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_channel3, singleChannelBufferSize * sizeof(Rpp8u));
 
         for (i = 0; i < images; i++)
         {
@@ -1976,9 +2026,13 @@ int main(int argc, char **argv)
        
         end = clock();
 
-        clReleaseMemObject(d_channel1);
-        clReleaseMemObject(d_channel2);
-        clReleaseMemObject(d_channel3);
+        // clReleaseMemObject(d_channel1);
+        // clReleaseMemObject(d_channel2);
+        // clReleaseMemObject(d_channel3);
+
+        hipFree(d_channel1);
+        hipFree(d_channel2);
+        hipFree(d_channel3);
 
         break;
     }
@@ -2102,72 +2156,79 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 43:
-    {
-        test_case_name = "integral";
+    // case 43:
+    // {
+    //     test_case_name = "integral";
 
-        Rpp32u singleImageBuffer = maxDstHeight * maxDstWidth * ip_channel;
-        cl_mem d_output32u;
-        d_output32u = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleImageBuffer * sizeof(Rpp32u), NULL, NULL);
+    //     Rpp32u singleImageBuffer = maxDstHeight * maxDstWidth * ip_channel;
+    //     // cl_mem d_output32u;
+    //     // d_output32u = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleImageBuffer * sizeof(Rpp32u), NULL, NULL);
+    //     int *d_output32u;
+    //     hipMalloc(&d_output32u, singleImageBuffer * sizeof(Rpp32u));
 
-        start = clock();
+    //     start = clock();
         
-        if (ip_bitDepth == 0)
-            rppi_integral_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output32u, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
+    //     if (ip_bitDepth == 0)
+    //         rppi_integral_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output32u, noOfImages, handle);
+    //     else if (ip_bitDepth == 1)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 2)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 3)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 4)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 5)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 6)
+    //         missingFuncFlag = 1;
+    //     else
+    //         missingFuncFlag = 1;
 
-        end = clock();
+    //     end = clock();
 
-        Rpp32u *output32u = (Rpp32u *)calloc(oBufferSize, sizeof(Rpp32u));
-        clEnqueueReadBuffer(theQueue, d_output32u, CL_TRUE, 0, oBufferSize * sizeof(Rpp32u), output32u, 0, NULL, NULL);
+    //     Rpp32u *output32u = (Rpp32u *)calloc(oBufferSize, sizeof(Rpp32u));
+    //     // clEnqueueReadBuffer(theQueue, d_output32u, CL_TRUE, 0, oBufferSize * sizeof(Rpp32u), output32u, 0, NULL, NULL);
+    //     hipMemcpy(output32u, d_output32u, oBufferSize * sizeof(Rpp32u), hipMemcpyDeviceToHost);
+    //     check_hip_error();
         
-        Rpp8u *outputTemp;
-        Rpp32u *output32uTemp;
-        outputTemp = output;
+    //     Rpp8u *outputTemp;
+    //     Rpp32u *output32uTemp;
+    //     outputTemp = output;
         
-        for (int count = 0; count < noOfImages; count++)
-        {
-            output32uTemp = output32u + (count * singleImageBuffer);
+    //     for (int count = 0; count < noOfImages; count++)
+    //     {
+    //         output32uTemp = output32u + (count * singleImageBuffer);
 
-            Rpp32u min, max;
-            min = *output32uTemp;
-            max = *output32uTemp;
-            for (int i = 0; i < singleImageBuffer; i++)
-            {
-                if (*output32uTemp > max)
-                    max = *output32uTemp;
-                output32uTemp++;
-            }
+    //         Rpp32u min, max;
+    //         min = *output32uTemp;
+    //         max = *output32uTemp;
+    //         for (int i = 0; i < singleImageBuffer; i++)
+    //         {
+    //             if (*output32uTemp > max)
+    //                 max = *output32uTemp;
+    //             output32uTemp++;
+    //         }
 
-            output32uTemp = output32u + (count * singleImageBuffer);
-            for (int i = 0; i < singleImageBuffer; i++)
-            {
-                *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (*output32uTemp - min)) / (Rpp32f) (max - min) * (Rpp32f) 255);
-                outputTemp++;
-                output32uTemp++;
-            }
-        }
+    //         output32uTemp = output32u + (count * singleImageBuffer);
+    //         for (int i = 0; i < singleImageBuffer; i++)
+    //         {
+    //             *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (*output32uTemp - min)) / (Rpp32f) (max - min) * (Rpp32f) 255);
+    //             outputTemp++;
+    //             output32uTemp++;
+    //         }
+    //     }
 
-        err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
+    //     // err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
+    //     hipMemcpy(d_output,output,oBufferSize * sizeof(Rpp8u),hipMemcpyHostToDevice);
+    //     check_hip_error();
 
-        free(output32u);
-        clReleaseMemObject(d_output32u);
+    //     free(output32u);
+    //     // clReleaseMemObject(d_output32u);
+    //     hipFree(d_output32u);
 
-        break;
-    }
+    //     break;
+    // }
     case 44:
     {
         test_case_name = "gaussian_filter";
@@ -3098,71 +3159,81 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 70:
-    {
-        test_case_name = "reconstruction_laplacian_image_pyramid";
+    // case 70:
+    // {
+    //     test_case_name = "reconstruction_laplacian_image_pyramid";
         
-        Rpp32u kernelSize[images];
-        Rpp32f stdDev[images];
-        RppiSize srcSizeHalf[images];
-        for (i = 0; i < images; i++)
-        {
-            kernelSize[i] = 3;
-            stdDev[i] = 20;
-            srcSizeHalf[i].height = srcSize[i].height / 2;
-            srcSizeHalf[i].width = srcSize[i].width / 2;
-        }
+    //     Rpp32u kernelSize[images];
+    //     Rpp32f stdDev[images];
+    //     RppiSize srcSizeHalf[images];
+    //     for (i = 0; i < images; i++)
+    //     {
+    //         kernelSize[i] = 3;
+    //         stdDev[i] = 20;
+    //         srcSizeHalf[i].height = srcSize[i].height / 2;
+    //         srcSizeHalf[i].width = srcSize[i].width / 2;
+    //     }
 
-        RppiSize srcSize1Max, srcSize2Max;
-        srcSize1Max.height = maxSize.height;
-        srcSize1Max.width = maxSize.width;
-        srcSize2Max.height = maxSize.height / 2;
-        srcSize2Max.width = maxSize.width / 2;
+    //     RppiSize srcSize1Max, srcSize2Max;
+    //     srcSize1Max.height = maxSize.height;
+    //     srcSize1Max.width = maxSize.width;
+    //     srcSize2Max.height = maxSize.height / 2;
+    //     srcSize2Max.width = maxSize.width / 2;
 
-        Rpp8u *srcPtr1 = (Rpp8u*) calloc(noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel, sizeof(Rpp8u));
-        Rpp8u *srcPtr2 = (Rpp8u*) calloc(noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel, sizeof(Rpp8u));
+    //     Rpp8u *srcPtr1 = (Rpp8u*) calloc(noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel, sizeof(Rpp8u));
+    //     Rpp8u *srcPtr2 = (Rpp8u*) calloc(noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel, sizeof(Rpp8u));
 
-        // Pre-processing for reconstruction_laplacian_image_pyramid done on host
-        rppi_resize_u8_pkd3_batchPD_host(input, srcSize, srcSize1Max, srcPtr2, srcSizeHalf, srcSize2Max, outputFormatToggle, noOfImages, handle);
-        rppi_laplacian_image_pyramid_u8_pkd3_batchPD_host(input, srcSize, maxSize, srcPtr1, stdDev, kernelSize, noOfImages, handle);
-        memcpy(input, srcPtr1, ioBufferSize * sizeof(Rpp8u));
-        memset(srcPtr1, 0, ioBufferSize * sizeof(Rpp8u));
-        rppi_resize_u8_pkd3_batchPD_host(input, srcSizeHalf, srcSize1Max, srcPtr1, srcSize, srcSize1Max, outputFormatToggle, noOfImages, handle);
+    //     // Pre-processing for reconstruction_laplacian_image_pyramid done on host
+    //     rppi_resize_u8_pkd3_batchPD_host(input, srcSize, srcSize1Max, srcPtr2, srcSizeHalf, srcSize2Max, outputFormatToggle, noOfImages, handle);
+    //     rppi_laplacian_image_pyramid_u8_pkd3_batchPD_host(input, srcSize, maxSize, srcPtr1, stdDev, kernelSize, noOfImages, handle);
+    //     memcpy(input, srcPtr1, ioBufferSize * sizeof(Rpp8u));
+    //     memset(srcPtr1, 0, ioBufferSize * sizeof(Rpp8u));
+    //     rppi_resize_u8_pkd3_batchPD_host(input, srcSizeHalf, srcSize1Max, srcPtr1, srcSize, srcSize1Max, outputFormatToggle, noOfImages, handle);
 
-        cl_mem d_srcPtr1, d_srcPtr2;
-        d_srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), NULL, NULL);
-        d_srcPtr2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_srcPtr1, CL_TRUE, 0, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), srcPtr1, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_srcPtr2, CL_TRUE, 0, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), srcPtr2, 0, NULL, NULL);
+    //     // cl_mem d_srcPtr1, d_srcPtr2;
+    //     // d_srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), NULL, NULL);
+    //     // d_srcPtr2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), NULL, NULL);
+    //     // err |= clEnqueueWriteBuffer(theQueue, d_srcPtr1, CL_TRUE, 0, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), srcPtr1, 0, NULL, NULL);
+    //     // err |= clEnqueueWriteBuffer(theQueue, d_srcPtr2, CL_TRUE, 0, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), srcPtr2, 0, NULL, NULL);
+
+    //     int *d_srcPtr1, *d_srcPtr2;
+    //     hipMalloc(&d_srcPtr1, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u));
+    //     hipMalloc(&d_srcPtr2, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u));
+    //     check_hip_error();
+    //     hipMemcpy(d_srcPtr1, srcPtr1, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), hipMemcpyHostToDevice);
+    //     hipMemcpy(d_srcPtr2, srcPtr2, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), hipMemcpyHostToDevice);
+    //     check_hip_error();
         
-        start = clock();
+    //     start = clock();
         
-        if (ip_bitDepth == 0)
-            rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(d_srcPtr1, srcSize, srcSize1Max, d_srcPtr2, srcSizeHalf, srcSize2Max, d_output, stdDev, kernelSize, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
+    //     if (ip_bitDepth == 0)
+    //         rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(d_srcPtr1, srcSize, srcSize1Max, d_srcPtr2, srcSizeHalf, srcSize2Max, d_output, stdDev, kernelSize, noOfImages, handle);
+    //     else if (ip_bitDepth == 1)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 2)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 3)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 4)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 5)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 6)
+    //         missingFuncFlag = 1;
+    //     else
+    //         missingFuncFlag = 1;
        
-        end = clock();
+    //     end = clock();
 
-        free(srcPtr1);
-        free(srcPtr2);
-        clReleaseMemObject(d_srcPtr1);
-        clReleaseMemObject(d_srcPtr2);
+    //     free(srcPtr1);
+    //     free(srcPtr2);
+    //     // clReleaseMemObject(d_srcPtr1);
+    //     // clReleaseMemObject(d_srcPtr2);
+    //     hipFree(d_srcPtr1);
+    //     hipFree(d_srcPtr2);
 
-        break;
-    }
+    //     break;
+    // }
     case 71:
     {
         test_case_name = "bilateral_filter";
@@ -3337,133 +3408,133 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 78:
-    {
-        test_case_name = "erase";
+    // case 78:
+    // {
+    //     test_case_name = "erase";
 
-        Rpp32u boxesInEachImage = 3;
+    //     Rpp32u boxesInEachImage = 3;
         
-        Rpp32u anchor_box_info[images * boxesInEachImage * 4];
-        Rpp32u box_offset[images];
-        Rpp32u num_of_boxes[images];
-        Rpp8u colorsu8[images * boxesInEachImage * 3];
-        Rpp32f colorsf32[images * boxesInEachImage * 3];
-        Rpp16f colorsf16[images * boxesInEachImage * 3];
-        Rpp8s colorsi8[images * boxesInEachImage * 3];
+    //     Rpp32u anchor_box_info[images * boxesInEachImage * 4];
+    //     Rpp32u box_offset[images];
+    //     Rpp32u num_of_boxes[images];
+    //     Rpp8u colorsu8[images * boxesInEachImage * 3];
+    //     Rpp32f colorsf32[images * boxesInEachImage * 3];
+    //     Rpp16f colorsf16[images * boxesInEachImage * 3];
+    //     Rpp8s colorsi8[images * boxesInEachImage * 3];
         
-        for (i = 0; i < images; i++)
-        {
-            box_offset[i] = i * boxesInEachImage;
-            num_of_boxes[i] = boxesInEachImage;
+    //     for (i = 0; i < images; i++)
+    //     {
+    //         box_offset[i] = i * boxesInEachImage;
+    //         num_of_boxes[i] = boxesInEachImage;
 
-            anchor_box_info[(boxesInEachImage * 4 * i)] = 0.125 * srcSize[i].width;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 1] = 0.125 * srcSize[i].height;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 2] = 0.375 * srcSize[i].width;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 3] = 0.375 * srcSize[i].height;
+    //         anchor_box_info[(boxesInEachImage * 4 * i)] = 0.125 * srcSize[i].width;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 1] = 0.125 * srcSize[i].height;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 2] = 0.375 * srcSize[i].width;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 3] = 0.375 * srcSize[i].height;
 
-            anchor_box_info[(boxesInEachImage * 4 * i) + 4] = 0.125 * srcSize[i].width;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 5] = 0.625 * srcSize[i].height;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 6] = 0.875 * srcSize[i].width;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 7] = 0.875 * srcSize[i].height;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 4] = 0.125 * srcSize[i].width;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 5] = 0.625 * srcSize[i].height;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 6] = 0.875 * srcSize[i].width;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 7] = 0.875 * srcSize[i].height;
 
-            anchor_box_info[(boxesInEachImage * 4 * i) + 8] = 0.75 * srcSize[i].width;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 9] = 0.125 * srcSize[i].height;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 10] = 0.875 * srcSize[i].width;
-            anchor_box_info[(boxesInEachImage * 4 * i) + 11] = 0.5 * srcSize[i].height;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 8] = 0.75 * srcSize[i].width;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 9] = 0.125 * srcSize[i].height;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 10] = 0.875 * srcSize[i].width;
+    //         anchor_box_info[(boxesInEachImage * 4 * i) + 11] = 0.5 * srcSize[i].height;
 
-            colorsu8[(boxesInEachImage * 3 * i)] = (Rpp8u) 240;
-            colorsu8[(boxesInEachImage * 3 * i) + 1] = (Rpp8u) 0;
-            colorsu8[(boxesInEachImage * 3 * i) + 2] = (Rpp8u) 0;
+    //         colorsu8[(boxesInEachImage * 3 * i)] = (Rpp8u) 240;
+    //         colorsu8[(boxesInEachImage * 3 * i) + 1] = (Rpp8u) 0;
+    //         colorsu8[(boxesInEachImage * 3 * i) + 2] = (Rpp8u) 0;
 
-            colorsu8[(boxesInEachImage * 3 * i) + 3] = (Rpp8u) 0;
-            colorsu8[(boxesInEachImage * 3 * i) + 4] = (Rpp8u) 240;
-            colorsu8[(boxesInEachImage * 3 * i) + 5] = (Rpp8u) 0;
+    //         colorsu8[(boxesInEachImage * 3 * i) + 3] = (Rpp8u) 0;
+    //         colorsu8[(boxesInEachImage * 3 * i) + 4] = (Rpp8u) 240;
+    //         colorsu8[(boxesInEachImage * 3 * i) + 5] = (Rpp8u) 0;
 
-            colorsu8[(boxesInEachImage * 3 * i) + 6] = (Rpp8u) 0;
-            colorsu8[(boxesInEachImage * 3 * i) + 7] = (Rpp8u) 0;
-            colorsu8[(boxesInEachImage * 3 * i) + 8] = (Rpp8u) 240;
+    //         colorsu8[(boxesInEachImage * 3 * i) + 6] = (Rpp8u) 0;
+    //         colorsu8[(boxesInEachImage * 3 * i) + 7] = (Rpp8u) 0;
+    //         colorsu8[(boxesInEachImage * 3 * i) + 8] = (Rpp8u) 240;
 
-            colorsf32[(boxesInEachImage * 3 * i)] = (Rpp32f) (240.0 / 255.0);
-            colorsf32[(boxesInEachImage * 3 * i) + 1] = (Rpp32f) (0.0 / 255.0);
-            colorsf32[(boxesInEachImage * 3 * i) + 2] = (Rpp32f) (0.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i)] = (Rpp32f) (240.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i) + 1] = (Rpp32f) (0.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i) + 2] = (Rpp32f) (0.0 / 255.0);
 
-            colorsf32[(boxesInEachImage * 3 * i) + 3] = (Rpp32f) (0.0 / 255.0);
-            colorsf32[(boxesInEachImage * 3 * i) + 4] = (Rpp32f) (240.0 / 255.0);
-            colorsf32[(boxesInEachImage * 3 * i) + 5] = (Rpp32f) (0.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i) + 3] = (Rpp32f) (0.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i) + 4] = (Rpp32f) (240.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i) + 5] = (Rpp32f) (0.0 / 255.0);
 
-            colorsf32[(boxesInEachImage * 3 * i) + 6] = (Rpp32f) (0.0 / 255.0);
-            colorsf32[(boxesInEachImage * 3 * i) + 7] = (Rpp32f) (0.0 / 255.0);
-            colorsf32[(boxesInEachImage * 3 * i) + 8] = (Rpp32f) (240.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i) + 6] = (Rpp32f) (0.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i) + 7] = (Rpp32f) (0.0 / 255.0);
+    //         colorsf32[(boxesInEachImage * 3 * i) + 8] = (Rpp32f) (240.0 / 255.0);
 
-            colorsf16[(boxesInEachImage * 3 * i)] = (Rpp16f) (240.0 / 255.0);
-            colorsf16[(boxesInEachImage * 3 * i) + 1] = (Rpp16f) (0.0 / 255.0);
-            colorsf16[(boxesInEachImage * 3 * i) + 2] = (Rpp16f) (0.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i)] = (Rpp16f) (240.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i) + 1] = (Rpp16f) (0.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i) + 2] = (Rpp16f) (0.0 / 255.0);
 
-            colorsf16[(boxesInEachImage * 3 * i) + 3] = (Rpp16f) (0.0 / 255.0);
-            colorsf16[(boxesInEachImage * 3 * i) + 4] = (Rpp16f) (240.0 / 255.0);
-            colorsf16[(boxesInEachImage * 3 * i) + 5] = (Rpp16f) (0.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i) + 3] = (Rpp16f) (0.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i) + 4] = (Rpp16f) (240.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i) + 5] = (Rpp16f) (0.0 / 255.0);
 
-            colorsf16[(boxesInEachImage * 3 * i) + 6] = (Rpp16f) (0.0 / 255.0);
-            colorsf16[(boxesInEachImage * 3 * i) + 7] = (Rpp16f) (0.0 / 255.0);
-            colorsf16[(boxesInEachImage * 3 * i) + 8] = (Rpp16f) (240.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i) + 6] = (Rpp16f) (0.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i) + 7] = (Rpp16f) (0.0 / 255.0);
+    //         colorsf16[(boxesInEachImage * 3 * i) + 8] = (Rpp16f) (240.0 / 255.0);
 
-            colorsi8[(boxesInEachImage * 3 * i)] = (Rpp8s) (240 - 128);
-            colorsi8[(boxesInEachImage * 3 * i) + 1] = (Rpp8s) (0 - 128);
-            colorsi8[(boxesInEachImage * 3 * i) + 2] = (Rpp8s) (0 - 128);
+    //         colorsi8[(boxesInEachImage * 3 * i)] = (Rpp8s) (240 - 128);
+    //         colorsi8[(boxesInEachImage * 3 * i) + 1] = (Rpp8s) (0 - 128);
+    //         colorsi8[(boxesInEachImage * 3 * i) + 2] = (Rpp8s) (0 - 128);
 
-            colorsi8[(boxesInEachImage * 3 * i) + 3] = (Rpp8s) (0 - 128);
-            colorsi8[(boxesInEachImage * 3 * i) + 4] = (Rpp8s) (240 - 128);
-            colorsi8[(boxesInEachImage * 3 * i) + 5] = (Rpp8s) (0 - 128);
+    //         colorsi8[(boxesInEachImage * 3 * i) + 3] = (Rpp8s) (0 - 128);
+    //         colorsi8[(boxesInEachImage * 3 * i) + 4] = (Rpp8s) (240 - 128);
+    //         colorsi8[(boxesInEachImage * 3 * i) + 5] = (Rpp8s) (0 - 128);
 
-            colorsi8[(boxesInEachImage * 3 * i) + 6] = (Rpp8s) (0 - 128);
-            colorsi8[(boxesInEachImage * 3 * i) + 7] = (Rpp8s) (0 - 128);
-            colorsi8[(boxesInEachImage * 3 * i) + 8] = (Rpp8s) (240 - 128);
-        }
+    //         colorsi8[(boxesInEachImage * 3 * i) + 6] = (Rpp8s) (0 - 128);
+    //         colorsi8[(boxesInEachImage * 3 * i) + 7] = (Rpp8s) (0 - 128);
+    //         colorsi8[(boxesInEachImage * 3 * i) + 8] = (Rpp8s) (240 - 128);
+    //     }
 
-        cl_mem d_anchor_box_info, d_box_offset, d_colorsu8, d_colorsf16, d_colorsf32, d_colorsi8;
-        d_anchor_box_info = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * boxesInEachImage * 4 * sizeof(Rpp32u), NULL, NULL);
-        d_box_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(Rpp32u), NULL, NULL);
-        d_colorsu8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8u), NULL, NULL);
-        d_colorsf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp16f), NULL, NULL);
-        d_colorsf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp32f), NULL, NULL);
-        d_colorsi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8s), NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_anchor_box_info, CL_TRUE, 0, images * boxesInEachImage * 4 * sizeof(Rpp32u), anchor_box_info, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_box_offset, CL_TRUE, 0, images * sizeof(Rpp32u), box_offset, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsu8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsu8, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsf16, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf16, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsf32, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf32, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsi8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsi8, 0, NULL, NULL);
+    //     cl_mem d_anchor_box_info, d_box_offset, d_colorsu8, d_colorsf16, d_colorsf32, d_colorsi8;
+    //     d_anchor_box_info = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * boxesInEachImage * 4 * sizeof(Rpp32u), NULL, NULL);
+    //     d_box_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(Rpp32u), NULL, NULL);
+    //     d_colorsu8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8u), NULL, NULL);
+    //     d_colorsf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp16f), NULL, NULL);
+    //     d_colorsf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp32f), NULL, NULL);
+    //     d_colorsi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8s), NULL, NULL);
+    //     err |= clEnqueueWriteBuffer(theQueue, d_anchor_box_info, CL_TRUE, 0, images * boxesInEachImage * 4 * sizeof(Rpp32u), anchor_box_info, 0, NULL, NULL);
+    //     err |= clEnqueueWriteBuffer(theQueue, d_box_offset, CL_TRUE, 0, images * sizeof(Rpp32u), box_offset, 0, NULL, NULL);
+    //     err |= clEnqueueWriteBuffer(theQueue, d_colorsu8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsu8, 0, NULL, NULL);
+    //     err |= clEnqueueWriteBuffer(theQueue, d_colorsf16, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf16, 0, NULL, NULL);
+    //     err |= clEnqueueWriteBuffer(theQueue, d_colorsf32, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf32, 0, NULL, NULL);
+    //     err |= clEnqueueWriteBuffer(theQueue, d_colorsi8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsi8, 0, NULL, NULL);
 
-        start = clock();
+    //     start = clock();
         
-        if (ip_bitDepth == 0)
-            rppi_erase_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_anchor_box_info, d_colorsu8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            rppi_erase_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, d_anchor_box_info, d_colorsf16, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 2)
-            rppi_erase_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, d_anchor_box_info, d_colorsf32, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            rppi_erase_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_anchor_box_info, d_colorsi8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
+    //     if (ip_bitDepth == 0)
+    //         rppi_erase_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_anchor_box_info, d_colorsu8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+    //     else if (ip_bitDepth == 1)
+    //         rppi_erase_f16_pkd3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, d_anchor_box_info, d_colorsf16, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+    //     else if (ip_bitDepth == 2)
+    //         rppi_erase_f32_pkd3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, d_anchor_box_info, d_colorsf32, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+    //     else if (ip_bitDepth == 3)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 4)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 5)
+    //         rppi_erase_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_anchor_box_info, d_colorsi8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+    //     else if (ip_bitDepth == 6)
+    //         missingFuncFlag = 1;
+    //     else
+    //         missingFuncFlag = 1;
        
-        end = clock();
+    //     end = clock();
 
-        clReleaseMemObject(d_anchor_box_info);
-        clReleaseMemObject(d_box_offset);
-        clReleaseMemObject(d_colorsu8);
-        clReleaseMemObject(d_colorsf16);
-        clReleaseMemObject(d_colorsf32);
-        clReleaseMemObject(d_colorsi8);
+    //     clReleaseMemObject(d_anchor_box_info);
+    //     clReleaseMemObject(d_box_offset);
+    //     clReleaseMemObject(d_colorsu8);
+    //     clReleaseMemObject(d_colorsf16);
+    //     clReleaseMemObject(d_colorsf32);
+    //     clReleaseMemObject(d_colorsi8);
 
-        break;
-    }
+    //     break;
+    // }
     case 79:
     {
         test_case_name = "crop_and_patch";
@@ -3512,51 +3583,51 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 80:
-    {
-        test_case_name = "lut";
+    // case 80:
+    // {
+    //     test_case_name = "lut";
 
-        Rpp8u lut8u[images * 256];
-        Rpp8s lut8s[images * 256];
+    //     Rpp8u lut8u[images * 256];
+    //     Rpp8s lut8s[images * 256];
 
-        for (i = 0; i < images; i++)
-        {
-            for (j = 0; j < 256; j++)
-            {
-                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
-                lut8s[(i * 256) + j] = (Rpp8s)(255 - j - 128);
-            }
-        }
+    //     for (i = 0; i < images; i++)
+    //     {
+    //         for (j = 0; j < 256; j++)
+    //         {
+    //             lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
+    //             lut8s[(i * 256) + j] = (Rpp8s)(255 - j - 128);
+    //         }
+    //     }
 
-        cl_mem d_lut8u, d_lut8s;
-        d_lut8u = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(Rpp8u), NULL, NULL);
-        d_lut8s = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(Rpp8s), NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_lut8u, CL_TRUE, 0, images * 256 * sizeof(Rpp8u), lut8u, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_lut8s, CL_TRUE, 0, images * 256 * sizeof(Rpp8s), lut8s, 0, NULL, NULL);
+    //     cl_mem d_lut8u, d_lut8s;
+    //     d_lut8u = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(Rpp8u), NULL, NULL);
+    //     d_lut8s = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(Rpp8s), NULL, NULL);
+    //     err |= clEnqueueWriteBuffer(theQueue, d_lut8u, CL_TRUE, 0, images * 256 * sizeof(Rpp8u), lut8u, 0, NULL, NULL);
+    //     err |= clEnqueueWriteBuffer(theQueue, d_lut8s, CL_TRUE, 0, images * 256 * sizeof(Rpp8s), lut8s, 0, NULL, NULL);
 
-        start = clock();
+    //     start = clock();
         
-        if (ip_bitDepth == 0)
-            rppi_lut_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_lut8u, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            rppi_lut_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_lut8s, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
+    //     if (ip_bitDepth == 0)
+    //         rppi_lut_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_lut8u, outputFormatToggle, noOfImages, handle);
+    //     else if (ip_bitDepth == 1)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 2)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 3)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 4)
+    //         missingFuncFlag = 1;
+    //     else if (ip_bitDepth == 5)
+    //         rppi_lut_i8_pkd3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_lut8s, outputFormatToggle, noOfImages, handle);
+    //     else if (ip_bitDepth == 6)
+    //         missingFuncFlag = 1;
+    //     else
+    //         missingFuncFlag = 1;
        
-        end = clock();
+    //     end = clock();
 
-        break;
-    }
+    //     break;
+    // }
     case 81:
     {
         test_case_name = "glitch";
@@ -3617,10 +3688,16 @@ int main(int argc, char **argv)
     cout << "\nGPU Time - BatchPD : " << gpu_time_used;
     printf("\n");
 
-    clEnqueueReadBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
+    // clEnqueueReadBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
+    // clEnqueueReadBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
+    // clEnqueueReadBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
+    // clEnqueueReadBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
+
+    hipMemcpy(output,d_output,oBufferSize * sizeof(Rpp8u),hipMemcpyDeviceToHost);
+    hipMemcpy(outputf16,d_outputf16,oBufferSize * sizeof(Rpp16f),hipMemcpyDeviceToHost);
+    hipMemcpy(outputf32,d_outputf32,oBufferSize * sizeof(Rpp32f),hipMemcpyDeviceToHost);
+    hipMemcpy(outputi8,d_outputi8,oBufferSize * sizeof(Rpp8s),hipMemcpyDeviceToHost);
+	check_hip_error();
 
 
     string fileName = std::to_string(ip_bitDepth);
@@ -3797,18 +3874,30 @@ int main(int argc, char **argv)
     free(inputi8);
     free(inputi8_second);
     free(outputi8);
-    clReleaseMemObject(d_input);
-    clReleaseMemObject(d_input_second);
-    clReleaseMemObject(d_output);
-    clReleaseMemObject(d_inputf16);
-    clReleaseMemObject(d_inputf16_second);
-    clReleaseMemObject(d_outputf16);
-    clReleaseMemObject(d_inputf32);
-    clReleaseMemObject(d_inputf32_second);
-    clReleaseMemObject(d_outputf32);
-    clReleaseMemObject(d_inputi8);
-    clReleaseMemObject(d_inputi8_second);
-    clReleaseMemObject(d_outputi8);
+    // clReleaseMemObject(d_input);
+    // clReleaseMemObject(d_input_second);
+    // clReleaseMemObject(d_output);
+    // clReleaseMemObject(d_inputf16);
+    // clReleaseMemObject(d_inputf16_second);
+    // clReleaseMemObject(d_outputf16);
+    // clReleaseMemObject(d_inputf32);
+    // clReleaseMemObject(d_inputf32_second);
+    // clReleaseMemObject(d_outputf32);
+    // clReleaseMemObject(d_inputi8);
+    // clReleaseMemObject(d_inputi8_second);
+    // clReleaseMemObject(d_outputi8);
+    hipFree(d_input);
+    hipFree(d_input_second);
+    hipFree(d_output);
+    hipFree(d_inputf16);
+    hipFree(d_inputf16_second);
+    hipFree(d_outputf16);
+    hipFree(d_inputf32);
+    hipFree(d_inputf32_second);
+    hipFree(d_outputf32);
+    hipFree(d_inputi8);
+    hipFree(d_inputi8_second);
+    hipFree(d_outputi8);
 
     return 0;
 }
