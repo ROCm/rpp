@@ -9489,6 +9489,12 @@ resize_crop_helper(
 	}
 #elif defined(HIP_COMPILE)
 	{
+		resize_crop_hip_batch(
+			static_cast<Rpp8u *>(srcPtr),
+			static_cast<Rpp8u *>(dstPtr),
+			rpp::deref(rppHandle),
+			chn_format, num_of_channels);
+		
 		// if (tensor_type == RPPTensorDataType::U8)
 		// {
 		// 	resize_crop_hip_batch(
@@ -9554,6 +9560,11 @@ resize_helper(RppiChnFormat chn_format,
 	}
 #elif defined(HIP_COMPILE)
 	{
+		resize_hip_batch(
+			static_cast<Rpp8u *>(srcPtr),
+			static_cast<Rpp8u *>(dstPtr),
+			rpp::deref(rppHandle),
+			chn_format, num_of_channels);
 		// if (tensor_type == RPPTensorDataType::U8)
 		// {
 		// 	resize_hip_batch(

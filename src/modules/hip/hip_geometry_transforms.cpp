@@ -312,35 +312,59 @@ resize_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel)
 {
     int plnpkdind;
-
-    if(chnFormat == RPPI_CHN_PLANAR)
+    if (chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
-        plnpkdind = 3;
+        plnpkdind = channel;
+    unsigned int padding = 0;
+    unsigned int type = 0;
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "resize.cpp", "resize_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.dstSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.dstSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                handle.GetInitHandle()->mem.mgpu.dstInc,
-                                                                plnpkdind
-                                                                );
+    // handle.AddKernel("", "", "resize.cpp", "resize_batch", vld, vgd, "")(srcPtr, dstPtr,
+    //                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
+    //                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
+    //                                                             handle.GetInitHandle()->mem.mgpu.dstSize.height,
+    //                                                             handle.GetInitHandle()->mem.mgpu.dstSize.width,
+    //                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+    //                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+    //                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+    //                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+    //                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+    //                                                             handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+    //                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+    //                                                             handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+    //                                                             channel,
+    //                                                             handle.GetInitHandle()->mem.mgpu.inc,
+    //                                                             handle.GetInitHandle()->mem.mgpu.dstInc,
+    //                                                             plnpkdind
+    //                                                             );
+    handle.AddKernel("", "", "resize.cpp", "resize_crop_batch", vld, vgd, "")(srcPtr, dstPtr,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                        // handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                                                                        // handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                                                                        // handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                                                                        // handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, 
+                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                        channel,
+                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                        padding,
+                                                                        type,
+                                                                        plnpkdind, plnpkdind);
     return RPP_SUCCESS;
 }
 
@@ -476,7 +500,7 @@ resize_crop_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    //std::cout << "coming till here" << std::endl;
+    // std::cout << "coming till here" << std::endl;
     handle.AddKernel("", "", "resize.cpp", "resize_crop_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
@@ -488,6 +512,10 @@ resize_crop_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
+                                                                        // handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                        // handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                        // handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                        // handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, 
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                         handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
                                                                         channel,
@@ -495,7 +523,7 @@ resize_crop_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
                                                                         handle.GetInitHandle()->mem.mgpu.dstInc,
                                                                         padding,
                                                                         type,
-                                                                        plnpkdind);
+                                                                        plnpkdind, plnpkdind);
     return RPP_SUCCESS;
 }
 /*************Rotate ******************/

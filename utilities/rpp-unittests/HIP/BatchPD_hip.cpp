@@ -331,7 +331,7 @@ int main(int argc, char **argv)
 	Rpp32u yRoiEnd[images];
 	Rpp32u mirrorFlag[images];
 
-	for(i = 0 ; i < noOfImages ; i++)
+	for(i = 0 ; i < images ; i++)
 	{
 		xRoiBegin[i] = 50;
 		yRoiBegin[i] = 50;
@@ -557,8 +557,8 @@ int main(int argc, char **argv)
 			// std::cout << "\n"<< test_case_name << "\n";
 			for(i = 0 ; i < noOfImages ; i++)
 			{
-				dstSize[i].height = srcSize[i].height;
-				dstSize[i].width = srcSize[i].width;
+				dstSize[i].height = srcSize[i].height / 3;
+				dstSize[i].width = srcSize[i].width / 1.1;
 				
 				if(maxDstHeight < dstSize[i].height)
 					maxDstHeight = dstSize[i].height;
