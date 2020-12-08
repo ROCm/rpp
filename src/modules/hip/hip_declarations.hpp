@@ -595,4 +595,7 @@ crop_mirror_normalize_hip_batch( Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &hand
 RppStatus
 crop_hip_batch( Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);
 
+RppStatus
+resize_crop_mirror_hip_batch( Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);
+
 #endif // HIP_DECLARATIONS_H

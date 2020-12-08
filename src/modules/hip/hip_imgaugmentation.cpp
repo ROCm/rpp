@@ -437,15 +437,6 @@ noise_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel)
 
 {
-    Rpp32u nbatchSize = handle.GetBatchSize();
-    hipMemcpy(srcPtr,dstPtr,sizeof(unsigned char) *
-     (handle.GetInitHandle()->mem.mcpu.srcBatchIndex[nbatchSize-1] +
-     (handle.GetInitHandle()->mem.mcpu.srcSize[nbatchSize-1].width *
-     handle.GetInitHandle()->mem.mcpu.srcSize[nbatchSize-1].height) * channel),hipMemcpyDeviceToDevice);
-    // clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, sizeof(unsigned char) *
-    //  (handle.GetInitHandle()->mem.mcpu.srcBatchIndex[nbatchSize-1] +
-    //  (handle.GetInitHandle()->mem.mcpu.srcSize[nbatchSize-1].width *
-    //  handle.GetInitHandle()->mem.mcpu.srcSize[nbatchSize-1].height) * channel), 0, NULL, NULL);
     int plnpkdind;
 
     if(chnFormat == RPPI_CHN_PLANAR)
