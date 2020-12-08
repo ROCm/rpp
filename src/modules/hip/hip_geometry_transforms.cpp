@@ -131,7 +131,7 @@ lens_correction_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         plnpkdind = 3;
     
     Rpp32u max_height, max_width;
-    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
@@ -572,7 +572,7 @@ rotate_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
-        plnpkdind = 3;
+        plnpkdind = channel;
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -596,7 +596,7 @@ rotate_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
                                                                 channel,
                                                                 handle.GetInitHandle()->mem.mgpu.inc,
                                                                 handle.GetInitHandle()->mem.mgpu.dstInc,
-                                                                plnpkdind
+                                                                plnpkdind, plnpkdind
                                                                 );
     return RPP_SUCCESS;
 }

@@ -329,16 +329,16 @@ int main(int argc, char **argv)
 	{
 		xRoiBegin[i] = 50;
 		yRoiBegin[i] = 50;
-		xRoiEnd[i]  = 200;
-		yRoiEnd[i]  = 200;
+		xRoiEnd[i]  = 150;
+		yRoiEnd[i]  = 150;
 		mirrorFlag[i] = 0;
 	}
 	Rpp32u crop_pos_x[images];
 	Rpp32u crop_pos_y[images];
 	for(i = 0 ; i < images ; i++)
 	{
-		crop_pos_x[i] = 100;
-		crop_pos_y[i] = 100;
+		crop_pos_x[i] = 50;
+		crop_pos_y[i] = 50;
 	}
 	Rpp32f hueShift[images];
 	Rpp32f saturationFactor[images];
@@ -400,6 +400,13 @@ int main(int argc, char **argv)
 	for(i = 0 ; i < images ; i++)
 	{
 		percentage[i] = 0.75;
+	}
+	Rpp32f cmn_mean[images];
+	Rpp32f cmn_stddev[images];
+	for(i = 0 ; i < images ; i++)
+	{
+		cmn_mean[i] = 0;
+		cmn_stddev[i] = 1;
 	}
 	Rpp32u outputFomatToggle = 0;
 
@@ -785,12 +792,44 @@ int main(int argc, char **argv)
 		case 62:
 			test_case_name = "crop";
 			// std::cout << "\n"<< test_case_name << "\n";
+			for(i = 0 ; i < noOfImages ; i++)
+			{
+				dstSize[i].height = srcSize[i].height / 3;
+				dstSize[i].width = srcSize[i].width / 4;
+				
+				if(maxDstHeight < dstSize[i].height)
+					maxDstHeight = dstSize[i].height;
+				if(maxDstWidth < dstSize[i].width)
+					maxDstWidth = dstSize[i].width;
+				if(minDstHeight > dstSize[i].height)
+					minDstHeight = dstSize[i].height;
+				if(minDstWidth > dstSize[i].width)
+					minDstWidth = dstSize[i].width;
+			}
+			maxDstSize.height = maxDstHeight;
+			maxDstSize.width = maxDstWidth;
 			rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, xRoiBegin, yRoiBegin,outputFomatToggle, noOfImages, handle);
 			break;
 		case 63:
 			test_case_name = "crop - mirror - normalize";
 			// std::cout << "\n"<< test_case_name << "\n";
-			rppi_crop_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFomatToggle, noOfImages, handle);
+			for(i = 0 ; i < noOfImages ; i++)
+			{
+				dstSize[i].height = srcSize[i].height / 3;
+				dstSize[i].width = srcSize[i].width / 4;
+				
+				if(maxDstHeight < dstSize[i].height)
+					maxDstHeight = dstSize[i].height;
+				if(maxDstWidth < dstSize[i].width)
+					maxDstWidth = dstSize[i].width;
+				if(minDstHeight > dstSize[i].height)
+					minDstHeight = dstSize[i].height;
+				if(minDstWidth > dstSize[i].width)
+					minDstWidth = dstSize[i].width;
+			}
+			maxDstSize.height = maxDstHeight;
+			maxDstSize.width = maxDstWidth;
+			rppi_crop_mirror_normalize_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, cmn_mean, cmn_stddev, mirrorFlag, outputFomatToggle, noOfImages, handle);
 			break;
 		case 64:
 			test_case_name = "color-twist";

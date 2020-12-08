@@ -104,7 +104,8 @@ extern "C" __global__ void rotate_batch(          unsigned char* srcPtr,
 									const unsigned int channel,
 									 unsigned int *source_inc, // use width * height for pln and 1 for pkd
 									 unsigned int *dest_inc,
-									const int plnpkdindex // use 1 pln 3 for pkd
+									const int in_plnpkdind, // use 1 pln 3 for pkd
+									const int out_plnpkdind // use 1 pln 3 for pkd
 									)
 {
 	int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
@@ -119,33 +120,32 @@ extern "C" __global__ void rotate_batch(          unsigned char* srcPtr,
 	rotate[1] = -1 * sin(angleRad);
 	rotate[2] = sin(angleRad);
 	rotate[3] = cos(angleRad);
-	int xc = id_x - (dest_width[id_z] >> 1);
-	int yc = id_y - (dest_height[id_z] >> 1);
+
+	int xc = id_x - dest_width[id_z] / 2;
+	int yc = id_y - dest_height[id_z] / 2;
 
 	int k = (int)((rotate[0] * xc) + (rotate[1] * yc));
 	int l = (int)((rotate[2] * xc) + (rotate[3] * yc));
-	k = k + (source_width[id_z] >> 1);
-	l = l + (source_height[id_z] >> 1);
+	k = k + source_width[id_z] / 2;
+	l = l + source_height[id_z] / 2;
 
-	if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] && (k >= xroi_begin[id_z]))
-	{
+	if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
+		(k >= xroi_begin[id_z])) {
 		src_pixIdx = source_batch_index[id_z] +
-						(k + l * max_source_width[id_z]) * in_plnpkdind;
+				 (k + l * max_source_width[id_z]) * in_plnpkdind;
 		dst_pixIdx = dest_batch_index[id_z] +
-						(id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-		for (indextmp = 0; indextmp < channel; indextmp++)
-		{
+				 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+		for (indextmp = 0; indextmp < channel; indextmp++) {
 			dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
 			src_pixIdx += source_inc[id_z];
 			dst_pixIdx += dest_inc[id_z];
 		}
 	}
-	else
-	{
+
+	else {
 		dst_pixIdx = dest_batch_index[id_z] +
-						(id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-		for (indextmp = 0; indextmp < channel; indextmp++)
-		{
+				 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+		for (indextmp = 0; indextmp < channel; indextmp++) {
 			dstPtr[dst_pixIdx] = 0;
 			dst_pixIdx += dest_inc[id_z];
 		}

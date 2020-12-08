@@ -14778,6 +14778,11 @@ rotate_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	}
 #elif defined(HIP_COMPILE)
 	{
+		rotate_hip_batch(
+			static_cast<Rpp8u *>(srcPtr),
+			static_cast<Rpp8u *>(dstPtr),
+			rpp::deref(rppHandle),
+			chn_format, num_of_channels);
 		// if (tensor_type == RPPTensorDataType::U8)
 		// {
 		// 	roatate_hip_helper(

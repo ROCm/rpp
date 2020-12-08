@@ -1388,6 +1388,70 @@ extern "C" __global__ void resize_pkd(unsigned char *srcPtr,unsigned char *dstPt
 extern "C" __global__ void resize_pln(unsigned char *srcPtr,unsigned char *dstPtr,const unsigned int source_height,const unsigned int source_width,const unsigned int dest_height,const unsigned int dest_width,const unsigned int channel);
 /* This file was automatically generated.  Do not edit! */
 
+extern "C" __global__ void resize_crop_mirror_batch(
+    unsigned char *srcPtr, 
+    unsigned char *dstPtr,
+    unsigned int *source_height, 
+    unsigned int *source_width,
+    unsigned int *dest_height, 
+    unsigned int *dest_width,
+    unsigned int *max_source_width,
+    unsigned int *max_dest_width, 
+    int *xroi_begin,
+    int *xroi_end, 
+    int *yroi_begin, 
+    int *yroi_end,
+    int *mirror, 
+    unsigned long *source_batch_index,
+    unsigned long *dest_batch_index, 
+    const unsigned int channel,
+    unsigned int *source_inc, // use width * height for pln and 1 for pkd
+    unsigned int *dest_inc,
+    const int in_plnpkdind, const int out_plnpkdind
+);
+
+extern "C" __global__ void crop_batch(
+    unsigned char *input,
+    unsigned char *output, 
+    unsigned int *dst_height, 
+    unsigned int *dst_width,
+    unsigned int *src_width, 
+    unsigned int *start_x,
+    unsigned int *start_y, 
+    unsigned int *max_src_width,
+    unsigned int *max_dst_width,
+    unsigned long *src_batch_index,
+    unsigned long *dst_batch_index, 
+    const unsigned int channel,
+    // const unsigned int batch_size,
+    unsigned int *src_inc, 
+    unsigned int *dst_inc,
+    const int in_plnpkdind, 
+    const int out_plnpkdind 
+);
+extern "C" __global__ void crop_mirror_normalize_batch(
+    unsigned char *input, 
+    unsigned char *output, 
+    unsigned int *dst_height, 
+    unsigned int *dst_width,
+    unsigned int *src_width, 
+    unsigned int *start_x,
+    unsigned int *start_y, 
+    float *mean,
+    float *std_dev, 
+    unsigned int *flip,
+    unsigned int *max_src_width, 
+    unsigned int *max_dst_width,
+    unsigned long *src_batch_index,
+    unsigned long *dst_batch_index, 
+    const unsigned int channel,
+    // const unsigned int batch_size,
+    unsigned int *src_inc,
+    unsigned int *dst_inc,
+    const int in_plnpkdind, 
+    const int out_plnpkdind // use 1 pln 3 for pkd
+);
+
 extern "C" __global__ void rotate_batch(          unsigned char* srcPtr,
                                      unsigned char* dstPtr,
                                      float *angleDeg,
@@ -1447,6 +1511,27 @@ extern "C" __global__ void subtract_batch(unsigned char *input1,unsigned char *i
 extern "C" __global__ void subtract(unsigned char *a,unsigned char *b,unsigned char *c,const unsigned int height,const unsigned int width,const unsigned int channel);
 /* This file was automatically generated.  Do not edit! */
 
+extern "C" __global__ void color_twist_batch(
+    unsigned char *input, 
+    unsigned char *output, 
+    float *alpha, 
+    float *beta, 
+    float *hue,
+    float *sat, 
+    int *xroi_begin, 
+    int *xroi_end,
+    int *yroi_begin, 
+    int *yroi_end,
+    unsigned int *height, 
+    unsigned int *width,
+    unsigned int *max_width, 
+    unsigned long *batch_index,
+    unsigned int *inc, 
+    unsigned int *dst_inc,
+    const int in_plnpkdind, 
+    const int out_plnpkdind
+);
+
 extern "C" __global__ void color_temperature_batch(unsigned char *input,unsigned char *output,int *value,int *xroi_begin,int *xroi_end,int *yroi_begin,int *yroi_end,unsigned int *height,unsigned int *width,unsigned int *batch_index,const unsigned int channel,unsigned int *inc,const int plnpkdindex);
 extern "C" __global__ void temperature_packed(unsigned char *input,unsigned char *output,const unsigned int height,const unsigned int width,const unsigned int channel,const int modificationValue);
 extern "C" __global__ void temperature_planar(unsigned char *input,unsigned char *output,const unsigned int height,const unsigned int width,const unsigned int channel,const int modificationValue);
@@ -1483,6 +1568,7 @@ const std::map<std::string, const void*>& funMap1()
                                                         {"phase_batch",reinterpret_cast<const void*>(phase_batch)},
                                                         {"accumulate_squared",reinterpret_cast<const void*>(accumulate_squared)},
                                                         {"accumulate_squared_batch",reinterpret_cast<const void*>(accumulate_squared_batch)},
+                                                        {"color_twist_batch",reinterpret_cast<const void*>(color_twist_batch)},
                                                         {"color_temperature_batch",reinterpret_cast<const void*>(color_temperature_batch)},
                                                         {"temperature_packed",reinterpret_cast<const void*>(temperature_packed)},
                                                         {"temperature_planar",reinterpret_cast<const void*>(temperature_planar)},
@@ -1605,6 +1691,8 @@ const std::map<std::string, const void*>& funMap1()
                                                         {"resize_pln",reinterpret_cast<const void*>(resize_pln)},
                                                         {"resize_pkd",reinterpret_cast<const void*>(resize_pkd)},
                                                         {"resize_batch",reinterpret_cast<const void*>(resize_batch)},
+                                                        {"crop_batch",reinterpret_cast<const void*>(crop_batch)},
+                                                        {"crop_mirror_normalize_batch",reinterpret_cast<const void*>(crop_mirror_normalize_batch)},
                                                         {"resize_crop_batch",reinterpret_cast<const void*>(resize_crop_batch)},
                                                         {"resize_crop_pln",reinterpret_cast<const void*>(resize_crop_pln)},
                                                         {"resize_crop_pkd",reinterpret_cast<const void*>(resize_crop_pkd)},

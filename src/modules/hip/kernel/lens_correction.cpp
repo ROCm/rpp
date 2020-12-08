@@ -164,6 +164,7 @@ extern "C" __global__ void lens_correction_batch(     unsigned char* input,
             output[dstpixIdx + indextmp*inc[id_z]] =  saturate_8u(pix);
         }
     }
+
     else {
         dstpixIdx = batch_index[id_z]   + (id_x  + id_y * max_width[id_z] ) * plnpkdindex;
         for(indextmp = 0; indextmp < channel; indextmp++){
