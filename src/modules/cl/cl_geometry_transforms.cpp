@@ -243,7 +243,6 @@ flip_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    //std::cout << "coming till near kernel here" << std::endl;
     handle.AddKernel("", "", "flip.cl", "flip_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,

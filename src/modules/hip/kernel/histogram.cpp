@@ -7,7 +7,7 @@ __device__ unsigned int get_pkd_index(unsigned int id_x, unsigned int id_y, unsi
                          {
  return (id_z + id_x * channel + id_y * width * channel);
 }
-__global__
+extern "C" __global__
 void partial_histogram_pln( unsigned char *input,
                          unsigned int *histogramPartial,
                            const unsigned int width,
@@ -66,7 +66,7 @@ void partial_histogram_pln( unsigned char *input,
     }
 }
 
-__global__
+extern "C" __global__
 void partial_histogram_pkd( unsigned char *input,
                             unsigned int *histogramPartial,
                            const unsigned int width,
@@ -125,7 +125,7 @@ void partial_histogram_pkd( unsigned char *input,
     }
 }
 
-__global__
+extern "C" __global__
 void partial_histogram_batch( unsigned char* input,
                                     unsigned int *histogramPartial,
                                      unsigned int *height,
@@ -195,7 +195,7 @@ void partial_histogram_batch( unsigned char* input,
 
 }
 
-__global__
+extern "C" __global__
 void partial_histogram_semibatch( unsigned char* input,
                                      unsigned int *histogramPartial,
                                      const unsigned int height,
@@ -265,7 +265,7 @@ void partial_histogram_semibatch( unsigned char* input,
 
 
 
-__global__ void
+extern "C" __global__ void
 histogram_sum_partial( unsigned int *histogramPartial,
                        unsigned int *histogram,
                       const unsigned int num_groups)
@@ -287,7 +287,7 @@ histogram_sum_partial( unsigned int *histogramPartial,
 
 }
 
-__global__ void
+extern "C" __global__ void
 histogram_sum_partial_batch( unsigned int *histogramPartial,
                        unsigned int *histogram,
                       const unsigned int batch_size,
@@ -313,7 +313,7 @@ histogram_sum_partial_batch( unsigned int *histogramPartial,
 
 }
 
-__global__ void
+extern "C" __global__ void
 histogram_equalize_pln( unsigned char *input,
                     unsigned char *output,
                     unsigned int *cum_histogram,
@@ -332,7 +332,7 @@ histogram_equalize_pln( unsigned char *input,
     output[pixId] = cum_histogram[input[pixId]] * (normalize_factor);
 }
 
-__global__ void
+extern "C" __global__ void
 histogram_equalize_pkd( unsigned char *input,
                     unsigned char *output,
                     unsigned int *cum_histogram,
@@ -352,7 +352,7 @@ histogram_equalize_pkd( unsigned char *input,
 }
 
 
-__global__ void
+extern "C" __global__ void
 histogram_equalize_batch( unsigned char* input,
                                      unsigned char* output,
                                      unsigned int *cum_histogram,
