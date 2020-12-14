@@ -48,20 +48,6 @@ local_binary_pattern_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiC
                                                                                             channel
                                                                                             );
     }
-    
-    //---- Args Setter
-    // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
-    // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-    
     return RPP_SUCCESS;    
 }
 

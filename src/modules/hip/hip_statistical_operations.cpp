@@ -13,28 +13,6 @@ thresholding_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp8u min,
                                                                             min,
                                                                             max);
     
-    // unsigned short counter=0;
-    // cl_kernel theKernel;
-    // cl_program theProgram;
-    // CreateProgramFromBinary(theQueue,"thresholding.cpp","thresholding.cpp.bin","thresholding",theProgram,theKernel);
-    // clRetainKernel(theKernel);
-    
-    // //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned char), &min);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned char), &max);
-    // //----
-
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-
     return RPP_SUCCESS;
 }
 
@@ -91,10 +69,6 @@ min_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                                                             srcSize.width,
                                                                                             channel);
 
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
     return RPP_SUCCESS;
 
 }
@@ -149,11 +123,6 @@ max_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                             srcSize.height,
                                                             srcSize.width,
                                                             channel);
-
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
     return RPP_SUCCESS;
 
 }
@@ -240,11 +209,6 @@ min_max_loc_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u*
     handle.AddKernel("", "", "min_max_loc.cpp", "min", vld, vgd, "")(srcPtr,
                                                                     b_mem_obj,
                                                                     b_mem_obj1);
-    // CreateProgramFromBinary(handle.GetStream(),"min_max_loc.cpp","min_max_loc.cpp.bin","min",theProgram,theKernel);
-    // clRetainKernel(theKernel);   
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj1);
     
     hipMemcpy(partial_min, b_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost);
     hipMemcpy(partial_min_location, b_mem_obj1, numGroups * sizeof(unsigned char),hipMemcpyDeviceToHost );   
@@ -266,15 +230,6 @@ min_max_loc_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u*
     handle.AddKernel("", "", "min_max_loc.cpp", "max", vld1, vgd1, "")(srcPtr,
                                                                     c_mem_obj,
                                                                     c_mem_obj1);
-    // CreateProgramFromBinary(handle.GetStream(),"min_max_loc.cpp","min_max_loc.cpp.bin","max",theProgram,theKernel);
-    // clRetainKernel(theKernel); 
-
-    // counter = 0;
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj1);
-
-    // cl_kernel_implementer (gDim3, local_item_size, theProgram, theKernel);
 
     hipMemcpy(partial_max, c_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost); 
     hipMemcpy(partial_max_location, b_mem_obj1, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost); 
@@ -305,8 +260,7 @@ RppStatus
 min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
                     Rpp32u *minLoc, Rpp32u *maxLoc, rpp::Handle& handle,
                     RppiChnFormat chnFormat, unsigned int channel)
-// cl_mem srcPtr, RppiSize *srcSize, Rpp8u *min, Rpp8u *max,
-//  Rpp32u *minLoc, Rpp32u *maxLoc, Rpp32u nBatchSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+
 {
     Rpp32u nBatchSize = handle.GetBatchSize();
     unsigned char *partial_min;
@@ -393,13 +347,6 @@ min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
         handle.AddKernel("", "", "min_max_loc.cpp", "min", vld, vgd, "")(srcPtr1,
                                                                     b_mem_obj,
                                                                     b_mem_obj1);
-        // CreateProgramFromBinary(handle.GetStream(),"min_max_loc.cpp","min_max_loc.cpp.bin","min",theProgram,theKernel);
-        // clRetainKernel(theKernel);   
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj1);
-        // cl_kernel_implementer (gDim3, local_item_size, theProgram, theKernel);
-        
         hipMemcpy(partial_min,b_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost);
         
         hipMemcpy(partial_min_location,b_mem_obj1, numGroups * sizeof(unsigned char),hipMemcpyDeviceToHost );   
@@ -421,15 +368,7 @@ min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
         handle.AddKernel("", "", "min_max_loc.cpp", "max", vld1, vgd1, "")(srcPtr1,
                                                                         c_mem_obj,
                                                                         c_mem_obj1);
-        // CreateProgramFromBinary(handle.GetStream(),"min_max_loc.cpp","min_max_loc.cpp.bin","max",theProgram,theKernel);
-        // clRetainKernel(theKernel); 
-
-        // counter = 0;
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj1);
-
-        // cl_kernel_implementer (gDim3, local_item_size, theProgram, theKernel);
+    
         
         hipMemcpy(partial_max,c_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost); 
         
@@ -486,8 +425,6 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                 srcSize.height,
                                                                                 srcSize.width,
                                                                                 channel);
-        // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_pkd_col",theProgram,theKernel);
-        // clRetainKernel(theKernel);
     }
     else
     {
@@ -498,23 +435,8 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                 srcSize.height,
                                                                                 srcSize.width,
                                                                                 channel);
-        // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_pln_col",theProgram,theKernel);
-        // clRetainKernel(theKernel);
     }
     
-    //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    // //----
-
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = 1;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
 
     /* FIRST ROW */
     if(chnFormat == RPPI_CHN_PACKED)
@@ -526,8 +448,6 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                 srcSize.height,
                                                                                 srcSize.width,
                                                                                 channel);
-        // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_pkd_row",theProgram,theKernel);
-        // clRetainKernel(theKernel);
     }
     else
     {
@@ -538,21 +458,8 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                 srcSize.height,
                                                                                 srcSize.width,
                                                                                 channel);
-        // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_pln_row",theProgram,theKernel);
-        // clRetainKernel(theKernel);
     }
     
-    // counter=0;
-    // //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    // //----
-
-    // gDim3[0] = srcSize.height;
-    // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
 
     Rpp32u temp = 1;
 
@@ -565,7 +472,6 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
             temp = srcSize.height - i + srcSize.width - 3;
         else
             temp = (srcSize.height - 1 <= srcSize.width - 1) ? srcSize.height - 1 : srcSize.width - 1;
-        // gDim3[0] = temp;
         if(chnFormat == RPPI_CHN_PACKED)
         {
             std::vector<size_t> vld{32, 32, 1};
@@ -577,8 +483,6 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                     channel,
                                                                                     i,
                                                                                     temp);
-            // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_up_pkd",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         else
         {
@@ -591,22 +495,9 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                     channel,
                                                                                     i,
                                                                                     temp);
-            // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_up_pln",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         
         counter=0;
-
-        //---- Args Setter
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-        // clSetKernelArg(theKernel, counter++, sizeof(int), &i);
-        // //----
-        // clSetKernelArg(theKernel, counter++, sizeof(int), &temp);
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
     }
     for(int i = 0 ; i < srcSize.width - 2 ; i++)
     {
@@ -619,7 +510,6 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
             temp = (srcSize.height - 1 <= srcSize.width - 1) ? srcSize.height - 1 : srcSize.width - 1;
         
 
-        // gDim3[0] = temp;
         if(chnFormat == RPPI_CHN_PACKED)
         {
             std::vector<size_t> vld{32, 32, 1};
@@ -631,8 +521,6 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                     channel,
                                                                                     i,
                                                                                     temp);
-            // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_low_pkd",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         else
         {
@@ -645,22 +533,10 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                     channel,
                                                                                     i,
                                                                                     temp);
-            // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_low_pln",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         
         counter=0;
 
-        //---- Args Setter
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-        // clSetKernelArg(theKernel, counter++, sizeof(int), &i);
-        // //----
-        // clSetKernelArg(theKernel, counter++, sizeof(int), &temp);
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
     }
     return RPP_SUCCESS;
 }
@@ -709,8 +585,7 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                 channel);
-            // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_pkd_col",theProgram,theKernel);
-            // clRetainKernel(theKernel);
+            
         }
         else
         {
@@ -721,22 +596,8 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                 channel);
-            // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_pln_col",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         
-        //---- Args Setter
-        // counter = 0;
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr1);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-        // //----
-
-
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
         /* FIRST ROW */
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
         if(chnFormat == RPPI_CHN_PACKED)
@@ -748,8 +609,6 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                 channel);
-            // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_pkd_row",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         else
         {
@@ -760,21 +619,7 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                 channel);
-            // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_pln_row",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
-        
-        // counter=0;
-        // //---- Args Setter
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr1);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-        // //----
-
-        // gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
 
         Rpp32u temp = 1;
 
@@ -798,8 +643,6 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
                                                                                 channel,
                                                                                 x,
                                                                                 temp);
-                // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_up_pkd",theProgram,theKernel);
-                // clRetainKernel(theKernel);
             }
             else
             {
@@ -812,22 +655,10 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
                                                                                 channel,
                                                                                 x,
                                                                                 temp);
-                // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_up_pln",theProgram,theKernel);
-                // clRetainKernel(theKernel);
+               
             }
             
-            // counter=0;
-
-            // //---- Args Setter
-            // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-            // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr1);
-            // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-            // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-            // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-            // clSetKernelArg(theKernel, counter++, sizeof(int), &x);
-            //----
-            // clSetKernelArg(theKernel, counter++, sizeof(int), &temp);
-            // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
+            
         }
         for(int x = 0 ; x < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 2 ; x++)
         {
@@ -849,8 +680,7 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
                                                                                         channel,
                                                                                         x,
                                                                                         temp);
-                // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_low_pkd",theProgram,theKernel);
-                // clRetainKernel(theKernel);
+               
             }
             else
             {
@@ -863,24 +693,12 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
                                                                                         channel,
                                                                                         x,
                                                                                         temp);
-                // CreateProgramFromBinary(handle.GetStream(),"integral.cpp","integral.cpp.bin","integral_low_pln",theProgram,theKernel);
-                // clRetainKernel(theKernel);
+                
             }
             
             counter=0;
 
-            //---- Args Setter
-            // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-            // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr1);
-            // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-            // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-            // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-            // clSetKernelArg(theKernel, counter++, sizeof(int), &x);
-            // //----
-
-
-            // clSetKernelArg(theKernel, counter++, sizeof(int), &temp);
-            // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
+            
         }
         hipMemcpy(dstPtr+batchIndexDst, dstPtr1, sizeof(unsigned int) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
         batchIndexSrc += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
@@ -924,13 +742,6 @@ mean_stddev_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
     std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
     handle.AddKernel("", "", "mean_stddev.cpp", "sum", vld, vgd, "")(srcPtr,
                                                                     b_mem_obj);
-    // CreateProgramFromBinary(handle.GetStream(),"mean_stddev.cpp","mean_stddev.cpp.bin","sum",theProgram,theKernel);
-    // clRetainKernel(theKernel);   
-    
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj);
-
-    // cl_kernel_implementer (gDim3, local_item_size, theProgram, theKernel);
     
     hipMemcpy(partial_sum,b_mem_obj, numGroups * sizeof(long), hipMemcpyDeviceToHost);   
     
@@ -945,14 +756,6 @@ mean_stddev_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
     handle.AddKernel("", "", "mean_stddev.cpp", "mean_stddev", vld, vgd, "")(srcPtr,
                                                                     c_mem_obj,
                                                                     meanCopy);
-    // CreateProgramFromBinary(handle.GetStream(),"mean_stddev.cpp","mean_stddev.cpp.bin","mean_stddev",theProgram,theKernel);
-    // clRetainKernel(theKernel); 
-
-    // counter = 0;
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj);
-    // clSetKernelArg(theKernel, counter++, sizeof(float), &meanCopy);
-    // cl_kernel_implementer (gDim3, local_item_size, theProgram, theKernel);
     hipMemcpy(partial_mean_sum,c_mem_obj, numGroups * sizeof(float), hipMemcpyDeviceToHost);  
     for(i = 0; i < numGroups; i++)
     {
@@ -972,7 +775,6 @@ mean_stddev_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
 RppStatus
 mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel)
-    // cl_mem srcPtr, RppiSize *srcSize, Rpp32f *mean, Rpp32f *stddev, Rpp32u nBatchSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     Rpp32u nBatchSize = handle.GetBatchSize();
     long *partial_sum;
@@ -1039,11 +841,6 @@ mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& 
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
         handle.AddKernel("", "", "mean_stddev.cpp", "sum", vld, vgd, "")(srcPtr1,
                                                                         b_mem_obj);
-        // CreateProgramFromBinary(handle.GetStream(),"mean_stddev.cpp","mean_stddev.cpp.bin","sum",theProgram,theKernel);
-        // clRetainKernel(theKernel);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &b_mem_obj);
-        // cl_kernel_implementer (gDim3, local_item_size, theProgram, theKernel);
         
         hipMemcpy( partial_sum,b_mem_obj, numGroups * sizeof(long),hipMemcpyDeviceToHost);   
         
@@ -1057,14 +854,6 @@ mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& 
         handle.AddKernel("", "", "mean_stddev.cpp", "sum", vld, vgd, "")(srcPtr1,
                                                                         c_mem_obj,
                                                                         meanCopy);
-
-        // CreateProgramFromBinary(handle.GetStream(),"mean_stddev.cpp","mean_stddev.cpp.bin","mean_stddev",theProgram,theKernel);
-        // clRetainKernel(theKernel); 
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-        // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &c_mem_obj);
-        // clSetKernelArg(theKernel, counter++, sizeof(float), &meanCopy);
-        
-        // cl_kernel_implementer (gDim3, local_item_size, theProgram, theKernel);
         hipMemcpy(partial_mean_sum,c_mem_obj, numGroups * sizeof(float),hipMemcpyDeviceToHost );  
         for(i = 0; i < numGroups; i++)
         {
