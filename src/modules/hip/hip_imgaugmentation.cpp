@@ -909,7 +909,9 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
 
     }
     else
-    {std::cerr << "Internal error: Unknown Channel format";
+    {
+        std::cerr << "Internal error: Unknown Channel format";
+    }
     hipFree(cum_histogram);
     hipFree(partialHistogram);
     hipFree(histogram);
