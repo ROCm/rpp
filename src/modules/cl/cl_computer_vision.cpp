@@ -601,7 +601,7 @@ laplacian_image_pyramid_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& 
     //std::cerr<<maxHeight<<" "<<maxWidth<<" "<<maxKernelSize<<"\n";
     for(int i = 0 ; i < handle.GetBatchSize(); i++)
     {       
-        std::cerr<<"loop : "<<i+1<<"\n INDEX : "<<batchIndex<<"\n";
+        // std::cerr<<"loop : "<<i+1<<"\n INDEX : "<<batchIndex<<"\n";
         generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[0].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
         clEnqueueWriteBuffer(handle.GetStream(), kernel, CL_TRUE, 0, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * sizeof(Rpp32f), kernelMain, 0, NULL, NULL);
         if(chnFormat == RPPI_CHN_PACKED)

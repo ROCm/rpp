@@ -16,10 +16,7 @@ absolute_difference_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                                                             srcSize.width,
                                                                                             channel);
 
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
+    
     return RPP_SUCCESS;
 
 }
@@ -74,10 +71,7 @@ accumulate_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                                         srcSize.height,
                                                                         srcSize.width,
                                                                         channel);
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
+    
     return RPP_SUCCESS;
 
 }
@@ -134,10 +128,7 @@ accumulate_weighted_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                                                    srcSize.height,
                                                                                    srcSize.width,
                                                                                    channel);
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
+   
     return RPP_SUCCESS;
 
 }
@@ -196,10 +187,7 @@ add_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                             srcSize.width,
                                                             channel);
 
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
+
     return RPP_SUCCESS;
 
 }
@@ -254,10 +242,7 @@ subtract_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                                       srcSize.height,
                                                                       srcSize.width,
                                                                       channel);
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
+    
     return RPP_SUCCESS;
 
 }
@@ -312,10 +297,7 @@ magnitude_hip( Rpp8u* srcPtr1,Rpp8u* srcPtr2, RppiSize srcSize, Rpp8u* dstPtr,
                                                                       srcSize.height,
                                                                       srcSize.width,
                                                                       channel);
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
+   
     return RPP_SUCCESS;
 }
 
@@ -367,10 +349,7 @@ multiply_hip( Rpp8u* srcPtr1,Rpp8u* srcPtr2, RppiSize srcSize, Rpp8u* dstPtr,
                                                                       srcSize.width,
                                                                       channel);
 
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
+    
     return RPP_SUCCESS;
 }
 
@@ -421,10 +400,7 @@ phase_hip( Rpp8u* srcPtr1,Rpp8u* srcPtr2, RppiSize srcSize, Rpp8u* dstPtr,
                                                                       srcSize.height,
                                                                       srcSize.width,
                                                                       channel);
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
+    
     return RPP_SUCCESS;
 }
 
@@ -475,10 +451,6 @@ accumulate_squared_hip(Rpp8u* srcPtr, RppiSize srcSize, RppiChnFormat chnFormat,
                                                                       srcSize.height,
                                                                       srcSize.width,
                                                                       channel);
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
     return RPP_SUCCESS;
     
 }
@@ -521,7 +493,6 @@ accumulate_squared_hip_batch ( Rpp8u* srcPtr, rpp::Handle& handle,
 RppStatus
 tensor_add_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle)
 { 
-    // unsigned short counter=0;
 
     size_t gDim3[3];
     if(tensorDimension == 1)
@@ -560,18 +531,6 @@ tensor_add_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u srcP
                                                                     dim1,
                                                                     dim2,
                                                                     dim3);
-    //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim1);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim2);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim3);
-    // //----
-    // CreateProgramFromBinary(theQueue,"tensor.cpp","tensor.cpp.bin","tensor_add",theProgram,theKernel);
-    // clRetainKernel(theKernel);    
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;
 }
 
@@ -617,18 +576,6 @@ tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u
                                                                     dim1,
                                                                     dim2,
                                                                     dim3);
-    //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim1);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim2);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim3);
-    // //----
-    // CreateProgramFromBinary(theQueue,"tensor.cpp","tensor.cpp.bin","tensor_subtract",theProgram,theKernel);
-    // clRetainKernel(theKernel);
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;
 }
 
@@ -674,18 +621,6 @@ tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u
                                                                     dim1,
                                                                     dim2,
                                                                     dim3);
-    //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim1);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim2);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim3);
-    // //---- 
-    // CreateProgramFromBinary(theQueue,"tensor.cpp","tensor.cpp.bin","tensor_multiply",theProgram,theKernel);
-    // clRetainKernel(theKernel);
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;    
 }
 
@@ -713,99 +648,5 @@ tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u* tensorDimensi
                                                                                 b,
                                                                                 c,
                                                                                 d);
-    //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr1);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr2);
-    // clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &a);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &b);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &c);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &d);
-    // //----  
-    // CreateProgramFromBinary(theQueue,"tensor.cpp","tensor.cpp.bin","tensor_matrix_multiply",theProgram,theKernel);
-    // clRetainKernel(theKernel);
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;    
 }
-
-
-/**************** Accumulate squared *******************/
-// RppStatus
-// mean_stddev_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
-// {
-//     unsigned short counter=0;
-    
-//     cl_kernel theKernel;
-//     cl_program theProgram;
-//     CreateProgramFromBinary(theQueue,"mean_stddev.cpp","mean_stddev.cpp.bin","sum",theProgram,theKernel);
-//     clRetainKernel(theKernel);   
-    
-//     int i;
-    
-//     const int LIST_SIZE = srcSize.height * srcSize.width * channel;
-//     int numGroups = std::ceil(LIST_SIZE / 256);
-    
-//     cl_context theContext;
-//     clGetCommandQueueInfo(theQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
-//     cl_device_id theDevice;
-//     clGetCommandQueueInfo(theQueue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
-
-//     float sum = 0;
-//     long *partial_sum;
-//     partial_sum = (long *) calloc (numGroups, sizeof(long));
-//     Rpp8u* b_mem_obj = clCreateBuffer(theContext, Rpp8u*_WRITE_ONLY, numGroups * sizeof(long), NULL, NULL);
-//     clEnqueueWriteBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);
-
-//     float mean_sum = 0;
-//     float *partial_mean_sum;
-//     partial_mean_sum = (float *) calloc (numGroups, sizeof(float));
-//     Rpp8u* c_mem_obj = clCreateBuffer(theContext, Rpp8u*_WRITE_ONLY, numGroups * sizeof(float), NULL, NULL);
-//     clEnqueueWriteBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);
-
-
-//     clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-//     clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &b_mem_obj);
-
-//     size_t gDim3[3];
-//     gDim3[0] = LIST_SIZE;
-//     gDim3[1] = 1;
-//     gDim3[2] = 1;
-//     size_t local_item_size[3];
-//     local_item_size[0] = 256;
-//     local_item_size[1] = 1;
-//     local_item_size[2] = 1;
-//     cl_kernel_implementer (theQueue, gDim3, local_item_size, theProgram, theKernel);
-//     clEnqueueReadBuffer(theQueue, b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);   
-    
-//     for(i = 0; i < numGroups; i++)
-//     {
-//         sum += (float)partial_sum[i];
-//     }
-
-//     *mean = (sum) / LIST_SIZE ;
-
-
-//     CreateProgramFromBinary(theQueue,"mean_stddev.cpp","mean_stddev.cpp.bin","mean_stddev",theProgram,theKernel);
-//     clRetainKernel(theKernel); 
-
-//     counter = 0;
-//     float meanCopy = *mean;
-//     clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-//     clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &c_mem_obj);
-//     clSetKernelArg(theKernel, counter++, sizeof(float), &meanCopy);
-//     cl_kernel_implementer (theQueue, gDim3, local_item_size, theProgram, theKernel);
-//     clEnqueueReadBuffer(theQueue, c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);  
-//     for(i = 0; i < numGroups; i++)
-//     {
-//         mean_sum += partial_mean_sum[i];
-//     }
-    
-//     mean_sum = mean_sum / LIST_SIZE ;
-//     *stddev = mean_sum;
-
-//     clReleaseMemObject(b_mem_obj); 
-//     free(partial_sum);
-//     clReleaseMemObject(c_mem_obj); 
-//     free(partial_mean_sum);
-    
-// }
