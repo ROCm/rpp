@@ -324,24 +324,6 @@ resize_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    // handle.AddKernel("", "", "resize.cpp", "resize_batch", vld, vgd, "")(srcPtr, dstPtr,
-    //                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
-    //                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
-    //                                                             handle.GetInitHandle()->mem.mgpu.dstSize.height,
-    //                                                             handle.GetInitHandle()->mem.mgpu.dstSize.width,
-    //                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-    //                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-    //                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-    //                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-    //                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-    //                                                             handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
-    //                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-    //                                                             handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
-    //                                                             channel,
-    //                                                             handle.GetInitHandle()->mem.mgpu.inc,
-    //                                                             handle.GetInitHandle()->mem.mgpu.dstInc,
-    //                                                             plnpkdind
-    //                                                             );
     handle.AddKernel("", "", "resize.cpp", "resize_crop_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
@@ -349,10 +331,6 @@ resize_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
                                                                         handle.GetInitHandle()->mem.mgpu.dstSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
-                                                                        // handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                                                                        // handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                                                                        // handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                                                                        // handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -376,11 +354,6 @@ resize_crop_hip(Rpp8u * srcPtr, RppiSize srcSize,
                 RppiChnFormat chnFormat, unsigned int channel,
                 rpp::Handle& handle)
 {
-    // unsigned short counter=0;
-    // cl_int err;
-    // cl_kernel theKernel;
-    // cl_program theProgram;
-    // cl_context theContext;
     unsigned int type = 0,  padding = 0;
     unsigned int width,height;
     if(type == 1)
@@ -392,8 +365,6 @@ resize_crop_hip(Rpp8u * srcPtr, RppiSize srcSize,
     {
         width = dstSize.width;
         height = dstSize.height;
-        // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstSize.height);
-        // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstSize.width);
     }
     if(chnFormat == RPPI_CHN_PACKED)
     {
@@ -433,52 +404,6 @@ resize_crop_hip(Rpp8u * srcPtr, RppiSize srcSize,
                                                                         channel
                                                                         );
     }
-
-    // if (chnFormat == RPPI_CHN_PLANAR)
-    // {
-    //     CreateProgramFromBinary(handle,"resize.cpp","resize.cpp.bin","resize_crop_pln",theProgram,theKernel);
-    //     clRetainKernel(theKernel);
-    //     // cl_kernel_initializer(  "resize.cpp", "resize_crop_pln",
-    //     //                         theProgram, theKernel);
-    // }
-    // else if (chnFormat == RPPI_CHN_PACKED)
-    // {
-    //     CreateProgramFromBinary(handle,"resize.cpp","resize.cpp.bin","resize_crop_pkd",theProgram,theKernel);
-    //     clRetainKernel(theKernel);
-    //     // cl_kernel_initializer(  "resize.cpp", "resize_crop_pkd",
-    //     //                         theProgram, theKernel);
-    // }
-    // else
-    // {std::cerr << "Internal error: Unknown Channel format";}
-    // err  = clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &dstPtr);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x1);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y1);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &x2);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &y2);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &padding);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &type);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-
-
-    // size_t gDim3[3];
-    // if(type == 1)
-    // {
-    //     gDim3[0] = dstSize.width - padding * 2;
-    //     gDim3[1] = dstSize.height - padding * 2;
-    //     gDim3[2] = channel;
-    // }
-    // else
-    // {
-    //     gDim3[0] = dstSize.width;
-    //     gDim3[1] = dstSize.height;
-    //     gDim3[2] = channel;
-    // }
-
-    // cl_kernel_implementer (handle, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;
 }
 RppStatus
@@ -500,7 +425,6 @@ resize_crop_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    // std::cout << "coming till here" << std::endl;
     handle.AddKernel("", "", "resize.cpp", "resize_crop_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
@@ -512,10 +436,6 @@ resize_crop_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
-                                                                        // handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                        // handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                        // handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        // handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, 
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                         handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
                                                                         channel,
@@ -610,7 +530,7 @@ warp_affine_hip(Rpp8u * srcPtr, RppiSize srcSize,
 {
 
     float affine_inv[6];
-    float det; //for Deteminent
+    float det; 
     det = (affine[0] * affine [4])  - (affine[1] * affine[3]);
     affine_inv[0] = affine[4]/ det;
     affine_inv[1] = (- 1 * affine[1])/ det;
@@ -637,10 +557,6 @@ warp_affine_hip(Rpp8u * srcPtr, RppiSize srcSize,
                                                                         dstSize.width,
                                                                         channel
                                                                         );
-        // CreateProgramFromBinary(handle,"warp_affine.cpp","warp_affine.cpp.bin","waro_affine_pln",theProgram,theKernel);
-        // clRetainKernel(theKernel);
-        // cl_kernel_initializer(  "rotate.cpp", "rotate_pln",
-        //                         theProgram, theKernel);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -655,30 +571,11 @@ warp_affine_hip(Rpp8u * srcPtr, RppiSize srcSize,
                                                                         dstSize.width,
                                                                         channel
                                                                         );
-        // CreateProgramFromBinary(handle,"warp_affine.cpp","warp_affine.cpp.bin","warp_affine_pkd",theProgram,theKernel);
-        // clRetainKernel(theKernel);
-        // cl_kernel_initializer(  "rotate.cpp", "rotate_pkd",
-        //                         theProgram, theKernel);
     }
 
     else
     {std::cerr << "Internal error: Unknown Channel format";}
 
-    // err  = clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &affine_array);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.height);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.width);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-
-
-    // size_t gDim3[3];
-    // gDim3[0] = dstSize.width;
-    // gDim3[1] = dstSize.height;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (handle, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;
 }
 
@@ -767,8 +664,7 @@ warp_perspective_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr,
                                                                         dstSize.width,
                                                                         channel
                                                                         );
-        // CreateProgramFromBinary(handle.GetStream(),"warp_perspective.cpp","warp_perspective.cpp.bin","warp_perspective_pln",theProgram,theKernel);
-        // clRetainKernel(theKernel);
+        
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -783,42 +679,21 @@ warp_perspective_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr,
                                                                         dstSize.width,
                                                                         channel
                                                                         );
-        // CreateProgramFromBinary(handle.GetStream(),"warp_perspective.cpp","warp_perspective.cpp.bin","warp_perspective_pkd",theProgram,theKernel);
-        // clRetainKernel(theKernel);
+       
     }
     else
     {
         std::cerr << "Internal error: Unknown Channel format";
     }
 
-    // int ctr =0;
-    // err  = clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &perspective_array);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.height);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &dstSize.width);
-    // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-
-
-    // size_t gDim3[3];
-    // gDim3[0] = dstSize.width;
-    // gDim3[1] = dstSize.height;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
+    
     return RPP_SUCCESS;
 }
 
 RppStatus
 warp_perspective_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,Rpp32f *perspective, 
                         RppiChnFormat chnFormat, unsigned int channel)
-    // Rpp8u* srcPtr, RppiSize *srcSize, RppiSize *src_maxSize,
-    //                         Rpp8u* dstPtr, RppiSize *dstSize, RppiSize *dst_maxSize,
-    //                         Rpp32f *perspective, Rpp32u nBatchSize,
-    //                         RppiChnFormat chnFormat, unsigned int channel,
-    //                         rpp::Handle& handle)
+    
 {
     Rpp32u nBatchSize = handle.GetBatchSize(); 
     float perspective_inv[9];
@@ -885,8 +760,7 @@ warp_perspective_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
                                                                         handle.GetInitHandle()->mem.mgpu.cdstSize.width[i],
                                                                         channel
                                                                         );
-            // CreateProgramFromBinary(handle.GetStream(),"warp_perspective.cpp","warp_perspective.cpp.bin","warp_perspective_pln",theProgram,theKernel);
-            // clRetainKernel(theKernel);
+            
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {   
@@ -901,27 +775,13 @@ warp_perspective_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
                                                                         handle.GetInitHandle()->mem.mgpu.cdstSize.width[i],
                                                                         channel
                                                                         );
-            // CreateProgramFromBinary(handle.GetStream(),"warp_perspective.cpp","warp_perspective.cpp.bin","warp_perspective_pkd",theProgram,theKernel);
-            // clRetainKernel(theKernel);
+           
         }
 
         else
         {std::cerr << "Internal error: Unknown Channel format";}
 
-        // int ctr =0;
-        // err  = clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr1);
-        // err |= clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr1);
-        // err |= clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &perspective_array);
-        // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.cdstSize.height[i]);
-        // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.cdstSize.width[i]);
-        // err |= clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-
-        // gDim3[0] = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
-        // gDim3[1] = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
-        // gDim3[2] = channel;
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
+        
         hipMemcpy(dstPtr+dstbatchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);        srcbatchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
         dstbatchIndex += handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * channel * sizeof(unsigned char);
         index = index + 9;
@@ -952,8 +812,7 @@ scale_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr, RppiSize dstSize,
                                                                         dstheight,
                                                                         dstwidth
                                                                         );
-        // CreateProgramFromBinary(handle.GetStream(),"resize.cpp","resize.cpp.bin","resize_pln",theProgram,theKernel);
-        // clRetainKernel(theKernel);
+        
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {   
@@ -969,30 +828,13 @@ scale_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr, RppiSize dstSize,
                                                                         dstheight,
                                                                         dstwidth
                                                                         );
-        // CreateProgramFromBinary(handle.GetStream(),"resize.cpp","resize.cpp.bin","resize_pkd",theProgram,theKernel);
-        // clRetainKernel(theKernel);
+        
     }
     else
     {
         std::cerr << "Internal error: Unknown Channel format";
     }
 
-    // err  = clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &dstPtr);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstSize.height);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstSize.width);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstheight);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dstwidth);
-
-
-    // size_t gDim3[3];
-    // gDim3[0] = dstSize.width;
-    // gDim3[1] = dstSize.height;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;
 }
 
