@@ -92,7 +92,7 @@ extern "C" __global__ void warp_affine_batch(          unsigned char* srcPtr,
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     int indextmp = 0;
-    unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+    unsigned long src_pixIdx, dst_pixIdx;
     int xc = id_x - (dest_width[id_z] >> 1);
     int yc = id_y - (dest_height[id_z] >> 1);
     int affine_index = id_z * 6;

@@ -456,12 +456,12 @@ int main(int argc, char **argv)
 		hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
 	}
 
-	clock_t start, end;   
 	double cpu_time_used[1000];
 	double max_time_used = 0, min_time_used = 500, avg_time_used = 0;
 
 	for (int i = 0; i < 1000; i++)
 	{
+		clock_t start, end;
 		start = clock();
 		switch (test_case)
 		{
