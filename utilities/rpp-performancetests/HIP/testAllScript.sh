@@ -10,7 +10,7 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/two_images_224x224_src2"
 
 # Output Images
 # Additional Note - There are no output images for rpp-performancetests - Only max, min, avg performance times for 1000 batches - A destination folder path however needs to be passed
-mkdir $cwd/../OUTPUT_IMAGES_HIP
+mkdir "$cwd/../OUTPUT_IMAGES_HIP"
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HIP"
 
 # <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
@@ -31,7 +31,7 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
-rm -rvf $DST_FOLDER/*
+rm -rvf "$DST_FOLDER/*"
 shopt -s extglob
 mkdir build
 cd build

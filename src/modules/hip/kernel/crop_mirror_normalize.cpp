@@ -27,8 +27,8 @@ extern "C" __global__ void crop_mirror_normalize_batch(
   int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
   int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
   int indextmp = 0;
-  const float local_mean = mean[id_z];
-  const float local_std_dev = std_dev[id_z];
+  // const float local_mean = mean[id_z];
+  // const float local_std_dev = std_dev[id_z];
   const unsigned int local_flip = flip[id_z];
   unsigned long src_pixIdx;
   if (local_flip == 1) {

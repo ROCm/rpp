@@ -9,7 +9,7 @@ DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/two_images_224x224_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/two_images_224x224_src2"
 
 # Output Images
-mkdir $cwd/../OUTPUT_IMAGES_OCL
+mkdir "$cwd/../OUTPUT_IMAGES_OCL"
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_OCL"
 
 # <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
@@ -30,7 +30,7 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
-rm -rvf $DST_FOLDER/*
+rm -rvf "$DST_FOLDER/*"
 shopt -s extglob
 mkdir build
 cd build
