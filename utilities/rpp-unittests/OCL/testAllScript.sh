@@ -45,6 +45,6 @@ echo "--------------------------------"
 printf "Running a New Functionality...\n"
 echo "--------------------------------"
 printf "\n./BatchPD_ocl $SRC_FOLDER_1 $SRC_FOLDER_2 $DST_FOLDER $case 1"
-./BatchPD_ocl $SRC_FOLDER_1 $SRC_FOLDER_2 $DST_FOLDER $case 1
+./BatchPD_ocl "$SRC_FOLDER_1" "$SRC_FOLDER_2" "$DST_FOLDER" "$case" "0"
 echo "------------------------------------------------------------------------------------------"
 done

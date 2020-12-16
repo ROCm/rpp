@@ -389,7 +389,7 @@ int main(int argc, char **argv)
 		max[i] = 30;
 	}
 	const int size_perspective = images * 9;
-    Rpp32f perspective[64 * 9];
+    Rpp32f perspective[size_perspective];
 	for (i = 0; i < images; i++)
 	{
 		perspective[0 + i * 9] = 0.93;
