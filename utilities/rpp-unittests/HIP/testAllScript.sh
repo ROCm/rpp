@@ -34,7 +34,7 @@ rm -rvf "$DST_FOLDER/*"
 shopt -s extglob
 mkdir build
 cd build
-rm -rvf *
+rm -rvf ./*
 cmake ..
 make
 
