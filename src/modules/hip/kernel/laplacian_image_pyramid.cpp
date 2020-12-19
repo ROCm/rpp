@@ -96,8 +96,7 @@ extern "C" __global__ void laplacian_image_pyramid_pkd_batch( unsigned char* inp
     int outPixIdx = batchIndex + id_y * channel * width + id_x * channel + id_z;
     int boundx = (kernalwidth - 1) / 2;
     int boundy = (kernalheight - 1) / 2;
-    int sum = 0;
-    int counter = 0;
+    
     if ((id_x >= ceil((float)(width / 2)) || id_y >= ceil((float)(height / 2)) || id_z >= channel))
     {
         output[outPixIdx] = 0;
@@ -109,6 +108,8 @@ extern "C" __global__ void laplacian_image_pyramid_pkd_batch( unsigned char* inp
     }
     else
     {
+        int sum = 0;
+        int counter = 0;
         for(int i = -boundy ; i <= boundy ; i++)
         {
             for(int j = -boundx ; j <= boundx ; j++)
