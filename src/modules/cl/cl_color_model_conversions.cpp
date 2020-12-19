@@ -330,6 +330,7 @@ hueRGB_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+        // std::cout << "coming INto HUE RPP till here"  << std::endl;
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};

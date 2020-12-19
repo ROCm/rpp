@@ -28,21 +28,7 @@ color_temperature_hip( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32s ad
                                                                                             channel,
                                                                                             adjustmentValue
                                                                                             );
-    }
-    //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    // clSetKernelArg(theKernel, counter++, sizeof(float), &adjustmentValue);
-
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = 1;
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-    
+    }    
     return RPP_SUCCESS;
 }
 
@@ -86,47 +72,6 @@ color_temperature_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handl
 RppStatus
 vignette_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, float stdDev, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    // int ctr=0;
-    // cl_kernel theKernel;
-    // cl_program theProgram;
-    // if(chnFormat == RPPI_CHN_PLANAR)
-    // {    
-    //     std::vector<size_t> vld{32, 32, 1};
-    //     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
-    //     handle.AddKernel("", "", "vignette.cpp", "vignette_pln", vld, vgd, "")(srcPtr,
-    //                                                                         dstPtr,
-    //                                                                         srcSize.height,
-    //                                                                         srcSize.width,
-    //                                                                         channel,
-    //                                                                         stdDev
-    //                                                                         );
-    // } 
-    // else
-    // {
-    //     std::vector<size_t> vld{32, 32, 1};
-    //     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,channel};
-    //     handle.AddKernel("", "", "vignette.cpp", "vignette_pkd", vld, vgd, "")(srcPtr,
-    //                                                                         dstPtr,
-    //                                                                         srcSize.height,
-    //                                                                         srcSize.width,
-    //                                                                         channel,
-    //                                                                         stdDev
-    //                                                                         );
-    // }
-    
-    // // //---- Args Setter
-    // // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
-    // // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
-    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    // // clSetKernelArg(theKernel, ctr++, sizeof(float), &stdDev);
-
-    // // size_t gDim3[3];
-    // // gDim3[0] = srcSize.width;
-    // // gDim3[1] = srcSize.height;
-    // // gDim3[2] = channel;
-    // // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;
 }
 
@@ -168,47 +113,6 @@ vignette_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 RppStatus
 channel_extract_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u extractChannelNumber, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    // unsigned short counter=0;
-    // cl_int err;
-    // cl_kernel theKernel;
-    // cl_program theProgram;
-    // if (chnFormat == RPPI_CHN_PLANAR)
-    // {
-    //     std::vector<size_t> vld{32, 32, 1};
-    //     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, 1};
-    //     handle.AddKernel("", "", "channel_extract.cpp", "channel_extract_pln", vld, vgd, "")(srcPtr,
-    //                                                                         dstPtr,
-    //                                                                         srcSize.height,
-    //                                                                         srcSize.width,
-    //                                                                         channel,
-    //                                                                         extractChannelNumber
-    //                                                                         );
-    // }
-    // else if (chnFormat == RPPI_CHN_PACKED)
-    // {
-    //     std::vector<size_t> vld{32, 32, 1};
-    //     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, 1};
-    //     handle.AddKernel("", "", "channel_extract.cpp", "channel_extract_pkd", vld, vgd, "")(srcPtr,
-    //                                                                         dstPtr,
-    //                                                                         srcSize.height,
-    //                                                                         srcSize.width,
-    //                                                                         channel,
-    //                                                                         extractChannelNumber
-    //                                                                         );
-    // }
-    // //---- Args Setter
-    // // err  = clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &dstPtr);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &extractChannelNumber);
-
-    // // size_t gDim3[3];
-    // // gDim3[0] = srcSize.width;
-    // // gDim3[1] = srcSize.height;
-    // // gDim3[2] = 1;
-    // // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
     return RPP_SUCCESS;  
 }
 
@@ -274,10 +178,6 @@ channel_combine_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* srcPtr3, RppiSize src
                                                                                             channel
                                                                                             );
     }
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = 1;
     return RPP_SUCCESS;      
 }
 
@@ -425,55 +325,6 @@ RppStatus
 look_up_table_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,Rpp8u* lutPtr,
  RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    // Rpp8u* clLutPtr;
-    // hipMalloc(&clLutPtr,sizeof(Rpp8u)*256*channel);
-    // hipMemcpy(clLutPtr, lutPtr, sizeof(Rpp8u)*256*channel,hipMemcpyHostToDevice);
-
-    // unsigned short counter=0;
-    // cl_int err;
-    // cl_kernel theKernel;
-    // cl_program theProgram;
-    // if (chnFormat == RPPI_CHN_PLANAR)
-    // {
-    //     std::vector<size_t> vld{32, 32, 1};
-    //     std::vector<size_t> vgd{srcSize.width,srcSize.height,channel};
-    //     handle.AddKernel("", "", "look_up_table.cpp", "look_up_table_pln", vld, vgd, "")(srcPtr,
-    //                                                                 dstPtr,
-    //                                                                 clLutPtr,
-    //                                                                 srcSize.height,
-    //                                                                 srcSize.width,
-    //                                                                 channel
-    //                                                                 );
-    //     // CreateProgramFromBinary(theQueue,"look_up_table.cpp","look_up_table.cpp.bin","look_up_table_pln",theProgram,theKernel);
-    //     // clRetainKernel(theKernel);
-    // }
-    // else if (chnFormat == RPPI_CHN_PACKED)
-    // {
-    //     std::vector<size_t> vld{32, 32, 1};
-    //     std::vector<size_t> vgd{srcSize.width,srcSize.height,channel};
-    //     handle.AddKernel("", "", "look_up_table.cpp", "look_up_table_pkd", vld, vgd, "")(srcPtr,
-    //                                                                 dstPtr,
-    //                                                                 clLutPtr,
-    //                                                                 srcSize.height,
-    //                                                                 srcSize.width,
-    //                                                                 channel
-    //                                                                 );
-    //     // CreateProgramFromBinary(theQueue,"look_up_table.cpp","look_up_table.cpp.bin","look_up_table_pkd",theProgram,theKernel);
-    //     // clRetainKernel(theKernel);
-    // }
-    // //---- Args Setter
-    // // err  = clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &dstPtr);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &clLutPtr);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-
-    // // size_t gDim3[3];
-    // // gDim3[0] = srcSize.width;
-    // // gDim3[1] = srcSize.height;
-    // // gDim3[2] = channel;
-    // // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);   
     return RPP_SUCCESS;      
 }
 RppStatus
@@ -558,16 +409,5 @@ tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues,
                                                                                 dim2,
                                                                                 dim3,
                                                                                 clLutPtr);
-    //---- Args Setter
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &tensorDimension);
-    // clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &srcPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &dstPtr);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim1);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim2);
-    // clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &dim3);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(Rpp8u*), &clLutPtr);
-    // CreateProgramFromBinary(theQueue,"look_up_table.cpp","look_up_table.cpp.bin","tensor_look_up_table",theProgram,theKernel);
-    // clRetainKernel(theKernel);
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);   
     return RPP_SUCCESS;      
 }

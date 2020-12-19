@@ -71,10 +71,6 @@ bitwise_AND_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                                             srcSize.width,
                                                                             channel);
 
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
     return RPP_SUCCESS;
 
 }
@@ -131,10 +127,6 @@ exclusive_OR_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                                             srcSize.width,
                                                                             channel);
  
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
     return RPP_SUCCESS;
 
 }
@@ -190,10 +182,6 @@ inclusive_OR_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
                                                                             srcSize.width,
                                                                             channel);
 
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
 
     return RPP_SUCCESS;
 

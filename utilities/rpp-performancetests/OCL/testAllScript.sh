@@ -9,6 +9,7 @@ DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/two_images_224x224_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/two_images_224x224_src2"
 
 # Output Images
+# Additional Note - There are no output images for rpp-performancetests - Only max, min, avg performance times for 1000 batches - A destination folder path however needs to be passed
 mkdir $cwd/../OUTPUT_IMAGES_OCL
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_OCL"
 
@@ -44,7 +45,7 @@ printf "\n\n\n\n"
 echo "--------------------------------"
 printf "Running a New Functionality...\n"
 echo "--------------------------------"
-printf "\n./BatchPD_ocl $SRC_FOLDER_1 $SRC_FOLDER_2 $DST_FOLDER $case 1"
+printf "\n./BatchPD_ocl $SRC_FOLDER_1 $SRC_FOLDER_2 $DST_FOLDER $case 0\n"
 ./BatchPD_ocl "$SRC_FOLDER_1" "$SRC_FOLDER_2" "$DST_FOLDER" "$case" "0"
 echo "------------------------------------------------------------------------------------------"
 done
