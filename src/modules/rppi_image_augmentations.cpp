@@ -42098,7 +42098,7 @@ rppi_random_crop_letterbox_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSiz
 
 #ifdef OCL_COMPILE
 	{
-		resize_crop_cl_batch(
+		random_crop_letterbox_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),

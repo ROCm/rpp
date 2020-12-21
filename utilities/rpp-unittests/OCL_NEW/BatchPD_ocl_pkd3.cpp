@@ -655,6 +655,10 @@ int main(int argc, char **argv)
     err |= clEnqueueWriteBuffer(theQueue, d_inputf32_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32_second, 0, NULL, NULL);
     err |= clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
     err |= clEnqueueWriteBuffer(theQueue, d_inputi8_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8_second, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_outputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_outputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
     
     rppHandle_t handle;
 
@@ -942,7 +946,7 @@ int main(int argc, char **argv)
         Rpp32f snowPercentage[images];
         for (i = 0; i < images; i++)
         {
-            snowPercentage[i] = 0.6;
+            snowPercentage[i] = 0.15;
         }
 
         start = clock();
@@ -1199,10 +1203,10 @@ int main(int argc, char **argv)
         Rpp32f transparency[images];
         for (i = 0; i < images; i++)
         {
-            rainPercentage[i] = 0.8;
-            rainWidth[i] = 5;
+            rainPercentage[i] = 0.75;
+            rainWidth[i] = 1;
             rainHeight[i] = 12;
-            transparency[i] = 0.5;
+            transparency[i] = 0.3;
         }
 
         start = clock();
@@ -1494,24 +1498,24 @@ int main(int argc, char **argv)
         Rpp32u y1[images];
         Rpp32u x2[images];
         Rpp32u y2[images];
-        Rpp32u numbeoOfShadows[images];
+        Rpp32u numberOfShadows[images];
         Rpp32u maxSizeX[images];
-        Rpp32u maxSizey[images];
+        Rpp32u maxSizeY[images];
         for (i = 0; i < images; i++)
         {
             x1[i] = 0;
             y1[i] = 0;
             x2[i] = 100;
             y2[i] = 100;
-            numbeoOfShadows[i] = 10;
+            numberOfShadows[i] = 10;
             maxSizeX[i] = 12;
-            maxSizey[i] = 15;
+            maxSizeY[i] = 15;
         }
 
         start = clock();
         
         if (ip_bitDepth == 0)
-            rppi_random_shadow_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x1, y1, x2, y2, numbeoOfShadows, maxSizeX, maxSizey, noOfImages, handle);
+            rppi_random_shadow_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3234,12 +3238,12 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            ampl_x[i] = 1.0;
-            ampl_y[i] = 1.0;
-            freq_x[i] = 0.8;
+            ampl_x[i] = 2.0;
+            ampl_y[i] = 5.0;
+            freq_x[i] = 5.8;
             freq_y[i] = 1.2;
             phase_x[i] = 10.0;
-            phase_y[i] = 5;
+            phase_y[i] = 15;
         }
 
         start = clock();
@@ -3429,10 +3433,10 @@ int main(int argc, char **argv)
         d_colorsi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8s), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_anchor_box_info, CL_TRUE, 0, images * boxesInEachImage * 4 * sizeof(Rpp32u), anchor_box_info, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_box_offset, CL_TRUE, 0, images * sizeof(Rpp32u), box_offset, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsu8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsu8, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsf16, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf16, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsf32, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf32, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsi8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsi8, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colorsu8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), colorsu8, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colorsf16, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp16f), colorsf16, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colorsf32, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp32f), colorsf32, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colorsi8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8s), colorsi8, 0, NULL, NULL);
 
         start = clock();
         
@@ -3570,8 +3574,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            x_offset_r[i] = 50;
-            y_offset_r[i] = 50;
+            x_offset_r[i] = 10;
+            y_offset_r[i] = 10;
             x_offset_g[i] = 0;
             y_offset_g[i] = 0;
             x_offset_b[i] = 5;

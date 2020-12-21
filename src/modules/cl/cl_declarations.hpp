@@ -484,6 +484,9 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
 RppStatus
 resize_crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                      RppiChnFormat chnFormat, unsigned int channel = 3);
+RppStatus
+random_crop_letterbox_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
+                     RppiChnFormat chnFormat, unsigned int channel = 3);
 
 RppStatus
 resize_crop_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);

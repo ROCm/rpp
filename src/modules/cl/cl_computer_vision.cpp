@@ -572,10 +572,8 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
     cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, maxHeight * maxWidth * channel * sizeof(Rpp8u), NULL, NULL);
     cl_mem kernel = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, maxKernelSize * maxKernelSize * sizeof(Rpp32f), NULL, NULL);
 
-    //std::cerr<<maxHeight<<" "<<maxWidth<<" "<<maxKernelSize<<"\n";
     for (int i = 0; i < handle.GetBatchSize(); i++)
     {
-        std::cerr << "loop : " << i + 1 << "\n INDEX : " << batchIndex << "\n";
         generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[0].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
         clEnqueueWriteBuffer(handle.GetStream(), kernel, CL_TRUE, 0, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * sizeof(Rpp32f), kernelMain, 0, NULL, NULL);
         if (chnFormat == RPPI_CHN_PACKED)
@@ -583,8 +581,8 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cl", "gaussian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr, srcPtr1,
-                                                                                                                     handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                     handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                     maxHeight,
+                                                                                                                     maxWidth,
                                                                                                                      channel,
                                                                                                                      kernel,
                                                                                                                      handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
@@ -594,10 +592,10 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
         else
         {
             std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
+            std::vector<size_t> vgd{maxWidth, maxHeight, channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cl", "gaussian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr, srcPtr1,
-                                                                                                                     handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                     handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                     maxHeight,
+                                                                                                                     maxWidth,
                                                                                                                      channel,
                                                                                                                      kernel,
                                                                                                                      handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
@@ -608,10 +606,10 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
         if (chnFormat == RPPI_CHN_PACKED)
         {
             std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
+            std::vector<size_t> vgd{maxWidth, maxHeight, channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cl", "laplacian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr1, dstPtr,
-                                                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                      maxHeight,
+                                                                                                                      maxWidth,
                                                                                                                       channel,
                                                                                                                       kernel,
                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
@@ -621,17 +619,17 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
         else
         {
             std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
+            std::vector<size_t> vgd{maxWidth, maxHeight, channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cl", "laplacian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr1, dstPtr,
-                                                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                      maxHeight,
+                                                                                                                      maxWidth,
                                                                                                                       channel,
                                                                                                                       kernel,
                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                       batchIndex);
         }
-        batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel;
+        batchIndex += maxHeight * maxWidth * channel;
     }
     clReleaseMemObject(srcPtr1);
     clReleaseMemObject(kernel);

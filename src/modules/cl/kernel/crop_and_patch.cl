@@ -30,10 +30,12 @@ __kernel void crop_and_patch_batch(
   A = B = C = D = 0;
 
   int indextmp = 0;
-  unsigned long dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0, src_pixIdx = 0;
 
   dst_pixIdx = dest_batch_index[id_z] +
                (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+  src_pixIdx = source_batch_index[id_z] +
+               (id_x + id_y * max_source_width[id_z]) * in_plnpkdind;
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
 
@@ -46,21 +48,21 @@ __kernel void crop_and_patch_batch(
     y_diff = (y_ratio * (id_y - y21[id_z])) - y;
 
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      A = srcPtr1[source_batch_index[id_z] +
+      A = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) + (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      B = srcPtr1[source_batch_index[id_z] +
+      B = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z] + 1) +
                    (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      C = srcPtr1[source_batch_index[id_z] +
+      C = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) +
                    (y + y11[id_z] + 1) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      D = srcPtr1[source_batch_index[id_z] +
+      D = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z] + 1) +
                    (y + y11[id_z] + 1) * max_source_width[id_z]) *
                       in_plnpkdind +
@@ -74,8 +76,9 @@ __kernel void crop_and_patch_batch(
     }
   } else {
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      dstPtr[dst_pixIdx] = srcPtr2[dst_pixIdx];
+      dstPtr[dst_pixIdx] = srcPtr1[src_pixIdx];
       dst_pixIdx += dest_inc[id_z];
+      src_pixIdx += source_inc[id_z];
     }
   }
 }
@@ -113,10 +116,12 @@ __kernel void crop_and_patch_batch_fp16(
   A = B = C = D = 0;
 
   int indextmp = 0;
-  unsigned long dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0, src_pixIdx = 0;
 
   dst_pixIdx = dest_batch_index[id_z] +
                (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+  src_pixIdx = source_batch_index[id_z] +
+               (id_x + id_y * max_source_width[id_z]) * in_plnpkdind;
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
 
@@ -129,21 +134,21 @@ __kernel void crop_and_patch_batch_fp16(
     y_diff = (y_ratio * (id_y - y21[id_z])) - y;
 
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      A = srcPtr1[source_batch_index[id_z] +
+      A = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) + (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      B = srcPtr1[source_batch_index[id_z] +
+      B = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z] + 1) +
                    (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      C = srcPtr1[source_batch_index[id_z] +
+      C = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) +
                    (y + y11[id_z] + 1) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      D = srcPtr1[source_batch_index[id_z] +
+      D = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z] + 1) +
                    (y + y11[id_z] + 1) * max_source_width[id_z]) *
                       in_plnpkdind +
@@ -157,8 +162,9 @@ __kernel void crop_and_patch_batch_fp16(
     }
   } else {
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      dstPtr[dst_pixIdx] = srcPtr2[dst_pixIdx];
+      dstPtr[dst_pixIdx] = srcPtr1[src_pixIdx];
       dst_pixIdx += dest_inc[id_z];
+      src_pixIdx += source_inc[id_z];
     }
   }
 }
@@ -195,10 +201,12 @@ __kernel void crop_and_patch_batch_fp32(
   A = B = C = D = 0;
 
   int indextmp = 0;
-  unsigned long dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0, src_pixIdx = 0;
 
   dst_pixIdx = dest_batch_index[id_z] +
                (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+  src_pixIdx = source_batch_index[id_z] +
+               (id_x + id_y * max_source_width[id_z]) * in_plnpkdind;
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
 
@@ -211,21 +219,21 @@ __kernel void crop_and_patch_batch_fp32(
     y_diff = (y_ratio * (id_y - y21[id_z])) - y;
 
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      A = srcPtr1[source_batch_index[id_z] +
+      A = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) + (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      B = srcPtr1[source_batch_index[id_z] +
+      B = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z] + 1) +
                    (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      C = srcPtr1[source_batch_index[id_z] +
+      C = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) +
                    (y + y11[id_z] + 1) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      D = srcPtr1[source_batch_index[id_z] +
+      D = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z] + 1) +
                    (y + y11[id_z] + 1) * max_source_width[id_z]) *
                       in_plnpkdind +
@@ -239,8 +247,9 @@ __kernel void crop_and_patch_batch_fp32(
     }
   } else {
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      dstPtr[dst_pixIdx] = srcPtr2[dst_pixIdx];
+      dstPtr[dst_pixIdx] = srcPtr1[src_pixIdx];
       dst_pixIdx += dest_inc[id_z];
+      src_pixIdx += source_inc[id_z];
     }
   }
 }
@@ -277,10 +286,12 @@ __kernel void crop_and_patch_batch_int8(
   A = B = C = D = 0;
 
   int indextmp = 0;
-  unsigned long dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0, src_pixIdx = 0;
 
   dst_pixIdx = dest_batch_index[id_z] +
                (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+  src_pixIdx = source_batch_index[id_z] +
+               (id_x + id_y * max_source_width[id_z]) * in_plnpkdind;
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
 
@@ -293,21 +304,21 @@ __kernel void crop_and_patch_batch_int8(
     y_diff = (y_ratio * (id_y - y21[id_z])) - y;
 
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      A = srcPtr1[source_batch_index[id_z] +
+      A = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) + (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      B = srcPtr1[source_batch_index[id_z] +
+      B = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z] + 1) +
                    (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      C = srcPtr1[source_batch_index[id_z] +
+      C = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) +
                    (y + y11[id_z] + 1) * max_source_width[id_z]) *
                       in_plnpkdind +
                   indextmp * source_inc[id_z]];
-      D = srcPtr1[source_batch_index[id_z] +
+      D = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z] + 1) +
                    (y + y11[id_z] + 1) * max_source_width[id_z]) *
                       in_plnpkdind +
@@ -321,8 +332,9 @@ __kernel void crop_and_patch_batch_int8(
     }
   } else {
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      dstPtr[dst_pixIdx] = srcPtr2[dst_pixIdx];
+      dstPtr[dst_pixIdx] = srcPtr1[src_pixIdx];
       dst_pixIdx += dest_inc[id_z];
+      src_pixIdx += source_inc[id_z];
     }
   }
 }

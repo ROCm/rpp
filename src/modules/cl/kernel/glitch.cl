@@ -25,6 +25,10 @@ __kernel void glitch_batch(
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
   unsigned long dst_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
+  
+  output[dst_pix_idx] = input[src_pix_idx];
+  output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
+  output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
 
   unsigned char R, G, B;
   R = B = G = 0;
@@ -41,42 +45,37 @@ __kernel void glitch_batch(
   x_b = (id_x + x_offset_b[id_z]);
   y_b = (id_y + y_offset_b[id_z]);
   
-
+  // R
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
-      (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]) &&
-      (y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
-      (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]) &&
-      (y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
-      (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z])
-      ) {
-
-    
-    // R
+      (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
+  {
     R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = R;
     dst_pix_idx += dstinc[id_z];
-
-    // G
+  }
+    
+  // G
+  if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
+      (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
+  {
     G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = G;
     dst_pix_idx += dstinc[id_z];
+  }
 
-    // B
+  // B
+  if ((y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
+      (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z]))
+  {
     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
     dst_pix_idx += dstinc[id_z];
-
-  } else {
-    for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[dst_pix_idx] = 0;
-      dst_pix_idx += dstinc[id_z];
-    }
   }
 }
 
@@ -103,6 +102,10 @@ __kernel void glitch_batch_fp16(
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
   unsigned long dst_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
+  
+  output[dst_pix_idx] = input[src_pix_idx];
+  output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
+  output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
 
   half R, G, B;
   R = B = G = 0;
@@ -119,42 +122,37 @@ __kernel void glitch_batch_fp16(
   x_b = (id_x + x_offset_b[id_z]);
   y_b = (id_y + y_offset_b[id_z]);
   
-
+  // R
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
-      (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]) &&
-      (y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
-      (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]) &&
-      (y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
-      (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z])
-      ) {
-
-    
-    // R
+      (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
+  {
     R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = R;
     dst_pix_idx += dstinc[id_z];
-
-    // G
+  }
+    
+  // G
+  if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
+      (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
+  {
     G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = G;
     dst_pix_idx += dstinc[id_z];
+  }
 
-    // B
+  // B
+  if ((y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
+      (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z]))
+  {
     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
     dst_pix_idx += dstinc[id_z];
-
-  } else {
-    for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[dst_pix_idx] = 0;
-      dst_pix_idx += dstinc[id_z];
-    }
   }
 }
 
@@ -183,6 +181,10 @@ __kernel void glitch_batch_fp32(
   unsigned long dst_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
 
+  output[dst_pix_idx] = input[src_pix_idx];
+  output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
+  output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
+  
   float R, G, B;
   R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
@@ -198,42 +200,37 @@ __kernel void glitch_batch_fp32(
   x_b = (id_x + x_offset_b[id_z]);
   y_b = (id_y + y_offset_b[id_z]);
   
-
+  // R
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
-      (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]) &&
-      (y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
-      (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]) &&
-      (y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
-      (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z])
-      ) {
-
-    
-    // R
+      (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
+  {
     R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = R;
     dst_pix_idx += dstinc[id_z];
-
-    // G
+  }
+    
+  // G
+  if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
+      (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
+  {
     G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = G;
     dst_pix_idx += dstinc[id_z];
+  }
 
-    // B
+  // B
+  if ((y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
+      (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z]))
+  {
     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
     dst_pix_idx += dstinc[id_z];
-
-  } else {
-    for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[dst_pix_idx] = 0;
-      dst_pix_idx += dstinc[id_z];
-    }
   }
 }
 
@@ -261,6 +258,10 @@ __kernel void glitch_batch_int8(
   unsigned long dst_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
 
+  output[dst_pix_idx] = input[src_pix_idx];
+  output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
+  output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
+
   char R, G, B;
   R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
@@ -277,41 +278,37 @@ __kernel void glitch_batch_int8(
   y_b = (id_y + y_offset_b[id_z]);
   
 
+  // R
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
-      (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]) &&
-      (y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
-      (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]) &&
-      (y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
-      (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z])
-      ) {
-
-    
-    // R
+      (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
+  {
     R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = R;
     dst_pix_idx += dstinc[id_z];
-
-    // G
+  }
+    
+  // G
+  if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
+      (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
+  {
     G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = G;
     dst_pix_idx += dstinc[id_z];
+  }
 
-    // B
+  // B
+  if ((y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
+      (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z]))
+  {
     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
     dst_pix_idx += dstinc[id_z];
-
-  } else {
-    for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[dst_pix_idx] = 0;
-      dst_pix_idx += dstinc[id_z];
-    }
   }
 }
 

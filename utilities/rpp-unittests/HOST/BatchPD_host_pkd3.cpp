@@ -1457,24 +1457,24 @@ int main(int argc, char **argv)
         Rpp32u y1[images];
         Rpp32u x2[images];
         Rpp32u y2[images];
-        Rpp32u numbeoOfShadows[images];
+        Rpp32u numberOfShadows[images];
         Rpp32u maxSizeX[images];
-        Rpp32u maxSizey[images];
+        Rpp32u maxSizeY[images];
         for (i = 0; i < images; i++)
         {
             x1[i] = 0;
             y1[i] = 0;
             x2[i] = 100;
             y2[i] = 100;
-            numbeoOfShadows[i] = 10;
+            numberOfShadows[i] = 10;
             maxSizeX[i] = 12;
-            maxSizey[i] = 15;
+            maxSizeY[i] = 15;
         }
 
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            rppi_random_shadow_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, x1, y1, x2, y2, numbeoOfShadows, maxSizeX, maxSizey, noOfImages, handle);
+            rppi_random_shadow_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3492,8 +3492,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            x_offset_r[i] = 50;
-            y_offset_r[i] = 50;
+            x_offset_r[i] = 10;
+            y_offset_r[i] = 10;
             x_offset_g[i] = 0;
             y_offset_g[i] = 0;
             x_offset_b[i] = 5;

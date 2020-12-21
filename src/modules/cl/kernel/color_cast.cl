@@ -49,7 +49,7 @@ __kernel void color_cast_batch(
       src_pix_idx += inc[id_z];
       dst_pix_idx += dstinc[id_z];
     }
-  } else {
+  } else if((id_x < width[id_z] ) && (id_y < height[id_z])){
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pix_idx] = 0;
       dst_pix_idx += dstinc[id_z];
@@ -104,7 +104,7 @@ __kernel void color_cast_batch_fp16(
       src_pix_idx += inc[id_z];
       dst_pix_idx += dstinc[id_z];
     }
-  } else {
+  } else if((id_x < width[id_z] ) && (id_y < height[id_z])){
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pix_idx] = 0;
       dst_pix_idx += dstinc[id_z];
@@ -159,7 +159,7 @@ __kernel void color_cast_batch_fp32(
       src_pix_idx += inc[id_z];
       dst_pix_idx += dstinc[id_z];
     }
-  } else {
+  } else if((id_x < width[id_z] ) && (id_y < height[id_z])){
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pix_idx] = 0;
       dst_pix_idx += dstinc[id_z];
@@ -214,7 +214,7 @@ __kernel void color_cast_batch_int8(
       src_pix_idx += inc[id_z];
       dst_pix_idx += dstinc[id_z];
     }
-  } else {
+  } else if((id_x < width[id_z] ) && (id_y < height[id_z])){
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pix_idx] = 0;
       dst_pix_idx += dstinc[id_z];
