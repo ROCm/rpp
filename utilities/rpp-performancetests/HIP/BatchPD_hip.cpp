@@ -585,11 +585,11 @@ int main(int argc, char **argv)
 				// std::cout << "\n"<< test_case_name << "\n";
 				rppi_histogram_balance_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
 				break;
-			// case 24:
-			// 	test_case_name = "RandomShadow";
-			// 	// std::cout << "\n"<< test_case_name << "\n";
-			// 	rppi_random_shadow_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x1, y1, x2, y2, numbeoOfShadows, maxSizeX, maxSizey, noOfImages, handle);
-			// 	break;
+			case 24:
+				test_case_name = "RandomShadow";
+				// std::cout << "\n"<< test_case_name << "\n";
+				rppi_random_shadow_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x1, y1, x2, y2, numbeoOfShadows, maxSizeX, maxSizey, noOfImages, handle);
+				break;
 			case 25:
 				test_case_name = "RandomCropLetterBox";
 				// std::cout << "\n"<< test_case_name << "\n";
@@ -723,11 +723,11 @@ int main(int argc, char **argv)
 				// std::cout << "\n"<< test_case_name << "\n";
 				rppi_max_u8_pkd3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
 				break;
-			// case 51:
-			// 	test_case_name = "Median Filter";
-			// 	// std::cout << "\n"<< test_case_name << "\n";
-			// 	rppi_median_filter_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
-			// 	break;
+			case 51:
+				test_case_name = "Median Filter";
+				// std::cout << "\n"<< test_case_name << "\n";
+				rppi_median_filter_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
+				break;
 			case 52:
 				test_case_name = "Min";
 				// std::cout << "\n"<< test_case_name << "\n";
