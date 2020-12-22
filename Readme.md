@@ -11,7 +11,9 @@ Radeon Performance Primitives (RPP) library is a comprehensive high-performance 
 RPP is developed for __Linux__ operating system.
 
 ## Prerequisites
-* Ubuntu `16.04`/`18.04`/`20.04`
+* OS 
+    + Ubuntu `16.04`/`18.04`/`20.04`
+    + CentOS/RHEL `8.0`
 * [ROCm supported hardware](https://rocm.github.io/hardware.html)
 * [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
 * CMake Version `3.5` or higher
@@ -21,13 +23,24 @@ RPP is developed for __Linux__ operating system.
 
 **NOTE:**
 * Boost
-```
-sudo apt --yes install libboost-all-dev
-```
+    + Ubuntu
+    ```
+    sudo apt --yes install libboost-all-dev
+    ```
+    + CentOS/RHEL
+    ```
+    sudo yum install boost-devel
+    ```
+
 * CLang
-```
-sudo apt --yes install clang
-```
+    + Ubuntu
+    ```
+    sudo apt --yes install clang
+    ```
+    + CentOS/RHEL
+    ```
+    sudo yum install boost-devel
+    ```
 * half.hpp
 ```
 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
