@@ -12,7 +12,7 @@ RPP is developed for __Linux__ operating system.
 
 ## Prerequisites
 * OS 
-    + Ubuntu `16.04`/`18.04`/`20.04`
+    + Ubuntu `18.04`/`20.04`
     + CentOS/RHEL `8.0`
 * [ROCm supported hardware](https://rocm.github.io/hardware.html)
 * [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
@@ -39,7 +39,7 @@ RPP is developed for __Linux__ operating system.
     ```
     + CentOS/RHEL
     ```
-    sudo yum install boost-devel
+    sudo yum install clang
     ```
 * half.hpp
 ```
