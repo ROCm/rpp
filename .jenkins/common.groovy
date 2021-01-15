@@ -1,7 +1,7 @@
 // This file is for internal AMD use.
 // If you are interested in running your own Jenkins, please raise a github issue for assistance.
 
-def runCompileCommand(platform, project, jobName, boolean debug=false, boolean staticLibrary=false){
+def runCompileCommand(platform, project, jobName, boolean debug=false, boolean staticLibrary=false) {
     project.paths.construct_build_prefix()
         
     project.paths.build_command = './install -c'
@@ -30,12 +30,12 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 }
 
 @Override
-def runTestCommand (platform, project){
+def runTestCommand (platform, project) {
 //TBD
 }
 
-def runPackageCommand(platform, project){
-    def packageHelper = platform.makePackage(platform.jenkinsLabel,"${project.paths.project_build_prefix}/build/release") 
+def runPackageCommand(platform, project) {
+    def packageHelper = platform.makePackage(platform.jenkinsLabel, "${project.paths.project_build_prefix}/build/release")
         
     platform.runCommand(this, packageHelper[0])
     platform.archiveArtifacts(this, packageHelper[1])

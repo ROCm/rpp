@@ -47,13 +47,13 @@ ci: {
     def propertyList = ["compute-rocm-dkms-no-npi-hipclang":[pipelineTriggers([cron('0 1 * * 0')])]]
     propertyList = auxiliary.appendPropertyList(propertyList)
 
-    def jobNameList = ["compute-rocm-dkms-no-npi-hipclang":([ubuntu16:[ 'gfx900'],centos7:[ 'gfx906'],centos8:[ 'gfx906'],sles15sp1:[ 'gfx908']])]
+    def jobNameList = ["compute-rocm-dkms-no-npi-hipclang":([ubuntu16:['gfx900'], centos7:['gfx906'], centos8:['gfx906'], sles15sp1:['gfx908']])]
     jobNameList = auxiliary.appendJobNameList(jobNameList)
 
     propertyList.each 
     {
         jobName, property->
-        if (urlJobName == jobName){
+        if (urlJobName == jobName) {
             properties(auxiliary.addCommonProperties(property))
         }
     }
@@ -61,18 +61,18 @@ ci: {
     jobNameList.each
     {
         jobName, nodeDetails->
-        if (urlJobName == jobName)
+        if (urlJobName == jobName) {
             stage(jobName) {
                 runCI(nodeDetails, jobName)
             }
+        }
     }
 
     // For url job names that are not listed by the jobNameList i.e. compute-rocm-dkms-no-npi-1901
-    if(!jobNameList.keySet().contains(urlJobName))
-    {
+    if(!jobNameList.keySet().contains(urlJobName)) {
         properties(auxiliary.addCommonProperties([pipelineTriggers([cron('0 1 * * *')])]))
         stage(urlJobName) {
-            runCI([ubuntu16:[ 'gfx906']], urlJobName)
+            runCI([ubuntu16:['gfx906']], urlJobName)
         }
     }
 }
