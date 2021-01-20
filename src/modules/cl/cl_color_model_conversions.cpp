@@ -510,7 +510,7 @@ look_up_table_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, Rpp8u* lutPtr,rpp::Hand
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
     cl_mem clLutPtr = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
                                     sizeof(Rpp8u)*256*channel*handle.GetBatchSize(), NULL, NULL);
-    clEnqueueWriteBuffer(handle.GetStream(), clLutPtr, CL_TRUE, 0, sizeof(Rpp8u)*256*channel, lutPtr, 0, NULL, NULL);
+    clEnqueueWriteBuffer(handle.GetStream(), clLutPtr, CL_TRUE, 0, sizeof(Rpp8u)*256*channel*handle.GetBatchSize(), lutPtr, 0, NULL, NULL);
     int plnpkdind;
 
     if(chnFormat == RPPI_CHN_PLANAR)
