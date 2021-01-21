@@ -76,6 +76,10 @@ extern "C" __global__ void warp_affine_batch(          unsigned char* srcPtr,
                                      unsigned int *source_width,
                                      unsigned int *dest_height,
                                      unsigned int *dest_width,
+                                     unsigned int *xroi_begin,
+                                     unsigned int *xroi_end,
+                                     unsigned int *yroi_begin,
+                                     unsigned int *yroi_end,
                                      unsigned int *max_source_width,
                                      unsigned int *max_dest_width,
                                      unsigned long *source_batch_index,
@@ -87,28 +91,39 @@ extern "C" __global__ void warp_affine_batch(          unsigned char* srcPtr,
                                     )
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    int indextmp=0;
-    unsigned long src_pixIdx = 0, dst_pixIdx = 0;
-    
-    
-    int xc = id_x - dest_width[id_z]/2;
-    int yc = id_y - dest_height[id_z]/2;
+    int indextmp = 0;
+    unsigned long dst_pixIdx;
+    int xc = id_x - (dest_width[id_z] >> 1);
+    int yc = id_y - (dest_height[id_z] >> 1);
     int affine_index = id_z * 6;
-   
-    int k = (int)((affine[affine_index + 0] * xc )+ (affine[ affine_index + 1] * yc)) + affine[affine_index + 2];
-    int l = (int)((affine[affine_index + 3] * xc )+ (affine[ affine_index + 4] * yc)) + affine[affine_index + 5];
-    k = k + source_width[id_z]/2;
-    l = l + source_height[id_z]/2;
+    int k =
+        (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) +
+        affine[affine_index + 2];
+    int l =
+        (int)((affine[affine_index + 3] * xc) + (affine[affine_index + 4] * yc)) +
+        affine[affine_index + 5];
+    k = k + (source_width[id_z] >> 1);
+    l = l + (source_height[id_z] >> 1);
 
-    src_pixIdx = source_batch_index[id_z] + (id_x  + id_y * max_source_width[id_z] ) * plnpkdindex;
-    dst_pixIdx = dest_batch_index[id_z]   + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;
-    
-    if(l < source_height[id_z] && l >=0 && k < source_width[id_z] && k >=0)
-    {   
-        for(indextmp = 0; indextmp < channel; indextmp++){
-            dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
-            src_pixIdx += source_inc[id_z];
-            dst_pixIdx += dest_inc[id_z];
-        }
+    if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
+        (k >= xroi_begin[id_z])) {
+    unsigned long src_pixIdx;
+    src_pixIdx = source_batch_index[id_z] +
+                    (k + l * max_source_width[id_z]) * plnpkdindex;
+    dst_pixIdx = dest_batch_index[id_z] +
+                    (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+    for (indextmp = 0; indextmp < channel; indextmp++) {
+        dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
+        src_pixIdx += source_inc[id_z];
+        dst_pixIdx += dest_inc[id_z];
+    }
+    }
+    else {
+    dst_pixIdx = dest_batch_index[id_z] +
+                    (id_x + id_y * max_dest_width[id_z]) * plnpkdindex;
+    for (indextmp = 0; indextmp < channel; indextmp++) {
+        dstPtr[dst_pixIdx] = 0;
+        dst_pixIdx += dest_inc[id_z];
+    }
     }
 }

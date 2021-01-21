@@ -102,43 +102,50 @@ extern "C" __global__ void gaussian_image_pyramid_batch(   unsigned char* input,
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;    int kernelSizeTemp = kernelSize[id_z];
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    if(id_x >= width[id_z] && id_y >= height[id_z])
+        return;
+    int kernelSizeTemp = kernelSize[id_z];
     int indextmp=0;
     long pixIdx = 0;
     long outPixIdx = 0;
     int bound = (kernelSizeTemp - 1) / 2;
     float r = 0, g = 0, b = 0;
-    if(id_x < width[id_z] && id_y < height[id_z])
+    
+    pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
+    output[pixIdx] = 0;
+    if(channel == 3)
     {
-        pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
-        outPixIdx = batch_index[id_z] + ((id_x/2)  + (id_y/2) * max_width[id_z] ) * plnpkdindex ;
-            for(int i = -bound ; i <= bound ; i++)
+        output[pixIdx + inc[id_z]] = 0;
+        output[pixIdx + inc[id_z] * 2] = 0;
+    }
+    outPixIdx = batch_index[id_z] + ((id_x/2)  + (id_y/2) * max_width[id_z] ) * plnpkdindex ;
+    for(int i = -bound ; i <= bound ; i++)
+    {
+        for(int j = -bound ; j <= bound ; j++)
+        {
+            if(id_x + j >= 0 && id_x + j <= width[id_z] - 1 && id_y + i >= 0 && id_y + i <= height[id_z] -1)
             {
-                for(int j = -bound ; j <= bound ; j++)
+                unsigned int index = pixIdx + (j + (i * max_width[id_z])) * plnpkdindex;
+                float gaussianvalue=gaussian_generate(j, i, stdDev[id_z]) / gaussian_generate(0.0, 0.0, stdDev[id_z]);
+                r += ((float)input[index]) * gaussianvalue ;
+                if(channel == 3)
                 {
-                    if(id_x + j >= 0 && id_x + j <= width[id_z] - 1 && id_y + i >= 0 && id_y + i <= height[id_z] -1)
-                    {
-                        unsigned int index = pixIdx + (j + (i * max_width[id_z])) * plnpkdindex;
-                        float gaussianvalue=gaussian_generate(j, i, stdDev[id_z]) / gaussian_generate(0.0, 0.0, stdDev[id_z]);
-                        r += ((float)input[index]) * gaussianvalue ;
-                        if(channel == 3)
-                        {
-                            index = pixIdx + (j + (i * max_width[id_z])) * plnpkdindex + inc[id_z];
-                            g += ((float)input[index]) * gaussianvalue ;
-                            index = pixIdx + (j + (i * max_width[id_z])) * plnpkdindex + inc[id_z] * 2;
-                            b += ((float)input[index]) * gaussianvalue ;
-                        }
-                    }
+                    index = pixIdx + (j + (i * max_width[id_z])) * plnpkdindex + inc[id_z];
+                    g += ((float)input[index]) * gaussianvalue ;
+                    index = pixIdx + (j + (i * max_width[id_z])) * plnpkdindex + inc[id_z] * 2;
+                    b += ((float)input[index]) * gaussianvalue ;
                 }
             }
-            r /= (kernelSize[id_z] * kernelSize[id_z]);
-            g /= (kernelSize[id_z] * kernelSize[id_z]);
-            b /= (kernelSize[id_z] * kernelSize[id_z]);
-            output[outPixIdx] = saturate_8u(r);
-            if(channel == 3)
-            {
-                output[outPixIdx + inc[id_z]] = saturate_8u(g);
-                output[outPixIdx + inc[id_z] * 2] = saturate_8u(b);
-            }
+        }
+    }
+    r /= (kernelSize[id_z] * kernelSize[id_z]);
+    g /= (kernelSize[id_z] * kernelSize[id_z]);
+    b /= (kernelSize[id_z] * kernelSize[id_z]);
+    output[outPixIdx] = saturate_8u(r);
+    if(channel == 3)
+    {
+        output[outPixIdx + inc[id_z]] = saturate_8u(g);
+        output[outPixIdx + inc[id_z] * 2] = saturate_8u(b);
     }
 }

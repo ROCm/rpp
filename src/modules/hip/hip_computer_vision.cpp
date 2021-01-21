@@ -48,20 +48,6 @@ local_binary_pattern_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiC
                                                                                             channel
                                                                                             );
     }
-    
-    //---- Args Setter
-    // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &srcPtr);
-    // clSetKernelArg(theKernel, ctr++, sizeof(Rpp8u*), &dstPtr);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
-    // cl_kernel_implementer (theQueue, gDim3, NULL/*Local*/, theProgram, theKernel);
-    
     return RPP_SUCCESS;    
 }
 
@@ -1096,9 +1082,6 @@ canny_edge_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp8u mi
 RppStatus
 canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
                             RppiChnFormat chnFormat, unsigned int channel)
-//     cl_mem srcPtr, RppiSize *srcSize, cl_mem dstPtr,
-//  Rpp8u *minThreshold, Rpp8u *maxThreshold, Rpp32u handle.GetBatchSize(),
-//   RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     unsigned int maxHeight, maxWidth;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
@@ -1127,10 +1110,15 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
     hipMalloc(&sobelY, sizeof(unsigned char) * maxHeight * maxWidth);
     
     unsigned long batchIndex = 0;
+    Rpp8u* srcPtr1;
+    hipMalloc(&srcPtr1, sizeof(unsigned char) * maxHeight * maxWidth * channel);
+    Rpp8u* dstPtr1;
+    hipMalloc(&dstPtr1, sizeof(unsigned char) * maxHeight * maxWidth * channel);
 
     // int ctr;
     for(int i = 0 ; i < handle.GetBatchSize() ; i++)
     {       
+        hipMemcpy(srcPtr1, srcPtr + batchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyHostToDevice);
         size_t gDim3[3];
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
         gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
@@ -1141,7 +1129,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         {
             if(chnFormat == RPPI_CHN_PACKED)
             {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pkd3_to_pln1", vld, vgd, "")(srcPtr,
+                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                 gsin,
                                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
@@ -1151,7 +1139,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             }
             else
             {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pln3_to_pln1", vld, vgd, "")(srcPtr,
+                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                 gsin,
                                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
@@ -1186,7 +1174,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         //---- Args Setter
         if(channel == 1)
         {    
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr,
+            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                         tempDest1,
                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
@@ -1219,7 +1207,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         //---- Args Setter
         if(channel == 1)
         {    
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr,
+            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                         sobelX,
                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
@@ -1252,7 +1240,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         //---- Args Setter
         if(channel == 1)
         {    
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr,
+            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                         sobelY,
                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
@@ -1317,7 +1305,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         if(channel == 1)
         {
             handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_edge", vld, vgd, "")(tempDest2,
-                                                                                dstPtr,
+                                                                                dstPtr1,
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                 newChannel,
@@ -1351,7 +1339,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             if(chnFormat == RPPI_CHN_PACKED)
             {
                 handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pln1_to_pkd3", vld, vgd, "")(gsout,
-                                                                                dstPtr,
+                                                                                dstPtr1,
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                 channel);
@@ -1361,7 +1349,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             else
             {
                 handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pln1_to_pln3", vld, vgd, "")(gsout,
-                                                                                dstPtr,
+                                                                                dstPtr1,
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                 handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                 channel);
@@ -1381,6 +1369,7 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             
             // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
         }
+        hipMemcpy(dstPtr + batchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToHost);
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel;
     }
     return RPP_SUCCESS;    

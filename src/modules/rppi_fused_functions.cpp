@@ -55,6 +55,11 @@ RppStatus color_twist_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	}
 #elif defined(HIP_COMPILE)
 	{
+		color_twist_hip_batch(
+			static_cast<Rpp8u *>(srcPtr),
+			static_cast<Rpp8u *>(dstPtr),
+			rpp::deref(rppHandle),
+			chn_format, num_of_channels);
 		// if (tensor_type == RPPTensorDataType::U8)
 		// {
 		// 	color_twist_hip_batch(
@@ -5016,6 +5021,11 @@ resize_crop_mirror_helper(
 	}
 #elif defined(HIP_COMPILE)
 	{
+		resize_crop_mirror_hip_batch(
+			static_cast<Rpp8u *>(srcPtr),
+			static_cast<Rpp8u *>(dstPtr),
+			rpp::deref(rppHandle),
+			chn_format, num_of_channels);
 		// if (tensor_type == RPPTensorDataType::U8)
 		// {
 		// 	resize_crop_mirror_hip_batch(

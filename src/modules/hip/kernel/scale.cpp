@@ -1,5 +1,7 @@
 #include <hip/hip_runtime.h>
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value)   ))
+#define MAX2(a,b)            ((a > b) ? a : b)
+#define MIN2(a,b)            ((a < b) ? a : b)
 
 extern "C" __global__ void scale_pln (   unsigned char* srcPtr,
                              unsigned char* dstPtr,
@@ -119,7 +121,8 @@ extern "C" __global__ void scale_batch(     unsigned char* srcPtr,
 
     int indextmp=0;
     unsigned long src_pixIdx = 0, dst_pixIdx = 0;
-    if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z] || id_x >= expdest_width || id_y >=expdest_height) return;
+    // if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z] || id_x >= expdest_width || id_y >=expdest_height) return;
+    if ((id_x >= MAX2(dest_width[id_z], expdest_width)) || (id_y >= MAX2(dest_height[id_z], expdest_height))) return;
     x = (int)(x_ratio * id_x) ;
     y = (int)(y_ratio * id_y) ;
 
@@ -128,6 +131,17 @@ extern "C" __global__ void scale_batch(     unsigned char* srcPtr,
 
     x = xroi_begin[id_z] + x;
     y = yroi_begin[id_z] + y;
+
+    if ((id_x >= MIN2(dest_width[id_z], expdest_width)) || (id_y >= MIN2(dest_height[id_z], expdest_height)))
+    {
+        dst_pixIdx = dest_batch_index[id_z] + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;
+        for(indextmp = 0; indextmp < channel; indextmp++)
+        {
+            dstPtr[dst_pixIdx] = 0;
+            dst_pixIdx += dest_inc[id_z];
+        }
+        return;
+    }
     
     if ((x +1) < source_width[id_z] && (y+1) < source_height[id_z]){
         dst_pixIdx = dest_batch_index[id_z] + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;

@@ -250,61 +250,144 @@ extern "C" __global__ void resize_crop_batch(     unsigned char* srcPtr,
                                      unsigned int *dest_inc,
                                     const unsigned int padding,
                                     const unsigned int type,
-                                    const int plnpkdindex // use 1 pln 3 for pkd
+                                    const int in_plnpkdind, 
+                                    const int out_plnpkdind
                                     )
 {
     int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-    int A, B, C, D, x, y, index, pixVal ;
-    float x_ratio = ((float)(xroi_end[id_z] - xroi_begin[id_z] -1 ))/dest_width[id_z] ;
-    float y_ratio = ((float)(yroi_end[id_z] - yroi_begin[id_z] -1 ))/dest_height[id_z];
-    float x_diff, y_diff, ya, yb ;
 
-    int indextmp=0;
-    unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+    int A, B, C, D, x, y, index, pixVal;
+  float x_ratio =
+      ((float)(xroi_end[id_z] - xroi_begin[id_z] - 1)) / dest_width[id_z];
+  float y_ratio =
+      ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
+  float x_diff, y_diff, ya, yb;
 
-    
-    if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z]) return;
+  int indextmp = 0;
+  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
 
-    
-    x = (int)(x_ratio * id_x) ;
-    y = (int)(y_ratio * id_y) ;
+  if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
+    return;
 
-    x_diff = (x_ratio * id_x) - x ;
-    y_diff = (y_ratio * id_y) - y ;
+  x = (int)(x_ratio * id_x);
+  y = (int)(y_ratio * id_y);
 
-    x = xroi_begin[id_z] + x;
-    y = yroi_begin[id_z] + y;
-    
-    if ((x +1) < source_width[id_z] && (y+1) < source_height[id_z]){
-        dst_pixIdx = dest_batch_index[id_z] + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;
-        for(indextmp = 0; indextmp < channel; indextmp++){
-            A = srcPtr[source_batch_index[id_z] + (x  + y * max_source_width[id_z]) * plnpkdindex + indextmp*source_inc[id_z]]; 
-            B = srcPtr[source_batch_index[id_z] + ((x + 1)   + y * max_source_width[id_z]) * plnpkdindex + indextmp*source_inc[id_z]];
-            C = srcPtr[source_batch_index[id_z] + (x  + (y + 1) * max_source_width[id_z]) * plnpkdindex + indextmp*source_inc[id_z]];
-            D = srcPtr[source_batch_index[id_z] + ((x + 1)  + (y + 1) * max_source_width[id_z]) * plnpkdindex + indextmp*source_inc[id_z]];
+  x_diff = (x_ratio * id_x) - x;
+  y_diff = (y_ratio * id_y) - y;
 
-            pixVal = (int)(  A*(1-x_diff)*(1-y_diff) +  B*(x_diff)*(1-y_diff) +
-                        C*(y_diff)*(1-x_diff)   +  D*(x_diff*y_diff)) ;
-            dstPtr[dst_pixIdx] =  saturate_8u(pixVal);
-            dst_pixIdx += dest_inc[id_z];
-        }
+  x = xroi_begin[id_z] + x;
+  y = yroi_begin[id_z] + y;
+
+  if ((x + 1) < source_width[id_z] && (y + 1) < source_height[id_z]) {
+    dst_pixIdx = dest_batch_index[id_z] +
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+    for (indextmp = 0; indextmp < channel; indextmp++) {
+      A = srcPtr[source_batch_index[id_z] +
+                 (x + y * max_source_width[id_z]) * in_plnpkdind +
+                 indextmp * source_inc[id_z]];
+      B = srcPtr[source_batch_index[id_z] +
+                 ((x + 1) + y * max_source_width[id_z]) * in_plnpkdind +
+                 indextmp * source_inc[id_z]];
+      C = srcPtr[source_batch_index[id_z] +
+                 (x + (y + 1) * max_source_width[id_z]) * in_plnpkdind +
+                 indextmp * source_inc[id_z]];
+      D = srcPtr[source_batch_index[id_z] +
+                 ((x + 1) + (y + 1) * max_source_width[id_z]) * in_plnpkdind +
+                 indextmp * source_inc[id_z]];
+
+      pixVal =
+          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+      dstPtr[dst_pixIdx] = saturate_8u(pixVal);
+      dst_pixIdx += dest_inc[id_z];
     }
-    
-    /*padding = 10;
+  }
 
-    if((id_x>= dest_width[id_z]-padding && id_x< dest_width[id_z]) || ( id_y >= (dest_height[id_z] - padding) && id_y < dest_height[id_z])){
-        dst_pixIdx = dest_batch_index[id_z] + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;
-            for(indextmp = 0; indextmp < channel; indextmp++){
-                dstPtr[dst_pixIdx] =  90 + 20*indextmp;
-                dst_pixIdx += dest_inc[id_z];
-        }
+  else {
+    dst_pixIdx = dest_batch_index[id_z] +
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+    for (indextmp = 0; indextmp < channel; indextmp++) {
+      dstPtr[dst_pixIdx] = 0;
+      dst_pixIdx += dest_inc[id_z];
     }
+  }
+}
 
-    if((id_x>= 0 && id_x< padding) || ( id_y >= 0 && id_y < padding)){
-        dst_pixIdx = dest_batch_index[id_z] + (id_x  + id_y * max_dest_width[id_z] ) * plnpkdindex;
-            for(indextmp = 0; indextmp < channel; indextmp++){
-                dstPtr[dst_pixIdx] =  90 + 20*indextmp;
-                dst_pixIdx += dest_inc[id_z];
-        }
-    }*/
+extern "C" __global__ void resize_crop_mirror_batch(
+    unsigned char *srcPtr, 
+    unsigned char *dstPtr,
+    unsigned int *source_height, 
+    unsigned int *source_width,
+    unsigned int *dest_height, 
+    unsigned int *dest_width,
+    unsigned int *max_source_width,
+    unsigned int *max_dest_width, 
+    int *xroi_begin,
+    int *xroi_end, 
+    int *yroi_begin, 
+    int *yroi_end,
+    int *mirror, 
+    unsigned long *source_batch_index,
+    unsigned long *dest_batch_index, 
+    const unsigned int channel,
+    unsigned int *source_inc, // use width * height for pln and 1 for pkd
+    unsigned int *dest_inc,
+    const int in_plnpkdind, const int out_plnpkdind
+)
+{
+  int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
+  int A, B, C, D, x, y, index, pixVal;
+  float x_ratio =
+      ((float)(xroi_end[id_z] - xroi_begin[id_z] - 1)) / dest_width[id_z];
+  float y_ratio =
+      ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
+  float x_diff, y_diff, ya, yb;
+
+  int indextmp = 0;
+  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+
+  if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
+    return;
+
+  x = (int)(x_ratio * id_x);
+  y = (int)(y_ratio * id_y);
+
+  x_diff = (x_ratio * id_x) - x;
+  y_diff = (y_ratio * id_y) - y;
+
+  x = xroi_begin[id_z] + x;
+  y = yroi_begin[id_z] + y;
+
+  if ((x + 1) < source_width[id_z] && (y + 1) < source_height[id_z]) {
+    dst_pixIdx = dest_batch_index[id_z] +
+                 ((dest_width[id_z] - 1 - id_x) + id_y * max_dest_width[id_z]) *
+                     out_plnpkdind;
+    for (indextmp = 0; indextmp < channel; indextmp++) {
+      A = srcPtr[source_batch_index[id_z] +
+                 (x + y * max_source_width[id_z]) * in_plnpkdind +
+                 indextmp * source_inc[id_z]];
+      B = srcPtr[source_batch_index[id_z] +
+                 ((x + 1) + y * max_source_width[id_z]) * in_plnpkdind +
+                 indextmp * source_inc[id_z]];
+      C = srcPtr[source_batch_index[id_z] +
+                 (x + (y + 1) * max_source_width[id_z]) * in_plnpkdind +
+                 indextmp * source_inc[id_z]];
+      D = srcPtr[source_batch_index[id_z] +
+                 ((x + 1) + (y + 1) * max_source_width[id_z]) * in_plnpkdind +
+                 indextmp * source_inc[id_z]];
+
+      pixVal =
+          (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
+                C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
+      dstPtr[dst_pixIdx] = saturate_8u(pixVal);
+      dst_pixIdx += dest_inc[id_z];
+    }
+  } else {
+    dst_pixIdx = dest_batch_index[id_z] +
+                 (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
+    for (indextmp = 0; indextmp < channel; indextmp++) {
+      dstPtr[dst_pixIdx] = 0;
+      dst_pixIdx += dest_inc[id_z];
+    }
+  }
 }

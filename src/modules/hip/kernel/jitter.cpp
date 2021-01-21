@@ -1,14 +1,13 @@
 #include <hip/hip_runtime.h>
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
-__device__ unsigned int xorshift(int pixid);
-//  {
-//     unsigned int x = 123456789;
-//     unsigned int w = 88675123;
-//     unsigned int seed = x + pixid;
-//     unsigned int t = seed ^ (seed << 11);
-//     unsigned int res = w ^ (w >> 19) ^ (t ^(t >> 8));
-// 	return res;
-// }
+__device__ unsigned int xorshift(int pixid){
+    unsigned int x = 123456789;
+    unsigned int w = 88675123;
+    unsigned int seed = x + pixid;
+    unsigned int t = seed ^ (seed << 11);
+    unsigned int res = w ^ (w >> 19) ^ (t ^(t >> 8));
+	return res;
+}
 extern "C" __global__ void jitter_pkd(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,

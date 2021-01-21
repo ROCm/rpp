@@ -87,7 +87,7 @@ unsigned int power(unsigned int a, unsigned int b)
     return sum;
 }
 
-int calcSobelx(int a[3][3])
+int calcSobelx(int (*a)[3])
 {
     int gx[3][3]={-1, 0, 1, -2, 0, 2, -1, 0, 1};
     int sum = 0;
@@ -101,7 +101,7 @@ int calcSobelx(int a[3][3])
     return sum;
 }
 
-int calcSobely(int a[3][3])
+int calcSobely(int (*a)[3])
 {
     int gy[3][3]={-1, -2, -1, 0, 0, 0, 1, 2, 1};
     int sum = 0;

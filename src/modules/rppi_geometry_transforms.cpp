@@ -9489,6 +9489,12 @@ resize_crop_helper(
 	}
 #elif defined(HIP_COMPILE)
 	{
+		resize_crop_hip_batch(
+			static_cast<Rpp8u *>(srcPtr),
+			static_cast<Rpp8u *>(dstPtr),
+			rpp::deref(rppHandle),
+			chn_format, num_of_channels);
+		
 		// if (tensor_type == RPPTensorDataType::U8)
 		// {
 		// 	resize_crop_hip_batch(
@@ -9554,6 +9560,11 @@ resize_helper(RppiChnFormat chn_format,
 	}
 #elif defined(HIP_COMPILE)
 	{
+		resize_hip_batch(
+			static_cast<Rpp8u *>(srcPtr),
+			static_cast<Rpp8u *>(dstPtr),
+			rpp::deref(rppHandle),
+			chn_format, num_of_channels);
 		// if (tensor_type == RPPTensorDataType::U8)
 		// {
 		// 	resize_hip_batch(
@@ -11198,7 +11209,7 @@ rppi_resize_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize max
 								RppiSize maxDstSize, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (resize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle,
-						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxSrcSize,
+						  srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize,
 						  nbatchSize, rppHandle));
 }
 RppStatus
@@ -14767,6 +14778,11 @@ rotate_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	}
 #elif defined(HIP_COMPILE)
 	{
+		rotate_hip_batch(
+			static_cast<Rpp8u *>(srcPtr),
+			static_cast<Rpp8u *>(dstPtr),
+			rpp::deref(rppHandle),
+			chn_format, num_of_channels);
 		// if (tensor_type == RPPTensorDataType::U8)
 		// {
 		// 	roatate_hip_helper(

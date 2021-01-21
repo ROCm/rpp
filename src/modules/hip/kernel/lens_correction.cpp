@@ -165,4 +165,11 @@ extern "C" __global__ void lens_correction_batch(     unsigned char* input,
         }
     }
 
+    else {
+        dstpixIdx = batch_index[id_z]   + (id_x  + id_y * max_width[id_z] ) * plnpkdindex;
+        for(indextmp = 0; indextmp < channel; indextmp++){
+            output[dstpixIdx] = 0;
+            dstpixIdx += inc[id_z];
+        }
+    }
 }
