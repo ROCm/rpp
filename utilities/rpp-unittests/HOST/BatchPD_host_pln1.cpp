@@ -377,6 +377,9 @@ int main(int argc, char **argv)
     case 81:
         strcpy(funcName, "glitch");
         break;
+    case 82:
+        strcpy(funcName, "resize_mirror_normalize");
+        break;
     }
 
     if (ip_bitDepth == 0)
@@ -3514,6 +3517,56 @@ int main(int argc, char **argv)
         test_case_name = "glitch";
         printf("\nThe glitch functionality  does not exist for 1 channel images!");
         missingFuncFlag = 1;
+
+        break;
+    }
+    case 82:
+    {
+        test_case_name = "resize_mirror_normalize";
+
+        Rpp32f mean[images];
+        Rpp32f stdDev[images];
+        Rpp32u mirrorFlag[images];
+        for (i = 0; i < images; i++)
+        {
+            dstSize[i].height = image.rows / 3;
+            dstSize[i].width = image.cols / 1.1;
+            if (maxDstHeight < dstSize[i].height)
+                maxDstHeight = dstSize[i].height;
+            if (maxDstWidth < dstSize[i].width)
+                maxDstWidth = dstSize[i].width;
+            if (minDstHeight > dstSize[i].height)
+                minDstHeight = dstSize[i].height;
+            if (minDstWidth > dstSize[i].width)
+                minDstWidth = dstSize[i].width;
+            mean[i] = 100.0;
+            stdDev[i] = 1.0;
+            mirrorFlag[i] = 1;
+        }
+        maxDstSize.height = maxDstHeight;
+        maxDstSize.width = maxDstWidth;
+
+        start = clock();
+        start_omp = omp_get_wtime();
+        if (ip_bitDepth == 0)
+            rppi_resize_mirror_normalize_u8_pln1_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+            // rppi_resize_mirror_normalize_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end_omp = omp_get_wtime();
+        end = clock();
 
         break;
     }
