@@ -51,7 +51,7 @@ __kernel void look_up_table_batch(
     if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
         (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
       for (indextmp = 0; indextmp < channel; indextmp++) {
-        luptrIndex = (id_z * plnpkdindex * 256) + (input[pixIdx] * plnpkdindex);
+        luptrIndex = (id_z * channel * 256) + (input[pixIdx] * plnpkdindex);
         output[pixIdx] = saturate_8u(lutPtr[luptrIndex]);
         pixIdx += inc[id_z];
       }

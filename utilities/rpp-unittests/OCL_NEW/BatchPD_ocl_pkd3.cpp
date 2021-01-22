@@ -814,7 +814,7 @@ int main(int argc, char **argv)
         Rpp32f alpha[images];
         for (i = 0; i < images; i++)
         {
-            alpha[i] = 0.5;
+            alpha[i] = 0.40;
         }
 
         start = clock();
@@ -2591,7 +2591,7 @@ int main(int argc, char **argv)
         Rpp32f percentage[images];
         for (i = 0; i < images; i++)
         {
-            percentage[i] = 75;
+            percentage[i] = 25;
         }
 
         start = clock();
@@ -3067,15 +3067,15 @@ int main(int argc, char **argv)
         test_case_name = "custom_convolution";
         
         RppiSize kernelSize[images];
-        Rpp32f kernel[images * 25];
-        Rpp32f value = (Rpp32f) (1.0 / 25);
+        Rpp32f kernel[images * 225];
+        Rpp32f value = (Rpp32f) (1.0 / 225);
         for (i = 0; i < images; i++)
         {
-            kernelSize[i].height = 5;
-            kernelSize[i].width = 5;
-            for (j = 0; j < 25; j++)
+            kernelSize[i].height = 15;
+            kernelSize[i].width = 15;
+            for (j = 0; j < 225; j++)
             {
-                kernel[(i * 25) + j] = value;
+                kernel[(i * 225) + j] = value;
             }
         }
 
@@ -3276,7 +3276,7 @@ int main(int argc, char **argv)
         Rpp32f std_dev[images];
         for (i = 0; i < images; i++)
         {
-            std_dev[i] = 350.0;
+            std_dev[i] = 50.0;
         }
 
         start = clock();

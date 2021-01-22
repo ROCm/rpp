@@ -1012,14 +1012,13 @@ harris_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     cl_mem sobelX = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
     cl_mem sobelY = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
 
-    // int ctr;
-
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
     gDim3[2] = 1;
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
+
     /* RGB to GREY SCALE */
 
     if (channel == 3)
@@ -1091,6 +1090,7 @@ harris_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                                                                     sobelTypeY);
 
     /* HARRIS CORNER STRENGTH MATRIX */
+
     handle.AddKernel("", "", "harris_corner_detector.cl", "harris_corner_detector_strength", vld, vgd, "")(sobelX,
                                                                                                            sobelY,
                                                                                                            dstFloat,
@@ -1143,7 +1143,7 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
     cl_program theProgram;
 
     unsigned int maxHeight, maxWidth, maxKernelSize;
-    unsigned long ioBufferSize = 0;
+    unsigned long ioBufferSize = 0, singleImageSize = 0;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
     maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[0];
@@ -1155,8 +1155,10 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
             maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
         if (maxKernelSize < handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i])
             maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i];
-        ioBufferSize += handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel;
     }
+
+    ioBufferSize = maxHeight * maxWidth * channel * handle.GetBatchSize();
+    singleImageSize = maxHeight * maxWidth * channel;
 
     Rpp32f *kernelMain = (Rpp32f *)calloc(maxKernelSize * maxKernelSize, sizeof(Rpp32f));
 
@@ -1177,17 +1179,16 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
     clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * ioBufferSize, 0, NULL, NULL);
 
     unsigned long batchIndex = 0;
-    cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
-    cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
-    // int ctr;
+    cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * singleImageSize, NULL, NULL);
+    cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * singleImageSize, NULL, NULL);
 
     size_t gDim3[3];
 
     for (int i = 0; i < handle.GetBatchSize(); i++)
     {
-        clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndex, 0, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
-        gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
+        clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndex, 0, sizeof(unsigned char) * singleImageSize, 0, NULL, NULL);
+        gDim3[0] = maxWidth;
+        gDim3[1] = maxHeight;
         gDim3[2] = 1;
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
@@ -1197,16 +1198,16 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
             {
                 handle.AddKernel("", "", "fast_corner_detector.cl", "ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                       gsin,
-                                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                      maxHeight,
+                                                                                                      maxWidth,
                                                                                                       channel);
             }
             else
             {
                 handle.AddKernel("", "", "fast_corner_detector.cl", "ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                       gsin,
-                                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                      maxHeight,
+                                                                                                      maxWidth,
                                                                                                       channel);
             }
         }
@@ -1218,15 +1219,12 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
         generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[1].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
         clEnqueueWriteBuffer(handle.GetStream(), kernel, CL_TRUE, 0, handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] * handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] * sizeof(Rpp32f), kernelMain, 0, NULL, NULL);
 
-        // ctr = 0;
-
-        //---- Args Setter
         if (channel == 1)
         {
-            handle.AddKernel("", "", "gaussian_filter.cl", "gaussian_pln", vld, vgd, "")(srcPtr,
+            handle.AddKernel("", "", "gaussian_filter.cl", "gaussian_pln", vld, vgd, "")(srcPtr1,
                                                                                          tempDest1,
-                                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                         maxHeight,
+                                                                                         maxWidth,
                                                                                          newChannel,
                                                                                          kernel,
                                                                                          handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
@@ -1236,68 +1234,74 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
         {
             handle.AddKernel("", "", "gaussian_filter.cl", "gaussian_pln", vld, vgd, "")(gsin,
                                                                                          tempDest1,
-                                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                         maxHeight,
+                                                                                         maxWidth,
                                                                                          newChannel,
                                                                                          kernel,
                                                                                          handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
                                                                                          handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
         }
+
         /* SOBEL X and Y */
+
         unsigned int sobelType = 2;
         unsigned int sobelTypeX = 0;
         unsigned int sobelTypeY = 1;
         handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(tempDest1,
                                                                         sobelX,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                        maxHeight,
+                                                                        maxWidth,
                                                                         newChannel,
                                                                         sobelTypeX);
         handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(tempDest1,
                                                                         sobelY,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                        maxHeight,
+                                                                        maxWidth,
                                                                         newChannel,
                                                                         sobelTypeY);
 
         /* HARRIS CORNER STRENGTH MATRIX */
+
         handle.AddKernel("", "", "harris_corner_detector.cl", "harris_corner_detector_strength", vld, vgd, "")(sobelX,
                                                                                                                sobelY,
                                                                                                                dstFloat,
-                                                                                                               handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                               handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                               maxHeight,
+                                                                                                               maxWidth,
                                                                                                                newChannel,
                                                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i],
                                                                                                                handle.GetInitHandle()->mem.mcpu.floatArr[3].floatmem[i],
                                                                                                                handle.GetInitHandle()->mem.mcpu.floatArr[4].floatmem[i]);
 
         /* NON-MAX SUPRESSION */
+
         handle.AddKernel("", "", "harris_corner_detector.cl", "harris_corner_detector_nonmax_supression", vld, vgd, "")(dstFloat,
                                                                                                                         nonMaxDstFloat,
-                                                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                        maxHeight,
+                                                                                                                        maxWidth,
                                                                                                                         newChannel,
                                                                                                                         handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]);
-        clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
+        
+        clEnqueueCopyBuffer(handle.GetStream(), srcPtr1, dstPtr1, 0, 0, sizeof(unsigned char) * singleImageSize, 0, NULL, NULL);
+        
         if (chnFormat == RPPI_CHN_PACKED)
         {
             handle.AddKernel("", "", "harris_corner_detector.cl", "harris_corner_detector_pkd", vld, vgd, "")(dstPtr1,
                                                                                                               nonMaxDstFloat,
-                                                                                                              handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                              handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                              maxHeight,
+                                                                                                              maxWidth,
                                                                                                               channel);
         }
         else
         {
-            handle.AddKernel("", "", "harris_corner_detector.cl", "harris_corner_detector_pkd", vld, vgd, "")(dstPtr1,
+            handle.AddKernel("", "", "harris_corner_detector.cl", "harris_corner_detector_pln", vld, vgd, "")(dstPtr1,
                                                                                                               nonMaxDstFloat,
-                                                                                                              handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                              handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                              maxHeight,
+                                                                                                              maxWidth,
                                                                                                               channel);
         }
 
-        clEnqueueCopyBuffer(handle.GetStream(), dstPtr1, dstPtr, 0, batchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
-        batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel;
+        clEnqueueCopyBuffer(handle.GetStream(), dstPtr1, dstPtr, 0, batchIndex, sizeof(unsigned char) * singleImageSize, 0, NULL, NULL);
+        batchIndex += maxHeight * maxWidth * channel;
     }
     return RPP_SUCCESS;
 }
