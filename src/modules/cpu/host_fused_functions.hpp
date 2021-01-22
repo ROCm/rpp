@@ -6209,9 +6209,9 @@ RppStatus resize_mirror_normalize_host_batch(T* srcPtr, RppiSize *batch_srcSize,
                         for (; vectorLoopCount < bufferLength; vectorLoopCount+=channel)
                         {
                             // memcpy(srcPtrROIMirrorredTemp, srcPtrROITemp, channel * sizeof(T));
-                            srcPtrROIMirrorredTemp[0] = (T) (((Rpp32f) srcPtrROITemp[0] - mean) / stdDev);
-                            srcPtrROIMirrorredTemp[1] = (T) (((Rpp32f) srcPtrROITemp[1] - mean) / stdDev);
-                            srcPtrROIMirrorredTemp[2] = (T) (((Rpp32f) srcPtrROITemp[2] - mean) / stdDev);
+                            srcPtrROIMirrorredTemp[0] = (T) RPPPIXELCHECK(((Rpp32f) srcPtrROITemp[0] - mean) / stdDev);
+                            srcPtrROIMirrorredTemp[1] = (T) RPPPIXELCHECK(((Rpp32f) srcPtrROITemp[1] - mean) / stdDev);
+                            srcPtrROIMirrorredTemp[2] = (T) RPPPIXELCHECK(((Rpp32f) srcPtrROITemp[2] - mean) / stdDev);
                             srcPtrROIMirrorredTemp += channel;
                             srcPtrROITemp -= channel;
                         }
