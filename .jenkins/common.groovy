@@ -29,10 +29,10 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     platform.runCommand(this, command)
 }
 
-@Override
+/*@Override
 def runTestCommand (platform, project) {
 //TBD
-}
+}*/
 
 def runPackageCommand(platform, project) {
     def packageHelper = platform.makePackage(platform.jenkinsLabel, "${project.paths.project_build_prefix}/build/release")
