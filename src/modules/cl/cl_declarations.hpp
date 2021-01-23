@@ -683,4 +683,12 @@ RppStatus
 glitch_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                           RPPTensorFunctionMetaData &tensor_info);
 
+RppStatus
+convert_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u type,
+                     RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
+RppStatus
+convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
+                           Rpp32u type, rpp::Handle &handle,
+                           RppiChnFormat chnFormat, unsigned int channel);
+
 #endif //CL_DECLATAIONS_H

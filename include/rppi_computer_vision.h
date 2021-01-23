@@ -1328,6 +1328,36 @@ RppStatus
 rppi_convert_bit_depth_u8s16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
 // ----------------------------------------
+// GPU convert_bit_depth functions declaration 
+// ----------------------------------------
+/* Convert Bit-Depth takes a srcPtr and converts bit depth to and from u8/s8/u16/s16
+*param[in] srcPtr input image
+*param[out] dstPtr output image
+param[in] srcSize Size of input/output image
+*returns a  RppStatus enumeration. 
+*retval RPP_SUCCESS : No error succesful completion
+*retval RPP_ERROR : Error  
+*/
+RppStatus
+rppi_convert_bit_depth_u8s8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8u16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8u16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8u16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus
+rppi_convert_bit_depth_u8s16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+// ----------------------------------------
 // CPU tensor_convert_bit_depth functions declaration 
 // ----------------------------------------
 /* Tensor Convert Bit-Depth takes a srcPtr tensor and converts bit depth to and from u8/s8/u16/s16

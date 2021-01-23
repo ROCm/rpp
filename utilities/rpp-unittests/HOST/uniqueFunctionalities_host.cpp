@@ -140,7 +140,22 @@ int main(int argc, char **argv)
 
         start = clock();
         start_omp = omp_get_wtime();
-        rppi_tensor_transpose_u8_host(srcPtr, dstPtr, dimension1, dimension2, tensorDimension, tensorDimensionValues);
+        if (ip_bitDepth == 0)
+            rppi_tensor_transpose_u8_host(srcPtr, dstPtr, dimension1, dimension2, tensorDimension, tensorDimensionValues);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
         end_omp = omp_get_wtime();
         end = clock();
 

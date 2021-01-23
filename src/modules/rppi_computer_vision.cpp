@@ -11577,6 +11577,303 @@ rppi_convert_bit_depth_u8s16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSiz
     return RPP_SUCCESS;
 }
 
+RppStatus
+rppi_convert_bit_depth_u8s8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	1,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PLANAR, 1
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	2,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PLANAR, 1
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	3,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PLANAR, 1
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	1,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PLANAR, 3
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	2,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PLANAR, 3
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	3,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PLANAR, 3
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	1,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PACKED, 3
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8u16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	2,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PACKED, 3
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_convert_bit_depth_u8s16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+	roiPoints.x = 0;
+	roiPoints.y = 0;
+	roiPoints.roiHeight = 0;
+	roiPoints.roiWidth = 0;
+	Rpp32u paramIndex = 0;
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+	copy_roi(roiPoints, rpp::deref(rppHandle));
+	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+
+#ifdef OCL_COMPILE
+	{
+		convert_bit_depth_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+        	3,
+			rpp::deref(rppHandle),
+            RPPI_CHN_PACKED, 3
+		);
+	}
+#elif defined (HIP_COMPILE)
+	{
+		// to add
+	}
+#endif //BACKEND
+		
+    return RPP_SUCCESS;
+}
+
 // **************************************** tensor convert bit depth ****************************************
 
 RppStatus
