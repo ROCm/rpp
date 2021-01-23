@@ -1411,17 +1411,15 @@ int main(int argc, char **argv)
     case 21:
     {
         test_case_name = "hueRGB";
-
         printf("\nhueRGB for PLN1 images doesn't exist!");
-
+        missingFuncFlag = 1;
         break;
     }
     case 22:
     {
         test_case_name = "saturationRGB";
-
         printf("\nsaturationRGB for PLN1 images doesn't exist!");
-
+        missingFuncFlag = 1;
         break;
     }
     case 23:
@@ -3602,7 +3600,6 @@ int main(int argc, char **argv)
         test_case_name = "glitch";
         printf("\nThe glitch functionality  does not exist for 1 channel images!");
         missingFuncFlag = 1;
-
         break;
     }
     default:
