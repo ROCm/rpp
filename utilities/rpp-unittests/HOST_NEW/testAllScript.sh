@@ -21,8 +21,8 @@ DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/two_images_mixed_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/two_images_mixed_src2"
 
 # Output Images
-mkdir $cwd/../OUTPUT_IMAGES_HOST
-DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST"
+mkdir $cwd/../OUTPUT_IMAGES_HOST_NEW
+DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
 
 # Images for unique functionalities
 DEFAULT_FAST_CORNER_DETECTOR_IMAGES="$cwd/../TEST_IMAGES/fast_corner_detector"
