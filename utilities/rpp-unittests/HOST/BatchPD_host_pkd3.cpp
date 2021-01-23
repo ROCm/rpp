@@ -524,12 +524,15 @@ int main(int argc, char **argv)
     DIR *dr2_second = opendir(src_second);
     count = 0;
     i = 0;
+    unsigned long long imageDimMax = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
+    Rpp32u elementsInRowMax = maxWidth * ip_channel;
+    Rpp8u *input_temp, *input_second_temp;
+    input_temp = input;
+    input_second_temp = input_second;
     while ((de = readdir(dr2)) != NULL)
     {
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
-
-        count = (unsigned long long)i * (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
 
         char temp[1000];
         strcpy(temp, src1);
@@ -544,18 +547,18 @@ int main(int argc, char **argv)
 
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
+        Rpp32u elementsInRow = srcSize[i].width * ip_channel;
         for (j = 0; j < srcSize[i].height; j++)
         {
-            for (int x = 0; x < srcSize[i].width; x++)
-            {
-                for (int y = 0; y < ip_channel; y++)
-                {
-                    input[count + ((j * maxWidth * ip_channel) + (x * ip_channel) + y)] = ip_image[(j * srcSize[i].width * ip_channel) + (x * ip_channel) + y];
-                    input_second[count + ((j * maxWidth * ip_channel) + (x * ip_channel) + y)] = ip_image_second[(j * srcSize[i].width * ip_channel) + (x * ip_channel) + y];
-                }
-            }
+            memcpy(input_temp, ip_image, elementsInRow * sizeof (Rpp8u));
+            memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof (Rpp8u));
+            ip_image += elementsInRow;
+            ip_image_second += elementsInRow;
+            input_temp += elementsInRowMax;
+            input_second_temp += elementsInRowMax;
         }
         i++;
+        count += imageDimMax;
     }
     closedir(dr2);
 

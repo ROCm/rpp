@@ -13,6 +13,8 @@
 #include <omp.h>
 #include <half.hpp>
 #include <fstream>
+#include <algorithm>
+#include <iterator>
 #include "helpers/testSuite_helper.hpp"
 
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
@@ -419,6 +421,36 @@ int main(int argc, char **argv)
     strcat(func, funcType);
     printf("\nRunning %s...", func);
 
+    int ip_bitDepth_1_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};
+    int ip_bitDepth_2_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};
+    int ip_bitDepth_3_cases[3] = {19, 62, 63};
+    int ip_bitDepth_4_cases[3] = {19, 62, 63};
+    int ip_bitDepth_5_cases[15] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 80, 81};
+    int ip_bitDepth_6_cases[3] = {19, 62, 63};
+
+    bool functionality_existence;
+
+    if (ip_bitDepth == 0)
+        functionality_existence = 1;
+    else if (ip_bitDepth == 1)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_1_cases), std::end(ip_bitDepth_1_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 2)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_2_cases), std::end(ip_bitDepth_2_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 3)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_3_cases), std::end(ip_bitDepth_3_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 4)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_4_cases), std::end(ip_bitDepth_4_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 5)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_5_cases), std::end(ip_bitDepth_5_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 6)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_6_cases), std::end(ip_bitDepth_6_cases), [&](int i) {return i == test_case;});
+    
+    if (functionality_existence == 0)
+    {
+        printf("\nThe functionality %s doesn't yet exist in RPP\n", func);
+        return -1;
+    }
+
     int missingFuncFlag = 0;
 
     int i = 0, j = 0;
@@ -528,12 +560,15 @@ int main(int argc, char **argv)
     DIR *dr2_second = opendir(src_second);
     count = 0;
     i = 0;
+    unsigned long long imageDimMax = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
+    Rpp32u elementsInRowMax = maxWidth * ip_channel;
+    Rpp8u *input_temp, *input_second_temp;
+    input_temp = input;
+    input_second_temp = input_second;
     while ((de = readdir(dr2)) != NULL)
     {
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
-
-        count = (unsigned long long)i * (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
 
         char temp[1000];
         strcpy(temp, src1);
@@ -543,31 +578,23 @@ int main(int argc, char **argv)
         strcpy(temp_second, src1_second);
         strcat(temp_second, de->d_name);
 
-        if (ip_channel == 3)
-        {
-            image = imread(temp, 1);
-            image_second = imread(temp_second, 1);
-        }
-        else
-        {
-            image = imread(temp, 0);
-            image_second = imread(temp_second, 0);
-        }
+        image = imread(temp, 0);
+        image_second = imread(temp_second, 0);
 
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
+        Rpp32u elementsInRow = srcSize[i].width * ip_channel;
         for (j = 0; j < srcSize[i].height; j++)
         {
-            for (int x = 0; x < srcSize[i].width; x++)
-            {
-                for (int y = 0; y < ip_channel; y++)
-                {
-                    input[count + ((j * maxWidth * ip_channel) + (x * ip_channel) + y)] = ip_image[(j * srcSize[i].width * ip_channel) + (x * ip_channel) + y];
-                    input_second[count + ((j * maxWidth * ip_channel) + (x * ip_channel) + y)] = ip_image_second[(j * srcSize[i].width * ip_channel) + (x * ip_channel) + y];
-                }
-            }
+            memcpy(input_temp, ip_image, elementsInRow * sizeof (Rpp8u));
+            memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof (Rpp8u));
+            ip_image += elementsInRow;
+            ip_image_second += elementsInRow;
+            input_temp += elementsInRowMax;
+            input_second_temp += elementsInRowMax;
         }
         i++;
+        count += imageDimMax;
     }
     closedir(dr2);
 
@@ -3617,16 +3644,12 @@ int main(int argc, char **argv)
     cout << "\nGPU Time - BatchPD : " << gpu_time_used;
     printf("\n");
 
-    clEnqueueReadBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
-
     string fileName = std::to_string(ip_bitDepth);
     ofstream outputFile (fileName + ".csv");
 
     if (ip_bitDepth == 0)
     {
+        clEnqueueReadBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
         Rpp8u *outputTemp;
         outputTemp = output;
 
@@ -3645,6 +3668,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 1) || (ip_bitDepth == 3))
     {
+        clEnqueueReadBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp16f *outputf16Temp;
@@ -3667,6 +3691,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 2) || (ip_bitDepth == 4))
     {
+        clEnqueueReadBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp32f *outputf32Temp;
@@ -3688,6 +3713,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 5) || (ip_bitDepth == 6))
     {
+        clEnqueueReadBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp8s *outputi8Temp;
