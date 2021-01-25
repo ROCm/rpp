@@ -2308,40 +2308,35 @@ RppStatus hueRGB_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
 
-            for(int c = 0; c < channel; c++)
+            for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
-                T *srcPtrChannel, *dstPtrChannel;
-                srcPtrChannel = srcPtrImage + (c * imageDimMax);
-                dstPtrChannel = dstPtrImage + (c * imageDimMax);
-
-
-                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
+                T *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrImage + (i * batch_srcSizeMax[batchCount].width);
+                dstPtrTemp = dstPtrImage + (i * batch_srcSizeMax[batchCount].width);
+                
+                if (!((y1 <= i) && (i <= y2)))
                 {
-                    T *srcPtrTemp, *dstPtrTemp;
-                    srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
+                    memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
+
+                    dstPtrTemp += batch_srcSizeMax[batchCount].width;
+                    srcPtrTemp += batch_srcSizeMax[batchCount].width;
+                }
+                else
+                {
+                    memcpy(dstPtrTemp, srcPtrTemp, x1 * sizeof(T));
+                    srcPtrTemp += x1;
+                    dstPtrTemp += x1;
+
+                    Rpp32u bufferLength = roiPoints[batchCount].roiWidth;
+
+                    hueRGB_processBuffer_host(srcPtrTemp, batch_srcSizeMax[batchCount], dstPtrTemp, hueShift, hueShiftAngle, bufferLength, chnFormat, channel);
+
+                    srcPtrTemp += bufferLength;
+                    dstPtrTemp += bufferLength;
                     
-                    if (!((y1 <= i) && (i <= y2)))
-                    {
-                        memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
-
-                        dstPtrTemp += batch_srcSizeMax[batchCount].width;
-                        srcPtrTemp += batch_srcSizeMax[batchCount].width;
-                    }
-                    else
-                    {
-                        memcpy(dstPtrTemp, srcPtrTemp, x1 * sizeof(T));
-                        srcPtrTemp += x1;
-                        dstPtrTemp += x1;
-
-                        Rpp32u bufferLength = roiPoints[batchCount].roiWidth;
-
-                        hueRGB_processBuffer_host(srcPtrTemp, batch_srcSizeMax[batchCount], dstPtrTemp, hueShift, hueShiftAngle, bufferLength, chnFormat, channel);
-                        
-                        memcpy(dstPtrTemp, srcPtrTemp, remainingElementsAfterROI * sizeof(T));
-                        srcPtrTemp += remainingElementsAfterROI;
-                        dstPtrTemp += remainingElementsAfterROI;
-                    }
+                    memcpy(dstPtrTemp, srcPtrTemp, remainingElementsAfterROI * sizeof(T));
+                    srcPtrTemp += remainingElementsAfterROI;
+                    dstPtrTemp += remainingElementsAfterROI;
                 }
             }
         }
@@ -2421,6 +2416,8 @@ RppStatus hueRGB_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
                     hueRGB_processBuffer_host(srcPtrTemp, batch_srcSizeMax[batchCount], dstPtrTemp, hueShift, hueShiftAngle, bufferLength, chnFormat, channel);
 
+                    srcPtrTemp += bufferLength;
+                    dstPtrTemp += bufferLength;
                     memcpy(dstPtrTemp, srcPtrTemp, remainingElementsAfterROI * sizeof(T));
                     srcPtrTemp += remainingElementsAfterROI;
                     dstPtrTemp += remainingElementsAfterROI;
@@ -3212,40 +3209,35 @@ RppStatus saturationRGB_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
 
-            for(int c = 0; c < channel; c++)
+            for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
-                T *srcPtrChannel, *dstPtrChannel;
-                srcPtrChannel = srcPtrImage + (c * imageDimMax);
-                dstPtrChannel = dstPtrImage + (c * imageDimMax);
-
-
-                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
+                T *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrImage + (i * batch_srcSizeMax[batchCount].width);
+                dstPtrTemp = dstPtrImage + (i * batch_srcSizeMax[batchCount].width);
+                
+                if (!((y1 <= i) && (i <= y2)))
                 {
-                    T *srcPtrTemp, *dstPtrTemp;
-                    srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
+                    memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
+
+                    dstPtrTemp += batch_srcSizeMax[batchCount].width;
+                    srcPtrTemp += batch_srcSizeMax[batchCount].width;
+                }
+                else
+                {
+                    memcpy(dstPtrTemp, srcPtrTemp, x1 * sizeof(T));
+                    srcPtrTemp += x1;
+                    dstPtrTemp += x1;
+
+                    Rpp32u bufferLength = roiPoints[batchCount].roiWidth;
+
+                    saturationRGB_processBuffer_host(srcPtrTemp, batch_srcSizeMax[batchCount], dstPtrTemp, saturationFactor, bufferLength, chnFormat, channel);
+
+                    srcPtrTemp += bufferLength;
+                    dstPtrTemp += bufferLength;
                     
-                    if (!((y1 <= i) && (i <= y2)))
-                    {
-                        memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
-
-                        dstPtrTemp += batch_srcSizeMax[batchCount].width;
-                        srcPtrTemp += batch_srcSizeMax[batchCount].width;
-                    }
-                    else
-                    {
-                        memcpy(dstPtrTemp, srcPtrTemp, x1 * sizeof(T));
-                        srcPtrTemp += x1;
-                        dstPtrTemp += x1;
-
-                        Rpp32u bufferLength = roiPoints[batchCount].roiWidth;
-
-                        saturationRGB_processBuffer_host(srcPtrTemp, batch_srcSizeMax[batchCount], dstPtrTemp, saturationFactor, bufferLength, chnFormat, channel);
-                        
-                        memcpy(dstPtrTemp, srcPtrTemp, remainingElementsAfterROI * sizeof(T));
-                        srcPtrTemp += remainingElementsAfterROI;
-                        dstPtrTemp += remainingElementsAfterROI;
-                    }
+                    memcpy(dstPtrTemp, srcPtrTemp, remainingElementsAfterROI * sizeof(T));
+                    srcPtrTemp += remainingElementsAfterROI;
+                    dstPtrTemp += remainingElementsAfterROI;
                 }
             }
         }

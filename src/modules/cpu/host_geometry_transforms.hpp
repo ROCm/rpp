@@ -1556,7 +1556,7 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
 
             T *srcPtrTopRow, *srcPtrBottomRow;
 
-            Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
+            Rpp32u elementsInRowMax = batch_srcSizeMax[batchCount].width;
 
             Rpp32f halfHeight = batch_srcSize[batchCount].height / 2;
             Rpp32f halfWidth = batch_srcSize[batchCount].width / 2;

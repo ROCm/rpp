@@ -1478,8 +1478,7 @@ int main(int argc, char **argv)
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
-            missingFuncFlag = 1;
-            // rppi_hueRGB_u8_pln3_batchPD_host(input, srcSize, maxSize, output, hueShift, noOfImages, handle);
+            rppi_hueRGB_u8_pln3_batchPD_host(input, srcSize, maxSize, output, hueShift, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1512,8 +1511,7 @@ int main(int argc, char **argv)
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
-            missingFuncFlag = 1;
-            // rppi_saturationRGB_u8_pln3_batchPD_host(input, srcSize, maxSize, output, saturationFactor, noOfImages, handle);
+            rppi_saturationRGB_u8_pln3_batchPD_host(input, srcSize, maxSize, output, saturationFactor, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2947,17 +2945,17 @@ int main(int argc, char **argv)
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
-            rppi_color_twist_u8_pln3_batchPD_gpu(input, srcSize, maxSize, output, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
+            rppi_color_twist_u8_pln3_batchPD_host(input, srcSize, maxSize, output, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_color_twist_f16_pln3_batchPD_gpu(inputf16, srcSize, maxSize, outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
+            rppi_color_twist_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_color_twist_f32_pln3_batchPD_gpu(inputf32, srcSize, maxSize, outputf32, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
+            rppi_color_twist_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_color_twist_i8_pln3_batchPD_gpu(inputi8, srcSize, maxSize, outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
+            rppi_color_twist_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
