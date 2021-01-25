@@ -4,7 +4,7 @@ The Radeon Performance Primitives library provides a test suite, to run unit tes
 - OCL backend - (On a GPU with OpenCL backend)
 - HIP backend - (On a GPU with HIP backend)
 ## Test Suite for HOST backend
-### Testing all functionalities with default images (2 224x224 images - batch size = 2)
+### Testing all functionalities with default images (3 224x224 images - batch size = 3)
 Executing the following should run and dump output images for all variants of functionalities running with HOST backend.
 ```
 cd utilities/rpp-unittests/HOST_NEW
@@ -40,7 +40,7 @@ Run either of the following executibles for packed-3channel / planar-3channel / 
 ```
 
 ## Test Suite for OCL backend
-### Testing all functionalities with default images (2 224x224 images - batch size = 2)
+### Testing all functionalities with default images (3 224x224 images - batch size = 3)
 Executing the following should run and dump output images for all variants of functionalities running with OCL backend.
 ```
 cd utilities/rpp-unittests/OCL_NEW
@@ -76,7 +76,7 @@ Run either of the following executibles for packed-3channel / planar-3channel / 
 ```
 
 ## Test Suite for HIP backend
-### Testing all functionalities with default images (2 224x224 images - batch size = 2)
+### Testing all functionalities with default images (3 224x224 images - batch size = 3)
 Executing the following should run and dump output images for all variants of functionalities running with HIP backend.
 ```
 cd utilities/rpp-unittests/HIP_NEW
