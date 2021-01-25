@@ -434,7 +434,6 @@ channel_combine_cl_batch ( cl_mem srcPtr1, cl_mem srcPtr2, cl_mem srcPtr3, cl_me
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     handle.AddKernel("", "", "channel_combine.cl", "channel_combine_batch", vld, vgd, "")(srcPtr1, srcPtr2, srcPtr3, dstPtr,
-                                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,

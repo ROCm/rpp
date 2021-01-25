@@ -828,26 +828,28 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
             maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
     }
 
-    cl_mem gsin = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
-    cl_mem gsout = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
+    Rpp32u imageDim = maxHeight * maxWidth;
 
-    cl_mem tempDest1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
-    cl_mem tempDest2 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
+    cl_mem gsin = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim, NULL, NULL);
+    cl_mem gsout = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim, NULL, NULL);
 
-    cl_mem sobelX = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
-    cl_mem sobelY = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
+    cl_mem tempDest1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim, NULL, NULL);
+    cl_mem tempDest2 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim, NULL, NULL);
+
+    cl_mem sobelX = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim, NULL, NULL);
+    cl_mem sobelY = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim, NULL, NULL);
 
     unsigned long batchIndex = 0;
-    cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
-    cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
+    cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim * channel, NULL, NULL);
+    cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim * channel, NULL, NULL);
 
     // int ctr;
     for (int i = 0; i < handle.GetBatchSize(); i++)
     {
-        clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndex, 0, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
+        clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndex, 0, sizeof(unsigned char) * imageDim * channel, 0, NULL, NULL);
         size_t gDim3[3];
-        gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
+        gDim3[0] = maxWidth;
+        gDim3[1] = maxHeight;
         gDim3[2] = 1;
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
@@ -857,16 +859,16 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
             {
                 handle.AddKernel("", "", "canny_edge_detector.cl", "canny_ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                            gsin,
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                           maxHeight,
+                                                                                                           maxWidth,
                                                                                                            channel);
             }
             else
             {
                 handle.AddKernel("", "", "canny_edge_detector.cl", "canny_ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                            gsin,
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                           maxHeight,
+                                                                                                           maxWidth,
                                                                                                            channel);
             }
         }
@@ -878,8 +880,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         {
             handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                             tempDest1,
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                            maxHeight,
+                                                                            maxWidth,
                                                                             newChannel,
                                                                             sobelType);
         }
@@ -887,8 +889,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         {
             handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(gsin,
                                                                             tempDest1,
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                            maxHeight,
+                                                                            maxWidth,
                                                                             newChannel,
                                                                             sobelType);
         }
@@ -896,8 +898,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         {
             handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                             sobelX,
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                            maxHeight,
+                                                                            maxWidth,
                                                                             newChannel,
                                                                             sobelTypeX);
         }
@@ -905,8 +907,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         {
             handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(gsin,
                                                                             sobelX,
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                            maxHeight,
+                                                                            maxWidth,
                                                                             newChannel,
                                                                             sobelTypeX);
         }
@@ -914,8 +916,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         {
             handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                             sobelY,
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                            maxHeight,
+                                                                            maxWidth,
                                                                             newChannel,
                                                                             sobelTypeY);
         }
@@ -923,8 +925,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         {
             handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(gsin,
                                                                             sobelY,
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                            maxHeight,
+                                                                            maxWidth,
                                                                             newChannel,
                                                                             sobelTypeY);
         }
@@ -933,8 +935,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                                                     sobelX,
                                                                                                     sobelY,
                                                                                                     tempDest2,
-                                                                                                    handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                    handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                    maxHeight,
+                                                                                                    maxWidth,
                                                                                                     newChannel,
                                                                                                     handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
                                                                                                     handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
@@ -943,8 +945,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         {
             handle.AddKernel("", "", "canny_edge_detector.cl", "canny_edge", vld, vgd, "")(tempDest2,
                                                                                            dstPtr1,
-                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                           maxHeight,
+                                                                                           maxWidth,
                                                                                            newChannel,
                                                                                            handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
                                                                                            handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
@@ -953,8 +955,8 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         {
             handle.AddKernel("", "", "canny_edge_detector.cl", "canny_edge", vld, vgd, "")(tempDest2,
                                                                                            gsout,
-                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                           maxHeight,
+                                                                                           maxWidth,
                                                                                            newChannel,
                                                                                            handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
                                                                                            handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
@@ -966,21 +968,21 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
             {
                 handle.AddKernel("", "", "canny_edge_detector.cl", "canny_ced_pln1_to_pkd3", vld, vgd, "")(gsout,
                                                                                                            dstPtr1,
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                           maxHeight,
+                                                                                                           maxWidth,
                                                                                                            channel);
             }
             else
             {
                 handle.AddKernel("", "", "canny_edge_detector.cl", "canny_ced_pln1_to_pln3", vld, vgd, "")(gsout,
                                                                                                            dstPtr1,
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                           maxHeight,
+                                                                                                           maxWidth,
                                                                                                            channel);
             }
         }
-        clEnqueueCopyBuffer(handle.GetStream(), dstPtr1, dstPtr, 0, batchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
-        batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel;
+        clEnqueueCopyBuffer(handle.GetStream(), dstPtr1, dstPtr, 0, batchIndex, sizeof(unsigned char) * imageDim * channel, 0, NULL, NULL);
+        batchIndex += imageDim * channel;
     }
     return RPP_SUCCESS;
 }
