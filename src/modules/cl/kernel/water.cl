@@ -17,6 +17,7 @@ __kernel void water_batch(  __global unsigned char* input,
                             __global int *yroi_end,
                             __global unsigned int *height,
                             __global unsigned int *width,
+                            __global unsigned int *max_height,
                             __global unsigned int *max_width,
                             __global unsigned long *batch_index,
                             const unsigned int channel,
@@ -49,7 +50,7 @@ __kernel void water_batch(  __global unsigned char* input,
     {   
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
-            if(src_pix_id >= 0 && src_pix_id < (batch_index[id_z] + (max_width[id_z] * img_height * channel)))
+            if(src_pix_id >= 0 && src_pix_id < (batch_index[id_z] + (max_width[id_z] * max_height[id_z] * channel)))
             {
                 valuergb = input[src_pix_id];
                 output[dst_pix_id] = valuergb;
