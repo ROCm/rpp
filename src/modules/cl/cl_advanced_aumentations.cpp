@@ -86,16 +86,28 @@ erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colo
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     std::string kernel_file = "erase.cl";
     std::string kernel_name = "erase_batch";
+    std::string kernel_pln1_name = "erase_pln1_batch";
     get_kernel_name(kernel_name, tensor_info);
-    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr, anchor_box_info, colors, box_offset,
-                                                                     handle_obj->mem.mgpu.uintArr[0].uintmem,
-                                                                     handle_obj->mem.mgpu.srcSize.height,
-                                                                     handle_obj->mem.mgpu.srcSize.width,
-                                                                     handle_obj->mem.mgpu.maxSrcSize.width,
-                                                                     handle_obj->mem.mgpu.srcBatchIndex,
-                                                                     handle_obj->mem.mgpu.inc,
-                                                                     handle_obj->mem.mgpu.dstInc,
-                                                                     in_plnpkdind, out_plnpkdind);
+    if (tensor_info._in_channels == 3)
+        handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr, anchor_box_info, colors, box_offset,
+                                                                        handle_obj->mem.mgpu.uintArr[0].uintmem,
+                                                                        handle_obj->mem.mgpu.srcSize.height,
+                                                                        handle_obj->mem.mgpu.srcSize.width,
+                                                                        handle_obj->mem.mgpu.maxSrcSize.width,
+                                                                        handle_obj->mem.mgpu.srcBatchIndex,
+                                                                        handle_obj->mem.mgpu.inc,
+                                                                        handle_obj->mem.mgpu.dstInc,
+                                                                        in_plnpkdind, out_plnpkdind);
+    else
+        handle.AddKernel("", "", kernel_file, kernel_pln1_name, vld, vgd, "")(srcPtr, dstPtr, anchor_box_info, colors, box_offset,
+                                                                        handle_obj->mem.mgpu.uintArr[0].uintmem,
+                                                                        handle_obj->mem.mgpu.srcSize.height,
+                                                                        handle_obj->mem.mgpu.srcSize.width,
+                                                                        handle_obj->mem.mgpu.maxSrcSize.width,
+                                                                        handle_obj->mem.mgpu.srcBatchIndex,
+                                                                        handle_obj->mem.mgpu.inc,
+                                                                        handle_obj->mem.mgpu.dstInc,
+                                                                        in_plnpkdind, out_plnpkdind);
 
     return RPP_SUCCESS;
 }

@@ -3434,101 +3434,101 @@ int main(int argc, char **argv)
 
         break;
     }
-    // case 78:
-    // {
-    //     test_case_name = "erase";
+    case 78:
+    {
+        test_case_name = "erase";
 
-    //     Rpp32u boxesInEachImage = 3;
+        Rpp32u boxesInEachImage = 3;
         
-    //     Rpp32u anchor_box_info[images * boxesInEachImage * 4];
-    //     Rpp32u box_offset[images];
-    //     Rpp32u num_of_boxes[images];
-    //     Rpp8u colorsu8[images * boxesInEachImage];
-    //     Rpp32f colorsf32[images * boxesInEachImage];
-    //     Rpp16f colorsf16[images * boxesInEachImage];
-    //     Rpp8s colorsi8[images * boxesInEachImage];
+        Rpp32u anchor_box_info[images * boxesInEachImage * 4];
+        Rpp32u box_offset[images];
+        Rpp32u num_of_boxes[images];
+        Rpp8u colorsu8[images * boxesInEachImage];
+        Rpp32f colorsf32[images * boxesInEachImage];
+        Rpp16f colorsf16[images * boxesInEachImage];
+        Rpp8s colorsi8[images * boxesInEachImage];
         
-    //     for (i = 0; i < images; i++)
-    //     {
-    //         box_offset[i] = i * boxesInEachImage;
-    //         num_of_boxes[i] = boxesInEachImage;
+        for (i = 0; i < images; i++)
+        {
+            box_offset[i] = i * boxesInEachImage;
+            num_of_boxes[i] = boxesInEachImage;
 
-    //         anchor_box_info[(boxesInEachImage * 4 * i)] = 0.125 * srcSize[i].width;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 1] = 0.125 * srcSize[i].height;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 2] = 0.375 * srcSize[i].width;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 3] = 0.375 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i)] = 0.125 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 1] = 0.125 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 2] = 0.375 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 3] = 0.375 * srcSize[i].height;
 
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 4] = 0.125 * srcSize[i].width;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 5] = 0.625 * srcSize[i].height;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 6] = 0.875 * srcSize[i].width;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 7] = 0.875 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 4] = 0.125 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 5] = 0.625 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 6] = 0.875 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 7] = 0.875 * srcSize[i].height;
 
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 8] = 0.75 * srcSize[i].width;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 9] = 0.125 * srcSize[i].height;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 10] = 0.875 * srcSize[i].width;
-    //         anchor_box_info[(boxesInEachImage * 4 * i) + 11] = 0.5 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 8] = 0.75 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 9] = 0.125 * srcSize[i].height;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 10] = 0.875 * srcSize[i].width;
+            anchor_box_info[(boxesInEachImage * 4 * i) + 11] = 0.5 * srcSize[i].height;
 
-    //         colorsu8[(boxesInEachImage * i)] = (Rpp8u) 240;
-    //         colorsu8[(boxesInEachImage * i) + 1] = (Rpp8u) 120;
-    //         colorsu8[(boxesInEachImage * i) + 2] = (Rpp8u) 60;
+            colorsu8[(boxesInEachImage * i)] = (Rpp8u) 240;
+            colorsu8[(boxesInEachImage * i) + 1] = (Rpp8u) 120;
+            colorsu8[(boxesInEachImage * i) + 2] = (Rpp8u) 60;
 
-    //         colorsf32[(boxesInEachImage * i)] = (Rpp32f) (240.0 / 255.0);
-    //         colorsf32[(boxesInEachImage * i) + 1] = (Rpp32f) (120.0 / 255.0);
-    //         colorsf32[(boxesInEachImage * i) + 2] = (Rpp32f) (60.0 / 255.0);
+            colorsf32[(boxesInEachImage * i)] = (Rpp32f) (240.0 / 255.0);
+            colorsf32[(boxesInEachImage * i) + 1] = (Rpp32f) (120.0 / 255.0);
+            colorsf32[(boxesInEachImage * i) + 2] = (Rpp32f) (60.0 / 255.0);
 
-    //         colorsf16[(boxesInEachImage * i)] = (Rpp16f) (240.0 / 255.0);
-    //         colorsf16[(boxesInEachImage * i) + 1] = (Rpp16f) (120.0 / 255.0);
-    //         colorsf16[(boxesInEachImage * i) + 2] = (Rpp16f) (60.0 / 255.0);
+            colorsf16[(boxesInEachImage * i)] = (Rpp16f) (240.0 / 255.0);
+            colorsf16[(boxesInEachImage * i) + 1] = (Rpp16f) (120.0 / 255.0);
+            colorsf16[(boxesInEachImage * i) + 2] = (Rpp16f) (60.0 / 255.0);
 
-    //         colorsi8[(boxesInEachImage * i)] = (Rpp8s) (240 - 128);
-    //         colorsi8[(boxesInEachImage * i) + 1] = (Rpp8s) (120 - 128);
-    //         colorsi8[(boxesInEachImage * i) + 2] = (Rpp8s) (60 - 128);
-    //     }
+            colorsi8[(boxesInEachImage * i)] = (Rpp8s) (240 - 128);
+            colorsi8[(boxesInEachImage * i) + 1] = (Rpp8s) (120 - 128);
+            colorsi8[(boxesInEachImage * i) + 2] = (Rpp8s) (60 - 128);
+        }
 
-    //     cl_mem d_anchor_box_info, d_box_offset, d_colorsu8, d_colorsf16, d_colorsf32, d_colorsi8;
-    //     d_anchor_box_info = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * boxesInEachImage * 4 * sizeof(Rpp32u), NULL, NULL);
-    //     d_box_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(Rpp32u), NULL, NULL);
-    //     d_colorsu8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8u), NULL, NULL);
-    //     d_colorsf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp16f), NULL, NULL);
-    //     d_colorsf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp32f), NULL, NULL);
-    //     d_colorsi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8s), NULL, NULL);
-    //     err |= clEnqueueWriteBuffer(theQueue, d_anchor_box_info, CL_TRUE, 0, images * boxesInEachImage * 4 * sizeof(Rpp32u), anchor_box_info, 0, NULL, NULL);
-    //     err |= clEnqueueWriteBuffer(theQueue, d_box_offset, CL_TRUE, 0, images * sizeof(Rpp32u), box_offset, 0, NULL, NULL);
-    //     err |= clEnqueueWriteBuffer(theQueue, d_colorsu8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsu8, 0, NULL, NULL);
-    //     err |= clEnqueueWriteBuffer(theQueue, d_colorsf16, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf16, 0, NULL, NULL);
-    //     err |= clEnqueueWriteBuffer(theQueue, d_colorsf32, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf32, 0, NULL, NULL);
-    //     err |= clEnqueueWriteBuffer(theQueue, d_colorsi8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsi8, 0, NULL, NULL);
+        cl_mem d_anchor_box_info, d_box_offset, d_colorsu8, d_colorsf16, d_colorsf32, d_colorsi8;
+        d_anchor_box_info = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * boxesInEachImage * 4 * sizeof(Rpp32u), NULL, NULL);
+        d_box_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(Rpp32u), NULL, NULL);
+        d_colorsu8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8u), NULL, NULL);
+        d_colorsf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp16f), NULL, NULL);
+        d_colorsf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp32f), NULL, NULL);
+        d_colorsi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8s), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_anchor_box_info, CL_TRUE, 0, images * boxesInEachImage * 4 * sizeof(Rpp32u), anchor_box_info, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_box_offset, CL_TRUE, 0, images * sizeof(Rpp32u), box_offset, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colorsu8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), colorsu8, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colorsf16, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), colorsf16, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colorsf32, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), colorsf32, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_colorsi8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), colorsi8, 0, NULL, NULL);
 
-    //     start = clock();
+        start = clock();
 
-    //     if (ip_bitDepth == 0)
-    //         rppi_erase_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_anchor_box_info, d_colorsu8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 1)
-    //         rppi_erase_f16_pln1_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, d_anchor_box_info, d_colorsf16, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 2)
-    //         rppi_erase_f32_pln1_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, d_anchor_box_info, d_colorsf32, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 3)
-    //         missingFuncFlag = 1;
-    //     else if (ip_bitDepth == 4)
-    //         missingFuncFlag = 1;
-    //     else if (ip_bitDepth == 5)
-    //         rppi_erase_i8_pln1_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_anchor_box_info, d_colorsi8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
-    //     else if (ip_bitDepth == 6)
-    //         missingFuncFlag = 1;
-    //     else
-    //         missingFuncFlag = 1;
+        if (ip_bitDepth == 0)
+            rppi_erase_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_anchor_box_info, d_colorsu8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            rppi_erase_f16_pln1_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, d_anchor_box_info, d_colorsf16, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            rppi_erase_f32_pln1_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, d_anchor_box_info, d_colorsf32, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppi_erase_i8_pln1_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_anchor_box_info, d_colorsi8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
 
-    //     end = clock();
+        end = clock();
 
-    //     clReleaseMemObject(d_anchor_box_info);
-    //     clReleaseMemObject(d_box_offset);
-    //     clReleaseMemObject(d_colorsu8);
-    //     clReleaseMemObject(d_colorsf16);
-    //     clReleaseMemObject(d_colorsf32);
-    //     clReleaseMemObject(d_colorsi8);
+        clReleaseMemObject(d_anchor_box_info);
+        clReleaseMemObject(d_box_offset);
+        clReleaseMemObject(d_colorsu8);
+        clReleaseMemObject(d_colorsf16);
+        clReleaseMemObject(d_colorsf32);
+        clReleaseMemObject(d_colorsi8);
 
-    //     break;
-    // }
+        break;
+    }
     case 79:
     {
         test_case_name = "crop_and_patch";

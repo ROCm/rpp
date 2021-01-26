@@ -52,6 +52,44 @@ kernel void erase_batch(
   }
 }
 
+kernel void erase_pln1_batch(
+    __global unsigned char *input, __global unsigned char *output,
+    __global unsigned int *box_info, __global unsigned char *colors,
+    __global unsigned int *box_offset, __global unsigned int *no_of_boxes,
+    __global unsigned int *src_height, __global unsigned int *src_width,
+    __global unsigned int *max_width, __global unsigned long *batch_index,
+    __global unsigned int *src_inc, __global unsigned int *dst_inc,
+    const int in_plnpkdind, const int out_plnpkdind) {
+  int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
+  uchar pixel;
+  uint l_box_offset = box_offset[id_z];
+  bool is_erase = false;
+  for (int i = 0; i < no_of_boxes[id_z]; i++) {
+    int temp = (l_box_offset + i) * 4;
+    if (id_x >= box_info[temp] && id_x < box_info[temp + 2] &&
+        id_y >= box_info[temp + 1] && id_y < box_info[temp + 3]) {
+      is_erase = true;
+      temp = (l_box_offset + i);
+      pixel = colors[temp];
+      break;
+    }
+  }
+  int indextmp = 0;
+  unsigned long src_pix_idx =
+      batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
+  unsigned long dst_pix_idx =
+      batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
+
+  if (is_erase == true)
+  {
+    output[dst_pix_idx] = pixel;
+  }
+  else
+  {
+    output[dst_pix_idx] = input[src_pix_idx];
+  }
+}
+
 // kernel void erase_batch_1(
 //     __global unsigned char *input, __global unsigned char *output,
 //     __global unsigned int *box_info, __global unsigned char *colors,
