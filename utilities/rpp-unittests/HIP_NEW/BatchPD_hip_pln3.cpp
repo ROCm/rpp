@@ -10,16 +10,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-#include <omp.h>
 #include <half.hpp>
 #include <fstream>
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-// #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
-
-#include </opt/rocm/opencl/include/CL/cl.h>
-// #include </usr/include/CL/cl.h>
-
+#include <algorithm>
+#include <iterator>
+#include "hip/hip_runtime_api.h"
 
 using namespace cv;
 using namespace std;
@@ -29,6 +24,16 @@ typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 
+void check_hip_error(void)
+{
+	hipError_t err = hipGetLastError();
+	if (err != hipSuccess)
+	{
+		cerr<< "Error: "<< hipGetErrorString(err)<<endl;
+		exit(err);
+	}
+}
+
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 8;
@@ -36,7 +41,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./BatchPD_ocl_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
+        printf("\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
         return -1;
     }
 
@@ -60,7 +65,7 @@ int main(int argc, char **argv)
 
     int ip_channel = 3;
 
-    char funcType[1000] = {"BatchPD_OCL_PLN3"};
+    char funcType[1000] = {"BatchPD_HIP_PLN3"};
 
     char funcName[1000];
     switch (test_case)
@@ -214,7 +219,7 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 38:
-        strcpy(funcName, "channel_combine and channel_extract");
+        strcpy(funcName, "channel_extract and channel_combine");
         outputFormatToggle = 0;
         break;
     case 39:
@@ -423,6 +428,34 @@ int main(int argc, char **argv)
     strcat(func, funcType);
     printf("\nRunning %s...", func);
 
+    int ip_bitDepth_1_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};	
+    int ip_bitDepth_2_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};	
+    int ip_bitDepth_3_cases[3] = {19, 62, 63};	
+    int ip_bitDepth_4_cases[3] = {19, 62, 63};	
+    int ip_bitDepth_5_cases[15] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 80, 81};	
+    int ip_bitDepth_6_cases[3] = {19, 62, 63};	
+    bool functionality_existence;	
+    if (ip_bitDepth == 0)	
+        functionality_existence = 1;	
+    else if (ip_bitDepth == 1)	
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_1_cases), std::end(ip_bitDepth_1_cases), [&](int i) {return i == test_case;});	
+    else if (ip_bitDepth == 2)	
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_2_cases), std::end(ip_bitDepth_2_cases), [&](int i) {return i == test_case;});	
+    else if (ip_bitDepth == 3)	
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_3_cases), std::end(ip_bitDepth_3_cases), [&](int i) {return i == test_case;});	
+    else if (ip_bitDepth == 4)	
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_4_cases), std::end(ip_bitDepth_4_cases), [&](int i) {return i == test_case;});	
+    else if (ip_bitDepth == 5)	
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_5_cases), std::end(ip_bitDepth_5_cases), [&](int i) {return i == test_case;});	
+    else if (ip_bitDepth == 6)	
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_6_cases), std::end(ip_bitDepth_6_cases), [&](int i) {return i == test_case;});	
+    	
+    if (functionality_existence == 0)	
+    {	
+        printf("\nThe functionality %s doesn't yet exist in RPP\n", func);	
+        return -1;	
+    }
+
     int missingFuncFlag = 0;
 
     int i = 0, j = 0;
@@ -505,18 +538,6 @@ int main(int argc, char **argv)
     Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     Rpp8u *output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
 
-    Rpp16f *inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-
-    Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-
-    Rpp8s *inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-
     RppiSize maxSize, maxDstSize;
     maxSize.height = maxHeight;
     maxSize.width = maxWidth;
@@ -527,12 +548,15 @@ int main(int argc, char **argv)
     DIR *dr2_second = opendir(src_second);
     count = 0;
     i = 0;
+    unsigned long long imageDimMax = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
+    Rpp32u elementsInRowMax = maxWidth * ip_channel;
+    Rpp8u *input_temp, *input_second_temp;
+    input_temp = input;
+    input_second_temp = input_second;
     while ((de = readdir(dr2)) != NULL)
     {
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
-
-        count = (unsigned long long)i * (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
 
         char temp[1000];
         strcpy(temp, src1);
@@ -547,18 +571,18 @@ int main(int argc, char **argv)
 
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
+        Rpp32u elementsInRow = srcSize[i].width * ip_channel;
         for (j = 0; j < srcSize[i].height; j++)
         {
-            for (int x = 0; x < srcSize[i].width; x++)
-            {
-                for (int y = 0; y < ip_channel; y++)
-                {
-                    input[count + ((j * maxWidth * ip_channel) + (x * ip_channel) + y)] = ip_image[(j * srcSize[i].width * ip_channel) + (x * ip_channel) + y];
-                    input_second[count + ((j * maxWidth * ip_channel) + (x * ip_channel) + y)] = ip_image_second[(j * srcSize[i].width * ip_channel) + (x * ip_channel) + y];
-                }
-            }
+            memcpy(input_temp, ip_image, elementsInRow * sizeof (Rpp8u));
+            memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof (Rpp8u));
+            ip_image += elementsInRow;
+            ip_image_second += elementsInRow;
+            input_temp += elementsInRowMax;
+            input_second_temp += elementsInRowMax;
         }
         i++;
+        count += imageDimMax;
     }
     closedir(dr2);
 
@@ -666,8 +690,27 @@ int main(int argc, char **argv)
 
     free(inputSecondCopy);
 
-    if (ip_bitDepth == 1)
+    Rpp16f *inputf16, *inputf16_second, *outputf16;
+    Rpp32f *inputf32, *inputf32_second, *outputf32;
+    Rpp8s *inputi8, *inputi8_second, *outputi8;
+    int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
+	int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
+
+    if (ip_bitDepth == 0)
     {
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 1)
+    {
+        Rpp16f *inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        Rpp16f *inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp16f *inputf16Temp, *inputf16_secondTemp;
 
@@ -686,9 +729,20 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputf16_secondTemp++;
         }
+
+        hipMalloc(&d_inputf16, ioBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
+        hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 2)
     {
+        Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        Rpp32f *inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
 
@@ -707,9 +761,40 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputf32_secondTemp++;
         }
+
+        hipMalloc(&d_inputf32, ioBufferSize * sizeof(Rpp32f));
+        hipMalloc(&d_inputf32_second, ioBufferSize * sizeof(Rpp32f));
+        hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
+        hipMemcpy(d_inputf32, inputf32, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 3)
+    {
+        Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        hipMalloc(&d_inputf16, ioBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
+        hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 4)
+    {
+        Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        hipMalloc(&d_inputf32, ioBufferSize * sizeof(Rpp32f));
+        hipMalloc(&d_inputf32_second, ioBufferSize * sizeof(Rpp32f));
+        hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
+        hipMemcpy(d_inputf32, inputf32, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 5)
     {
+        Rpp8s *inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        Rpp8s *inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
 
@@ -728,43 +813,29 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputi8_secondTemp++;
         }
+
+        hipMalloc(&d_inputi8, ioBufferSize * sizeof(Rpp8s));
+        hipMalloc(&d_inputi8_second, ioBufferSize * sizeof(Rpp8s));
+        hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
+        hipMemcpy(d_inputi8, inputi8, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 6)
+    {
+        Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        hipMalloc(&d_inputi8, ioBufferSize * sizeof(Rpp8s));
+        hipMalloc(&d_inputi8_second, ioBufferSize * sizeof(Rpp8s));
+        hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
+        hipMemcpy(d_inputi8, inputi8, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
     }
 
-    cl_mem d_input, d_input_second, d_inputf16, d_inputf16_second, d_inputf32, d_inputf32_second, d_inputi8, d_inputi8_second;
-    cl_mem d_output, d_outputf16, d_outputf32, d_outputi8;
-    cl_platform_id platform_id;
-    cl_device_id device_id;
-    cl_context theContext;
-    cl_command_queue theQueue;
-    cl_int err;
-    err = clGetPlatformIDs(1, &platform_id, NULL);
-    err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
-    theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
-    d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_inputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_inputf16_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_inputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_inputf32_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_inputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
-    d_inputi8_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
-    d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf16_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf32_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputi8_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8_second, 0, NULL, NULL);
-    
     rppHandle_t handle;
-
-    rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
+    hipStream_t stream;
+	hipStreamCreate(&stream);
+    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
 
     clock_t start, end;
     double gpu_time_used;
@@ -916,7 +987,7 @@ int main(int argc, char **argv)
         Rpp32f alpha[images];
         for (i = 0; i < images; i++)
         {
-            alpha[i] = 0.5;
+            alpha[i] = 0.4;
         }
 
         start = clock();
@@ -1048,7 +1119,7 @@ int main(int argc, char **argv)
         Rpp32f snowPercentage[images];
         for (i = 0; i < images; i++)
         {
-            snowPercentage[i] = 0.6;
+            snowPercentage[i] = 0.15;
         }
 
         start = clock();
@@ -1305,10 +1376,10 @@ int main(int argc, char **argv)
         Rpp32f transparency[images];
         for (i = 0; i < images; i++)
         {
-            rainPercentage[i] = 0.8;
-            rainWidth[i] = 5;
+            rainPercentage[i] = 0.75;
+            rainWidth[i] = 1;
             rainHeight[i] = 12;
-            transparency[i] = 0.5;
+            transparency[i] = 0.3;
         }
 
         start = clock();
@@ -1600,24 +1671,24 @@ int main(int argc, char **argv)
         Rpp32u y1[images];
         Rpp32u x2[images];
         Rpp32u y2[images];
-        Rpp32u numbeoOfShadows[images];
+        Rpp32u numberOfShadows[images];
         Rpp32u maxSizeX[images];
-        Rpp32u maxSizey[images];
+        Rpp32u maxSizeY[images];
         for (i = 0; i < images; i++)
         {
             x1[i] = 0;
             y1[i] = 0;
             x2[i] = 100;
             y2[i] = 100;
-            numbeoOfShadows[i] = 10;
+            numberOfShadows[i] = 10;
             maxSizeX[i] = 12;
-            maxSizey[i] = 15;
+            maxSizeY[i] = 15;
         }
 
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppi_random_shadow_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x1, y1, x2, y2, numbeoOfShadows, maxSizeX, maxSizey, noOfImages, handle);
+            rppi_random_shadow_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1740,7 +1811,7 @@ int main(int argc, char **argv)
 
         end = clock();
 
-        err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        hipMemcpy(d_output, d_input, oBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToDevice);
 
         break;
     }
@@ -1769,7 +1840,7 @@ int main(int argc, char **argv)
 
         end = clock();
 
-        err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        hipMemcpy(d_output, d_input, oBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToDevice);
 
         break;
     }
@@ -1804,7 +1875,7 @@ int main(int argc, char **argv)
 
         end = clock();
 
-        err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
+        hipMemcpy(d_output, d_input, oBufferSize * sizeof(Rpp8u),hipMemcpyDeviceToDevice);
 
         break;
     }
@@ -2044,10 +2115,10 @@ int main(int argc, char **argv)
 
         Rpp32u extractChannelNumber1[images], extractChannelNumber2[images], extractChannelNumber3[images];
         Rpp32u singleChannelBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)noOfImages;
-        cl_mem d_channel1, d_channel2, d_channel3;
-        d_channel1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
-        d_channel2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
-        d_channel3 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleChannelBufferSize * sizeof(Rpp8u), NULL, NULL);
+        int *d_channel1, *d_channel2, *d_channel3;
+        hipMalloc(&d_channel1, singleChannelBufferSize * sizeof(Rpp8u));
+	    hipMalloc(&d_channel2, singleChannelBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_channel3, singleChannelBufferSize * sizeof(Rpp8u));
 
         for (i = 0; i < images; i++)
         {
@@ -2082,9 +2153,9 @@ int main(int argc, char **argv)
 
         end = clock();
 
-        clReleaseMemObject(d_channel1);
-        clReleaseMemObject(d_channel2);
-        clReleaseMemObject(d_channel3);
+        hipFree(d_channel1);
+        hipFree(d_channel2);
+        hipFree(d_channel3);
 
         break;
     }
@@ -2213,8 +2284,8 @@ int main(int argc, char **argv)
         test_case_name = "integral";
 
         Rpp32u singleImageBuffer = maxDstHeight * maxDstWidth * ip_channel;
-        cl_mem d_output32u;
-        d_output32u = clCreateBuffer(theContext, CL_MEM_READ_ONLY, singleImageBuffer * sizeof(Rpp32u), NULL, NULL);
+        int *d_output32u;
+        hipMalloc(&d_output32u, singleImageBuffer * sizeof(Rpp32u));
 
         start = clock();
 
@@ -2238,7 +2309,7 @@ int main(int argc, char **argv)
         end = clock();
 
         Rpp32u *output32u = (Rpp32u *)calloc(oBufferSize, sizeof(Rpp32u));
-        clEnqueueReadBuffer(theQueue, d_output32u, CL_TRUE, 0, oBufferSize * sizeof(Rpp32u), output32u, 0, NULL, NULL);
+        hipMemcpy(output32u, d_output32u, oBufferSize * sizeof(Rpp32u), hipMemcpyDeviceToHost);
 
         Rpp8u *outputTemp;
         Rpp32u *output32uTemp;
@@ -2267,10 +2338,10 @@ int main(int argc, char **argv)
             }
         }
 
-        err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
+        hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
 
         free(output32u);
-        clReleaseMemObject(d_output32u);
+        hipFree(d_output32u);
 
         break;
     }
@@ -2693,7 +2764,7 @@ int main(int argc, char **argv)
         Rpp32f percentage[images];
         for (i = 0; i < images; i++)
         {
-            percentage[i] = 75;
+            percentage[i] = 25;
         }
 
         start = clock();
@@ -3171,15 +3242,15 @@ int main(int argc, char **argv)
         test_case_name = "custom_convolution";
         
         RppiSize kernelSize[images];
-        Rpp32f kernel[images * 25];
-        Rpp32f value = (Rpp32f) (1.0 / 25);
+        Rpp32f kernel[images * 225];
+        Rpp32f value = (Rpp32f) (1.0 / 225);
         for (i = 0; i < images; i++)
         {
-            kernelSize[i].height = 5;
-            kernelSize[i].width = 5;
-            for (j = 0; j < 25; j++)
+            kernelSize[i].height = 15;
+            kernelSize[i].width = 15;
+            for (j = 0; j < 225; j++)
             {
-                kernel[(i * 25) + j] = value;
+                kernel[(i * 225) + j] = value;
             }
         }
 
@@ -3237,11 +3308,11 @@ int main(int argc, char **argv)
         memset(srcPtr1, 0, ioBufferSize * sizeof(Rpp8u));
         rppi_resize_u8_pln3_batchPD_host(input, srcSizeHalf, srcSize1Max, srcPtr1, srcSize, srcSize1Max, outputFormatToggle, noOfImages, handle);
 
-        cl_mem d_srcPtr1, d_srcPtr2;
-        d_srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), NULL, NULL);
-        d_srcPtr2 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_srcPtr1, CL_TRUE, 0, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), srcPtr1, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_srcPtr2, CL_TRUE, 0, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), srcPtr2, 0, NULL, NULL);
+        int *d_srcPtr1, *d_srcPtr2;
+        hipMalloc(&d_srcPtr1, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u));
+        hipMalloc(&d_srcPtr2, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u));
+        hipMemcpy(d_srcPtr1, srcPtr1, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_srcPtr2, srcPtr2, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), hipMemcpyHostToDevice);
 
         start = clock();
 
@@ -3266,8 +3337,8 @@ int main(int argc, char **argv)
 
         free(srcPtr1);
         free(srcPtr2);
-        clReleaseMemObject(d_srcPtr1);
-        clReleaseMemObject(d_srcPtr2);
+        hipFree(d_srcPtr1);
+        hipFree(d_srcPtr2);
 
         break;
     }
@@ -3304,8 +3375,11 @@ int main(int argc, char **argv)
 
         if (ip_bitDepth == 0)
         {
-            rppi_color_convert_u8_pln3_batchPS_gpu(d_input, srcSize, maxSize, d_outputf32, convert_mode_1, noOfImages, handle);
-            rppi_color_convert_u8_pln3_batchPS_gpu(d_outputf32, srcSize, maxSize, d_output, convert_mode_2, noOfImages, handle);
+            // rppi_color_convert_u8_pln3_batchPS_gpu(d_input, srcSize, maxSize, d_outputf32, convert_mode_1, noOfImages, handle);
+            // rppi_color_convert_u8_pln3_batchPS_gpu(d_outputf32, srcSize, maxSize, d_output, convert_mode_2, noOfImages, handle);
+
+            // rppi_color_convert_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf32, convert_mode_1, noOfImages, handle);
+            // rppi_color_convert_u8_pln3_batchPD_gpu(d_outputf32, srcSize, maxSize, d_output, convert_mode_2, noOfImages, handle);
         }
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
@@ -3342,12 +3416,12 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            ampl_x[i] = 1.0;
-            ampl_y[i] = 1.0;
-            freq_x[i] = 0.8;
+            ampl_x[i] = 2.0;
+            ampl_y[i] = 5.0;
+            freq_x[i] = 5.8;
             freq_y[i] = 1.2;
             phase_x[i] = 10.0;
-            phase_y[i] = 5;
+            phase_y[i] = 15;
         }
 
         start = clock();
@@ -3380,7 +3454,7 @@ int main(int argc, char **argv)
         Rpp32f std_dev[images];
         for (i = 0; i < images; i++)
         {
-            std_dev[i] = 350.0;
+            std_dev[i] = 50.0;
         }
 
         start = clock();
@@ -3528,19 +3602,19 @@ int main(int argc, char **argv)
             colorsi8[(boxesInEachImage * 3 * i) + 8] = (Rpp8s) (240 - 128);
         }
 
-        cl_mem d_anchor_box_info, d_box_offset, d_colorsu8, d_colorsf16, d_colorsf32, d_colorsi8;
-        d_anchor_box_info = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * boxesInEachImage * 4 * sizeof(Rpp32u), NULL, NULL);
-        d_box_offset = clCreateBuffer(theContext, CL_MEM_READ_ONLY,  images * sizeof(Rpp32u), NULL, NULL);
-        d_colorsu8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8u), NULL, NULL);
-        d_colorsf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp16f), NULL, NULL);
-        d_colorsf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp32f), NULL, NULL);
-        d_colorsi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * boxesInEachImage * 3 * sizeof(Rpp8s), NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_anchor_box_info, CL_TRUE, 0, images * boxesInEachImage * 4 * sizeof(Rpp32u), anchor_box_info, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_box_offset, CL_TRUE, 0, images * sizeof(Rpp32u), box_offset, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsu8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsu8, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsf16, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf16, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsf32, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsf32, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_colorsi8, CL_TRUE, 0, images * boxesInEachImage * 3 * sizeof(Rpp8u), d_colorsi8, 0, NULL, NULL);
+        int *d_anchor_box_info, *d_box_offset, *d_colorsu8, *d_colorsf16, *d_colorsf32, *d_colorsi8;
+        hipMalloc(&d_anchor_box_info, images * boxesInEachImage * 4 * sizeof(Rpp32u));
+        hipMalloc(&d_box_offset, images * sizeof(Rpp32u));
+        hipMalloc(&d_colorsu8, images * boxesInEachImage * 3 * sizeof(Rpp8u));
+        hipMalloc(&d_colorsf16, images * boxesInEachImage * 3 * sizeof(Rpp16f));
+        hipMalloc(&d_colorsf32, images * boxesInEachImage * 3 * sizeof(Rpp32f));
+        hipMalloc(&d_colorsi8, images * boxesInEachImage * 3 * sizeof(Rpp8s));
+        hipMemcpy(d_anchor_box_info, anchor_box_info, images * boxesInEachImage * 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+        hipMemcpy(d_box_offset, box_offset, images * sizeof(Rpp32u), hipMemcpyHostToDevice);
+        hipMemcpy(d_colorsu8, colorsu8, images * boxesInEachImage * 3 * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_colorsf16, colorsf16, images * boxesInEachImage * 3 * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_colorsf32, colorsf32, images * boxesInEachImage * 3 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_colorsi8, colorsi8, images * boxesInEachImage * 3 * sizeof(Rpp8s), hipMemcpyHostToDevice);
 
         start = clock();
 
@@ -3563,12 +3637,12 @@ int main(int argc, char **argv)
 
         end = clock();
 
-        clReleaseMemObject(d_anchor_box_info);
-        clReleaseMemObject(d_box_offset);
-        clReleaseMemObject(d_colorsu8);
-        clReleaseMemObject(d_colorsf16);
-        clReleaseMemObject(d_colorsf32);
-        clReleaseMemObject(d_colorsi8);
+        hipFree(d_anchor_box_info);
+        hipFree(d_box_offset);
+        hipFree(d_colorsu8);
+        hipFree(d_colorsf16);
+        hipFree(d_colorsf32);
+        hipFree(d_colorsi8);
 
         break;
     }
@@ -3636,11 +3710,11 @@ int main(int argc, char **argv)
             }
         }
 
-        cl_mem d_lut8u, d_lut8s;
-        d_lut8u = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(Rpp8u), NULL, NULL);
-        d_lut8s = clCreateBuffer(theContext, CL_MEM_READ_ONLY, images * 256 * sizeof(Rpp8s), NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_lut8u, CL_TRUE, 0, images * 256 * sizeof(Rpp8u), lut8u, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_lut8s, CL_TRUE, 0, images * 256 * sizeof(Rpp8s), lut8s, 0, NULL, NULL);
+        int *d_lut8u, *d_lut8s;
+        hipMalloc(&d_lut8u, images * 256 * sizeof(Rpp8u));
+        hipMalloc(&d_lut8s, images * 256 * sizeof(Rpp8s));
+        hipMemcpy(d_lut8u, lut8u, images * 256 * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_lut8s, lut8s, images * 256 * sizeof(Rpp8s), hipMemcpyHostToDevice);
 
         start = clock();
 
@@ -3663,6 +3737,9 @@ int main(int argc, char **argv)
 
         end = clock();
 
+        hipFree(d_lut8u);
+        hipFree(d_lut8s);
+
         break;
     }
     case 81:
@@ -3678,8 +3755,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            x_offset_r[i] = 50;
-            y_offset_r[i] = 50;
+            x_offset_r[i] = 10;
+            y_offset_r[i] = 10;
             x_offset_g[i] = 0;
             y_offset_g[i] = 0;
             x_offset_b[i] = 5;
@@ -3725,16 +3802,12 @@ int main(int argc, char **argv)
     cout << "\nCPU Time - BatchPD : " << gpu_time_used;
     printf("\n");
 
-    clEnqueueReadBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
-    clEnqueueReadBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
-
     string fileName = std::to_string(ip_bitDepth);
     ofstream outputFile (fileName + ".csv");
 
     if (ip_bitDepth == 0)
     {
+        hipMemcpy(output, d_output, oBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
 
@@ -3753,6 +3826,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 1) || (ip_bitDepth == 3))
     {
+        hipMemcpy(outputf16, d_outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp16f *outputf16Temp;
@@ -3775,6 +3849,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 2) || (ip_bitDepth == 4))
     {
+        hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp32f *outputf32Temp;
@@ -3796,6 +3871,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 5) || (ip_bitDepth == 6))
     {
+        hipMemcpy(outputi8, d_outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp8s *outputi8Temp;
@@ -3904,18 +3980,18 @@ int main(int argc, char **argv)
     free(inputi8_second);
     free(outputf32);
     free(outputi8);
-    clReleaseMemObject(d_input);
-    clReleaseMemObject(d_input_second);
-    clReleaseMemObject(d_output);
-    clReleaseMemObject(d_inputf16);
-    clReleaseMemObject(d_inputf16_second);
-    clReleaseMemObject(d_outputf16);
-    clReleaseMemObject(d_inputf32);
-    clReleaseMemObject(d_inputf32_second);
-    clReleaseMemObject(d_outputf32);
-    clReleaseMemObject(d_inputi8);
-    clReleaseMemObject(d_inputi8_second);
-    clReleaseMemObject(d_outputi8);
+    hipFree(d_input);
+    hipFree(d_input_second);
+    hipFree(d_output);
+    hipFree(d_inputf16);
+    hipFree(d_inputf16_second);
+    hipFree(d_outputf16);
+    hipFree(d_inputf32);
+    hipFree(d_inputf32_second);
+    hipFree(d_outputf32);
+    hipFree(d_inputi8);
+    hipFree(d_inputi8_second);
+    hipFree(d_outputi8);
 
     return 0;
 }
