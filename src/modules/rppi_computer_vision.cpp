@@ -10909,7 +10909,7 @@ RppStatus
 	if(operation == RPP_SCALAR_OP_XOR)
 		*output = num1 ^ num2;
 	if(operation == RPP_SCALAR_OP_NAND)
-		*output = ~(num1 & num2);
+		*output = !(num1 & num2);
 	return RPP_SUCCESS;
 }
 
