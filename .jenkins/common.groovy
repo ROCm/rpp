@@ -5,24 +5,47 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     project.paths.construct_build_prefix()
         
     project.paths.build_command = './install -c'
+
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
-    String osInfo = platform.jenkinsLabel.contains('centos') ? 'cat /etc/os-release && uname -a' : 'cat /etc/lsb-release && uname -a'
-    String packageInstaller = platform.jenkinsLabel.contains('centos') ? 'yum' : 'apt'
-    String cmake = platform.jenkinsLabel.contains('centos') ? 'cmake3' : 'cmake'
-    String packages = platform.jenkinsLabel.contains('centos') ? 'boost-devel clang' : 'unzip cmake libboost-all-dev clang'
-    String centos7 = platform.jenkinsLabel.contains('centos7') ? 'source scl_source enable devtoolset-7' : ''
+
+    String installPackage = ""
+    String osInfo = ""
+    String cmake = ""
+    String centos7 = ""
+    String update = ""
+
+    if (platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('sles'))
+    {
+        osInfo = 'cat /etc/os-release && uname -r'
+        update = 'sudo yum -y update'
+        installPackage = 'sudo yum install -y boost-devel clang'
+        cmake = 'cmake3'
+        if (platform.jenkinsLabel.contains('centos7')
+        {
+          centos7 = 'scl enable devtoolset-7 bash'
+        }
+    } else
+    {
+        osInfo = 'cat /etc/lsb-release && uname -r'
+        update = 'sudo apt -y update'
+        installPackage = 'sudo apt install -y unzip cmake libboost-all-dev clang'
+        cmake = 'cmake'
+    }
 
     def command = """#!/usr/bin/env bash
                 set -x
                 ${osInfo}
+                ${update}
                 ${centos7}
+                echo Install RPP Prerequisites
                 mkdir -p rpp-deps && cd rpp-deps
-                sudo ${packageInstaller} install -y ${packages}
+                ${installPackage}
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
                 unzip half-1.12.0.zip -d half-files
                 sudo cp half-files/include/half.hpp /usr/local/include/
                 cd ../
+                echo Build RPP - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
                 ${cmake} -DBACKEND=OCL ${buildTypeArg} ../..
