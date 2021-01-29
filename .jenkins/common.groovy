@@ -21,11 +21,12 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
         update = 'sudo yum -y update'
         installPackage = 'sudo yum install -y boost-devel clang'
         cmake = 'cmake3'
-        if (platform.jenkinsLabel.contains('centos7')
+        if (platform.jenkinsLabel.contains('centos7'))
         {
           centos7 = 'scl enable devtoolset-7 bash'
         }
-    } else
+    }
+    else
     {
         osInfo = 'cat /etc/lsb-release && uname -r'
         update = 'sudo apt -y update'
