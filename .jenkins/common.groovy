@@ -11,10 +11,12 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String packageInstaller = platform.jenkinsLabel.contains('centos') ? 'yum' : 'apt'
     String cmake = platform.jenkinsLabel.contains('centos') ? 'cmake3' : 'cmake'
     String packages = platform.jenkinsLabel.contains('centos') ? 'boost-devel clang' : 'unzip cmake libboost-all-dev clang'
+    String centos7 = platform.jenkinsLabel.contains('centos7') ? 'source scl_source enable devtoolset-7' : ''
 
     def command = """#!/usr/bin/env bash
                 set -x
                 ${osInfo}
+                ${centos7}
                 mkdir -p rpp-deps && cd rpp-deps
                 sudo ${packageInstaller} install -y ${packages}
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
