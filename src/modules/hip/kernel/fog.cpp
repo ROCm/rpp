@@ -129,7 +129,7 @@ extern "C" __global__ void fog_batch(   unsigned char* input,
         float check = input[pixIdx];
         if(channel == 3)
             check = (check + input[pixIdx + inc[id_z]] + input[pixIdx + inc[id_z] * 2]) / 3;
-        if(check >= (240) || tempFogValue!=0)
+        if(check >= (240) && tempFogValue!=0)
         {
             output [pixIdx] = input [pixIdx];
             if(channel > 1)
@@ -138,7 +138,7 @@ extern "C" __global__ void fog_batch(   unsigned char* input,
                 output [pixIdx + inc[id_z] * 2] = input [pixIdx + inc[id_z] * 2];
             }
         }
-        else if(check>=(170))
+        else if(check>=(170) && tempFogValue!=0 )
         {
             float pixel = ((float) input[pixIdx])  * (1.5 + tempFogValue) - (tempFogValue*4) + (7*tempFogValue);
             output[pixIdx] = saturate_8u(pixel);
@@ -151,7 +151,7 @@ extern "C" __global__ void fog_batch(   unsigned char* input,
             }
         }
 
-        else if(check<=(85))
+        else if(check<=(85) && tempFogValue!=0 )
         {
             float pixel = ((float) input[pixIdx]) * (1.5 + (tempFogValue*tempFogValue)) - (tempFogValue*4) + (130*tempFogValue);
             output[pixIdx] = saturate_8u(pixel);
@@ -163,7 +163,7 @@ extern "C" __global__ void fog_batch(   unsigned char* input,
                 output[pixIdx + inc[id_z] * 2] = saturate_8u(pixel);
             }
         }
-        else
+        else if(tempFogValue != 0)
         {
             float pixel = ((float) input[pixIdx]) * (1.5 + (tempFogValue * ( tempFogValue * 1.414))) - (tempFogValue*4) + 20 + (100*tempFogValue);
             output[pixIdx] = saturate_8u(pixel);
