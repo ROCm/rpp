@@ -7,13 +7,14 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     project.paths.build_command = './install -c'
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
+    String osInfo = platform.jenkinsLabel.contains('centos') ? 'cat /etc/os-release && uname -a' : 'cat /etc/lsb-release && uname -a'
+    String packageInstaller = platform.jenkinsLabel.contains('centos') ? 'yum' : 'apt'
     String cmake = platform.jenkinsLabel.contains('centos') ? 'cmake3' : 'cmake'
-    String packageInstaller = platform.jenkinsLabel.contains('centos') ? 'yum' : 'apt-get'
-    String packages = platform.jenkinsLabel.contains('centos') ? 'boost-devel clang' : 'libboost-all-dev clang'
-    String sudo = auxiliary.sudo(platform.jenkinsLabel)
+    String packages = platform.jenkinsLabel.contains('centos') ? 'boost-devel clang' : 'unzip cmake libboost-all-dev clang'
 
     def command = """#!/usr/bin/env bash
                 set -x
+                ${osInfo}
                 mkdir -p rpp-deps && cd rpp-deps
                 sudo ${packageInstaller} install -y ${packages}
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
