@@ -3375,11 +3375,8 @@ int main(int argc, char **argv)
 
         if (ip_bitDepth == 0)
         {
-            // rppi_color_convert_u8_pln3_batchPS_gpu(d_input, srcSize, maxSize, d_outputf32, convert_mode_1, noOfImages, handle);
-            // rppi_color_convert_u8_pln3_batchPS_gpu(d_outputf32, srcSize, maxSize, d_output, convert_mode_2, noOfImages, handle);
-
-            // rppi_color_convert_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf32, convert_mode_1, noOfImages, handle);
-            // rppi_color_convert_u8_pln3_batchPD_gpu(d_outputf32, srcSize, maxSize, d_output, convert_mode_2, noOfImages, handle);
+            rppi_color_convert_u8_pln3_batchPS_gpu(d_input, srcSize, maxSize, d_outputf32, convert_mode_1, noOfImages, handle);
+            rppi_color_convert_u8_pln3_batchPS_gpu(d_outputf32, srcSize, maxSize, d_output, convert_mode_2, noOfImages, handle);
         }
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;

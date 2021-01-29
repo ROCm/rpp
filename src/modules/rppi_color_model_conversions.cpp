@@ -17072,7 +17072,7 @@ rppi_look_up_table_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	}
 #elif defined (HIP_COMPILE)
 	{
-look_up_table_hip_batch(
+		look_up_table_hip_batch(
 			static_cast<Rpp8u*>(srcPtr),
 			static_cast<Rpp8u*>(dstPtr), lutPtr,
 			rpp::deref(rppHandle),
@@ -18859,6 +18859,12 @@ RppStatus
 	}
 #elif defined (HIP_COMPILE)
 	{
+		// color_convert_hip_batch(
+		// 	static_cast<cl_mem>(srcPtr),
+		// 	static_cast<cl_mem>(dstPtr),
+		// 	convert_mode,
+		// 	RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+		// );
 	}
 #endif //BACKEND
 

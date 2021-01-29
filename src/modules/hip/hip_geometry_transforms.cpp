@@ -1,3 +1,4 @@
+#include "hip/rpp_hip_common.hpp"
 #include "hip_declarations.hpp"
 
 /************* Fish eye ******************/
@@ -695,100 +696,142 @@ warp_perspective_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel)
     
 {
-    Rpp32u nBatchSize = handle.GetBatchSize(); 
-    float perspective_inv[9];
-    float det; //for Deteminent
-    short counter;
-    size_t gDim3[3];
+    int plnpkdind;
+
+    if (chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+    
     Rpp32f* perspective_array;
-    hipMalloc(&perspective_array,sizeof(float)*9);
+    hipMalloc(&perspective_array, sizeof(float) * 9 * handle.GetBatchSize());
+    hipMemcpy(perspective_array, perspective, sizeof(float) * 9 * handle.GetBatchSize(), hipMemcpyHostToDevice);
 
-    unsigned int maxsrcHeight, maxsrcWidth, maxdstHeight, maxdstWidth;
-    maxsrcHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
-    maxsrcWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
-    maxdstHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[0];
-    maxdstWidth = handle.GetInitHandle()->mem.mgpu.cdstSize.width[0];
-    for(int i = 0 ; i < nBatchSize ; i++)
-    {
-        if(maxsrcHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
-            maxsrcHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-        if(maxsrcWidth < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
-            maxsrcWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        
-        if(maxdstHeight < handle.GetInitHandle()->mem.mgpu.cdstSize.height[i])
-            maxdstHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
-        if(maxdstWidth < handle.GetInitHandle()->mem.mgpu.cdstSize.width[i])
-            maxdstWidth = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
-    }
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
-    Rpp8u * srcPtr1;
-    hipMalloc(&srcPtr1, sizeof(unsigned char) * maxsrcHeight * maxsrcWidth * channel);
-    Rpp8u * dstPtr1;
-    hipMalloc(&dstPtr1, sizeof(unsigned char) * maxdstHeight * maxdstWidth * channel);
-
-    int ctr;
-    size_t srcbatchIndex = 0, dstbatchIndex = 0;
-    size_t index =0;
-
-    for(int i =0; i<nBatchSize; i++)
-    {
-        hipMemcpy(srcPtr1, srcPtr+srcbatchIndex , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * 
-        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
-        det = (perspective[index] * ((perspective[index+4] * perspective[index+8]) - (perspective[index+5] * perspective[index+7]))) - (perspective[index+1] * ((perspective[index+3] * perspective[index+8]) - (perspective[index+5] * perspective[index+6]))) + (perspective[index+2] * ((perspective[index+3] * perspective[index+7]) - (perspective[index+4] * perspective[index+6])));
-        perspective_inv[0] = (1 * ((perspective[index+4] * perspective[index+8]) - (perspective[index+5] * perspective[index+7]))) / det;
-        perspective_inv[1] = (-1 * ((perspective[index+1] * perspective[index+8]) - (perspective[index+7] * perspective[index+2]))) / det;
-        perspective_inv[2] = (1 * ((perspective[index+1] * perspective[index+5]) - (perspective[index+4] * perspective[index+2]))) / det;
-        perspective_inv[3] = (-1 * ((perspective[index+3] * perspective[index+8]) - (perspective[index+6] * perspective[index+5]))) / det;
-        perspective_inv[4] = (1 * ((perspective[index] * perspective[index+8]) - (perspective[index+6] * perspective[index+2]))) / det;
-        perspective_inv[5] = (-1 * ((perspective[index] * perspective[index+5]) - (perspective[index+3] * perspective[index+2]))) / det;
-        perspective_inv[6] = (1 * ((perspective[index+3] * perspective[index+7]) - (perspective[index+6] * perspective[index+4]))) / det;
-        perspective_inv[7] = (-1 * ((perspective[index] * perspective[index+7]) - (perspective[index+6] * perspective[index+1]))) / det;
-        perspective_inv[8] = (1 * ((perspective[index] * perspective[index+4]) - (perspective[index+3] * perspective[index+1]))) / det;
-
-        hipMemcpy(perspective_array,perspective,sizeof(float)*9,hipMemcpyHostToDevice);
-
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.cdstSize.width[i], handle.GetInitHandle()->mem.mgpu.cdstSize.height[i], channel};
-            handle.AddKernel("", "", "warp_perspective.cpp", "warp_perspective_pln", vld, vgd, "")(srcPtr1,
-                                                                        dstPtr1,
+    handle.AddKernel("", "", "warp_perspective.cpp", "warp_perspective_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         perspective_array,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.cdstSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.cdstSize.width[i],
-                                                                        channel
-                                                                        );
-            
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {   
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.cdstSize.width[i], handle.GetInitHandle()->mem.mgpu.cdstSize.height[i], channel};
-            handle.AddKernel("", "", "warp_perspective.cpp", "warp_perspective_pkd", vld, vgd, "")(srcPtr1,
-                                                                        dstPtr1,
-                                                                        perspective_array,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.cdstSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.cdstSize.width[i],
-                                                                        channel
-                                                                        );
-           
-        }
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                        channel,
+                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                        plnpkdind);
+    
+    hipFree(perspective_array);
 
-        else
-        {std::cerr << "Internal error: Unknown Channel format";}
-
-        
-        hipMemcpy(dstPtr+dstbatchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);        srcbatchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
-        dstbatchIndex += handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * channel * sizeof(unsigned char);
-        index = index + 9;
-    }
     return RPP_SUCCESS;
-    /* CLrelease should come here */
 }
+    
+    
+    
+//     Rpp32u nBatchSize = handle.GetBatchSize(); 
+//     float perspective_inv[9];
+//     float det; //for Deteminent
+//     short counter;
+//     size_t gDim3[3];
+//     Rpp32f* perspective_array;
+//     hipMalloc(&perspective_array,sizeof(float)*9);
+
+//     unsigned int maxsrcHeight, maxsrcWidth, maxdstHeight, maxdstWidth;
+//     maxsrcHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
+//     maxsrcWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
+//     maxdstHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[0];
+//     maxdstWidth = handle.GetInitHandle()->mem.mgpu.cdstSize.width[0];
+//     for(int i = 0 ; i < nBatchSize ; i++)
+//     {
+//         if(maxsrcHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
+//             maxsrcHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
+//         if(maxsrcWidth < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
+//             maxsrcWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
+        
+//         if(maxdstHeight < handle.GetInitHandle()->mem.mgpu.cdstSize.height[i])
+//             maxdstHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
+//         if(maxdstWidth < handle.GetInitHandle()->mem.mgpu.cdstSize.width[i])
+//             maxdstWidth = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
+//     }
+
+//     Rpp8u * srcPtr1;
+//     hipMalloc(&srcPtr1, sizeof(unsigned char) * maxsrcHeight * maxsrcWidth * channel);
+//     Rpp8u * dstPtr1;
+//     hipMalloc(&dstPtr1, sizeof(unsigned char) * maxdstHeight * maxdstWidth * channel);
+
+//     int ctr;
+//     size_t srcbatchIndex = 0, dstbatchIndex = 0;
+//     size_t index =0;
+
+//     for(int i =0; i<nBatchSize; i++)
+//     {
+//         hipMemcpy(srcPtr1, srcPtr+srcbatchIndex , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * 
+//         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
+//         det = (perspective[index] * ((perspective[index+4] * perspective[index+8]) - (perspective[index+5] * perspective[index+7]))) - (perspective[index+1] * ((perspective[index+3] * perspective[index+8]) - (perspective[index+5] * perspective[index+6]))) + (perspective[index+2] * ((perspective[index+3] * perspective[index+7]) - (perspective[index+4] * perspective[index+6])));
+//         perspective_inv[0] = (1 * ((perspective[index+4] * perspective[index+8]) - (perspective[index+5] * perspective[index+7]))) / det;
+//         perspective_inv[1] = (-1 * ((perspective[index+1] * perspective[index+8]) - (perspective[index+7] * perspective[index+2]))) / det;
+//         perspective_inv[2] = (1 * ((perspective[index+1] * perspective[index+5]) - (perspective[index+4] * perspective[index+2]))) / det;
+//         perspective_inv[3] = (-1 * ((perspective[index+3] * perspective[index+8]) - (perspective[index+6] * perspective[index+5]))) / det;
+//         perspective_inv[4] = (1 * ((perspective[index] * perspective[index+8]) - (perspective[index+6] * perspective[index+2]))) / det;
+//         perspective_inv[5] = (-1 * ((perspective[index] * perspective[index+5]) - (perspective[index+3] * perspective[index+2]))) / det;
+//         perspective_inv[6] = (1 * ((perspective[index+3] * perspective[index+7]) - (perspective[index+6] * perspective[index+4]))) / det;
+//         perspective_inv[7] = (-1 * ((perspective[index] * perspective[index+7]) - (perspective[index+6] * perspective[index+1]))) / det;
+//         perspective_inv[8] = (1 * ((perspective[index] * perspective[index+4]) - (perspective[index+3] * perspective[index+1]))) / det;
+
+//         hipMemcpy(perspective_array,perspective,sizeof(float)*9,hipMemcpyHostToDevice);
+
+//         if (chnFormat == RPPI_CHN_PLANAR)
+//         {
+//             std::vector<size_t> vld{32, 32, 1};
+//             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.cdstSize.width[i], handle.GetInitHandle()->mem.mgpu.cdstSize.height[i], channel};
+//             handle.AddKernel("", "", "warp_perspective.cpp", "warp_perspective_pln", vld, vgd, "")(srcPtr1,
+//                                                                         dstPtr1,
+//                                                                         perspective_array,
+//                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+//                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+//                                                                         handle.GetInitHandle()->mem.mgpu.cdstSize.height[i],
+//                                                                         handle.GetInitHandle()->mem.mgpu.cdstSize.width[i],
+//                                                                         channel
+//                                                                         );
+            
+//         }
+//         else if (chnFormat == RPPI_CHN_PACKED)
+//         {   
+//             std::vector<size_t> vld{32, 32, 1};
+//             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.cdstSize.width[i], handle.GetInitHandle()->mem.mgpu.cdstSize.height[i], channel};
+//             handle.AddKernel("", "", "warp_perspective.cpp", "warp_perspective_pkd", vld, vgd, "")(srcPtr1,
+//                                                                         dstPtr1,
+//                                                                         perspective_array,
+//                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+//                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+//                                                                         handle.GetInitHandle()->mem.mgpu.cdstSize.height[i],
+//                                                                         handle.GetInitHandle()->mem.mgpu.cdstSize.width[i],
+//                                                                         channel
+//                                                                         );
+           
+//         }
+
+//         else
+//         {std::cerr << "Internal error: Unknown Channel format";}
+
+        
+//         hipMemcpy(dstPtr+dstbatchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);        srcbatchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
+//         dstbatchIndex += handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * channel * sizeof(unsigned char);
+//         index = index + 9;
+//     }
+//     return RPP_SUCCESS;
+//     /* CLrelease should come here */
+// }
 // /************* Scale ******************/
 RppStatus
 scale_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr, RppiSize dstSize,

@@ -3,9 +3,11 @@
 
 #include "rpp.h"
 #include "hip/rpp/handle.hpp"
-
+#include "hip/rpp_hip_common.hpp"
 
 void max_size(Rpp32u *height, Rpp32u *width, unsigned int batch_size, unsigned int *max_height, unsigned int *max_width);
+
+void get_kernel_name(std::string &kernel_name, const RPPTensorFunctionMetaData &tensor_info);
 
 RppStatus
 hueRGB_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
@@ -411,6 +413,13 @@ resize_hip(Rpp8u * srcPtr, RppiSize srcSize,
 RppStatus
 resize_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel);
+
+// template <typename T, typename U>
+// RppStatus
+// resize_hip_batch_tensor(T* srcPtr, U* dstPtr);
+
+// // resize_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr);
+// // resize_hip_batch_tensor(T* srcPtr, U* dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 resize_crop_hip(Rpp8u * srcPtr, RppiSize srcSize,
                 Rpp8u * dstPtr, RppiSize dstSize,

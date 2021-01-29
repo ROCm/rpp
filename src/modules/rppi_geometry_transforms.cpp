@@ -5,6 +5,7 @@
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
 #include "hip/hip_declarations.hpp"
+#include "hip/hip_declarations_inline.hpp"
 
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
@@ -9560,35 +9561,65 @@ resize_helper(RppiChnFormat chn_format,
 	}
 #elif defined(HIP_COMPILE)
 	{
-		resize_hip_batch(
-			static_cast<Rpp8u *>(srcPtr),
-			static_cast<Rpp8u *>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels);
-		// if (tensor_type == RPPTensorDataType::U8)
-		// {
-		// 	resize_hip_batch(
-		// 		static_cast<Rpp8u *>(srcPtr),
-		// 		static_cast<Rpp8u *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP32)
-		// {
-		// 	resize_hip_batch(
-		// 		static_cast<Rpp32f *>(srcPtr),
-		// 		static_cast<Rpp32f *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP16)
-		// {
-		// 	resize_hip_batch(
-		// 		static_cast<data_type_t *>(srcPtr),
-		// 		static_cast<data_type_t *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
+		if (in_tensor_type == RPPTensorDataType::U8)
+		{
+			if (out_tensor_type == RPPTensorDataType::U8)
+			{
+				resize_hip_batch_tensor<Rpp8u, Rpp8u>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp8u *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::FP16)
+			{
+				resize_hip_batch_tensor<Rpp8u, Rpp16f>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp16f *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::FP32)
+			{
+				resize_hip_batch_tensor<Rpp8u, Rpp32f>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp32f *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::I8)
+			{
+				resize_hip_batch_tensor<Rpp8u, Rpp8s>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp8s *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP16)
+		{
+			resize_hip_batch_tensor<Rpp16f, Rpp16f>(
+				static_cast<Rpp16f *>(srcPtr),
+				static_cast<Rpp16f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP32)
+		{
+			resize_hip_batch_tensor<Rpp32f, Rpp32f>(
+				static_cast<Rpp32f *>(srcPtr),
+				static_cast<Rpp32f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::I8)
+		{
+			resize_hip_batch_tensor<Rpp8s, Rpp8s>(
+				static_cast<Rpp8s *>(srcPtr),
+				static_cast<Rpp8s *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
 	}
 #endif //BACKEND
 
@@ -17132,7 +17163,7 @@ rppi_scale_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 	}
 #elif defined(HIP_COMPILE)
 	{
-		scale_hip_batch(
+		resize_hip_batch(
 			static_cast<Rpp8u *>(srcPtr),
 			static_cast<Rpp8u *>(dstPtr),
 			rpp::deref(rppHandle),
