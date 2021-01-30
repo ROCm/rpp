@@ -3,8 +3,6 @@
 
 def runCompileCommand(platform, project, jobName, boolean debug=false, boolean staticLibrary=false) {
     project.paths.construct_build_prefix()
-        
-    project.paths.build_command = './install -c'
 
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
@@ -13,7 +11,6 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String osInfo = ""
     String cmake = ""
     String centos7 = ""
-    String sles = ""
     String update = ""
 
     if (platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('sles'))
@@ -24,11 +21,13 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
         cmake = 'cmake3'
         if (platform.jenkinsLabel.contains('centos7'))
         {
-          centos7 = 'scl enable devtoolset-7 bash'
+            centos7 = 'scl enable devtoolset-7 bash'
         }
         if (platform.jenkinsLabel.contains('sles'))
         {
-          sles = 'yum install -y sudo'
+            update = 'sudo zypper -y update'
+            cmake = 'cmake'
+            installPackage = 'sudo zypper install -y boost-devel clang'
         }
     }
     else
@@ -42,7 +41,6 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     def command = """#!/usr/bin/env bash
                 set -x
                 ${osInfo}
-                ${sles}
                 ${update}
                 ${centos7}
                 echo Install RPP Prerequisites
@@ -70,9 +68,32 @@ def runTestCommand (platform, project) {
 }*/
 
 def runPackageCommand(platform, project) {
+
     def packageHelper = platform.makePackage(platform.jenkinsLabel, "${project.paths.project_build_prefix}/build/release")
+
+    String packageType = ""
+
+    if (platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('sles'))
+    {
+        packageType = 'rpm'
+    }
+    else
+    {
+        packageType = 'deb'
+    }
+
+    def command = """#!/usr/bin/env bash
+                set -x
+                export HOME=/home/jenkins
+                echo Make RPP Package
+                cd ${project.paths.project_build_prefix}/build/release
+                sudo make package
+                mkdir -p package
+                mv *.${packageType} package/
+                dpkg -c package/*.${packageType}
+                """
         
-    platform.runCommand(this, packageHelper[0])
+    platform.runCommand(this, command)
     platform.archiveArtifacts(this, packageHelper[1])
 }
 
