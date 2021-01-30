@@ -7,28 +7,17 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
 
-    String installPackage = ""
     String osInfo = ""
-    String cmake = ""
-    String centos7 = ""
     String update = ""
+    String installPackage = ""
+    String cmake = ""
 
-    if (platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('sles'))
+    if (platform.jenkinsLabel.contains('centos'))
     {
         osInfo = 'cat /etc/os-release && uname -r'
         update = 'sudo yum -y update'
         installPackage = 'sudo yum install -y boost-devel clang'
         cmake = 'cmake3'
-        if (platform.jenkinsLabel.contains('centos7'))
-        {
-            centos7 = 'scl enable devtoolset-7 bash'
-        }
-        if (platform.jenkinsLabel.contains('sles'))
-        {
-            update = 'sudo zypper -y update'
-            cmake = 'cmake'
-            installPackage = 'sudo zypper install -y boost-devel clang'
-        }
     }
     else
     {
@@ -42,7 +31,6 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 set -x
                 ${osInfo}
                 ${update}
-                ${centos7}
                 echo Install RPP Prerequisites
                 mkdir -p rpp-deps && cd rpp-deps
                 ${installPackage}
@@ -80,7 +68,7 @@ def runPackageCommand(platform, project) {
     String packageType = ""
     String packageInfo = ""
 
-    if (platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('sles'))
+    if (platform.jenkinsLabel.contains('centos'))
     {
         packageType = 'rpm'
         packageInfo = 'rpm -qlp'
