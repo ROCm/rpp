@@ -62,10 +62,16 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     platform.runCommand(this, command)
 }
 
-/*@Override
 def runTestCommand (platform, project) {
-//TBD
-}*/
+
+    def command = """#!/usr/bin/env bash
+                set -x
+                ldd -v /opt/rocm/rpp/lib/libamd_rpp.so
+                """
+
+    platform.runCommand(this, command)
+    // Unit tests - TBD
+}
 
 def runPackageCommand(platform, project) {
 
