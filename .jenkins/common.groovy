@@ -13,6 +13,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String osInfo = ""
     String cmake = ""
     String centos7 = ""
+    String sles = ""
     String update = ""
 
     if (platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('sles'))
@@ -24,6 +25,10 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
         if (platform.jenkinsLabel.contains('centos7'))
         {
           centos7 = 'scl enable devtoolset-7 bash'
+        }
+        if (platform.jenkinsLabel.contains('sles'))
+        {
+          sles = 'yum install -y sudo'
         }
     }
     else
@@ -37,6 +42,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     def command = """#!/usr/bin/env bash
                 set -x
                 ${osInfo}
+                ${sles}
                 ${update}
                 ${centos7}
                 echo Install RPP Prerequisites
@@ -51,7 +57,8 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
                 ${cmake} -DBACKEND=OCL ${buildTypeArg} ../..
                 make -j\$(nproc)
-                make package
+                sudo make install
+                sudo make package
                 """
     
     platform.runCommand(this, command)
