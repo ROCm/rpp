@@ -72,14 +72,17 @@ def runPackageCommand(platform, project) {
     def packageHelper = platform.makePackage(platform.jenkinsLabel, "${project.paths.project_build_prefix}/build/release")
 
     String packageType = ""
+    String packageInfo = ""
 
     if (platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('sles'))
     {
         packageType = 'rpm'
+        packageInfo = 'rpm -qlp'
     }
     else
     {
         packageType = 'deb'
+        packageInfo = 'dpkg -c'
     }
 
     def command = """#!/usr/bin/env bash
@@ -90,9 +93,9 @@ def runPackageCommand(platform, project) {
                 sudo make package
                 mkdir -p package
                 mv *.${packageType} package/
-                dpkg -c package/*.${packageType}
+                ${packageInfo} package/*.${packageType}
                 """
-        
+
     platform.runCommand(this, command)
     platform.archiveArtifacts(this, packageHelper[1])
 }
