@@ -18752,6 +18752,20 @@ RppStatus
 	}
 #elif defined (HIP_COMPILE)
 	{
+		if (convert_mode == RGB_HSV)
+			color_convert_hip_batch<Rpp8u, Rpp32f>(
+				static_cast<Rpp8u*>(srcPtr),
+				static_cast<Rpp32f*>(dstPtr),
+				convert_mode,
+				RPPI_CHN_PLANAR, 3, rpp::deref(rppHandle)
+			);
+		else if (convert_mode == HSV_RGB)
+			color_convert_hip_batch<Rpp32f, Rpp8u>(
+				static_cast<Rpp32f*>(srcPtr),
+				static_cast<Rpp8u*>(dstPtr),
+				convert_mode,
+				RPPI_CHN_PLANAR, 3, rpp::deref(rppHandle)
+			);
 	}
 #endif //BACKEND
 
