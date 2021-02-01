@@ -5,6 +5,7 @@
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
 #include "hip/hip_declarations.hpp"
+#include "hip/hip_declarations_inline.hpp"
 
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
@@ -18859,12 +18860,20 @@ RppStatus
 	}
 #elif defined (HIP_COMPILE)
 	{
-		// color_convert_hip_batch(
-		// 	static_cast<cl_mem>(srcPtr),
-		// 	static_cast<cl_mem>(dstPtr),
-		// 	convert_mode,
-		// 	RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
-		// );
+		if (convert_mode == RGB_HSV)
+			color_convert_hip_batch<Rpp8u, Rpp32f>(
+				static_cast<Rpp8u*>(srcPtr),
+				static_cast<Rpp32f*>(dstPtr),
+				convert_mode,
+				RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+			);
+		else if (convert_mode == HSV_RGB)
+			color_convert_hip_batch<Rpp32f, Rpp8u>(
+				static_cast<Rpp32f*>(srcPtr),
+				static_cast<Rpp8u*>(dstPtr),
+				convert_mode,
+				RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+			);
 	}
 #endif //BACKEND
 

@@ -23702,6 +23702,14 @@ rppi_custom_convolution_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,Rp
 	}
 #elif defined (HIP_COMPILE)
 	{
+		custom_convolution_hip_batch(
+			static_cast<Rpp8u*>(srcPtr),
+			static_cast<Rpp8u*>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize[0],
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 1
+		);
 	}
 #endif //BACKEND
 
@@ -23757,6 +23765,14 @@ rppi_custom_convolution_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,Rp
 	}
 #elif defined (HIP_COMPILE)
 	{
+		custom_convolution_hip_batch(
+			static_cast<Rpp8u*>(srcPtr),
+			static_cast<Rpp8u*>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize[0],
+			rpp::deref(rppHandle),
+			RPPI_CHN_PLANAR, 3
+		);
 	}
 #endif //BACKEND
 
@@ -23812,6 +23828,14 @@ rppi_custom_convolution_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,RppiSize *srcSize,Rp
 	}
 #elif defined (HIP_COMPILE)
 	{
+		custom_convolution_hip_batch(
+			static_cast<Rpp8u*>(srcPtr),
+			static_cast<Rpp8u*>(dstPtr),
+			static_cast<Rpp32f*>(kernel),
+			kernelSize[0],
+			rpp::deref(rppHandle),
+			RPPI_CHN_PACKED, 3
+		);
 	}
 #endif //BACKEND
 

@@ -66,7 +66,6 @@ color_temperature_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handl
     return RPP_SUCCESS;
 }
 
-
 /****************  Vignette modification *******************/
 
 RppStatus
@@ -332,9 +331,9 @@ look_up_table_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr,rpp::Han
                         RppiChnFormat chnFormat, unsigned int channel)
 
 {
-    Rpp8u* clLutPtr;
-    hipMalloc(&clLutPtr,sizeof(Rpp8u)*256*channel*handle.GetBatchSize());
-    hipMemcpy(clLutPtr,  lutPtr,sizeof(Rpp8u)*256*channel,hipMemcpyHostToDevice);
+    Rpp8u* hipLutPtr;
+    hipMalloc(&hipLutPtr, sizeof(Rpp8u) * 256 * channel * handle.GetBatchSize());
+    hipMemcpy(hipLutPtr, lutPtr, sizeof(Rpp8u) * 256 * channel * handle.GetBatchSize(), hipMemcpyHostToDevice);
     int plnpkdind;
 
     if(chnFormat == RPPI_CHN_PLANAR)
@@ -348,7 +347,7 @@ look_up_table_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr,rpp::Han
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     handle.AddKernel("", "", "look_up_table.cpp", "look_up_table_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                                        clLutPtr,
+                                                                                        hipLutPtr,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,

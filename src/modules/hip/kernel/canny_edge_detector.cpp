@@ -17,7 +17,7 @@ extern "C" __global__ void canny_ced_pln3_to_pln1(   unsigned char* input,
     float value = ((input[IPpixIdx] + input[IPpixIdx + ch] + input[IPpixIdx + ch * 2]) / 3);
     output[IPpixIdx] = (unsigned char)value ;
 }
-extern "C" __global__ void ced_pkd3_to_pln1(   unsigned char* input,
+extern "C" __global__ void canny_ced_pkd3_to_pln1(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,
                     const unsigned int width,
@@ -454,7 +454,7 @@ extern "C" __global__ void ced_pln1_to_pkd3_batch(   unsigned char* input,
     output[OPpixIdx + 1] = input[IPpixIdx];
     output[OPpixIdx + 2] = input[IPpixIdx];
 }
-extern "C" __global__ void ced_pln1_to_pln3(   unsigned char* input,
+extern "C" __global__ void canny_ced_pln1_to_pln3(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,
                     const unsigned int width,
@@ -471,7 +471,7 @@ extern "C" __global__ void ced_pln1_to_pln3(   unsigned char* input,
     output[IPpixIdx + ch] = input[IPpixIdx];
     output[IPpixIdx + ch * 2] = input[IPpixIdx];
 }
-extern "C" __global__ void ced_pln1_to_pkd3(   unsigned char* input,
+extern "C" __global__ void canny_ced_pln1_to_pkd3(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,
                     const unsigned int width,

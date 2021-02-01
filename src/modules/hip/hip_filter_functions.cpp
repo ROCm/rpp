@@ -458,59 +458,17 @@ gaussian_filter_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 }
 
 /********************** custom_convolution ************************/
-RppStatus
-custom_convolution_cl( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32f* kernel,
- RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
-{
-    int buffer_size_kernel_size = sizeof(float) * kernelSize.height * kernelSize.width;
-    Rpp32f* d_kernel;
-    hipMalloc(&d_kernel, sizeof(float) * kernelSize.height * kernelSize.width);
-    hipMemcpy(d_kernel,kernel,buffer_size_kernel_size,hipMemcpyHostToDevice);
-    if(chnFormat == RPPI_CHN_PACKED)
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-        handle.AddKernel("", "", "custom_convolution.cpp", "custom_convolution_pkd", vld, vgd, "")(srcPtr,
-                                                                        dstPtr,
-                                                                        srcSize.height,
-                                                                        srcSize.width,
-                                                                        channel,
-                                                                        d_kernel,
-                                                                        kernelSize.height,
-                                                                        kernelSize.width
-                                                                        );
-    }
-    else
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-        handle.AddKernel("", "", "custom_convolution.cpp", "custom_convolution_pln", vld, vgd, "")(srcPtr,
-                                                                        dstPtr,
-                                                                        srcSize.height,
-                                                                        srcSize.width,
-                                                                        channel,
-                                                                        d_kernel,
-                                                                        kernelSize.height,
-                                                                        kernelSize.width
-                                                                        );
-        
-    }
-
-   
-    return RPP_SUCCESS;  
-}
 
 RppStatus
-custom_convolution_cl_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiSize KernelSize,
+custom_convolution_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiSize KernelSize,
                         rpp::Handle& handle,RppiChnFormat chnFormat, unsigned int channel)
-   
 {
     Rpp32u nbatchSize = handle.GetBatchSize();
     int buffer_size_kernel_size = nbatchSize * sizeof(float) * KernelSize.height * KernelSize.width;
+    Rpp32f *d_kernel;
+    hipMalloc(&d_kernel, buffer_size_kernel_size);
+    hipMemcpy(d_kernel, kernel, buffer_size_kernel_size, hipMemcpyHostToDevice);
     int plnpkdind;
-    Rpp32f* d_kernel;
-    hipMalloc(&d_kernel, nbatchSize * sizeof(float) * KernelSize.height * KernelSize.width);
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
@@ -518,10 +476,9 @@ custom_convolution_cl_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiS
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    hipMemcpy(d_kernel,kernel,buffer_size_kernel_size,hipMemcpyHostToDevice);
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "custom_convolution.cpp", "custom_convolution_batch", vld, vgd, "")(srcPtr,
+    handle.AddKernel("", "", "custom_convolution.cl", "custom_convolution_batch", vld, vgd, "")(srcPtr,
                                                                 dstPtr,
                                                                 d_kernel,
                                                                 KernelSize.height,
@@ -539,6 +496,5 @@ custom_convolution_cl_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiS
                                                                 plnpkdind
                                                                 );
     return RPP_SUCCESS;
-
 }
 

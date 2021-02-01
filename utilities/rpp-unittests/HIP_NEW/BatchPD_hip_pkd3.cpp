@@ -604,9 +604,9 @@ int main(int argc, char **argv)
     }
     else if (ip_bitDepth == 1)
     {
-        Rpp16f *inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-        Rpp16f *inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-        Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
 
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp16f *inputf16Temp, *inputf16_secondTemp;
@@ -636,9 +636,9 @@ int main(int argc, char **argv)
     }
     else if (ip_bitDepth == 2)
     {
-        Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-        Rpp32f *inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-        Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
 
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
@@ -668,29 +668,29 @@ int main(int argc, char **argv)
     }
     else if (ip_bitDepth == 3)
     {
-        Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-        hipMalloc(&d_inputf16, ioBufferSize * sizeof(Rpp16f));
-        hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(Rpp16f));
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
         hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
-        hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
-        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
         hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 4)
     {
-        Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-        hipMalloc(&d_inputf32, ioBufferSize * sizeof(Rpp32f));
-        hipMalloc(&d_inputf32_second, ioBufferSize * sizeof(Rpp32f));
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
         hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
-        hipMemcpy(d_inputf32, inputf32, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
-        hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
         hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 5)
     {
-        Rpp8s *inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-        Rpp8s *inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-        Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
         
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
@@ -720,12 +720,12 @@ int main(int argc, char **argv)
     }
     else if (ip_bitDepth == 6)
     {
-        Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-        hipMalloc(&d_inputi8, ioBufferSize * sizeof(Rpp8s));
-        hipMalloc(&d_inputi8_second, ioBufferSize * sizeof(Rpp8s));
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
         hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
-        hipMemcpy(d_inputi8, inputi8, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
-        hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
         hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
     }
 
@@ -3262,6 +3262,8 @@ int main(int argc, char **argv)
     case 74:
     {
         test_case_name = "color_convert";
+
+        hipMalloc(&d_outputf32, ioBufferSize * sizeof(Rpp32f));
         
         RppiColorConvertMode convert_mode_1 = RppiColorConvertMode::RGB_HSV;
         RppiColorConvertMode convert_mode_2 = RppiColorConvertMode::HSV_RGB;
@@ -3289,6 +3291,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
        
         end = clock();
+
+        hipFree(d_outputf32);
 
         start /= 2;
         end /= 2;
@@ -3858,32 +3862,32 @@ int main(int argc, char **argv)
         free(temp_output);
     }
 
-    free(srcSize);
-    free(dstSize);
-    free(input);
-    free(input_second);
-    free(output);
-    free(inputf16);
-    free(inputf16_second);
-    free(outputf16);
-    free(inputf32);
-    free(inputf32_second);
-    free(outputf32);
-    free(inputi8);
-    free(inputi8_second);
-    free(outputi8);
-    hipFree(d_input);
-    hipFree(d_input_second);
-    hipFree(d_output);
-    hipFree(d_inputf16);
-    hipFree(d_inputf16_second);
-    hipFree(d_outputf16);
-    hipFree(d_inputf32);
-    hipFree(d_inputf32_second);
-    hipFree(d_outputf32);
-    hipFree(d_inputi8);
-    hipFree(d_inputi8_second);
-    hipFree(d_outputi8);
+    // free(srcSize);
+    // free(dstSize);
+    // free(input);
+    // free(input_second);
+    // free(output);
+    // free(inputf16);
+    // free(inputf16_second);
+    // free(outputf16);
+    // free(inputf32);
+    // free(inputf32_second);
+    // free(outputf32);
+    // free(inputi8);
+    // free(inputi8_second);
+    // free(outputi8);
+    // hipFree(d_input);
+    // hipFree(d_input_second);
+    // hipFree(d_output);
+    // hipFree(d_inputf16);
+    // hipFree(d_inputf16_second);
+    // hipFree(d_outputf16);
+    // hipFree(d_inputf32);
+    // hipFree(d_inputf32_second);
+    // hipFree(d_outputf32);
+    // hipFree(d_inputi8);
+    // hipFree(d_inputi8_second);
+    // hipFree(d_outputi8);
 
     return 0;
 }

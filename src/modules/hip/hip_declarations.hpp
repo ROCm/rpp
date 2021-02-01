@@ -535,11 +535,8 @@ RppStatus
 data_object_copy_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiChnFormat chnFormat,
                      unsigned int channel, rpp::Handle& handle);
 RppStatus
-custom_convolution_cl_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiSize KernelSize,
+custom_convolution_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiSize KernelSize,
                         rpp::Handle& handle,RppiChnFormat chnFormat, unsigned int channel);
-RppStatus
-custom_convolution_cl( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32f* kernel,
- RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 template <typename T, typename U>
 RppStatus
 tensor_convert_bit_depth_hip( Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, T* srcPtr,

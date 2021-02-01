@@ -693,10 +693,8 @@ laplacian_image_pyramid_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle&
     Rpp32f* kernel;
     hipMalloc(&kernel,  maxKernelSize * maxKernelSize * sizeof(Rpp32f));
 
-   // std::cerr<<maxHeight<<" "<<maxWidth<<" "<<maxKernelSize<<"\n";
     for(int i = 0 ; i < handle.GetBatchSize(); i++)
     {       
-       // std::cerr<<"loop : "<<i+1<<"\n INDEX : "<<batchIndex<<"\n";
         generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[0].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
         hipMemcpy(kernel,kernelMain,handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * sizeof(Rpp32f),hipMemcpyHostToDevice);
         if(chnFormat == RPPI_CHN_PACKED)
@@ -704,94 +702,55 @@ laplacian_image_pyramid_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle&
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "gaussian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr,srcPtr1,
-                                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                maxHeight,
+                                                                                                                maxWidth,
                                                                                                                 channel,
                                                                                                                 kernel,
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                 batchIndex);
-            // CreateProgramFromBinary(handle.GetStream(),"laplacian_image_pyramid.cpp","laplacian_image_pyramid.cpp.bin","gaussian_image_pyramid_pkd_batch",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "gaussian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr,srcPtr1,
-                                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                maxHeight,
+                                                                                                                maxWidth,
                                                                                                                 channel,
                                                                                                                 kernel,
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                 batchIndex);
-            // CreateProgramFromBinary(handle.GetStream(),"laplacian_image_pyramid.cpp","laplacian_image_pyramid.cpp.bin","gaussian_image_pyramid_pln_batch",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
 
-        //---- Args Setter
-        // ctr = 0;
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr1);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &kernel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-
-        // size_t gDim3[3];
-        // gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        // gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-        // gDim3[2] = channel;
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-        
         if(chnFormat == RPPI_CHN_PACKED)
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "laplacian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr1,dstPtr,
-                                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                maxHeight,
+                                                                                                                maxWidth,
                                                                                                                 channel,
                                                                                                                 kernel,
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                 batchIndex);
-            // CreateProgramFromBinary(handle.GetStream(),"laplacian_image_pyramid.cpp","laplacian_image_pyramid.cpp.bin","laplacian_image_pyramid_pkd_batch",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "laplacian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr1,dstPtr,
-                                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                                maxHeight,
+                                                                                                                maxWidth,
                                                                                                                 channel,
                                                                                                                 kernel,
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                 batchIndex);
-            // CreateProgramFromBinary(handle.GetStream(),"laplacian_image_pyramid.cpp","laplacian_image_pyramid.cpp.bin","laplacian_image_pyramid_pln_batch",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
-        // ctr=0;
-        // //---- Args Setter
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr1);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &kernel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-        
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-        batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel;
+        batchIndex += maxHeight * maxWidth * channel;
     }
     hipFree(srcPtr1);
     hipFree(kernel);
@@ -1094,34 +1053,36 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
     }
 
+    Rpp32u imageDim = maxHeight * maxWidth;
+
     Rpp8u* gsin;
-    hipMalloc(&gsin, sizeof(unsigned char) * maxHeight * maxWidth);
+    hipMalloc(&gsin, sizeof(unsigned char) * imageDim);
     Rpp8u* gsout;
-    hipMalloc(&gsout, sizeof(unsigned char) * maxHeight * maxWidth);
+    hipMalloc(&gsout, sizeof(unsigned char) * imageDim);
     
     Rpp8u* tempDest1;
-    hipMalloc(&tempDest1, sizeof(unsigned char) * maxHeight * maxWidth);
+    hipMalloc(&tempDest1, sizeof(unsigned char) * imageDim);
     Rpp8u* tempDest2;
-    hipMalloc(&tempDest2, sizeof(unsigned char) * maxHeight * maxWidth);
+    hipMalloc(&tempDest2, sizeof(unsigned char) * imageDim);
 
     Rpp8u* sobelX;
-    hipMalloc(&sobelX, sizeof(unsigned char) * maxHeight * maxWidth);
+    hipMalloc(&sobelX, sizeof(unsigned char) * imageDim);
     Rpp8u* sobelY;
-    hipMalloc(&sobelY, sizeof(unsigned char) * maxHeight * maxWidth);
+    hipMalloc(&sobelY, sizeof(unsigned char) * imageDim);
     
     unsigned long batchIndex = 0;
     Rpp8u* srcPtr1;
-    hipMalloc(&srcPtr1, sizeof(unsigned char) * maxHeight * maxWidth * channel);
+    hipMalloc(&srcPtr1, sizeof(unsigned char) * imageDim * channel);
     Rpp8u* dstPtr1;
-    hipMalloc(&dstPtr1, sizeof(unsigned char) * maxHeight * maxWidth * channel);
+    hipMalloc(&dstPtr1, sizeof(unsigned char) * imageDim * channel);
 
     // int ctr;
     for(int i = 0 ; i < handle.GetBatchSize() ; i++)
     {       
-        hipMemcpy(srcPtr1, srcPtr + batchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyHostToDevice);
+        hipMemcpy(srcPtr1, srcPtr + batchIndex, sizeof(unsigned char) * imageDim * channel, hipMemcpyHostToDevice);
         size_t gDim3[3];
-        gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
+        gDim3[0] = maxWidth;
+        gDim3[1] = maxHeight;
         gDim3[2] = 1;
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
@@ -1129,248 +1090,131 @@ canny_edge_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         {
             if(chnFormat == RPPI_CHN_PACKED)
             {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
+                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                 gsin,
-                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                maxHeight,
+                                                                                                maxWidth,
                                                                                                 channel);
-                // CreateProgramFromBinary(handle.GetStream(),"canny_edge_detector.cpp","canny_edge_detector.cpp.bin","ced_pkd3_to_pln1_batch",theProgram,theKernel);
-                // clRetainKernel(theKernel);
             }
             else
             {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
+                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                 gsin,
-                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                maxHeight,
+                                                                                                maxWidth,
                                                                                                 channel);
-                // CreateProgramFromBinary(handle.GetStream(),"canny_edge_detector.cpp","canny_edge_detector.cpp.bin","ced_pln3_to_pln1_batch",theProgram,theKernel);
-                // clRetainKernel(theKernel);
             }
-            
-            // ctr = 0;
-            
-            // //---- Args Setter
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-
-            // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
         }
-        
-        // CreateProgramFromBinary(handle.GetStream(),"canny_edge_detector.cpp","canny_edge_detector.cpp.bin","sobel_pln_batch",theProgram,theKernel);
-        // clRetainKernel(theKernel);
-        
         unsigned int sobelType = 2;
         unsigned int sobelTypeX = 0;
         unsigned int sobelTypeY = 1;
         unsigned int newChannel = 1;
-        
-        // ctr = 0;
-        
-        //---- Args Setter
         if(channel == 1)
         {    
             handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                         tempDest1,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                        maxHeight,
+                                                                        maxWidth,
                                                                         newChannel,
                                                                         sobelType);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
         }
         else
         {
             handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(gsin,
                                                                         tempDest1,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                        maxHeight,
+                                                                        maxWidth,
                                                                         newChannel,
                                                                         sobelType);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin);
         }
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &tempDest1);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &sobelType);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
-        // ctr = 0;
-        
-        //---- Args Setter
         if(channel == 1)
         {    
             handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                         sobelX,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                        maxHeight,
+                                                                        maxWidth,
                                                                         newChannel,
                                                                         sobelTypeX);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
         }
         else
         {
             handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(gsin,
                                                                         sobelX,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                        maxHeight,
+                                                                        maxWidth,
                                                                         newChannel,
                                                                         sobelTypeX);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin);
         }
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &sobelX);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &sobelTypeX);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
-        // ctr = 0;
-        
-        //---- Args Setter
         if(channel == 1)
         {    
             handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
                                                                         sobelY,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                        maxHeight,
+                                                                        maxWidth,
                                                                         newChannel,
                                                                         sobelTypeY);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
         }
         else
         {
             handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(gsin,
                                                                         sobelY,
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                        maxHeight,
+                                                                        maxWidth,
                                                                         newChannel,
                                                                         sobelTypeY);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin);
         }
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &sobelY);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &sobelTypeY);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
         
         handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_non_max_suppression", vld, vgd, "")(tempDest1,
                                                                                 sobelX,
                                                                                 sobelY,
                                                                                 tempDest2,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                maxHeight,
+                                                                                maxWidth,
                                                                                 newChannel,
                                                                                 handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
                                                                                 handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
-        // CreateProgramFromBinary(handle.GetStream(),"canny_edge_detector.cpp","canny_edge_detector.cpp.bin","ced_non_max_suppression_batch",theProgram,theKernel);
-        // clRetainKernel(theKernel);
-        
-        // ctr = 0;
-        
-        //---- Args Setter
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &tempDest1);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &sobelX);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &sobelY);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &tempDest2);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned char), &minThreshold[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned char), &maxThreshold[i]);
-        
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
-        // CreateProgramFromBinary(handle.GetStream(),"canny_edge_detector.cpp","canny_edge_detector.cpp.bin","canny_edge_batch",theProgram,theKernel);
-        // clRetainKernel(theKernel);
-        
-        // ctr = 0;
-        
-        //---- Args Setter
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &tempDest2);
         if(channel == 1)
         {
             handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_edge", vld, vgd, "")(tempDest2,
                                                                                 dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                maxHeight,
+                                                                                maxWidth,
                                                                                 newChannel,
                                                                                 handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
                                                                                 handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
         }
         else
         {
             handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_edge", vld, vgd, "")(tempDest2,
                                                                                 gsout,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                maxHeight,
+                                                                                maxWidth,
                                                                                 newChannel,
                                                                                 handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
                                                                                 handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsout);
         }
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned char), &minThreshold[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned char), &maxThreshold[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
         
         if(channel == 3)
         {
             if(chnFormat == RPPI_CHN_PACKED)
             {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pln1_to_pkd3", vld, vgd, "")(gsout,
+                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pln1_to_pkd3", vld, vgd, "")(gsout,
                                                                                 dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                maxHeight,
+                                                                                maxWidth,
                                                                                 channel);
-                // CreateProgramFromBinary(handle.GetStream(),"canny_edge_detector.cpp","canny_edge_detector.cpp.bin","ced_pln1_to_pkd3_batch",theProgram,theKernel);
-                // clRetainKernel(theKernel);
             }
             else
             {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pln1_to_pln3", vld, vgd, "")(gsout,
+                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pln1_to_pln3", vld, vgd, "")(gsout,
                                                                                 dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                maxHeight,
+                                                                                maxWidth,
                                                                                 channel);
-                // CreateProgramFromBinary(handle.GetStream(),"canny_edge_detector.cpp","canny_edge_detector.cpp.bin","ced_pln1_to_pln3_batch",theProgram,theKernel);
-                // clRetainKernel(theKernel);
             }
-            
-            // ctr = 0;
-            
-            // //---- Args Setter
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsout);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-            
-            // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
         }
-        hipMemcpy(dstPtr + batchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToHost);
-        batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel;
+        hipMemcpy(dstPtr + batchIndex, dstPtr1, sizeof(unsigned char) * imageDim * channel, hipMemcpyDeviceToHost);
+        batchIndex += imageDim * channel;
     }
     return RPP_SUCCESS;    
 }
@@ -1617,26 +1461,26 @@ harris_corner_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
 RppStatus
 harris_corner_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr,rpp::Handle& handle,
                                 RppiChnFormat chnFormat, unsigned int channel)
-    // cl_mem srcPtr, RppiSize *srcSize, cl_mem dstPtr, Rpp32u *gaussianKernelSize, Rpp32f *stdDev,
-    // Rpp32u *kernelSize, Rpp32f *kValue, Rpp32f *threshold, Rpp32u *nonmaxKernelSize,Rpp32u handle.GetBatchSize(),
-    // RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     /* SETTING UP */
+
     unsigned int maxHeight, maxWidth, maxKernelSize;
-    unsigned long ioBufferSize = 0;
+    unsigned long ioBufferSize = 0, singleImageSize = 0;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
     maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[0];
-    for(int i = 0 ; i < handle.GetBatchSize() ; i++)
+    for (int i = 0; i < handle.GetBatchSize(); i++)
     {
-        if(maxHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
+        if (maxHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
             maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-        if(maxWidth < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
+        if (maxWidth < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
             maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        if(maxKernelSize < handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i])
+        if (maxKernelSize < handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i])
             maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i];
-        ioBufferSize += handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel;
     }
+
+    ioBufferSize = maxHeight * maxWidth * channel * handle.GetBatchSize();
+    singleImageSize = maxHeight * maxWidth * channel;
 
     Rpp32f *kernelMain = (Rpp32f *)calloc(maxKernelSize * maxKernelSize, sizeof(Rpp32f));
 
@@ -1663,18 +1507,20 @@ harris_corner_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr,rpp::Handle& handl
     Rpp32f* nonMaxDstFloat;
     hipMalloc(&nonMaxDstFloat, sizeof(float) * maxHeight * maxWidth);
 
-    hipMemcpy( dstPtr,srcPtr, sizeof(unsigned char) * ioBufferSize,hipMemcpyDeviceToDevice);
+    hipMemcpy(dstPtr, srcPtr, sizeof(unsigned char) * ioBufferSize, hipMemcpyDeviceToDevice);
 
     unsigned long batchIndex = 0;
-
-    // int ctr;
+    Rpp8u *srcPtr1, *dstPtr1;
+    hipMalloc(&srcPtr1, sizeof(Rpp8u) * singleImageSize);
+    hipMalloc(&dstPtr1, sizeof(Rpp8u) * singleImageSize);
 
     size_t gDim3[3];
 
     for(int i = 0 ; i < handle.GetBatchSize() ; i++)       
     {        
-        gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
+        hipMemcpy(srcPtr1, srcPtr + batchIndex, sizeof(unsigned char) * singleImageSize, hipMemcpyDeviceToDevice);
+        gDim3[0] = maxWidth;
+        gDim3[1] = maxHeight;
         gDim3[2] = 1;
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
@@ -1682,199 +1528,112 @@ harris_corner_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr,rpp::Handle& handl
         {
             if(chnFormat == RPPI_CHN_PACKED)
             {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pkd3_to_pln1", vld, vgd, "")(srcPtr,
+                handle.AddKernel("", "", "fast_corner_detector.cpp", "ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                 gsin,
-                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                maxHeight,
+                                                                                                maxWidth,
                                                                                                 channel);
-                // CreateProgramFromBinary(handle.GetStream(),"harris_corner_detector.cpp","harris_corner_detector.cpp.bin","ced_pkd3_to_pln1_batch",theProgram,theKernel);
-                // clRetainKernel(theKernel);
             }
             else
             {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_pln3_to_pln1", vld, vgd, "")(srcPtr,
+                handle.AddKernel("", "", "fast_corner_detector.cpp", "ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
                                                                                                 gsin,
-                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                maxHeight,
+                                                                                                maxWidth,
                                                                                                 channel);
-                // CreateProgramFromBinary(handle.GetStream(),"harris_corner_detector.cpp","harris_corner_detector.cpp.bin","ced_pln3_to_pln1_batch",theProgram,theKernel);
-                // clRetainKernel(theKernel);
             }
-            
-            // ctr = 0;
-            // //---- Args Setter
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-            // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-
-            // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
         }
 
         unsigned int newChannel = 1;
 
-        
         /* GAUSSIAN FILTER */
 
         generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[1].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);    
-        hipMemcpy(kernel,kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] * handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] * sizeof(Rpp32f),hipMemcpyHostToDevice);
-        // CreateProgramFromBinary(handle.GetStream(),"harris_corner_detector.cpp","harris_corner_detector.cpp.bin","gaussian_pln_batch",theProgram,theKernel);
-        // clRetainKernel(theKernel);
+        hipMemcpy(kernel, kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] * handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] * sizeof(Rpp32f),hipMemcpyHostToDevice);
 
-        // ctr = 0;
-        
-        //---- Args Setter
         if(channel == 1)
         {    
-            handle.AddKernel("", "", "gaussian_filter.cpp", "gaussian_pln", vld, vgd, "")(srcPtr,
+            handle.AddKernel("", "", "gaussian_filter.cpp", "gaussian_pln", vld, vgd, "")(srcPtr1,
                                                                             tempDest1,
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                            maxHeight,
+                                                                            maxWidth,
                                                                             newChannel,
                                                                             kernel,
                                                                             handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
                                                                             handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr);
         }
         else
         {
             handle.AddKernel("", "", "gaussian_filter.cpp", "gaussian_pln", vld, vgd, "")(gsin,
                                                                             tempDest1,
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                            maxHeight,
+                                                                            maxWidth,
                                                                             newChannel,
                                                                             kernel,
                                                                             handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
                                                                             handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
-            // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin);
         }
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &tempDest1);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &kernel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &gaussianhandle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &gaussianhandle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
         
         /* SOBEL X and Y */
         
-        // CreateProgramFromBinary(handle.GetStream(),"harris_corner_detector.cpp","harris_corner_detector.cpp.bin","sobel_pln_batch",theProgram,theKernel);
-        // clRetainKernel(theKernel);
-
         unsigned int sobelType = 2;
         unsigned int sobelTypeX = 0;
         unsigned int sobelTypeY = 1;
         handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(tempDest1,
                                                                 sobelX,
-                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                maxHeight,
+                                                                maxWidth,
                                                                 newChannel,
                                                                 sobelTypeX);
-        // ctr = 0;
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &tempDest1);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &sobelX);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &sobelTypeX);
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
         handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(tempDest1,
                                                                     sobelY,
-                                                                    handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                    handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                    maxHeight,
+                                                                    maxWidth,
                                                                     newChannel,
                                                                     sobelTypeY);
-        // ctr = 0;
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &tempDest1);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &sobelY);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &sobelTypeY);
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
         
         /* HARRIS CORNER STRENGTH MATRIX */
+
         handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_strength", vld, vgd, "")(sobelX,
                                                                                                            sobelY,
                                                                                                            dstFloat,
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                           maxHeight,
+                                                                                                           maxWidth,
                                                                                                            newChannel,
                                                                                                            handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i],
                                                                                                            handle.GetInitHandle()->mem.mcpu.floatArr[3].floatmem[i],
                                                                                                            handle.GetInitHandle()->mem.mcpu.floatArr[4].floatmem[i]);
-        // CreateProgramFromBinary(handle.GetStream(),"harris_corner_detector.cpp","harris_corner_detector.cpp.bin","harris_corner_detector_strength_batch",theProgram,theKernel);
-        // clRetainKernel(theKernel);
-        // ctr = 0;
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &sobelX);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &sobelY);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstFloat);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(float), &kValue[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(float), &threshold[i]);
-
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
 
         /* NON-MAX SUPRESSION */
+
         handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_nonmax_supression", vld, vgd, "")(dstFloat,
                                                                                                            nonMaxDstFloat,
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                           maxHeight,
+                                                                                                           maxWidth,
                                                                                                            newChannel,
                                                                                                            handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]);
-        // CreateProgramFromBinary(handle.GetStream(),"harris_corner_detector.cpp","harris_corner_detector.cpp.bin","harris_corner_detector_nonmax_supression_batch",theProgram,theKernel);
-        // clRetainKernel(theKernel);    
-        // ctr = 0;
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstFloat);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &nonMaxDstFloat);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &nonmaxhandle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-        hipMemcpy( dstPtr,srcPtr, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
+        
+        hipMemcpy(dstPtr1, srcPtr1, sizeof(unsigned char) * singleImageSize, hipMemcpyDeviceToDevice);
+        
         if(chnFormat == RPPI_CHN_PACKED)
         {
-            handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_pkd", vld, vgd, "")(dstPtr,
+            handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_pkd", vld, vgd, "")(dstPtr1,
                                                                                                           nonMaxDstFloat,
-                                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                          maxHeight,
+                                                                                                          maxWidth,
                                                                                                           channel);
-            // CreateProgramFromBinary(handle.GetStream(),"harris_corner_detector.cpp","harris_corner_detector.cpp.bin","harris_corner_detector_pkd_batch",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
         else
         {
-            handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_pkd", vld, vgd, "")(dstPtr,
+            handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_pln", vld, vgd, "")(dstPtr1,
                                                                                                           nonMaxDstFloat,
-                                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                          maxHeight,
+                                                                                                          maxWidth,
                                                                                                           channel);
-            // CreateProgramFromBinary(handle.GetStream(),"harris_corner_detector.cpp","harris_corner_detector.cpp.bin","harris_corner_detector_pln_batch",theProgram,theKernel);
-            // clRetainKernel(theKernel);
         }
 
-        // ctr = 0;
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &dstPtr);
-        // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &nonMaxDstFloat);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.height[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &handle.GetInitHandle()->mem.mgpu.csrcSize.width[i]);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-        // clSetKernelArg(theKernel, ctr++, sizeof(unsigned long), &batchIndex);
-        // cl_kernel_implementer (gDim3, NULL/*Local*/, theProgram, theKernel);
-
-        batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel;
+        hipMemcpy(dstPtr + batchIndex, dstPtr1, sizeof(unsigned char) * singleImageSize, hipMemcpyDeviceToDevice);
+        batchIndex += maxHeight * maxWidth * channel;
     }
     return RPP_SUCCESS;
 }
