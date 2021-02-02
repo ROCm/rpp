@@ -3,9 +3,9 @@ import os
 os.system("./rawLogsGenScript.sh")
 
 log_file_list = [
-    "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/BatchPD_host_pkd3_host_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/BatchPD_host_pln3_host_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/BatchPD_host_pln1_host_raw_performance_log.txt"
+    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pkd3_hip_raw_performance_log.txt",
+    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln3_hip_raw_performance_log.txt",
+    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln1_hip_raw_performance_log.txt"
     ]
 
 for log_file in log_file_list:
