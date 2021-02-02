@@ -1,13 +1,11 @@
 import os
 
-os.system("cd build")
 os.system("./rawLogsGenScript.sh")
-os.system("cd ..")
 
 log_file_list = [
-    "../OUTPUT_PERFORMANCE_LOGS_OCL_NEW/BatchPD_ocl_pkd3_ocl_raw_performance_log.txt"#,
-    #"../OUTPUT_PERFORMANCE_LOGS_OCL_NEW/BatchPD_ocl_pln3_ocl_raw_performance_log.txt",
-    #"../OUTPUT_PERFORMANCE_LOGS_OCL_NEW/BatchPD_ocl_pln1_ocl_raw_performance_log.txt"
+    "../OUTPUT_PERFORMANCE_LOGS_OCL_NEW/BatchPD_ocl_pkd3_ocl_raw_performance_log.txt",
+    "../OUTPUT_PERFORMANCE_LOGS_OCL_NEW/BatchPD_ocl_pln3_ocl_raw_performance_log.txt",
+    "../OUTPUT_PERFORMANCE_LOGS_OCL_NEW/BatchPD_ocl_pln1_ocl_raw_performance_log.txt"
     ]
 
 for log_file in log_file_list:

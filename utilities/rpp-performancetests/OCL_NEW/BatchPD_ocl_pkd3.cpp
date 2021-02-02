@@ -420,7 +420,6 @@ int main(int argc, char **argv)
     char func[1000];
     strcpy(func, funcName);
     strcat(func, funcType);
-    // printf("\nRunning %s...", func);
 
     int ip_bitDepth_1_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};
     int ip_bitDepth_2_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};
@@ -472,8 +471,6 @@ int main(int argc, char **argv)
     strcpy(src1_second, src_second);
     strcat(src1_second, "/");
     strcat(funcName, funcType);
-    // strcat(dst, "/");
-    // strcat(dst, funcName);
 
     DIR *dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
@@ -607,13 +604,13 @@ int main(int argc, char **argv)
         d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
     }
     if (ip_bitDepth == 1)
     {
         inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
         inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-        outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
 
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp16f *inputf16Temp, *inputf16_secondTemp;
@@ -639,13 +636,13 @@ int main(int argc, char **argv)
         d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_inputf16_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16_second, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_outputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
     }
     else if (ip_bitDepth == 2)
     {
         inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
         inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-        outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
 
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
@@ -671,33 +668,33 @@ int main(int argc, char **argv)
         d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_inputf32_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32_second, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_outputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
     }
     else if (ip_bitDepth == 3)
     {
-        outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
         d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
         d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
         d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_outputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
     }
     else if (ip_bitDepth == 4)
     {
-        outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
         d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
         d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
         d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_outputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
     }
     else if (ip_bitDepth == 5)
     {
         inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
         inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-        outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
 
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
@@ -723,17 +720,17 @@ int main(int argc, char **argv)
         d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_inputi8_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8_second, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
     }
     else if (ip_bitDepth == 6)
     {
-        outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
         d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
         d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
         d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
-        err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
     }
 
     rppHandle_t handle;
@@ -3271,6 +3268,9 @@ int main(int argc, char **argv)
         case 74:
         {
             test_case_name = "color_convert";
+
+            cl_mem d_outputf32;
+            d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
             
             RppiColorConvertMode convert_mode_1 = RppiColorConvertMode::RGB_HSV;
             RppiColorConvertMode convert_mode_2 = RppiColorConvertMode::HSV_RGB;
@@ -3298,6 +3298,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
         
             end = clock();
+
+            clReleaseMemObject(d_outputf32);
 
             start /= 2;
             end /= 2;
@@ -3638,6 +3640,9 @@ int main(int argc, char **argv)
         
             end = clock();
 
+            clReleaseMemObject(d_lut8u);
+            clReleaseMemObject(d_lut8s);
+
             break;
         }
         case 81:
@@ -3709,32 +3714,32 @@ int main(int argc, char **argv)
 
     rppDestroyGPU(handle);
 
-    free(srcSize);
-    free(dstSize);
-    free(input);
-    free(input_second);
-    free(output);
-    free(inputf16);
-    free(inputf16_second);
-    free(outputf16);
-    free(inputf32);
-    free(inputf32_second);
-    free(outputf32);
-    free(inputi8);
-    free(inputi8_second);
-    free(outputi8);
-    clReleaseMemObject(d_input);
-    clReleaseMemObject(d_input_second);
-    clReleaseMemObject(d_output);
-    clReleaseMemObject(d_inputf16);
-    clReleaseMemObject(d_inputf16_second);
-    clReleaseMemObject(d_outputf16);
-    clReleaseMemObject(d_inputf32);
-    clReleaseMemObject(d_inputf32_second);
-    clReleaseMemObject(d_outputf32);
-    clReleaseMemObject(d_inputi8);
-    clReleaseMemObject(d_inputi8_second);
-    clReleaseMemObject(d_outputi8);
+    // free(srcSize);
+    // free(dstSize);
+    // free(input);
+    // free(input_second);
+    // free(output);
+    // free(inputf16);
+    // free(inputf16_second);
+    // free(outputf16);
+    // free(inputf32);
+    // free(inputf32_second);
+    // free(outputf32);
+    // free(inputi8);
+    // free(inputi8_second);
+    // free(outputi8);
+    // clReleaseMemObject(d_input);
+    // clReleaseMemObject(d_input_second);
+    // clReleaseMemObject(d_output);
+    // clReleaseMemObject(d_inputf16);
+    // clReleaseMemObject(d_inputf16_second);
+    // clReleaseMemObject(d_outputf16);
+    // clReleaseMemObject(d_inputf32);
+    // clReleaseMemObject(d_inputf32_second);
+    // clReleaseMemObject(d_outputf32);
+    // clReleaseMemObject(d_inputi8);
+    // clReleaseMemObject(d_inputi8_second);
+    // clReleaseMemObject(d_outputi8);
 
     return 0;
 }
