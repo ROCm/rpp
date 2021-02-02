@@ -414,12 +414,6 @@ RppStatus
 resize_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel);
 
-// template <typename T, typename U>
-// RppStatus
-// resize_hip_batch_tensor(T* srcPtr, U* dstPtr);
-
-// // resize_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr);
-// // resize_hip_batch_tensor(T* srcPtr, U* dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 resize_crop_hip(Rpp8u * srcPtr, RppiSize srcSize,
                 Rpp8u * dstPtr, RppiSize dstSize,
@@ -544,18 +538,15 @@ tensor_convert_bit_depth_hip( Rpp32u tensorDimension, Rpp32u* tensorDimensionVal
 RppStatus
 tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, 
                         Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr, rpp::Handle& handle);
+
 RppStatus
-tensor_add_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u* srcPtr1,
-Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle);
+tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle);
 RppStatus
-tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, 
-Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle);
+tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle);
 RppStatus
-tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues,
- Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle);
+tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle);
 RppStatus
-tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u* tensorDimensionValues1,
- Rpp32u* tensorDimensionValues2, Rpp8u* dstPtr, rpp::Handle& handle);
+tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2, Rpp8u* dstPtr, rpp::Handle &handle);
 
 RppStatus
 occlusion_hip_batch (Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,

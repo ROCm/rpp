@@ -5,6 +5,7 @@
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
 #include "hip/hip_declarations.hpp"
+#include "hip/hip_declarations_inline.hpp"
 
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
@@ -29706,7 +29707,13 @@ rppi_tensor_add_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp3
 			rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+ 	 tensor_add_hip(tensorDimension,
+            static_cast<Rpp32u*>(tensorDimensionValues),
+            static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			static_cast<Rpp8u*>(dstPtr),
+			rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
@@ -29726,7 +29733,13 @@ rppi_tensor_subtract_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr,
 			rpp::deref(rppHandle)); 	
 	} 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+ 	 tensor_subtract_hip(tensorDimension,
+            static_cast<Rpp32u*>(tensorDimensionValues),
+            static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			static_cast<Rpp8u*>(dstPtr),
+			rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
@@ -29745,7 +29758,13 @@ rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr,
 			rpp::deref(rppHandle)); 	 
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+ 	 tensor_multiply_hip(tensorDimension,
+            static_cast<Rpp32u*>(tensorDimensionValues),
+            static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			static_cast<Rpp8u*>(dstPtr),
+			rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
@@ -29764,7 +29783,13 @@ rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t 
 			rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+ 	 tensor_matrix_multiply_hip(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			static_cast<Rpp32u*>(tensorDimensionValues1),
+			static_cast<Rpp32u*>(tensorDimensionValues2),
+			static_cast<Rpp8u*>(dstPtr),
+			rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
@@ -29797,7 +29822,9 @@ rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tenso
 		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::U8, rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+		tensor_transpose_hip<Rpp8u, Rpp8u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::U8, rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 	return RPP_SUCCESS;
@@ -29812,7 +29839,9 @@ rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tens
 		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP16, rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+		tensor_transpose_hip<Rpp16f, Rpp16f>(static_cast<Rpp16f*>(srcPtr), static_cast<Rpp16f*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP16, rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 	return RPP_SUCCESS;
@@ -29827,7 +29856,9 @@ rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tens
 		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP32, rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+		tensor_transpose_hip<Rpp32f, Rpp32f>(static_cast<Rpp32f*>(srcPtr), static_cast<Rpp32f*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP32, rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 	return RPP_SUCCESS;
@@ -29842,7 +29873,9 @@ rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tenso
 		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::I8, rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+		tensor_transpose_hip<Rpp8s, Rpp8s>(static_cast<Rpp8s*>(srcPtr), static_cast<Rpp8s*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::I8, rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 	return RPP_SUCCESS;

@@ -219,26 +219,26 @@ mv $DST_FOLDER/!(PKD3|PLN1|PLN3) $DST_FOLDER/PLN3
 
 
 
-# printf "\n\n\n\n\n"
-# echo "##########################################################################################"
-# echo "Running all Unique functionalities..."
-# echo "##########################################################################################"
+printf "\n\n\n\n\n"
+echo "##########################################################################################"
+echo "Running all Unique functionalities..."
+echo "##########################################################################################"
 
-# printf "\n\nUsage: ./uniqueFunctionalities_ocl <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>"
+printf "\n\nUsage: ./uniqueFunctionalities_hip <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>"
 
-# for ((case=0;case<13;case++))
-# do
-# printf "\n\n\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
-# echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
-# printf "Running a New Functionality...\n" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
-# echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
-# for ((bitDepth=0;bitDepth<7;bitDepth++))
-# do
-# printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
-# echo "./uniqueFunctionalities_ocl $bitDepth $case" | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
-# ./uniqueFunctionalities_ocl $bitDepth $case | tee -a $DST_FOLDER/uniqueFunctionalities_ocl_log.txt
-# echo "------------------------------------------------------------------------------------------"
-# done
-# done
+for ((case=0;case<13;case++))
+do
+printf "\n\n\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+printf "Running a New Functionality...\n" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+for ((bitDepth=0;bitDepth<7;bitDepth++))
+do
+printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+echo "./uniqueFunctionalities_hip $bitDepth $case" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+./uniqueFunctionalities_hip $bitDepth $case | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+echo "------------------------------------------------------------------------------------------"
+done
+done
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
