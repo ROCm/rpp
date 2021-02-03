@@ -6,7 +6,7 @@
 Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends.
 
 ## Top level design
-<p align="center"><img width="60%" src="rpp_new.png" /></p>
+<p align="center"><img width="60%" src="docs/images/rpp_structure.png" /></p>
 
 RPP is developed for __Linux__ operating system.
 
@@ -48,110 +48,22 @@ unzip half-1.12.0.zip -d half-files
 sudo cp half-files/include/half.hpp /usr/local/include/
 ```
 
-## Functions Included
+## Supported Functionalities and Variants
 
-### Image Augmentation Category
+### Supported Functionalities List
+<p align="center"><img width="90%" src="docs/images/supported_functionalities.png" /></p>
 
-#### Enhancements
-* Brightness modification
-* Contrast modification
-* Hue modification
-* Saturation modification
-* Color temperature modification
-* Vignette effect
-* Gamma Correction
-* Histogram Balance
+### Supported Functionalities Samples
+<p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
 
-#### Self Driving Car Specs
-* Exposure modifications
-* Foggy
-* Rainy
-* Snowy
-* RandomShadow
-
-#### Geometric Distortion Nodes
-* Rotate
-* Warp-affine
-* Flip (horizontally or vertically)
-* Fish Eye Effect
-* Lens correction
-
-#### Other Augmentations
-* Resize
-* RandomResizeCrop
-* Blending images
-* Adding Occlusion
-* Pixilation
-* Adding Noise
-* Blurring
-* Adding Jitter
-* RandomCropLetterBox
-
-### Vision Functions
-* Absolute Difference
-* Accumulate
-* Accumulate Squared
-* Accumulate Weighted
-* Arithmetic Addition
-* Arithmetic Subtraction
-* Bilateral Filter
-* Bitwise AND
-* Bitwise EXCLUSIVE OR
-* Bitwise INCLUSIVE OR
-* Bitwise NOT
-* Box Filter
-* Canny Edge Detector
-* Channel Combine
-* Channel Extract
-* Control Flow
-* Convert Bit Depth
-* Custom Convolution
-* Data Object Copy
-* Dilate Image
-* Equalize Histogram
-* Erode Image
-* Fast Corners
-* Gaussian Filter
-* Gaussian Image Pyramid
-* Harris Corners
-* Histogram
-* Integral Image
-* LBP
-* Laplacian Image Pyramid
-* Magnitude
-* MatchTemplate
-* Max
-* Mean and Standard Deviation
-* Median Filter
-* Min
-* Min, Max Location
-* Non-Linear Filter
-* Non-Maxima Suppression
-* Phase
-* Pixel-wise Multiplication
-* Reconstruction from a Laplacian Image Pyramid
-* Remap
-* Scale Image
-* Sobel 3x3
-* TableLookup
-* Tensor Add
-* Tensor Convert Bit-Depth
-* Tensor Matrix Multiply
-* Tensor Multiply
-* Tensor Subtract
-* Tensor TableLookUp
-* Tensor Transpose
-* Thresholding
-* Warp Affine
-* Warp Perspective
-
-## Variations
-* Support for 3C(RGB) and 1C(Grayscale) images
-* Planar and Packed
-* Host and GPU 
-* Batch Processing with 26 variations
-* ROI variations
-* Padded Variations
+### Supported Variants
+* Packed 3 Channel (RGB) - PKD3 images
+* Planar 3 Channel (RGB) - PLN3 images
+* Planar 1 Channel (Greyscale) - PLN1 images
+* Affinity - Host and GPU
+* Batch Processing with 26 variants
+* ROI variants
+* Padded variants
 
 ## [Instructions to build the library](#rpp-installation)
 
@@ -162,13 +74,32 @@ $ mkdir build
 $ cd build
 $ cmake -DBACKEND=OCL .. #for OCL and HOST
         or
-$ cmake -DBACKEND=HIP -DCOMPILE=STATIC #for HIPSTATIC
+$ cmake -DBACKEND=HIP -DCOMPILE=STATIC .. #for HIPSTATIC
         or
-$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO #for HIPHSACOO
+$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO .. #for HIPHSACOO
         or
-$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC #for HIPRTC        
-$ make -j4
+$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC .. #for HIPRTC
+$ make -j16
 $ sudo make install
+```
+
+## Instructions to test functionalities after HOST/OCL installation
+
+```
+$ cd rpp/utilities/rpp-unittests/HOST
+$ ./testAllScript.sh
+```
+or
+```
+$ cd rpp/utilities/rpp-unittests/OCL
+$ ./testAllScript.sh
+```
+
+## Instructions to test functionalities after HIP installation
+
+```
+$ cd rpp/utilities/rpp-unittests/HIP
+$ ./testAllScript.sh
 ```
 
 ## MIVisionX(OpenVX) Support

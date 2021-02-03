@@ -491,17 +491,18 @@ accumulate_squared_hip_batch ( Rpp8u* srcPtr, rpp::Handle& handle,
 
 /**************** Tensor functions *******************/
 RppStatus
-tensor_add_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle)
-{ 
+tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle)
+{
+    // unsigned short counter=0;
 
     size_t gDim3[3];
-    if(tensorDimension == 1)
+    if (tensorDimension == 1)
     {
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = 1;
         gDim3[2] = 1;
     }
-    else if(tensorDimension == 2)
+    else if (tensorDimension == 2)
     {
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = tensorDimensionValues[1];
@@ -512,40 +513,40 @@ tensor_add_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u srcP
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = tensorDimensionValues[1];
         int value = 1;
-        for(int i = 2 ; i < tensorDimension ; i++)
-        {    
+        for (int i = 2; i < tensorDimension; i++)
+        {
             value *= tensorDimensionValues[i];
         }
         gDim3[2] = value;
     }
-    unsigned int dim1,dim2,dim3;
+    unsigned int dim1, dim2, dim3;
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
     handle.AddKernel("", "", "tensor.cpp", "tensor_add", vld, vgd, "")(tensorDimension,
-                                                                    srcPtr1,
-                                                                    srcPtr2,
-                                                                    dstPtr,
-                                                                    dim1,
-                                                                    dim2,
-                                                                    dim3);
+                                                                      srcPtr1,
+                                                                      srcPtr2,
+                                                                      dstPtr,
+                                                                      dim1,
+                                                                      dim2,
+                                                                      dim3);
     return RPP_SUCCESS;
 }
 
 RppStatus
-tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle)
-{ 
+tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle)
+{
 
     size_t gDim3[3];
-    if(tensorDimension == 1)
+    if (tensorDimension == 1)
     {
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = 1;
         gDim3[2] = 1;
     }
-    else if(tensorDimension == 2)
+    else if (tensorDimension == 2)
     {
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = tensorDimensionValues[1];
@@ -556,41 +557,41 @@ tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = tensorDimensionValues[1];
         int value = 1;
-        for(int i = 2 ; i < tensorDimension ; i++)
-        {    
+        for (int i = 2; i < tensorDimension; i++)
+        {
             value *= tensorDimensionValues[i];
         }
         gDim3[2] = value;
     }
-    
-    unsigned int dim1,dim2,dim3;
+
+    unsigned int dim1, dim2, dim3;
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
     handle.AddKernel("", "", "tensor.cpp", "tensor_subtract", vld, vgd, "")(tensorDimension,
-                                                                    srcPtr1,
-                                                                    srcPtr2,
-                                                                    dstPtr,
-                                                                    dim1,
-                                                                    dim2,
-                                                                    dim3);
+                                                                           srcPtr1,
+                                                                           srcPtr2,
+                                                                           dstPtr,
+                                                                           dim1,
+                                                                           dim2,
+                                                                           dim3);
     return RPP_SUCCESS;
 }
 
 RppStatus
-tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle)
-{ 
+tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle)
+{
 
     size_t gDim3[3];
-    if(tensorDimension == 1)
+    if (tensorDimension == 1)
     {
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = 1;
         gDim3[2] = 1;
     }
-    else if(tensorDimension == 2)
+    else if (tensorDimension == 2)
     {
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = tensorDimensionValues[1];
@@ -601,40 +602,39 @@ tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u
         gDim3[0] = tensorDimensionValues[0];
         gDim3[1] = tensorDimensionValues[1];
         int value = 1;
-        for(int i = 2 ; i < tensorDimension ; i++)
-        {    
+        for (int i = 2; i < tensorDimension; i++)
+        {
             value *= tensorDimensionValues[i];
         }
         gDim3[2] = value;
     }
-    
-    unsigned int dim1,dim2,dim3;
+
+    unsigned int dim1, dim2, dim3;
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
     handle.AddKernel("", "", "tensor.cpp", "tensor_multiply", vld, vgd, "")(tensorDimension,
-                                                                    srcPtr1,
-                                                                    srcPtr2,
-                                                                    dstPtr,
-                                                                    dim1,
-                                                                    dim2,
-                                                                    dim3);
-    return RPP_SUCCESS;    
+                                                                           srcPtr1,
+                                                                           srcPtr2,
+                                                                           dstPtr,
+                                                                           dim1,
+                                                                           dim2,
+                                                                           dim3);
+    return RPP_SUCCESS;
 }
 
 RppStatus
-tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u* tensorDimensionValues1,
- Rpp32u* tensorDimensionValues2, Rpp8u* dstPtr, rpp::Handle& handle)
-{ 
+tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2, Rpp8u* dstPtr, rpp::Handle &handle)
+{
 
     size_t gDim3[3];
     gDim3[0] = tensorDimensionValues2[1];
     gDim3[1] = tensorDimensionValues1[0];
     gDim3[2] = 1;
 
-    unsigned int a,b,c,d;
+    unsigned int a, b, c, d;
     a = tensorDimensionValues1[0];
     b = tensorDimensionValues1[1];
     c = tensorDimensionValues2[0];
@@ -642,11 +642,11 @@ tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u* tensorDimensi
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
     handle.AddKernel("", "", "tensor.cpp", "tensor_matrix_multiply", vld, vgd, "")(srcPtr1,
-                                                                                srcPtr2,
-                                                                                dstPtr,
-                                                                                a,
-                                                                                b,
-                                                                                c,
-                                                                                d);
-    return RPP_SUCCESS;    
+                                                                                  srcPtr2,
+                                                                                  dstPtr,
+                                                                                  a,
+                                                                                  b,
+                                                                                  c,
+                                                                                  d);
+    return RPP_SUCCESS;
 }

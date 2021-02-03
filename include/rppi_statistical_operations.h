@@ -976,9 +976,9 @@ RppStatus
 RppStatus
  rppi_histogram_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
 RppStatus
- rppi_histogram_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
+ rppi_histogram_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
 RppStatus
- rppi_histogram_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
+ rppi_histogram_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
 
 //GPU
 /*Computes the mean pixel value and the standard deviation of the pixels in the input image.
@@ -1035,9 +1035,9 @@ RppStatus
 RppStatus
  rppi_histogram_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
 RppStatus
- rppi_histogram_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
+ rppi_histogram_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
 RppStatus
- rppi_histogram_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
+ rppi_histogram_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp32u* outputHistogram ,Rpp32u bins ,rppHandle_t rppHandle);
 
 
 // ----------------------------------------

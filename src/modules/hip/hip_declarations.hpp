@@ -3,9 +3,11 @@
 
 #include "rpp.h"
 #include "hip/rpp/handle.hpp"
-
+#include "hip/rpp_hip_common.hpp"
 
 void max_size(Rpp32u *height, Rpp32u *width, unsigned int batch_size, unsigned int *max_height, unsigned int *max_width);
+
+void get_kernel_name(std::string &kernel_name, const RPPTensorFunctionMetaData &tensor_info);
 
 RppStatus
 hueRGB_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
@@ -411,6 +413,7 @@ resize_hip(Rpp8u * srcPtr, RppiSize srcSize,
 RppStatus
 resize_hip_batch (   Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel);
+
 RppStatus
 resize_crop_hip(Rpp8u * srcPtr, RppiSize srcSize,
                 Rpp8u * dstPtr, RppiSize dstSize,
@@ -526,11 +529,8 @@ RppStatus
 data_object_copy_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiChnFormat chnFormat,
                      unsigned int channel, rpp::Handle& handle);
 RppStatus
-custom_convolution_cl_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiSize KernelSize,
+custom_convolution_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiSize KernelSize,
                         rpp::Handle& handle,RppiChnFormat chnFormat, unsigned int channel);
-RppStatus
-custom_convolution_cl( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32f* kernel,
- RppiSize kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 template <typename T, typename U>
 RppStatus
 tensor_convert_bit_depth_hip( Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, T* srcPtr,
@@ -538,18 +538,15 @@ tensor_convert_bit_depth_hip( Rpp32u tensorDimension, Rpp32u* tensorDimensionVal
 RppStatus
 tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, 
                         Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr, rpp::Handle& handle);
+
 RppStatus
-tensor_add_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, Rpp8u* srcPtr1,
-Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle);
+tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle);
 RppStatus
-tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, 
-Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle);
+tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle);
 RppStatus
-tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues,
- Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle);
+tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle);
 RppStatus
-tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u* tensorDimensionValues1,
- Rpp32u* tensorDimensionValues2, Rpp8u* dstPtr, rpp::Handle& handle);
+tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2, Rpp8u* dstPtr, rpp::Handle &handle);
 
 RppStatus
 occlusion_hip_batch (Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,

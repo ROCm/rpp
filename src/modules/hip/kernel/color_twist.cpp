@@ -92,68 +92,225 @@ __device__ float4 convert_one_pixel_to_hsv(uchar4 pixel) {
 }
 
 extern "C" __global__ void color_twist_batch(
-    unsigned char *input, 
-    unsigned char *output, 
-    float *alpha, 
-    float *beta, 
-    float *hue,
-    float *sat, 
-    int *xroi_begin, 
-    int *xroi_end,
-    int *yroi_begin, 
-    int *yroi_end,
-    unsigned int *height, 
-    unsigned int *width,
-    unsigned int *max_width, 
-    unsigned long *batch_index,
-    unsigned int *inc, 
-    unsigned int *dst_inc,
-    const int in_plnpkdind, 
-    const int out_plnpkdind
-)
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    if (id_x >= width[id_z] || id_y >= height[id_z])
+    unsigned char *input, unsigned char *output,
+    float *alpha, float *beta, float *hue,
+    float *sat, int *xroi_begin, int *xroi_end,
+    int *yroi_begin, int *yroi_end,
+    unsigned int *height, unsigned int *width,
+    unsigned int *max_width, unsigned long *batch_index,
+    unsigned int *inc, unsigned int *dst_inc,
+    const int in_plnpkdind , const int out_plnpkdind
+) {
+  int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
+  if (id_x >= width[id_z] || id_y >= height[id_z])
     return;
-    uchar4 pixel;
-    float4 hsv;
+  uchar4 pixel;
+  float4 hsv;
 
-    unsigned int l_inc = inc[id_z]; 
-    unsigned int d_inc  = dst_inc[id_z];
-    int pixIdx =
-        batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
-    int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
-    pixel.x = input[pixIdx];
-    pixel.y = input[pixIdx + l_inc];
-    pixel.z = input[pixIdx + 2 * l_inc];
-    pixel.w = 0.0;
-    float alpha1 = alpha[id_z], beta1 = beta[id_z];
+  unsigned int l_inc = inc[id_z]; 
+  unsigned int d_inc  = dst_inc[id_z];
+  int pixIdx =
+      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
+  int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
+  pixel.x = input[pixIdx];
+  pixel.y = input[pixIdx + l_inc];
+  pixel.z = input[pixIdx + 2 * l_inc];
+  pixel.w = 0.0;
+  float alpha1 = alpha[id_z], beta1 = beta[id_z];
 
-    if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
-        (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
+  if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
+      (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
     hsv = convert_one_pixel_to_hsv(pixel); // Converting to HSV
     hsv.x += hue[id_z];
     if (hsv.x > 360.0) {
-        hsv.x = hsv.x - 360.0;
+      hsv.x = hsv.x - 360.0;
     } else if (hsv.x < 0) {
-        hsv.x = hsv.x + 360.0;
+      hsv.x = hsv.x + 360.0;
     }
     hsv.y *= sat[id_z];
     if (hsv.y > 1.0) {
-        hsv.y = 1.0;
+      hsv.y = 1.0;
     } else if (hsv.y < 0.0) {
-        hsv.y = 0.0;
+      hsv.y = 0.0;
     }
     pixel = convert_one_pixel_to_rgb(
         hsv); // Converting to RGB back with hue modification
     output[out_pixIdx] = saturate_8u(alpha1 * pixel.x + beta1);
     output[out_pixIdx + d_inc] = saturate_8u(alpha1 * pixel.y + beta1);
     output[out_pixIdx + 2 * d_inc] = saturate_8u(alpha1 * pixel.z + beta1);
-    } else {
+  } else {
     output[out_pixIdx] = pixel.x;
     output[out_pixIdx + d_inc] = pixel.y;
     output[out_pixIdx + 2 * d_inc] = pixel.z;
-    }
+  }
 }
+
+extern "C" __global__ void color_twist_batch_int8(
+    char  *input, char *output,
+    float *alpha, float *beta, float *hue,
+    float *sat, int *xroi_begin, int *xroi_end,
+    int *yroi_begin, int *yroi_end,
+    unsigned int *height, unsigned int *width,
+    unsigned int *max_width, unsigned long *batch_index,
+    unsigned int *inc,  unsigned int *dst_inc,// use width * height for pln and 1 for pkd
+    const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
+) {
+  int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
+  if (id_x >= width[id_z] || id_y >= height[id_z])
+    return;
+  uchar4 pixel;
+  float4 hsv;
+
+  unsigned int l_inc = inc[id_z];
+  unsigned int d_inc  = dst_inc[id_z];
+  int pixIdx =
+      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
+  int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
+
+  pixel.x = (uchar)(input[pixIdx] + 128);
+  pixel.y = (uchar)(input[pixIdx + l_inc] + 128);
+  pixel.z = (uchar)(input[pixIdx + 2 * l_inc] + 128);
+  pixel.w = 0.0;
+  float alpha1 = alpha[id_z], beta1 = beta[id_z];
+
+  if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
+      (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
+    hsv = convert_one_pixel_to_hsv(pixel); // Converting to HSV
+    hsv.x += hue[id_z];
+    if (hsv.x > 360.0) {
+      hsv.x = hsv.x - 360.0;
+    } else if (hsv.x < 0) {
+      hsv.x = hsv.x + 360.0;
+    }
+    hsv.y *= sat[id_z];
+    if (hsv.y > 1.0) {
+      hsv.y = 1.0;
+    } else if (hsv.y < 0.0) {
+      hsv.y = 0.0;
+    }
+    pixel = convert_one_pixel_to_rgb(
+        hsv); // Converting to RGB back with hue modification
+    output[out_pixIdx] = (char)(saturate_8u(alpha1 * pixel.x + beta1) - 128);
+    output[out_pixIdx + d_inc] = (char)(saturate_8u(alpha1 * pixel.y + beta1) - 128);
+    output[out_pixIdx + 2 * d_inc] = (char)(saturate_8u(alpha1 * pixel.z + beta1) - 128);
+  } else {
+    output[out_pixIdx] = pixel.x - 128;
+    output[out_pixIdx + d_inc] = pixel.y - 128;
+    output[out_pixIdx + 2 * d_inc] = pixel.z - 128;
+  }
+}
+
+extern "C" __global__ void color_twist_batch_fp32(
+    float *input, float *output, float *alpha,
+    float *beta, float *hue, float *sat,
+    int *xroi_begin, int *xroi_end, int *yroi_begin,
+    int *yroi_end, unsigned int *height,
+    unsigned int *width, unsigned int *max_width,
+    unsigned long *batch_index,
+    unsigned int *inc, unsigned int *dst_inc, // use width * height for pln and 1 for pkd
+    const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
+) {
+  int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
+  if (id_x >= width[id_z] || id_y >= height[id_z])
+    return;
+  uchar4 pixel;
+  float4 hsv;
+
+  unsigned int l_inc = inc[id_z];
+  unsigned int d_inc  = dst_inc[id_z];
+  int pixIdx =
+      batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
+  int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
+
+  pixel.x = (uchar)(input[pixIdx] * 255);
+  pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
+  pixel.z = (uchar)(input[pixIdx + 2 * l_inc] * 255);
+  pixel.w = 0.0;
+  float alpha1 = alpha[id_z], beta1 = beta[id_z];
+
+  if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
+      (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
+    hsv = convert_one_pixel_to_hsv(pixel); // Converting to HSV
+    hsv.x += hue[id_z];
+    if (hsv.x > 360.0) {
+      hsv.x = hsv.x - 360.0;
+    } else if (hsv.x < 0) {
+      hsv.x = hsv.x + 360.0;
+    }
+    hsv.y *= sat[id_z];
+    if (hsv.y > 1.0) {
+      hsv.y = 1.0;
+    } else if (hsv.y < 0.0) {
+      hsv.y = 0.0;
+    }
+    pixel = convert_one_pixel_to_rgb(hsv); 
+    output[out_pixIdx] = (alpha1 * pixel.x + beta1) / 255.0;
+    output[out_pixIdx + d_inc] = (alpha1 * pixel.y + beta1) / 255.0;
+    output[out_pixIdx + 2 * d_inc] = (alpha1 * pixel.z + beta1) / 255.0;
+  } else {
+    output[out_pixIdx] = input[pixIdx];
+    output[out_pixIdx + d_inc] = input[pixIdx + l_inc];
+    output[out_pixIdx + 2 * d_inc] = input[pixIdx + 2 * l_inc];
+  }
+}
+
+// extern "C" __global__ void color_twist_batch_fp16(
+//     half *input, half *output, float *alpha,
+//     float *beta, float *hue, float *sat,
+//     int *xroi_begin, int *xroi_end, int *yroi_begin,
+//     int *yroi_end, unsigned int *height,
+//     unsigned int *width, unsigned int *max_width,
+//     unsigned long *batch_index,
+//     unsigned int *inc, unsigned int *dst_inc, // use width * height for pln and 1 for pkd
+//     const int in_plnpkdind , const int out_plnpkdind      // use 1 pln 3 for pkd
+// ) {
+//   int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
+//     int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
+//     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
+//   if (id_x >= width[id_z] || id_y >= height[id_z])
+//     return;
+//   uchar4 pixel;
+//   float4 hsv;
+
+//   unsigned int l_inc = inc[id_z];
+//   unsigned int d_inc  = dst_inc[id_z];
+//   int pixIdx =
+//       batch_index[id_z] + (id_y * max_width[id_z] + id_x) * in_plnpkdind;
+//   int out_pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * out_plnpkdind;
+//   pixel.x = (uchar)(input[pixIdx] * 255);
+//   pixel.y = (uchar)(input[pixIdx + l_inc] * 255);
+//   pixel.z = (uchar)(input[pixIdx + 2 * l_inc] * 255);
+//   pixel.w = 0.0;
+//   float alpha1 = alpha[id_z], beta1 = beta[id_z];
+
+//   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
+//       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
+//     hsv = convert_one_pixel_to_hsv(pixel); // Converting to HSV
+//     hsv.x += hue[id_z];
+//     if (hsv.x > 360.0) {
+//       hsv.x = hsv.x - 360.0;
+//     } else if (hsv.x < 0) {
+//       hsv.x = hsv.x + 360.0;
+//     }
+//     hsv.y *= sat[id_z];
+//     if (hsv.y > 1.0) {
+//       hsv.y = 1.0;
+//     } else if (hsv.y < 0.0) {
+//       hsv.y = 0.0;
+//     }
+//     pixel = convert_one_pixel_to_rgb(hsv); 
+//     output[out_pixIdx] = (half)((alpha1 * pixel.x + beta1) / 255.0);
+//     output[out_pixIdx + d_inc] = (half)((alpha1 * pixel.y + beta1) / 255.0);
+//     output[out_pixIdx + 2 * d_inc] = (half)((alpha1 * pixel.z + beta1) / 255.0);
+//   } else {
+//     output[out_pixIdx] = input[pixIdx];
+//     output[out_pixIdx + d_inc] = input[pixIdx + l_inc];
+//     output[out_pixIdx + 2 * d_inc] = input[pixIdx + 2 * l_inc];
+//   }
+// }

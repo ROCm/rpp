@@ -128,8 +128,8 @@ __kernel void laplacian_image_pyramid_pln_batch(__global unsigned char* input,
     int id_z = get_global_id(2);
     if (id_x >= ceil((float)(width / 2)) || id_y >= ceil((float)(height / 2)) || id_z >= channel) return;
 
-    int pixIdx = id_y * channel * width + id_x * channel + id_z;
-    int outPixIdx = batchIndex + id_y * channel * width + id_x * channel + id_z;
+    int pixIdx = (id_z * width * height) + (id_y * width) + id_x;
+    int outPixIdx = batchIndex + (id_z * width * height) + (id_y * width) + id_x;
     int boundx = (kernalwidth - 1) / 2;
     int boundy = (kernalheight - 1) / 2;
     int sum = 0;

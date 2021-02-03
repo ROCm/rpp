@@ -50,13 +50,13 @@ control_flow_cl(cl_mem srcPtr1, cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr,
 RppStatus
 control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type, rpp::Handle &handle,
                       RppiChnFormat chnFormat, unsigned int channel);
-RppStatus
-convert_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u type,
-                     RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
-RppStatus
-convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
-                           Rpp32u type, rpp::Handle &handle,
-                           RppiChnFormat chnFormat, unsigned int channel);
+// RppStatus
+// image_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppConvertBitDepthMode convert_mode,
+//                      RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
+// RppStatus
+// image_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
+//                            RppConvertBitDepthMode convert_mode, 
+//                            RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
 RppStatus
 laplacian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                            Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat,
@@ -484,6 +484,9 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize,
 RppStatus
 resize_crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                      RppiChnFormat chnFormat, unsigned int channel = 3);
+RppStatus
+random_crop_letterbox_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
+                     RppiChnFormat chnFormat, unsigned int channel = 3);
 
 RppStatus
 resize_crop_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
@@ -555,14 +558,17 @@ tensor_subtract_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem
 
 RppStatus
 tensor_multiply_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle);
+
 RppStatus
 tensor_matrix_multiply_cl(cl_mem srcPtr1, cl_mem srcPtr2, Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2, cl_mem dstPtr, rpp::Handle &handle);
+// RppStatus
+// tensor_table_look_up_cl( cl_mem srcPtr1, cl_mem dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, rpp::Handle &handle);
+// RppStatus
+// tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
+//                             cl_mem dstPtr, RppConvertBitDepthMode convert_mode, rpp::Handle &handle);
 RppStatus
-tensor_look_up_table_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues,
-                        cl_mem srcPtr, cl_mem dstPtr, Rpp8u *lutPtr, rpp::Handle &handle);
-RppStatus
-tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
-                            cl_mem dstPtr, Rpp32u type, rpp::Handle &handle);
+tensor_transpose_cl( cl_mem srcPtr, cl_mem dstPtr,  Rpp32u* in_dims, Rpp32u *perm, RPPTensorDataType data_type, rpp::Handle& handle);
+
 RppStatus
 occlusion_cl(cl_mem srcPtr1, RppiSize srcSize1,
              cl_mem srcPtr2, RppiSize srcSize2, cl_mem dstPtr, //Destiation Size is Same as the Second Image's Dimensions
@@ -611,7 +617,7 @@ color_twist_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnF
                      unsigned int channel = 3);
 
 RppStatus
-color_twist_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info );
+color_twist_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 
 RppStatus
 crop_mirror_normalize_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize, Rpp32u crop_pox_x,
@@ -624,5 +630,65 @@ crop_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFuncti
 RppStatus
 resize_crop_mirror_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 /* Fused Functions End*/
+RppStatus
+non_linear_blend_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle,
+                          RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+water_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colors, cl_mem box_offset,
+                             rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
+
+RppStatus
+optical_flow_pyramid_cl(cl_mem srcPtr1,
+                        cl_mem srcPtr2,
+                        RppiSize srcSize,
+                        Rpp32u *oldPoints,
+                        Rpp32u *newPointsEstimates,
+                        Rpp32f *newPoints,
+                        Rpp32u numPoints,
+                        Rpp32f threshold,
+                        Rpp32u numIterations,
+                        Rpp32u kernelSize,
+                        RppiChnFormat chnFormat,
+                        unsigned int channel,
+                        rpp::Handle &handle);
+RppStatus
+hog_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u *dstPtr, RppiSize Kernelsize, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
+RppStatus
+warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+color_convert_cl ( cl_mem srcPtr,RppiSize srcSize,
+                 cl_mem dstPtr,  RppiColorConvertMode convert_mode,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 rpp::Handle& handle);
+RppStatus
+color_convert_cl_batch ( cl_mem srcPtr,
+                 cl_mem dstPtr,  RppiColorConvertMode convert_mode,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 rpp::Handle& handle);
+RppStatus
+color_cast_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, 
+                                                            RPPTensorFunctionMetaData &tensor_info);
+
+RppStatus
+crop_and_patch_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle,
+                          RPPTensorFunctionMetaData &tensor_info);
+RppStatus
+warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info);
+
+RppStatus
+glitch_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
+                          RPPTensorFunctionMetaData &tensor_info);
+
+RppStatus
+convert_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u type,
+                     RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
+RppStatus
+convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
+                           Rpp32u type, rpp::Handle &handle,
+                           RppiChnFormat chnFormat, unsigned int channel);
 
 #endif //CL_DECLATAIONS_H

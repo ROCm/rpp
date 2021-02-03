@@ -540,6 +540,7 @@ custom_convolution_cl_batch (cl_mem srcPtr, cl_mem dstPtr, Rpp32f *kernel, RppiS
     clGetCommandQueueInfo(  handle.GetStream(),
                             CL_QUEUE_CONTEXT,
                             sizeof(cl_context), &ctx, NULL);
+    d_kernel = clCreateBuffer(ctx, CL_MEM_READ_ONLY, buffer_size_kernel_size, NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), d_kernel, CL_FALSE, 0, buffer_size_kernel_size, kernel, 0,
                                 NULL, NULL);
     std::vector<size_t> vld{32, 32, 1};

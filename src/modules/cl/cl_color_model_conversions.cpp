@@ -249,6 +249,74 @@ saturationRGB_cl ( cl_mem srcPtr,RppiSize srcSize,
 }
 
 RppStatus
+color_convert_cl ( cl_mem srcPtr,RppiSize srcSize,
+                 cl_mem dstPtr,  RppiColorConvertMode convert_mode,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 rpp::Handle& handle){
+    unsigned int plnpkdind, inc;
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        plnpkdind = 1;
+        inc = srcSize.height * srcSize.width;
+    }
+    else
+    {
+        plnpkdind = 3;
+        inc = 1;
+    }
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{((srcSize.width + 15)/16) * 16, ((srcSize.height + 15)/16) * 16, 1};
+    if (convert_mode == RGB_HSV)
+    {
+       handle.AddKernel("", "", "hue.cl", "convert_single_rgb_hsv", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width, inc, plnpkdind);
+    }
+    else if (convert_mode == HSV_RGB)
+    {
+        handle.AddKernel("", "", "hue.cl", "convert_single_hsv_rgb", vld, vgd, "")(srcPtr, dstPtr, srcSize.height, srcSize.width,  inc, plnpkdind);
+    }
+   
+    return RPP_SUCCESS;
+}
+
+RppStatus
+color_convert_cl_batch ( cl_mem srcPtr,
+                 cl_mem dstPtr,  RppiColorConvertMode convert_mode,
+                 RppiChnFormat chnFormat, unsigned int channel,
+                 rpp::Handle& handle){
+    int plnpkdind;
+
+    if(chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+
+    Rpp32u max_height, max_width;
+    std::string kernel_name ;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    if (convert_mode == RGB_HSV)
+        kernel_name = "convert_batch_rgb_hsv";
+    if (convert_mode == HSV_RGB)
+        kernel_name = "convert_batch_hsv_rgb";
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+    handle.AddKernel("", "", "hue.cl", kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+                                                                                    
+                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                        plnpkdind
+                                                                                        );
+    return RPP_SUCCESS;
+}
+
+
+RppStatus
 hueRGB_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel)
 
@@ -325,24 +393,22 @@ channel_combine_cl(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem srcPtr3, RppiSize srcS
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, srcSize.height, 1};
-        handle.AddKernel("", "", "channel_combine.cl", "channel_combine_pln", vld, vgd, "")(srcPtr1,
+        handle.AddKernel("", "", "channel_combine.cl", "channel_combine_pln", vld, vgd, "")(srcPtr1, srcPtr2, srcPtr3,
                                                                                             dstPtr,
                                                                                             srcSize.height,
                                                                                             srcSize.width,
                                                                                             channel
-                                                                                           // adjustmentValue
                                                                                             );
     }
     else
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, srcSize.height, 1};
-        handle.AddKernel("", "", "channel_combine.cl", "channel_combine_pkd", vld, vgd, "")(srcPtr1,
+        handle.AddKernel("", "", "channel_combine.cl", "channel_combine_pkd", vld, vgd, "")(srcPtr1, srcPtr2, srcPtr3,
                                                                                             dstPtr,
                                                                                             srcSize.height,
                                                                                             srcSize.width,
                                                                                             channel
-                                                                                            //adjustmentValue
                                                                                             );
     }
     return RPP_SUCCESS;      
@@ -368,7 +434,6 @@ channel_combine_cl_batch ( cl_mem srcPtr1, cl_mem srcPtr2, cl_mem srcPtr3, cl_me
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
     handle.AddKernel("", "", "channel_combine.cl", "channel_combine_batch", vld, vgd, "")(srcPtr1, srcPtr2, srcPtr3, dstPtr,
-                                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
@@ -444,7 +509,7 @@ look_up_table_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, Rpp8u* lutPtr,rpp::Hand
                             CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
     cl_mem clLutPtr = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
                                     sizeof(Rpp8u)*256*channel*handle.GetBatchSize(), NULL, NULL);
-    clEnqueueWriteBuffer(handle.GetStream(), clLutPtr, CL_TRUE, 0, sizeof(Rpp8u)*256*channel, lutPtr, 0, NULL, NULL);
+    clEnqueueWriteBuffer(handle.GetStream(), clLutPtr, CL_TRUE, 0, sizeof(Rpp8u)*256*channel*handle.GetBatchSize(), lutPtr, 0, NULL, NULL);
     int plnpkdind;
 
     if(chnFormat == RPPI_CHN_PLANAR)

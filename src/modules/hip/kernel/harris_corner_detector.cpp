@@ -265,7 +265,7 @@ extern "C" __global__ void harris_corner_detector_pln(   unsigned char* input,
     int pixIdx = id_y * width + id_x;
     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
 
-    unsigned int kernelSize = 5;
+    unsigned int kernelSize = 3;
     int bound = (kernelSize - 1) / 2;
     for(int i = -bound ; i <= bound ; i++)
     {
@@ -274,11 +274,15 @@ extern "C" __global__ void harris_corner_detector_pln(   unsigned char* input,
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
                 unsigned int index = pixIdx + j + (i * width);
-                input[index] = 255;
                 if(channel == 3)
                 {
+                    input[index] = 0;
                     input[index + height * width] = 0;
-                    input[index + height * width * 2] = 0;
+                    input[index + height * width * 2] = 255;
+                }
+                else if(channel == 1)
+                {
+                    input[index] = 255;
                 }
             }
         }
@@ -299,7 +303,7 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
     pixIdx = id_y * channel * width + id_x * channel;
 
-    unsigned int kernelSize = 5;
+    unsigned int kernelSize = 3;
     int bound = (kernelSize - 1) / 2;
     for(int i = -bound ; i <= bound ; i++)
     {
@@ -308,9 +312,9 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
                 unsigned int index = pixIdx + (j * channel) + (i * width * channel);
-                input[index] = 255;
+                input[index] = 0;
                 input[index+1] = 0;
-                input[index+2] = 0;
+                input[index+2] = 255;
             }
         }
     }

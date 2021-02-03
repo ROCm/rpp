@@ -5,6 +5,7 @@
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
 #include "hip/hip_declarations.hpp"
+#include "hip/hip_declarations_inline.hpp"
 
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
@@ -29706,7 +29707,13 @@ rppi_tensor_add_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp3
 			rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+ 	 tensor_add_hip(tensorDimension,
+            static_cast<Rpp32u*>(tensorDimensionValues),
+            static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			static_cast<Rpp8u*>(dstPtr),
+			rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
@@ -29726,7 +29733,13 @@ rppi_tensor_subtract_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr,
 			rpp::deref(rppHandle)); 	
 	} 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+ 	 tensor_subtract_hip(tensorDimension,
+            static_cast<Rpp32u*>(tensorDimensionValues),
+            static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			static_cast<Rpp8u*>(dstPtr),
+			rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
@@ -29745,7 +29758,13 @@ rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr,
 			rpp::deref(rppHandle)); 	 
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+ 	 tensor_multiply_hip(tensorDimension,
+            static_cast<Rpp32u*>(tensorDimensionValues),
+            static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			static_cast<Rpp8u*>(dstPtr),
+			rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
@@ -29764,8 +29783,444 @@ rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t 
 			rpp::deref(rppHandle));
  	 } 
 #elif defined (HIP_COMPILE) 
- 	 { 
+ 	 {
+ 	 tensor_matrix_multiply_hip(static_cast<Rpp8u*>(srcPtr1), 
+			static_cast<Rpp8u*>(srcPtr2), 
+			static_cast<Rpp32u*>(tensorDimensionValues1),
+			static_cast<Rpp32u*>(tensorDimensionValues2),
+			static_cast<Rpp8u*>(dstPtr),
+			rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 		return RPP_SUCCESS;
 }
+
+
+// RppStatus
+// rppi_tensor_table_look_up_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp8u *look_up_table, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle)
+// {
+// #ifdef OCL_COMPILE
+//  	 {
+//  	 tensor_table_look_up_cl( 
+//             static_cast<cl_mem>(srcPtr), 
+// 			static_cast<cl_mem>(dstPtr),
+// 			look_up_table, 
+// 			tensorDimension,
+// 			static_cast<Rpp32u *>(tensorDimensionValues),
+// 			rpp::deref(rppHandle)); 	
+// 	  }
+// #endif //BACKEND 
+// 		return RPP_SUCCESS;
+// } 
+
+RppStatus
+rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::U8, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 {
+		tensor_transpose_hip<Rpp8u, Rpp8u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::U8, rpp::deref(rppHandle));
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP16, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 {
+		tensor_transpose_hip<Rpp16f, Rpp16f>(static_cast<Rpp16f*>(srcPtr), static_cast<Rpp16f*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP16, rpp::deref(rppHandle));
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP32, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 {
+		tensor_transpose_hip<Rpp32f, Rpp32f>(static_cast<Rpp32f*>(srcPtr), static_cast<Rpp32f*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP32, rpp::deref(rppHandle));
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tensor_dims, RppPtr_t perm, rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+ 	 {
+		tensor_transpose_cl(static_cast<cl_mem>(srcPtr), static_cast<cl_mem>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::I8, rpp::deref(rppHandle));
+ 	 } 
+#elif defined (HIP_COMPILE) 
+ 	 {
+		tensor_transpose_hip<Rpp8s, Rpp8s>(static_cast<Rpp8s*>(srcPtr), static_cast<Rpp8s*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::I8, rpp::deref(rppHandle));
+ 	 } 
+#endif //BACKEND 
+	return RPP_SUCCESS;
+}
+
+// RppStatus
+// rppi_tensor_convert_bit_depth_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle)
+// {
+// #ifdef OCL_COMPILE
+//  	 {
+//  	 tensor_convert_bit_depth_cl( 
+//             tensorDimension, 
+//             static_cast<Rpp32u*>(tensorDimensionValues),
+//             static_cast<cl_mem>(srcPtr), 
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode, 
+// 			rpp::deref(rppHandle)); 	 
+// 	  }
+// #endif //BACKEND 
+// 	return RPP_SUCCESS;
+// }
+
+
+// Convert Bit Depth GPU
+
+// RppStatus
+// rppi_image_bit_depth_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle)
+// {
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl(
+// 			static_cast<cl_mem>(srcPtr),
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PLANAR, 3, rpp::deref(rppHandle));
+// 	}
+// #elif defined(HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_image_bit_depth_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PLANAR, 3, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+
+// }
+	
+// RppStatus
+//  rppi_image_bit_depth_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PLANAR, 3, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+//  rppi_image_bit_depth_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PLANAR, 3, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_image_bit_depth_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle)
+// {
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl(
+// 			static_cast<cl_mem>(srcPtr),
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PLANAR, 1, rpp::deref(rppHandle));
+// 	}
+// #elif defined(HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_image_bit_depth_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PLANAR, 1, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+
+// }
+	
+// RppStatus
+//  rppi_image_bit_depth_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PLANAR, 1, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+//  rppi_image_bit_depth_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PLANAR, 1, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_image_bit_depth_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppConvertBitDepthMode convert_mode, rppHandle_t rppHandle)
+// {
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl(
+// 			static_cast<cl_mem>(srcPtr),
+// 			srcSize,
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle));
+// 	}
+// #elif defined(HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+// rppi_image_bit_depth_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+
+// }
+	
+// RppStatus
+//  rppi_image_bit_depth_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
+
+// RppStatus
+//  rppi_image_bit_depth_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr , RppConvertBitDepthMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
+// {
+// 	RppiROI roiPoints;
+// 	roiPoints.x = 0;
+// 	roiPoints.y = 0;
+// 	roiPoints.roiHeight = 0;
+// 	roiPoints.roiWidth = 0;
+// 	copy_srcSize(srcSize, rpp::deref(rppHandle));
+// 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+// 	copy_roi(roiPoints, rpp::deref(rppHandle));
+// 	get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+// #ifdef OCL_COMPILE
+// 	{
+// 		image_bit_depth_cl_batch(
+// 			static_cast<cl_mem>(srcPtr),
+// 			static_cast<cl_mem>(dstPtr),
+// 			convert_mode,
+// 			RPPI_CHN_PACKED, 3, rpp::deref(rppHandle)
+// 		);
+// 	}
+// #elif defined (HIP_COMPILE)
+// 	{
+// 	}
+// #endif //BACKEND
+
+// 	return RPP_SUCCESS;
+// }
