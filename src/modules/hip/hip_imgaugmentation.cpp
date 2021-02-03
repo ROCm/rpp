@@ -445,10 +445,6 @@ rain_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 
 {
     Rpp32u nbatchSize = handle.GetBatchSize();
-    hipMemcpy(dstPtr,srcPtr,sizeof(unsigned char) *
-     (handle.GetInitHandle()->mem.mcpu.srcBatchIndex[nbatchSize-1] +
-     (handle.GetInitHandle()->mem.mgpu.csrcSize.width[nbatchSize-1] *
-     handle.GetInitHandle()->mem.mgpu.csrcSize.height[nbatchSize-1]) * channel),hipMemcpyDeviceToDevice);
     int plnpkdind;
 
     if(chnFormat == RPPI_CHN_PLANAR)
@@ -458,6 +454,8 @@ rain_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    hipMemcpy(dstPtr, srcPtr, max_height * max_width * channel * nbatchSize, hipMemcpyDeviceToDevice);
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
@@ -546,10 +544,6 @@ snow_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 
 {
     Rpp32u nbatchSize = handle.GetBatchSize();
-    hipMemcpy(dstPtr,srcPtr,sizeof(unsigned char) *
-     (handle.GetInitHandle()->mem.mcpu.srcBatchIndex[nbatchSize-1] +
-     (handle.GetInitHandle()->mem.mgpu.csrcSize.width[nbatchSize-1] *
-     handle.GetInitHandle()->mem.mgpu.csrcSize.height[nbatchSize-1]) * channel),hipMemcpyDeviceToDevice);
     int plnpkdind;
 
     if(chnFormat == RPPI_CHN_PLANAR)
@@ -559,6 +553,7 @@ snow_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    hipMemcpy(dstPtr, srcPtr, nbatchSize * max_height * max_width * channel * sizeof(unsigned char), hipMemcpyDeviceToDevice);
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
@@ -748,8 +743,8 @@ random_shadow_hip_batch(   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         Rpp32u row1, row2, column2, column1;
         int x, y;
 
-        hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
-        hipMemcpy(dstPtr1, srcPtr1,  sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
+        hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
+        hipMemcpy(dstPtr1, srcPtr1,  sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
         for(x = 0 ; x < handle.GetInitHandle()->mem.mcpu.uintArr[4].uintmem[i]; x++)
         {
             do
@@ -791,8 +786,8 @@ random_shadow_hip_batch(   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             }
             
         }
-        hipMemcpy(dstPtr+batchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
-        batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
+        hipMemcpy(dstPtr+batchIndex, dstPtr1, sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
+        batchIndex += maxHeight * maxWidth * channel * sizeof(unsigned char);
     }
     return RPP_SUCCESS;
 }

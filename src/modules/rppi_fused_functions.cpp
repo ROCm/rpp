@@ -6,6 +6,7 @@
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
 #include "hip/hip_declarations.hpp"
+#include "hip/hip_declarations_inline.hpp"
 
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
@@ -55,35 +56,38 @@ RppStatus color_twist_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	}
 #elif defined(HIP_COMPILE)
 	{
-		color_twist_hip_batch(
-			static_cast<Rpp8u *>(srcPtr),
-			static_cast<Rpp8u *>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels);
-		// if (tensor_type == RPPTensorDataType::U8)
-		// {
-		// 	color_twist_hip_batch(
-		// 		static_cast<Rpp8u *>(srcPtr),
-		// 		static_cast<Rpp8u *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP32)
-		// {
-		// 	color_twist_hip_batch(
-		// 		static_cast<Rpp32f *>(srcPtr),
-		// 		static_cast<Rpp32f *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP16)
-		// {
-		// 	color_twist_hip_batch(
-		// 		static_cast<data_type_t *>(srcPtr),
-		// 		static_cast<data_type_t *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
+		if (in_tensor_type == RPPTensorDataType::U8)
+		{
+			color_twist_hip_batch_tensor<Rpp8u, Rpp8u>(
+				static_cast<Rpp8u *>(srcPtr),
+				static_cast<Rpp8u *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP16)
+		{
+			color_twist_hip_batch_tensor<Rpp16f, Rpp16f>(
+				static_cast<Rpp16f *>(srcPtr),
+				static_cast<Rpp16f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP32)
+		{
+			color_twist_hip_batch_tensor<Rpp32f, Rpp32f>(
+				static_cast<Rpp32f *>(srcPtr),
+				static_cast<Rpp32f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::I8)
+		{
+			color_twist_hip_batch_tensor<Rpp8s, Rpp8s>(
+				static_cast<Rpp8s *>(srcPtr),
+				static_cast<Rpp8s *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
 	}
 #endif //BACKEND
 
@@ -3943,30 +3947,65 @@ crop_mirror_normalize_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	}
 #elif defined(HIP_COMPILE)
 	{
-		// if (tensor_type == RPPTensorDataType::U8)
-		// {
-		// 	crop_mirror_normalize_hip_batch(
-		// 		static_cast<Rpp8u *>(srcPtr),
-		// 		static_cast<Rpp8u *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP32)
-		// {
-		// 	crop_mirror_normalize_hip_batch(
-		// 		static_cast<Rpp32f *>(srcPtr),
-		// 		static_cast<Rpp32f *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP16)
-		// {
-		// 	crop_mirror_normalize_hip_batch(
-		// 		static_cast<data_type_t *>(srcPtr),
-		// 		static_cast<data_type_t *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
+		if (in_tensor_type == RPPTensorDataType::U8)
+		{
+			if (out_tensor_type == RPPTensorDataType::U8)
+			{
+				crop_mirror_normalize_hip_batch_tensor<Rpp8u, Rpp8u>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp8u *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::FP16)
+			{
+				crop_mirror_normalize_hip_batch_tensor<Rpp8u, Rpp16f>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp16f *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::FP32)
+			{
+				crop_mirror_normalize_hip_batch_tensor<Rpp8u, Rpp32f>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp32f *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::I8)
+			{
+				crop_mirror_normalize_hip_batch_tensor<Rpp8u, Rpp8s>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp8s *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP16)
+		{
+			crop_mirror_normalize_hip_batch_tensor<Rpp16f, Rpp16f>(
+				static_cast<Rpp16f *>(srcPtr),
+				static_cast<Rpp16f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP32)
+		{
+			crop_mirror_normalize_hip_batch_tensor<Rpp32f, Rpp32f>(
+				static_cast<Rpp32f *>(srcPtr),
+				static_cast<Rpp32f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::I8)
+		{
+			crop_mirror_normalize_hip_batch_tensor<Rpp8s, Rpp8s>(
+				static_cast<Rpp8s *>(srcPtr),
+				static_cast<Rpp8s *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
 	}
 #endif //BACKEND
 
@@ -4531,30 +4570,65 @@ crop_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	}
 #elif defined(HIP_COMPILE)
 	{
-		// if (tensor_type == RPPTensorDataType::U8)
-		// {
-		// 	crop_hip_batch(
-		// 		static_cast<Rpp8u *>(srcPtr),
-		// 		static_cast<Rpp8u *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP32)
-		// {
-		// 	crop_hip_batch(
-		// 		static_cast<Rpp32f *>(srcPtr),
-		// 		static_cast<Rpp32f *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP16)
-		// {
-		// 	crop_hip_batch(
-		// 		static_cast<data_type_t *>(srcPtr),
-		// 		static_cast<data_type_t *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
+		if (in_tensor_type == RPPTensorDataType::U8)
+		{
+			if (out_tensor_type == RPPTensorDataType::U8)
+			{
+				crop_hip_batch_tensor<Rpp8u, Rpp8u>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp8u *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::FP16)
+			{
+				crop_hip_batch_tensor<Rpp8u, Rpp16f>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp16f *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::FP32)
+			{
+				crop_hip_batch_tensor<Rpp8u, Rpp32f>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp32f *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::I8)
+			{
+				crop_hip_batch_tensor<Rpp8u, Rpp8s>(
+					static_cast<Rpp8u *>(srcPtr),
+					static_cast<Rpp8s *>(dstPtr),
+					rpp::deref(rppHandle),
+					tensor_info);
+			}
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP16)
+		{
+			crop_hip_batch_tensor<Rpp16f, Rpp16f>(
+				static_cast<Rpp16f *>(srcPtr),
+				static_cast<Rpp16f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP32)
+		{
+			crop_hip_batch_tensor<Rpp32f, Rpp32f>(
+				static_cast<Rpp32f *>(srcPtr),
+				static_cast<Rpp32f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::I8)
+		{
+			crop_hip_batch_tensor<Rpp8s, Rpp8s>(
+				static_cast<Rpp8s *>(srcPtr),
+				static_cast<Rpp8s *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
 	}
 #endif //BACKEND
 
@@ -5021,35 +5095,38 @@ resize_crop_mirror_helper(
 	}
 #elif defined(HIP_COMPILE)
 	{
-		resize_crop_mirror_hip_batch(
-			static_cast<Rpp8u *>(srcPtr),
-			static_cast<Rpp8u *>(dstPtr),
-			rpp::deref(rppHandle),
-			chn_format, num_of_channels);
-		// if (tensor_type == RPPTensorDataType::U8)
-		// {
-		// 	resize_crop_mirror_hip_batch(
-		// 		static_cast<Rpp8u *>(srcPtr),
-		// 		static_cast<Rpp8u *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP32)
-		// {
-		// 	resize_crop_mirror_hip_batch(
-		// 		static_cast<Rpp32f *>(srcPtr),
-		// 		static_cast<Rpp32f *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
-		// else if (tensor_type == RPPTensorDataType::FP16)
-		// {
-		// 	resize_crop_mirror_hip_batch(
-		// 		static_cast<data_type_t *>(srcPtr),
-		// 		static_cast<data_type_t *>(dstPtr),
-		// 		rpp::deref(rppHandle),
-		// 		chn_format, num_of_channels, tensor_type);
-		// }
+		if (in_tensor_type == RPPTensorDataType::U8)
+		{
+			resize_crop_mirror_hip_batch_tensor<Rpp8u, Rpp8u>(
+				static_cast<Rpp8u *>(srcPtr),
+				static_cast<Rpp8u *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP16)
+		{
+			resize_crop_mirror_hip_batch_tensor<Rpp16f, Rpp16f>(
+				static_cast<Rpp16f *>(srcPtr),
+				static_cast<Rpp16f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP32)
+		{
+			resize_crop_mirror_hip_batch_tensor<Rpp32f, Rpp32f>(
+				static_cast<Rpp32f *>(srcPtr),
+				static_cast<Rpp32f *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::I8)
+		{
+			resize_crop_mirror_hip_batch_tensor<Rpp8s, Rpp8s>(
+				static_cast<Rpp8s *>(srcPtr),
+				static_cast<Rpp8s *>(dstPtr),
+				rpp::deref(rppHandle),
+				tensor_info);
+		}
 	}
 #endif //BACKEND
 
@@ -5332,3 +5409,83 @@ rppi_resize_crop_mirror_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 {
 	return (resize_crop_mirror_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, xRoiBegin, xRoiEnd, yRoiBegin, yRoiEnd, mirrorFlag, outputFormatToggle, nbatchSize, rppHandle));
 }
+
+RppStatus
+resize_mirror_normalize_host_helper(
+	RppiChnFormat chn_format, Rpp32u num_of_channels,
+	RPPTensorDataType tensor_type,
+	RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize,
+	RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize,
+	Rpp32f *batch_mean, Rpp32f *batch_stdDev, 
+	Rpp32u *mirrorFlag,
+	Rpp32u outputFormatToggle,
+	Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	Rpp32u paramIndex = 0;
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
+	if (tensor_type == RPPTensorDataType::U8)
+	{
+		resize_mirror_normalize_host_batch<Rpp8u>(
+			static_cast<Rpp8u *>(srcPtr),
+			srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+			static_cast<Rpp8u *>(dstPtr),
+			dstSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize,
+			batch_mean, batch_stdDev, 
+			mirrorFlag,
+			outputFormatToggle,
+			rpp::deref(rppHandle).GetBatchSize(),
+			chn_format, num_of_channels);
+	}
+	// else if (tensor_type == RPPTensorDataType::FP32)
+	// {
+	// 	resize_mirror_normalize_f32_host_batch(
+	// 		static_cast<Rpp32f *>(srcPtr),
+	// 		srcSize,
+	// 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+	// 		static_cast<Rpp32f *>(dstPtr),
+	// 		dstSize,
+	// 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize,
+	// 		batch_mean, batch_stdDev, 
+	// 		mirrorFlag,
+	// 		outputFormatToggle,
+	// 		rpp::deref(rppHandle).GetBatchSize(),
+	// 		chn_format, num_of_channels);
+	// }
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_resize_mirror_normalize_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (resize_mirror_normalize_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::U8, srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, batch_mean, batch_stdDev, mirrorFlag, outputFormatToggle, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_resize_mirror_normalize_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag,Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (resize_mirror_normalize_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, batch_mean, batch_stdDev, mirrorFlag, outputFormatToggle, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_resize_mirror_normalize_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (resize_mirror_normalize_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, batch_mean, batch_stdDev, mirrorFlag, outputFormatToggle, nbatchSize, rppHandle));
+}
+
+// RppStatus
+// rppi_resize_mirror_normalize_f32_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+// 	return (resize_mirror_normalize_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, batch_mean, batch_stdDev, mirrorFlag, outputFormatToggle, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_resize_mirror_normalize_f32_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+// 	return (resize_mirror_normalize_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, batch_mean, batch_stdDev, mirrorFlag, outputFormatToggle, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_resize_mirror_normalize_f32_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+// 	return (resize_mirror_normalize_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, srcPtr, srcSize, maxSrcSize, dstPtr, dstSize, maxDstSize, batch_mean, batch_stdDev, mirrorFlag, outputFormatToggle, nbatchSize, rppHandle));
+// }

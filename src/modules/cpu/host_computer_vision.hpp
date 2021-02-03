@@ -446,273 +446,41 @@ RppStatus convert_bit_depth_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiS
                                        Rpp32u nbatchSize,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
+    T *srcPtrTemp;
+    U *dstPtrTemp;
+    srcPtrTemp = srcPtr;
+    dstPtrTemp = dstPtr;
+
+    Rpp32u totalBufferSize = nbatchSize * batch_srcSizeMax[0].height * batch_srcSizeMax[0].width * channel;
     if (conversionType == 1)
     {
-        if(chnFormat == RPPI_CHN_PLANAR)
+        Rpp32s val = 128;
+        for (Rpp32u i = 0; i < totalBufferSize; i++)
         {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                for(int c = 0; c < channel; c++)
-                {
-                    T *srcPtrChannel;
-                    U *dstPtrChannel;
-                    srcPtrChannel = srcPtrImage + (c * imageDimMax);
-                    dstPtrChannel = dstPtrImage + (c * imageDimMax);
-
-
-                    for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                    {
-                        Rpp32s val = 128;
-                        
-                        T *srcPtrTemp;
-                        U *dstPtrTemp;
-                        srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-
-                        for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                        {
-                            *dstPtrTemp = (U) ((Rpp32s) *srcPtrTemp - val);
-
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                }
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-                
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
-                Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-                
-
-                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                {
-                    Rpp32s val = 128;
-                    
-                    T *srcPtrTemp;
-                    U *dstPtrTemp;
-                    srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
-                    dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
-
-                    for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                    {
-                        for(int c = 0; c < channel; c++)
-                        {
-                            *dstPtrTemp = (U) ((Rpp32s) *srcPtrTemp - val);
-                            
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                    srcPtrTemp += (elementsInRowMax - elementsInRow);
-                    dstPtrTemp += (elementsInRowMax - elementsInRow);
-                }
-            }
+            *dstPtrTemp = (U) ((Rpp32s) *srcPtrTemp - val);
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
     else if (conversionType == 2)
     {
-        if(chnFormat == RPPI_CHN_PLANAR)
+        Rpp32f multiplier = 65535/255;
+        for (Rpp32u i = 0; i < totalBufferSize; i++)
         {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                for(int c = 0; c < channel; c++)
-                {
-                    T *srcPtrChannel;
-                    U *dstPtrChannel;
-                    srcPtrChannel = srcPtrImage + (c * imageDimMax);
-                    dstPtrChannel = dstPtrImage + (c * imageDimMax);
-
-
-                    for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                    {
-                        Rpp32f multiplier = 65535/255;
-                        
-                        T *srcPtrTemp;
-                        U *dstPtrTemp;
-                        srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-
-                        for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                        {
-                            *dstPtrTemp = (U) ((Rpp32f) *srcPtrTemp * multiplier);
-
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                }
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-                
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
-                Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-                
-
-                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                {
-                    Rpp32f multiplier = 65535/255;
-                    
-                    T *srcPtrTemp;
-                    U *dstPtrTemp;
-                    srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
-                    dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
-
-                    for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                    {
-                        for(int c = 0; c < channel; c++)
-                        {
-                            *dstPtrTemp = (U) ((Rpp32f) *srcPtrTemp * multiplier);
-                            
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                    srcPtrTemp += (elementsInRowMax - elementsInRow);
-                    dstPtrTemp += (elementsInRowMax - elementsInRow);
-                }
-            }
+            *dstPtrTemp = (U) ((Rpp32f) *srcPtrTemp * multiplier);
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
     else if (conversionType == 3)
     {
-        if(chnFormat == RPPI_CHN_PLANAR)
+        Rpp32f multiplier = 65535/255;
+        Rpp32f val = 32768;
+        for (Rpp32u i = 0; i < totalBufferSize; i++)
         {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                for(int c = 0; c < channel; c++)
-                {
-                    T *srcPtrChannel;
-                    U *dstPtrChannel;
-                    srcPtrChannel = srcPtrImage + (c * imageDimMax);
-                    dstPtrChannel = dstPtrImage + (c * imageDimMax);
-
-
-                    for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                    {
-                        Rpp32f multiplier = 65535/255;
-                        Rpp32f val = 32768;
-                        
-                        T *srcPtrTemp;
-                        U *dstPtrTemp;
-                        srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-
-                        for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                        {
-                            *dstPtrTemp = (U) (((Rpp32f) *srcPtrTemp * multiplier) - val);
-
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                }
-            }
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-            for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-            {
-                Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-                
-                T *srcPtrImage;
-                U *dstPtrImage;
-                Rpp32u loc = 0;
-                compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
-                srcPtrImage = srcPtr + loc;
-                dstPtrImage = dstPtr + loc;
-
-                Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
-                Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-                
-
-                for(int i = 0; i < batch_srcSize[batchCount].height; i++)
-                {
-                    Rpp32f multiplier = 65535/255;
-                    Rpp32f val = 32768;
-                    
-                    T *srcPtrTemp;
-                    U *dstPtrTemp;
-                    srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
-                    dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
-
-                    for(int j = 0; j < batch_srcSize[batchCount].width; j++)
-                    {
-                        for(int c = 0; c < channel; c++)
-                        {
-                            *dstPtrTemp = (U) (((Rpp32f) *srcPtrTemp * multiplier) - val);
-                            
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
-                    }
-                    srcPtrTemp += (elementsInRowMax - elementsInRow);
-                    dstPtrTemp += (elementsInRowMax - elementsInRow);
-                }
-            }
+            *dstPtrTemp = (U) (((Rpp32f) *srcPtrTemp * multiplier) - val);
+            srcPtrTemp++;
+            dstPtrTemp++;
         }
     }
 
@@ -790,7 +558,7 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
             Rpp32u *rowRemapTableImage, *colRemapTableImage;
             loc = 0;
-            compute_image_location_host(batch_srcSize, batchCount, &loc, channel);
+            compute_image_location_host(batch_srcSize, batchCount, &loc, 1);
             rowRemapTableImage = batch_rowRemapTable + loc;
             colRemapTableImage = batch_colRemapTable + loc;
 
@@ -801,8 +569,8 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 dstPtrChannel = dstPtrImage + (c * imageDimMax);
 
                 Rpp32u *rowRemapTableChannel, *colRemapTableChannel;
-                rowRemapTableChannel = rowRemapTableImage + (c * imageDim);
-                colRemapTableChannel = colRemapTableImage + (c * imageDim);
+                rowRemapTableChannel = rowRemapTableImage;
+                colRemapTableChannel = colRemapTableImage;
 
 
                 for(int i = 0; i < batch_srcSize[batchCount].height; i++)
@@ -844,11 +612,11 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
             Rpp32u *rowRemapTableImage, *colRemapTableImage;
             loc = 0;
-            compute_image_location_host(batch_srcSize, batchCount, &loc, channel);
+            compute_image_location_host(batch_srcSize, batchCount, &loc, 1);
             rowRemapTableImage = batch_rowRemapTable + loc;
             colRemapTableImage = batch_colRemapTable + loc;
 
-            Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
+            Rpp32u elementsInRemapTableRow = batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
 
 
@@ -858,8 +626,8 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
 
                 Rpp32u *rowRemapTableTemp, *colRemapTableTemp;
-                rowRemapTableTemp = rowRemapTableImage + (i * elementsInRow);
-                colRemapTableTemp = colRemapTableImage + (i * elementsInRow);
+                rowRemapTableTemp = rowRemapTableImage + (i * elementsInRemapTableRow);
+                colRemapTableTemp = colRemapTableImage + (i * elementsInRemapTableRow);
 
                 for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                 {
@@ -870,9 +638,9 @@ RppStatus remap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
                         dstPtrTemp++;
                         srcPtrTemp++;
-                        rowRemapTableTemp++;
-                        colRemapTableTemp++;
                     }
+                    rowRemapTableTemp++;
+                    colRemapTableTemp++;
                 }
             }
         }
@@ -1941,7 +1709,7 @@ RppStatus harris_corner_detector_host_batch(T* batch_srcPtr, RppiSize *batch_src
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
-            dstPtrGreyscaleFloatTemp = dstPtrGreyscaleFloat + (channel * ((bound * srcSize.width) + bound));
+            dstPtrGreyscaleFloatTemp = dstPtrGreyscaleFloat + (newChannel * ((bound * srcSize.width) + bound));
             dstPtrWindow = dstPtr;
             Rpp32u remainingElementsInRow = channel * (srcSize.width - kernelSize);
             Rpp32u increment = channel * (kernelSize - 1);
@@ -2299,10 +2067,6 @@ RppStatus reconstruction_laplacian_image_pyramid_host_batch(T* batch_srcPtr1, Rp
         
         resize_kernel_host(srcPtr2, srcSize2, srcPtr2Upsampled, srcSize1, chnFormat, channel);
 
-        // if (kernelSize % 2 == 0)
-        // {
-        //     return RPP_ERROR;
-        // }
         Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
         int bound = ((kernelSize - 1) / 2);
 
@@ -2642,8 +2406,9 @@ RppStatus hough_lines_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiS
                 linesTemp++;
 
                 numofLines++;
-                // if(numofLines >= linesMax)
-                //     return RPP_SUCCESS;
+                if(numofLines >= linesMax)
+                    // return RPP_SUCCESS;
+                    break;
             }
         }
 
@@ -3161,7 +2926,7 @@ RppStatus fast_corner_detector_host_batch(T* batch_srcPtr, RppiSize *batch_srcSi
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
-            dstPtrGreyscale32uTemp = dstPtrGreyscale32u + (channel * ((bound * srcSize.width) + bound));
+            dstPtrGreyscale32uTemp = dstPtrGreyscale32u + (newChannel * ((bound * srcSize.width) + bound));
             dstPtrWindow = dstPtr;
             Rpp32u remainingElementsInRow = channel * (srcSize.width - kernelSize);
             Rpp32u increment = channel * (kernelSize - 1);
@@ -3481,96 +3246,6 @@ RppStatus fast_corner_detector_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     return RPP_SUCCESS;
 }
 
-
-/**************** Control Flow ***************/
-template <typename T>
-RppStatus control_flow_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                         Rpp32u type, RppiROI *batch_roiPoints, Rpp32u nbatchSize,
-                         RppiChnFormat chnFormat, Rpp32u channel)
-{
-        switch(type)
-        {
-            case 1:
-                bitwise_AND_host_batch(static_cast<Rpp8u*>(srcPtr1),
-                                        static_cast<Rpp8u*>(srcPtr2),
-                                        batch_srcSize,
-                                        batch_srcSizeMax,
-                                        static_cast<Rpp8u*>(dstPtr),
-                                        batch_roiPoints,
-                                        nbatchSize,
-                                        chnFormat,
-                                        channel);
-                break;
-            case 2:
-                inclusive_OR_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
-                break;
-            case 3:
-                exclusive_OR_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
-                break;
-            case 4:
-                add_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
-                break;
-            case 5:
-                subtract_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
-                break;
-            case 6:
-                multiply_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
-                break;
-            case 7:
-                min_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
-                break;
-            case 8:
-                max_host_batch(static_cast<Rpp8u*>(srcPtr1), static_cast<Rpp8u*>(srcPtr2), batch_srcSize, batch_srcSizeMax, static_cast<Rpp8u*>(dstPtr),
-                batch_roiPoints, nbatchSize,chnFormat,channel);
-                break;
-        }
-
-    return RPP_SUCCESS;
-}
-
-template <typename T, typename U>
-RppStatus control_flow_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr, 
-                            Rpp32u type, 
-                            RppiChnFormat chnFormat, Rpp32u channel)
-{
-    switch(type)
-    {
-        case 1:
-            compute_bitwise_AND_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
-            break;
-        case 2:
-            compute_inclusive_OR_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
-            break;
-        case 3:
-            compute_exclusive_OR_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
-            break;
-        case 4:
-            compute_add_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
-            break;
-        case 5:
-            compute_subtract_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
-            break;
-        case 6:
-            compute_multiply_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
-            break;
-        case 7:
-            compute_min_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
-            break;
-        case 8:
-            compute_max_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
-            break;
-    }
-
-    return RPP_SUCCESS;
-
-}
-
 /**************** Tensor Convert Bit Depth ***************/
 
 template <typename T, typename U>
@@ -3670,7 +3345,7 @@ RppStatus tensor_transpose_host(T* srcPtr, T* dstPtr, Rpp32u dimension1, Rpp32u 
 
 }
 /**************** hog ***************/
-/*
+
 template <typename T, typename U>
 RppStatus hog_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* batch_binsTensor, Rpp32u *batch_binsTensorLength, 
                          RppiSize *batch_kernelSize, RppiSize *batch_windowSize,  Rpp32u *batch_windowStride, Rpp32u *batch_numOfBins, 
@@ -3681,219 +3356,27 @@ RppStatus hog_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize *bat
 #pragma omp parallel for num_threads(nbatchSize)
     for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
     {
+        Rpp32u binsTensorLength = batch_binsTensorLength[batchCount];
         RppiSize kernelSize = batch_kernelSize[batchCount];
         RppiSize windowSize = batch_windowSize[batchCount];
         Rpp32u windowStride = batch_windowStride[batchCount];
         Rpp32u numOfBins = batch_numOfBins[batchCount];
-        Rpp32u binsTensorLength = batch_binsTensorLength[batchCount];
-        
+
         Rpp32u loc = 0;
         compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
 
         T *srcPtr = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
-
+        
         compute_unpadded_from_padded_host(batch_srcPtr + loc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtr, 
                                           chnFormat, channel);
-        
-        RppiSize srcSize;
-        srcSize.height = batch_srcSize[batchCount].height;
-        srcSize.width = batch_srcSize[batchCount].width;
 
         Rpp32u locHist = 0;
         compute_histogram_location_host(batch_binsTensorLength, batchCount, &locHist);
         U *binsTensor;
         binsTensor = batch_binsTensor + locHist;
 
-        Rpp32u imageDim = srcSize.height * srcSize.width;
-        Rpp32u newChannel = 1;
-
-        Rpp32f gradientKernel[3] = {-1, 0, 1};
-        RppiSize rppiGradientKernelSizeX, rppiGradientKernelSizeY;
-        rppiGradientKernelSizeX.height = 1;
-        rppiGradientKernelSizeX.width = 3;
-        rppiGradientKernelSizeY.height = 3;
-        rppiGradientKernelSizeY.width = 1;
-
-        Rpp32s *gradientX = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientY = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientMagnitude = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32f *gradientDirection = (Rpp32f *)calloc(imageDim * newChannel, sizeof(Rpp32f));
-        
-        if (channel == 1)
-        {
-            hog_single_channel_gradient_computations_kernel_host(srcPtr, srcSize, gradientX, gradientY, gradientMagnitude, gradientDirection, 
-                                                                gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY);
-        }
-        else if (channel == 3)
-        {
-            Rpp32s *gradientX0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientX1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientX2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientY0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientY1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-            Rpp32s *gradientY2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-
-            T *srcPtrSingleChannel = (T *)calloc(imageDim * newChannel, sizeof(T));
-            
-            hog_three_channel_gradient_computations_kernel_host(srcPtr, srcPtrSingleChannel, srcSize, 
-                                                                gradientX0, gradientY0, gradientX1, gradientY1, gradientX2, gradientY2, 
-                                                                gradientX, gradientY, 
-                                                                gradientMagnitude, gradientDirection, 
-                                                                gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY, chnFormat, channel);
-
-            free(gradientX0);
-            free(gradientX1);
-            free(gradientX2);
-            free(gradientY0);
-            free(gradientY1);
-            free(gradientY2);
-            free(srcPtrSingleChannel);
-        }
-
-        Rpp32s *gradientMagnitudeTemp, *gradientMagnitudeTemp2, *gradientMagnitudeTemp3;
-        Rpp32f *gradientDirectionTemp, *gradientDirectionTemp2, *gradientDirectionTemp3;
-
-        Rpp32u binsTensorTrueLength = 0;
-        Rpp32u windowKernelHeightRatio = windowSize.height / kernelSize.height;
-        Rpp32u windowKernelWidthRatio = windowSize.width / kernelSize.width;
-        binsTensorTrueLength = ((windowKernelWidthRatio * windowKernelHeightRatio) + ((windowKernelWidthRatio - 1) * (windowKernelHeightRatio - 1)));
-        Rpp32u numOfPositionsAlongImageWidth = (srcSize.width / windowStride - (windowSize.width / windowStride - 1));
-        Rpp32u numOfPositionsAlongImageHeight = (srcSize.height / windowStride - (windowSize.height / windowStride - 1));
-        binsTensorTrueLength = binsTensorTrueLength * (numOfPositionsAlongImageWidth * numOfPositionsAlongImageHeight);
-        binsTensorTrueLength = binsTensorTrueLength * numOfBins;
-
-        Rpp32u numOfPositionsAlongWindowWidth = (windowSize.width / kernelSize.width);
-        Rpp32u numOfPositionsAlongWindowHeight = (windowSize.height / kernelSize.height);
-
-        U *binsTensorTemp;
-        binsTensorTemp = binsTensor;
-        Rpp32f rangeInBin = PI / numOfBins;
-        Rpp32u elementCount = 0, bin;
-        Rpp32f adder = PI / 2;
-
-        // For sliding window on image
-
-        for(int i = 0; i < numOfPositionsAlongImageHeight; i++)
-        {
-            gradientMagnitudeTemp = gradientMagnitude + (i * windowStride * srcSize.width);
-            gradientDirectionTemp = gradientDirection + (i * windowStride * srcSize.width);
-            for(int j = 0; j < numOfPositionsAlongImageWidth; j++)
-            {
-                // For each window
-
-                // Layer 1
-                for (int m = 0; m < numOfPositionsAlongWindowHeight; m++)
-                {
-                    gradientMagnitudeTemp2 = gradientMagnitudeTemp + (m * kernelSize.height * srcSize.width);
-                    gradientDirectionTemp2 = gradientDirectionTemp + (m * kernelSize.height * srcSize.width);
-                    for (int n = 0; n < numOfPositionsAlongWindowWidth; n++)
-                    {
-                        U *kernelHistogram = (U*) calloc(numOfBins, sizeof(U));
-                        
-                        // For each kernel
-                        for (int p = 0; p < kernelSize.height; p++)
-                        {
-                            gradientMagnitudeTemp3 = gradientMagnitudeTemp2 + (p * srcSize.width);
-                            gradientDirectionTemp3 = gradientDirectionTemp2 + (p * srcSize.width);
-                            for (int q = 0; q < kernelSize.width; q++)
-                            {
-                                bin = (Rpp32u) ((*gradientDirectionTemp3 + adder) / rangeInBin);
-                                if (bin > (numOfBins - 1))
-                                {
-                                    bin = numOfBins - 1;
-                                }
-                                *(kernelHistogram + bin) += *gradientMagnitudeTemp3;
-                                gradientMagnitudeTemp3++;
-                                gradientDirectionTemp3++;
-                            }
-                        }
-                        U *kernelHistogramTemp;
-                        kernelHistogramTemp = kernelHistogram;
-                        for (int r = 0; r < numOfBins; r++)
-                        {
-                            if (elementCount < (binsTensorLength - 1))
-                            {
-                                *binsTensorTemp = *kernelHistogramTemp;
-                                binsTensorTemp++;
-                                kernelHistogramTemp++;
-                                elementCount++;
-                            }
-                            else
-                            {
-                                return RPP_SUCCESS;
-                            }
-                            
-                        }
-                        gradientMagnitudeTemp2 += kernelSize.width;
-                        gradientDirectionTemp2 += kernelSize.width;
-
-                        free(kernelHistogram);
-                    }
-                }
-
-                // Layer 2
-                for (int m = 0; m < numOfPositionsAlongWindowHeight - 1; m++)
-                {
-                    gradientMagnitudeTemp2 = gradientMagnitudeTemp + (kernelSize.height / 2 * srcSize.width) + (m * kernelSize.height * srcSize.width) + (kernelSize.width / 2);
-                    gradientDirectionTemp2 = gradientDirectionTemp + (kernelSize.height / 2 * srcSize.width)+ (m * kernelSize.height * srcSize.width) + (kernelSize.width / 2);
-                    for (int n = 0; n < numOfPositionsAlongWindowWidth - 1; n++)
-                    {
-                        U *kernelHistogram = (U*) calloc(numOfBins, sizeof(U));
-                        
-                        // For each kernel
-                        
-                        for (int p = 0; p < kernelSize.height; p++)
-                        {
-                            gradientMagnitudeTemp3 = gradientMagnitudeTemp2 + (p * srcSize.width);
-                            gradientDirectionTemp3 = gradientDirectionTemp2 + (p * srcSize.width);
-                            for (int q = 0; q < kernelSize.width; q++)
-                            {
-                                bin = (Rpp32u) ((*gradientDirectionTemp3 + adder) / rangeInBin);
-                                if (bin > (numOfBins - 1))
-                                {
-                                    bin = numOfBins - 1;
-                                }
-                                *(kernelHistogram + bin) += *gradientMagnitudeTemp3;
-                                gradientMagnitudeTemp3++;
-                                gradientDirectionTemp3++;
-                            }
-                        }
-                        U *kernelHistogramTemp;
-                        kernelHistogramTemp = kernelHistogram;
-                        for (int r = 0; r < numOfBins; r++)
-                        {
-                            if (elementCount < (binsTensorLength - 1))
-                            {
-                                *binsTensorTemp = *kernelHistogramTemp;
-                                binsTensorTemp++;
-                                kernelHistogramTemp++;
-                                elementCount++;
-                            }
-                            else
-                            {
-                                return RPP_SUCCESS;
-                            }
-                            
-                        }
-
-                        gradientMagnitudeTemp2 += kernelSize.width;
-                        gradientDirectionTemp2 += kernelSize.width;
-
-                        free(kernelHistogram);
-                    }
-                }
-
-                gradientMagnitudeTemp += windowStride;
-                gradientDirectionTemp += windowStride;
-            }
-        }
-
-        free(srcPtr);
-        free(gradientX);
-        free(gradientY);
-        free(gradientMagnitude);
-        free(gradientDirection);
-
+        hog_host(srcPtr, batch_srcSize[batchCount], binsTensor, binsTensorLength, 
+                kernelSize, windowSize, windowStride, numOfBins, chnFormat, channel);
     }
 
     return RPP_SUCCESS;
@@ -3918,37 +3401,79 @@ RppStatus hog_host(T* srcPtr, RppiSize srcSize, U* binsTensor, Rpp32u binsTensor
     Rpp32s *gradientY = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
     Rpp32s *gradientMagnitude = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
     Rpp32f *gradientDirection = (Rpp32f *)calloc(imageDim * newChannel, sizeof(Rpp32f));
-    
-    if (channel == 1)
-    {
-        hog_single_channel_gradient_computations_kernel_host(srcPtr, srcSize, gradientX, gradientY, gradientMagnitude, gradientDirection, 
-                                                             gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY);
-    }
-    else if (channel == 3)
-    {
-        Rpp32s *gradientX0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientX1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientX2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientY0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientY1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
-        Rpp32s *gradientY2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
 
-        T *srcPtrSingleChannel = (T *)calloc(imageDim * newChannel, sizeof(T));
-        
-        hog_three_channel_gradient_computations_kernel_host(srcPtr, srcPtrSingleChannel, srcSize, 
-                                                             gradientX0, gradientY0, gradientX1, gradientY1, gradientX2, gradientY2, 
-                                                             gradientX, gradientY, 
-                                                             gradientMagnitude, gradientDirection, 
-                                                             gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY, chnFormat, channel);
-        
-        free(gradientX0);
-        free(gradientX1);
-        free(gradientX2);
-        free(gradientY0);
-        free(gradientY1);
-        free(gradientY2);
-        free(srcPtrSingleChannel);
+    T *srcPtrGreyscale = (T *)calloc(imageDim, sizeof(T));
+    T *srcPtrGreyscaleTemp;
+    srcPtrGreyscaleTemp = srcPtrGreyscale;
+
+    if (channel == 3)
+    {
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+            srcPtrTempR = srcPtr;
+            srcPtrTempG = srcPtr + imageDim;
+            srcPtrTempB = srcPtrTempG + imageDim;
+
+            for (int i = 0; i < imageDim; i++)
+            {
+                *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
+                srcPtrGreyscaleTemp++;
+                srcPtrTempR++;
+                srcPtrTempG++;
+                srcPtrTempB++;
+            }
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+            srcPtrTempR = srcPtr;
+            srcPtrTempG = srcPtr + 1;
+            srcPtrTempB = srcPtrTempG + 1;
+            
+            for (int i = 0; i < imageDim; i++)
+            {
+                *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
+                srcPtrGreyscaleTemp++;
+                srcPtrTempR += channel;
+                srcPtrTempG += channel;
+                srcPtrTempB += channel;
+            }
+        }
     }
+    else if (channel == 1)
+    {
+        memcpy(srcPtrGreyscale, srcPtr, imageDim * sizeof(T));
+    }
+    
+    hog_single_channel_gradient_computations_kernel_host(srcPtrGreyscale, srcSize, gradientX, gradientY, gradientMagnitude, gradientDirection, 
+                                                            gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY);
+    
+    // if (channel == 3)
+    // {
+    //     Rpp32s *gradientX0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientX1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientX2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientY0 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientY1 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+    //     Rpp32s *gradientY2 = (Rpp32s *)calloc(imageDim * newChannel, sizeof(Rpp32s));
+
+    //     T *srcPtrSingleChannel = (T *)calloc(imageDim * newChannel, sizeof(T));
+        
+    //     hog_three_channel_gradient_computations_kernel_host(srcPtr, srcPtrSingleChannel, srcSize, 
+    //                                                          gradientX0, gradientY0, gradientX1, gradientY1, gradientX2, gradientY2, 
+    //                                                          gradientX, gradientY, 
+    //                                                          gradientMagnitude, gradientDirection, 
+    //                                                          gradientKernel, rppiGradientKernelSizeX, rppiGradientKernelSizeY, chnFormat, channel);
+        
+    //     free(gradientX0);
+    //     free(gradientX1);
+    //     free(gradientX2);
+    //     free(gradientY0);
+    //     free(gradientY1);
+    //     free(gradientY2);
+    //     free(srcPtrSingleChannel);
+    // }
 
     Rpp32s *gradientMagnitudeTemp, *gradientMagnitudeTemp2, *gradientMagnitudeTemp3;
     Rpp32f *gradientDirectionTemp, *gradientDirectionTemp2, *gradientDirectionTemp3;
@@ -4095,366 +3620,7 @@ RppStatus hog_host(T* srcPtr, RppiSize srcSize, U* binsTensor, Rpp32u binsTensor
 
     return RPP_SUCCESS;
 }
-*/
-/**************** optical_flow_pyramid ***************/
-/*
-template <typename T>
-RppStatus optical_flow_pyramid_host_batch(T* batch_srcPtr1, T* batch_srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
-                                          Rpp32u *batch_oldPoints, Rpp32u *batch_newPointsEstimates, Rpp32u *batch_newPoints, 
-                                          Rpp32u* batch_numPoints, Rpp32f *batch_threshold, Rpp32u *batch_numIterations, Rpp32u *batch_kernelSize, 
-                                          Rpp32u nbatchSize, 
-                                          RppiChnFormat chnFormat, Rpp32u channel)
-{
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
-    for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
-    {
-        Rpp32u numPoints = batch_numPoints[batchCount];
-        Rpp32f threshold = batch_threshold[batchCount];
-        Rpp32u numIterations = batch_numIterations[batchCount];
-        Rpp32u kernelSize = batch_kernelSize[batchCount];
-        
-        Rpp32u loc = 0;
-        compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
 
-        T *srcPtr1 = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
-        T *srcPtr2 = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
-
-        compute_unpadded_from_padded_host(batch_srcPtr1 + loc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtr1, 
-                                          chnFormat, channel);
-        compute_unpadded_from_padded_host(batch_srcPtr2 + loc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtr2, 
-                                          chnFormat, channel);
-        
-        RppiSize srcSize;
-        srcSize.height = batch_srcSize[batchCount].height;
-        srcSize.width = batch_srcSize[batchCount].width;
-
-        Rpp32u locPointList = 0;
-        compute_point_list_location_host(batch_numPoints, batchCount, &locPointList);
-        Rpp32u *oldPoints, *newPointsEstimates, *newPoints;
-        oldPoints = batch_oldPoints + locPointList;
-        newPointsEstimates = batch_newPointsEstimates + locPointList;
-        newPoints = batch_newPoints + locPointList;
-        
-        // RGB to Greyscale Conversion
-        
-        Rpp32u imageDim = srcSize.height * srcSize.width;
-        T *srcPtr1Greyscale = (T *)calloc(imageDim, sizeof(T));
-        compute_rgb_to_greyscale_host(srcPtr1, srcSize, srcPtr1Greyscale, chnFormat, channel);
-        T *srcPtr2Greyscale = (T *)calloc(imageDim, sizeof(T));
-        compute_rgb_to_greyscale_host(srcPtr2, srcSize, srcPtr2Greyscale, chnFormat, channel);
-
-        Rpp32u newChannel = 1;
-
-        // Scharr Filter
-        
-        RppiSize rppiScharrKernelSize, srcSizeMod;
-        Rpp32u scharrKernelSize = 3;
-        int scharrBound = (scharrKernelSize - 1) / 2;
-
-        srcSizeMod.width = srcSize.width + (2 * scharrBound);
-        srcSizeMod.height = srcSize.height + (2 * scharrBound);
-
-        T *srcPtrModScharr = (T *)calloc(srcSizeMod.height * srcSizeMod.width * newChannel, sizeof(T));
-        generate_evenly_padded_image_host(srcPtr1Greyscale, srcSize, srcPtrModScharr, srcSizeMod, chnFormat, newChannel);
-
-        rppiScharrKernelSize.height = scharrKernelSize;
-        rppiScharrKernelSize.width = scharrKernelSize;
-
-        Rpp32f *kernelX = (Rpp32f *)calloc(3 * 3, sizeof(Rpp32f));
-        generate_scharr_kernel_host(kernelX, 1);
-        T *srcPtrDerivativeX = (T *)calloc(srcSize.height * srcSize.width * newChannel, sizeof(T));
-        convolve_image_host(srcPtrModScharr, srcSizeMod, srcPtrDerivativeX, srcSize, kernelX, rppiScharrKernelSize, chnFormat, newChannel);
-
-        Rpp32f *kernelY = (Rpp32f *)calloc(3 * 3, sizeof(Rpp32f));
-        generate_scharr_kernel_host(kernelY, 2);
-        T *srcPtrDerivativeY = (T *)calloc(srcSize.height * srcSize.width * newChannel, sizeof(T));
-        convolve_image_host(srcPtrModScharr, srcSizeMod, srcPtrDerivativeY, srcSize, kernelY, rppiScharrKernelSize, chnFormat, newChannel);
-
-        // Pad x and y gradient images
-        
-        int bound = (kernelSize - 1) / 2;
-        RppiSize srcSizeDerivativeMod;
-        srcSizeDerivativeMod.height = srcSize.height + (2 * bound);
-        srcSizeDerivativeMod.width = srcSize.width + (2 * bound);
-
-        T *srcPtrDerivativeXmod = (T *)calloc(srcSizeDerivativeMod.height * srcSizeDerivativeMod.width * newChannel, sizeof(T));
-        generate_evenly_padded_image_host(srcPtrDerivativeX, srcSize, srcPtrDerivativeXmod, srcSizeDerivativeMod, chnFormat, newChannel);
-
-        T *srcPtrDerivativeYmod = (T *)calloc(srcSizeDerivativeMod.height * srcSizeDerivativeMod.width * newChannel, sizeof(T));
-        generate_evenly_padded_image_host(srcPtrDerivativeY, srcSize, srcPtrDerivativeYmod, srcSizeDerivativeMod, chnFormat, newChannel);
-
-        // Create padded images for both inputs based on kernelSize to find residual for Lucas-Kanade
-        
-        srcSizeMod.height = srcSizeDerivativeMod.height;
-        srcSizeMod.width = srcSizeDerivativeMod.width;
-
-        T *srcPtr1Mod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * newChannel, sizeof(T));
-        generate_evenly_padded_image_host(srcPtr1Greyscale, srcSize, srcPtr1Mod, srcSizeMod, chnFormat, newChannel);
-
-        T *srcPtr2Mod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * newChannel, sizeof(T));
-        generate_evenly_padded_image_host(srcPtr2Greyscale, srcSize, srcPtr2Mod, srcSizeMod, chnFormat, newChannel);
-
-        T *srcPtr1Window, *srcPtr2Window;
-
-        Rpp32u remainingElementsInRow = srcSizeDerivativeMod.width - kernelSize;
-
-        // Run Lucas-Kanade algorithm for every pixel in the list of oldPoints
-
-        T *srcPtrWindowX, *srcPtrWindowY;
-        Rpp32u *oldPointsTemp, *newPointsEstimatesTemp, *newPointsTemp;
-        oldPointsTemp = oldPoints;
-        newPointsEstimatesTemp = newPointsEstimates;
-        newPointsTemp = newPoints;
-
-        Rpp32s rowOld, colOld, rowNewEst, colNewEst, rowNew, colNew, lostTrackFlag = 0;
-        Rpp32f VxPrev, VxIntermediate, VxDiff, Vx, VyPrev, VyIntermediate, VyDiff, Vy;
-        Rpp32f residual;
-
-        memcpy(newPoints, oldPoints, 2 * numPoints * sizeof(Rpp32u));
-
-        for(int i = 0; i < numPoints; i++)
-        {
-            colOld = *oldPointsTemp;
-            oldPointsTemp++;
-            rowOld = *oldPointsTemp;
-            oldPointsTemp++;
-
-            colNewEst = *newPointsEstimatesTemp;
-            newPointsEstimatesTemp++;
-            rowNewEst = *newPointsEstimatesTemp;
-            newPointsEstimatesTemp++;
-
-            VxPrev = colNewEst - colOld;
-            VyPrev = rowNewEst - rowOld;
-
-            srcPtrWindowX = srcPtrDerivativeXmod + (rowOld * srcSizeDerivativeMod.width) + colOld;
-            srcPtrWindowY = srcPtrDerivativeYmod + (rowOld * srcSizeDerivativeMod.width) + colOld;
-
-            lucas_kanade_matrix_kernel_host(srcPtrWindowX, srcPtrWindowY, srcSize, &VxIntermediate, &VyIntermediate, 
-                                            kernelSize, remainingElementsInRow, lostTrackFlag);
-
-            if (lostTrackFlag == 1)
-            {
-                lostTrackFlag = 0;
-                newPointsTemp += 2;
-                continue;
-            }
-
-            Rpp32f It;
-
-            for (int j = 0; j < numIterations; j++)
-            {
-                It = *(srcPtr1Greyscale + (rowOld * srcSize.width) + colOld) - *(srcPtr2Greyscale + (rowNewEst * srcSize.width) + colNewEst);
-                VxDiff = VxIntermediate * It;
-                VyDiff = VyIntermediate * It;
-
-                Vx = VxPrev + VxDiff;
-                Vy = VyPrev + VyDiff;
-
-                VxPrev = Vx;
-                VyPrev = Vy;
-
-                colNewEst = colOld + VxPrev;
-                rowNewEst = rowOld + VxPrev;
-
-                srcPtr1Window = srcPtr1Mod + (rowOld * srcSizeMod.width) + colOld;
-                srcPtr2Window = srcPtr2Mod + (rowNewEst * srcSizeMod.width) + colNewEst;
-                
-                lucas_kanade_residual_kernel_host(srcPtr1Window, srcPtr2Window, srcSize, &residual, 
-                                                kernelSize, remainingElementsInRow);
-
-                if (residual < threshold)
-                {
-                    break;
-                }
-            }
-
-            *newPointsTemp = (Rpp32u) colNewEst;
-            newPointsTemp++;
-            *newPointsTemp = (Rpp32u) rowNewEst;
-            newPointsTemp++;
-        }
-    }
-
-    free(srcPtr1);
-    free(srcPtr2);
-    free(srcPtr1Greyscale);
-    free(srcPtr2Greyscale);
-    free(srcPtrModScharr);
-    free(kernelX);
-    free(srcPtrDerivativeX);
-    free(kernelY);
-    free(srcPtrDerivativeY);
-    free(srcPtrDerivativeXmod);
-    free(srcPtrDerivativeYmod);
-    free(srcPtr1Mod);
-    free(srcPtr2Mod);
-
-    return RPP_SUCCESS;
-}
-
-template <typename T>
-RppStatus optical_flow_pyramid_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, 
-                                    Rpp32u* oldPoints, Rpp32u* newPointsEstimates, Rpp32u* newPoints, 
-                                    Rpp32u numPoints, Rpp32f threshold, Rpp32u numIterations, Rpp32u kernelSize, 
-                                    RppiChnFormat chnFormat, Rpp32u channel)
-{
-    // RGB to Greyscale Conversion
-    
-    Rpp32u imageDim = srcSize.height * srcSize.width;
-    T *srcPtr1Greyscale = (T *)calloc(imageDim, sizeof(T));
-    compute_rgb_to_greyscale_host(srcPtr1, srcSize, srcPtr1Greyscale, chnFormat, channel);
-    T *srcPtr2Greyscale = (T *)calloc(imageDim, sizeof(T));
-    compute_rgb_to_greyscale_host(srcPtr2, srcSize, srcPtr2Greyscale, chnFormat, channel);
-
-    Rpp32u newChannel = 1;
-
-    // Scharr Filter
-    
-    RppiSize rppiScharrKernelSize, srcSizeMod;
-    Rpp32u scharrKernelSize = 3;
-    int scharrBound = (scharrKernelSize - 1) / 2;
-
-    srcSizeMod.width = srcSize.width + (2 * scharrBound);
-    srcSizeMod.height = srcSize.height + (2 * scharrBound);
-
-    T *srcPtrModScharr = (T *)calloc(srcSizeMod.height * srcSizeMod.width * newChannel, sizeof(T));
-    generate_evenly_padded_image_host(srcPtr1Greyscale, srcSize, srcPtrModScharr, srcSizeMod, chnFormat, newChannel);
-
-    rppiScharrKernelSize.height = scharrKernelSize;
-    rppiScharrKernelSize.width = scharrKernelSize;
-
-    Rpp32f *kernelX = (Rpp32f *)calloc(3 * 3, sizeof(Rpp32f));
-    generate_scharr_kernel_host(kernelX, 1);
-    T *srcPtrDerivativeX = (T *)calloc(srcSize.height * srcSize.width * newChannel, sizeof(T));
-    convolve_image_host(srcPtrModScharr, srcSizeMod, srcPtrDerivativeX, srcSize, kernelX, rppiScharrKernelSize, chnFormat, newChannel);
-
-    Rpp32f *kernelY = (Rpp32f *)calloc(3 * 3, sizeof(Rpp32f));
-    generate_scharr_kernel_host(kernelY, 2);
-    T *srcPtrDerivativeY = (T *)calloc(srcSize.height * srcSize.width * newChannel, sizeof(T));
-    convolve_image_host(srcPtrModScharr, srcSizeMod, srcPtrDerivativeY, srcSize, kernelY, rppiScharrKernelSize, chnFormat, newChannel);
-
-    // Pad x and y gradient images
-    
-    int bound = (kernelSize - 1) / 2;
-    RppiSize srcSizeDerivativeMod;
-    srcSizeDerivativeMod.height = srcSize.height + (2 * bound);
-    srcSizeDerivativeMod.width = srcSize.width + (2 * bound);
-
-    T *srcPtrDerivativeXmod = (T *)calloc(srcSizeDerivativeMod.height * srcSizeDerivativeMod.width * newChannel, sizeof(T));
-    generate_evenly_padded_image_host(srcPtrDerivativeX, srcSize, srcPtrDerivativeXmod, srcSizeDerivativeMod, chnFormat, newChannel);
-
-    T *srcPtrDerivativeYmod = (T *)calloc(srcSizeDerivativeMod.height * srcSizeDerivativeMod.width * newChannel, sizeof(T));
-    generate_evenly_padded_image_host(srcPtrDerivativeY, srcSize, srcPtrDerivativeYmod, srcSizeDerivativeMod, chnFormat, newChannel);
-
-    // Create padded images for both inputs based on kernelSize to find residual for Lucas-Kanade
-    
-    srcSizeMod.height = srcSizeDerivativeMod.height;
-    srcSizeMod.width = srcSizeDerivativeMod.width;
-
-    T *srcPtr1Mod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * newChannel, sizeof(T));
-    generate_evenly_padded_image_host(srcPtr1Greyscale, srcSize, srcPtr1Mod, srcSizeMod, chnFormat, newChannel);
-
-    T *srcPtr2Mod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * newChannel, sizeof(T));
-    generate_evenly_padded_image_host(srcPtr2Greyscale, srcSize, srcPtr2Mod, srcSizeMod, chnFormat, newChannel);
-
-    T *srcPtr1Window, *srcPtr2Window;
-
-    Rpp32u remainingElementsInRow = srcSizeDerivativeMod.width - kernelSize;
-
-    // Run Lucas-Kanade algorithm for every pixel in the list of oldPoints
-
-    T *srcPtrWindowX, *srcPtrWindowY;
-    Rpp32u *oldPointsTemp, *newPointsEstimatesTemp, *newPointsTemp;
-    oldPointsTemp = oldPoints;
-    newPointsEstimatesTemp = newPointsEstimates;
-    newPointsTemp = newPoints;
-
-    Rpp32s rowOld, colOld, rowNewEst, colNewEst, rowNew, colNew, lostTrackFlag = 0;
-    Rpp32f VxPrev, VxIntermediate, VxDiff, Vx, VyPrev, VyIntermediate, VyDiff, Vy;
-    Rpp32f residual;
-
-    memcpy(newPoints, oldPoints, 2 * numPoints * sizeof(Rpp32u));
-
-    for(int i = 0; i < numPoints; i++)
-    {
-        colOld = *oldPointsTemp;
-        oldPointsTemp++;
-        rowOld = *oldPointsTemp;
-        oldPointsTemp++;
-
-        colNewEst = *newPointsEstimatesTemp;
-        newPointsEstimatesTemp++;
-        rowNewEst = *newPointsEstimatesTemp;
-        newPointsEstimatesTemp++;
-
-        VxPrev = colNewEst - colOld;
-        VyPrev = rowNewEst - rowOld;
-
-        srcPtrWindowX = srcPtrDerivativeXmod + (rowOld * srcSizeDerivativeMod.width) + colOld;
-        srcPtrWindowY = srcPtrDerivativeYmod + (rowOld * srcSizeDerivativeMod.width) + colOld;
-
-        lucas_kanade_matrix_kernel_host(srcPtrWindowX, srcPtrWindowY, srcSize, &VxIntermediate, &VyIntermediate, 
-                                        kernelSize, remainingElementsInRow, lostTrackFlag);
-
-        if (lostTrackFlag == 1)
-        {
-            lostTrackFlag = 0;
-            newPointsTemp += 2;
-            continue;
-        }
-
-        Rpp32f It;
-
-        for (int j = 0; j < numIterations; j++)
-        {
-            It = *(srcPtr1Greyscale + (rowOld * srcSize.width) + colOld) - *(srcPtr2Greyscale + (rowNewEst * srcSize.width) + colNewEst);
-            VxDiff = VxIntermediate * It;
-            VyDiff = VyIntermediate * It;
-
-            Vx = VxPrev + VxDiff;
-            Vy = VyPrev + VyDiff;
-
-            VxPrev = Vx;
-            VyPrev = Vy;
-
-            colNewEst = colOld + VxPrev;
-            rowNewEst = rowOld + VxPrev;
-
-            srcPtr1Window = srcPtr1Mod + (rowOld * srcSizeMod.width) + colOld;
-            srcPtr2Window = srcPtr2Mod + (rowNewEst * srcSizeMod.width) + colNewEst;
-            
-            lucas_kanade_residual_kernel_host(srcPtr1Window, srcPtr2Window, srcSize, &residual, 
-                                              kernelSize, remainingElementsInRow);
-
-            if (residual < threshold)
-            {
-                break;
-            }
-        }
-
-        *newPointsTemp = (Rpp32u) colNewEst;
-        newPointsTemp++;
-        *newPointsTemp = (Rpp32u) rowNewEst;
-        newPointsTemp++;
-    }
-
-    free(srcPtr1Greyscale);
-    free(srcPtr2Greyscale);
-    free(srcPtrModScharr);
-    free(kernelX);
-    free(srcPtrDerivativeX);
-    free(kernelY);
-    free(srcPtrDerivativeY);
-    free(srcPtrDerivativeXmod);
-    free(srcPtrDerivativeYmod);
-    free(srcPtr1Mod);
-    free(srcPtr2Mod);
-
-    return RPP_SUCCESS;
-}
-*/
 /**************** match_template ***************/
 /*
 template <typename T, typename U>

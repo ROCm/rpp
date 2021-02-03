@@ -676,8 +676,6 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize,
     {
         std::cerr << "Internal error: Unknown Channel format";
     }
-
-   
     return RPP_SUCCESS;
 }
 
@@ -726,7 +724,51 @@ warp_affine_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle, Rpp32f 
                                                                         channel,
                                                                         handle.GetInitHandle()->mem.mgpu.inc,
                                                                         handle.GetInitHandle()->mem.mgpu.dstInc,
-                                                                        plnpkdind);
+                                                                        plnpkdind, plnpkdind);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info)
+{
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    // int batch_size = handle.GetBatchSize();
+    InitHandle *handle_obj = handle.GetInitHandle();
+    Rpp32u max_height, max_width;
+    max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    cl_int err;
+    cl_context theContext;
+    clGetCommandQueueInfo(handle.GetStream(),
+                          CL_QUEUE_CONTEXT,
+                          sizeof(cl_context), &theContext, NULL);
+    cl_mem affine_array = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
+                                         sizeof(float) * 6 * handle.GetBatchSize(), NULL, NULL);
+    err = clEnqueueWriteBuffer(handle.GetStream(), affine_array, CL_TRUE, 0,
+                               sizeof(float) * 6 *handle.GetBatchSize(),
+                               affine, 0, NULL, NULL);
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
+    std::string kernel_file  = "warp_affine.cl";
+    std::string kernel_name = "warp_affine_batch";
+    get_kernel_name(kernel_name, tensor_info);
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr, dstPtr,
+                                                                        affine_array,
+                                                                        handle_obj->mem.mgpu.srcSize.height,
+                                                                        handle_obj->mem.mgpu.srcSize.width,
+                                                                        handle_obj->mem.mgpu.dstSize.height,
+                                                                        handle_obj->mem.mgpu.dstSize.width,
+                                                                        handle_obj->mem.mgpu.roiPoints.x,
+                                                                        handle_obj->mem.mgpu.roiPoints.roiWidth,
+                                                                        handle_obj->mem.mgpu.roiPoints.y,
+                                                                        handle_obj->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle_obj->mem.mgpu.maxSrcSize.width,
+                                                                        handle_obj->mem.mgpu.maxDstSize.width,
+                                                                        handle_obj->mem.mgpu.srcBatchIndex,
+                                                                        handle_obj->mem.mgpu.dstBatchIndex,
+                                                                        tensor_info._in_channels,
+                                                                        handle_obj->mem.mgpu.inc,
+                                                                        handle_obj->mem.mgpu.dstInc,
+                                                                        in_plnpkdind, out_plnpkdind);
     return RPP_SUCCESS;
 }
 
@@ -927,5 +969,43 @@ scale_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize,
     {
         std::cerr << "Internal error: Unknown Channel format";
     }
+    return RPP_SUCCESS;
+}
+
+RppStatus
+random_crop_letterbox_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
+                     RppiChnFormat chnFormat, unsigned int channel)
+{
+    int plnpkdind;
+    if (chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = channel;
+    unsigned int padding = 10;
+    unsigned int type = 1;
+
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+    handle.AddKernel("", "", "resize.cl", "random_crop_letterbox_batch", vld, vgd, "")(srcPtr, dstPtr,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
+                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                        channel,
+                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                        handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                        padding,
+                                                                        type,
+                                                                        plnpkdind, plnpkdind);
     return RPP_SUCCESS;
 }

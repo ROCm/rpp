@@ -264,7 +264,7 @@ __kernel void harris_corner_detector_pln(  __global unsigned char* input,
     int pixIdx = id_y * width + id_x;
     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
 
-    unsigned int kernelSize = 5;
+    unsigned int kernelSize = 3;
     int bound = (kernelSize - 1) / 2;
     for(int i = -bound ; i <= bound ; i++)
     {
@@ -273,11 +273,15 @@ __kernel void harris_corner_detector_pln(  __global unsigned char* input,
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
                 unsigned int index = pixIdx + j + (i * width);
-                input[index] = 255;
                 if(channel == 3)
                 {
+                    input[index] = 0;
                     input[index + height * width] = 0;
-                    input[index + height * width * 2] = 0;
+                    input[index + height * width * 2] = 255;
+                }
+                else if(channel == 1)
+                {
+                    input[index] = 255;
                 }
             }
         }
@@ -298,7 +302,7 @@ __kernel void harris_corner_detector_pkd(  __global unsigned char* input,
     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
     pixIdx = id_y * channel * width + id_x * channel;
 
-    unsigned int kernelSize = 5;
+    unsigned int kernelSize = 3;
     int bound = (kernelSize - 1) / 2;
     for(int i = -bound ; i <= bound ; i++)
     {
@@ -307,160 +311,10 @@ __kernel void harris_corner_detector_pkd(  __global unsigned char* input,
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
                 unsigned int index = pixIdx + (j * channel) + (i * width * channel);
-                input[index] = 255;
+                input[index] = 0;
                 input[index+1] = 0;
-                input[index+2] = 0;
+                input[index+2] = 255;
             }
         }
     }
 }
-// __kernel void harris_corner_detector_strength_batch(  __global unsigned char* sobelX,
-//                     __global unsigned char* sobelY,
-//                     __global float* output,
-//                     const unsigned int height,
-//                     const unsigned int width,
-//                     const unsigned int channel,
-//                     const unsigned int kernelSize,
-//                     const float kValue,
-//                     const float threshold
-// )
-// {
-//     int id_x = get_global_id(0);
-//     int id_y = get_global_id(1);
-//     int id_z = get_global_id(2);
-//     if (id_x >= width || id_y >= height || id_z >= channel) return;
-
-//     float sumXX = 0, sumYY = 0, sumXY = 0, valX = 0, valY = 0, det = 0, trace = 0, pixel = 0;
-
-//     int pixIdx = id_y * channel * width + id_x * channel + id_z;
-//     int bound = (kernelSize - 1) / 2;
-//     for(int i = -bound ; i <= bound ; i++)
-//     {
-//         for(int j = -bound ; j <= bound ; j++)
-//         {
-//             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-//             {
-//                 unsigned int index = pixIdx + (j * channel) + (i * width * channel);
-//                 valX = sobelX[index];
-//                 valY = sobelY[index];
-//                 sumXX += (valX * valX);
-//                 sumYY += (valY * valY);
-//                 sumXY += (valX * valY);
-//             }
-//         }
-//     }
-//     det = (sumXX * sumYY) - (sumXY * sumXY);
-//     trace = sumXX + sumYY;
-//     pixel = (det) - (kValue * trace * trace);
-//     if (pixel > threshold)
-//     {
-//         output[pixIdx] = pixel;
-//     }
-//     else
-//     {
-//         output[pixIdx] = 0;
-//     }
-// }
-
-// __kernel void harris_corner_detector_nonmax_supression_batch(  __global float* input,
-//                     __global float* output,
-//                     const unsigned int height,
-//                     const unsigned int width,
-//                     const unsigned int channel,
-//                     const unsigned int kernelSize
-// )
-// {
-//     int id_x = get_global_id(0);
-//     int id_y = get_global_id(1);
-//     int id_z = get_global_id(2);
-//     if (id_x >= width || id_y >= height || id_z >= channel) return;
-
-    
-//     int pixIdx = id_y * width + id_x + id_z * width * height;
-//     int bound = (kernelSize - 1) / 2;
-//     float pixel = input[pixIdx];
-//     for(int i = -bound ; i <= bound ; i++)
-//     {
-//         for(int j = -bound ; j <= bound ; j++)
-//         {
-//             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-//             {
-//                 unsigned int index = pixIdx + j + (i * width);
-//                 if(input[index] > pixel)
-//                 {
-//                     return;
-//                 }
-//             }
-//         }
-//     }
-//     output[pixIdx] = input[pixIdx];  
-// }
-
-// __kernel void harris_corner_detector_pln_batch( __global unsigned char* input,
-//                                                 __global float* inputFloat,
-//                                                 const unsigned int height,
-//                                                 const unsigned int width,
-//                                                 const unsigned int channel,
-//                                                 const unsigned long batchIndex
-// )
-// {
-//     int id_x = get_global_id(0);
-//     int id_y = get_global_id(1);
-//     int id_z = get_global_id(2);
-//     unsigned long pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
-//     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
-    
-//     pixIdx = (unsigned long)batchIndex + (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
-    
-//     unsigned int kernelSize = 5;
-//     int bound = (kernelSize - 1) / 2;
-//     for(int i = -bound ; i <= bound ; i++)
-//     {
-//         for(int j = -bound ; j <= bound ; j++)
-//         {
-//             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-//             {
-//                 unsigned long index = (unsigned long)pixIdx + (unsigned long)j + ((unsigned long)i * (unsigned long)width);
-//                 input[index] = 255;
-//                 if(channel == 3)
-//                 {
-//                     input[index + (unsigned long)height * (unsigned long)width] = 0;
-//                     input[index + (unsigned long)height * (unsigned long)width * 2] = 0;
-//                 }
-//             }
-//         }
-//     } 
-// }
-
-// __kernel void harris_corner_detector_pkd_batch( __global unsigned char* input,
-//                                                 __global float* inputFloat,
-//                                                 const unsigned int height,
-//                                                 const unsigned int width,
-//                                                 const unsigned int channel,
-//                                                 const unsigned long batchIndex
-// )
-// {
-//     int id_x = get_global_id(0);
-//     int id_y = get_global_id(1);
-//     int id_z = get_global_id(2);
-//     unsigned long pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
-//     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
-    
-//     pixIdx = (unsigned long)batchIndex + (unsigned long)id_y * (unsigned long)channel * (unsigned long)width + (unsigned long)id_x * (unsigned long)channel;
-
-//     unsigned int kernelSize = 5;
-//     int bound = (kernelSize - 1) / 2;
-//     for(int i = -bound ; i <= bound ; i++)
-//     {
-//         for(int j = -bound ; j <= bound ; j++)
-//         {
-//             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-//             {
-//                 unsigned long index = (unsigned long)pixIdx + ((unsigned long)j * (unsigned long)channel) + ((unsigned long)i * (unsigned long)width * (unsigned long)channel);
-//                 input[index] = 255;
-//                 input[index+1] = 0;
-//                 input[index+2] = 0;
-//             }
-//         }
-//     }
-// }

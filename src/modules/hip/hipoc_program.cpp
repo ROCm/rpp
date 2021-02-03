@@ -57,7 +57,7 @@ hipModulePtr CreateModule(const boost::filesystem::path& hsaco_file)
 hipModulePtr CreateModuleRTC(char** codeData)
 {
     hipModule_t raw_m;
-    std::cout<<"attempting to run hipModule Load data of codeData:\n";// <<hsaco_file.string().c_str()<<std::endl;
+    // std::cout<<"attempting to run hipModule Load data of codeData:\n";// <<hsaco_file.string().c_str()<<std::endl;
     auto status = hipModuleLoadData(&raw_m, *codeData);
     hipModulePtr m{raw_m};
     if(status != hipSuccess)
@@ -79,10 +79,10 @@ struct HIPOCProgramImpl
         : name(program_name), dev_name(_dev_name)
     {
 #if defined(HIPRTC)
-        std::cout<<"Using HIPRTC API to do run time compilation\n";
+        // std::cout<<"Using HIPRTC API to do run time compilation\n";
         this->module = this->BuildAndCreateModuleRTC(program_name, params, is_kernel_str, kernel_src);
 #elif defined(HSACOO)
-        std::cout<<"Using HSACOO MODE OF RUNTIME COMPILATION\n";
+        // std::cout<<"Using HSACOO MODE OF RUNTIME COMPILATION\n";
         this->BuildModule(program_name, params, is_kernel_str, kernel_src);
         this->module = CreateModule(this->hsaco_file);
 #else
@@ -124,7 +124,7 @@ struct HIPOCProgramImpl
 	if (logSize) {
         	std::string log(logSize, '\0');
 		hiprtcGetProgramLog(prog, &log[0]);
-        	std::cout << log << '\n';
+        	// std::cout << log << '\n';
     	}
 	if (compileResult != HIPRTC_SUCCESS) { std::cout<<"Compilation failed."<<compileResult<<std::endl; exit(1);}
 	size_t codeSize;

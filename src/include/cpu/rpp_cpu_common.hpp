@@ -12,21 +12,22 @@ using half_float::half;
 typedef half                Rpp16f;
 #include "rpp_cpu_simd.hpp"
 
-#define PI 3.14159265
-#define RAD(deg)                (deg * PI / 180)
-#define RPPABS(a)               ((a < 0) ? (-a) : (a))
-#define RPPMIN2(a,b)            ((a < b) ? a : b)
-#define RPPMIN3(a,b,c)          ((a < b) && (a < c) ?  a : ((b < c) ? b : c))
-#define RPPMAX2(a,b)            ((a > b) ? a : b)
-#define RPPMAX3(a,b,c)          ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
-#define RPPINRANGE(a, x, y)     ((a >= x) && (a <= y) ? 1 : 0)
-#define RPPFLOOR(a)             ((int) a)
-#define RPPCEIL(a)              ((int) (a + 1.0))
-#define RPPISEVEN(a)            ((a % 2 == 0) ? 1 : 0)
-#define RPPPIXELCHECK(pixel)    (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
-#define RPPPIXELCHECKI8(pixel)    (pixel < (Rpp32f) -128) ? ((Rpp32f) -128) : ((pixel < (Rpp32f) 127) ? pixel : ((Rpp32f) 127))
-#define RPPISGREATER(pixel, value)  ((pixel > value) ? 1 : 0)
-#define RPPISLESSER(pixel, value)  ((pixel < value) ? 1 : 0)
+#define PI                              3.14159265
+#define RAD(deg)                        (deg * PI / 180)
+#define RPPABS(a)                       ((a < 0) ? (-a) : (a))
+#define RPPMIN2(a,b)                    ((a < b) ? a : b)
+#define RPPMIN3(a,b,c)                  ((a < b) && (a < c) ?  a : ((b < c) ? b : c))
+#define RPPMAX2(a,b)                    ((a > b) ? a : b)
+#define RPPMAX3(a,b,c)                  ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
+#define RPPINRANGE(a, x, y)             ((a >= x) && (a <= y) ? 1 : 0)
+#define RPPPRANGECHECK(value, a, b)     (value < (Rpp32f) a) ? ((Rpp32f) a) : ((value < (Rpp32f) b) ? value : ((Rpp32f) b))
+#define RPPFLOOR(a)                     ((int) a)
+#define RPPCEIL(a)                      ((int) (a + 1.0))
+#define RPPISEVEN(a)                    ((a % 2 == 0) ? 1 : 0)
+#define RPPPIXELCHECK(pixel)            (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
+#define RPPPIXELCHECKI8(pixel)          (pixel < (Rpp32f) -128) ? ((Rpp32f) -128) : ((pixel < (Rpp32f) 127) ? pixel : ((Rpp32f) 127))
+#define RPPISGREATER(pixel, value)      ((pixel > value) ? 1 : 0)
+#define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 
 static uint16_t wyhash16_x; 
 
@@ -103,6 +104,25 @@ RppStatus exclusive_OR_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSiz
                               RppiChnFormat chnFormat, Rpp32u channel);
 
 
+// Specific Helper Functions
+
+inline Rpp32f gaussian_2d_relative(Rpp32s locI, Rpp32s locJ, Rpp32f std_dev)
+{
+    // Rpp32f res, pi = 3.14;
+    Rpp32f relativeGaussian;
+    // res = 1 / (2 * pi * std_dev * std_dev);
+    Rpp32f exp1, exp2;
+    exp1 = -(locJ * locJ) / (2 * std_dev * std_dev);
+    exp2 = -(locI * locI) / (2 * std_dev * std_dev);
+    // exp1 = exp1 + exp2;
+    // exp1 = exp(exp1);
+    // res *= exp1;
+    // res = exp1;
+    relativeGaussian = exp(exp1 + exp2);
+
+    // return res;
+    return relativeGaussian;
+}
 
 // Generate Functions
 
@@ -507,7 +527,141 @@ inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
     return RPP_SUCCESS;
 }
 
+inline RppStatus generate_scharr_kernel_host(Rpp32f* kernel, Rpp32u type)
+{
+    Rpp32f* kernelTemp;
+    kernelTemp = kernel;
 
+    if (type == 1)
+    {
+        Rpp32f kernelX[9] = {3, 0, -3, 10, 0, -10, 3, 0, -3};
+        Rpp32f* kernelXTemp;
+        kernelXTemp = kernelX;
+
+        for (int i = 0; i < 9; i++)
+        {
+            *kernelTemp = *kernelXTemp;
+            kernelTemp++;
+            kernelXTemp++;
+        }
+    }
+    else if (type == 2)
+    {
+        Rpp32f kernelY[9] = {3, 10, 3, 0, 0, 0, -3, -10, -3};
+        Rpp32f* kernelYTemp;
+        kernelYTemp = kernelY;
+
+        for (int i = 0; i < 9; i++)
+        {
+            *kernelTemp = *kernelYTemp;
+            kernelTemp++;
+            kernelYTemp++;
+        }
+    }
+    else
+    {
+        return RPP_ERROR;
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T>
+inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp32u *endpoints, Rpp32u *rasterCoordinates)
+{
+    Rpp32u *rasterCoordinatesTemp;
+    rasterCoordinatesTemp = rasterCoordinates;
+
+    Rpp32s x0 = *endpoints;
+    Rpp32s y0 = *(endpoints + 1);
+    Rpp32s x1 = *(endpoints + 2);
+    Rpp32s y1 = *(endpoints + 3);
+
+    Rpp32s dx, dy;
+    Rpp32s stepX, stepY;
+
+    dx = x1 - x0;
+    dy = y1 - y0;
+
+    if (dy < 0)
+    {
+        dy = -dy;
+        stepY = -1;
+    }
+    else
+    {
+        stepY = 1;
+    }
+    
+    if (dx < 0)
+    {
+        dx = -dx;
+        stepX = -1;
+    }
+    else
+    {
+        stepX = 1;
+    }
+
+    dy <<= 1;
+    dx <<= 1;
+
+    if ((0 <= x0) && (x0 < dstSize.width) && (0 <= y0) && (y0 < dstSize.height))
+    {
+        *(dstPtr + (y0 * dstSize.width) + x0) = (T) 255;
+        *rasterCoordinatesTemp = y0;
+        rasterCoordinatesTemp++;
+        *rasterCoordinatesTemp = x0;
+        rasterCoordinatesTemp++;
+    }
+
+    if (dx > dy)
+    {
+        Rpp32s fraction = dy - (dx >> 1);
+        while (x0 != x1)
+        {
+            x0 += stepX;
+            if (fraction >= 0)
+            {
+                y0 += stepY;
+                fraction -= dx;
+            }
+            fraction += dy;
+            if ((0 <= x0) && (x0 < dstSize.width) && (0 <= y0) && (y0 < dstSize.height))
+            {
+                *(dstPtr + (y0 * dstSize.width) + x0) = (T) 255;
+                *rasterCoordinatesTemp = y0;
+                rasterCoordinatesTemp++;
+                *rasterCoordinatesTemp = x0;
+                rasterCoordinatesTemp++;
+            }
+        }
+    }
+    else
+    {
+        int fraction = dx - (dy >> 1);
+        while (y0 != y1)
+        {
+            if (fraction >= 0)
+            {
+                x0 += stepX;
+                fraction -= dy;
+            }
+            y0 += stepY;
+            fraction += dx;
+            if ((0 <= x0) && (x0 < dstSize.width) && (0 <= y0) && (y0 < dstSize.height))
+            {
+                *(dstPtr + (y0 * dstSize.width) + x0) = (T) 255;
+                *rasterCoordinatesTemp = y0;
+                rasterCoordinatesTemp++;
+                *rasterCoordinatesTemp = x0;
+                rasterCoordinatesTemp++;
+            }
+        }
+    }
+    
+    return RPP_SUCCESS;
+}
 
 
 
@@ -1705,6 +1859,7 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
 {
     Rpp32u imageDim = srcSize.height * srcSize.width;
     Rpp32u imageDimMax = srcSizeMax.height * srcSizeMax.width;
+    Rpp32u imageDimROI = srcSizeBoundedROI.height * srcSizeBoundedROI.width;
 
     T maxVal = (T)(std::numeric_limits<T>::max());
     T minVal = (T)(std::numeric_limits<T>::min());
@@ -1716,7 +1871,7 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
         for(int c = 0; c < channel; c++)
         {
             T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
-            srcPtrBoundedROIChannel = srcPtrBoundedROI + (c * imageDim);
+            srcPtrBoundedROIChannel = srcPtrBoundedROI + (c * imageDimROI);
             srcPtrChannel = srcPtrImage + (c * imageDimMax);
             dstPtrChannel = dstPtrImage + (c * imageDimMax);
 
@@ -3071,6 +3226,56 @@ inline RppStatus compute_hsl_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     return RPP_SUCCESS;
 }
 
+template <typename T>
+inline RppStatus compute_rgb_to_greyscale_host(T* srcPtr, RppiSize srcSize, T* srcPtrGreyscale, RppiChnFormat chnFormat, Rpp32u channel)
+{
+    T *srcPtrGreyscaleTemp;
+    srcPtrGreyscaleTemp = srcPtrGreyscale;
+    Rpp32u imageDim = srcSize.height * srcSize.width;
+
+    if (channel == 3)
+    {
+        if (chnFormat == RPPI_CHN_PLANAR)
+        {
+            T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+            srcPtrTempR = srcPtr;
+            srcPtrTempG = srcPtr + imageDim;
+            srcPtrTempB = srcPtrTempG + imageDim;
+
+            for (int i = 0; i < imageDim; i++)
+            {
+                *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
+                srcPtrGreyscaleTemp++;
+                srcPtrTempR++;
+                srcPtrTempG++;
+                srcPtrTempB++;
+            }
+        }
+        else if (chnFormat == RPPI_CHN_PACKED)
+        {
+            T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+            srcPtrTempR = srcPtr;
+            srcPtrTempG = srcPtr + 1;
+            srcPtrTempB = srcPtrTempG + 1;
+            
+            for (int i = 0; i < imageDim; i++)
+            {
+                *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
+                srcPtrGreyscaleTemp++;
+                srcPtrTempR += channel;
+                srcPtrTempG += channel;
+                srcPtrTempB += channel;
+            }
+        }
+    }
+    else if (channel == 1)
+    {
+        memcpy(srcPtrGreyscale, srcPtr, imageDim * sizeof(T));
+    }
+
+    return RPP_SUCCESS;
+}
+
 template <typename T, typename U>
 inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, U* dstPtr,
                          RppiChnFormat chnFormat, Rpp32u channel)
@@ -3871,112 +4076,5 @@ inline RppStatus copy_remapTable(Rpp32u *remapTable,Rpp32u *batch_remapTable,Rpp
 
     return RPP_SUCCESS;
 }
-
-// Non SIMD Resize (without or without omp autovectorization)
-
-// template <typename T>
-// inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
-//                            RppiChnFormat chnFormat, Rpp32u channel)
-// {
-//     if (dstSize.height < 0 || dstSize.width < 0)
-//     {
-//         return RPP_ERROR;
-//     }
-
-//     Rpp32f hRatio = (((Rpp32f) (dstSize.height - 1)) / ((Rpp32f) (srcSize.height - 1)));
-//     Rpp32f wRatio = (((Rpp32f) (dstSize.width - 1)) / ((Rpp32f) (srcSize.width - 1)));
-//     Rpp32f srcLocationRow, srcLocationColumn, pixel;
-//     Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
-//     T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
-//     srcPtrTemp = srcPtr;
-//     dstPtrTemp = dstPtr;
-
-//     if (chnFormat == RPPI_CHN_PLANAR)
-//     {
-//         for (int c = 0; c < channel; c++)
-//         {
-//             for (int i = 0; i < dstSize.height; i++)
-//             {
-//                 srcLocationRow = ((Rpp32f) i) / hRatio;
-//                 srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
-//                 Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
-//                 if (srcLocationRowFloor > (srcSize.height - 2))
-//                 {
-//                     srcLocationRowFloor = srcSize.height - 2;
-//                 }
-
-//                 srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcSize.width;
-//                 srcPtrBottomRow  = srcPtrTopRow + srcSize.width;
-
-//                 #pragma omp simd
-//                 for (int j = 0; j < dstSize.width; j++)
-//                 {
-//                     srcLocationColumn = ((Rpp32f) j) / wRatio;
-//                     srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
-//                     Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-
-//                     if (srcLocationColumnFloor > (srcSize.width - 2))
-//                     {
-//                         srcLocationColumnFloor = srcSize.width - 2;
-//                     }
-//                     pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
-//                             + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
-//                             + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
-//                             + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
-
-//                     *dstPtrTemp = (T) pixel;
-//                     dstPtrTemp ++;
-//                 }
-//             }
-//             srcPtrTemp += srcSize.height * srcSize.width;
-//         }
-//     }
-//     else if (chnFormat == RPPI_CHN_PACKED)
-//     {
-//         Rpp32s elementsInRow = srcSize.width * channel;
-//         for (int i = 0; i < dstSize.height; i++)
-//         {
-//             srcLocationRow = ((Rpp32f) i) / hRatio;
-//             srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
-//             Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
-
-//             if (srcLocationRowFloor > (srcSize.height - 2))
-//             {
-//                 srcLocationRowFloor = srcSize.height - 2;
-//             }
-
-//             srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * elementsInRow;
-//             srcPtrBottomRow  = srcPtrTopRow + elementsInRow;
-
-//             for (int j = 0; j < dstSize.width; j++)
-//             {
-//                 srcLocationColumn = ((Rpp32f) j) / wRatio;
-//                 srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
-//                 Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-
-//                 if (srcLocationColumnFloor > (srcSize.width - 2))
-//                 {
-//                     srcLocationColumnFloor = srcSize.width - 2;
-//                 }
-
-//                 Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
-
-//                 for (int c = 0; c < channel; c++)
-//                 {
-//                     pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
-//                             + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
-//                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
-//                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
-
-//                     *dstPtrTemp = (T) pixel;
-//                     dstPtrTemp ++;
-//                 }
-//             }
-//         }
-//     }
-
-//     return RPP_SUCCESS;
-// }
-
 
 #endif //RPP_CPU_COMMON_H

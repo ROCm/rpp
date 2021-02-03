@@ -22,11 +22,7 @@ typedef unsigned long long  Rpp64u;
 typedef long long           Rpp64s;
 typedef float               Rpp32f;
 typedef double              Rpp64f;
-
 typedef void*              RppPtr_t;
-
-
-
 
 typedef enum
 {
@@ -54,6 +50,33 @@ typedef enum
     RPPI_VERTICAL_AXIS,
     RPPI_BOTH_AXIS
 } RppiAxis;
+
+typedef enum
+{
+  RPP_SCALAR_OP_AND = 1,
+  RPP_SCALAR_OP_OR,
+  RPP_SCALAR_OP_XOR,
+  RPP_SCALAR_OP_NAND,
+  RPP_SCALAR_OP_EQUAL,
+  RPP_SCALAR_OP_NOTEQUAL,
+  RPP_SCALAR_OP_LESS,
+  RPP_SCALAR_OP_LESSEQ,
+  RPP_SCALAR_OP_GREATER,
+  RPP_SCALAR_OP_GREATEREQ,
+  RPP_SCALAR_OP_ADD,
+  RPP_SCALAR_OP_SUBTRACT,
+  RPP_SCALAR_OP_MULTIPLY,
+  RPP_SCALAR_OP_DIVIDE,
+  RPP_SCALAR_OP_MODULUS,
+  RPP_SCALAR_OP_MIN,
+  RPP_SCALAR_OP_MAX,
+} RppOp;
+
+typedef enum
+{
+    RGB_HSV = 1,
+    HSV_RGB
+} RppiColorConvertMode;
 
 typedef enum
 {
@@ -107,6 +130,11 @@ typedef enum{
     ZEROPAD,
     NOPAD
 } RppiPad;
+
+typedef enum{
+    U8_S8,
+    S8_U8,
+} RppConvertBitDepthMode;
 
 typedef enum{
     RGB,

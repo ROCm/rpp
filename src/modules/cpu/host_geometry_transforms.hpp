@@ -1556,7 +1556,7 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
 
             T *srcPtrTopRow, *srcPtrBottomRow;
 
-            Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
+            Rpp32u elementsInRowMax = batch_srcSizeMax[batchCount].width;
 
             Rpp32f halfHeight = batch_srcSize[batchCount].height / 2;
             Rpp32f halfWidth = batch_srcSize[batchCount].width / 2;
@@ -3508,10 +3508,9 @@ RppStatus resize_crop_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
 template <typename T>
 RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, RppiROI *roiPoints,
                                  Rpp32f *batch_affine,
-                                 Rpp32u nbatchSize,
+                                 Rpp32u outputFormatToggle, Rpp32u nbatchSize,
                                  RppiChnFormat chnFormat, Rpp32u channel)
 {
-    //Rpp32f affine[6] = {1.35, 0.3, 0, -0.75, 1.1, 0};
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -3627,6 +3626,24 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                     }
                 }
             }
+            if (outputFormatToggle == 1)
+            {
+                T *dstPtrImageUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
+                T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(T));
+
+                compute_planar_to_packed_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
+
+                memset(dstPtrImage, (T) 0, dstImageDimMax * channel * sizeof(T));
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
+            }
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -3649,6 +3666,8 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 y2 = batch_srcSize[batchCount].height - 1;
                 roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
             }
+
+            Rpp32u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
             
             Rpp32f affine[6] = {0};
             for (int i = 0; i < 6; i++)
@@ -3742,6 +3761,24 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                         }
                     }
                 }
+            }
+            if (outputFormatToggle == 1)
+            {
+                T *dstPtrImageUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
+                T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
+
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
+                
+                memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(T));
+
+                compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
+
+                memset(dstPtrImage, (T) 0, dstImageDimMax * channel * sizeof(T));
+
+                compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, RPPI_CHN_PLANAR, channel);
+
+                free(dstPtrImageUnpadded);
+                free(dstPtrImageUnpaddedCopy);
             }
         }
     }
