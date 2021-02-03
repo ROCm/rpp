@@ -1064,7 +1064,6 @@ histogram_balance_cl_batch (cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
         if(numGroups < group)
             numGroups = group;
     }
-    printf("\n\n%d, %d", maxWidth, maxHeight);
 
     cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
                                     sizeof(unsigned int)*256*numGroups, NULL, NULL);
