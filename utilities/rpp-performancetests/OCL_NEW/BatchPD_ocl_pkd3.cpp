@@ -606,7 +606,7 @@ int main(int argc, char **argv)
         err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
     }
-    if (ip_bitDepth == 1)
+    else if (ip_bitDepth == 1)
     {
         inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
         inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
