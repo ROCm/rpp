@@ -1367,14 +1367,12 @@ int main(int argc, char **argv)
         case 21:
         {
             test_case_name = "hueRGB";
-            printf("\nhueRGB for PLN1 images doesn't exist!");
             missingFuncFlag = 1;
             break;
         }
         case 22:
         {
             test_case_name = "saturationRGB";
-            printf("\nsaturationRGB for PLN1 images doesn't exist!");
             missingFuncFlag = 1;
             break;
         }
@@ -2776,40 +2774,8 @@ int main(int argc, char **argv)
         case 64:
         {
             test_case_name = "color_twist";
-
-            Rpp32f alpha[images];
-            Rpp32f beta[images];
-            Rpp32f hueShift[images];
-            Rpp32f saturationFactor[images];
-            for (i = 0; i < images; i++)
-            {
-                alpha[i] = 1.4;
-                beta[i] = 0;
-                hueShift[i] = 60;
-                saturationFactor[i] = 1.9;
-            }
-
-            start_omp = omp_get_wtime();
-            start = clock();
-            if (ip_bitDepth == 0)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 1)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 2)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-            end = clock();
-            end_omp = omp_get_wtime();
-
+            missingFuncFlag = 1;
+            
             break;
         }
         case 65:
@@ -3224,7 +3190,6 @@ int main(int argc, char **argv)
         case 74:
         {
             test_case_name = "color_convert";
-            printf("\ncolor_convert has RGB <-> HSV conversions that only exist for 3 channel images!");
             missingFuncFlag = 1;
 
             break;
@@ -3510,7 +3475,6 @@ int main(int argc, char **argv)
         case 81:
         {
             test_case_name = "glitch";
-            printf("\nThe glitch functionality  does not exist for 1 channel images!");
             missingFuncFlag = 1;
             break;
         }
