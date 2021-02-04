@@ -14,12 +14,7 @@
 #include <fstream>
 #include <algorithm>
 #include <iterator>
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-// #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
-
 #include </opt/rocm/opencl/include/CL/cl.h>
-// #include </usr/include/CL/cl.h>
 
 using namespace cv;
 using namespace std;
@@ -546,10 +541,11 @@ int main(int argc, char **argv)
     unsigned long long imageDimMax = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
     Rpp32u elementsInRowMax = maxWidth * ip_channel;
     Rpp8u *input_temp, *input_second_temp;
-    input_temp = input;
-    input_second_temp = input_second;
+    
     while ((de = readdir(dr2)) != NULL)
     {
+        input_temp = input + (i * imageDimMax);
+        input_second_temp = input_second + (i * imageDimMax);
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
 
@@ -595,7 +591,7 @@ int main(int argc, char **argv)
     err = clGetPlatformIDs(1, &platform_id, NULL);
     err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
     theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
+    theQueue = clCreateCommandQueueWithProperties(theContext, device_id, 0, &err);
 
     if (ip_bitDepth == 0)
     {
