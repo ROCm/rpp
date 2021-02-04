@@ -83,22 +83,24 @@ $ make -j16
 $ sudo make install
 ```
 
-## Instructions to test functionalities after HOST/OCL installation
+## Instructions to test functionalities after HOST installation
 
 ```
-$ cd rpp/utilities/rpp-unittests/HOST
+$ cd rpp/utilities/rpp-unittests/HOST_NEW
 $ ./testAllScript.sh
 ```
-or
+
+## Instructions to test functionalities after OCL installation
+
 ```
-$ cd rpp/utilities/rpp-unittests/OCL
+$ cd rpp/utilities/rpp-unittests/OCL_NEW
 $ ./testAllScript.sh
 ```
 
 ## Instructions to test functionalities after HIP installation
 
 ```
-$ cd rpp/utilities/rpp-unittests/HIP
+$ cd rpp/utilities/rpp-unittests/HIP_NEW
 $ ./testAllScript.sh
 ```
 
