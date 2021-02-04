@@ -551,10 +551,11 @@ int main(int argc, char **argv)
     unsigned long long imageDimMaxIncrement = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
     Rpp32u elementsInRowMax = maxWidth * ip_channel;
     Rpp8u *input_temp, *input_second_temp;
-    input_temp = input;
-    input_second_temp = input_second;
+    
     while ((de = readdir(dr2)) != NULL)
     {
+        input_temp = input + (i * imageDimMaxIncrement);
+        input_second_temp = input_second + (i * imageDimMaxIncrement);
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
 
@@ -1482,8 +1483,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            dstSize[i].height = image.rows / 3;
-            dstSize[i].width = image.cols / 1.1;
+            dstSize[i].height = srcSize[i].height / 3;
+            dstSize[i].width = srcSize[i].width / 1.1;
             if (maxDstHeight < dstSize[i].height)
                 maxDstHeight = dstSize[i].height;
             if (maxDstWidth < dstSize[i].width)
@@ -1533,8 +1534,8 @@ int main(int argc, char **argv)
             y1[i] = 0;
             x2[i] = 50;
             y2[i] = 50;
-            dstSize[i].height = image.rows / 3;
-            dstSize[i].width = image.cols / 1.1;
+            dstSize[i].height = srcSize[i].height / 3;
+            dstSize[i].width = srcSize[i].width / 1.1;
             if (maxDstHeight < dstSize[i].height)
                 maxDstHeight = dstSize[i].height;
             if (maxDstWidth < dstSize[i].width)
@@ -2915,8 +2916,8 @@ int main(int argc, char **argv)
             y1[i] = 0;
             x2[i] = 50;
             y2[i] = 50;
-            dstSize[i].height = image.rows / 3;
-            dstSize[i].width = image.cols / 1.1;
+            dstSize[i].height = srcSize[i].height / 3;
+            dstSize[i].width = srcSize[i].width / 1.1;
             if (maxDstHeight < dstSize[i].height)
                 maxDstHeight = dstSize[i].height;
             if (maxDstWidth < dstSize[i].width)
