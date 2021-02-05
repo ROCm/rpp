@@ -16,12 +16,7 @@
 #include <algorithm>
 #include <iterator>
 #include "helpers/testSuite_helper.hpp"
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-// #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
-
 #include </opt/rocm/opencl/include/CL/cl.h>
-// #include </usr/include/CL/cl.h>
 
 using namespace cv;
 using namespace std;
@@ -538,18 +533,6 @@ int main(int argc, char **argv)
     Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     Rpp8u *output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
 
-    Rpp16f *inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-
-    Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-
-    Rpp8s *inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-
     RppiSize maxSize, maxDstSize;
     maxSize.height = maxHeight;
     maxSize.width = maxWidth;
@@ -563,10 +546,11 @@ int main(int argc, char **argv)
     unsigned long long imageDimMax = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
     Rpp32u elementsInRowMax = maxWidth * ip_channel;
     Rpp8u *input_temp, *input_second_temp;
-    input_temp = input;
-    input_second_temp = input_second;
+    
     while ((de = readdir(dr2)) != NULL)
     {
+        input_temp = input + (i * imageDimMax);
+        input_second_temp = input_second + (i * imageDimMax);
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
 
@@ -598,8 +582,37 @@ int main(int argc, char **argv)
     }
     closedir(dr2);
 
-    if (ip_bitDepth == 1)
+    Rpp16f *inputf16, *inputf16_second, *outputf16;
+    Rpp32f *inputf32, *inputf32_second, *outputf32;
+    Rpp8s *inputi8, *inputi8_second, *outputi8;
+
+    cl_mem d_input, d_input_second, d_inputf16, d_inputf16_second, d_inputf32, d_inputf32_second, d_inputi8, d_inputi8_second;
+    cl_mem d_output, d_outputf16, d_outputf32, d_outputi8;
+    cl_platform_id platform_id;
+    cl_device_id device_id;
+    cl_context theContext;
+    cl_command_queue theQueue;
+    cl_int err;
+    err = clGetPlatformIDs(1, &platform_id, NULL);
+    err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
+    theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
+    theQueue = clCreateCommandQueueWithProperties(theContext, device_id, 0, &err);
+
+    if (ip_bitDepth == 0)
     {
+        d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
+    }
+    else if (ip_bitDepth == 1)
+    {
+        inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp16f *inputf16Temp, *inputf16_secondTemp;
 
@@ -618,9 +631,20 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputf16_secondTemp++;
         }
+
+        d_inputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
+        d_inputf16_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
+        d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_inputf16_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16_second, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
     }
     else if (ip_bitDepth == 2)
     {
+        inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
 
@@ -639,9 +663,40 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputf32_secondTemp++;
         }
+
+        d_inputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
+        d_inputf32_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
+        d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_inputf32_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32_second, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
+    }
+    else if (ip_bitDepth == 3)
+    {
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+        d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputf16, CL_TRUE, 0, oBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
+    }
+    else if (ip_bitDepth == 4)
+    {
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+        d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputf32, CL_TRUE, 0, oBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
     }
     else if (ip_bitDepth == 5)
     {
+        inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
 
@@ -660,44 +715,25 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputi8_secondTemp++;
         }
+
+        d_inputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
+        d_inputi8_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
+        d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_inputi8_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8_second, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
+    }
+    else if (ip_bitDepth == 6)
+    {
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
+        d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
+        d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
+        err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
     }
 
-    cl_mem d_input, d_input_second, d_inputf16, d_inputf16_second, d_inputf32, d_inputf32_second, d_inputi8, d_inputi8_second;
-    cl_mem d_output, d_outputf16, d_outputf32, d_outputi8;
-    cl_platform_id platform_id;
-    cl_device_id device_id;
-    cl_context theContext;
-    cl_command_queue theQueue;
-    cl_int err;
-    err = clGetPlatformIDs(1, &platform_id, NULL);
-    err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
-    theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
-    d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_input_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_inputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_inputf16_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_inputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_inputf32_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_inputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
-    d_inputi8_second = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8s), NULL, NULL);
-    d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_outputf16 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp16f), NULL, NULL);
-    d_outputf32 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp32f), NULL, NULL);
-    d_outputi8 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, oBufferSize * sizeof(Rpp8s), NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf16_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), inputf16_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputf32_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), inputf32_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_inputi8_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), inputi8_second, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_outputf16, CL_TRUE, 0, ioBufferSize * sizeof(Rpp16f), outputf16, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_outputf32, CL_TRUE, 0, ioBufferSize * sizeof(Rpp32f), outputf32, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
-    
     rppHandle_t handle;
 
     rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
@@ -1347,8 +1383,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            dstSize[i].height = image.rows / 3;
-            dstSize[i].width = image.cols / 1.1;
+            dstSize[i].height = srcSize[i].height / 3;
+            dstSize[i].width = srcSize[i].width / 1.1;
             if (maxDstHeight < dstSize[i].height)
                 maxDstHeight = dstSize[i].height;
             if (maxDstWidth < dstSize[i].width)
@@ -1398,8 +1434,8 @@ int main(int argc, char **argv)
             y1[i] = 0;
             x2[i] = 50;
             y2[i] = 50;
-            dstSize[i].height = image.rows / 3;
-            dstSize[i].width = image.cols / 1.1;
+            dstSize[i].height = srcSize[i].height / 3;
+            dstSize[i].width = srcSize[i].width / 1.1;
             if (maxDstHeight < dstSize[i].height)
                 maxDstHeight = dstSize[i].height;
             if (maxDstWidth < dstSize[i].width)
@@ -2720,8 +2756,8 @@ int main(int argc, char **argv)
             y1[i] = 0;
             x2[i] = 50;
             y2[i] = 50;
-            dstSize[i].height = image.rows / 3;
-            dstSize[i].width = image.cols / 1.1;
+            dstSize[i].height = srcSize[i].height / 3;
+            dstSize[i].width = srcSize[i].width / 1.1;
             if (maxDstHeight < dstSize[i].height)
                 maxDstHeight = dstSize[i].height;
             if (maxDstWidth < dstSize[i].width)

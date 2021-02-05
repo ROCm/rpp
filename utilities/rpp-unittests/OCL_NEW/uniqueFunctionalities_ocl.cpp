@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     err = clGetPlatformIDs(1, &platform_id, NULL);
     err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
     theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
+    theQueue = clCreateCommandQueueWithProperties(theContext, device_id, 0, &err);
 
     rppHandle_t handle;
 
