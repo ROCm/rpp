@@ -4,7 +4,7 @@ The Radeon Performance Primitives library provides a test suite, to run performa
 - OCL backend - (On a GPU with OpenCL backend)
 - HIP backend - (On a GPU with HIP backend)
 ## Test Suite for HOST backend
-### Testing all functionalities with default images (2 224x224 images - batch size = 2)
+### Testing all functionalities with default images (3 224x224 images - batch size = 3)
 Executing the following should run and report max/min/avg times in seconds over 100 runs for all variants of functionalities running with HOST backend.
 ```
 cd utilities/rpp-performancetests/HOST_NEW
@@ -25,7 +25,7 @@ python3 generatePerformanceLogs.py
 ```
 
 ## Test Suite for OCL backend
-### Testing all functionalities with default images (2 224x224 images - batch size = 2)
+### Testing all functionalities with default images (3 224x224 images - batch size = 3)
 Executing the following should run and report max/min/avg times in seconds over 100 runs for all variants of functionalities running with OCL backend.
 ```
 cd utilities/rpp-performancetests/OCL_NEW
@@ -46,7 +46,7 @@ python3 generatePerformanceLogs.py
 ```
 
 ## Test Suite for HIP backend
-### Testing all functionalities with default images (2 224x224 images - batch size = 2)
+### Testing all functionalities with default images (3 224x224 images - batch size = 3)
 Executing the following should run and report max/min/avg times in seconds over 100 runs for all variants of functionalities running with HIP backend.
 ```
 cd utilities/rpp-performancetests/HIP_NEW

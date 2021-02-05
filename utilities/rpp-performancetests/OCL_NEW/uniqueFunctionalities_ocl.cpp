@@ -12,12 +12,7 @@
 #include <time.h>
 #include <half.hpp>
 #include <fstream>
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-// #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
-
 #include </opt/rocm/opencl/include/CL/cl.h>
-// #include </usr/include/CL/cl.h>
 
 using namespace cv;
 using namespace std;
@@ -126,7 +121,7 @@ int main(int argc, char **argv)
     err = clGetPlatformIDs(1, &platform_id, NULL);
     err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
     theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    theQueue = clCreateCommandQueue(theContext, device_id, 0, &err);
+    theQueue = clCreateCommandQueueWithProperties(theContext, device_id, 0, &err);
 
     rppHandle_t handle;
 
