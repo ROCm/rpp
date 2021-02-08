@@ -1,5 +1,6 @@
 #include <hip/hip_runtime.h>
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
+#define saturate_8u_unsigned(value) ( (value) > 255 ? 255 : value)
 
 extern "C" __global__ void tensor_add(const unsigned int tensorDimension,
                          unsigned char *input1,
@@ -16,7 +17,7 @@ extern "C" __global__ void tensor_add(const unsigned int tensorDimension,
   int pixIdx = id_y * c * a + id_x * c + id_z;
 
   unsigned int value = input1[pixIdx] + input2[pixIdx];
-  output[pixIdx] = saturate_8u(value);
+  output[pixIdx] = saturate_8u_unsigned(value);
 }
 
 extern "C" __global__ void tensor_subtract(const unsigned int tensorDimension,
@@ -66,11 +67,10 @@ extern "C" __global__ void tensor_matrix_multiply(
   if (id_x >= c2 || id_y >= r1 || id_z >= 1)
     return;
   unsigned int OpPixIdx = id_y * c2 + id_x;
-  unsigned int pixIdx1, pixIdx2;
   output[OpPixIdx] = 0;
   for (int j = 0; j < c1; j++) {
-    pixIdx1 = id_y * c1 + j;
-    pixIdx2 = j * c2 + id_x;
+    unsigned int pixIdx1 = id_y * c1 + j;
+    unsigned int pixIdx2 = j * c2 + id_x;
     int value = input1[pixIdx1] * input2[pixIdx2];
     output[OpPixIdx] = saturate_8u(output[OpPixIdx] + value);
   }

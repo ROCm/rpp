@@ -12,7 +12,6 @@ resize_hip_batch_tensor(T* srcPtr, U* dstPtr, rpp::Handle &handle, RPPTensorFunc
     unsigned int padding = 0;
     unsigned int type = 0;
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
-    int batch_size = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);

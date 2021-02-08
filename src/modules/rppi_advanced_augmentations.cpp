@@ -31,7 +31,6 @@ RppStatus non_linear_blend_helper(RppiChnFormat chn_format, Rpp32u num_of_channe
 	bool is_padded = true;
 	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
 										  (bool)outputFormatToggle);
-	RppiSize maxDstSize = maxSrcSize;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
 	roiPoints.roiHeight = 0;
@@ -1510,7 +1509,6 @@ RppStatus lut_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
 										  (bool)outputFormatToggle);
 	RppiSize maxDstSize = maxSrcSize;
-	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_dstMaxSize(maxSrcSize, rpp::deref(rppHandle));

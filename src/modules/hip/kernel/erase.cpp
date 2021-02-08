@@ -27,7 +27,6 @@ extern "C" __global__ void erase_batch(
       break;
     }
   }
-  int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
   unsigned long dst_pix_idx =

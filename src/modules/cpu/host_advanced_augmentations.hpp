@@ -52,7 +52,6 @@ RppStatus water_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
                 __m128 pI = _mm_set1_ps((Rpp32f)i);
                 __m128 pJ, pWaterI, pWaterJ;
                 __m128 pAmplX = _mm_set1_ps(ampl_x);
@@ -2177,7 +2176,7 @@ RppStatus crop_and_patch_host_batch(T* srcPtr1, RppiSize *batch_srcSize1, RppiSi
             Rpp32f wRatio = (((Rpp32f) (dstSizeSubImage.width - 1)) / ((Rpp32f) (srcSize2SubImage.width - 1)));
             Rpp32f srcLocationRow, srcLocationColumn, pixel;
             Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
-            T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+            T *srcPtrTemp, *dstPtrTemp;
             srcPtrTemp = srcPtr2SubImage;
             dstPtrTemp = dstPtrSubImage;
             Rpp32u remainingElementsInRowDst = (batch_srcSizeMax1[batchCount].width - dstSizeSubImage.width) * channel;
@@ -2192,6 +2191,7 @@ RppStatus crop_and_patch_host_batch(T* srcPtr1, RppiSize *batch_srcSize1, RppiSi
                     srcLocationRowFloor = srcSize2SubImage.height - 2;
                 }
 
+                T *srcPtrTopRow, *srcPtrBottomRow;
                 srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * elementsInRowMax1;
                 srcPtrBottomRow  = srcPtrTopRow + elementsInRowMax1;
 
@@ -2504,9 +2504,9 @@ RppStatus glitch_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             Rpp32u currentRow, currentCol;
 
-            T *srcPtrImageTemp, *dstPtrImageTemp;
             for (int c = 0; c < channel; c++)
             {
+                T *srcPtrImageTemp, *dstPtrImageTemp;
                 srcPtrImageTemp = srcPtrImage + (c * imageDimMax) + yOffsetsLoc[c] + xOffsetsLoc[c];
                 dstPtrImageTemp = dstPtrImage + (c * imageDimMax);
 

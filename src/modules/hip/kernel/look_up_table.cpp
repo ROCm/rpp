@@ -1,5 +1,6 @@
 #include <hip/hip_runtime.h>
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
+#define saturate_8u_unsigned(value) ( (value) > 255 ? 255 : value)
 
 extern "C" __global__ void look_up_table_pkd(   unsigned char* input,
                      unsigned char* output,
@@ -56,12 +57,11 @@ extern "C" __global__ void look_up_table_batch(
   int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
   if (id_x < width[id_z] && id_y < height[id_z]) {
     long pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
-    int luptrIndex = id_z * plnpkdindex * 256;
     if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
         (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
       for (int indextmp = 0; indextmp < channel; indextmp++) {
-        luptrIndex = (id_z * channel * 256) + (input[pixIdx] * plnpkdindex);
-        output[pixIdx] = saturate_8u(lutPtr[luptrIndex]);
+        int luptrIndex = (id_z * channel * 256) + (input[pixIdx] * plnpkdindex);
+        output[pixIdx] = saturate_8u_unsigned(lutPtr[luptrIndex]);
         pixIdx += inc[id_z];
       }
     } else if ((id_x < width[id_z]) && (id_y < height[id_z])) {

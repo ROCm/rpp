@@ -30,7 +30,6 @@ extern "C" __global__ void glitch_batch(
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
 
   unsigned char R, G, B;
-  R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
   // R
   x_r = (id_x + x_offset_r[id_z]);
@@ -72,9 +71,7 @@ extern "C" __global__ void glitch_batch(
   {
     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
-    indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
-    dst_pix_idx += dstinc[id_z];
   }
 }
 
@@ -107,7 +104,6 @@ extern "C" __global__ void glitch_batch(
 //   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
 
 //   half R, G, B;
-//   R = B = G = 0;
 //   int x_r, x_g, x_b, y_r, y_g, y_b;
 //   // R
 //   x_r = (id_x + x_offset_r[id_z]);
@@ -149,9 +145,7 @@ extern "C" __global__ void glitch_batch(
 //   {
 //     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
 //               indextmp * inc[id_z]];
-//     indextmp = indextmp + 1;
 //     output[dst_pix_idx] = B;
-//     dst_pix_idx += dstinc[id_z];
 //   }
 // }
 
@@ -184,7 +178,6 @@ extern "C" __global__ void glitch_batch_fp32(
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
   
   float R, G, B;
-  R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
   // R
   x_r = (id_x + x_offset_r[id_z]);
@@ -226,9 +219,7 @@ extern "C" __global__ void glitch_batch_fp32(
   {
     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
-    indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
-    dst_pix_idx += dstinc[id_z];
   }
 }
 
@@ -261,7 +252,6 @@ extern "C" __global__ void glitch_batch_int8(
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
 
   char R, G, B;
-  R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
   // R
   x_r = (id_x + x_offset_r[id_z]);
@@ -304,8 +294,6 @@ extern "C" __global__ void glitch_batch_int8(
   {
     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
-    indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
-    dst_pix_idx += dstinc[id_z];
   }
 }

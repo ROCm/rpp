@@ -37,7 +37,7 @@ extern "C" __global__ void crop_mirror_normalize_batch(
                              (id_x + id_y * max_dst_width[id_z]) * out_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      output[dst_pixIdx] = input[src_pixIdx]; ;
+      output[dst_pixIdx] = (unsigned char) ((float)input[src_pixIdx] - local_mean) / local_std_dev;
       src_pixIdx += src_inc[id_z];
       dst_pixIdx += dst_inc[id_z];
     }

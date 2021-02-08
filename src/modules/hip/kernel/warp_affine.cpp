@@ -88,7 +88,6 @@ extern "C" __global__ void warp_affine_batch(
     return;
 
   int indextmp = 0;
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
   int affine_index = id_z * 6;
@@ -103,6 +102,7 @@ extern "C" __global__ void warp_affine_batch(
 
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
+    unsigned long src_pixIdx, dst_pixIdx;
     src_pixIdx = source_batch_index[id_z] +
                  (k + l * max_source_width[id_z]) * in_plnpkdind;
     dst_pixIdx = dest_batch_index[id_z] +
@@ -115,6 +115,7 @@ extern "C" __global__ void warp_affine_batch(
   }
 
   else {
+    unsigned long dst_pixIdx;
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
@@ -143,7 +144,6 @@ extern "C" __global__ void warp_affine_batch_fp32(
     return;
 
   int indextmp = 0;
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
   int affine_index = id_z * 6;
@@ -159,6 +159,7 @@ extern "C" __global__ void warp_affine_batch_fp32(
 
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
+    unsigned long src_pixIdx, dst_pixIdx;
     src_pixIdx = source_batch_index[id_z] +
                  (k + l * max_source_width[id_z]) * in_plnpkdind;
     dst_pixIdx = dest_batch_index[id_z] +
@@ -171,6 +172,7 @@ extern "C" __global__ void warp_affine_batch_fp32(
   }
 
   else {
+    unsigned long dst_pixIdx;
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
@@ -255,7 +257,6 @@ extern "C" __global__ void warp_affine_batch_int8(
     return;
 
   int indextmp = 0;
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
   int affine_index = id_z * 6;
@@ -271,6 +272,7 @@ extern "C" __global__ void warp_affine_batch_int8(
 
   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
       (k >= xroi_begin[id_z])) {
+    unsigned long src_pixIdx, dst_pixIdx;
     src_pixIdx = source_batch_index[id_z] +
                  (k + l * max_source_width[id_z]) * in_plnpkdind;
     dst_pixIdx = dest_batch_index[id_z] +
@@ -283,6 +285,7 @@ extern "C" __global__ void warp_affine_batch_int8(
   }
 
   else {
+    unsigned long dst_pixIdx;
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
