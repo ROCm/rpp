@@ -269,7 +269,6 @@ extern "C" __global__ void crop_and_patch_batch_int8(
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
   char A, B, C, D;
   int x, y;
-   char pixVal;
   float x_ratio =
       ((float)(x12[id_z] - x11[id_z] + 1) / (x22[id_z] - x21[id_z] + 1));
   float y_ratio =
@@ -296,6 +295,7 @@ extern "C" __global__ void crop_and_patch_batch_int8(
     y_diff = (y_ratio * (id_y - y21[id_z])) - y;
 
     for (indextmp = 0; indextmp < channel; indextmp++) {
+      char pixVal;
       A = srcPtr2[source_batch_index[id_z] +
                   ((x + x11[id_z]) + (y + y11[id_z]) * max_source_width[id_z]) *
                       in_plnpkdind +

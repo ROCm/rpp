@@ -95,7 +95,7 @@ extern "C" __global__ void warp_perspective_batch(
     return;
 
   int indextmp = 0;
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long src_pixIdx, dst_pixIdx;
   int xc = id_x - (dest_width[id_z] >> 1);
   int yc = id_y - (dest_height[id_z] >> 1);
   int perspective_index = id_z * 9;

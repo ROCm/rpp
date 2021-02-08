@@ -54,20 +54,18 @@ extern "C" __global__ void look_up_table_batch(
   int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
   int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
   int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-  int indextmp = 0;
-  long pixIdx = 0;
   if (id_x < width[id_z] && id_y < height[id_z]) {
-    pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
+    long pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
     int luptrIndex = id_z * plnpkdindex * 256;
     if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
         (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-      for (indextmp = 0; indextmp < channel; indextmp++) {
+      for (int indextmp = 0; indextmp < channel; indextmp++) {
         luptrIndex = (id_z * channel * 256) + (input[pixIdx] * plnpkdindex);
         output[pixIdx] = saturate_8u(lutPtr[luptrIndex]);
         pixIdx += inc[id_z];
       }
     } else if ((id_x < width[id_z]) && (id_y < height[id_z])) {
-      for (indextmp = 0; indextmp < channel; indextmp++) {
+      for (int indextmp = 0; indextmp < channel; indextmp++) {
         output[pixIdx] = input[pixIdx];
         pixIdx += inc[id_z];
       }
@@ -87,15 +85,13 @@ extern "C" __global__ void look_up_table_batch_tensor(
   int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
   int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
   int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-  int indextmp = 0;
-  long in_pix_index = 0, out_pix_index = 0;
   if (id_x < width[id_z] && id_y < height[id_z]) {
-    in_pix_index =
+    long in_pix_index =
         batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_pln_pkd_ind;
-    out_pix_index =
+    long out_pix_index =
         batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_pln_pkd_ind;
     int luptrIndex = id_z << 8;
-    for (indextmp = 0; indextmp < channel; indextmp++) {
+    for (int indextmp = 0; indextmp < channel; indextmp++) {
       int lutIndex = luptrIndex + input[in_pix_index];
       output[out_pix_index] = lutPtr[lutIndex];
       in_pix_index += inc[id_z];
@@ -115,15 +111,13 @@ extern "C" __global__ void look_up_table_batch_tensor_int8(
   int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
   int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
   int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-  int indextmp = 0;
-  long in_pix_index = 0, out_pix_index = 0;
   if (id_x < width[id_z] && id_y < height[id_z]) {
-    in_pix_index =
+    long in_pix_index =
         batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_pln_pkd_ind;
-    out_pix_index =
+    long out_pix_index =
         batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_pln_pkd_ind;
     int luptrIndex = id_z << 8;
-    for (indextmp = 0; indextmp < channel; indextmp++) {
+    for (int indextmp = 0; indextmp < channel; indextmp++) {
       int lutIndex = luptrIndex + input[in_pix_index] + 128;
       output[out_pix_index] = lutPtr[lutIndex];
       in_pix_index += inc[id_z];
