@@ -175,7 +175,6 @@ RppStatus water_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
                 __m128 pI = _mm_set1_ps((Rpp32f)i);
                 __m128 pJ, pWaterI, pWaterJ;
                 __m128 pAmplX = _mm_set1_ps(ampl_x);
@@ -2605,9 +2604,9 @@ RppStatus glitch_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             Rpp32u currentRow, currentCol;
 
-            T *srcPtrImageTemp, *dstPtrImageTemp;
             for (int c = 0; c < channel; c++)
             {
+                T *srcPtrImageTemp, *dstPtrImageTemp;
                 srcPtrImageTemp = srcPtrImage + c + yOffsetsLoc[c] + xOffsetsLoc[c];
                 dstPtrImageTemp = dstPtrImage + c;
 

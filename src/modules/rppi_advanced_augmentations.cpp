@@ -764,7 +764,6 @@ RppStatus erase_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	bool is_padded = true;
 	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
 										  (bool)outputFormatToggle);
-	RppiSize maxDstSize = maxSrcSize;
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));

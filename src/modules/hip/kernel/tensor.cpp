@@ -36,7 +36,7 @@ extern "C" __global__ void tensor_subtract(const unsigned int tensorDimension,
   int pixIdx = id_y * c * a + id_x * c + id_z;
 
   unsigned int value = input1[pixIdx] - input2[pixIdx];
-  output[pixIdx] = saturate_8u(value);
+  output[pixIdx] = saturate_8u_unsigned(value);
 }
 
 extern "C" __global__ void tensor_multiply(const unsigned int tensorDimension,
@@ -55,7 +55,7 @@ extern "C" __global__ void tensor_multiply(const unsigned int tensorDimension,
   int pixIdx = id_y * c * a + id_x * c + id_z;
 
   unsigned int value = input1[pixIdx] * input2[pixIdx];
-  output[pixIdx] = saturate_8u(value);
+  output[pixIdx] = saturate_8u_unsigned(value);
 }
 extern "C" __global__ void tensor_matrix_multiply(
     unsigned char *input1, unsigned char *input2,

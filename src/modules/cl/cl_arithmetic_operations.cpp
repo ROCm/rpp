@@ -757,16 +757,16 @@ tensor_transpose_cl( cl_mem srcPtr, cl_mem dstPtr,  Rpp32u* in_dims, Rpp32u *per
                                          sizeof(unsigned int) * 4, NULL, NULL);
     d_out_dims = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                          sizeof(unsigned int) * 4, NULL, NULL);
-    err = clEnqueueWriteBuffer(handle.GetStream(), d_perm, CL_TRUE, 0,
+    clEnqueueWriteBuffer(handle.GetStream(), d_perm, CL_TRUE, 0,
                                sizeof(unsigned int) * 4,
                                perm, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(handle.GetStream(), d_in_strides, CL_TRUE, 0,
+    clEnqueueWriteBuffer(handle.GetStream(), d_in_strides, CL_TRUE, 0,
                                sizeof(unsigned int) * 4,
                                in_strides, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(handle.GetStream(), d_out_strides, CL_TRUE, 0,
+    clEnqueueWriteBuffer(handle.GetStream(), d_out_strides, CL_TRUE, 0,
                                sizeof(unsigned int) * 4,
                                out_strides, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(handle.GetStream(), d_out_dims, CL_TRUE, 0,
+    clEnqueueWriteBuffer(handle.GetStream(), d_out_dims, CL_TRUE, 0,
                                sizeof(unsigned int) * 4,
                                out_dims, 0, NULL, NULL);
     std::vector<size_t> vld{16, 16, 1};
