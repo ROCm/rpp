@@ -1,6 +1,6 @@
-import os
+import subprocess
 
-os.system("./rawLogsGenScript.sh")
+subprocess.call("./rawLogsGenScript.sh")
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/BatchPD_host_pkd3_host_raw_performance_log.txt",
@@ -35,7 +35,7 @@ for log_file in log_file_list:
                 maxVals.append(stats[0])
                 minVals.append(stats[1])
                 avgVals.append(stats[2])
-        
+
         if line != "\n":
             prevLine = line
     
@@ -46,8 +46,8 @@ for log_file in log_file_list:
     print("\n\nFunctionality\t\t\t\t\t\t\t\tFrames Count\tmax(s)\t\tmin(s)\t\tavg(s)\n")
     maxCharLength = len(max(functions, key=len))
     functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
-    for i in range(len(functions)):
-        print(functions[i], "\t100\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
+    for i, func in enumerate(functions):
+        print(func, "\t100\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
 
     # Closing log file
     f.close()
