@@ -10,7 +10,7 @@ log_file_list = [
 
 for log_file in log_file_list:
 
-    # Opening log file 
+    # Opening log file
     f = open(log_file,"r")
     print("\n\n\nOpened log file -> ", log_file)
 
@@ -23,14 +23,12 @@ for log_file in log_file_list:
 
     # Loop over each line
     for line in f:
-        
         if "max,min,avg" in line:
             split_word_start = "Running "
             split_word_end = " 100"
             prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
             if prevLine not in functions:
                 functions.append(prevLine)
-
                 split_word_start = "max,min,avg = "
                 split_word_end = "\n"
                 stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")

@@ -25,7 +25,7 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_224x224_src2"
 # DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/two_images_mixed_src2"
 
 # Output Images
-mkdir $cwd/../OUTPUT_PERFORMANCE_LOGS_OCL_NEW
+mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_OCL_NEW"
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_OCL_NEW"
 
 # <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
@@ -46,11 +46,11 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
-rm -rvf $DST_FOLDER/*
+rm -rvf "$DST_FOLDER/*"
 shopt -s extglob
 mkdir build
 cd build
-rm -rvf *
+rm -rvf ./*
 cmake ..
 make -j16
 
@@ -77,7 +77,7 @@ SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
 SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 
 printf "\n./BatchPD_ocl_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-./BatchPD_ocl_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0 | tee -a $DST_FOLDER/BatchPD_ocl_pkd3_ocl_raw_performance_log.txt
+./BatchPD_ocl_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pkd3_ocl_raw_performance_log.txt"
 echo "------------------------------------------------------------------------------------------"
 done
 done
@@ -110,7 +110,7 @@ SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
 SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 
 printf "\n./BatchPD_ocl_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-./BatchPD_ocl_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0 | tee -a $DST_FOLDER/BatchPD_ocl_pln1_ocl_raw_performance_log.txt
+./BatchPD_ocl_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pln1_ocl_raw_performance_log.txt"
 echo "------------------------------------------------------------------------------------------"
 done
 done
@@ -143,7 +143,7 @@ SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
 SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 
 printf "\n./BatchPD_ocl_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-./BatchPD_ocl_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0 | tee -a $DST_FOLDER/BatchPD_ocl_pln3_ocl_raw_performance_log.txt
+./BatchPD_ocl_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pln3_ocl_raw_performance_log.txt"
 echo "------------------------------------------------------------------------------------------"
 done
 done
