@@ -31,7 +31,7 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
-rm -rvf "$DST_FOLDER/*"
+rm -rvf "$DST_FOLDER"/*
 shopt -s extglob
 mkdir build
 cd build
