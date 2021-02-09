@@ -61,7 +61,7 @@ sudo cp half-files/include/half.hpp /usr/local/include/
 *  Planar 3 Channel (RGB) - PLN3 images
 *  Planar 1 Channel (Greyscale) - PLN1 images
 *  Affinity - Host and GPU
-*  Batch Processing with 26 variants
+*  Batch Processing - 26 variants
 *  ROI variants
 *  Padded variants
 
