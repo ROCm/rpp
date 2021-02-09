@@ -25,7 +25,7 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_224x224_src2"
 # DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/two_images_mixed_src2"
 
 # Output Images
-mkdir $cwd/../OUTPUT_IMAGES_HIP_NEW
+mkdir "$cwd/../OUTPUT_IMAGES_HIP_NEW"
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HIP_NEW"
 
 # Images for unique functionalities
@@ -52,11 +52,11 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
-rm -rvf $DST_FOLDER/*
+rm -rvf "$DST_FOLDER/*"
 shopt -s extglob
 mkdir build
 cd build
-rm -rvf *
+rm -rvf ./*
 cmake ..
 make -j16
 
@@ -101,14 +101,14 @@ else
 fi
 
 printf "\n./BatchPD_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
+./BatchPD_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
 echo "------------------------------------------------------------------------------------------"
 done
 done
 done
 
-mkdir $DST_FOLDER/PKD3
-mv $DST_FOLDER/!(PKD3) $DST_FOLDER/PKD3
+mkdir "$DST_FOLDER/PKD3"
+mv "$DST_FOLDER/"!(PKD3) "$DST_FOLDER/PKD3"
 
 
 
@@ -154,14 +154,14 @@ else
 fi
 
 printf "\n./BatchPD_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
+./BatchPD_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
 echo "------------------------------------------------------------------------------------------"
 done
 done
 done
 
-mkdir $DST_FOLDER/PLN1
-mv $DST_FOLDER/!(PKD3|PLN1) $DST_FOLDER/PLN1
+mkdir "$DST_FOLDER/PLN1"
+mv "$DST_FOLDER/"!(PKD3|PLN1) "$DST_FOLDER/PLN1"
 
 
 
@@ -207,14 +207,14 @@ else
 fi
 
 printf "\n./BatchPD_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0
+./BatchPD_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
 echo "------------------------------------------------------------------------------------------"
 done
 done
 done
 
-mkdir $DST_FOLDER/PLN3
-mv $DST_FOLDER/!(PKD3|PLN1|PLN3) $DST_FOLDER/PLN3
+mkdir "$DST_FOLDER/PLN3"
+mv "$DST_FOLDER/"!(PKD3|PLN1|PLN3) "$DST_FOLDER/PLN3"
 
 
 
@@ -228,15 +228,15 @@ printf "\n\nUsage: ./uniqueFunctionalities_hip <u8 = 0 / f16 = 1 / f32 = 2 / u8-
 
 for ((case=0;case<13;case++))
 do
-printf "\n\n\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
-echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
-printf "Running a New Functionality...\n" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
-echo "--------------------------------" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+printf "\n\n\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+printf "Running a New Functionality...\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
 for ((bitDepth=0;bitDepth<7;bitDepth++))
 do
-printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
-echo "./uniqueFunctionalities_hip $bitDepth $case" | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
-./uniqueFunctionalities_hip $bitDepth $case | tee -a $DST_FOLDER/uniqueFunctionalities_hip_log.txt
+printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+echo "./uniqueFunctionalities_hip $bitDepth $case" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+./uniqueFunctionalities_hip "$bitDepth" "$case" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
 echo "------------------------------------------------------------------------------------------"
 done
 done

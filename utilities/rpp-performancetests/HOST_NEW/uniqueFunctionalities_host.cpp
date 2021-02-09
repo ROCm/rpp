@@ -810,11 +810,11 @@ int main(int argc, char **argv)
                     printf("\n\nInput Shape:\n");
                     printf("[%d x %d x %d]", 3, srcSize3Channel[0].height, srcSize3Channel[0].width);
                     printf("\n\nOutput of convert_bit_depth operation:\n");
-                    if (i == 0)
+                    if (i == 3)
                         displayPlanar(dstPtr8s, srcSize1Channel[0], 3);
-                    else if (i == 1)
+                    else if (i == 4)
                         displayPlanar(dstPtr16u, srcSize1Channel[0], 3);
-                    else if (i == 2)
+                    else if (i == 5)
                         displayPlanar(dstPtr16s, srcSize1Channel[0], 3);
                 }
                 else if ((i == 6) || (i == 7) || (i == 8))
@@ -824,11 +824,11 @@ int main(int argc, char **argv)
                     printf("\n\nInput Shape:\n");
                     printf("[%d x %d x %d]", srcSize3Channel[0].height, srcSize3Channel[0].width, 3);
                     printf("\n\nOutput of convert_bit_depth operation:\n");
-                    if (i == 0)
+                    if (i == 6)
                         displayPacked(dstPtr8s, srcSize1Channel[0], 3);
-                    else if (i == 1)
+                    else if (i == 7)
                         displayPacked(dstPtr16u, srcSize1Channel[0], 3);
-                    else if (i == 2)
+                    else if (i == 8)
                         displayPacked(dstPtr16s, srcSize1Channel[0], 3);
                 }
 

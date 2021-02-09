@@ -57,13 +57,13 @@ sudo cp half-files/include/half.hpp /usr/local/include/
 <p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
 
 ### Supported Variants
-* Packed 3 Channel (RGB) - PKD3 images
-* Planar 3 Channel (RGB) - PLN3 images
-* Planar 1 Channel (Greyscale) - PLN1 images
-* Affinity - Host and GPU
-* Batch Processing with 26 variants
-* ROI variants
-* Padded variants
+*  Packed 3 Channel (RGB) - PKD3 images
+*  Planar 3 Channel (RGB) - PLN3 images
+*  Planar 1 Channel (Greyscale) - PLN1 images
+*  Affinity - Host and GPU
+*  Batch Processing - 26 variants
+*  ROI variants
+*  Padded variants
 
 ## [Instructions to build the library](#rpp-installation)
 

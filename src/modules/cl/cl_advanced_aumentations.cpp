@@ -7,7 +7,6 @@ non_linear_blend_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Ha
 {
 
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
-    int batch_size = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -40,7 +39,6 @@ water_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
 {
 
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
-    int batch_size = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -78,7 +76,6 @@ erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colo
                              rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
-    int batch_size = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -120,7 +117,6 @@ color_cast_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
 {
 
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
-    int batch_size = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -154,7 +150,6 @@ RppStatus
 lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
-    int batch_size = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -181,7 +176,6 @@ crop_and_patch_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Hand
                                                             RPPTensorFunctionMetaData &tensor_info)
 {
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
-    int batch_size = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -221,7 +215,6 @@ glitch_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                             RPPTensorFunctionMetaData &tensor_info)
 {
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
-    int batch_size = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);

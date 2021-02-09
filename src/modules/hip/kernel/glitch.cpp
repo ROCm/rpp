@@ -29,8 +29,6 @@ extern "C" __global__ void glitch_batch(
   output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
 
-  unsigned char R, G, B;
-  R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
   // R
   x_r = (id_x + x_offset_r[id_z]);
@@ -48,7 +46,7 @@ extern "C" __global__ void glitch_batch(
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
       (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
   {
-    R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
+    unsigned char R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = R;
@@ -59,7 +57,7 @@ extern "C" __global__ void glitch_batch(
   if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
       (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
   {
-    G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
+    unsigned char G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = G;
@@ -70,11 +68,9 @@ extern "C" __global__ void glitch_batch(
   if ((y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
       (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z]))
   {
-    B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
+    unsigned char B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
-    indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
-    dst_pix_idx += dstinc[id_z];
   }
 }
 
@@ -106,8 +102,6 @@ extern "C" __global__ void glitch_batch(
 //   output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
 //   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
 
-//   half R, G, B;
-//   R = B = G = 0;
 //   int x_r, x_g, x_b, y_r, y_g, y_b;
 //   // R
 //   x_r = (id_x + x_offset_r[id_z]);
@@ -125,7 +119,7 @@ extern "C" __global__ void glitch_batch(
 //   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
 //       (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
 //   {
-//     R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
+//     half R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
 //               indextmp * inc[id_z]];
 //     indextmp = indextmp + 1;
 //     output[dst_pix_idx] = R;
@@ -136,7 +130,7 @@ extern "C" __global__ void glitch_batch(
 //   if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
 //       (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
 //   {
-//     G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
+//     half G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
 //               indextmp * inc[id_z]];
 //     indextmp = indextmp + 1;
 //     output[dst_pix_idx] = G;
@@ -147,11 +141,9 @@ extern "C" __global__ void glitch_batch(
 //   if ((y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
 //       (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z]))
 //   {
-//     B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
+//     half B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
 //               indextmp * inc[id_z]];
-//     indextmp = indextmp + 1;
 //     output[dst_pix_idx] = B;
-//     dst_pix_idx += dstinc[id_z];
 //   }
 // }
 
@@ -183,8 +175,6 @@ extern "C" __global__ void glitch_batch_fp32(
   output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
   
-  float R, G, B;
-  R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
   // R
   x_r = (id_x + x_offset_r[id_z]);
@@ -202,7 +192,7 @@ extern "C" __global__ void glitch_batch_fp32(
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
       (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
   {
-    R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
+    float R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = R;
@@ -213,7 +203,7 @@ extern "C" __global__ void glitch_batch_fp32(
   if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
       (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
   {
-    G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
+    float G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = G;
@@ -224,11 +214,9 @@ extern "C" __global__ void glitch_batch_fp32(
   if ((y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
       (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z]))
   {
-    B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
+    float B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
-    indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
-    dst_pix_idx += dstinc[id_z];
   }
 }
 
@@ -260,8 +248,6 @@ extern "C" __global__ void glitch_batch_int8(
   output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
 
-  char R, G, B;
-  R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
   // R
   x_r = (id_x + x_offset_r[id_z]);
@@ -280,7 +266,7 @@ extern "C" __global__ void glitch_batch_int8(
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
       (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
   {
-    R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
+    char R = input[batch_index[id_z] + (x_r + y_r * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = R;
@@ -291,7 +277,7 @@ extern "C" __global__ void glitch_batch_int8(
   if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
       (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
   {
-    G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
+    char G = input[batch_index[id_z] + (x_g + y_g * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
     indextmp = indextmp + 1;
     output[dst_pix_idx] = G;
@@ -302,10 +288,8 @@ extern "C" __global__ void glitch_batch_int8(
   if ((y_b >= yroi_begin[id_z]) && (y_b <= yroi_end[id_z]) &&
       (x_b >= xroi_begin[id_z]) && (x_b <= xroi_end[id_z]))
   {
-    B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
+    char B = input[batch_index[id_z] + (x_b + y_b * max_width[id_z]) * in_plnpkdind +
               indextmp * inc[id_z]];
-    indextmp = indextmp + 1;
     output[dst_pix_idx] = B;
-    dst_pix_idx += dstinc[id_z];
   }
 }

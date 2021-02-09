@@ -52,7 +52,6 @@ RppStatus water_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
                 __m128 pI = _mm_set1_ps((Rpp32f)i);
                 __m128 pJ, pWaterI, pWaterJ;
                 __m128 pAmplX = _mm_set1_ps(ampl_x);
@@ -176,7 +175,6 @@ RppStatus water_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
                 __m128 pI = _mm_set1_ps((Rpp32f)i);
                 __m128 pJ, pWaterI, pWaterJ;
                 __m128 pAmplX = _mm_set1_ps(ampl_x);
@@ -595,7 +593,6 @@ RppStatus non_linear_blend_f32_host_batch(Rpp32f* srcPtr1, Rpp32f* srcPtr2, Rppi
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
                 __m128 pMultiplier = _mm_set1_ps(multiplier);
                 __m128 pOne = _mm_set1_ps(1.0);
                 __m128 pExpI = _mm_set1_ps(locI * locI * multiplier);
@@ -714,7 +711,6 @@ RppStatus non_linear_blend_f32_host_batch(Rpp32f* srcPtr1, Rpp32f* srcPtr2, Rppi
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
                 __m128 pMultiplier = _mm_set1_ps(multiplier);
                 __m128 pOne = _mm_set1_ps(1.0);
                 __m128 pExpI = _mm_set1_ps(locI * locI * multiplier);
@@ -851,7 +847,6 @@ RppStatus non_linear_blend_f16_host_batch(Rpp16f* srcPtr1, Rpp16f* srcPtr2, Rppi
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
                 __m128 pMultiplier = _mm_set1_ps(multiplier);
                 __m128 pOne = _mm_set1_ps(1.0);
                 __m128 pExpI = _mm_set1_ps(locI * locI * multiplier);
@@ -983,7 +978,6 @@ RppStatus non_linear_blend_f16_host_batch(Rpp16f* srcPtr1, Rpp16f* srcPtr2, Rppi
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
                 __m128 pMultiplier = _mm_set1_ps(multiplier);
                 __m128 pOne = _mm_set1_ps(1.0);
                 __m128 pExpI = _mm_set1_ps(locI * locI * multiplier);
@@ -1398,8 +1392,6 @@ RppStatus color_cast_f32_host_batch(Rpp32f* srcPtr, RppiSize *batch_srcSize, Rpp
                 srcPtrChannel = srcPtrImage + (c * imageDimMax);
                 dstPtrChannel = dstPtrImage + (c * imageDimMax);
 
-                __m128i const zero = _mm_setzero_si128();
-                __m128 pZero = _mm_set1_ps(0.0);
                 __m128 pOne = _mm_set1_ps(1.0);
                 __m128 pUserPixel = _mm_set1_ps(userPixel[c]);
                 __m128 pAlpha = _mm_set1_ps(alpha);
@@ -1491,8 +1483,6 @@ RppStatus color_cast_f32_host_batch(Rpp32f* srcPtr, RppiSize *batch_srcSize, Rpp
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
-                __m128 pZero = _mm_set1_ps(0.0);
                 __m128 pOne = _mm_set1_ps(1.0);
                 __m128 pAlpha = _mm_set1_ps(alpha);
                 __m128 pUserPixelPartialVector1 = _mm_setr_ps(userPixel[0], userPixel[1], userPixel[2], userPixel[0]);
@@ -1597,8 +1587,6 @@ RppStatus color_cast_f16_host_batch(Rpp16f* srcPtr, RppiSize *batch_srcSize, Rpp
                 srcPtrChannel = srcPtrImage + (c * imageDimMax);
                 dstPtrChannel = dstPtrImage + (c * imageDimMax);
 
-                __m128i const zero = _mm_setzero_si128();
-                __m128 pZero = _mm_set1_ps(0.0);
                 __m128 pOne = _mm_set1_ps(1.0);
                 __m128 pUserPixel = _mm_set1_ps(userPixel[c]);
                 __m128 pAlpha = _mm_set1_ps(alpha);
@@ -1702,8 +1690,6 @@ RppStatus color_cast_f16_host_batch(Rpp16f* srcPtr, RppiSize *batch_srcSize, Rpp
                 Rpp32u bufferLength = batch_srcSize[batchCount].width;
                 Rpp32u alignedLength = bufferLength & ~3;
 
-                __m128i const zero = _mm_setzero_si128();
-                __m128 pZero = _mm_set1_ps(0.0);
                 __m128 pOne = _mm_set1_ps(1.0);
                 __m128 pAlpha = _mm_set1_ps(alpha);
                 __m128 pUserPixelPartialVector1 = _mm_setr_ps(userPixel[0], userPixel[1], userPixel[2], userPixel[0]);
@@ -2177,7 +2163,7 @@ RppStatus crop_and_patch_host_batch(T* srcPtr1, RppiSize *batch_srcSize1, RppiSi
             Rpp32f wRatio = (((Rpp32f) (dstSizeSubImage.width - 1)) / ((Rpp32f) (srcSize2SubImage.width - 1)));
             Rpp32f srcLocationRow, srcLocationColumn, pixel;
             Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
-            T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
+            T *srcPtrTemp, *dstPtrTemp;
             srcPtrTemp = srcPtr2SubImage;
             dstPtrTemp = dstPtrSubImage;
             Rpp32u remainingElementsInRowDst = (batch_srcSizeMax1[batchCount].width - dstSizeSubImage.width) * channel;
@@ -2192,6 +2178,7 @@ RppStatus crop_and_patch_host_batch(T* srcPtr1, RppiSize *batch_srcSize1, RppiSi
                     srcLocationRowFloor = srcSize2SubImage.height - 2;
                 }
 
+                T *srcPtrTopRow, *srcPtrBottomRow;
                 srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * elementsInRowMax1;
                 srcPtrBottomRow  = srcPtrTopRow + elementsInRowMax1;
 
@@ -2504,9 +2491,9 @@ RppStatus glitch_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             Rpp32u currentRow, currentCol;
 
-            T *srcPtrImageTemp, *dstPtrImageTemp;
             for (int c = 0; c < channel; c++)
             {
+                T *srcPtrImageTemp, *dstPtrImageTemp;
                 srcPtrImageTemp = srcPtrImage + (c * imageDimMax) + yOffsetsLoc[c] + xOffsetsLoc[c];
                 dstPtrImageTemp = dstPtrImage + (c * imageDimMax);
 
@@ -2605,9 +2592,9 @@ RppStatus glitch_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             Rpp32u currentRow, currentCol;
 
-            T *srcPtrImageTemp, *dstPtrImageTemp;
             for (int c = 0; c < channel; c++)
             {
+                T *srcPtrImageTemp, *dstPtrImageTemp;
                 srcPtrImageTemp = srcPtrImage + c + yOffsetsLoc[c] + xOffsetsLoc[c];
                 dstPtrImageTemp = dstPtrImage + c;
 

@@ -550,10 +550,10 @@ int main(int argc, char **argv)
     i = 0;
     unsigned long long imageDimMaxIncrement = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
     Rpp32u elementsInRowMax = maxWidth * ip_channel;
-    Rpp8u *input_temp, *input_second_temp;
     
     while ((de = readdir(dr2)) != NULL)
     {
+        Rpp8u *input_temp, *input_second_temp;
         input_temp = input + (i * imageDimMaxIncrement);
         input_second_temp = input_second + (i * imageDimMaxIncrement);
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
@@ -2313,11 +2313,11 @@ int main(int argc, char **argv)
         hipMemcpy(output32u, d_output32u, oBufferSize * sizeof(Rpp32u), hipMemcpyDeviceToHost);
 
         Rpp8u *outputTemp;
-        Rpp32u *output32uTemp;
         outputTemp = output;
         
         for (int count = 0; count < noOfImages; count++)
         {
+            Rpp32u *output32uTemp;
             output32uTemp = output32u + (count * singleImageBuffer);
 
             Rpp32u min, max;
