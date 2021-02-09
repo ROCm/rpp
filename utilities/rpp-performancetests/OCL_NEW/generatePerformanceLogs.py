@@ -1,6 +1,6 @@
 import subprocess
 
-subprocess.call("./rawLogsGenScript.sh")
+subprocess.call("./rawLogsGenScript.sh", shell=True)
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_OCL_NEW/BatchPD_ocl_pkd3_ocl_raw_performance_log.txt",
@@ -37,7 +37,7 @@ for log_file in log_file_list:
                 avgVals.append(stats[2])
 
         prevLine = line
-    
+
     # Print log lengths
     print("Functionalities - ", len(functions))
 
