@@ -3210,14 +3210,10 @@ RppStatus crop_mirror_normalize_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
 
-            printf("\nsrcImageDimMax, dstImageDimMax = %d, %d", srcImageDimMax, dstImageDimMax);
-            
             Rpp32u x1 = batch_crop_pos_x[batchCount];
             Rpp32u y1 = batch_crop_pos_y[batchCount];
             Rpp32u x2 = x1 + batch_dstSize[batchCount].width - 1;
             Rpp32u y2 = y1 + batch_dstSize[batchCount].height - 1;
-
-            printf("\nx1,y1,x2,y2 = %d,%d,%d,%d", x1,y1,x2,y2);
 
             Rpp32u mirrorFlag = batch_mirrorFlag[batchCount];
             Rpp32f mean = batch_mean[batchCount];
@@ -3230,8 +3226,6 @@ RppStatus crop_mirror_normalize_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
             compute_image_location_host(batch_dstSizeMax, batchCount, &dstLoc, channel);
             srcPtrImage = srcPtr + srcLoc;
             dstPtrImage = dstPtr + dstLoc;
-
-            printf("\nsrcLoc, dstLoc = %d, %d", srcLoc, dstLoc);
 
             Rpp32u srcElementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
             Rpp32u dstElementsInRowMax = channel * batch_dstSizeMax[batchCount].width;
