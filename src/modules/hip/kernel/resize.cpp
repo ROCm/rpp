@@ -210,8 +210,8 @@ extern "C" __global__ void resize_batch( unsigned char* srcPtr,
     if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z]) return;
 
 
-    x = (int)(x_ratio * id_x) ;
-    y = (int)(y_ratio * id_y) ;
+    int x = (int)(x_ratio * id_x) ;
+    int y = (int)(y_ratio * id_y) ;
 
     x_diff = (x_ratio * id_x) - x ;
     y_diff = (y_ratio * id_y) - y ;
