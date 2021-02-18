@@ -2930,7 +2930,7 @@ int main(int argc, char **argv)
             start = clock();
 
             if (ip_bitDepth == 0)
-                rppi_remap_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_output, rowRemapTable, colRemapTable, noOfImages, handle);
+                missingFuncFlag = 1;
             else if (ip_bitDepth == 1)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 2)
