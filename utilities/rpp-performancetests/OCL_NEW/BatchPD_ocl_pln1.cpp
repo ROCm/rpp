@@ -29,7 +29,7 @@ typedef half Rpp16f;
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 7;
-    
+
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -436,7 +436,7 @@ int main(int argc, char **argv)
         functionality_existence = std::any_of(std::begin(ip_bitDepth_5_cases), std::end(ip_bitDepth_5_cases), [&](int i) {return i == test_case;});
     else if (ip_bitDepth == 6)
         functionality_existence = std::any_of(std::begin(ip_bitDepth_6_cases), std::end(ip_bitDepth_6_cases), [&](int i) {return i == test_case;});
-    
+
     if (functionality_existence == 0)
     {
         printf("\nThe functionality %s doesn't yet exist in RPP\n", func);
@@ -489,9 +489,9 @@ int main(int argc, char **argv)
         char temp[1000];
         strcpy(temp, src1);
         strcat(temp, imageNames[count]);
-        
+
         image = imread(temp, 0);
-        
+
         srcSize[count].height = image.rows;
         srcSize[count].width = image.cols;
         if (maxHeight < srcSize[count].height)
@@ -537,7 +537,7 @@ int main(int argc, char **argv)
     i = 0;
     unsigned long long imageDimMax = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
     Rpp32u elementsInRowMax = maxWidth * ip_channel;
-    
+
     while ((de = readdir(dr2)) != NULL)
     {
         Rpp8u *input_temp, *input_second_temp;
@@ -604,7 +604,7 @@ int main(int argc, char **argv)
         inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
         inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
         outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
-        
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp16f *inputf16Temp, *inputf16_secondTemp;
 
@@ -636,7 +636,7 @@ int main(int argc, char **argv)
         inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
         inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
         outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
-        
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
 
@@ -688,7 +688,7 @@ int main(int argc, char **argv)
         inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
         inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
         outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
-        
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
 
@@ -2147,7 +2147,7 @@ int main(int argc, char **argv)
 
             Rpp8u *outputTemp;
             outputTemp = output;
-            
+
             for (int count = 0; count < noOfImages; count++)
             {
                 Rpp32u *output32uTemp;
@@ -2926,11 +2926,11 @@ int main(int argc, char **argv)
 
                 }
             }
-            
+
             start = clock();
 
             if (ip_bitDepth == 0)
-                rppi_remap_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_output, rowRemapTable, colRemapTable, noOfImages, handle);
+                missingFuncFlag = 1;
             else if (ip_bitDepth == 1)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 2)
@@ -3075,17 +3075,17 @@ int main(int argc, char **argv)
 
             Rpp32u *linesTemp;
             linesTemp = lines;
-            
+
             for(int batchCount = 0; batchCount < noOfImages; batchCount ++)
             {
                 Rpp32u loc = 0;
                 compute_image_location_host(maxSize, batchCount, &loc, ip_channel);
 
                 Rpp8u *outputImage = (Rpp8u*) calloc(ip_channel * srcSize[batchCount].height * srcSize[batchCount].width, sizeof(Rpp8u));
-                
+
                 Rpp32u *endpoints = (Rpp32u*)calloc(4, sizeof(Rpp32u));
                 Rpp32u *rasterCoordinates= (Rpp32u *)calloc(2 * (srcSize[batchCount].height + srcSize[batchCount].width), sizeof(Rpp32u));
-                
+
                 for (Rpp32u i = 0; i < linesMax[batchCount]; i++)
                 {
                     *endpoints = *linesTemp;
@@ -3104,7 +3104,7 @@ int main(int argc, char **argv)
             }
 
             err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-            
+
             free(lines);
 
             break;
@@ -3112,7 +3112,7 @@ int main(int argc, char **argv)
         case 69:
         {
             test_case_name = "custom_convolution";
-            
+
             RppiSize kernelSize[images];
             Rpp32f kernel[images * 225];
             Rpp32f value = (Rpp32f) (1.0 / 225);
@@ -3152,7 +3152,7 @@ int main(int argc, char **argv)
         case 70:
         {
             test_case_name = "reconstruction_laplacian_image_pyramid";
-            
+
             Rpp32u kernelSize[images];
             Rpp32f stdDev[images];
             RppiSize srcSizeHalf[images];
@@ -3224,7 +3224,7 @@ int main(int argc, char **argv)
         // case 72:
         // {
         //     test_case_name = "hog";
-            
+
         //     Rpp32u totalBinsTensorLength = 0;
         //     Rpp32u binsTensorLength[images];
         //     RppiSize kernelSize[images];
@@ -3249,7 +3249,7 @@ int main(int argc, char **argv)
         //         binsTensorLength[i] = ((windowKernelWidthRatio * windowKernelHeightRatio) + ((windowKernelWidthRatio - 1) * (windowKernelHeightRatio - 1)));
         //         binsTensorLength[i] = binsTensorLength[i] * ((srcSize[i].width / windowStride[i] - (windowSize[i].width / windowStride[i] - 1)) * (srcSize[i].height / windowStride[i] - (windowSize[i].height / windowStride[i] - 1)));
         //         binsTensorLength[i] = binsTensorLength[i] * numOfBins[i];
-                
+
         //         totalBinsTensorLength += binsTensorLength[i];
         //     }
 
@@ -3435,7 +3435,7 @@ int main(int argc, char **argv)
         //     test_case_name = "erase";
 
         //     Rpp32u boxesInEachImage = 3;
-            
+
         //     Rpp32u anchor_box_info[images * boxesInEachImage * 4];
         //     Rpp32u box_offset[images];
         //     Rpp32u num_of_boxes[images];
@@ -3443,7 +3443,7 @@ int main(int argc, char **argv)
         //     Rpp32f colorsf32[images * boxesInEachImage];
         //     Rpp16f colorsf16[images * boxesInEachImage];
         //     Rpp8s colorsi8[images * boxesInEachImage];
-            
+
         //     for (i = 0; i < images; i++)
         //     {
         //         box_offset[i] = i * boxesInEachImage;
@@ -3650,7 +3650,7 @@ int main(int argc, char **argv)
 	cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
 
     rppDestroyGPU(handle);
-    
+
     // free(srcSize);
     // free(dstSize);
     // free(input);
