@@ -29,7 +29,7 @@ typedef half Rpp16f;
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 8;
-    
+
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -443,7 +443,7 @@ int main(int argc, char **argv)
         functionality_existence = std::any_of(std::begin(ip_bitDepth_5_cases), std::end(ip_bitDepth_5_cases), [&](int i) {return i == test_case;});
     else if (ip_bitDepth == 6)
         functionality_existence = std::any_of(std::begin(ip_bitDepth_6_cases), std::end(ip_bitDepth_6_cases), [&](int i) {return i == test_case;});
-    
+
     if (functionality_existence == 0)
     {
         printf("\nThe functionality %s doesn't yet exist in RPP\n", func);
@@ -496,9 +496,9 @@ int main(int argc, char **argv)
         char temp[1000];
         strcpy(temp, src1);
         strcat(temp, imageNames[count]);
-        
+
         image = imread(temp, 1);
-        
+
         srcSize[count].height = image.rows;
         srcSize[count].width = image.cols;
         if (maxHeight < srcSize[count].height)
@@ -544,7 +544,7 @@ int main(int argc, char **argv)
     i = 0;
     unsigned long long imageDimMaxCopy = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
     Rpp32u elementsInRowMax = maxWidth * ip_channel;
-    
+
     while ((de = readdir(dr2)) != NULL)
     {
         Rpp8u *input_temp, *input_second_temp;
@@ -583,7 +583,7 @@ int main(int argc, char **argv)
 
     Rpp8u *inputCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     memcpy(inputCopy, input, ioBufferSize * sizeof(Rpp8u));
-    
+
     Rpp8u *inputTemp, *inputCopyTemp;
     inputTemp = input;
     inputCopyTemp = inputCopy;
@@ -635,7 +635,7 @@ int main(int argc, char **argv)
 
     Rpp8u *inputSecondCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     memcpy(inputSecondCopy, input_second, ioBufferSize * sizeof(Rpp8u));
-    
+
     Rpp8u *inputSecondTemp, *inputSecondCopyTemp;
     inputSecondTemp = input_second;
     inputSecondCopyTemp = inputSecondCopy;
@@ -836,7 +836,7 @@ int main(int argc, char **argv)
         err |= clEnqueueWriteBuffer(theQueue, d_input_second, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input_second, 0, NULL, NULL);
         err |= clEnqueueWriteBuffer(theQueue, d_outputi8, CL_TRUE, 0, oBufferSize * sizeof(Rpp8s), outputi8, 0, NULL, NULL);
     }
-    
+
     rppHandle_t handle;
 
     rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
@@ -2317,7 +2317,7 @@ int main(int argc, char **argv)
 
         Rpp8u *outputTemp;
         outputTemp = output;
-        
+
         for (int count = 0; count < noOfImages; count++)
         {
             Rpp32u *output32uTemp;
@@ -3128,11 +3128,11 @@ int main(int argc, char **argv)
 
             }
         }
-        
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppi_remap_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, rowRemapTable, colRemapTable, noOfImages, handle);
+            missingFuncFlag = 1;
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3244,7 +3244,7 @@ int main(int argc, char **argv)
     case 69:
     {
         test_case_name = "custom_convolution";
-        
+
         RppiSize kernelSize[images];
         Rpp32f kernel[images * 225];
         Rpp32f value = (Rpp32f) (1.0 / 225);
@@ -3284,7 +3284,7 @@ int main(int argc, char **argv)
     case 70:
     {
         test_case_name = "reconstruction_laplacian_image_pyramid";
-        
+
         Rpp32u kernelSize[images];
         Rpp32f stdDev[images];
         RppiSize srcSizeHalf[images];
@@ -3356,9 +3356,9 @@ int main(int argc, char **argv)
     case 72:
     {
         test_case_name = "hog";
-        
+
         missingFuncFlag = 1;
-        
+
         break;
     }
     case 73:
@@ -3371,7 +3371,7 @@ int main(int argc, char **argv)
     case 74:
     {
         test_case_name = "color_convert";
-        
+
         RppiColorConvertMode convert_mode_1 = RppiColorConvertMode::RGB_HSV;
         RppiColorConvertMode convert_mode_2 = RppiColorConvertMode::HSV_RGB;
 
@@ -3525,7 +3525,7 @@ int main(int argc, char **argv)
         test_case_name = "erase";
 
         Rpp32u boxesInEachImage = 3;
-        
+
         Rpp32u anchor_box_info[images * boxesInEachImage * 4];
         Rpp32u box_offset[images];
         Rpp32u num_of_boxes[images];
@@ -3533,7 +3533,7 @@ int main(int argc, char **argv)
         Rpp32f colorsf32[images * boxesInEachImage * 3];
         Rpp16f colorsf16[images * boxesInEachImage * 3];
         Rpp8s colorsi8[images * boxesInEachImage * 3];
-        
+
         for (i = 0; i < images; i++)
         {
             box_offset[i] = i * boxesInEachImage;
@@ -3759,7 +3759,7 @@ int main(int argc, char **argv)
             y_offset_g[i] = 0;
             x_offset_b[i] = 5;
             y_offset_b[i] = 5;
-            
+
         }
 
         start = clock();
@@ -3852,7 +3852,7 @@ int main(int argc, char **argv)
         outputTemp = output;
         Rpp32f *outputf32Temp;
         outputf32Temp = outputf32;
-        
+
         if (outputFile.is_open())
         {
             for (int i = 0; i < oBufferSize; i++)
@@ -3874,7 +3874,7 @@ int main(int argc, char **argv)
         outputTemp = output;
         Rpp8s *outputi8Temp;
         outputi8Temp = outputi8;
-        
+
         if (outputFile.is_open())
         {
             for (int i = 0; i < oBufferSize; i++)
@@ -3894,7 +3894,7 @@ int main(int argc, char **argv)
     {
         Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
         memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
-        
+
         Rpp8u *outputTemp, *outputCopyTemp;
         outputTemp = output;
         outputCopyTemp = outputCopy;
