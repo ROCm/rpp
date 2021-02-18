@@ -11,7 +11,7 @@ Radeon Performance Primitives (RPP) library is a comprehensive high-performance 
 RPP is developed for __Linux__ operating system.
 
 ## Prerequisites
-* OS 
+* OS
     + Ubuntu `18.04`/`20.04`
     + CentOS/RHEL `8.0`
 * [ROCm supported hardware](https://rocm.github.io/hardware.html)
@@ -74,11 +74,7 @@ $ mkdir build
 $ cd build
 $ cmake -DBACKEND=OCL .. #for OCL and HOST
         or
-$ cmake -DBACKEND=HIP -DCOMPILE=STATIC .. #for HIPSTATIC
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO .. #for HIPHSACOO
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC .. #for HIPRTC
+$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC .. #for HIP
 $ make -j16
 $ sudo make install
 ```
@@ -122,10 +118,10 @@ err = clEnqueueWriteBuffer(theQueue, d_a, CL_TRUE, 0,  bytes, h_a, 0, NULL, NULL
 cl_mem d_f;
 d_f = clCreateBuffer(theContext, CL_MEM_READ_ONLY, f_bytes, NULL, NULL);
 err = clEnqueueWriteBuffer(theQueue, d_f, CL_TRUE, 0, f_bytes, h_f, 0, NULL, NULL)
-    
+
 Rpp32f alpha=2;
 Rpp32s beta=1;
-    
+
 RppiSize srcSize;
 srcSize.height=height;
 srcSize.width=width;
@@ -140,7 +136,7 @@ rppCreateWithBatchSize(&handle, noOfImages);
 rppi_resize_u8_pkd3_batchDD_host(input, srcSize, output, dstSize, noOfImages, handle);
 Rpp32f alpha=2;
 Rpp32s beta=1;
-    
+
 RppiSize srcSize;
 srcSize.height=height;
 srcSize.width=width;
