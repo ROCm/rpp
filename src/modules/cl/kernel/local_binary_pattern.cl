@@ -1,11 +1,11 @@
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 
-unsigned int power(unsigned int a, unsigned int b)
+int power_function(int a, int b)
 {
-    unsigned int sum = 1;
+    int product = 1;
     for(int i = 0; i < b; i++)
-        sum += sum * a;
-    return sum;
+        product *= product * a;
+    return product;
 }
 
 __kernel void local_binary_pattern_pkd(  __global unsigned char* input,
@@ -20,7 +20,7 @@ __kernel void local_binary_pattern_pkd(  __global unsigned char* input,
     int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    
+
     int pixIdx = id_y * channel * width + id_x * channel + id_z;
 
     unsigned int pixel = 0;
@@ -30,22 +30,22 @@ __kernel void local_binary_pattern_pkd(  __global unsigned char* input,
         neighborhood[0] = input [pixIdx - width * channel - channel];
     else
         neighborhood[0] = 0;
-    
+
     if((id_y - 1) >= 0)
         neighborhood[1] = input [pixIdx - width * channel];
     else
         neighborhood[1] = 0;
-    
+
     if((id_x + 1) <= width && (id_y - 1) >= 0)
         neighborhood[2] = input [pixIdx - width * channel + channel];
     else
         neighborhood[2] = 0;
-    
+
     if((id_x + 1) <= width)
         neighborhood[3] = input [pixIdx + channel];
     else
         neighborhood[3] = 0;
-    
+
     if((id_x + 1) <= width && (id_y + 1) <= height)
         neighborhood[4] = input [pixIdx + width * channel + channel];
     else
@@ -55,7 +55,7 @@ __kernel void local_binary_pattern_pkd(  __global unsigned char* input,
         neighborhood[5] = input [pixIdx + width * channel];
     else
         neighborhood[5] = 0;
-    
+
     if((id_x - 1) >= 0 && (id_y + 1) <= height)
         neighborhood[6] = input [pixIdx + width * channel -channel];
     else
@@ -72,7 +72,7 @@ __kernel void local_binary_pattern_pkd(  __global unsigned char* input,
     {
         if(neighborhood[i] - input[pixIdx] >= 0)
         {
-            pixel += power(2, i);
+            pixel += (unsigned char) power_function(2, i);
         }
     }
     output[pixIdx] = saturate_8u(pixel);
@@ -92,7 +92,7 @@ __kernel void local_binary_pattern_pln(  __global unsigned char* input,
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
     int pixIdx = id_y * width + id_x + id_z * width * height;
-    
+
     unsigned char pixel = 0;
     unsigned char neighborhood[9];
 
@@ -100,22 +100,22 @@ __kernel void local_binary_pattern_pln(  __global unsigned char* input,
         neighborhood[0] = input [pixIdx - width - 1];
     else
         neighborhood[0] = 0;
-    
+
     if((id_y - 1) >= 0)
         neighborhood[1] = input [pixIdx - width];
     else
         neighborhood[1] = 0;
-    
+
     if((id_x + 1) <= width && (id_y - 1) >= 0)
         neighborhood[2] = input [pixIdx - width + 1];
     else
         neighborhood[2] = 0;
-    
+
     if((id_x + 1) <= width)
         neighborhood[3] = input [pixIdx + 1];
     else
         neighborhood[3] = 0;
-    
+
     if((id_x + 1) <= width && (id_y + 1) <= height)
         neighborhood[4] = input [pixIdx + width + 1];
     else
@@ -125,7 +125,7 @@ __kernel void local_binary_pattern_pln(  __global unsigned char* input,
         neighborhood[5] = input [pixIdx + width];
     else
         neighborhood[5] = 0;
-    
+
     if((id_x - 1) >= 0 && (id_y + 1) <= height)
         neighborhood[6] = input [pixIdx + width -1];
     else
@@ -142,7 +142,7 @@ __kernel void local_binary_pattern_pln(  __global unsigned char* input,
     {
         if(neighborhood[i] - input[pixIdx] >= 0)
         {
-            pixel += power(2, i);
+            pixel += power_function(2, i);
         }
     }
     output[pixIdx] = saturate_8u(pixel);
@@ -166,35 +166,35 @@ __kernel void local_binary_pattern_batch(  __global unsigned char* input,
     int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
     int indextmp=0;
     long pixIdx = 0;
-    unsigned char pixel;
+    int pixel;
     if(id_x < width[id_z]-1 && id_y < height[id_z]-1 && id_x > 0 && id_y > 0)
     {
         pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
         unsigned char neighborhoodR[3][9];
         if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-        {   
+        {
             for(int i = 0 ; i < channel ; i++)
             {
                 if((id_x - 1) >= 0 && (id_y - 1) >= 0)
-                    neighborhoodR[i][0] = input [pixIdx - (max_width[id_z] - 1) * plnpkdindex];
+                    neighborhoodR[i][0] = input [pixIdx - (max_width[id_z] + 1) * plnpkdindex];
                 else
                     neighborhoodR[i][0] = 0;
-                
+
                 if((id_y - 1) >= 0)
                     neighborhoodR[i][1] = input [pixIdx - (max_width[id_z]) * plnpkdindex];
                 else
                     neighborhoodR[i][1] = 0;
-                
+
                 if((id_x + 1) < width[id_z] && (id_y - 1) >= 0)
-                    neighborhoodR[i][2] = input [pixIdx - (max_width[id_z] + 1) * plnpkdindex];
+                    neighborhoodR[i][2] = input [pixIdx - (max_width[id_z] - 1) * plnpkdindex];
                 else
                     neighborhoodR[i][2] = 0;
-                
+
                 if((id_x + 1) < width[id_z])
                     neighborhoodR[i][3] = input [pixIdx + (1) * plnpkdindex];
                 else
                     neighborhoodR[i][3] = 0;
-                
+
                 if((id_x + 1) < width[id_z] && (id_y + 1) < height[id_z])
                     neighborhoodR[i][4] = input [pixIdx + (max_width[id_z] + 1) * plnpkdindex];
                 else
@@ -204,7 +204,7 @@ __kernel void local_binary_pattern_batch(  __global unsigned char* input,
                     neighborhoodR[i][5] = input [pixIdx + (max_width[id_z]) * plnpkdindex];
                 else
                     neighborhoodR[i][5] = 0;
-                
+
                 if((id_x - 1) >= 0 && (id_y + 1) < height[id_z])
                     neighborhoodR[i][6] = input [pixIdx + (max_width[id_z] - 1) * plnpkdindex];
                 else
@@ -227,10 +227,10 @@ __kernel void local_binary_pattern_batch(  __global unsigned char* input,
                 {
                     if(neighborhoodR[j][i] - input[pixIdx] >= 0)
                     {
-                        pixel += power(2, i);
+                        pixel += powr((float)2, (float)i);
                     }
                 }
-                output[pixIdx] = saturate_8u(pixel);   
+                output[pixIdx] = (unsigned char) saturate_8u(pixel);
                 pixIdx += inc[id_z];
             }
 
