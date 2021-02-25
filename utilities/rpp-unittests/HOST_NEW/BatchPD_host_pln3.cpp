@@ -25,7 +25,7 @@ typedef half Rpp16f;
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 8;
-    
+
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -465,9 +465,9 @@ int main(int argc, char **argv)
         char temp[1000];
         strcpy(temp, src1);
         strcat(temp, imageNames[count]);
-        
+
         image = imread(temp, 1);
-        
+
         srcSize[count].height = image.rows;
         srcSize[count].width = image.cols;
         if (maxHeight < srcSize[count].height)
@@ -530,7 +530,7 @@ int main(int argc, char **argv)
         Rpp8u *input_temp, *input_second_temp;
         input_temp = input + (i * imageDimMaxCopy);
         input_second_temp = input_second + (i * imageDimMaxCopy);
-        
+
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
 
@@ -564,7 +564,7 @@ int main(int argc, char **argv)
 
     Rpp8u *inputCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     memcpy(inputCopy, input, ioBufferSize * sizeof(Rpp8u));
-    
+
     Rpp8u *inputTemp, *inputCopyTemp;
     inputTemp = input;
     inputCopyTemp = inputCopy;
@@ -616,7 +616,7 @@ int main(int argc, char **argv)
 
     Rpp8u *inputSecondCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     memcpy(inputSecondCopy, input_second, ioBufferSize * sizeof(Rpp8u));
-    
+
     Rpp8u *inputSecondTemp, *inputSecondCopyTemp;
     inputSecondTemp = input_second;
     inputSecondCopyTemp = inputSecondCopy;
@@ -2196,7 +2196,7 @@ int main(int argc, char **argv)
 
         Rpp8u *outputTemp;
         outputTemp = output;
-        
+
         for (int count = 0; count < noOfImages; count++)
         {
             Rpp32u *output32uTemp;
@@ -3002,7 +3002,7 @@ int main(int argc, char **argv)
 
             }
         }
-        
+
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
@@ -3109,7 +3109,7 @@ int main(int argc, char **argv)
     case 68:
     {
         test_case_name = "hough_lines";
-        
+
         printf("\nThe hough_lines algorithm only has a single channel image input. The input must be an output of a canny edge detector!");
         missingFuncFlag = 1;
 
@@ -3118,7 +3118,7 @@ int main(int argc, char **argv)
     case 69:
     {
         test_case_name = "custom_convolution";
-        
+
         RppiSize kernelSize[images];
         Rpp32f kernel[images * 225];
         Rpp32f value = (Rpp32f) (1.0 / 225);
@@ -3158,7 +3158,7 @@ int main(int argc, char **argv)
     case 70:
     {
         test_case_name = "reconstruction_laplacian_image_pyramid";
-        
+
         Rpp32u kernelSize[images];
         Rpp32f stdDev[images];
         RppiSize srcSizeHalf[images];
@@ -3223,9 +3223,9 @@ int main(int argc, char **argv)
     case 72:
     {
         test_case_name = "hog";
-        
+
         missingFuncFlag = 1;
-        
+
         break;
     }
     case 73:
@@ -3238,7 +3238,7 @@ int main(int argc, char **argv)
     case 74:
     {
         test_case_name = "color_convert";
-        
+
         RppiColorConvertMode convert_mode_1 = RppiColorConvertMode::RGB_HSV;
         RppiColorConvertMode convert_mode_2 = RppiColorConvertMode::HSV_RGB;
 
@@ -3394,7 +3394,7 @@ int main(int argc, char **argv)
         test_case_name = "erase";
 
         Rpp32u boxesInEachImage = 3;
-        
+
         Rpp32u anchor_box_info[images * boxesInEachImage * 4];
         Rpp32u box_offset[images];
         Rpp32u num_of_boxes[images];
@@ -3402,7 +3402,7 @@ int main(int argc, char **argv)
         Rpp32f colorsf32[images * boxesInEachImage * 3];
         Rpp16f colorsf16[images * boxesInEachImage * 3];
         Rpp8s colorsi8[images * boxesInEachImage * 3];
-        
+
         for (i = 0; i < images; i++)
         {
             box_offset[i] = i * boxesInEachImage;
@@ -3557,7 +3557,7 @@ int main(int argc, char **argv)
                 lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
                 lut8s[(i * 256) + j] = (Rpp8u)(255 - j - 128);
             }
-            
+
         }
 
         start_omp = omp_get_wtime();
@@ -3602,7 +3602,7 @@ int main(int argc, char **argv)
             y_offset_g[i] = 0;
             x_offset_b[i] = 5;
             y_offset_b[i] = 5;
-            
+
         }
 
         start_omp = omp_get_wtime();
@@ -3744,7 +3744,7 @@ int main(int argc, char **argv)
         outputTemp = output;
         Rpp32f *outputf32Temp;
         outputf32Temp = outputf32;
-        
+
         if (outputFile.is_open())
         {
             for (int i = 0; i < oBufferSize; i++)
@@ -3765,7 +3765,7 @@ int main(int argc, char **argv)
         outputTemp = output;
         Rpp8s *outputi8Temp;
         outputi8Temp = outputi8;
-        
+
         if (outputFile.is_open())
         {
             for (int i = 0; i < oBufferSize; i++)
@@ -3785,7 +3785,7 @@ int main(int argc, char **argv)
     {
         Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
         memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
-        
+
         Rpp8u *outputTemp, *outputCopyTemp;
         outputTemp = output;
         outputCopyTemp = outputCopy;

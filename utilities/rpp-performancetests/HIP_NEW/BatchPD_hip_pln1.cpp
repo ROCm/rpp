@@ -2953,37 +2953,7 @@ int main(int argc, char **argv)
         case 66:
         {
             test_case_name = "fast_corner_detector";
-
-            Rpp32u numOfPixels[images];
-            Rpp8u threshold[images];
-            Rpp32u nonmaxKernelSize[images];
-            for (i = 0; i < images; i++)
-            {
-                numOfPixels[i] = 14;
-                threshold[i] = 5;
-                nonmaxKernelSize[i] = 15;
-            }
-
-            start = clock();
-
-            if (ip_bitDepth == 0)
-                rppi_fast_corner_detector_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_output, numOfPixels, threshold, nonmaxKernelSize, noOfImages, handle);
-            else if (ip_bitDepth == 1)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 2)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            end = clock();
+            missingFuncFlag = 1;
 
             break;
         }
@@ -3323,39 +3293,7 @@ int main(int argc, char **argv)
         case 77:
         {
             test_case_name = "color_cast";
-
-            Rpp8u r[images];
-            Rpp8u g[images];
-            Rpp8u b[images];
-            Rpp32f alpha[images];
-            for (i = 0; i < images; i++)
-            {
-                r[i] = 0;
-                g[i] = 0;
-                b[i] = 100;
-                alpha[i] = 0.5;
-            }
-
-            start = clock();
-
-            if (ip_bitDepth == 0)
-                rppi_color_cast_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_output, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
-            else if (ip_bitDepth == 1)
-                missingFuncFlag = 1; // rppi_color_cast_f16_pln1_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
-            else if (ip_bitDepth == 2)
-                rppi_color_cast_f32_pln1_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                rppi_color_cast_i8_pln1_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            end = clock();
+            missingFuncFlag = 1;
 
             break;
         }
