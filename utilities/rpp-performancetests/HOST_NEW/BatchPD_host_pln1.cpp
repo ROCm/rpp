@@ -1368,12 +1368,14 @@ int main(int argc, char **argv)
         {
             test_case_name = "hueRGB";
             missingFuncFlag = 1;
+
             break;
         }
         case 22:
         {
             test_case_name = "saturationRGB";
             missingFuncFlag = 1;
+
             break;
         }
         case 23:
@@ -3444,6 +3446,7 @@ int main(int argc, char **argv)
         {
             test_case_name = "glitch";
             missingFuncFlag = 1;
+
             break;
         }
         case 82:

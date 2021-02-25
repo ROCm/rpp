@@ -3098,7 +3098,6 @@ int main(int argc, char **argv)
         case 68:
         {
             test_case_name = "hough_lines";
-            printf("\nThe hough_lines algorithm only has a single channel image input. The input must be an output of a canny edge detector!");
             missingFuncFlag = 1;
 
             break;
@@ -3218,7 +3217,6 @@ int main(int argc, char **argv)
         case 72:
         {
             test_case_name = "hog";
-
             missingFuncFlag = 1;
 
             break;

@@ -1470,12 +1470,14 @@ int main(int argc, char **argv)
         {
             test_case_name = "hueRGB";
             missingFuncFlag = 1;
+
             break;
         }
         case 22:
         {
             test_case_name = "saturationRGB";
             missingFuncFlag = 1;
+
             break;
         }
         case 23:
@@ -3003,79 +3005,7 @@ int main(int argc, char **argv)
         case 68:
         {
             test_case_name = "hough_lines";
-
-            Rpp32u linesMax[images];
-            Rpp32f rho[images];
-            Rpp32f theta[images];
-            Rpp32u threshold[images];
-            Rpp32u minLineLength[images];
-            Rpp32u maxLineGap[images];
-            for (i = 0; i < images; i++)
-            {
-                linesMax[i] = 200;
-                rho[i] = 1;
-                theta[i] = 3.14 / 180;
-                threshold[i] = 25;
-                minLineLength[i] = 350;
-                maxLineGap[i] = 2;
-            }
-
-            Rpp32u *lines = (Rpp32u*) calloc(noOfImages * linesMax[0] * 4, sizeof(Rpp32u));
-
-            start = clock();
-
-            if (ip_bitDepth == 0)
-                rppi_hough_lines_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, lines, rho, theta, threshold, minLineLength, maxLineGap, linesMax, noOfImages, handle);
-            else if (ip_bitDepth == 1)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 2)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            end = clock();
-
-            Rpp32u *linesTemp;
-            linesTemp = lines;
-
-            for(int batchCount = 0; batchCount < noOfImages; batchCount ++)
-            {
-                Rpp32u loc = 0;
-                compute_image_location_host(maxSize, batchCount, &loc, ip_channel);
-
-                Rpp8u *outputImage = (Rpp8u*) calloc(ip_channel * srcSize[batchCount].height * srcSize[batchCount].width, sizeof(Rpp8u));
-
-                Rpp32u *endpoints = (Rpp32u*)calloc(4, sizeof(Rpp32u));
-                Rpp32u *rasterCoordinates= (Rpp32u *)calloc(2 * (srcSize[batchCount].height + srcSize[batchCount].width), sizeof(Rpp32u));
-
-                for (Rpp32u i = 0; i < linesMax[batchCount]; i++)
-                {
-                    *endpoints = *linesTemp;
-                    *(endpoints + 1) = *(linesTemp+1);
-                    *(endpoints + 2) = *(linesTemp+2);
-                    *(endpoints + 3) = *(linesTemp+3);
-
-                    generate_bressenham_line_host(outputImage, srcSize[batchCount], endpoints, rasterCoordinates);
-
-                    linesTemp += 4;
-                }
-
-                compute_padded_from_unpadded_host(outputImage, srcSize[batchCount], maxSize, output + loc, RPPI_CHN_PLANAR, ip_channel);
-
-                free(outputImage);
-            }
-
-            err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, oBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-
-            free(lines);
+            missingFuncFlag = 1;
 
             break;
         }
@@ -3191,85 +3121,13 @@ int main(int argc, char **argv)
 
             break;
         }
-        // case 72:
-        // {
-        //     test_case_name = "hog";
+        case 72:
+        {
+            test_case_name = "hog";
+            missingFuncFlag = 1;
 
-        //     Rpp32u totalBinsTensorLength = 0;
-        //     Rpp32u binsTensorLength[images];
-        //     RppiSize kernelSize[images];
-        //     RppiSize windowSize[images];
-        //     Rpp32u windowStride[images];
-        //     Rpp32u numOfBins[images];
-        //     for (i = 0; i < images; i++)
-        //     {
-        //         kernelSize[i].height = 4;
-        //         kernelSize[i].width = 4;
-
-        //         windowSize[i].height = 32;
-        //         windowSize[i].width = 32;
-
-        //         windowStride[i] = 16;
-        //         numOfBins[i] = 10;
-
-        //         Rpp32u windowKernelHeightRatio = windowSize[i].height / kernelSize[i].height;
-        //         Rpp32u windowKernelWidthRatio = windowSize[i].width / kernelSize[i].width;
-
-        //         binsTensorLength[i] = 0;
-        //         binsTensorLength[i] = ((windowKernelWidthRatio * windowKernelHeightRatio) + ((windowKernelWidthRatio - 1) * (windowKernelHeightRatio - 1)));
-        //         binsTensorLength[i] = binsTensorLength[i] * ((srcSize[i].width / windowStride[i] - (windowSize[i].width / windowStride[i] - 1)) * (srcSize[i].height / windowStride[i] - (windowSize[i].height / windowStride[i] - 1)));
-        //         binsTensorLength[i] = binsTensorLength[i] * numOfBins[i];
-
-        //         totalBinsTensorLength += binsTensorLength[i];
-        //     }
-
-        //     Rpp32u *binsTensor = (Rpp32u*) calloc (totalBinsTensorLength, sizeof(Rpp32u));
-
-        //     start = clock();
-
-        //     if (ip_bitDepth == 0)
-        //         rppi_hog_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, binsTensor, binsTensorLength, kernelSize, windowSize, windowStride, numOfBins, noOfImages, handle);
-        //     else if (ip_bitDepth == 1)
-        //         missingFuncFlag = 1;
-        //     else if (ip_bitDepth == 2)
-        //         missingFuncFlag = 1;
-        //     else if (ip_bitDepth == 3)
-        //         missingFuncFlag = 1;
-        //     else if (ip_bitDepth == 4)
-        //         missingFuncFlag = 1;
-        //     else if (ip_bitDepth == 5)
-        //         missingFuncFlag = 1;
-        //     else if (ip_bitDepth == 6)
-        //         missingFuncFlag = 1;
-        //     else
-        //         missingFuncFlag = 1;
-
-        //     end = clock();
-
-        //     if (missingFuncFlag != 1)
-        //     {
-        //         Rpp32u *binsTensorTemp;
-        //         binsTensorTemp = binsTensor;
-        //         printf("\nPrinting the bins tensor for hog_pln1:");
-        //         for (int batchCount  = 0; batchCount < noOfImages; batchCount++)
-        //         {
-        //             printf("\n\nImage %d:\n", batchCount);
-        //             for (Rpp32u i = 0; i < binsTensorLength[batchCount]; i++)
-        //             {
-        //                 if(i % 8 == 0)
-        //                 {
-        //                     printf("\n %d    - ", i/8);
-        //                 }
-        //                 printf("%d  ",*binsTensorTemp);
-        //                 binsTensorTemp++;
-        //             }
-        //         }
-        //     }
-
-        //     free(binsTensor);
-
-        //     break;
-        // }
+            break;
+        }
         case 73:
         {
             test_case_name = "match_template";
@@ -3563,6 +3421,7 @@ int main(int argc, char **argv)
         {
             test_case_name = "glitch";
             missingFuncFlag = 1;
+
             break;
         }
         default:

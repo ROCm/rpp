@@ -3155,9 +3155,8 @@ int main(int argc, char **argv)
     case 66:
     {
         test_case_name = "fast_corner_detector";
+        printf("\nfast_corner_detector only available for HOST backend!");
         missingFuncFlag = 1;
-
-        end = clock();
 
         break;
     }
@@ -3207,8 +3206,7 @@ int main(int argc, char **argv)
     case 68:
     {
         test_case_name = "hough_lines";
-
-        printf("\nThe hough_lines algorithm only has a single channel image input. The input must be an output of a canny edge detector!");
+        printf("\nhough_lines only available for HOST backend!");
         missingFuncFlag = 1;
 
         break;
@@ -3328,7 +3326,7 @@ int main(int argc, char **argv)
     case 72:
     {
         test_case_name = "hog";
-
+        printf("\nhog only available for HOST backend!");
         missingFuncFlag = 1;
 
         break;

@@ -3596,8 +3596,8 @@ int main(int argc, char **argv)
 
             for (i = 0; i < images; i++)
             {
-                x_offset_r[i] = 50;
-                y_offset_r[i] = 50;
+                x_offset_r[i] = 10;
+                y_offset_r[i] = 10;
                 x_offset_g[i] = 0;
                 y_offset_g[i] = 0;
                 x_offset_b[i] = 5;
