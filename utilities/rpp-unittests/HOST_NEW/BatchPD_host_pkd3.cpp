@@ -2202,29 +2202,21 @@ int main(int argc, char **argv)
     {
         test_case_name = "look_up_table";
 
-        Rpp8u lookUpTableU8Pkd[images * ip_channel * 256];
-        Rpp8u *lookUpTableU8PkdTemp;
-        lookUpTableU8PkdTemp = lookUpTableU8Pkd;
+        Rpp8u lut8u[images * 256];
 
         for (i = 0; i < images; i++)
         {
             for (j = 0; j < 256; j++)
             {
-                for (int c = 0; c < ip_channel; c++)
-                {
-                    if (c == 0)
-                        *lookUpTableU8PkdTemp = (Rpp8u)(255 - j);
-                    else
-                        *lookUpTableU8PkdTemp = (Rpp8u)(j);
-                    lookUpTableU8PkdTemp++;
-                }
+                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
             }
+
         }
 
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
-            rppi_look_up_table_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, lookUpTableU8Pkd, noOfImages, handle);
+            rppi_look_up_table_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, lut8u, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
