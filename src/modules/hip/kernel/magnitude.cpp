@@ -38,21 +38,21 @@ extern "C" __global__ void magnitude_batch(   unsigned char* input1,
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;    int indextmp=0;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    int indextmp=0;
     unsigned long pixIdx = 0;
 
-    pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
-    if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {   
-        for(indextmp = 0; indextmp < channel; indextmp++){
-            output[pixIdx] = saturate_8u(input1[pixIdx] + input2[pixIdx]);
+    pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
+    if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
+        (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
+        for (indextmp = 0; indextmp < channel; indextmp++) {
+            output[pixIdx] = saturate_8u(sqrt((float)(input1[pixIdx]*input1[pixIdx] + input2[pixIdx]*input2[pixIdx])));
+            pixIdx += inc[id_z];
+        }
+    } else if ((id_x < width[id_z]) && (id_y < height[id_z])) {
+        for (indextmp = 0; indextmp < channel; indextmp++) {
+            output[pixIdx] = input1[pixIdx];
             pixIdx += inc[id_z];
         }
     }
-    else if((id_x < width[id_z] ) && (id_y < height[id_z])){
-            for(indextmp = 0; indextmp < channel; indextmp++){
-            output[pixIdx] = saturate_8u(sqrt((float)(pow((int)input1[pixIdx],2.0) + pow((int)input2[pixIdx],2.0))));
-                pixIdx += inc[id_z];
-            }
-        }
 }

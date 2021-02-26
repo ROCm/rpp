@@ -2953,37 +2953,7 @@ int main(int argc, char **argv)
         case 66:
         {
             test_case_name = "fast_corner_detector";
-
-            Rpp32u numOfPixels[images];
-            Rpp8u threshold[images];
-            Rpp32u nonmaxKernelSize[images];
-            for (i = 0; i < images; i++)
-            {
-                numOfPixels[i] = 14;
-                threshold[i] = 5;
-                nonmaxKernelSize[i] = 15;
-            }
-
-            start = clock();
-
-            if (ip_bitDepth == 0)
-                rppi_fast_corner_detector_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_output, numOfPixels, threshold, nonmaxKernelSize, noOfImages, handle);
-            else if (ip_bitDepth == 1)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 2)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            end = clock();
+            missingFuncFlag = 1;
 
             break;
         }
@@ -3033,79 +3003,7 @@ int main(int argc, char **argv)
         case 68:
         {
             test_case_name = "hough_lines";
-
-            Rpp32u linesMax[images];
-            Rpp32f rho[images];
-            Rpp32f theta[images];
-            Rpp32u threshold[images];
-            Rpp32u minLineLength[images];
-            Rpp32u maxLineGap[images];
-            for (i = 0; i < images; i++)
-            {
-                linesMax[i] = 200;
-                rho[i] = 1;
-                theta[i] = 3.14 / 180;
-                threshold[i] = 25;
-                minLineLength[i] = 350;
-                maxLineGap[i] = 2;
-            }
-
-            Rpp32u *lines = (Rpp32u*) calloc(noOfImages * linesMax[0] * 4, sizeof(Rpp32u));
-
-            start = clock();
-
-            if (ip_bitDepth == 0)
-                rppi_hough_lines_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, lines, rho, theta, threshold, minLineLength, maxLineGap, linesMax, noOfImages, handle);
-            else if (ip_bitDepth == 1)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 2)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            end = clock();
-
-            Rpp32u *linesTemp;
-            linesTemp = lines;
-
-            for(int batchCount = 0; batchCount < noOfImages; batchCount ++)
-            {
-                Rpp32u loc = 0;
-                compute_image_location_host(maxSize, batchCount, &loc, ip_channel);
-
-                Rpp8u *outputImage = (Rpp8u*) calloc(ip_channel * srcSize[batchCount].height * srcSize[batchCount].width, sizeof(Rpp8u));
-
-                Rpp32u *endpoints = (Rpp32u*)calloc(4, sizeof(Rpp32u));
-                Rpp32u *rasterCoordinates= (Rpp32u *)calloc(2 * (srcSize[batchCount].height + srcSize[batchCount].width), sizeof(Rpp32u));
-
-                for (Rpp32u i = 0; i < linesMax[batchCount]; i++)
-                {
-                    *endpoints = *linesTemp;
-                    *(endpoints + 1) = *(linesTemp+1);
-                    *(endpoints + 2) = *(linesTemp+2);
-                    *(endpoints + 3) = *(linesTemp+3);
-
-                    generate_bressenham_line_host(outputImage, srcSize[batchCount], endpoints, rasterCoordinates);
-
-                    linesTemp += 4;
-                }
-
-                compute_padded_from_unpadded_host(outputImage, srcSize[batchCount], maxSize, output + loc, RPPI_CHN_PLANAR, ip_channel);
-
-                free(outputImage);
-            }
-
-            hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u),hipMemcpyHostToDevice);
-
-            free(lines);
+            missingFuncFlag = 1;
 
             break;
         }
@@ -3224,7 +3122,6 @@ int main(int argc, char **argv)
         case 72:
         {
             test_case_name = "hog";
-
             missingFuncFlag = 1;
 
             break;
@@ -3323,39 +3220,7 @@ int main(int argc, char **argv)
         case 77:
         {
             test_case_name = "color_cast";
-
-            Rpp8u r[images];
-            Rpp8u g[images];
-            Rpp8u b[images];
-            Rpp32f alpha[images];
-            for (i = 0; i < images; i++)
-            {
-                r[i] = 0;
-                g[i] = 0;
-                b[i] = 100;
-                alpha[i] = 0.5;
-            }
-
-            start = clock();
-
-            if (ip_bitDepth == 0)
-                rppi_color_cast_u8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_output, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
-            else if (ip_bitDepth == 1)
-                missingFuncFlag = 1; // rppi_color_cast_f16_pln1_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
-            else if (ip_bitDepth == 2)
-                rppi_color_cast_f32_pln1_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                rppi_color_cast_i8_pln1_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            end = clock();
+            missingFuncFlag = 1;
 
             break;
         }

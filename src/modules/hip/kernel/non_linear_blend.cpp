@@ -27,7 +27,6 @@ extern "C" __global__ void non_linear_blend_batch(
   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-  float temp_std_dev = height[id_z] >> 3;
   int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
@@ -39,7 +38,7 @@ extern "C" __global__ void non_linear_blend_batch(
     int x = (id_x - (width[id_z] >> 1));
     int y = (id_y - (height[id_z] >> 1));
     float gaussianvalue =
-        gaussian(x, y, temp_std_dev) / gaussian(0.0, 0.0, temp_std_dev);
+        gaussian(x, y, std_dev[id_z]) / gaussian(0.0, 0.0, std_dev[id_z]);
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pix_idx] = gaussianvalue * input1[src_pix_idx] +
                             (1 - gaussianvalue) * input2[src_pix_idx];
@@ -67,7 +66,6 @@ extern "C" __global__ void non_linear_blend_batch(
 //   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 //     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
 //     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-//   float temp_std_dev = height[id_z] >> 3;
 //   int indextmp = 0;
 //   unsigned long src_pix_idx =
 //       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
@@ -79,7 +77,7 @@ extern "C" __global__ void non_linear_blend_batch(
 //     int x = (id_x - (width[id_z] >> 1));
 //     int y = (id_y - (height[id_z] >> 1));
 //     float gaussianvalue =
-//         gaussian(x, y, temp_std_dev) / gaussian(0.0, 0.0, temp_std_dev);
+//         gaussian(x, y, std_dev[id_z]) / gaussian(0.0, 0.0, std_dev[id_z]);
 //     for (indextmp = 0; indextmp < channel; indextmp++) {
 //       output[dst_pix_idx] = (half) gaussianvalue * input1[src_pix_idx] +
 //                             (1 - gaussianvalue) * input2[src_pix_idx];
@@ -107,7 +105,6 @@ extern "C" __global__ void non_linear_blend_batch_fp32(
   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-  float temp_std_dev = height[id_z] >> 3;
   int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
@@ -119,7 +116,7 @@ extern "C" __global__ void non_linear_blend_batch_fp32(
     int x = (id_x - (width[id_z] >> 1));
     int y = (id_y - (height[id_z] >> 1));
     float gaussianvalue =
-        gaussian(x, y, temp_std_dev) / gaussian(0.0, 0.0, temp_std_dev);
+        gaussian(x, y, std_dev[id_z]) / gaussian(0.0, 0.0, std_dev[id_z]);
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pix_idx] = gaussianvalue * input1[src_pix_idx] +
                             (1 - gaussianvalue) * input2[src_pix_idx];
@@ -147,7 +144,6 @@ extern "C" __global__ void non_linear_blend_batch_int8(
   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-  float temp_std_dev = height[id_z] >> 3;
   int indextmp = 0;
   unsigned long src_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
@@ -159,7 +155,7 @@ extern "C" __global__ void non_linear_blend_batch_int8(
     int x = (id_x - (width[id_z] >> 1));
     int y = (id_y - (height[id_z] >> 1));
     float gaussianvalue =
-        gaussian(x, y, temp_std_dev) / gaussian(0.0, 0.0, temp_std_dev);
+        gaussian(x, y, std_dev[id_z]) / gaussian(0.0, 0.0, std_dev[id_z]);
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pix_idx] = gaussianvalue * input1[src_pix_idx] +
                             (1 - gaussianvalue) * input2[src_pix_idx];

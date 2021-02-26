@@ -105,7 +105,7 @@ extern "C" __global__ void huergb_pkd(     unsigned char *input,
     pixel.x = input[pixIdx];
     pixel.y = input[pixIdx + 1];
     pixel.z = input[pixIdx + 2];
-    pixel.w = 0 ;// Transpency factor yet to come 
+    pixel.w = 0 ;// Transpency factor yet to come
     float4 hsv;
     hsv = convert_one_pixel_to_hsv(pixel);
     hsv.x += hue;
@@ -117,7 +117,7 @@ extern "C" __global__ void huergb_pkd(     unsigned char *input,
     else if(hsv.y < 0.0){hsv.y = 0.0;}
 
     pixel = convert_one_pixel_to_rgb(hsv);
-      
+
     output[pixIdx] = pixel.x;
     output[pixIdx + 1] = pixel.y;
     output[pixIdx + 2] = pixel.z;
@@ -139,7 +139,7 @@ extern "C" __global__ void huergb_pln(     unsigned char *input,
     pixel.x = input[pixIdx];
     pixel.y = input[pixIdx + width*height];
     pixel.z = input[pixIdx + 2*width*height];
-    pixel.w = 0 ;// Transpency factor yet to come 
+    pixel.w = 0 ;// Transpency factor yet to come
     float4 hsv;
     hsv = convert_one_pixel_to_hsv(pixel);
     hsv.x += hue;
@@ -151,7 +151,7 @@ extern "C" __global__ void huergb_pln(     unsigned char *input,
     else if(hsv.y < 0.0){hsv.y = 0.0;}
 
     pixel = convert_one_pixel_to_rgb(hsv);
-      
+
     output[pixIdx] = pixel.x;
     output[pixIdx + width*height] = pixel.y;
     output[pixIdx + 2*width*height] = pixel.z;
@@ -176,7 +176,7 @@ extern "C" __global__ void hue_batch(   unsigned char* input,
     int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
     if (id_x >= width[id_z] || id_y >= height[id_z]) return;
     uchar4 pixel; float4 hsv;
-    
+
 
     int pixIdx = batch_index[id_z]  + (id_y * max_width[id_z] + id_x) * plnpkdindex;
     pixel.x = input[pixIdx];
@@ -218,34 +218,37 @@ extern "C" __global__ void saturation_batch(   unsigned char* input,
                                     const int plnpkdindex // use 1 pln 3 for pkd
                                     )
 {
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-    if (id_x >= width[id_z] || id_y >= height[id_z]) return;
-    uchar4 pixel; float4 hsv;
-    
+  int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
+  if (id_x >= width[id_z] || id_y >= height[id_z]) return;
+  uchar4 pixel; float4 hsv;
 
-    int pixIdx = batch_index[id_z]  + (id_y * max_width[id_z] + id_x) * plnpkdindex;
-    pixel.x = input[pixIdx];
-    pixel.y = input[pixIdx + inc[id_z]];
-    pixel.z = input[pixIdx + 2*inc[id_z]];
-    pixel.w = 0.0;
 
-    if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {
-        hsv = convert_one_pixel_to_hsv(pixel);
-        hsv.y += sat[id_z];
-        if(hsv.y > 1.0){hsv.y = 1.0;}
-        else if(hsv.y < 0.0){hsv.y = 0.0;}
-        pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with saturation modification
-        output[pixIdx] = pixel.x;
-        output[pixIdx + inc[id_z]] = pixel.y;
-        output[pixIdx + 2*inc[id_z]] = pixel.z;
+  int pixIdx = batch_index[id_z] + (id_y * max_width[id_z] + id_x) * plnpkdindex;
+  pixel.x = input[pixIdx];
+  pixel.y = input[pixIdx + inc[id_z]];
+  pixel.z = input[pixIdx + 2 * inc[id_z]];
+  pixel.w = 0.0;
+
+  if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
+    (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
+    hsv = convert_one_pixel_to_hsv(pixel);
+    hsv.y *= sat[id_z];
+    if (hsv.y > 1.0) {
+      hsv.y = 1.0;
     }
-     else {
-        output[pixIdx] = pixel.x;
-        output[pixIdx + inc[id_z]] =  pixel.y;
-        output[pixIdx + 2*inc[id_z]] = pixel.z;
+    else if (hsv.y < 0.0) {
+      hsv.y = 0.0;
     }
-
+    pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with saturation modification
+    output[pixIdx] = pixel.x;
+    output[pixIdx + inc[id_z]] = pixel.y;
+    output[pixIdx + 2 * inc[id_z]] = pixel.z;
+  }
+  else {
+    output[pixIdx] = pixel.x;
+    output[pixIdx + inc[id_z]] = pixel.y;
+    output[pixIdx + 2 * inc[id_z]] = pixel.z;
+  }
 }
 
 extern "C" __global__ void convert_batch_rgb_hsv(

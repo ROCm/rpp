@@ -29,7 +29,7 @@ typedef half                Rpp16f;
 #define RPPISGREATER(pixel, value)      ((pixel > value) ? 1 : 0)
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 
-static uint16_t wyhash16_x; 
+static uint16_t wyhash16_x;
 
 inline uint32_t hash16(uint32_t input, uint32_t key) {
   uint32_t hash = input * key;
@@ -69,37 +69,45 @@ inline int fastrand()
     return (g_seed>>16)&0x7FFF;
 }
 
+inline int power_function(int a, int b)
+{
+    int product = 1;
+    for(int i = 0; i < b; i++)
+        product *= product * a;
+    return product;
+}
+
 template <typename T>
-RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
 template <typename T>
-RppStatus add_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus add_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
 template <typename T>
-RppStatus multiply_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus multiply_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
 template <typename T>
-RppStatus min_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus min_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
 template <typename T>
-RppStatus max_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus max_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
 
 template <typename T>
-RppStatus bitwise_AND_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus bitwise_AND_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
 template <typename T>
-RppStatus inclusive_OR_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus inclusive_OR_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
 template <typename T>
-RppStatus exclusive_OR_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus exclusive_OR_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
 
@@ -592,7 +600,7 @@ inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp3
     {
         stepY = 1;
     }
-    
+
     if (dx < 0)
     {
         dx = -dx;
@@ -659,7 +667,7 @@ inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp3
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -942,7 +950,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, U* dstPtr, Rppi
             __m128 p3 = _mm_set1_ps(1 - weightedHeight);
             __m128 pOne = _mm_set1_ps(1.0);
             __m128i pxColFloor;
-            
+
             Rpp64u vectorLoopCount = 0;
             for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
             {
@@ -952,7 +960,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, U* dstPtr, Rppi
                 pxColFloor = _mm_cvtps_epi32(pColFloor);
                 p0 = _mm_sub_ps(p0, pColFloor);
                 p2  = _mm_sub_ps(pOne, p0);
-                
+
                 p4 = _mm_mul_ps(p3, p2);
                 p5 = _mm_mul_ps(p3, p0);
                 p6 = _mm_mul_ps(p1, p2);
@@ -1007,7 +1015,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, U* dstPtr, Rppi
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1178,7 +1186,7 @@ inline RppStatus local_binary_pattern_kernel_host(T* srcPtrWindow, T* dstPtrPixe
                                        Rpp32u remainingElementsInRow, T* centerPixelPtr,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
-    T pixel = (T) 0;
+    int pixel = (int) 0;
     T *srcPtrWindowTemp;
     srcPtrWindowTemp = srcPtrWindow;
 
@@ -1285,7 +1293,7 @@ inline RppStatus local_binary_pattern_kernel_host(T* srcPtrWindow, T* dstPtrPixe
         }
     }
 
-    *dstPtrPixel = pixel;
+    *dstPtrPixel = (T) RPPPIXELCHECK(pixel);
 
     return RPP_SUCCESS;
 }
@@ -2494,7 +2502,7 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
             xY = _mm_xor_ps(xY, SIMD_GET_PS(full));                // xY <- [V==R || V!=G]
             xZ = _mm_xor_ps(xZ, SIMD_GET_PS(full));                // xZ <- [V==R || V==G]
-                
+
             xR = _mm_and_ps(xR, xX);                               // xR <- [X!=0 ? R : 0]
             xB = _mm_and_ps(xB, xZ);                               // xB <- [Z!=0 ? B : 0]
             xG = _mm_and_ps(xG, xY);                               // xG <- [Y!=0 ? G : 0]
@@ -3257,7 +3265,7 @@ inline RppStatus compute_rgb_to_greyscale_host(T* srcPtr, RppiSize srcSize, T* s
             srcPtrTempR = srcPtr;
             srcPtrTempG = srcPtr + 1;
             srcPtrTempB = srcPtrTempG + 1;
-            
+
             for (int i = 0; i < imageDim; i++)
             {
                 *srcPtrGreyscaleTemp = (T) (((Rpp32u)(*srcPtrTempR) + (Rpp32u)(*srcPtrTempG) + (Rpp32u)(*srcPtrTempB)) / 3);
@@ -3710,7 +3718,7 @@ inline RppStatus compute_1_channel_minmax_host(T *srcPtr, RppiSize srcSize, Rppi
     {
         pMin = _mm_set1_epi8(*min);
         pMax = _mm_set1_epi8(*max);
-        
+
         int bufferLength = srcSize.width;
         int alignedLength = bufferLength & ~15;
 
@@ -3746,7 +3754,7 @@ inline RppStatus compute_1_channel_minmax_host(T *srcPtr, RppiSize srcSize, Rppi
 
 template <typename T>
 inline RppStatus compute_3_channel_minmax_host(T *srcPtr, RppiSize srcSize, RppiSize srcSizeMax,
-                                               T *min, T *max, 
+                                               T *min, T *max,
                                                RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp;
@@ -3765,7 +3773,7 @@ inline RppStatus compute_3_channel_minmax_host(T *srcPtr, RppiSize srcSize, Rppi
             {
                 pMin = _mm_set1_epi8(minTemp);
                 pMax = _mm_set1_epi8(maxTemp);
-                
+
                 int bufferLength = srcSize.width;
                 int alignedLength = bufferLength & ~15;
 
@@ -3862,11 +3870,11 @@ inline RppStatus compute_3_channel_minmax_host(T *srcPtr, RppiSize srcSize, Rppi
             }
             srcPtrTemp += (elementsInRowMax - elementsInRow);
         }
-        
+
         T minVector[16], maxVector[16];
         _mm_storeu_si128((__m128i *)minVector, pMin);
         _mm_storeu_si128((__m128i *)maxVector, pMax);
-        
+
         minRTemp = RPPMIN2(RPPMIN3(minVector[0], minVector[3], minVector[6]), RPPMIN3(minVector[9], minVector[12], minRTemp));
         minGTemp = RPPMIN2(RPPMIN3(minVector[1], minVector[4], minVector[7]), RPPMIN3(minVector[10], minVector[13], minGTemp));
         minBTemp = RPPMIN2(RPPMIN3(minVector[2], minVector[5], minVector[8]), RPPMIN3(minVector[11], minVector[14], minBTemp));
@@ -3969,7 +3977,7 @@ inline RppStatus compute_padded_from_unpadded_host(T* srcPtrUnpadded, RppiSize s
 }
 
 template <typename T>
-inline RppStatus compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+inline RppStatus compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                         Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
@@ -3995,7 +4003,7 @@ inline RppStatus compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* d
 }
 
 template <typename T>
-inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                         Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;

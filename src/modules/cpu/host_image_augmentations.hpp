@@ -8,8 +8,8 @@
 /************ brightness ************/
 
 template <typename T>
-RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                                Rpp32f *batch_alpha, Rpp32f *batch_beta, 
+RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                                Rpp32f *batch_alpha, Rpp32f *batch_beta,
                                 RppiROI *roiPoints, Rpp32u nbatchSize,
                                 RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -40,7 +40,7 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
 
             Rpp32f alpha = batch_alpha[batchCount];
             Rpp32f beta = batch_beta[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -59,7 +59,7 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -86,14 +86,14 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
                         for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                         {
                             px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
-                            
+
                             px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
                             px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
                             p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
                             p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
                             p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
                             p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-                            
+
                             p0 = _mm_mul_ps(p0, pMul);
                             p1 = _mm_mul_ps(p1, pMul);
                             p2 = _mm_mul_ps(p2, pMul);
@@ -102,13 +102,13 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
                             px1 = _mm_cvtps_epi32(_mm_add_ps(p1, pAdd));
                             px2 = _mm_cvtps_epi32(_mm_add_ps(p2, pAdd));
                             px3 = _mm_cvtps_epi32(_mm_add_ps(p3, pAdd));
-                            
+
                             px0 = _mm_packus_epi32(px0, px1);
                             px1 = _mm_packus_epi32(px2, px3);
                             px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-                            
+
                             _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-                            
+
                             srcPtrTemp +=16;
                             dstPtrTemp +=16;
                         }
@@ -132,7 +132,7 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = roiPoints[batchCount].x;
             Rpp32u y1 = roiPoints[batchCount].y;
             Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth;
@@ -150,10 +150,10 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
 
             Rpp32u elementsBeforeROI = channel * x1;
             Rpp32u remainingElementsAfterROI = channel * (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
-            
+
             Rpp32f alpha = batch_alpha[batchCount];
             Rpp32f beta = batch_beta[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -162,7 +162,7 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -196,14 +196,14 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
                     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                     {
                         px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
-                        
+
                         px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
                         px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
                         p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
                         p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
                         p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
                         p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-                        
+
                         p0 = _mm_mul_ps(p0, pMul);
                         p1 = _mm_mul_ps(p1, pMul);
                         p2 = _mm_mul_ps(p2, pMul);
@@ -212,13 +212,13 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
                         px1 = _mm_cvtps_epi32(_mm_add_ps(p1, pAdd));
                         px2 = _mm_cvtps_epi32(_mm_add_ps(p2, pAdd));
                         px3 = _mm_cvtps_epi32(_mm_add_ps(p3, pAdd));
-                        
+
                         px0 = _mm_packus_epi32(px0, px1);
                         px1 = _mm_packus_epi32(px2, px3);
                         px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-                        
+
                         _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-                        
+
                         srcPtrTemp +=16;
                         dstPtrTemp +=16;
                     }
@@ -234,7 +234,7 @@ RppStatus brightness_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -247,7 +247,7 @@ RppStatus brightness_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
 
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
-    
+
     int bufferLength = channel * srcSize.height * srcSize.width;
     int alignedLength = bufferLength & ~15;
 
@@ -260,14 +260,14 @@ RppStatus brightness_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
     {
         px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
-        
+
         px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
         px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
         p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
         p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
         p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
         p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-        
+
         p0 = _mm_mul_ps(p0, pMul);
         p1 = _mm_mul_ps(p1, pMul);
         p2 = _mm_mul_ps(p2, pMul);
@@ -276,13 +276,13 @@ RppStatus brightness_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
         px1 = _mm_cvtps_epi32(_mm_add_ps(p1, pAdd));
         px2 = _mm_cvtps_epi32(_mm_add_ps(p2, pAdd));
         px3 = _mm_cvtps_epi32(_mm_add_ps(p3, pAdd));
-        
+
         px0 = _mm_packus_epi32(px0, px1);
         px1 = _mm_packus_epi32(px2, px3);
         px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-        
+
         _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-        
+
         srcPtrTemp +=16;
         dstPtrTemp +=16;
     }
@@ -297,8 +297,8 @@ RppStatus brightness_host(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
 // /**************** contrast ***************/
 
 template <typename T>
-RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                              Rpp32u *batch_new_min, Rpp32u *batch_new_max, 
+RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                              Rpp32u *batch_new_min, Rpp32u *batch_new_max,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -329,7 +329,7 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
 
             Rpp32f new_min = batch_new_min[batchCount];
             Rpp32f new_max = batch_new_max[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -341,7 +341,7 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
 
             if (channel == 1)
             {
-                compute_1_channel_minmax_host(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], &min[0], &max[0], chnFormat, channel);   
+                compute_1_channel_minmax_host(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], &min[0], &max[0], chnFormat, channel);
             }
             else if (channel == 3)
             {
@@ -362,7 +362,7 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -405,12 +405,12 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
 
                             px0 = _mm_packus_epi32(_mm_cvtps_epi32(p0), _mm_cvtps_epi32(p1));
                             px1 = _mm_packus_epi32(_mm_cvtps_epi32(p2), _mm_cvtps_epi32(p3));
-                            
+
                             px0 = _mm_add_epi16(px0, pNewMin);
                             px1 = _mm_add_epi16(px1, pNewMin);
-                            
+
                             _mm_storeu_si128((__m128i *)dstPtrTemp, _mm_packus_epi16(px0,px1));
-                            
+
                             srcPtrTemp += 16;
                             dstPtrTemp += 16;
                         }
@@ -434,7 +434,7 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = roiPoints[batchCount].x;
             Rpp32u y1 = roiPoints[batchCount].y;
             Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -504,7 +504,7 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                     __m128 pContrastFactor0 = _mm_setr_ps(contrastFactorR, contrastFactorG, contrastFactorB, contrastFactorR);
                     __m128 pContrastFactor1 = _mm_setr_ps(contrastFactorG, contrastFactorB, contrastFactorR, contrastFactorG);
                     __m128 pContrastFactor2 = _mm_setr_ps(contrastFactorB, contrastFactorR, contrastFactorG, contrastFactorB);
-                    
+
                     __m128 pMin0 = _mm_setr_ps((Rpp32f) min[0], (Rpp32f) min[1], (Rpp32f) min[2], (Rpp32f) min[0]);
                     __m128 pMin1 = _mm_setr_ps((Rpp32f) min[1], (Rpp32f) min[2], (Rpp32f) min[0], (Rpp32f) min[1]);
                     __m128 pMin2 = _mm_setr_ps((Rpp32f) min[2], (Rpp32f) min[0], (Rpp32f) min[1], (Rpp32f) min[2]);
@@ -523,12 +523,12 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                         p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
                         p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
                         p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-                        
+
                         p0 = _mm_max_ps(_mm_sub_ps(p0, pMin0), pzero);
                         p1 = _mm_max_ps(_mm_sub_ps(p1, pMin1), pzero);
                         p2 = _mm_max_ps(_mm_sub_ps(p2, pMin2), pzero);
                         p3 = _mm_max_ps(_mm_sub_ps(p3, pMin0), pzero);
-                        
+
                         p0 = _mm_mul_ps(p0, pContrastFactor0);
                         p1 = _mm_mul_ps(p1, pContrastFactor1);
                         p2 = _mm_mul_ps(p2, pContrastFactor2);
@@ -541,9 +541,9 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
 
                         px0 = _mm_packus_epi32(_mm_cvtps_epi32(p0), _mm_cvtps_epi32(p1));
                         px1 = _mm_packus_epi32(_mm_cvtps_epi32(p2), _mm_cvtps_epi32(p3));
-                        
+
                         _mm_storeu_si128((__m128i *)dstPtrTemp, _mm_packus_epi16(px0,px1));
-                        
+
                         srcPtrTemp += 15;
                         dstPtrTemp += 15;
                     }
@@ -561,12 +561,12 @@ RppStatus contrast_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         Rpp32u new_min, Rpp32u new_max,
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -581,7 +581,7 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     {
         if (channel == 1)
         {
-            compute_1_channel_minmax_host(srcPtr, srcSize, srcSize, &min[0], &max[0], chnFormat, channel);   
+            compute_1_channel_minmax_host(srcPtr, srcSize, srcSize, &min[0], &max[0], chnFormat, channel);
         }
         else if (channel == 3)
         {
@@ -621,12 +621,12 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
                 px0 = _mm_packus_epi32(_mm_cvtps_epi32(p0), _mm_cvtps_epi32(p1));
                 px1 = _mm_packus_epi32(_mm_cvtps_epi32(p2), _mm_cvtps_epi32(p3));
-                
+
                 px0 = _mm_add_epi16(px0, pNewMin);
                 px1 = _mm_add_epi16(px1, pNewMin);
-                
+
                 _mm_storeu_si128((__m128i *)dstPtrTemp, _mm_packus_epi16(px0,px1));
-                
+
                 srcPtrTemp += 16;
                 dstPtrTemp += 16;
             }
@@ -652,7 +652,7 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         __m128 pContrastFactor0 = _mm_setr_ps(contrastFactorR, contrastFactorG, contrastFactorB, contrastFactorR);
         __m128 pContrastFactor1 = _mm_setr_ps(contrastFactorG, contrastFactorB, contrastFactorR, contrastFactorG);
         __m128 pContrastFactor2 = _mm_setr_ps(contrastFactorB, contrastFactorR, contrastFactorG, contrastFactorB);
-        
+
         __m128 pMin0 = _mm_setr_ps((Rpp32f) min[0], (Rpp32f) min[1], (Rpp32f) min[2], (Rpp32f) min[0]);
         __m128 pMin1 = _mm_setr_ps((Rpp32f) min[1], (Rpp32f) min[2], (Rpp32f) min[0], (Rpp32f) min[1]);
         __m128 pMin2 = _mm_setr_ps((Rpp32f) min[2], (Rpp32f) min[0], (Rpp32f) min[1], (Rpp32f) min[2]);
@@ -689,9 +689,9 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
             px0 = _mm_packus_epi32(_mm_cvtps_epi32(p0), _mm_cvtps_epi32(p1));
             px1 = _mm_packus_epi32(_mm_cvtps_epi32(p2), _mm_cvtps_epi32(p3));
-            
+
             _mm_storeu_si128((__m128i *)dstPtrTemp, _mm_packus_epi16(px0,px1));
-            
+
             srcPtrTemp += 15;
             dstPtrTemp += 15;
         }
@@ -709,8 +709,8 @@ RppStatus contrast_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /************ blend ************/
 
 template <typename T>
-RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                           Rpp32f *batch_alpha, 
+RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                           Rpp32f *batch_alpha,
                            RppiROI *roiPoints, Rpp32u nbatchSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -740,7 +740,7 @@ RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
             Rpp32u remainingElementsAfterROI = (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
 
             Rpp32f alpha = batch_alpha[batchCount];
-            
+
             T *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -764,7 +764,7 @@ RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -792,46 +792,46 @@ RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
                         int vectorLoopCount = 0;
                         for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                         {
-                            px0 =  _mm_loadu_si128((__m128i *)srcPtr1Temp);
-                            
-                            px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
-                            px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
-                            p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
-                            p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
-                            p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
-                            p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-
                             px0 =  _mm_loadu_si128((__m128i *)srcPtr2Temp);
 
                             px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
                             px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
-                            q0 = _mm_add_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero)), p0);    // pixels 0-3
-                            q1 = _mm_add_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero)), p1);    // pixels 4-7
-                            q2 = _mm_add_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero)), p2);    // pixels 8-11
-                            q3 = _mm_add_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero)), p3);    // pixels 12-15
+                            q0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
+                            q1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
+                            q2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
+                            q3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
 
-                            q0 = _mm_mul_ps(q0, pMul);
-                            q1 = _mm_mul_ps(q1, pMul);
-                            q2 = _mm_mul_ps(q2, pMul);
-                            q3 = _mm_mul_ps(q3, pMul);
+                            px0 =  _mm_loadu_si128((__m128i *)srcPtr1Temp);
+
+                            px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
+                            px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
+                            p0 = _mm_sub_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero)), q0);    // pixels 0-3
+                            p1 = _mm_sub_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero)), q1);    // pixels 4-7
+                            p2 = _mm_sub_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero)), q2);    // pixels 8-11
+                            p3 = _mm_sub_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero)), q3);    // pixels 12-15
+
+                            p0 = _mm_mul_ps(p0, pMul);
+                            p1 = _mm_mul_ps(p1, pMul);
+                            p2 = _mm_mul_ps(p2, pMul);
+                            p3 = _mm_mul_ps(p3, pMul);
                             px0 = _mm_cvtps_epi32(_mm_add_ps(p0, q0));
                             px1 = _mm_cvtps_epi32(_mm_add_ps(p1, q1));
                             px2 = _mm_cvtps_epi32(_mm_add_ps(p2, q2));
                             px3 = _mm_cvtps_epi32(_mm_add_ps(p3, q3));
-                            
+
                             px0 = _mm_packus_epi32(px0, px1);
                             px1 = _mm_packus_epi32(px2, px3);
                             px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-                            
+
                             _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-                            
+
                             srcPtr1Temp +=16;
                             srcPtr2Temp +=16;
                             dstPtrTemp +=16;
                         }
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            *dstPtrTemp = (T) RPPPIXELCHECK(*srcPtr1Temp + (alpha * (*srcPtr2Temp - *srcPtr1Temp)));
+                            *dstPtrTemp = (T) RPPPIXELCHECK((alpha * (*srcPtr1Temp - *srcPtr2Temp)) + *srcPtr2Temp);
                             dstPtrTemp++;
                             srcPtr2Temp++;
                             srcPtr1Temp++;
@@ -853,7 +853,7 @@ RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = roiPoints[batchCount].x;
             Rpp32u y1 = roiPoints[batchCount].y;
             Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth;
@@ -871,9 +871,9 @@ RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
 
             Rpp32u elementsBeforeROI = channel * x1;
             Rpp32u remainingElementsAfterROI = channel * (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
-            
+
             Rpp32f alpha = batch_alpha[batchCount];
-            
+
             T *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -883,12 +883,12 @@ RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
                 Rpp32f pixel;
-                
+
                 T *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1Temp = srcPtr1Image + (i * elementsInRowMax);
                 srcPtr2Temp = srcPtr2Image + (i * elementsInRowMax);
@@ -921,46 +921,46 @@ RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                     {
-                        px0 =  _mm_loadu_si128((__m128i *)srcPtr1Temp);
-                        
-                        px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
-                        px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
-                        p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
-                        p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
-                        p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
-                        p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-
                         px0 =  _mm_loadu_si128((__m128i *)srcPtr2Temp);
 
                         px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
                         px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
-                        q0 = _mm_add_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero)), p0);    // pixels 0-3
-                        q1 = _mm_add_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero)), p1);    // pixels 4-7
-                        q2 = _mm_add_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero)), p2);    // pixels 8-11
-                        q3 = _mm_add_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero)), p3);    // pixels 12-15
+                        q0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
+                        q1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
+                        q2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
+                        q3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
 
-                        q0 = _mm_mul_ps(q0, pMul);
-                        q1 = _mm_mul_ps(q1, pMul);
-                        q2 = _mm_mul_ps(q2, pMul);
-                        q3 = _mm_mul_ps(q3, pMul);
+                        px0 =  _mm_loadu_si128((__m128i *)srcPtr1Temp);
+
+                        px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
+                        px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
+                        p0 = _mm_sub_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero)), q0);    // pixels 0-3
+                        p1 = _mm_sub_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero)), q1);    // pixels 4-7
+                        p2 = _mm_sub_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero)), q2);    // pixels 8-11
+                        p3 = _mm_sub_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero)), q3);    // pixels 12-15
+
+                        p0 = _mm_mul_ps(p0, pMul);
+                        p1 = _mm_mul_ps(p1, pMul);
+                        p2 = _mm_mul_ps(p2, pMul);
+                        p3 = _mm_mul_ps(p3, pMul);
                         px0 = _mm_cvtps_epi32(_mm_add_ps(p0, q0));
                         px1 = _mm_cvtps_epi32(_mm_add_ps(p1, q1));
                         px2 = _mm_cvtps_epi32(_mm_add_ps(p2, q2));
                         px3 = _mm_cvtps_epi32(_mm_add_ps(p3, q3));
-                        
+
                         px0 = _mm_packus_epi32(px0, px1);
                         px1 = _mm_packus_epi32(px2, px3);
                         px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-                        
+
                         _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-                        
+
                         srcPtr1Temp +=16;
                         srcPtr2Temp +=16;
                         dstPtrTemp +=16;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = (T) RPPPIXELCHECK(*srcPtr1Temp + (alpha * (*srcPtr2Temp - *srcPtr1Temp)));
+                        *dstPtrTemp = (T) RPPPIXELCHECK((alpha * (*srcPtr1Temp - *srcPtr2Temp)) + *srcPtr2Temp);
                         dstPtrTemp++;
                         srcPtr2Temp++;
                         srcPtr1Temp++;
@@ -974,13 +974,13 @@ RppStatus blend_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr, 
-                        Rpp32f alpha, RppiChnFormat chnFormat, 
+RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+                        Rpp32f alpha, RppiChnFormat chnFormat,
                         unsigned int channel)
 {
     T *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
@@ -1002,7 +1002,7 @@ RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
     {
         px0 =  _mm_loadu_si128((__m128i *)srcPtr1Temp);
-        
+
         px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
         px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
         p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
@@ -1027,13 +1027,13 @@ RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
         px1 = _mm_cvtps_epi32(_mm_add_ps(p1, q1));
         px2 = _mm_cvtps_epi32(_mm_add_ps(p2, q2));
         px3 = _mm_cvtps_epi32(_mm_add_ps(p3, q3));
-        
+
         px0 = _mm_packus_epi32(px0, px1);
         px1 = _mm_packus_epi32(px2, px3);
         px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-        
+
         _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-        
+
         srcPtr1Temp +=16;
         srcPtr2Temp +=16;
         dstPtrTemp +=16;
@@ -1045,15 +1045,15 @@ RppStatus blend_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
         srcPtr2Temp++;
         srcPtr1Temp++;
     }
-    
-    return RPP_SUCCESS;  
+
+    return RPP_SUCCESS;
 }
 
 /************ gamma_correction ************/
 
 template <typename T>
-RppStatus gamma_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                                      Rpp32f *batch_gamma, 
+RppStatus gamma_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                                      Rpp32f *batch_gamma,
                                       RppiROI *roiPoints, Rpp32u nbatchSize,
                                       RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1081,14 +1081,14 @@ RppStatus gamma_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             }
 
             Rpp32f gamma = batch_gamma[batchCount];
-            
+
             Rpp8u *gammaLUT = (Rpp8u *)calloc(256, sizeof(Rpp8u));
-    
+
             for (int i = 0; i < 256; i++)
             {
                 gammaLUT[i] = (T) RPPPIXELCHECK(pow((((Rpp32f) i) / 255.0), gamma) * 255.0);
             }
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1107,7 +1107,7 @@ RppStatus gamma_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -1147,7 +1147,7 @@ RppStatus gamma_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth;
@@ -1166,12 +1166,12 @@ RppStatus gamma_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             Rpp32f gamma = batch_gamma[batchCount];
 
             Rpp8u *gammaLUT = (Rpp8u *)calloc(256, sizeof(Rpp8u));
-    
+
             for (int i = 0; i < 256; i++)
             {
                 gammaLUT[i] = (T) RPPPIXELCHECK(pow((((Rpp32f) i) / 255.0), gamma) * 255.0);
             }
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1180,7 +1180,7 @@ RppStatus gamma_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1222,7 +1222,7 @@ RppStatus gamma_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             free(gammaLUT);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1232,18 +1232,18 @@ RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                 RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32u imageBuffer = channel * srcSize.height * srcSize.width;
-    
+
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
     Rpp8u *gammaLUT = (Rpp8u *)calloc(256, sizeof(Rpp8u));
-    
+
     for (int i = 0; i < 256; i++)
     {
         gammaLUT[i] = (T) RPPPIXELCHECK(pow((((Rpp32f) i) / 255.0), gamma) * 255.0);
     }
-    
+
     for (int i = 0; i < imageBuffer; i++)
     {
         *dstPtrTemp = gammaLUT[*srcPtrTemp];
@@ -1260,8 +1260,8 @@ RppStatus gamma_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /************ exposure ************/
 
 template <typename T>
-RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                              Rpp32f *batch_exposureFactor, 
+RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                              Rpp32f *batch_exposureFactor,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1289,10 +1289,10 @@ RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
             }
 
             Rpp32u remainingElementsAfterROI = (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
-            
+
             Rpp32f exposureFactor = batch_exposureFactor[batchCount];
             Rpp32f multiplyingFactor = pow(2, exposureFactor);
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1313,7 +1313,7 @@ RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -1339,25 +1339,25 @@ RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                         for (; i < alignedLength; i+=16)
                         {
                             px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
-                            
+
                             px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
                             px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
                             p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
                             p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
                             p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
                             p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-                            
+
                             px0 = _mm_cvtps_epi32(_mm_mul_ps(p0, pMul));
                             px1 = _mm_cvtps_epi32(_mm_mul_ps(p1, pMul));
                             px2 = _mm_cvtps_epi32(_mm_mul_ps(p2, pMul));
                             px3 = _mm_cvtps_epi32(_mm_mul_ps(p3, pMul));
-                            
+
                             px0 = _mm_packus_epi32(px0, px1);
                             px1 = _mm_packus_epi32(px2, px3);
                             px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-                            
+
                             _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-                            
+
                             srcPtrTemp +=16;
                             dstPtrTemp +=16;
                         }
@@ -1381,7 +1381,7 @@ RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = roiPoints[batchCount].x;
             Rpp32u y1 = roiPoints[batchCount].y;
             Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth;
@@ -1399,10 +1399,10 @@ RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
 
             Rpp32u elementsBeforeROI = channel * x1;
             Rpp32u remainingElementsAfterROI = channel * (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
-            
+
             Rpp32f exposureFactor = batch_exposureFactor[batchCount];
             Rpp32f multiplyingFactor = pow(2, exposureFactor);
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1411,7 +1411,7 @@ RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1446,25 +1446,25 @@ RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                     {
                         px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
-                        
+
                         px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
                         px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
                         p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
                         p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
                         p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
                         p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-                        
+
                         px0 = _mm_cvtps_epi32(_mm_mul_ps(p0, pMul));
                         px1 = _mm_cvtps_epi32(_mm_mul_ps(p1, pMul));
                         px2 = _mm_cvtps_epi32(_mm_mul_ps(p2, pMul));
                         px3 = _mm_cvtps_epi32(_mm_mul_ps(p3, pMul));
-                        
+
                         px0 = _mm_packus_epi32(px0, px1);
                         px1 = _mm_packus_epi32(px2, px3);
                         px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-                        
+
                         _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-                        
+
                         srcPtrTemp +=16;
                         dstPtrTemp +=16;
                     }
@@ -1480,7 +1480,7 @@ RppStatus exposure_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1495,7 +1495,7 @@ RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     dstPtrTemp = dstPtr;
 
     Rpp32f multiplyingFactor = pow(2, exposureFactor);
-    
+
     int bufferLength = channel * srcSize.height * srcSize.width;
     int alignedLength = bufferLength & ~15;
 
@@ -1508,25 +1508,25 @@ RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
     {
         px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
-        
+
         px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
         px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
         p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
         p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
         p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
         p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-        
+
         px0 = _mm_cvtps_epi32(_mm_mul_ps(p0, pMul));
         px1 = _mm_cvtps_epi32(_mm_mul_ps(p1, pMul));
         px2 = _mm_cvtps_epi32(_mm_mul_ps(p2, pMul));
         px3 = _mm_cvtps_epi32(_mm_mul_ps(p3, pMul));
-        
+
         px0 = _mm_packus_epi32(px0, px1);
         px1 = _mm_packus_epi32(px2, px3);
         px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-        
+
         _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-        
+
         srcPtrTemp +=16;
         dstPtrTemp +=16;
     }
@@ -1541,7 +1541,7 @@ RppStatus exposure_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 /**************** blur ***************/
 
 template <typename T>
-RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                 Rpp32u *batch_kernelSize,
                                 RppiROI *roiPoints, Rpp32u nbatchSize,
                                 RppiChnFormat chnFormat, Rpp32u channel)
@@ -1598,12 +1598,12 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             {
                 Rpp16u vSums[16] = {0};
                 Rpp16u hSums[12] = {0};
-                
+
                 for(int c = 0; c < channel; c++)
                 {
                     srcPtrChannel = srcPtrImage + (c * imageDimMax);
                     dstPtrChannel = dstPtrImage + (c * imageDimMax);
-                    
+
                     srcPtrTemp2 = srcPtrChannel + ((firstRow - bound) * batch_srcSizeMax[batchCount].width) + (firstColumn - bound);
 
 
@@ -1635,7 +1635,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                             __m128i px0, px1, px2, qx0, qx1;
                             __m128i pSum1, pSum2;
                             __m128 p0, p1, p2;
-                            
+
                             __m128 pMul = _mm_set1_ps(multiplier);
 
                             int vectorLoopCount = 0;
@@ -1753,7 +1753,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                 {
                     srcPtrChannel = srcPtrImage + (c * imageDimMax);
                     dstPtrChannel = dstPtrImage + (c * imageDimMax);
-                    
+
                     srcPtrTemp2 = srcPtrChannel + ((firstRow - bound) * batch_srcSizeMax[batchCount].width) + (firstColumn - bound);
 
 
@@ -1834,7 +1834,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = roiPoints[batchCount].x;
             Rpp32u y1 = roiPoints[batchCount].y;
             Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1863,7 +1863,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
 
             Rpp32u sumsR[25] = {0}, sumsG[25] = {0}, sumsB[25] = {0};
             Rpp32f pixelR, pixelG, pixelB;
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1884,7 +1884,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             srcPtrTemp2R = srcPtrImage + ((firstRow - bound) * elementsInRowMax) + ((firstColumn - bound) * channel);
             srcPtrTemp2G = srcPtrTemp2R + 1;
             srcPtrTemp2B = srcPtrTemp2R + 2;
-            
+
             if (kernelSize == 5)
             {
                 Rpp16u vSums[32] = {0};
@@ -2038,7 +2038,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                         srcPtrTemp3R = srcPtrTemp2R;
                         srcPtrTemp3G = srcPtrTemp2G;
                         srcPtrTemp3B = srcPtrTemp2B;
-                        
+
                         pixelR = 0;
                         pixelG = 0;
                         pixelB = 0;
@@ -2124,7 +2124,7 @@ RppStatus blur_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -2146,7 +2146,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         T *srcPtrTemp, *srcPtrTemp2, *srcPtrTemp3, *srcPtrTemp4, *dstPtrTemp;
-        
+
         Rpp32u sums[25] = {0};
         Rpp32f pixel;
 
@@ -2187,7 +2187,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         __m128i px0, px1, px2, qx0, qx1;
                         __m128i pSum1, pSum2;
                         __m128 p0, p1, p2;
-                        
+
                         __m128 pMul = _mm_set1_ps(multiplier);
 
                         int vectorLoopCount = 0;
@@ -2250,7 +2250,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         if (vectorLoopCount < bufferLength)
                         {
                             srcPtrTemp4 = srcPtrTemp3;
-                            
+
                             pixel = 0;
                             for (int m = 0; m < kernelSize; m++)
                             {
@@ -2293,7 +2293,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                             }
                         }
                         srcPtrTemp2 += srcSize.width;
-                        
+
                         memcpy(dstPtrTemp, srcPtrTemp, bound * sizeof(T));
                         dstPtrTemp += bound;
                         srcPtrTemp += bound;
@@ -2325,7 +2325,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         srcPtrTemp += bound;
 
                         srcPtrTemp3 = srcPtrTemp2;
-                                
+
                         pixel = 0;
                         for (int m = 0; m < kernelSize; m++)
                         {
@@ -2591,7 +2591,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     }
 
                     srcPtrTemp2R += elementsInRow;
-                    
+
                     memcpy(dstPtrTemp, srcPtrTemp, channeledBound * sizeof(T));
                     dstPtrTemp += channeledBound;
                     srcPtrTemp += channeledBound;
@@ -2617,7 +2617,7 @@ RppStatus blur_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     srcPtrTemp3R = srcPtrTemp2R;
                     srcPtrTemp3G = srcPtrTemp2G;
                     srcPtrTemp3B = srcPtrTemp2B;
-                    
+
                     pixelR = 0;
                     pixelG = 0;
                     pixelB = 0;
@@ -2752,7 +2752,7 @@ RppStatus histogram_balance_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiS
                     {
                         T *srcPtrTemp;
                         srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        
+
                         for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                         {
                             *(outputHistogramImage + (*srcPtrTemp / rangeInBin)) += 1;
@@ -2789,7 +2789,7 @@ RppStatus histogram_balance_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiS
             {
                 y2 = batch_srcSize[batchCount].height;
             }
-            
+
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrChannel, *dstPtrChannel;
@@ -2802,7 +2802,7 @@ RppStatus histogram_balance_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiS
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -2874,7 +2874,7 @@ RppStatus histogram_balance_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiS
                         for(int c = 0; c < channel; c++)
                         {
                             *(outputHistogramImage + (*srcPtrTemp / rangeInBin)) += 1;
-                            
+
                             srcPtrTemp++;
                         }
                     }
@@ -2907,7 +2907,7 @@ RppStatus histogram_balance_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiS
             {
                 y2 = batch_srcSize[batchCount].height;
             }
-            
+
 
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
@@ -2967,7 +2967,7 @@ RppStatus histogram_balance_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     Rpp32u sum = 0;
     histogramTemp = histogram;
     lookUpTableTemp = lookUpTable;
-    
+
     for (int i = 0; i < 256; i++)
     {
         sum += *histogramTemp;
@@ -2986,7 +2986,7 @@ RppStatus histogram_balance_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         srcPtrTemp++;
         dstPtrTemp++;
     }
-    
+
     return RPP_SUCCESS;
 
 }
@@ -2994,7 +2994,7 @@ RppStatus histogram_balance_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** random_crop_letterbox ***************/
 
 template <typename T>
-RppStatus random_crop_letterbox_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+RppStatus random_crop_letterbox_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                            Rpp32u *batch_x1, Rpp32u *batch_x2, Rpp32u *batch_y1, Rpp32u *batch_y2, RppiROI *roiPoints,
                                            Rpp32u nbatchSize,
                                            RppiChnFormat chnFormat, Rpp32u channel)
@@ -3015,9 +3015,9 @@ RppStatus random_crop_letterbox_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
         T *srcPtrImage = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
         T *dstPtrImage = (T*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(T));
 
-        compute_unpadded_from_padded_host(srcPtr + srcLoc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtrImage, 
+        compute_unpadded_from_padded_host(srcPtr + srcLoc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtrImage,
                                             chnFormat, channel);
-        
+
         Rpp32u borderWidth = (5 * RPPMIN2(batch_dstSize[batchCount].height, batch_dstSize[batchCount].width) / 100);
 
         RppiSize srcSizeSubImage;
@@ -3036,26 +3036,26 @@ RppStatus random_crop_letterbox_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
 
         resize_kernel_host(srcPtrImageCropPadded, srcSizeSubImagePadded, dstPtrImage, batch_dstSize[batchCount], chnFormat, channel);
 
-        compute_padded_from_unpadded_host(dstPtrImage, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtr + dstLoc, 
+        compute_padded_from_unpadded_host(dstPtrImage, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtr + dstLoc,
                                           chnFormat, channel);
-        
+
         free(srcPtrImage);
         free(dstPtrImage);
         free(srcPtrImageCrop);
         free(srcPtrImageCropPadded);
     }
 
-    return RPP_SUCCESS;       
+    return RPP_SUCCESS;
 }
 
 template <typename T>
 RppStatus random_crop_letterbox_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
-                                     Rpp32u x1, Rpp32u x2, Rpp32u y1, Rpp32u y2, 
+                                     Rpp32u x1, Rpp32u x2, Rpp32u y1, Rpp32u y2,
                                      RppiChnFormat chnFormat, Rpp32u channel)
 {
-    if ((RPPINRANGE(x1, 0, srcSize.width - 1) == 0) 
-        || (RPPINRANGE(x2, 0, srcSize.width - 1) == 0) 
-        || (RPPINRANGE(y1, 0, srcSize.height - 1) == 0) 
+    if ((RPPINRANGE(x1, 0, srcSize.width - 1) == 0)
+        || (RPPINRANGE(x2, 0, srcSize.width - 1) == 0)
+        || (RPPINRANGE(y1, 0, srcSize.height - 1) == 0)
         || (RPPINRANGE(y2, 0, srcSize.height - 1) == 0))
     {
         return RPP_ERROR;
@@ -3206,7 +3206,7 @@ RppStatus pixelate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
             Rpp32u lengthDiffNew = lengthDiff;
             if (lengthDiff > 7)
                 lengthDiffNew -= 7;
-            
+
             Rpp32f lastColMultiplier = 1.0 / (lengthDiffNew * 7);
             Rpp32f lastRowMultiplier = 1.0 / (heightDiff * 7);
             Rpp32f lastMultiplier = 1.0 / (heightDiff * lengthDiffNew);
@@ -3297,7 +3297,7 @@ RppStatus pixelate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                             _mm_storeu_si128((__m128i *)dstPtrTemp3, px0);
                             dstPtrTemp3 += batch_srcSizeMax[batchCount].width;
                         }
-                        
+
                         srcPtrTemp2 += 14;
                         dstPtrTemp2 += 14;
                     }
@@ -3309,7 +3309,7 @@ RppStatus pixelate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                     }
 
                     pixelate_base_pln_host(srcPtrChannel, batch_srcSizeMax[batchCount].width, dstPtrChannel, 7, lengthDiffNew, i + y1, vectorLoopCount + x1, lastColMultiplier);
-                                        
+
                     srcPtrTemp += increment;
                     dstPtrTemp += increment;
                 }
@@ -3403,7 +3403,7 @@ RppStatus pixelate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
             Rpp32u lengthDiffNew = lengthDiff;
             if (lengthDiff > 7)
                 lengthDiffNew -= 7;
-            
+
             Rpp32f lastColMultiplier = 1.0 / (lengthDiffNew * 7);
             Rpp32f lastRowMultiplier = 1.0 / (heightDiff * 7);
             Rpp32f lastMultiplier = 1.0 / (heightDiff * lengthDiffNew);
@@ -3510,11 +3510,11 @@ RppStatus pixelate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                     hSums[0] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[0] + vSums[3] + vSums[6] + vSums[9] + vSums[12] + vSums[15] + vSums[18]) * multiplier);
                     hSums[1] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[1] + vSums[4] + vSums[7] + vSums[10] + vSums[13] + vSums[16] + vSums[19]) * multiplier);
                     hSums[2] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[2] + vSums[5] + vSums[8] + vSums[11] + vSums[14] + vSums[17] + vSums[20]) * multiplier);
-                    
+
                     hSums[3] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[21] + vSums[24] + vSums[27] + vSums[30] + vSums[33] + vSums[36] + vSums[39]) * multiplier);
                     hSums[4] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[22] + vSums[25] + vSums[28] + vSums[31] + vSums[34] + vSums[37] + vSums[40]) * multiplier);
                     hSums[5] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[23] + vSums[26] + vSums[29] + vSums[32] + vSums[35] + vSums[38] + vSums[41]) * multiplier);
-                    
+
                     hSums[6] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[42] + vSums[45] + vSums[48] + vSums[51] + vSums[54] + vSums[57] + vSums[60]) * multiplier);
                     hSums[7] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[43] + vSums[46] + vSums[49] + vSums[52] + vSums[55] + vSums[58] + vSums[61]) * multiplier);
                     hSums[8] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[44] + vSums[47] + vSums[50] + vSums[53] + vSums[56] + vSums[59] + vSums[62]) * multiplier);
@@ -3558,7 +3558,7 @@ RppStatus pixelate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
                 srcPtrTemp += increment;
                 dstPtrTemp += increment;
             }
-            
+
             srcPtrTemp2 = srcPtrTemp;
             dstPtrTemp2 = dstPtrTemp;
 
@@ -3624,7 +3624,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         Rpp32u lengthDiffNew = lengthDiff;
         if (lengthDiff > 7)
             lengthDiffNew -= 7;
-        
+
         Rpp32f lastColMultiplier = 1.0 / (lengthDiffNew * 7);
         Rpp32f lastRowMultiplier = 1.0 / (heightDiff * 7);
         Rpp32f lastMultiplier = 1.0 / (heightDiff * lengthDiffNew);
@@ -3728,7 +3728,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         Rpp32u lengthDiffNew = lengthDiff;
         if (lengthDiff > 7)
             lengthDiffNew -= 7;
-        
+
         Rpp32f lastColMultiplier = 1.0 / (lengthDiffNew * 7);
         Rpp32f lastRowMultiplier = 1.0 / (heightDiff * 7);
         Rpp32f lastMultiplier = 1.0 / (heightDiff * lengthDiffNew);
@@ -3811,11 +3811,11 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                 hSums[0] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[0] + vSums[3] + vSums[6] + vSums[9] + vSums[12] + vSums[15] + vSums[18]) * multiplier);
                 hSums[1] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[1] + vSums[4] + vSums[7] + vSums[10] + vSums[13] + vSums[16] + vSums[19]) * multiplier);
                 hSums[2] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[2] + vSums[5] + vSums[8] + vSums[11] + vSums[14] + vSums[17] + vSums[20]) * multiplier);
-                
+
                 hSums[3] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[21] + vSums[24] + vSums[27] + vSums[30] + vSums[33] + vSums[36] + vSums[39]) * multiplier);
                 hSums[4] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[22] + vSums[25] + vSums[28] + vSums[31] + vSums[34] + vSums[37] + vSums[40]) * multiplier);
                 hSums[5] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[23] + vSums[26] + vSums[29] + vSums[32] + vSums[35] + vSums[38] + vSums[41]) * multiplier);
-                
+
                 hSums[6] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[42] + vSums[45] + vSums[48] + vSums[51] + vSums[54] + vSums[57] + vSums[60]) * multiplier);
                 hSums[7] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[43] + vSums[46] + vSums[49] + vSums[52] + vSums[55] + vSums[58] + vSums[61]) * multiplier);
                 hSums[8] = (Rpp16s) RPPPIXELCHECK((Rpp32f) (vSums[44] + vSums[47] + vSums[50] + vSums[53] + vSums[56] + vSums[59] + vSums[62]) * multiplier);
@@ -3876,7 +3876,7 @@ RppStatus pixelate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** Fog ***************/
 
 template <typename T>
-RppStatus fog_host(  T* temp,RppiSize srcSize,T* srcPtr, 
+RppStatus fog_host(  T* temp,RppiSize srcSize,T* srcPtr,
                     Rpp32f fogValue,
                     RppiChnFormat chnFormat,   unsigned int channel)
 {
@@ -3888,7 +3888,7 @@ RppStatus fog_host(  T* temp,RppiSize srcSize,T* srcPtr,
         srcPtr1++;
         temp++;
     }
-    
+
     if(fogValue != 0)
     {
         if (chnFormat == RPPI_CHN_PLANAR)
@@ -3902,7 +3902,7 @@ RppStatus fog_host(  T* temp,RppiSize srcSize,T* srcPtr,
             for (int i = 0; i < (srcSize.width * srcSize.height); i++)
             {
                 Rpp32f check= *srcPtr;
-                if(channel > 1) 
+                if(channel > 1)
                     check = (check + *srcPtr1 + *srcPtr2) / 3;
                 *srcPtr = fogGenerator(*srcPtr, fogValue, 1, check);
                 srcPtr++;
@@ -3937,8 +3937,8 @@ RppStatus fog_host(  T* temp,RppiSize srcSize,T* srcPtr,
 }
 
 template <typename T>
-RppStatus fog_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                              Rpp32f *batch_fogValue, 
+RppStatus fog_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                              Rpp32f *batch_fogValue,
                               Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -3951,13 +3951,13 @@ RppStatus fog_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_src
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
 
             Rpp32f fogValue = batch_fogValue[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
                 for(int j = 0; j < batch_srcSize[batchCount].width; j++)
@@ -4007,7 +4007,7 @@ RppStatus fog_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_src
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
 
             Rpp32f fogValue = batch_fogValue[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -4019,7 +4019,7 @@ RppStatus fog_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_src
             T *srcPtrTemp1, *dstPtrTemp1;
             srcPtrTemp1 = srcPtrImage;
             dstPtrTemp1 = dstPtrImage;
-            
+
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
                 Rpp32f pixel;
@@ -4055,7 +4055,7 @@ RppStatus fog_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_src
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -4063,7 +4063,7 @@ RppStatus fog_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_src
 
 template <typename T>
 RppStatus noise_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                        Rpp32f noiseProbability, 
+                        Rpp32f noiseProbability,
                         RppiChnFormat chnFormat, unsigned int channel)
 {
     T *dstPtrTemp;
@@ -4154,8 +4154,8 @@ RppStatus noise_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 }
 
 template <typename T>
-RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                           Rpp32f *batch_noiseProbability, 
+RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                           Rpp32f *batch_noiseProbability,
                            RppiROI *roiPoints, Rpp32u nbatchSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -4195,7 +4195,7 @@ RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             Rpp32u remainingHeight = batch_srcSize[batchCount].height - (y2 + 1);
 
             Rpp32f noiseProbability = batch_noiseProbability[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -4279,7 +4279,7 @@ RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = roiPoints[batchCount].x;
             Rpp32u y1 = roiPoints[batchCount].y;
             Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -4303,9 +4303,9 @@ RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             Rpp32u remainingElementsAfterROI = channel * (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
             Rpp32u remainingElementsAfterROIMax = channel * (batch_srcSizeMax[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
             Rpp32u remainingHeight = batch_srcSize[batchCount].height - (y2 + 1);
-            
+
             Rpp32f noiseProbability = batch_noiseProbability[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -4325,7 +4325,7 @@ RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
             Rpp32u elementsInRowROI = channel * roiSize.width;
-            
+
             T *srcPtrTemp, *dstPtrTemp, *srcPtrTemp2, *dstPtrTemp2;
             srcPtrTemp = srcPtrImage;
             dstPtrTemp = dstPtrImage;
@@ -4362,7 +4362,7 @@ RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 srcPtrTemp += remainingElementsAfterROIMax;
                 dstPtrTemp += remainingElementsAfterROIMax;
             }
-            
+
             for (int i = 0; i < remainingHeight; i++)
             {
                 memcpy(dstPtrTemp, srcPtrTemp, elementsInRow * sizeof(T));
@@ -4375,7 +4375,7 @@ RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
         free(srcPtrBufferROI);
         free(dstPtrBufferROI);
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -4390,7 +4390,7 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     int snow_mat[5][5] = {{0,50,75,50,0}, {40,80,120,80,40}, {75,120,255,120,75}, {40,80,120,80,40}, {0,50,75,50,0}};
 
     Rpp32u snowDrops = (Rpp32u)(strength * srcSize.width * srcSize.height * channel );
-    
+
     T *dstptrtemp;
     dstptrtemp=dstPtr;
     for(int k=0;k<srcSize.height*srcSize.width*channel;k++)
@@ -4421,7 +4421,7 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                             dstPtr[(row * srcSize.width) + (column) + (k * srcSize.height * srcSize.width) + (srcSize.width * j) + m] = snow_mat[j][m] ;
                         }
                     }
-                }            
+                }
             }
         }
     }
@@ -4447,8 +4447,8 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                         {
                             dstPtr[(channel * row * srcSize.width) + (column * channel) + k + (channel * srcSize.width * j) + (channel * m)] = snow_mat[j][m];
                         }
-                    } 
-                }            
+                    }
+                }
             }
         }
     }
@@ -4463,8 +4463,8 @@ RppStatus snow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 }
 
 template <typename T>
-RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                              Rpp32f *batch_strength, 
+RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                              Rpp32f *batch_strength,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -4490,13 +4490,13 @@ RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
 
             Rpp32u snowDrops = (Rpp32u)(strength * batch_srcSize[batchCount].width * batch_srcSize[batchCount].height * channel );
 
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
                 T *srcPtrTemp, *dstPtrTemp;
@@ -4508,7 +4508,7 @@ RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             T *srcPtrTemp, *dstPtrTemp;
             srcPtrTemp = srcPtrImage;
             dstPtrTemp = dstPtrImage;
-            
+
             for(int i = 0 ; i < snowDrops ; i++)
             {
                 Rpp32u row = rand() % batch_srcSize[batchCount].height;
@@ -4530,7 +4530,7 @@ RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                                 dstPtrTemp[(row * batch_srcSizeMax[batchCount].width) + (column) + (k * batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width) + (batch_srcSizeMax[batchCount].width * j) + m] = RPPPIXELCHECK( dstPtrTemp[(row * batch_srcSizeMax[batchCount].width) + (column) + (k * batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width) + (batch_srcSizeMax[batchCount].width * j) + m] + snow_mat[j][m]) ;
                             }
                         }
-                    }            
+                    }
                 }
             }
         }
@@ -4542,7 +4542,7 @@ RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth;
@@ -4556,7 +4556,7 @@ RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             int snow_mat[5][5] = {{0,50,75,50,0}, {40,80,120,80,40}, {75,120,255,120,75}, {40,80,120,80,40}, {0,50,75,50,0}};
 
             Rpp32u snowDrops = (Rpp32u)(strength * batch_srcSize[batchCount].width * batch_srcSize[batchCount].height * channel );
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -4565,7 +4565,7 @@ RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
                 T *srcPtrTemp, *dstPtrTemp;
@@ -4597,13 +4597,13 @@ RppStatus snow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                             {
                                 dstPtrTemp[(channel * row * batch_srcSizeMax[batchCount].width) + (column * channel) + k + (channel * batch_srcSizeMax[batchCount].width * j) + (channel * m)] = RPPPIXELCHECK( dstPtrTemp[(channel * row * batch_srcSizeMax[batchCount].width) + (column * channel) + k + (channel * batch_srcSizeMax[batchCount].width * j) + (channel * m)] + snow_mat[j][m]);
                             }
-                        } 
-                    }            
+                        }
+                    }
                 }
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -4613,7 +4613,7 @@ template <typename T>
 RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
                     Rpp32f rainPercentage, Rpp32f rainWidth, Rpp32f rainHeight, Rpp32f transparency,
                     RppiChnFormat chnFormat,   unsigned int channel)
-{ 
+{
     rainPercentage *= 0.004;
     transparency *= 0.2;
 
@@ -4627,7 +4627,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
         col_rand[i] = fastrand() % srcSize.width;
         row_rand[i] = fastrand() % srcSize.height;
     }
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for(int i = 0 ; i < rainDrops ; i++)
@@ -4648,7 +4648,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
                 {
                     if ( (row + rainHeight) < srcSize.height && (column + rainWidth) < srcSize.width)
                     {
-                        int idx = srcSize.width*j + m; 
+                        int idx = srcSize.width*j + m;
                         dst[idx] = 196;
                         if (channel > 1) {
                             dst1[idx] = 226, dst2[idx] = 255;
@@ -4680,7 +4680,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
                             dst[idx+2] = 255;
                         }
                     }
-                } 
+                }
             }
         }
     }
@@ -4689,10 +4689,10 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
     Rpp8u *dst = &dstPtr[0];
     int length = channel * srcSize.width * srcSize.height;
     int i=0;
-#if __AVX2__  
+#if __AVX2__
     int alignedLength = length & ~31;
     __m256i const trans = _mm256_set1_epi16((unsigned short)(transparency*65535));       // 1/5th
-    __m256i const zero = _mm256_setzero_si256();    
+    __m256i const zero = _mm256_setzero_si256();
     for (; i < alignedLength; i+=32)
     {
         __m256i s0, s1, r0;
@@ -4710,7 +4710,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
     }
 #else
     int alignedLength = length & ~15;
-    __m128i const trans = _mm_set1_epi16((unsigned short)(transparency*65535));       // trans factor 
+    __m128i const trans = _mm_set1_epi16((unsigned short)(transparency*65535));       // trans factor
     __m128i const zero = _mm_setzero_si128();
     for (; i < alignedLength; i+=16)
     {
@@ -4727,14 +4727,14 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
         dst += 16;
         src += 16;
     }
-#endif        
+#endif
 
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus rain_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                          Rpp32f *batch_rainPercentage, Rpp32u *batch_rainWidth, Rpp32u *batch_rainHeight, Rpp32f *batch_transparency, 
+RppStatus rain_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                          Rpp32f *batch_rainPercentage, Rpp32u *batch_rainWidth, Rpp32u *batch_rainHeight, Rpp32f *batch_transparency,
                           Rpp32u nbatchSize, RppiChnFormat chnFormat, Rpp32u channel)
 {
     omp_set_dynamic(0);
@@ -4745,7 +4745,7 @@ RppStatus rain_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
         Rpp32u rainWidth = batch_rainWidth[batchCount];
         Rpp32u rainHeight = batch_rainHeight[batchCount];
         Rpp32f transparency = batch_transparency[batchCount];
-        
+
         T *srcPtrImage, *dstPtrImage;
         Rpp32u loc = 0;
         compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -4772,7 +4772,7 @@ RppStatus rain_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
 
 template <typename T>
 RppStatus random_shadow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
-                             Rpp32u *batch_x1, Rpp32u *batch_y1, Rpp32u *batch_x2, Rpp32u *batch_y2, 
+                             Rpp32u *batch_x1, Rpp32u *batch_y1, Rpp32u *batch_x2, Rpp32u *batch_y2,
                              Rpp32u *batch_numberOfShadows, Rpp32u *batch_maxSizeX, Rpp32u *batch_maxSizeY,
                              Rpp32u nbatchSize,
                              RppiChnFormat chnFormat, Rpp32u channel)
@@ -4792,7 +4792,7 @@ RppStatus random_shadow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             Rpp32u numberOfShadows = batch_numberOfShadows[batchCount];
             Rpp32u maxSizeX = batch_maxSizeX[batchCount];
             Rpp32u maxSizeY = batch_maxSizeY[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -4819,7 +4819,7 @@ RppStatus random_shadow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             T *srcPtrTemp, *dstPtrTemp;
             srcPtrTemp = srcPtrImage;
             dstPtrTemp = dstPtrImage;
-            
+
 
             for (int shadow = 0; shadow < numberOfShadows; shadow++)
             {
@@ -4855,7 +4855,7 @@ RppStatus random_shadow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = batch_x1[batchCount];
             Rpp32u y1 = batch_y1[batchCount];
             Rpp32u x2 = batch_x2[batchCount];
@@ -4871,7 +4871,7 @@ RppStatus random_shadow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -4920,20 +4920,20 @@ RppStatus random_shadow_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus random_shadow_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-                             Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2, 
-                             Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, 
+RppStatus random_shadow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                             Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
+                             Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY,
                              RppiChnFormat chnFormat, Rpp32u channel)
 {
     srand (time(NULL));
     RppiSize srcSizeSubImage, dstSizeSubImage, shadowSize;
     T *srcPtrSubImage, *dstPtrSubImage;
-    
+
     compute_subimage_location_host(srcPtr, &srcPtrSubImage, srcSize, &srcSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
 
     if (maxSizeX > srcSizeSubImage.width || maxSizeY > srcSizeSubImage.height)
@@ -4942,7 +4942,7 @@ RppStatus random_shadow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
 
     compute_subimage_location_host(dstPtr, &dstPtrSubImage, srcSize, &dstSizeSubImage, x1, y1, x2, y2, chnFormat, channel);
-    
+
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
@@ -4998,15 +4998,15 @@ RppStatus random_shadow_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             }
         }
     }
- 
+
     return RPP_SUCCESS;
 }
 
 /**************** Jitter ***************/
 
 template <typename T>
-RppStatus jitter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                              Rpp32u *batch_kernelSize,  
+RppStatus jitter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                              Rpp32u *batch_kernelSize,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -5113,7 +5113,7 @@ RppStatus jitter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = roiPoints[batchCount].x;
             Rpp32u y1 = roiPoints[batchCount].y;
             Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -5131,7 +5131,7 @@ RppStatus jitter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             Rpp32u elementsBeforeROI = channel * x1;
             Rpp32u remainingElementsAfterROI = channel * (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
-            
+
             Rpp32u kernelSize = batch_kernelSize[batchCount];
             Rpp32u bound = (kernelSize - 1);
             Rpp32u widthLimit = roiPoints[batchCount].roiWidth - bound;
@@ -5141,7 +5141,7 @@ RppStatus jitter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             srand(time(0));
             int seedVal;
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -5204,24 +5204,24 @@ RppStatus jitter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
 RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                    Rpp32u kernelSize, 
+                    Rpp32u kernelSize,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
-    
+
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
     Rpp32u bound = (kernelSize - 1);
     Rpp32u widthLimit = srcSize.width - bound;
     Rpp32u heightLimit = srcSize.height - bound;
-    
+
     srand(time(0));
     int seedVal;
 
@@ -5287,7 +5287,7 @@ RppStatus jitter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         }
         memcpy(dstPtrTemp, srcPtrTemp, bound * elementsInRow * sizeof(T));
     }
-    
+
     return RPP_SUCCESS;
 }
 

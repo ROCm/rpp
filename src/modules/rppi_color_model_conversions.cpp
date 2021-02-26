@@ -15,13 +15,13 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
-using namespace std::chrono; 
+using namespace std::chrono;
 
-#include "cpu/host_color_model_conversions.hpp" 
+#include "cpu/host_color_model_conversions.hpp"
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -30,7 +30,7 @@ rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			stdDev,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -40,7 +40,7 @@ rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			stdDev,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -48,9 +48,9 @@ rppi_vignette_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -81,9 +81,9 @@ rppi_vignette_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -119,9 +119,9 @@ rppi_vignette_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -157,9 +157,9 @@ rppi_vignette_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -195,9 +195,9 @@ rppi_vignette_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize m
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -233,9 +233,9 @@ rppi_vignette_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -271,9 +271,9 @@ rppi_vignette_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -309,9 +309,9 @@ rppi_vignette_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize m
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -342,9 +342,9 @@ rppi_vignette_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -375,9 +375,9 @@ rppi_vignette_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -408,9 +408,9 @@ rppi_vignette_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -441,9 +441,9 @@ rppi_vignette_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -474,9 +474,9 @@ rppi_vignette_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -507,9 +507,9 @@ rppi_vignette_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -540,9 +540,9 @@ rppi_vignette_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -573,9 +573,9 @@ rppi_vignette_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -606,9 +606,9 @@ rppi_vignette_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -639,9 +639,9 @@ rppi_vignette_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -672,9 +672,9 @@ rppi_vignette_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -705,9 +705,9 @@ rppi_vignette_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -716,7 +716,7 @@ rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			stdDev,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -726,7 +726,7 @@ rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			stdDev,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -734,9 +734,9 @@ rppi_vignette_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -767,9 +767,9 @@ rppi_vignette_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -805,9 +805,9 @@ rppi_vignette_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -843,9 +843,9 @@ rppi_vignette_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -881,9 +881,9 @@ rppi_vignette_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize m
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -919,9 +919,9 @@ rppi_vignette_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -957,9 +957,9 @@ rppi_vignette_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -995,9 +995,9 @@ rppi_vignette_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize m
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1028,9 +1028,9 @@ rppi_vignette_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1061,9 +1061,9 @@ rppi_vignette_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -1094,9 +1094,9 @@ rppi_vignette_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1127,9 +1127,9 @@ rppi_vignette_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1160,9 +1160,9 @@ rppi_vignette_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -1193,9 +1193,9 @@ rppi_vignette_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1226,9 +1226,9 @@ rppi_vignette_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1259,9 +1259,9 @@ rppi_vignette_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -1292,9 +1292,9 @@ rppi_vignette_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1325,9 +1325,9 @@ rppi_vignette_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1358,9 +1358,9 @@ rppi_vignette_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -1391,9 +1391,9 @@ rppi_vignette_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -1402,7 +1402,7 @@ rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			stdDev,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -1412,7 +1412,7 @@ rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			stdDev,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -1420,9 +1420,9 @@ rppi_vignette_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1453,9 +1453,9 @@ rppi_vignette_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -1491,9 +1491,9 @@ rppi_vignette_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -1529,9 +1529,9 @@ rppi_vignette_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -1567,9 +1567,9 @@ rppi_vignette_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize m
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -1605,9 +1605,9 @@ rppi_vignette_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -1643,9 +1643,9 @@ rppi_vignette_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -1681,9 +1681,9 @@ rppi_vignette_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize m
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1714,9 +1714,9 @@ rppi_vignette_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1747,9 +1747,9 @@ rppi_vignette_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -1780,9 +1780,9 @@ rppi_vignette_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1813,9 +1813,9 @@ rppi_vignette_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1846,9 +1846,9 @@ rppi_vignette_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -1879,9 +1879,9 @@ rppi_vignette_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1912,9 +1912,9 @@ rppi_vignette_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -1945,9 +1945,9 @@ rppi_vignette_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -1978,9 +1978,9 @@ rppi_vignette_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -2011,9 +2011,9 @@ rppi_vignette_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -2044,9 +2044,9 @@ rppi_vignette_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -2077,24 +2077,24 @@ rppi_vignette_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,rppHandle_t rppHandle )
-{ 
+{
 	vignette_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			stdDev,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -2113,9 +2113,9 @@ rppi_vignette_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2139,9 +2139,9 @@ rppi_vignette_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2164,9 +2164,9 @@ rppi_vignette_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2190,9 +2190,9 @@ rppi_vignette_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2215,9 +2215,9 @@ rppi_vignette_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2239,9 +2239,9 @@ rppi_vignette_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2264,9 +2264,9 @@ rppi_vignette_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -2285,9 +2285,9 @@ rppi_vignette_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -2305,9 +2305,9 @@ rppi_vignette_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -2326,9 +2326,9 @@ rppi_vignette_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -2346,9 +2346,9 @@ rppi_vignette_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -2365,9 +2365,9 @@ rppi_vignette_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -2385,9 +2385,9 @@ rppi_vignette_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -2405,9 +2405,9 @@ rppi_vignette_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
 	vignette_host_batch<Rpp8u>(
@@ -2424,9 +2424,9 @@ rppi_vignette_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -2444,9 +2444,9 @@ rppi_vignette_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -2463,9 +2463,9 @@ rppi_vignette_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	vignette_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -2481,9 +2481,9 @@ rppi_vignette_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -2500,24 +2500,24 @@ rppi_vignette_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,rppHandle_t rppHandle )
-{ 
+{
 	vignette_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			stdDev,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -2536,9 +2536,9 @@ rppi_vignette_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2562,9 +2562,9 @@ rppi_vignette_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2587,9 +2587,9 @@ rppi_vignette_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2613,9 +2613,9 @@ rppi_vignette_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2638,9 +2638,9 @@ rppi_vignette_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2662,9 +2662,9 @@ rppi_vignette_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2687,9 +2687,9 @@ rppi_vignette_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -2708,9 +2708,9 @@ rppi_vignette_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -2728,9 +2728,9 @@ rppi_vignette_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -2749,9 +2749,9 @@ rppi_vignette_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -2769,9 +2769,9 @@ rppi_vignette_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -2788,9 +2788,9 @@ rppi_vignette_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -2808,9 +2808,9 @@ rppi_vignette_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -2828,9 +2828,9 @@ rppi_vignette_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
 	vignette_host_batch<Rpp8u>(
@@ -2847,9 +2847,9 @@ rppi_vignette_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -2867,9 +2867,9 @@ rppi_vignette_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -2886,9 +2886,9 @@ rppi_vignette_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	vignette_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -2904,9 +2904,9 @@ rppi_vignette_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -2923,24 +2923,24 @@ rppi_vignette_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,rppHandle_t rppHandle )
-{ 
+{
 	vignette_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			stdDev,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -2959,9 +2959,9 @@ rppi_vignette_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -2985,9 +2985,9 @@ rppi_vignette_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -3010,9 +3010,9 @@ rppi_vignette_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -3036,9 +3036,9 @@ rppi_vignette_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -3061,9 +3061,9 @@ rppi_vignette_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -3085,9 +3085,9 @@ rppi_vignette_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -3110,9 +3110,9 @@ rppi_vignette_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -3131,9 +3131,9 @@ rppi_vignette_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -3151,9 +3151,9 @@ rppi_vignette_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -3172,9 +3172,9 @@ rppi_vignette_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -3192,9 +3192,9 @@ rppi_vignette_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -3211,9 +3211,9 @@ rppi_vignette_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -3231,9 +3231,9 @@ rppi_vignette_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -3251,9 +3251,9 @@ rppi_vignette_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
 	vignette_host_batch<Rpp8u>(
@@ -3270,9 +3270,9 @@ rppi_vignette_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (stdDev, rpp::deref(rppHandle), paramIndex++);
@@ -3290,9 +3290,9 @@ rppi_vignette_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -3309,9 +3309,9 @@ rppi_vignette_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	vignette_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -3327,9 +3327,9 @@ rppi_vignette_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_vignette_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	vignette_host_batch<Rpp8u>(
@@ -3346,9 +3346,9 @@ rppi_vignette_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -3357,7 +3357,7 @@ rppi_color_temperature_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -3367,7 +3367,7 @@ rppi_color_temperature_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -3375,9 +3375,9 @@ rppi_color_temperature_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3408,9 +3408,9 @@ rppi_color_temperature_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -3446,9 +3446,9 @@ rppi_color_temperature_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -3484,9 +3484,9 @@ rppi_color_temperature_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -3522,9 +3522,9 @@ rppi_color_temperature_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -3560,9 +3560,9 @@ rppi_color_temperature_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -3598,9 +3598,9 @@ rppi_color_temperature_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -3636,9 +3636,9 @@ rppi_color_temperature_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3669,9 +3669,9 @@ rppi_color_temperature_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3702,9 +3702,9 @@ rppi_color_temperature_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -3735,9 +3735,9 @@ rppi_color_temperature_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3768,9 +3768,9 @@ rppi_color_temperature_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3801,9 +3801,9 @@ rppi_color_temperature_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -3834,9 +3834,9 @@ rppi_color_temperature_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3867,9 +3867,9 @@ rppi_color_temperature_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3900,9 +3900,9 @@ rppi_color_temperature_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -3933,9 +3933,9 @@ rppi_color_temperature_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3966,9 +3966,9 @@ rppi_color_temperature_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -3999,9 +3999,9 @@ rppi_color_temperature_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -4032,9 +4032,9 @@ rppi_color_temperature_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -4043,7 +4043,7 @@ rppi_color_temperature_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -4053,7 +4053,7 @@ rppi_color_temperature_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -4061,9 +4061,9 @@ rppi_color_temperature_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4094,9 +4094,9 @@ rppi_color_temperature_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4132,9 +4132,9 @@ rppi_color_temperature_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4170,9 +4170,9 @@ rppi_color_temperature_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4208,9 +4208,9 @@ rppi_color_temperature_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4246,9 +4246,9 @@ rppi_color_temperature_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4284,9 +4284,9 @@ rppi_color_temperature_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4322,9 +4322,9 @@ rppi_color_temperature_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4355,9 +4355,9 @@ rppi_color_temperature_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4388,9 +4388,9 @@ rppi_color_temperature_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -4421,9 +4421,9 @@ rppi_color_temperature_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4454,9 +4454,9 @@ rppi_color_temperature_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4487,9 +4487,9 @@ rppi_color_temperature_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -4520,9 +4520,9 @@ rppi_color_temperature_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4553,9 +4553,9 @@ rppi_color_temperature_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4586,9 +4586,9 @@ rppi_color_temperature_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -4619,9 +4619,9 @@ rppi_color_temperature_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4652,9 +4652,9 @@ rppi_color_temperature_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4685,9 +4685,9 @@ rppi_color_temperature_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -4718,9 +4718,9 @@ rppi_color_temperature_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -4729,7 +4729,7 @@ rppi_color_temperature_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -4739,7 +4739,7 @@ rppi_color_temperature_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -4747,9 +4747,9 @@ rppi_color_temperature_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -4780,9 +4780,9 @@ rppi_color_temperature_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4818,9 +4818,9 @@ rppi_color_temperature_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4856,9 +4856,9 @@ rppi_color_temperature_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4894,9 +4894,9 @@ rppi_color_temperature_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4932,9 +4932,9 @@ rppi_color_temperature_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -4970,9 +4970,9 @@ rppi_color_temperature_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -5008,9 +5008,9 @@ rppi_color_temperature_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -5041,9 +5041,9 @@ rppi_color_temperature_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -5074,9 +5074,9 @@ rppi_color_temperature_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -5107,9 +5107,9 @@ rppi_color_temperature_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -5140,9 +5140,9 @@ rppi_color_temperature_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -5173,9 +5173,9 @@ rppi_color_temperature_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -5206,9 +5206,9 @@ rppi_color_temperature_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -5239,9 +5239,9 @@ rppi_color_temperature_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -5272,9 +5272,9 @@ rppi_color_temperature_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -5305,9 +5305,9 @@ rppi_color_temperature_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -5338,9 +5338,9 @@ rppi_color_temperature_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -5371,9 +5371,9 @@ rppi_color_temperature_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -5404,24 +5404,24 @@ rppi_color_temperature_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,rppHandle_t rppHandle )
-{ 
+{
 	color_temperature_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -5440,9 +5440,9 @@ rppi_color_temperature_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5466,9 +5466,9 @@ rppi_color_temperature_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5491,9 +5491,9 @@ rppi_color_temperature_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5517,9 +5517,9 @@ rppi_color_temperature_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5542,9 +5542,9 @@ rppi_color_temperature_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5566,9 +5566,9 @@ rppi_color_temperature_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5591,9 +5591,9 @@ rppi_color_temperature_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -5612,9 +5612,9 @@ rppi_color_temperature_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -5632,9 +5632,9 @@ rppi_color_temperature_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -5653,9 +5653,9 @@ rppi_color_temperature_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -5673,9 +5673,9 @@ rppi_color_temperature_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -5692,9 +5692,9 @@ rppi_color_temperature_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -5712,9 +5712,9 @@ rppi_color_temperature_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -5732,9 +5732,9 @@ rppi_color_temperature_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
 	color_temperature_host_batch<Rpp8u>(
@@ -5751,9 +5751,9 @@ rppi_color_temperature_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -5771,9 +5771,9 @@ rppi_color_temperature_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -5790,9 +5790,9 @@ rppi_color_temperature_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	color_temperature_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -5808,9 +5808,9 @@ rppi_color_temperature_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -5827,24 +5827,24 @@ rppi_color_temperature_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,rppHandle_t rppHandle )
-{ 
+{
 	color_temperature_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -5863,9 +5863,9 @@ rppi_color_temperature_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5889,9 +5889,9 @@ rppi_color_temperature_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5914,9 +5914,9 @@ rppi_color_temperature_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5940,9 +5940,9 @@ rppi_color_temperature_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5965,9 +5965,9 @@ rppi_color_temperature_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -5989,9 +5989,9 @@ rppi_color_temperature_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -6014,9 +6014,9 @@ rppi_color_temperature_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -6035,9 +6035,9 @@ rppi_color_temperature_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -6055,9 +6055,9 @@ rppi_color_temperature_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -6076,9 +6076,9 @@ rppi_color_temperature_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -6096,9 +6096,9 @@ rppi_color_temperature_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -6115,9 +6115,9 @@ rppi_color_temperature_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -6135,9 +6135,9 @@ rppi_color_temperature_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -6155,9 +6155,9 @@ rppi_color_temperature_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
 	color_temperature_host_batch<Rpp8u>(
@@ -6174,9 +6174,9 @@ rppi_color_temperature_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -6194,9 +6194,9 @@ rppi_color_temperature_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -6213,9 +6213,9 @@ rppi_color_temperature_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	color_temperature_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -6231,9 +6231,9 @@ rppi_color_temperature_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -6250,24 +6250,24 @@ rppi_color_temperature_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,rppHandle_t rppHandle )
-{ 
+{
 	color_temperature_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			adjustmentValue,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -6286,9 +6286,9 @@ rppi_color_temperature_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -6312,9 +6312,9 @@ rppi_color_temperature_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -6337,9 +6337,9 @@ rppi_color_temperature_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -6363,9 +6363,9 @@ rppi_color_temperature_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -6388,9 +6388,9 @@ rppi_color_temperature_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -6412,9 +6412,9 @@ rppi_color_temperature_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -6437,9 +6437,9 @@ rppi_color_temperature_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -6458,9 +6458,9 @@ rppi_color_temperature_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -6478,9 +6478,9 @@ rppi_color_temperature_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -6499,9 +6499,9 @@ rppi_color_temperature_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -6519,9 +6519,9 @@ rppi_color_temperature_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -6538,9 +6538,9 @@ rppi_color_temperature_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -6558,9 +6558,9 @@ rppi_color_temperature_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -6578,9 +6578,9 @@ rppi_color_temperature_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
 	color_temperature_host_batch<Rpp8u>(
@@ -6597,9 +6597,9 @@ rppi_color_temperature_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_int (adjustmentValue, rpp::deref(rppHandle), paramIndex++);
@@ -6617,9 +6617,9 @@ rppi_color_temperature_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -6636,9 +6636,9 @@ rppi_color_temperature_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	color_temperature_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -6654,9 +6654,9 @@ rppi_color_temperature_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_color_temperature_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32s *adjustmentValue ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	color_temperature_host_batch<Rpp8u>(
@@ -6673,9 +6673,9 @@ rppi_color_temperature_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -6684,7 +6684,7 @@ rppi_channel_extract_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -6694,7 +6694,7 @@ rppi_channel_extract_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -6702,9 +6702,9 @@ rppi_channel_extract_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -6734,9 +6734,9 @@ rppi_channel_extract_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -6766,9 +6766,9 @@ rppi_channel_extract_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -6798,9 +6798,9 @@ rppi_channel_extract_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -6830,9 +6830,9 @@ rppi_channel_extract_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -6862,9 +6862,9 @@ rppi_channel_extract_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -6894,9 +6894,9 @@ rppi_channel_extract_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -6905,7 +6905,7 @@ rppi_channel_extract_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -6915,7 +6915,7 @@ rppi_channel_extract_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -6923,9 +6923,9 @@ rppi_channel_extract_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -6955,9 +6955,9 @@ rppi_channel_extract_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -6987,9 +6987,9 @@ rppi_channel_extract_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7019,9 +7019,9 @@ rppi_channel_extract_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7051,9 +7051,9 @@ rppi_channel_extract_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -7083,9 +7083,9 @@ rppi_channel_extract_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -7115,9 +7115,9 @@ rppi_channel_extract_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -7126,7 +7126,7 @@ rppi_channel_extract_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -7136,7 +7136,7 @@ rppi_channel_extract_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -7144,9 +7144,9 @@ rppi_channel_extract_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7176,9 +7176,9 @@ rppi_channel_extract_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7208,9 +7208,9 @@ rppi_channel_extract_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7240,9 +7240,9 @@ rppi_channel_extract_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7272,9 +7272,9 @@ rppi_channel_extract_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -7304,9 +7304,9 @@ rppi_channel_extract_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -7336,24 +7336,24 @@ rppi_channel_extract_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,rppHandle_t rppHandle )
-{ 
+{
 	channel_extract_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
@@ -7370,9 +7370,9 @@ rppi_channel_extract_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_extract_host_batch<Rpp8u>(
@@ -7388,9 +7388,9 @@ rppi_channel_extract_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
 	channel_extract_host_batch<Rpp8u>(
@@ -7406,9 +7406,9 @@ rppi_channel_extract_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_extract_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -7423,9 +7423,9 @@ rppi_channel_extract_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
@@ -7442,9 +7442,9 @@ rppi_channel_extract_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_extract_host_batch<Rpp8u>(
@@ -7460,24 +7460,24 @@ rppi_channel_extract_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,rppHandle_t rppHandle )
-{ 
+{
 	channel_extract_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
@@ -7494,9 +7494,9 @@ rppi_channel_extract_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_extract_host_batch<Rpp8u>(
@@ -7512,9 +7512,9 @@ rppi_channel_extract_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
 	channel_extract_host_batch<Rpp8u>(
@@ -7530,9 +7530,9 @@ rppi_channel_extract_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_extract_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -7547,9 +7547,9 @@ rppi_channel_extract_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
@@ -7566,9 +7566,9 @@ rppi_channel_extract_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_extract_host_batch<Rpp8u>(
@@ -7584,24 +7584,24 @@ rppi_channel_extract_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,rppHandle_t rppHandle )
-{ 
+{
 	channel_extract_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			extractChannelNumber,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
@@ -7618,9 +7618,9 @@ rppi_channel_extract_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_extract_host_batch<Rpp8u>(
@@ -7636,9 +7636,9 @@ rppi_channel_extract_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
 	channel_extract_host_batch<Rpp8u>(
@@ -7654,9 +7654,9 @@ rppi_channel_extract_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_extract_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -7671,9 +7671,9 @@ rppi_channel_extract_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_uint (extractChannelNumber, rpp::deref(rppHandle), paramIndex++);
@@ -7690,9 +7690,9 @@ rppi_channel_extract_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_extract_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *extractChannelNumber ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_extract_host_batch<Rpp8u>(
@@ -7708,9 +7708,9 @@ rppi_channel_extract_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -7720,7 +7720,7 @@ rppi_channel_combine_u8_pln1_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 			static_cast<cl_mem>(srcPtr3),
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -7731,7 +7731,7 @@ rppi_channel_combine_u8_pln1_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 			static_cast<Rpp8u *>(srcPtr3),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -7739,9 +7739,9 @@ rppi_channel_combine_u8_pln1_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchSS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7774,9 +7774,9 @@ rppi_channel_combine_u8_pln1_batchSS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchSD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7809,9 +7809,9 @@ rppi_channel_combine_u8_pln1_batchSD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchDS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7844,9 +7844,9 @@ rppi_channel_combine_u8_pln1_batchDS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchDD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -7879,9 +7879,9 @@ rppi_channel_combine_u8_pln1_batchDD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchPS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -7914,9 +7914,9 @@ rppi_channel_combine_u8_pln1_batchPS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -7949,9 +7949,9 @@ rppi_channel_combine_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -7961,7 +7961,7 @@ rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 			static_cast<cl_mem>(srcPtr3),
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -7972,7 +7972,7 @@ rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 			static_cast<Rpp8u *>(srcPtr3),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -7980,9 +7980,9 @@ rppi_channel_combine_u8_pln3_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchSS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8015,9 +8015,9 @@ rppi_channel_combine_u8_pln3_batchSS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchSD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8050,9 +8050,9 @@ rppi_channel_combine_u8_pln3_batchSD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchDS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8085,9 +8085,9 @@ rppi_channel_combine_u8_pln3_batchDS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchDD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8120,9 +8120,9 @@ rppi_channel_combine_u8_pln3_batchDD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchPS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -8155,9 +8155,9 @@ rppi_channel_combine_u8_pln3_batchPS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -8190,9 +8190,9 @@ rppi_channel_combine_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -8202,7 +8202,7 @@ rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 			static_cast<cl_mem>(srcPtr3),
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -8213,7 +8213,7 @@ rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 			static_cast<Rpp8u *>(srcPtr3),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -8221,9 +8221,9 @@ rppi_channel_combine_u8_pkd3_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t sr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8256,9 +8256,9 @@ rppi_channel_combine_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8291,9 +8291,9 @@ rppi_channel_combine_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8326,9 +8326,9 @@ rppi_channel_combine_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8361,9 +8361,9 @@ rppi_channel_combine_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -8396,9 +8396,9 @@ rppi_channel_combine_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -8431,25 +8431,25 @@ rppi_channel_combine_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rpp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle )
-{ 
+{
 	channel_combine_host(
 			static_cast<Rpp8u *>(srcPtr1),
 			static_cast<Rpp8u *>(srcPtr2),
 			static_cast<Rpp8u *>(srcPtr3),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchSS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8466,9 +8466,9 @@ rppi_channel_combine_u8_pln1_batchSS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchSD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8485,9 +8485,9 @@ rppi_channel_combine_u8_pln1_batchSD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchDS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_combine_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr1),
@@ -8503,9 +8503,9 @@ rppi_channel_combine_u8_pln1_batchDS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchDD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_combine_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr1),
@@ -8521,9 +8521,9 @@ rppi_channel_combine_u8_pln1_batchDD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchPS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8540,9 +8540,9 @@ rppi_channel_combine_u8_pln1_batchPS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln1_batchPD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8559,25 +8559,25 @@ rppi_channel_combine_u8_pln1_batchPD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle )
-{ 
+{
 	channel_combine_host(
 			static_cast<Rpp8u *>(srcPtr1),
 			static_cast<Rpp8u *>(srcPtr2),
 			static_cast<Rpp8u *>(srcPtr3),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchSS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8594,9 +8594,9 @@ rppi_channel_combine_u8_pln3_batchSS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchSD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8613,9 +8613,9 @@ rppi_channel_combine_u8_pln3_batchSD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchDS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_combine_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr1),
@@ -8631,9 +8631,9 @@ rppi_channel_combine_u8_pln3_batchDS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchDD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_combine_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr1),
@@ -8649,9 +8649,9 @@ rppi_channel_combine_u8_pln3_batchDD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchPS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8668,9 +8668,9 @@ rppi_channel_combine_u8_pln3_batchPS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pln3_batchPD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8687,25 +8687,25 @@ rppi_channel_combine_u8_pln3_batchPD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle )
-{ 
+{
 	channel_combine_host(
 			static_cast<Rpp8u *>(srcPtr1),
 			static_cast<Rpp8u *>(srcPtr2),
 			static_cast<Rpp8u *>(srcPtr3),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchSS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8722,9 +8722,9 @@ rppi_channel_combine_u8_pkd3_batchSS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchSD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8741,9 +8741,9 @@ rppi_channel_combine_u8_pkd3_batchSD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchDS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_combine_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr1),
@@ -8759,9 +8759,9 @@ rppi_channel_combine_u8_pkd3_batchDS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchDD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	channel_combine_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr1),
@@ -8777,9 +8777,9 @@ rppi_channel_combine_u8_pkd3_batchDD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchPS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8796,9 +8796,9 @@ rppi_channel_combine_u8_pkd3_batchPS_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_channel_combine_u8_pkd3_batchPD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,RppPtr_t srcPtr3 ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	channel_combine_host_batch<Rpp8u>(
@@ -8815,9 +8815,9 @@ rppi_channel_combine_u8_pkd3_batchPD_host(RppPtr_t srcPtr1 ,RppPtr_t srcPtr2 ,Rp
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -8826,7 +8826,7 @@ rppi_hueRGB_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			hueShift,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -8836,7 +8836,7 @@ rppi_hueRGB_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			hueShift,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -8844,9 +8844,9 @@ rppi_hueRGB_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -8877,9 +8877,9 @@ rppi_hueRGB_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -8915,9 +8915,9 @@ rppi_hueRGB_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -8953,9 +8953,9 @@ rppi_hueRGB_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -8991,9 +8991,9 @@ rppi_hueRGB_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize max
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9029,9 +9029,9 @@ rppi_hueRGB_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9067,9 +9067,9 @@ rppi_hueRGB_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9105,9 +9105,9 @@ rppi_hueRGB_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize max
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9138,9 +9138,9 @@ rppi_hueRGB_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9171,9 +9171,9 @@ rppi_hueRGB_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -9204,9 +9204,9 @@ rppi_hueRGB_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9237,9 +9237,9 @@ rppi_hueRGB_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9270,9 +9270,9 @@ rppi_hueRGB_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -9303,9 +9303,9 @@ rppi_hueRGB_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9336,9 +9336,9 @@ rppi_hueRGB_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9369,9 +9369,9 @@ rppi_hueRGB_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -9402,9 +9402,9 @@ rppi_hueRGB_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9435,9 +9435,9 @@ rppi_hueRGB_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9468,9 +9468,9 @@ rppi_hueRGB_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -9501,9 +9501,9 @@ rppi_hueRGB_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -9512,7 +9512,7 @@ rppi_hueRGB_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			hueShift,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -9522,7 +9522,7 @@ rppi_hueRGB_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			hueShift,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -9530,9 +9530,9 @@ rppi_hueRGB_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9563,9 +9563,9 @@ rppi_hueRGB_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9601,9 +9601,9 @@ rppi_hueRGB_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9639,9 +9639,9 @@ rppi_hueRGB_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9677,9 +9677,9 @@ rppi_hueRGB_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize max
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9715,9 +9715,9 @@ rppi_hueRGB_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9753,9 +9753,9 @@ rppi_hueRGB_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -9791,9 +9791,9 @@ rppi_hueRGB_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize max
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9824,9 +9824,9 @@ rppi_hueRGB_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9857,9 +9857,9 @@ rppi_hueRGB_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -9890,9 +9890,9 @@ rppi_hueRGB_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9923,9 +9923,9 @@ rppi_hueRGB_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -9956,9 +9956,9 @@ rppi_hueRGB_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -9989,9 +9989,9 @@ rppi_hueRGB_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10022,9 +10022,9 @@ rppi_hueRGB_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10055,9 +10055,9 @@ rppi_hueRGB_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -10088,9 +10088,9 @@ rppi_hueRGB_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10121,9 +10121,9 @@ rppi_hueRGB_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10154,9 +10154,9 @@ rppi_hueRGB_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -10187,9 +10187,9 @@ rppi_hueRGB_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -10198,7 +10198,7 @@ rppi_hueRGB_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			hueShift,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -10208,7 +10208,7 @@ rppi_hueRGB_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			hueShift,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -10216,9 +10216,9 @@ rppi_hueRGB_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp3
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10249,9 +10249,9 @@ rppi_hueRGB_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -10287,9 +10287,9 @@ rppi_hueRGB_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -10325,9 +10325,9 @@ rppi_hueRGB_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -10363,9 +10363,9 @@ rppi_hueRGB_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize max
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -10401,9 +10401,9 @@ rppi_hueRGB_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -10439,9 +10439,9 @@ rppi_hueRGB_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -10477,9 +10477,9 @@ rppi_hueRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize max
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10510,9 +10510,9 @@ rppi_hueRGB_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10543,9 +10543,9 @@ rppi_hueRGB_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -10576,9 +10576,9 @@ rppi_hueRGB_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10609,9 +10609,9 @@ rppi_hueRGB_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10642,9 +10642,9 @@ rppi_hueRGB_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -10675,9 +10675,9 @@ rppi_hueRGB_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10708,9 +10708,9 @@ rppi_hueRGB_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10741,9 +10741,9 @@ rppi_hueRGB_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -10774,9 +10774,9 @@ rppi_hueRGB_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10807,9 +10807,9 @@ rppi_hueRGB_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -10840,9 +10840,9 @@ rppi_hueRGB_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -10873,24 +10873,24 @@ rppi_hueRGB_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSiz
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,rppHandle_t rppHandle )
-{ 
+{
 	hueRGB_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			hueShift,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -10909,9 +10909,9 @@ rppi_hueRGB_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -10935,9 +10935,9 @@ rppi_hueRGB_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -10960,9 +10960,9 @@ rppi_hueRGB_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -10986,9 +10986,9 @@ rppi_hueRGB_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize ma
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11011,9 +11011,9 @@ rppi_hueRGB_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11035,9 +11035,9 @@ rppi_hueRGB_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11060,9 +11060,9 @@ rppi_hueRGB_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize ma
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -11081,9 +11081,9 @@ rppi_hueRGB_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -11101,9 +11101,9 @@ rppi_hueRGB_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -11122,9 +11122,9 @@ rppi_hueRGB_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -11142,9 +11142,9 @@ rppi_hueRGB_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -11161,9 +11161,9 @@ rppi_hueRGB_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -11181,9 +11181,9 @@ rppi_hueRGB_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -11201,9 +11201,9 @@ rppi_hueRGB_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
 	hueRGB_host_batch<Rpp8u>(
@@ -11220,9 +11220,9 @@ rppi_hueRGB_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -11240,9 +11240,9 @@ rppi_hueRGB_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -11259,9 +11259,9 @@ rppi_hueRGB_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	hueRGB_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -11277,9 +11277,9 @@ rppi_hueRGB_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -11296,24 +11296,24 @@ rppi_hueRGB_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,rppHandle_t rppHandle )
-{ 
+{
 	hueRGB_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			hueShift,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -11332,9 +11332,9 @@ rppi_hueRGB_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11358,9 +11358,9 @@ rppi_hueRGB_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11383,9 +11383,9 @@ rppi_hueRGB_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11409,9 +11409,9 @@ rppi_hueRGB_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize ma
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11434,9 +11434,9 @@ rppi_hueRGB_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11458,9 +11458,9 @@ rppi_hueRGB_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11483,9 +11483,9 @@ rppi_hueRGB_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize ma
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -11504,9 +11504,9 @@ rppi_hueRGB_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -11524,9 +11524,9 @@ rppi_hueRGB_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -11545,9 +11545,9 @@ rppi_hueRGB_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -11565,9 +11565,9 @@ rppi_hueRGB_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -11584,9 +11584,9 @@ rppi_hueRGB_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -11604,9 +11604,9 @@ rppi_hueRGB_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -11624,9 +11624,9 @@ rppi_hueRGB_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
 	hueRGB_host_batch<Rpp8u>(
@@ -11643,9 +11643,9 @@ rppi_hueRGB_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -11663,9 +11663,9 @@ rppi_hueRGB_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -11682,9 +11682,9 @@ rppi_hueRGB_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	hueRGB_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -11700,9 +11700,9 @@ rppi_hueRGB_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -11719,24 +11719,24 @@ rppi_hueRGB_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,rppHandle_t rppHandle )
-{ 
+{
 	hueRGB_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			hueShift,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -11755,9 +11755,9 @@ rppi_hueRGB_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11781,9 +11781,9 @@ rppi_hueRGB_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11806,9 +11806,9 @@ rppi_hueRGB_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11832,9 +11832,9 @@ rppi_hueRGB_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize ma
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11857,9 +11857,9 @@ rppi_hueRGB_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dst
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11881,9 +11881,9 @@ rppi_hueRGB_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t ds
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -11906,9 +11906,9 @@ rppi_hueRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize ma
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -11927,9 +11927,9 @@ rppi_hueRGB_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -11947,9 +11947,9 @@ rppi_hueRGB_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -11968,9 +11968,9 @@ rppi_hueRGB_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -11988,9 +11988,9 @@ rppi_hueRGB_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -12007,9 +12007,9 @@ rppi_hueRGB_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -12027,9 +12027,9 @@ rppi_hueRGB_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -12047,9 +12047,9 @@ rppi_hueRGB_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
 	hueRGB_host_batch<Rpp8u>(
@@ -12066,9 +12066,9 @@ rppi_hueRGB_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (hueShift, rpp::deref(rppHandle), paramIndex++);
@@ -12086,9 +12086,9 @@ rppi_hueRGB_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -12105,9 +12105,9 @@ rppi_hueRGB_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	hueRGB_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -12123,9 +12123,9 @@ rppi_hueRGB_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_hueRGB_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *hueShift ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	hueRGB_host_batch<Rpp8u>(
@@ -12142,9 +12142,9 @@ rppi_hueRGB_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -12153,7 +12153,7 @@ rppi_saturationRGB_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -12163,7 +12163,7 @@ rppi_saturationRGB_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -12171,9 +12171,9 @@ rppi_saturationRGB_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12204,9 +12204,9 @@ rppi_saturationRGB_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -12242,9 +12242,9 @@ rppi_saturationRGB_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -12280,9 +12280,9 @@ rppi_saturationRGB_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -12318,9 +12318,9 @@ rppi_saturationRGB_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -12356,9 +12356,9 @@ rppi_saturationRGB_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -12394,9 +12394,9 @@ rppi_saturationRGB_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -12432,9 +12432,9 @@ rppi_saturationRGB_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12465,9 +12465,9 @@ rppi_saturationRGB_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12498,9 +12498,9 @@ rppi_saturationRGB_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -12531,9 +12531,9 @@ rppi_saturationRGB_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12564,9 +12564,9 @@ rppi_saturationRGB_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12597,9 +12597,9 @@ rppi_saturationRGB_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -12630,9 +12630,9 @@ rppi_saturationRGB_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12663,9 +12663,9 @@ rppi_saturationRGB_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12696,9 +12696,9 @@ rppi_saturationRGB_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -12729,9 +12729,9 @@ rppi_saturationRGB_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12762,9 +12762,9 @@ rppi_saturationRGB_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12795,9 +12795,9 @@ rppi_saturationRGB_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -12828,9 +12828,9 @@ rppi_saturationRGB_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -12839,7 +12839,7 @@ rppi_saturationRGB_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -12849,7 +12849,7 @@ rppi_saturationRGB_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -12857,9 +12857,9 @@ rppi_saturationRGB_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -12890,9 +12890,9 @@ rppi_saturationRGB_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -12928,9 +12928,9 @@ rppi_saturationRGB_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -12966,9 +12966,9 @@ rppi_saturationRGB_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13004,9 +13004,9 @@ rppi_saturationRGB_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13042,9 +13042,9 @@ rppi_saturationRGB_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13080,9 +13080,9 @@ rppi_saturationRGB_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13118,9 +13118,9 @@ rppi_saturationRGB_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13151,9 +13151,9 @@ rppi_saturationRGB_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13184,9 +13184,9 @@ rppi_saturationRGB_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -13217,9 +13217,9 @@ rppi_saturationRGB_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13250,9 +13250,9 @@ rppi_saturationRGB_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13283,9 +13283,9 @@ rppi_saturationRGB_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -13316,9 +13316,9 @@ rppi_saturationRGB_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13349,9 +13349,9 @@ rppi_saturationRGB_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13382,9 +13382,9 @@ rppi_saturationRGB_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -13415,9 +13415,9 @@ rppi_saturationRGB_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13448,9 +13448,9 @@ rppi_saturationRGB_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13481,9 +13481,9 @@ rppi_saturationRGB_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -13514,9 +13514,9 @@ rppi_saturationRGB_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -13525,7 +13525,7 @@ rppi_saturationRGB_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -13535,7 +13535,7 @@ rppi_saturationRGB_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -13543,9 +13543,9 @@ rppi_saturationRGB_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13576,9 +13576,9 @@ rppi_saturationRGB_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13614,9 +13614,9 @@ rppi_saturationRGB_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13652,9 +13652,9 @@ rppi_saturationRGB_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13690,9 +13690,9 @@ rppi_saturationRGB_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13728,9 +13728,9 @@ rppi_saturationRGB_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13766,9 +13766,9 @@ rppi_saturationRGB_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -13804,9 +13804,9 @@ rppi_saturationRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13837,9 +13837,9 @@ rppi_saturationRGB_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13870,9 +13870,9 @@ rppi_saturationRGB_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -13903,9 +13903,9 @@ rppi_saturationRGB_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13936,9 +13936,9 @@ rppi_saturationRGB_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -13969,9 +13969,9 @@ rppi_saturationRGB_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -14002,9 +14002,9 @@ rppi_saturationRGB_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -14035,9 +14035,9 @@ rppi_saturationRGB_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -14068,9 +14068,9 @@ rppi_saturationRGB_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -14101,9 +14101,9 @@ rppi_saturationRGB_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -14134,9 +14134,9 @@ rppi_saturationRGB_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -14167,9 +14167,9 @@ rppi_saturationRGB_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -14200,24 +14200,24 @@ rppi_saturationRGB_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,rppHandle_t rppHandle )
-{ 
+{
 	saturationRGB_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -14236,9 +14236,9 @@ rppi_saturationRGB_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14262,9 +14262,9 @@ rppi_saturationRGB_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14287,9 +14287,9 @@ rppi_saturationRGB_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14313,9 +14313,9 @@ rppi_saturationRGB_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14338,9 +14338,9 @@ rppi_saturationRGB_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14362,9 +14362,9 @@ rppi_saturationRGB_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14387,9 +14387,9 @@ rppi_saturationRGB_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -14408,9 +14408,9 @@ rppi_saturationRGB_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -14428,9 +14428,9 @@ rppi_saturationRGB_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -14449,9 +14449,9 @@ rppi_saturationRGB_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -14469,9 +14469,9 @@ rppi_saturationRGB_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -14488,9 +14488,9 @@ rppi_saturationRGB_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -14508,9 +14508,9 @@ rppi_saturationRGB_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -14528,9 +14528,9 @@ rppi_saturationRGB_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
 	saturationRGB_host_batch<Rpp8u>(
@@ -14547,9 +14547,9 @@ rppi_saturationRGB_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -14567,9 +14567,9 @@ rppi_saturationRGB_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -14586,9 +14586,9 @@ rppi_saturationRGB_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	saturationRGB_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -14604,9 +14604,9 @@ rppi_saturationRGB_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -14623,24 +14623,24 @@ rppi_saturationRGB_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,rppHandle_t rppHandle )
-{ 
+{
 	saturationRGB_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -14659,9 +14659,9 @@ rppi_saturationRGB_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14685,9 +14685,9 @@ rppi_saturationRGB_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14710,9 +14710,9 @@ rppi_saturationRGB_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14736,9 +14736,9 @@ rppi_saturationRGB_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14761,9 +14761,9 @@ rppi_saturationRGB_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14785,9 +14785,9 @@ rppi_saturationRGB_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -14810,9 +14810,9 @@ rppi_saturationRGB_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -14831,9 +14831,9 @@ rppi_saturationRGB_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -14851,9 +14851,9 @@ rppi_saturationRGB_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -14872,9 +14872,9 @@ rppi_saturationRGB_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -14892,9 +14892,9 @@ rppi_saturationRGB_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -14911,9 +14911,9 @@ rppi_saturationRGB_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -14931,9 +14931,9 @@ rppi_saturationRGB_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -14951,9 +14951,9 @@ rppi_saturationRGB_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
 	saturationRGB_host_batch<Rpp8u>(
@@ -14970,9 +14970,9 @@ rppi_saturationRGB_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -14990,9 +14990,9 @@ rppi_saturationRGB_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -15009,9 +15009,9 @@ rppi_saturationRGB_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	saturationRGB_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -15027,9 +15027,9 @@ rppi_saturationRGB_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -15046,24 +15046,24 @@ rppi_saturationRGB_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,rppHandle_t rppHandle )
-{ 
+{
 	saturationRGB_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			saturationFactor,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -15082,9 +15082,9 @@ rppi_saturationRGB_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -15108,9 +15108,9 @@ rppi_saturationRGB_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -15133,9 +15133,9 @@ rppi_saturationRGB_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -15159,9 +15159,9 @@ rppi_saturationRGB_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -15184,9 +15184,9 @@ rppi_saturationRGB_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -15208,9 +15208,9 @@ rppi_saturationRGB_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -15233,9 +15233,9 @@ rppi_saturationRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -15254,9 +15254,9 @@ rppi_saturationRGB_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -15274,9 +15274,9 @@ rppi_saturationRGB_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -15295,9 +15295,9 @@ rppi_saturationRGB_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -15315,9 +15315,9 @@ rppi_saturationRGB_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -15334,9 +15334,9 @@ rppi_saturationRGB_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -15354,9 +15354,9 @@ rppi_saturationRGB_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -15374,9 +15374,9 @@ rppi_saturationRGB_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
 	saturationRGB_host_batch<Rpp8u>(
@@ -15393,9 +15393,9 @@ rppi_saturationRGB_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	copy_param_float (saturationFactor, rpp::deref(rppHandle), paramIndex++);
@@ -15413,9 +15413,9 @@ rppi_saturationRGB_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -15432,9 +15432,9 @@ rppi_saturationRGB_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	saturationRGB_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -15450,9 +15450,9 @@ rppi_saturationRGB_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_saturationRGB_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *saturationFactor ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	saturationRGB_host_batch<Rpp8u>(
@@ -15469,9 +15469,9 @@ rppi_saturationRGB_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -15479,7 +15479,7 @@ rppi_look_up_table_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			static_cast<cl_mem>(srcPtr),
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),lutPtr,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -15489,7 +15489,7 @@ rppi_look_up_table_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			 lutPtr,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -15497,9 +15497,9 @@ rppi_look_up_table_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -15529,9 +15529,9 @@ rppi_look_up_table_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -15566,9 +15566,9 @@ rppi_look_up_table_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -15603,9 +15603,9 @@ rppi_look_up_table_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -15640,9 +15640,9 @@ rppi_look_up_table_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -15677,9 +15677,9 @@ rppi_look_up_table_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -15714,9 +15714,9 @@ rppi_look_up_table_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -15751,9 +15751,9 @@ rppi_look_up_table_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -15783,9 +15783,9 @@ rppi_look_up_table_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -15815,9 +15815,9 @@ rppi_look_up_table_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -15847,9 +15847,9 @@ rppi_look_up_table_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -15879,9 +15879,9 @@ rppi_look_up_table_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -15911,9 +15911,9 @@ rppi_look_up_table_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -15943,9 +15943,9 @@ rppi_look_up_table_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -15975,9 +15975,9 @@ rppi_look_up_table_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16007,9 +16007,9 @@ rppi_look_up_table_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -16039,9 +16039,9 @@ rppi_look_up_table_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16071,9 +16071,9 @@ rppi_look_up_table_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16103,9 +16103,9 @@ rppi_look_up_table_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -16135,9 +16135,9 @@ rppi_look_up_table_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -16146,7 +16146,7 @@ rppi_look_up_table_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			 lutPtr,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -16156,7 +16156,7 @@ rppi_look_up_table_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			 lutPtr,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -16164,9 +16164,9 @@ rppi_look_up_table_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16196,9 +16196,9 @@ rppi_look_up_table_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16233,9 +16233,9 @@ rppi_look_up_table_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16270,9 +16270,9 @@ rppi_look_up_table_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16307,9 +16307,9 @@ rppi_look_up_table_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16344,9 +16344,9 @@ rppi_look_up_table_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16381,9 +16381,9 @@ rppi_look_up_table_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16418,9 +16418,9 @@ rppi_look_up_table_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16450,9 +16450,9 @@ rppi_look_up_table_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16482,9 +16482,9 @@ rppi_look_up_table_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -16514,9 +16514,9 @@ rppi_look_up_table_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16546,9 +16546,9 @@ rppi_look_up_table_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16578,9 +16578,9 @@ rppi_look_up_table_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -16610,9 +16610,9 @@ rppi_look_up_table_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16642,9 +16642,9 @@ rppi_look_up_table_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16674,9 +16674,9 @@ rppi_look_up_table_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -16706,9 +16706,9 @@ rppi_look_up_table_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16738,9 +16738,9 @@ rppi_look_up_table_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,R
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16770,9 +16770,9 @@ rppi_look_up_table_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -16802,9 +16802,9 @@ rppi_look_up_table_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,rppHandle_t rppHandle )
-{ 
+{
 
 #ifdef OCL_COMPILE
 	{
@@ -16813,7 +16813,7 @@ rppi_look_up_table_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<cl_mem>(dstPtr),
 			 lutPtr,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #elif defined (HIP_COMPILE)
@@ -16823,7 +16823,7 @@ rppi_look_up_table_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			 lutPtr,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			,rpp::deref(rppHandle));
 	}
 #endif //BACKEND
@@ -16831,9 +16831,9 @@ rppi_look_up_table_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -16863,9 +16863,9 @@ rppi_look_up_table_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t d
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16900,9 +16900,9 @@ rppi_look_up_table_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16937,9 +16937,9 @@ rppi_look_up_table_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -16974,9 +16974,9 @@ rppi_look_up_table_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -17011,9 +17011,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -17048,9 +17048,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	RppiROI roiPoints;
 	roiPoints.x = 0;
 	roiPoints.y = 0;
@@ -17085,9 +17085,9 @@ rppi_look_up_table_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiS
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -17117,9 +17117,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -17149,9 +17149,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -17181,9 +17181,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -17213,9 +17213,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -17245,9 +17245,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -17277,9 +17277,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -17309,9 +17309,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -17341,9 +17341,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -17373,9 +17373,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -17405,9 +17405,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (rpp::deref(rppHandle));
@@ -17437,9 +17437,9 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_srcSize(srcSize, rpp::deref(rppHandle));
 	copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
@@ -17469,23 +17469,23 @@ look_up_table_hip_batch(
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,rppHandle_t rppHandle )
-{ 
+{
 	look_up_table_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),lutPtr,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -17502,9 +17502,9 @@ rppi_look_up_table_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17526,9 +17526,9 @@ rppi_look_up_table_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17549,9 +17549,9 @@ rppi_look_up_table_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17573,9 +17573,9 @@ rppi_look_up_table_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17597,9 +17597,9 @@ rppi_look_up_table_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17620,9 +17620,9 @@ rppi_look_up_table_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17635,7 +17635,8 @@ rppi_look_up_table_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-		static_cast<Rpp8u*>(dstPtr), lutPtr,
+		static_cast<Rpp8u*>(dstPtr),
+		static_cast<Rpp8u *>(lutPtr),
 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
 		rpp::deref(rppHandle).GetBatchSize(),
 		RPPI_CHN_PLANAR, 1
@@ -17644,9 +17645,9 @@ rppi_look_up_table_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -17663,9 +17664,9 @@ rppi_look_up_table_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -17681,9 +17682,9 @@ rppi_look_up_table_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -17700,9 +17701,9 @@ rppi_look_up_table_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -17719,9 +17720,9 @@ rppi_look_up_table_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -17737,9 +17738,9 @@ rppi_look_up_table_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -17756,9 +17757,9 @@ rppi_look_up_table_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -17774,9 +17775,9 @@ rppi_look_up_table_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	look_up_table_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -17791,9 +17792,9 @@ rppi_look_up_table_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -17809,9 +17810,9 @@ rppi_look_up_table_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -17827,9 +17828,9 @@ rppi_look_up_table_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	look_up_table_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -17844,9 +17845,9 @@ rppi_look_up_table_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -17862,24 +17863,24 @@ rppi_look_up_table_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,rppHandle_t rppHandle )
-{ 
+{
 	look_up_table_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			 lutPtr,
-			RPPI_CHN_PLANAR, 1 
+			RPPI_CHN_PLANAR, 1
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -17896,9 +17897,9 @@ rppi_look_up_table_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17920,9 +17921,9 @@ rppi_look_up_table_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17943,9 +17944,9 @@ rppi_look_up_table_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17967,9 +17968,9 @@ rppi_look_up_table_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -17991,9 +17992,9 @@ rppi_look_up_table_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -18014,9 +18015,9 @@ rppi_look_up_table_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -18029,7 +18030,8 @@ rppi_look_up_table_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-		static_cast<Rpp8u*>(dstPtr), lutPtr,
+		static_cast<Rpp8u*>(dstPtr),
+		static_cast<Rpp8u *>(lutPtr),
 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
 		rpp::deref(rppHandle).GetBatchSize(),
 		RPPI_CHN_PLANAR, 3
@@ -18038,9 +18040,9 @@ rppi_look_up_table_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -18057,9 +18059,9 @@ rppi_look_up_table_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18075,9 +18077,9 @@ rppi_look_up_table_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -18094,9 +18096,9 @@ rppi_look_up_table_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -18113,9 +18115,9 @@ rppi_look_up_table_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18131,9 +18133,9 @@ rppi_look_up_table_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -18150,9 +18152,9 @@ rppi_look_up_table_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18168,9 +18170,9 @@ rppi_look_up_table_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	look_up_table_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -18185,9 +18187,9 @@ rppi_look_up_table_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18203,9 +18205,9 @@ rppi_look_up_table_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18221,9 +18223,9 @@ rppi_look_up_table_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	look_up_table_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -18238,9 +18240,9 @@ rppi_look_up_table_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18256,24 +18258,24 @@ rppi_look_up_table_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,rppHandle_t rppHandle )
-{ 
+{
 	look_up_table_host(
 			static_cast<Rpp8u *>(srcPtr),
 			 srcSize,
 			static_cast<Rpp8u *>(dstPtr),
 			lutPtr,
-			RPPI_CHN_PACKED, 3 
+			RPPI_CHN_PACKED, 3
 			);
 
 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -18290,9 +18292,9 @@ rppi_look_up_table_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -18314,9 +18316,9 @@ rppi_look_up_table_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -18337,9 +18339,9 @@ rppi_look_up_table_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -18361,9 +18363,9 @@ rppi_look_up_table_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -18385,9 +18387,9 @@ rppi_look_up_table_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -18408,9 +18410,9 @@ rppi_look_up_table_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppP
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	RppiROI roiPoints;
 	roiPoints.x = 0;
@@ -18423,7 +18425,8 @@ rppi_look_up_table_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 		static_cast<Rpp8u*>(srcPtr),
 		srcSize,
 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-		static_cast<Rpp8u*>(dstPtr), lutPtr,
+		static_cast<Rpp8u*>(dstPtr),
+		static_cast<Rpp8u *>(lutPtr),
 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
 		rpp::deref(rppHandle).GetBatchSize(),
 		RPPI_CHN_PACKED, 3
@@ -18432,9 +18435,9 @@ rppi_look_up_table_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -18451,9 +18454,9 @@ rppi_look_up_table_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18469,9 +18472,9 @@ rppi_look_up_table_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -18488,9 +18491,9 @@ rppi_look_up_table_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
@@ -18507,9 +18510,9 @@ rppi_look_up_table_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18525,9 +18528,9 @@ rppi_look_up_table_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_roi(roiPoints, rpp::deref(rppHandle));
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
@@ -18544,9 +18547,9 @@ rppi_look_up_table_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18562,9 +18565,9 @@ rppi_look_up_table_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	look_up_table_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -18579,9 +18582,9 @@ rppi_look_up_table_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18597,9 +18600,9 @@ rppi_look_up_table_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_srcSize(srcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18615,9 +18618,9 @@ rppi_look_up_table_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	look_up_table_host_batch<Rpp8u>(
 		static_cast<Rpp8u*>(srcPtr),
@@ -18632,9 +18635,9 @@ rppi_look_up_table_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize 
 	return RPP_SUCCESS;
 }
 
-RppStatus  
+RppStatus
 rppi_look_up_table_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u* lutPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle )
-{ 
+{
 	Rpp32u paramIndex = 0;
 	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 	look_up_table_host_batch<Rpp8u>(
@@ -18699,7 +18702,7 @@ rppi_color_convert_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 
 }
-	
+
 RppStatus
  rppi_color_convert_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
@@ -18821,7 +18824,7 @@ rppi_color_convert_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr
 	return RPP_SUCCESS;
 
 }
-	
+
 RppStatus
  rppi_color_convert_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
@@ -18950,7 +18953,7 @@ rppi_color_convert_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 
 	return RPP_SUCCESS;
 }
-	
+
 RppStatus
 rppi_color_convert_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
@@ -19017,7 +19020,7 @@ rppi_color_convert_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 RppStatus
 rppi_color_convert_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, rppHandle_t rppHandle)
 {
-	
+
 	if (convert_mode == RppiColorConvertMode::RGB_HSV)
 	{
 		color_convert_rgb_to_hsv_host(
@@ -19071,7 +19074,7 @@ rppi_color_convert_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPt
 
 	return RPP_SUCCESS;
 }
-	
+
 RppStatus
 rppi_color_convert_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr , RppiColorConvertMode convert_mode, Rpp32u nbatchSize ,rppHandle_t rppHandle )
 {
@@ -19138,10 +19141,10 @@ rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,Rppi
 // ******************************** tensor look up table ********************************
 
 RppStatus
-rppi_tensor_look_up_table_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t lutPtr, 
+rppi_tensor_look_up_table_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t lutPtr,
                         Rpp32u tensorDimension, RppPtr_t tensorDimensionValues)
 {
-    tensor_look_up_table_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), static_cast<Rpp8u*>(lutPtr), 
+    tensor_look_up_table_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), static_cast<Rpp8u*>(lutPtr),
                            tensorDimension, static_cast<Rpp32u*>(tensorDimensionValues));
 
     return RPP_SUCCESS;
