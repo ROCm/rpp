@@ -34,7 +34,7 @@ extern "C" __global__ void box_filter_batch(   unsigned char* input,
     {
         pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
         if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-        {   
+        {
             for(int i = -bound ; i <= bound ; i++)
             {
                 for(int j = -bound ; j <= bound ; j++)
@@ -59,18 +59,30 @@ extern "C" __global__ void box_filter_batch(   unsigned char* input,
                             g = 0;
                             b = 0;
                         }
+                        break;
                     }
                 }
             }
-            
-            temp = (int)(r / (kernelSizeTemp * kernelSizeTemp));
-            output[pixIdx] = saturate_8u(temp);
-            if(channel == 3)
+
+            if(id_x >= bound && id_x <= width[id_z] - bound - 1 && id_y >= bound && id_y <= height[id_z] - bound - 1 )
             {
-                temp = (int)(g / (kernelSizeTemp * kernelSizeTemp));
-                output[pixIdx + inc[id_z]] = saturate_8u(temp);
-                temp = (int)(b / (kernelSizeTemp * kernelSizeTemp));
-                output[pixIdx + inc[id_z] * 2] = saturate_8u(temp);
+                temp = (int)(r / (kernelSizeTemp * kernelSizeTemp));
+                output[pixIdx] = saturate_8u(temp);
+                if(channel == 3)
+                {
+                    temp = (int)(g / (kernelSizeTemp * kernelSizeTemp));
+                    output[pixIdx + inc[id_z]] = saturate_8u(temp);
+                    temp = (int)(b / (kernelSizeTemp * kernelSizeTemp));
+                    output[pixIdx + inc[id_z] * 2] = saturate_8u(temp);
+                }
+            }
+            else
+            {
+                for(indextmp = 0; indextmp < channel; indextmp++)
+                {
+                    output[pixIdx] = input[pixIdx];
+                    pixIdx += inc[id_z];
+                }
             }
         }
         else if((id_x < width[id_z] ) && (id_y < height[id_z]))

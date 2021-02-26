@@ -3048,37 +3048,7 @@ int main(int argc, char **argv)
         case 66:
         {
             test_case_name = "fast_corner_detector";
-
-            Rpp32u numOfPixels[images];
-            Rpp8u threshold[images];
-            Rpp32u nonmaxKernelSize[images];
-            for (i = 0; i < images; i++)
-            {
-                numOfPixels[i] = 14;
-                threshold[i] = 5;
-                nonmaxKernelSize[i] = 15;
-            }
-
-            start = clock();
-
-            if (ip_bitDepth == 0)
-                rppi_fast_corner_detector_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, numOfPixels, threshold, nonmaxKernelSize, noOfImages, handle);
-            else if (ip_bitDepth == 1)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 2)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            end = clock();
+            missingFuncFlag = 1;
 
             break;
         }
@@ -3128,7 +3098,6 @@ int main(int argc, char **argv)
         case 68:
         {
             test_case_name = "hough_lines";
-            printf("\nThe hough_lines algorithm only has a single channel image input. The input must be an output of a canny edge detector!");
             missingFuncFlag = 1;
 
             break;
@@ -3248,7 +3217,6 @@ int main(int argc, char **argv)
         case 72:
         {
             test_case_name = "hog";
-
             missingFuncFlag = 1;
 
             break;

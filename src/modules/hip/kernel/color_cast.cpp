@@ -20,7 +20,7 @@ extern "C" __global__ void color_cast_batch(
     unsigned int *inc,  // use width * height for pln and 1 for pkd
     unsigned int *dstinc , // use width * height for pln and 1 for pkd
     int in_plnpkdind,         // use 1 pln 3 for pkd
-    int out_plnpkdind 
+    int out_plnpkdind
 ) {
 
  int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
@@ -34,11 +34,11 @@ extern "C" __global__ void color_cast_batch(
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
 
   float alphatmp=alpha[id_z];
- 
+
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-   
-    for (int indextmp = 0; indextmp < channel; indextmp++) {
+
+    for (int indextmp = channel - 1; indextmp >= 0; indextmp--) {
       unsigned char input_pixel1 = input[src_pix_idx];
       unsigned char input_pixel2 = user_input[indextmp];
       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
@@ -73,7 +73,7 @@ extern "C" __global__ void color_cast_batch(
 //     unsigned int *inc,  // use width * height for pln and 1 for pkd
 //     unsigned int *dstinc , // use width * height for pln and 1 for pkd
 //     int in_plnpkdind,         // use 1 pln 3 for pkd
-//     int out_plnpkdind 
+//     int out_plnpkdind
 // ) {
 
 //   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
@@ -87,11 +87,11 @@ extern "C" __global__ void color_cast_batch(
 //       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
 
 //   float alphatmp=alpha[id_z];
- 
+
 //   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
 //       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-   
-//     for (int indextmp = 0; indextmp < channel; indextmp++) {
+
+//     for (int indextmp = channel - 1; indextmp >= 0; indextmp--) {
 //       half input_pixel1 = input[src_pix_idx];
 //       half input_pixel2 = user_input[indextmp];
 //       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
@@ -141,15 +141,15 @@ extern "C" __global__ void color_cast_batch_fp32(
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
 
   float alphatmp=alpha[id_z];
- 
+
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-   
-    for (int indextmp = 0; indextmp < channel; indextmp++) {
+
+    for (int indextmp = channel - 1; indextmp >= 0; indextmp--) {
       float input_pixel1 = input[src_pix_idx];
       float input_pixel2 = user_input[indextmp];
       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
-                           
+
       src_pix_idx += inc[id_z];
       dst_pix_idx += dstinc[id_z];
     }
@@ -195,11 +195,11 @@ extern "C" __global__ void color_cast_batch_int8(
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
 
   float alphatmp=alpha[id_z];
- 
+
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-   
-    for (int indextmp = 0; indextmp < channel; indextmp++) {
+
+    for (int indextmp = channel - 1; indextmp >= 0; indextmp--) {
       char input_pixel1 = input[src_pix_idx];
       char input_pixel2 = user_input[indextmp];
       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);

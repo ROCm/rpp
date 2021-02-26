@@ -5,7 +5,7 @@
 /**************** erode ***************/
 
 template <typename T>
-RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                            Rpp32u *batch_kernelSize,
                            RppiROI *roiPoints, Rpp32u nbatchSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
@@ -55,8 +55,12 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             RppiSize srcSizeROI;
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
-            
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+
+            Rpp32u elementsInRowMax = batch_srcSizeMax[batchCount].width;
+            Rpp32u elementsInRowBoundedROI = srcSizeBoundedROI.width;
+            Rpp32u elementsInRowROI = srcSizeROI.width;
+
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -74,28 +78,51 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             }
             else
             {
-                T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
+                T *srcPtrImageTemp, *srcPtrBoundedROITemp;
+                srcPtrBoundedROITemp = srcPtrBoundedROI;
 
-                T *srcPtrImageTemp, *srcPtrROITemp;
-                srcPtrROITemp = srcPtrROI;
+                srcPtrBoundedROITemp += bound;
                 for (int c = 0; c < channel; c++)
                 {
-                    srcPtrImageTemp = srcPtrImage + (c * imageDimMax) + ((Rpp32u) y1 * batch_srcSizeMax[batchCount].width) + (Rpp32u) x1;
+                    srcPtrImageTemp = srcPtrImage + (c * imageDimMax) + ((Rpp32u) y1 * elementsInRowMax) + (Rpp32u) x1;
+
+                    for (int i = 0; i < bound; i++)
+                    {
+                        memcpy(srcPtrBoundedROITemp, srcPtrImageTemp, elementsInRowROI * sizeof(T));
+                        srcPtrBoundedROITemp += elementsInRowBoundedROI;
+                    }
+                    srcPtrBoundedROITemp -= bound;
+
                     for (int i = 0; i < srcSizeROI.height; i++)
                     {
-                        memcpy(srcPtrROITemp, srcPtrImageTemp, srcSizeROI.width * sizeof(T));
-                        srcPtrImageTemp += batch_srcSizeMax[batchCount].width;
-                        srcPtrROITemp += srcSizeROI.width;
+                        for (int i = 0; i < bound; i++)
+                        {
+                            memcpy(srcPtrBoundedROITemp, srcPtrImageTemp, 1 * sizeof(T));
+                            srcPtrBoundedROITemp += 1;
+                        }
+                        memcpy(srcPtrBoundedROITemp, srcPtrImageTemp, elementsInRowROI * sizeof(T));
+                        srcPtrBoundedROITemp += elementsInRowROI;
+                        for (int i = 0; i < bound; i++)
+                        {
+                            memcpy(srcPtrBoundedROITemp, srcPtrImageTemp + elementsInRowROI, 1 * sizeof(T));
+                            srcPtrBoundedROITemp += 1;
+                        }
+
+                        srcPtrImageTemp += elementsInRowMax;
+                    }
+                    srcPtrImageTemp -= elementsInRowMax;
+
+                    srcPtrBoundedROITemp += bound;
+                    for (int i = 0; i < bound; i++)
+                    {
+                        memcpy(srcPtrBoundedROITemp, srcPtrImageTemp, elementsInRowROI * sizeof(T));
+                        srcPtrBoundedROITemp += elementsInRowBoundedROI;
                     }
                 }
-
-                generate_evenly_padded_image_host(srcPtrROI, srcSizeROI, srcPtrBoundedROI, srcSizeBoundedROI, chnFormat, channel);
-
-                free(srcPtrROI);
             }
 
             Rpp32u remainingElementsInRow = srcSizeBoundedROI.width - rppiKernelSize.width;
-        
+
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
@@ -105,13 +132,12 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
                 Rpp32u roiRowCount = 0;
 
-
                 for(int i = 0; i < batch_srcSize[batchCount].height; i++)
                 {
                     T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -126,10 +152,10 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                         {
                             if((x1 <= j) && (j <= x2 ))
                             {
-                                erode_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                  kernelSize, remainingElementsInRow, 
+                                erode_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                  kernelSize, remainingElementsInRow,
                                                   chnFormat, channel);
-                                
+
                                 srcPtrWindow++;
                                 srcPtrTemp++;
                                 dstPtrTemp++;
@@ -157,7 +183,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u imageDim = batch_srcSize[batchCount].height * batch_srcSize[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -184,7 +210,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
@@ -199,7 +225,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -215,22 +241,44 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             }
             else
             {
-                T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
-
-                T *srcPtrImageTemp, *srcPtrROITemp;
-                srcPtrROITemp = srcPtrROI;
-                
+                T *srcPtrImageTemp, *srcPtrBoundedROITemp;
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
+                srcPtrBoundedROITemp = srcPtrBoundedROI;
+
+                srcPtrBoundedROITemp += (bound * channel);
+
+                for (int i = 0; i < bound; i++)
+                {
+                    memcpy(srcPtrBoundedROITemp, srcPtrImageTemp, elementsInRowROI * sizeof(T));
+                    srcPtrBoundedROITemp += elementsInRowBoundedROI;
+                }
+                srcPtrBoundedROITemp -= (bound * channel);
+
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
-                    memcpy(srcPtrROITemp, srcPtrImageTemp, elementsInRowROI * sizeof(T));
+                    for (int i = 0; i < bound; i++)
+                    {
+                        memcpy(srcPtrBoundedROITemp, srcPtrImageTemp, channel * sizeof(T));
+                        srcPtrBoundedROITemp += channel;
+                    }
+                    memcpy(srcPtrBoundedROITemp, srcPtrImageTemp, elementsInRowROI * sizeof(T));
+                    srcPtrBoundedROITemp += elementsInRowROI;
+                    for (int i = 0; i < bound; i++)
+                    {
+                        memcpy(srcPtrBoundedROITemp, srcPtrImageTemp + elementsInRowROI, channel * sizeof(T));
+                        srcPtrBoundedROITemp += channel;
+                    }
+
                     srcPtrImageTemp += elementsInRowMax;
-                    srcPtrROITemp += elementsInRowROI;
                 }
+                srcPtrImageTemp -= elementsInRowMax;
 
-                generate_evenly_padded_image_host(srcPtrROI, srcSizeROI, srcPtrBoundedROI, srcSizeBoundedROI, chnFormat, channel);
-
-                free(srcPtrROI);
+                srcPtrBoundedROITemp += (bound * channel);
+                for (int i = 0; i < bound; i++)
+                {
+                    memcpy(srcPtrBoundedROITemp, srcPtrImageTemp, elementsInRowROI * sizeof(T));
+                    srcPtrBoundedROITemp += elementsInRowBoundedROI;
+                }
             }
 
             Rpp32u remainingElementsInRow = (srcSizeBoundedROI.width - rppiKernelSize.width) * channel;
@@ -267,8 +315,8 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                         {
                             for(int c = 0; c < channel; c++)
                             {
-                                erode_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                  kernelSize, remainingElementsInRow, 
+                                erode_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                  kernelSize, remainingElementsInRow,
                                                   chnFormat, channel);
 
                                 srcPtrWindow++;
@@ -284,7 +332,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             free(srcPtrBoundedROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -305,11 +353,11 @@ RppStatus erode_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     T *srcPtrMod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
-    
+
     T *srcPtrWindow, *dstPtrTemp;
     srcPtrWindow = srcPtrMod;
     dstPtrTemp = dstPtr;
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         Rpp32u remainingElementsInRow = srcSizeMod.width - kernelSize;
@@ -321,8 +369,8 @@ RppStatus erode_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             {
                 for (int j = 0; j < srcSize.width; j++)
                 {
-                    erode_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRow, 
+                    erode_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRow,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -342,9 +390,9 @@ RppStatus erode_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
-                {   
-                    erode_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRow, 
+                {
+                    erode_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRow,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -362,7 +410,7 @@ RppStatus erode_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** dilate ***************/
 
 template <typename T>
-RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                            Rpp32u *batch_kernelSize,
                            RppiROI *roiPoints, Rpp32u nbatchSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
@@ -413,7 +461,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -452,7 +500,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             }
 
             Rpp32u remainingElementsInRow = srcSizeBoundedROI.width - rppiKernelSize.width;
-        
+
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
@@ -468,7 +516,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                     T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -483,10 +531,10 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                         {
                             if((x1 <= j) && (j <= x2 ))
                             {
-                                dilate_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                  kernelSize, remainingElementsInRow, 
+                                dilate_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                  kernelSize, remainingElementsInRow,
                                                   chnFormat, channel);
-                                
+
                                 srcPtrWindow++;
                                 srcPtrTemp++;
                                 dstPtrTemp++;
@@ -515,7 +563,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u imageDim = batch_srcSize[batchCount].height * batch_srcSize[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -542,7 +590,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
@@ -557,7 +605,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -577,7 +625,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
                 T *srcPtrImageTemp, *srcPtrROITemp;
                 srcPtrROITemp = srcPtrROI;
-                
+
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
@@ -625,8 +673,8 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                         {
                             for(int c = 0; c < channel; c++)
                             {
-                                dilate_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                  kernelSize, remainingElementsInRow, 
+                                dilate_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                  kernelSize, remainingElementsInRow,
                                                   chnFormat, channel);
 
                                 srcPtrWindow++;
@@ -642,7 +690,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             free(srcPtrBoundedROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -663,11 +711,11 @@ RppStatus dilate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     T *srcPtrMod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
-    
+
     T *srcPtrWindow, *dstPtrTemp;
     srcPtrWindow = srcPtrMod;
     dstPtrTemp = dstPtr;
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         Rpp32u remainingElementsInRow = srcSizeMod.width - kernelSize;
@@ -679,8 +727,8 @@ RppStatus dilate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             {
                 for (int j = 0; j < srcSize.width; j++)
                 {
-                    dilate_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRow, 
+                    dilate_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRow,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -700,9 +748,9 @@ RppStatus dilate_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
-                {   
-                    dilate_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRow, 
+                {
+                    dilate_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRow,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;

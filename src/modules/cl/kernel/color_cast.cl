@@ -23,7 +23,7 @@ __kernel void color_cast_batch(
     __global unsigned int *inc,  // use width * height for pln and 1 for pkd
     __global unsigned int *dstinc , // use width * height for pln and 1 for pkd
     int in_plnpkdind,         // use 1 pln 3 for pkd
-    int out_plnpkdind 
+    int out_plnpkdind
 ) {
 
  int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
@@ -37,11 +37,11 @@ __kernel void color_cast_batch(
 
   float alphatmp=alpha[id_z];
   unsigned char input_pixel1, input_pixel2;
- 
+
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-   
-    for (indextmp = 0; indextmp < channel; indextmp++) {
+
+    for (indextmp = channel-1; indextmp >= 0; indextmp--) {
       input_pixel1 = input[src_pix_idx];
       input_pixel2 = user_input[indextmp];
       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
@@ -78,7 +78,7 @@ __kernel void color_cast_batch_fp16(
     __global unsigned int *inc,  // use width * height for pln and 1 for pkd
     __global unsigned int *dstinc , // use width * height for pln and 1 for pkd
     int in_plnpkdind,         // use 1 pln 3 for pkd
-    int out_plnpkdind 
+    int out_plnpkdind
 ) {
 
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
@@ -92,11 +92,11 @@ __kernel void color_cast_batch_fp16(
 
   float alphatmp=alpha[id_z];
   half input_pixel1, input_pixel2;
- 
+
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-   
-    for (indextmp = 0; indextmp < channel; indextmp++) {
+
+    for (indextmp = channel-1; indextmp >= 0; indextmp--) {
       input_pixel1 = input[src_pix_idx];
       input_pixel2 = user_input[indextmp];
       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
@@ -147,15 +147,15 @@ __kernel void color_cast_batch_fp32(
 
   float alphatmp=alpha[id_z];
   float input_pixel1, input_pixel2;
- 
+
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-   
-    for (indextmp = 0; indextmp < channel; indextmp++) {
+
+    for (indextmp = channel-1; indextmp >= 0; indextmp--) {
       input_pixel1 = input[src_pix_idx];
       input_pixel2 = user_input[indextmp];
       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
-                           
+
       src_pix_idx += inc[id_z];
       dst_pix_idx += dstinc[id_z];
     }
@@ -202,11 +202,11 @@ __kernel void color_cast_batch_int8(
 
   float alphatmp=alpha[id_z];
   char input_pixel1, input_pixel2;
- 
+
   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-   
-    for (indextmp = 0; indextmp < channel; indextmp++) {
+
+    for (indextmp = channel-1; indextmp >= 0; indextmp--) {
       input_pixel1 = input[src_pix_idx];
       input_pixel2 = user_input[indextmp];
       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);

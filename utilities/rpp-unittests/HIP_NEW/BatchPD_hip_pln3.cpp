@@ -2420,29 +2420,21 @@ int main(int argc, char **argv)
     {
         test_case_name = "look_up_table";
 
-        Rpp8u lookUpTableU8Pln[images * ip_channel * 256];
-        Rpp8u *lookUpTableU8PlnTemp;
-        lookUpTableU8PlnTemp = lookUpTableU8Pln;
+        Rpp8u lut8u[images * 256];
 
         for (i = 0; i < images; i++)
         {
-            for (int c = 0; c < ip_channel; c++)
+            for (j = 0; j < 256; j++)
             {
-                for (j = 0; j < 256; j++)
-                {
-                    if (c == 0)
-                        *lookUpTableU8PlnTemp = (Rpp8u)(255 - j);
-                    else
-                        *lookUpTableU8PlnTemp = (Rpp8u)(j);
-                    lookUpTableU8PlnTemp++;
-                }
+                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
             }
+
         }
 
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppi_look_up_table_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, lookUpTableU8Pln, noOfImages, handle);
+            rppi_look_up_table_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, lut8u, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3152,37 +3144,8 @@ int main(int argc, char **argv)
     case 66:
     {
         test_case_name = "fast_corner_detector";
-
-        Rpp32u numOfPixels[images];
-        Rpp8u threshold[images];
-        Rpp32u nonmaxKernelSize[images];
-        for (i = 0; i < images; i++)
-        {
-            numOfPixels[i] = 14;
-            threshold[i] = 5;
-            nonmaxKernelSize[i] = 15;
-        }
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-            rppi_fast_corner_detector_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, numOfPixels, threshold, nonmaxKernelSize, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        end = clock();
+        printf("\nfast_corner_detector only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
@@ -3232,8 +3195,7 @@ int main(int argc, char **argv)
     case 68:
     {
         test_case_name = "hough_lines";
-
-        printf("\nThe hough_lines algorithm only has a single channel image input. The input must be an output of a canny edge detector!");
+        printf("\nhough_lines only available for HOST backend!");
         missingFuncFlag = 1;
 
         break;
@@ -3353,7 +3315,7 @@ int main(int argc, char **argv)
     case 72:
     {
         test_case_name = "hog";
-
+        printf("\nhog only available for HOST backend!");
         missingFuncFlag = 1;
 
         break;
