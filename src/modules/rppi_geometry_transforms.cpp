@@ -17214,7 +17214,7 @@ rppi_scale_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		resize_cl_batch(
+		scale_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17222,7 +17222,7 @@ rppi_scale_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 	}
 #elif defined(HIP_COMPILE)
 	{
-		resize_hip_batch(
+		scale_hip_batch(
 			static_cast<Rpp8u *>(srcPtr),
 			static_cast<Rpp8u *>(dstPtr),
 			rpp::deref(rppHandle),
@@ -17918,7 +17918,7 @@ rppi_scale_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		resize_cl_batch(
+		scale_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -18622,7 +18622,7 @@ rppi_scale_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxS
 
 #ifdef OCL_COMPILE
 	{
-		resize_cl_batch(
+		scale_cl_batch(
 			static_cast<cl_mem>(srcPtr),
 			static_cast<cl_mem>(dstPtr),
 			rpp::deref(rppHandle),
@@ -23320,8 +23320,8 @@ rppi_warp_affine_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppPtr_
 
 RppStatus warp_affine_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 			  RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp32u outputFormatToggle,
-		RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, 
-		RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix, 
+		RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr,
+		RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *affineMatrix,
 		Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
@@ -23912,7 +23912,7 @@ rppi_warp_affine_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr, RppiSize *srcSize, Rp
 
 RppStatus warp_affine_host_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 							 RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp8u outputFormatToggle,
-							 RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, 
+							 RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize,
 							 Rpp32f *affineMatrix,
 							 Rpp32u nbatchSize, rppHandle_t rppHandle)
 {

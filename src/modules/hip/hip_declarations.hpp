@@ -441,10 +441,10 @@ warp_affine_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,Rpp32f
                         RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
 warp_perspective_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr,
-                    RppiSize dstSize,float *perspective, RppiChnFormat chnFormat, 
+                    RppiSize dstSize,float *perspective, RppiChnFormat chnFormat,
                     unsigned int channel, rpp::Handle& handle);
 RppStatus
-warp_perspective_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr,rpp::Handle& handle, Rpp32f *perspective,RppiChnFormat chnFormat, 
+warp_perspective_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr,rpp::Handle& handle, Rpp32f *perspective,RppiChnFormat chnFormat,
                              unsigned int channel);
 RppStatus
 scale_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr, RppiSize dstSize,
@@ -452,6 +452,9 @@ scale_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr, RppiSize dstSize,
 RppStatus
 scale_hip_batch (Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel);
+RppStatus
+random_crop_letterbox_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle,
+                     RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
 look_up_table_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,Rpp8u* lutPtr,
  RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
@@ -477,7 +480,7 @@ convert_bit_depth_hip(T* srcPtr, RppiSize srcSize, U* dstPtr, Rpp32u type,
              RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 template <typename T, typename U>
 RppStatus
-convert_bit_depth_hip_batch (   T* srcPtr, U* dstPtr, 
+convert_bit_depth_hip_batch (   T* srcPtr, U* dstPtr,
                             Rpp32u type,rpp::Handle& handle,
                         RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
@@ -506,7 +509,7 @@ match_template_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp16u* dstPtr,
                  Rpp8u* templateImage, RppiSize templateImageSize,
                  RppiChnFormat chnFormat,unsigned int channel, rpp::Handle& handle);
 RppStatus
-match_template_hip_batch(Rpp8u* srcPtr, RppiSize *srcSize, Rpp16u* dstPtr, Rpp8u* templateImage, 
+match_template_hip_batch(Rpp8u* srcPtr, RppiSize *srcSize, Rpp16u* dstPtr, Rpp8u* templateImage,
                         RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
 fast_corner_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
@@ -536,7 +539,7 @@ RppStatus
 tensor_convert_bit_depth_hip( Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, T* srcPtr,
                              U* dstPtr, Rpp32u type, rpp::Handle& handle);
 RppStatus
-tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, 
+tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues,
                         Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr, rpp::Handle& handle);
 
 RppStatus
@@ -575,7 +578,7 @@ remap_hip_batch(Rpp8u *srcPtr, Rpp8u* dstPtr, Rpp32u* rowRemapTable, Rpp32u* col
          rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
 
 RppStatus
-color_twist_hip( Rpp8u* srcPtr,RppiSize srcSize, Rpp8u* dstPtr, 
+color_twist_hip( Rpp8u* srcPtr,RppiSize srcSize, Rpp8u* dstPtr,
             float alpha, float beta, float hue_shift, float sat,
             RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 
