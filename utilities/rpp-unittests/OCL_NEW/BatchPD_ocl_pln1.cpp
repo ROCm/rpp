@@ -2607,7 +2607,7 @@ int main(int argc, char **argv)
         Rpp32f percentage[images];
         for (i = 0; i < images; i++)
         {
-            percentage[i] = 25;
+            percentage[i] = 75;
         }
 
         start = clock();
