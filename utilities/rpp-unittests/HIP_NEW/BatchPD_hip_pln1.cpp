@@ -3119,6 +3119,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "hog";
         printf("\nhog only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
