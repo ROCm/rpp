@@ -275,7 +275,7 @@ kernel void erase_batch_fp16(
     __global unsigned int *src_inc, __global unsigned int *dst_inc,
     const int in_plnpkdind, const int out_plnpkdind) {
   int id_x = get_global_id(0), id_y = get_global_id(1), id_z = get_global_id(2);
-  half3 pixel;
+  float3 pixel;
   uint l_box_offset = box_offset[id_z];
   bool is_erase = false;
   for (int i = 0; i < no_of_boxes[id_z]; i++) {
@@ -284,9 +284,9 @@ kernel void erase_batch_fp16(
         id_y >= box_info[temp + 1] && id_y < box_info[temp + 3]) {
       is_erase = true;
       temp = (l_box_offset + i) * 3;
-      pixel.x = colors[temp];
-      pixel.y = colors[temp + 1];
-      pixel.z = colors[temp + 2];
+      pixel.x = (float) colors[temp];
+      pixel.y = (float) colors[temp + 1];
+      pixel.z = (float) colors[temp + 2];
       break;
     }
   }
@@ -298,11 +298,11 @@ kernel void erase_batch_fp16(
 
   if (is_erase == true)
   {
-    output[dst_pix_idx] = pixel.x;
+    output[dst_pix_idx] = (half) pixel.x;
     dst_pix_idx += dst_inc[id_z];
-    output[dst_pix_idx] = pixel.y;
+    output[dst_pix_idx] = (half) pixel.y;
     dst_pix_idx += dst_inc[id_z];
-    output[dst_pix_idx] = pixel.z;
+    output[dst_pix_idx] = (half) pixel.z;
   }
   else
   {

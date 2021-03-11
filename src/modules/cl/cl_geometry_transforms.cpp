@@ -236,7 +236,7 @@ flip_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         plnpkdind = 1;
     else
         plnpkdind = 3;
-    
+
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -252,7 +252,7 @@ flip_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
                                                                         channel,
                                                                         handle.GetInitHandle()->mem.mgpu.inc,
                                                                         plnpkdind);
@@ -324,7 +324,7 @@ resize_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                         handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
                                                                         channel,
@@ -441,7 +441,7 @@ rotate_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTen
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    
+
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
     std::string kernel_file  = "rotate.cl";
@@ -456,7 +456,7 @@ rotate_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTen
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
@@ -477,7 +477,7 @@ resize_crop_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    
+
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
     std::string kernel_file  = "resize.cl";
@@ -515,7 +515,7 @@ resize_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTen
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    
+
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
     std::string kernel_file  = "resize.cl";
@@ -531,7 +531,7 @@ resize_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTen
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, 
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                         handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
                                                                         tensor_info._in_channels,
@@ -593,7 +593,7 @@ rotate_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-        
+
     handle.AddKernel("", "", "rotate.cl", "rotate_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
@@ -603,7 +603,7 @@ rotate_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
@@ -689,7 +689,7 @@ warp_affine_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle, Rpp32f 
         plnpkdind = 1;
     else
         plnpkdind = 3;
-    
+
     cl_int err;
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(),
@@ -706,7 +706,7 @@ warp_affine_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle, Rpp32f 
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-        
+
     handle.AddKernel("", "", "warp_affine.cl", "warp_affine_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         affine_array,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
@@ -716,7 +716,7 @@ warp_affine_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle, Rpp32f 
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
@@ -760,7 +760,7 @@ warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
                                                                         handle_obj->mem.mgpu.roiPoints.x,
                                                                         handle_obj->mem.mgpu.roiPoints.roiWidth,
                                                                         handle_obj->mem.mgpu.roiPoints.y,
-                                                                        handle_obj->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle_obj->mem.mgpu.roiPoints.roiHeight,
                                                                         handle_obj->mem.mgpu.maxSrcSize.width,
                                                                         handle_obj->mem.mgpu.maxDstSize.width,
                                                                         handle_obj->mem.mgpu.srcBatchIndex,
@@ -834,7 +834,7 @@ warp_perspective_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
 
 
 RppStatus
-warp_perspective_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle,Rpp32f *perspective,   
+warp_perspective_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle,Rpp32f *perspective,
                 RppiChnFormat chnFormat, unsigned int channel)
 {
     int plnpkdind;
@@ -843,7 +843,7 @@ warp_perspective_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle,Rpp
         plnpkdind = 1;
     else
         plnpkdind = 3;
-    
+
     cl_int err;
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(),
@@ -860,7 +860,7 @@ warp_perspective_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle,Rpp
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-        
+
     handle.AddKernel("", "", "warp_perspective.cl", "warp_perspective_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         perspective_array,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
@@ -870,7 +870,7 @@ warp_perspective_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle,Rpp
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
@@ -902,7 +902,6 @@ scale_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
 
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    //std::cout << "coming till here" << std::endl;
     handle.AddKernel("", "", "scale.cl", "scale_batch", vld, vgd, "")(srcPtr, dstPtr,
                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
@@ -914,7 +913,7 @@ scale_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,   
+                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                         handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
                                                                         channel,

@@ -2,8 +2,8 @@
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
 extern "C" __global__ void crop_mirror_normalize_batch(
-    unsigned char *input, 
-    unsigned char *output, 
+    unsigned char *input,
+    unsigned char *output,
     unsigned int *dst_height, unsigned int *dst_width,
     unsigned int *src_width, unsigned int *start_x,
     unsigned int *start_y, float *mean,
@@ -26,14 +26,14 @@ extern "C" __global__ void crop_mirror_normalize_batch(
   unsigned long src_pixIdx;
   if (local_flip == 1) {
     src_pixIdx = src_batch_index[id_z] +
-                 ((src_width[id_z] - 1 - (id_x + start_x[id_z])) +
+                 ((dst_width[id_z] - 1 - id_x + start_x[id_z]) +
                   (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   else{
      src_pixIdx = src_batch_index[id_z] +
-      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind; 
+      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
-  unsigned long dst_pixIdx = dst_batch_index[id_z] + 
+  unsigned long dst_pixIdx = dst_batch_index[id_z] +
                              (id_x + id_y * max_dst_width[id_z]) * out_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
@@ -50,7 +50,7 @@ extern "C" __global__ void crop_mirror_normalize_batch(
 }
 
 // extern "C" __global__ void crop_mirror_normalize_batch_fp16(
-//     half *input, 
+//     half *input,
 //     half *output,
 //     unsigned int *dst_height, unsigned int *dst_width,
 //     unsigned int *src_width, unsigned int *start_x,
@@ -74,12 +74,12 @@ extern "C" __global__ void crop_mirror_normalize_batch(
 //   unsigned long  src_pixIdx;
 //   if (local_flip == 1) {
 //     src_pixIdx = src_batch_index[id_z] +
-//                  ((src_width[id_z] - 1 - (id_x + start_x[id_z])) +
+//                  ((dst_width[id_z] - 1 - id_x + start_x[id_z]) +
 //                   (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
 //   }
 //   else{
 //      src_pixIdx = src_batch_index[id_z] +
-//       (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind; 
+//       (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
 //   }
 //   unsigned long dst_pixIdx =
 //       dst_batch_index[id_z] +
@@ -99,7 +99,7 @@ extern "C" __global__ void crop_mirror_normalize_batch(
 // }
 
 extern "C" __global__ void crop_mirror_normalize_batch_int8(
-    char *input, 
+    char *input,
     char *output,
     unsigned int *dst_height, unsigned int *dst_width,
     unsigned int *src_width, unsigned int *start_x,
@@ -109,7 +109,7 @@ extern "C" __global__ void crop_mirror_normalize_batch_int8(
     unsigned long *src_batch_index,
     unsigned long *dst_batch_index, const unsigned int channel,
     // const unsigned int batch_size,
-    unsigned int *src_inc, 
+    unsigned int *src_inc,
     unsigned int *dst_inc,
     const int in_plnpkdind, const int out_plnpkdind // use 1 pln 3 for pkd
 ) {
@@ -123,12 +123,12 @@ extern "C" __global__ void crop_mirror_normalize_batch_int8(
   unsigned long src_pixIdx;
   if (local_flip == 1) {
     src_pixIdx = src_batch_index[id_z] +
-                 ((src_width[id_z] - 1 - (id_x + start_x[id_z])) +
+                 ((dst_width[id_z] - 1 - id_x + start_x[id_z]) +
                   (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   else{
      src_pixIdx = src_batch_index[id_z] +
-      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind; 
+      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
@@ -149,7 +149,7 @@ extern "C" __global__ void crop_mirror_normalize_batch_int8(
 }
 
 extern "C" __global__ void crop_mirror_normalize_batch_fp32(
-    float *input, 
+    float *input,
     float *output,
     unsigned int *dst_height, unsigned int *dst_width,
     unsigned int *src_width, unsigned int *start_x,
@@ -173,17 +173,17 @@ extern "C" __global__ void crop_mirror_normalize_batch_fp32(
   unsigned long src_pixIdx;
   if (local_flip == 1) {
     src_pixIdx = src_batch_index[id_z] +
-                 ((src_width[id_z] - 1 - (id_x + start_x[id_z])) +
+                 ((dst_width[id_z] - 1 - id_x + start_x[id_z]) +
                   (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   else{
      src_pixIdx = src_batch_index[id_z] +
-      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind; 
+      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
       (id_x + id_y * max_dst_width[id_z]) *
-          out_plnpkdind; 
+          out_plnpkdind;
   if ((id_x < dst_width[id_z]) && (id_y < dst_height[id_z])) {
     for (indextmp = 0; indextmp < channel; indextmp++) {
       output[dst_pixIdx] = (input[src_pixIdx] - local_mean) / local_std_dev;
@@ -199,7 +199,7 @@ extern "C" __global__ void crop_mirror_normalize_batch_fp32(
 }
 
 // extern "C" __global__ void crop_mirror_normalize_batch_u8_fp16(
-//     unsigned char *input, 
+//     unsigned char *input,
 //     half *output,
 //     unsigned int *dst_height, unsigned int *dst_width,
 //     unsigned int *src_width, unsigned int *start_x,
@@ -223,12 +223,12 @@ extern "C" __global__ void crop_mirror_normalize_batch_fp32(
 //   unsigned long src_pixIdx;
 //   if (local_flip == 1) {
 //     src_pixIdx = src_batch_index[id_z] +
-//                  ((src_width[id_z] - 1 - (id_x + start_x[id_z])) +
+//                  ((dst_width[id_z] - 1 - id_x + start_x[id_z]) +
 //                   (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
 //   }
 //   else{
 //      src_pixIdx = src_batch_index[id_z] +
-//       (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind; 
+//       (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
 //   }
 //   unsigned long dst_pixIdx =
 //       dst_batch_index[id_z] +
@@ -248,7 +248,7 @@ extern "C" __global__ void crop_mirror_normalize_batch_fp32(
 // }
 
 extern "C" __global__ void crop_mirror_normalize_batch_u8_fp32(
-    unsigned char *input, 
+    unsigned char *input,
     float *output,
     unsigned int *dst_height, unsigned int *dst_width,
     unsigned int *src_width, unsigned int *start_x,
@@ -272,12 +272,12 @@ extern "C" __global__ void crop_mirror_normalize_batch_u8_fp32(
   unsigned long src_pixIdx;
   if (local_flip == 1) {
     src_pixIdx = src_batch_index[id_z] +
-                 ((src_width[id_z] - 1 - (id_x + start_x[id_z])) +
+                 ((dst_width[id_z] - 1 - id_x + start_x[id_z]) +
                   (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   else{
      src_pixIdx = src_batch_index[id_z] +
-      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind; 
+      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
@@ -297,7 +297,7 @@ extern "C" __global__ void crop_mirror_normalize_batch_u8_fp32(
 }
 
 extern "C" __global__ void crop_mirror_normalize_batch_u8_int8(
-    unsigned char *input, 
+    unsigned char *input,
     char *output,
     unsigned int *dst_height, unsigned int *dst_width,
     unsigned int *src_width, unsigned int *start_x,
@@ -321,12 +321,12 @@ extern "C" __global__ void crop_mirror_normalize_batch_u8_int8(
   unsigned long src_pixIdx;
   if (local_flip == 1) {
     src_pixIdx = src_batch_index[id_z] +
-                 ((src_width[id_z] - 1 - (id_x + start_x[id_z])) +
+                 ((dst_width[id_z] - 1 - id_x + start_x[id_z]) +
                   (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   else{
      src_pixIdx = src_batch_index[id_z] +
-      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind; 
+      (id_x + start_x[id_z] + (id_y + start_y[id_z]) * max_src_width[id_z]) * in_plnpkdind;
   }
   unsigned long dst_pixIdx =
       dst_batch_index[id_z] +
