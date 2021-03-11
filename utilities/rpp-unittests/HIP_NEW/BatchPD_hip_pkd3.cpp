@@ -1537,27 +1537,8 @@ int main(int argc, char **argv)
     case 23:
     {
         test_case_name = "histogram_balance";
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-            rppi_histogram_balance_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        end = clock();
+        printf("\nhistogram_balance only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
@@ -2010,50 +1991,8 @@ int main(int argc, char **argv)
     case 38:
     {
         test_case_name = "channel_extract and channel_combine";
-
-        Rpp32u extractChannelNumber1[images], extractChannelNumber2[images], extractChannelNumber3[images];
-        Rpp32u singleChannelBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)noOfImages;
-        int *d_channel1, *d_channel2, *d_channel3;
-        hipMalloc(&d_channel1, singleChannelBufferSize * sizeof(Rpp8u));
-	    hipMalloc(&d_channel2, singleChannelBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_channel3, singleChannelBufferSize * sizeof(Rpp8u));
-
-        for (i = 0; i < images; i++)
-        {
-            extractChannelNumber1[i] = 2;
-            extractChannelNumber2[i] = 1;
-            extractChannelNumber3[i] = 0;
-        }
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-        {
-            rppi_channel_extract_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_channel1, extractChannelNumber1, noOfImages, handle);
-            rppi_channel_extract_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_channel2, extractChannelNumber2, noOfImages, handle);
-            rppi_channel_extract_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_channel3, extractChannelNumber3, noOfImages, handle);
-            rppi_channel_combine_u8_pkd3_batchPD_gpu(d_channel1, d_channel2, d_channel3, srcSize, maxSize, d_output, noOfImages, handle);
-        }
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        end = clock();
-
-        hipFree(d_channel1);
-        hipFree(d_channel2);
-        hipFree(d_channel3);
+        printf("\nchannel_extract and channel_combine only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
@@ -2120,27 +2059,8 @@ int main(int argc, char **argv)
     case 41:
     {
         test_case_name = "histogram_equalization";
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-            rppi_histogram_equalization_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        end = clock();
+        printf("\nhistogram_equalization only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
@@ -2180,66 +2100,8 @@ int main(int argc, char **argv)
     case 43:
     {
         test_case_name = "integral";
-
-        Rpp32u singleImageBuffer = maxDstHeight * maxDstWidth * ip_channel;
-        int *d_output32u;
-        hipMalloc(&d_output32u, singleImageBuffer * sizeof(Rpp32u));
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        end = clock();
-
-        Rpp32u *output32u = (Rpp32u *)calloc(oBufferSize, sizeof(Rpp32u));
-        hipMemcpy(output32u, d_output32u, oBufferSize * sizeof(Rpp32u), hipMemcpyDeviceToHost);
-
-        Rpp8u *outputTemp;
-        outputTemp = output;
-
-        for (int count = 0; count < noOfImages; count++)
-        {
-            Rpp32u *output32uTemp;
-            output32uTemp = output32u + (count * singleImageBuffer);
-
-            Rpp32u min, max;
-            min = *output32uTemp;
-            max = *output32uTemp;
-            for (int i = 0; i < singleImageBuffer; i++)
-            {
-                if (*output32uTemp > max)
-                    max = *output32uTemp;
-                output32uTemp++;
-            }
-
-            output32uTemp = output32u + (count * singleImageBuffer);
-            for (int i = 0; i < singleImageBuffer; i++)
-            {
-                *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (*output32uTemp - min)) / (Rpp32f) (max - min) * (Rpp32f) 255);
-                outputTemp++;
-                output32uTemp++;
-            }
-        }
-
-        hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-
-        free(output32u);
-        hipFree(d_output32u);
+        printf("\nintegral only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
@@ -2981,59 +2843,8 @@ int main(int argc, char **argv)
     case 65:
     {
         test_case_name = "remap";
-
-        Rpp32u *rowRemapTable = (Rpp32u*) calloc(ioBufferSize,sizeof(Rpp32u));
-        Rpp32u *colRemapTable = (Rpp32u*) calloc(ioBufferSize,sizeof(Rpp32u));
-
-        Rpp32u *rowRemapTableTemp, *colRemapTableTemp;
-        rowRemapTableTemp = rowRemapTable;
-        colRemapTableTemp = colRemapTable;
-
-        for (Rpp32u count = 0; count < noOfImages; count++)
-        {
-            Rpp32u halfWidth = srcSize[count].width / 2;
-            for (Rpp32u i = 0; i < srcSize[count].height; i++)
-            {
-                Rpp32u j = 0;
-                for (; j < halfWidth; j++)
-                {
-                    *rowRemapTableTemp = i;
-                    *colRemapTableTemp = halfWidth - j;
-
-                    rowRemapTableTemp++;
-                    colRemapTableTemp++;
-                }
-                for (; j < srcSize[count].width; j++)
-                {
-                    *rowRemapTableTemp = i;
-                    *colRemapTableTemp = j;
-
-                    rowRemapTableTemp++;
-                    colRemapTableTemp++;
-                }
-            }
-        }
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        end = clock();
+        printf("\nremap only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
@@ -3099,105 +2910,16 @@ int main(int argc, char **argv)
     case 69:
     {
         test_case_name = "custom_convolution";
-
-        RppiSize kernelSize[images];
-        Rpp32f kernel[images * 225];
-        Rpp32f value = (Rpp32f) (1.0 / 225);
-        for (i = 0; i < images; i++)
-        {
-            kernelSize[i].height = 15;
-            kernelSize[i].width = 15;
-            for (j = 0; j < 225; j++)
-            {
-                kernel[(i * 225) + j] = value;
-            }
-        }
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-            rppi_custom_convolution_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernel, kernelSize, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        end = clock();
+        printf("\ncustom_convolution only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
     case 70:
     {
         test_case_name = "reconstruction_laplacian_image_pyramid";
-
-        Rpp32u kernelSize[images];
-        Rpp32f stdDev[images];
-        RppiSize srcSizeHalf[images];
-        for (i = 0; i < images; i++)
-        {
-            kernelSize[i] = 3;
-            stdDev[i] = 20;
-            srcSizeHalf[i].height = srcSize[i].height / 2;
-            srcSizeHalf[i].width = srcSize[i].width / 2;
-        }
-
-        RppiSize srcSize1Max, srcSize2Max;
-        srcSize1Max.height = maxSize.height;
-        srcSize1Max.width = maxSize.width;
-        srcSize2Max.height = maxSize.height / 2;
-        srcSize2Max.width = maxSize.width / 2;
-
-        Rpp8u *srcPtr1 = (Rpp8u*) calloc(noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel, sizeof(Rpp8u));
-        Rpp8u *srcPtr2 = (Rpp8u*) calloc(noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel, sizeof(Rpp8u));
-
-        // Pre-processing for reconstruction_laplacian_image_pyramid done on host
-        rppi_resize_u8_pkd3_batchPD_host(input, srcSize, srcSize1Max, srcPtr2, srcSizeHalf, srcSize2Max, outputFormatToggle, noOfImages, handle);
-        rppi_laplacian_image_pyramid_u8_pkd3_batchPD_host(input, srcSize, maxSize, srcPtr1, stdDev, kernelSize, noOfImages, handle);
-        memcpy(input, srcPtr1, ioBufferSize * sizeof(Rpp8u));
-        memset(srcPtr1, 0, ioBufferSize * sizeof(Rpp8u));
-        rppi_resize_u8_pkd3_batchPD_host(input, srcSizeHalf, srcSize1Max, srcPtr1, srcSize, srcSize1Max, outputFormatToggle, noOfImages, handle);
-
-        int *d_srcPtr1, *d_srcPtr2;
-        hipMalloc(&d_srcPtr1, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u));
-        hipMalloc(&d_srcPtr2, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u));
-        hipMemcpy(d_srcPtr1, srcPtr1, noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_srcPtr2, srcPtr2, noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel * sizeof(Rpp8u), hipMemcpyHostToDevice);
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-            rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(d_srcPtr1, srcSize, srcSize1Max, d_srcPtr2, srcSizeHalf, srcSize2Max, d_output, stdDev, kernelSize, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        end = clock();
-
-        free(srcPtr1);
-        free(srcPtr2);
-        hipFree(d_srcPtr1);
-        hipFree(d_srcPtr2);
+        printf("\nreconstruction_laplacian_image_pyramid only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
