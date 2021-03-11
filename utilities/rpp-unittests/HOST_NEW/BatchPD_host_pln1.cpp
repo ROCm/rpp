@@ -3239,7 +3239,7 @@ int main(int argc, char **argv)
         Rpp32f std_dev[images];
         for (i = 0; i < images; i++)
         {
-            std_dev[i] = 350.0;
+            std_dev[i] = 50.0;
         }
 
         start_omp = omp_get_wtime();

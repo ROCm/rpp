@@ -28,7 +28,7 @@ color_temperature_hip( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32s ad
                                                                                             channel,
                                                                                             adjustmentValue
                                                                                             );
-    }    
+    }
     return RPP_SUCCESS;
 }
 
@@ -112,7 +112,7 @@ vignette_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 RppStatus
 channel_extract_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u extractChannelNumber, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    return RPP_SUCCESS;  
+    return RPP_SUCCESS;
 }
 
 RppStatus
@@ -177,7 +177,7 @@ channel_combine_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* srcPtr3, RppiSize src
                                                                                             channel
                                                                                             );
     }
-    return RPP_SUCCESS;      
+    return RPP_SUCCESS;
 }
 
 
@@ -230,7 +230,7 @@ hueRGB_hip ( Rpp8u* srcPtr,RppiSize srcSize,
     {
         handle.AddKernel("", "", "hue.cpp", "huergb_pkd", vld, vgd, "")(srcPtr, dstPtr, hue_factor, sat, srcSize.height, srcSize.width);
     }
-   
+
     return RPP_SUCCESS;
 }
 
@@ -251,7 +251,7 @@ saturationRGB_hip ( Rpp8u* srcPtr,RppiSize srcSize,
     {
         handle.AddKernel("", "", "hue.cpp", "huergb_pkd", vld, vgd, "")(srcPtr, dstPtr, hue_factor, sat, srcSize.height, srcSize.width);
     }
-   
+
     return RPP_SUCCESS;
 }
 
@@ -324,7 +324,7 @@ RppStatus
 look_up_table_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,Rpp8u* lutPtr,
  RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    return RPP_SUCCESS;      
+    return RPP_SUCCESS;
 }
 RppStatus
 look_up_table_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr,rpp::Handle& handle,
@@ -360,11 +360,12 @@ look_up_table_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr,rpp::Han
                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
                                                                                         plnpkdind
                                                                                         );
+    hipFree(&hipLutPtr);
     return RPP_SUCCESS;
 }
 /****************  Tensor Look_up_table modification *******************/
 RppStatus
-tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, 
+tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues,
                         Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr, rpp::Handle& handle)
 {
     Rpp8u* clLutPtr;
@@ -389,12 +390,12 @@ tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues,
         gDim3[1] = tensorDimensionValues[1];
         int value = 1;
         for(int i = 2 ; i < tensorDimension ; i++)
-        {    
+        {
             value *= tensorDimensionValues[i];
         }
         gDim3[2] = value;
     }
-    
+
     unsigned int dim1,dim2,dim3;
     dim1 = gDim3[0];
     dim2 = gDim3[1];
@@ -408,5 +409,5 @@ tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues,
                                                                                 dim2,
                                                                                 dim3,
                                                                                 clLutPtr);
-    return RPP_SUCCESS;      
+    return RPP_SUCCESS;
 }

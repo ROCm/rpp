@@ -3018,7 +3018,7 @@ RppStatus random_crop_letterbox_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
         compute_unpadded_from_padded_host(srcPtr + srcLoc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtrImage,
                                             chnFormat, channel);
 
-        Rpp32u borderWidth = (5 * RPPMIN2(batch_dstSize[batchCount].height, batch_dstSize[batchCount].width) / 100);
+        Rpp32u borderWidth = (4 * RPPMIN2(batch_dstSize[batchCount].height, batch_dstSize[batchCount].width) / 100);
 
         RppiSize srcSizeSubImage;
         T* srcPtrSubImage;

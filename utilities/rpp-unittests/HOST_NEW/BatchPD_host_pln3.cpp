@@ -207,7 +207,7 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 38:
-        strcpy(funcName, "channel_combine and channel_extract");
+        strcpy(funcName, "channel_extract and channel_combine");
         outputFormatToggle = 0;
         break;
     case 39:
@@ -2007,23 +2007,29 @@ int main(int argc, char **argv)
     }
     case 38:
     {
-        test_case_name = "channel_combine and channel_extract";
+        test_case_name = "channel_extract and channel_combine";
 
-        Rpp32u threeChannelBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * 3 * (unsigned long long)noOfImages;
-        Rpp8u *combinedImages = (Rpp8u *)calloc(threeChannelBufferSize, sizeof(Rpp8u));
+        Rpp32u extractChannelNumber1[images], extractChannelNumber2[images], extractChannelNumber3[images];
+        Rpp32u singleChannelBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)noOfImages;
+        Rpp8u *channel1 = (Rpp8u *)calloc(singleChannelBufferSize, sizeof(Rpp8u));
+        Rpp8u *channel2 = (Rpp8u *)calloc(singleChannelBufferSize, sizeof(Rpp8u));
+        Rpp8u *channel3 = (Rpp8u *)calloc(singleChannelBufferSize, sizeof(Rpp8u));
 
-        Rpp32u extractChannelNumber[images];
         for (i = 0; i < images; i++)
         {
-            extractChannelNumber[i] = 0;
+            extractChannelNumber1[i] = 0;
+            extractChannelNumber2[i] = 1;
+            extractChannelNumber3[i] = 2;
         }
 
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
         {
-            rppi_channel_combine_u8_pln3_batchPD_host(input, input, input, srcSize, maxSize, combinedImages, noOfImages, handle);
-            rppi_channel_extract_u8_pln3_batchPD_host(combinedImages, srcSize, maxSize, output, extractChannelNumber, noOfImages, handle);
+            rppi_channel_extract_u8_pln3_batchPD_host(input, srcSize, maxSize, channel1, extractChannelNumber1, noOfImages, handle);
+            rppi_channel_extract_u8_pln3_batchPD_host(input, srcSize, maxSize, channel2, extractChannelNumber2, noOfImages, handle);
+            rppi_channel_extract_u8_pln3_batchPD_host(input, srcSize, maxSize, channel3, extractChannelNumber3, noOfImages, handle);
+            rppi_channel_combine_u8_pln3_batchPD_host(channel1, channel2, channel3, srcSize, maxSize, output, noOfImages, handle);
         }
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
@@ -2042,7 +2048,9 @@ int main(int argc, char **argv)
         end = clock();
         end_omp = omp_get_wtime();
 
-        free(combinedImages);
+        free(channel1);
+        free(channel2);
+        free(channel3);
 
         break;
     }
