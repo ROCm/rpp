@@ -577,8 +577,8 @@ RppStatus non_linear_blend_f32_host_batch(Rpp32f* srcPtr1, Rpp32f* srcPtr2, Rppi
             dstPtrImage = dstPtr + loc;
 
             Rpp32u elementsInRowMax = batch_srcSizeMax[batchCount].width;
-            Rpp32s subtrahendI = (Rpp32s) (batch_srcSizeMax[batchCount].height >> 1);
-            Rpp32s subtrahendJ = (Rpp32s) (batch_srcSizeMax[batchCount].width >> 1);
+            Rpp32s subtrahendI = (Rpp32s) (batch_srcSize[batchCount].height >> 1);
+            Rpp32s subtrahendJ = (Rpp32s) (batch_srcSize[batchCount].width >> 1);
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -695,8 +695,8 @@ RppStatus non_linear_blend_f32_host_batch(Rpp32f* srcPtr1, Rpp32f* srcPtr2, Rppi
             dstPtrImage = dstPtr + loc;
 
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            Rpp32s subtrahendI = (Rpp32s) (batch_srcSizeMax[batchCount].height >> 1);
-            Rpp32s subtrahendJ = (Rpp32s) (batch_srcSizeMax[batchCount].width >> 1);
+            Rpp32s subtrahendI = (Rpp32s) (batch_srcSize[batchCount].height >> 1);
+            Rpp32s subtrahendJ = (Rpp32s) (batch_srcSize[batchCount].width >> 1);
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -829,8 +829,8 @@ RppStatus non_linear_blend_f16_host_batch(Rpp16f* srcPtr1, Rpp16f* srcPtr2, Rppi
             dstPtrImage = dstPtr + loc;
 
             Rpp32u elementsInRowMax = batch_srcSizeMax[batchCount].width;
-            Rpp32s subtrahendI = (Rpp32s) (batch_srcSizeMax[batchCount].height >> 1);
-            Rpp32s subtrahendJ = (Rpp32s) (batch_srcSizeMax[batchCount].width >> 1);
+            Rpp32s subtrahendI = (Rpp32s) (batch_srcSize[batchCount].height >> 1);
+            Rpp32s subtrahendJ = (Rpp32s) (batch_srcSize[batchCount].width >> 1);
 
             Rpp32f srcPtr1TempChannelps[4], srcPtr2TempChannelps[4], dstPtrTempChannelps[4];
 
@@ -960,8 +960,8 @@ RppStatus non_linear_blend_f16_host_batch(Rpp16f* srcPtr1, Rpp16f* srcPtr2, Rppi
             dstPtrImage = dstPtr + loc;
 
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            Rpp32s subtrahendI = (Rpp32s) (batch_srcSizeMax[batchCount].height >> 1);
-            Rpp32s subtrahendJ = (Rpp32s) (batch_srcSizeMax[batchCount].width >> 1);
+            Rpp32s subtrahendI = (Rpp32s) (batch_srcSize[batchCount].height >> 1);
+            Rpp32s subtrahendJ = (Rpp32s) (batch_srcSize[batchCount].width >> 1);
 
             Rpp32f srcPtr1Tempps[12], srcPtr2Tempps[12], dstPtrTempps[12];
 
