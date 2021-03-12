@@ -116,19 +116,12 @@ RppStatus exclusive_OR_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSiz
 
 inline Rpp32f gaussian_2d_relative(Rpp32s locI, Rpp32s locJ, Rpp32f std_dev)
 {
-    // Rpp32f res, pi = 3.14;
     Rpp32f relativeGaussian;
-    // res = 1 / (2 * pi * std_dev * std_dev);
     Rpp32f exp1, exp2;
     exp1 = -(locJ * locJ) / (2 * std_dev * std_dev);
     exp2 = -(locI * locI) / (2 * std_dev * std_dev);
-    // exp1 = exp1 + exp2;
-    // exp1 = exp(exp1);
-    // res *= exp1;
-    // res = exp1;
     relativeGaussian = exp(exp1 + exp2);
 
-    // return res;
     return relativeGaussian;
 }
 
@@ -535,45 +528,6 @@ inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
     return RPP_SUCCESS;
 }
 
-inline RppStatus generate_scharr_kernel_host(Rpp32f* kernel, Rpp32u type)
-{
-    Rpp32f* kernelTemp;
-    kernelTemp = kernel;
-
-    if (type == 1)
-    {
-        Rpp32f kernelX[9] = {3, 0, -3, 10, 0, -10, 3, 0, -3};
-        Rpp32f* kernelXTemp;
-        kernelXTemp = kernelX;
-
-        for (int i = 0; i < 9; i++)
-        {
-            *kernelTemp = *kernelXTemp;
-            kernelTemp++;
-            kernelXTemp++;
-        }
-    }
-    else if (type == 2)
-    {
-        Rpp32f kernelY[9] = {3, 10, 3, 0, 0, 0, -3, -10, -3};
-        Rpp32f* kernelYTemp;
-        kernelYTemp = kernelY;
-
-        for (int i = 0; i < 9; i++)
-        {
-            *kernelTemp = *kernelYTemp;
-            kernelTemp++;
-            kernelYTemp++;
-        }
-    }
-    else
-    {
-        return RPP_ERROR;
-    }
-
-    return RPP_SUCCESS;
-}
-
 template <typename T>
 inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp32u *endpoints, Rpp32u *rasterCoordinates)
 {
@@ -910,7 +864,6 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, U* dstPtr, Rppi
         Rpp32f wRatio = (((Rpp32f) (dstSize.width - 1)) / ((Rpp32f) (srcSize.width - 1)));
         Rpp32f srcLocationRow, srcLocationColumn, pixel;
         Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
-        // T *srcPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
         T *srcPtrTemp;
         U *dstPtrTemp;
         srcPtrTemp = srcPtr;
@@ -1371,11 +1324,8 @@ inline RppStatus canny_hysterisis_edge_tracing_kernel_host(T* srcPtrWindow, T* d
                                        Rpp32u kernelSize, Rpp32u remainingElementsInRow, T windowCenter, Rpp32u bound,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
-    T pixel;
-
     T* srcPtrWindowTemp;
     srcPtrWindowTemp = srcPtrWindow;
-    pixel = *srcPtrWindowTemp;
 
     for (int m = 0; m < kernelSize; m++)
     {
@@ -1406,14 +1356,14 @@ inline RppStatus harris_corner_detector_kernel_host(T* srcPtrWindowX, T* srcPtrW
     srcPtrWindowTempX = srcPtrWindowX;
     srcPtrWindowTempY = srcPtrWindowY;
 
-    Rpp32f sumXX = 0, sumYY = 0, sumXY = 0, valX = 0, valY = 0;
+    Rpp32f sumXX = 0, sumYY = 0, sumXY = 0;
 
     for (int m = 0; m < kernelSize; m++)
     {
         for (int n = 0; n < kernelSize; n++)
         {
-            valX = (Rpp32f) *srcPtrWindowTempX;
-            valY = (Rpp32f) *srcPtrWindowTempY;
+            Rpp32f valX = (Rpp32f) *srcPtrWindowTempX;
+            Rpp32f valY = (Rpp32f) *srcPtrWindowTempY;
             sumXX += (valX * valX);
             sumYY += (valY * valY);
             sumXY += (valX * valY);
@@ -1865,7 +1815,6 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
                                            Rpp32f x1, Rpp32f y1, Rpp32f x2, Rpp32f y2,
                                            RppiChnFormat chnFormat, Rpp32u channel)
 {
-    Rpp32u imageDim = srcSize.height * srcSize.width;
     Rpp32u imageDimMax = srcSizeMax.height * srcSizeMax.width;
     Rpp32u imageDimROI = srcSizeBoundedROI.height * srcSizeBoundedROI.width;
 
@@ -1888,7 +1837,7 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
 
             for(int i = 0; i < srcSize.height; i++)
             {
-                T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
+                T *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrChannel + (i * srcSizeMax.width);
                 dstPtrTemp = dstPtrChannel + (i * srcSizeMax.width);
 
@@ -1901,6 +1850,7 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
                 }
                 else
                 {
+                    T *srcPtrWindow;
                     srcPtrWindow = srcPtrBoundedROIChannel + (roiRowCount * srcSizeBoundedROI.width);
                     for(int j = 0; j < srcSize.width; j++)
                     {
@@ -2197,7 +2147,6 @@ inline RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
                                  RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
-    srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
 
     if (chnFormat == RPPI_CHN_PLANAR)
@@ -2695,7 +2644,6 @@ inline RppStatus compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         Rpp64u bufferLength = srcSize.height * srcSize.width;
         Rpp64u alignedLength = bufferLength & ~3;
 
-        __m128i const zero = _mm_setzero_si128();
         __m128 pDiv = _mm_set1_ps(360.0);
         __m128 pMul = _mm_set1_ps(255.0);
 
@@ -3635,15 +3583,15 @@ inline RppStatus compute_gradient_direction_host(T* gradientX, T* gradientY, Rpp
 
 inline Rpp32u fogGenerator(Rpp32u srcPtr, Rpp32f fogValue, int colour, int check)
 {
-    unsigned int fog=0;
-    int range;
+    int fog = 0;
+    int range = 3;
     if(check >= (240) && fogValue!=0);
     else if(check>=(170))
         range = 1;
     else if(check<=(85))
         range = 2;
     else
-    range = 3;
+        range = 3;
     switch(range)
     {
         case 1:
