@@ -1007,7 +1007,6 @@ extern "C" __global__ void random_crop_letterbox_batch(
     const int in_plnpkdind, const int out_plnpkdind
 ) {
   int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x, id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y, id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-  int A, B, C, D, x, y, index, pixVal;
   float x_ratio =
       ((float)(xroi_end[id_z] - xroi_begin[id_z] - 1)) / dest_width[id_z];
   float y_ratio =
@@ -1022,8 +1021,8 @@ extern "C" __global__ void random_crop_letterbox_batch(
   if (id_x >= dest_width[id_z] - padding || id_y >= dest_height[id_z] - padding || id_x < padding || id_y < padding)
     return;
 
-  x = (int)(x_ratio * id_x);
-  y = (int)(y_ratio * id_y);
+  int x = (int)(x_ratio * id_x);
+  int y = (int)(y_ratio * id_y);
 
   x_diff = (x_ratio * id_x) - x;
   y_diff = (y_ratio * id_y) - y;
@@ -1035,20 +1034,20 @@ extern "C" __global__ void random_crop_letterbox_batch(
     dst_pixIdx = dest_batch_index[id_z] +
                  (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
     for (indextmp = 0; indextmp < channel; indextmp++) {
-      A = srcPtr[source_batch_index[id_z] +
+      int A = srcPtr[source_batch_index[id_z] +
                  (x + y * max_source_width[id_z]) * in_plnpkdind +
                  indextmp * source_inc[id_z]];
-      B = srcPtr[source_batch_index[id_z] +
+      int B = srcPtr[source_batch_index[id_z] +
                  ((x + 1) + y * max_source_width[id_z]) * in_plnpkdind +
                  indextmp * source_inc[id_z]];
-      C = srcPtr[source_batch_index[id_z] +
+      int C = srcPtr[source_batch_index[id_z] +
                  (x + (y + 1) * max_source_width[id_z]) * in_plnpkdind +
                  indextmp * source_inc[id_z]];
-      D = srcPtr[source_batch_index[id_z] +
+      int D = srcPtr[source_batch_index[id_z] +
                  ((x + 1) + (y + 1) * max_source_width[id_z]) * in_plnpkdind +
                  indextmp * source_inc[id_z]];
 
-      pixVal =
+      int pixVal =
           (int)(A * (1 - x_diff) * (1 - y_diff) + B * (x_diff) * (1 - y_diff) +
                 C * (y_diff) * (1 - x_diff) + D * (x_diff * y_diff));
       dstPtr[dst_pixIdx] = saturate_8u(pixVal);
