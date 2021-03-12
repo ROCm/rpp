@@ -2818,6 +2818,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "hough_lines";
         printf("\nhough_lines only available for HOST backend!");
+        missingFuncFlag = 1;
 
         break;
     }
