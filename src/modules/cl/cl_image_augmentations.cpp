@@ -381,10 +381,9 @@ RppStatus
 noise_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nbatchSize = handle.GetBatchSize();
-    clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, (
-        sizeof(unsigned char) * (
+    clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * (
             handle.GetInitHandle()->mem.mcpu.srcBatchIndex[nbatchSize-1] +
-            (handle.GetInitHandle()->mem.mcpu.srcSize[nbatchSize-1].width * handle.GetInitHandle()->mem.mcpu.srcSize[nbatchSize-1].height) * channel
+            handle.GetInitHandle()->mem.mcpu.srcSize[nbatchSize-1].width * handle.GetInitHandle()->mem.mcpu.srcSize[nbatchSize-1].height * channel
         ), 0, NULL, NULL);
     int plnpkdind;
     if(chnFormat == RPPI_CHN_PLANAR)
