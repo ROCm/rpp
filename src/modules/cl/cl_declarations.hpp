@@ -240,7 +240,7 @@ erode_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, Rppi
 RppStatus
 erode_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);
 
-/******************** geometric_transforms ********************/
+/******************** geometry_transforms ********************/
 
 RppStatus
 flip_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, uint flipAxis, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
