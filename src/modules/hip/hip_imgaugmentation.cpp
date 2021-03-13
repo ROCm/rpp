@@ -425,7 +425,7 @@ rain_hip(Rpp8u * srcPtr, RppiSize srcSize,Rpp8u * dstPtr, Rpp32f rainPercentage,
                                                                     );
         }
 
-       
+
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, srcSize.height,channel};
         std::cerr<<"\n Gonna call rain\n";
@@ -487,7 +487,7 @@ snow_hip( Rpp8u * srcPtr,RppiSize srcSize, Rpp8u * dstPtr,
     }
     else
     {
-        int ctr=0; 
+        int ctr=0;
         Rpp32u snowDrops= (Rpp32u)((snowCoefficient * srcSize.width * srcSize.height )/100);
         Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / snowDrops);
         size_t gDim3[3];
@@ -505,7 +505,7 @@ snow_hip( Rpp8u * srcPtr,RppiSize srcSize, Rpp8u * dstPtr,
                                                                     channel,
                                                                     pixelDistance
                                                                     );
-            
+
         }
         else if(chnFormat == RPPI_CHN_PLANAR)
         {
@@ -518,11 +518,11 @@ snow_hip( Rpp8u * srcPtr,RppiSize srcSize, Rpp8u * dstPtr,
                                                                     channel,
                                                                     pixelDistance
                                                                     );
-            
+
         }
 
-        
-        
+
+
         gDim3[0] = srcSize.width;
         gDim3[1] = srcSize.height;
         gDim3[2] = channel;
@@ -615,7 +615,7 @@ pixelate_hip(Rpp8u * srcPtr, RppiSize srcSize,Rpp8u * dstPtr,
             RppiChnFormat chnFormat,
             unsigned int channel,rpp::Handle& handle)
 {
-    
+
 
     return RPP_SUCCESS;
 }
@@ -713,7 +713,7 @@ random_shadow_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u x1, Rpp
                                                                 column2,
                                                                 row2
                                                                 );
-    
+
         }
     }
     return RPP_SUCCESS;
@@ -784,7 +784,7 @@ random_shadow_hip_batch(   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
                                                                                                    column1,row1,
                                                                                                    column2,row2);
             }
-            
+
         }
         hipMemcpy(dstPtr+batchIndex, dstPtr1, sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
         batchIndex += maxHeight * maxWidth * channel * sizeof(unsigned char);
@@ -811,12 +811,12 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
     lDim3[1] = num_pixels_per_work_item;
     gDim3[2] = 1;
     lDim3[2] = 1;
-    
+
 
     numGroups = gDim3[0] * gDim3[1];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
-    
+
     Rpp8u* partialHistogram;
     hipMalloc(&partialHistogram,sizeof(unsigned int)*256*numGroups);
     Rpp8u* histogram;
@@ -831,7 +831,7 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
                                                                                         srcSize.width,
                                                                                         srcSize.height,
                                                                                         channel);
-        
+
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -846,11 +846,11 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
     else
     {std::cerr << "Internal error: Unknown Channel format";}
 
-    
+
     // // For sum histogram kernel
     gDim3[0] = 256;
     lDim3[0] = 256;
-    gDim3[1] = 1; 
+    gDim3[1] = 1;
     gDim3[2] = 1;
     lDim3[1] = 1;
     lDim3[2] = 1;
@@ -859,21 +859,21 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
     handle.AddKernel("", "", "histogram.cpp", "histogram_sum_partial", vld, vgd, "")(partialHistogram,
                                                                                     histogram,
                                                                                     numGroups);
-    
+
     Rpp8u* cum_histogram;
     hipMalloc(&cum_histogram,sizeof(unsigned int)*256);
     // For scan kernel
     gDim3[0] = 256;
-    gDim3[1] = 1; 
+    gDim3[1] = 1;
     gDim3[2] = 1;
     lDim3[0] = 32;
-    lDim3[1] = 1; 
+    lDim3[1] = 1;
     lDim3[2] = 1;
     std::vector<size_t> vld1{lDim3[0], lDim3[1], lDim3[2]};
     std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
     handle.AddKernel("", "", "scan.cpp", "scan", vld1, vgd1, "")(histogram,
                                                              cum_histogram);
-    
+
 
 
 
@@ -948,7 +948,7 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
     hipMalloc(&dstPtr1,sizeof(unsigned char)* maxHeight * maxWidth * channel);
 
     int ctr;
-           
+
     size_t gDim3[3];
 
     size_t batchIndex = 0;
@@ -964,7 +964,7 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         lDim3[1] = num_pixels_per_work_item;
         gDim3[2] = 1;
         lDim3[2] = 1;
-        
+
 
         numGroups = gDim3[0] * gDim3[1];
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
@@ -979,7 +979,7 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
                                                                                             handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                             handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                             channel);
-           
+
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
@@ -994,12 +994,12 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         else
         {std::cerr << "Internal error: Unknown Channel format";}
 
-        
+
 
         // // For sum histogram kernel
         gDim3[0] = 256;
         lDim3[0] = 256;
-        gDim3[1] = 1; 
+        gDim3[1] = 1;
         gDim3[2] = 1;
         lDim3[1] = 1;
         lDim3[2] = 1;
@@ -1011,16 +1011,16 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 
         // For scan kernel
         gDim3[0] = 256;
-        gDim3[1] = 1; 
+        gDim3[1] = 1;
         gDim3[2] = 1;
         lDim3[0] = 32;
-        lDim3[1] = 1; 
+        lDim3[1] = 1;
         lDim3[2] = 1;
         std::vector<size_t> vld1{lDim3[0], lDim3[1], lDim3[2]};
         std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
         handle.AddKernel("", "", "scan.cpp", "scan", vld1, vgd1, "")(histogram,
                                                              cum_histogram);
-        
+
 
         // For histogram equalize
 
@@ -1034,7 +1034,7 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
                                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                         channel);
-    
+
         }
         else if (chnFormat == RPPI_CHN_PACKED)
         {
@@ -1046,11 +1046,11 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
                                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
                                                                                         handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
                                                                                         channel);
-           
+
         }
         else
         {std::cerr << "Internal error: Unknown Channel format";}
-        
+
         hipMemcpy(dstPtr+batchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
     }
@@ -1059,166 +1059,4 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
     hipFree(partialHistogram);
     hipFree(histogram);
     return RPP_SUCCESS;
-}
-/********************** Occlusion ************************/
-RppStatus
-occlusion_hip(   Rpp8u* srcPtr1,RppiSize srcSize1,
-                Rpp8u* srcPtr2,RppiSize srcSize2, Rpp8u* dstPtr,//Destiation Size is Same as the Second Image's Dimensions
-                const unsigned int x11,
-                const unsigned int y11,
-                const unsigned int x12,
-                const unsigned int y12,
-                const unsigned int x21,
-                const unsigned int y21,
-                const unsigned int x22,
-                const unsigned int y22,
-                RppiChnFormat chnFormat,unsigned int channel,
-                rpp::Handle& handle)
-{
-    size_t gDim3[3];
-    gDim3[0] = srcSize2.width;
-    gDim3[1] = srcSize2.height;
-    gDim3[2] = channel;
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
-     if (chnFormat == RPPI_CHN_PLANAR)
-    {
-        handle.AddKernel("", "", "occlusion.cpp", "occlusion_pln", vld, vgd, "")(srcPtr1,
-                                                                                srcPtr2,
-                                                                                dstPtr,
-                                                                                srcSize1.height,
-                                                                                srcSize1.width,
-                                                                                srcSize2.height,
-                                                                                srcSize2.width,
-                                                                                x11,
-                                                                                y11,
-                                                                                x12,
-                                                                                y12,
-                                                                                x21,
-                                                                                y21,
-                                                                                x22,
-                                                                                y22,
-                                                                                channel);
-        
-    }
-    else if (chnFormat == RPPI_CHN_PACKED)
-    {
-            handle.AddKernel("", "", "occlusion.cpp", "occlusion_pkd", vld, vgd, "")(srcPtr1,
-                                                                                srcPtr2,
-                                                                                dstPtr,
-                                                                                srcSize1.height,
-                                                                                srcSize1.width,
-                                                                                srcSize2.height,
-                                                                                srcSize2.width,
-                                                                                x11,
-                                                                                y11,
-                                                                                x12,
-                                                                                y12,
-                                                                                x21,
-                                                                                y21,
-                                                                                x22,
-                                                                                y22,
-                                                                                channel);
-        
-    }
-    else
-    {std::cerr << "Internal error: Unknown Channel format";}
-
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-occlusion_hip_batch (Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-{
-    Rpp32u nBatchSize = handle.GetBatchSize();
-    unsigned int src1MaxHeight, src1MaxWidth,src2MaxHeight, src2MaxWidth, dstMaxHeight, dstMaxWidth;
-    src1MaxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
-    src1MaxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
-    for(int i = 0 ; i < nBatchSize ; i++)
-    {
-        if(src1MaxHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
-            src1MaxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-        if(src1MaxWidth < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
-            src1MaxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        if(src2MaxHeight < handle.GetInitHandle()->mem.mgpu.cdstSize.height[i])
-            src2MaxHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
-        if(src2MaxWidth < handle.GetInitHandle()->mem.mgpu.cdstSize.width[i])
-            src2MaxWidth = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
-    }
-
-    Rpp8u* srcPtr11;
-    hipMalloc(&srcPtr11, sizeof(unsigned char) * src1MaxHeight * src2MaxWidth * channel);
-    Rpp8u* srcPtr21;
-    hipMalloc(&srcPtr21, sizeof(unsigned char) * src2MaxHeight * src2MaxWidth * channel);
-    Rpp8u* dstPtr1;
-    hipMalloc(&dstPtr1, sizeof(unsigned char) * src2MaxHeight * src2MaxWidth * channel);
-
-    int ctr;
-    size_t gDim3[3];
-    size_t src1BatchIndex = 0, src2BatchIndex =0;
-    for(int i = 0 ; i < nBatchSize ; i++)
-    {
-        size_t gDim3[3];
-        gDim3[0] = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
-        gDim3[1] = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
-        gDim3[2] = channel;
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
-        hipMemcpy(srcPtr11, srcPtr1+src1BatchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel,hipMemcpyDeviceToDevice);
-        hipMemcpy(srcPtr21, srcPtr2+src2BatchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * channel,hipMemcpyDeviceToDevice);
-        if (chnFormat == RPPI_CHN_PLANAR)
-        {
-            handle.AddKernel("", "", "occlusion.cpp", "occlusion_pln", vld, vgd, "")(srcPtr11,
-                                                                                srcPtr21,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.cdstSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.cdstSize.width[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[3].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[4].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[6].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[7].uintmem[i],
-                                                                                channel);
-            
-        }
-        else if (chnFormat == RPPI_CHN_PACKED)
-        {
-            handle.AddKernel("", "", "occlusion.cpp", "occlusion_pkd", vld, vgd, "")(srcPtr11,
-                                                                                srcPtr21,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.cdstSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.cdstSize.width[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[3].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[4].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[6].uintmem[i],
-                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[7].uintmem[i],
-                                                                                channel);
-
-        }
-        else
-        {std::cerr << "Internal error: Unknown Channel format";}
-
-        
-        hipMemcpy( dstPtr+src2BatchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * channel, hipMemcpyDeviceToDevice);
-        src1BatchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
-        src2BatchIndex += handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * channel * sizeof(unsigned char);
-    }
-   /* Releasing of the stuff needs to be done */
-    hipFree(srcPtr11);
-    hipFree(srcPtr21);
-    hipFree(dstPtr1);
-    return RPP_SUCCESS;   
 }

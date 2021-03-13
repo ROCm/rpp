@@ -1,13 +1,12 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
 
-/********************** data_object_copy ************************/
+/******************** data_object_copy ********************/
 
 RppStatus
 data_object_copy_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
-
     return RPP_SUCCESS;
 }
 
@@ -20,12 +19,12 @@ data_object_copy_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     {
         buffer_size += handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width[i] * channel;
     }
-    clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0,
-                        buffer_size * sizeof(unsigned char), 0, NULL, NULL);
+    clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, buffer_size * sizeof(unsigned char), 0, NULL, NULL);
     return RPP_SUCCESS;
 }
 
-/********************** local binary pattern ************************/
+/******************** local_binary_pattern ********************/
+
 RppStatus
 local_binary_pattern_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
@@ -33,6 +32,7 @@ local_binary_pattern_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnF
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+
         handle.AddKernel("", "", "local_binary_pattern.cl", "local_binary_pattern_pkd", vld, vgd, "")(srcPtr,
                                                                                                       dstPtr,
                                                                                                       srcSize.height,
@@ -54,23 +54,20 @@ local_binary_pattern_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnF
 }
 
 RppStatus
-local_binary_pattern_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                              RppiChnFormat chnFormat, unsigned int channel)
-
+local_binary_pattern_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     int plnpkdind;
-
     if (chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "local_binary_pattern.cl", "local_binary_pattern_batch", vld, vgd, "")(srcPtr, dstPtr,
+
+    handle.AddKernel("", "", "local_binary_pattern.cl", "local_binary_pattern_batch", vld, vgd, "")(srcPtr,
+                                                                                                    dstPtr,
                                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -82,18 +79,17 @@ local_binary_pattern_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
                                                                                                     channel,
                                                                                                     handle.GetInitHandle()->mem.mgpu.inc,
                                                                                                     plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-/********************** Gaussian image pyramid ************************/
+/******************** gaussian_image_pyramid ********************/
 
 RppStatus
-gaussian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
-                          Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+gaussian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     Rpp32f *kernelMain = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
     generate_gaussian_kernel_gpu(stdDev, kernelMain, kernelSize);
-
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
@@ -127,28 +123,25 @@ gaussian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
                                                                                                           kernelSize,
                                                                                                           kernelSize);
     }
+
     return RPP_SUCCESS;
 }
 
 RppStatus
-gaussian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                                RppiChnFormat chnFormat, unsigned int channel)
-
+gaussian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if (chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "gaussian_image_pyramid.cl", "gaussian_image_pyramid_batch", vld, vgd, "")(srcPtr, dstPtr,
+
+    handle.AddKernel("", "", "gaussian_image_pyramid.cl", "gaussian_image_pyramid_batch", vld, vgd, "")(srcPtr,
+                                                                                                        dstPtr,
                                                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                                                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
@@ -158,13 +151,14 @@ gaussian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
                                                                                                         channel,
                                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
                                                                                                         plnpkdind);
+
     return RPP_SUCCESS;
 }
-/********************** Control Flow ************************/
+
+/******************** control_flow ********************/
 
 RppStatus
-control_flow_cl(cl_mem srcPtr1, cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr,
-                Rpp32u type, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+control_flow_cl(cl_mem srcPtr1, cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr, Rpp32u type, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
@@ -239,27 +233,24 @@ control_flow_cl(cl_mem srcPtr1, cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr,
 }
 
 RppStatus
-control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type, rpp::Handle &handle,
-                      RppiChnFormat chnFormat, unsigned int channel)
-
+control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if (chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
     switch (type)
     {
     case 1:
-        handle.AddKernel("", "", "bitwise_AND.cl", "bitwise_AND_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
+        handle.AddKernel("", "", "bitwise_AND.cl", "bitwise_AND_batch", vld, vgd, "")(srcPtr1,
+                                                                                      srcPtr2,
+                                                                                      dstPtr,
                                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -273,7 +264,9 @@ control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type
                                                                                       plnpkdind);
         break;
     case 2:
-        handle.AddKernel("", "", "inclusive_OR.cl", "inclusive_OR_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
+        handle.AddKernel("", "", "inclusive_OR.cl", "inclusive_OR_batch", vld, vgd, "")(srcPtr1,
+                                                                                        srcPtr2,
+                                                                                        dstPtr,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -287,7 +280,9 @@ control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type
                                                                                         plnpkdind);
         break;
     case 3:
-        handle.AddKernel("", "", "exclusive_OR.cl", "exclusive_OR_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
+        handle.AddKernel("", "", "exclusive_OR.cl", "exclusive_OR_batch", vld, vgd, "")(srcPtr1,
+                                                                                        srcPtr2,
+                                                                                        dstPtr,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -301,7 +296,9 @@ control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type
                                                                                         plnpkdind);
         break;
     case 4:
-        handle.AddKernel("", "", "add.cl", "add_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
+        handle.AddKernel("", "", "add.cl", "add_batch", vld, vgd, "")(srcPtr1,
+                                                                      srcPtr2,
+                                                                      dstPtr,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -315,7 +312,9 @@ control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type
                                                                       plnpkdind);
         break;
     case 5:
-        handle.AddKernel("", "", "subtract.cl", "subtract_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
+        handle.AddKernel("", "", "subtract.cl", "subtract_batch", vld, vgd, "")(srcPtr1,
+                                                                                srcPtr2,
+                                                                                dstPtr,
                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -329,7 +328,9 @@ control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type
                                                                                 plnpkdind);
         break;
     case 6:
-        handle.AddKernel("", "", "multiply.cl", "multiply_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
+        handle.AddKernel("", "", "multiply.cl", "multiply_batch", vld, vgd, "")(srcPtr1,
+                                                                                srcPtr2,
+                                                                                dstPtr,
                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -343,7 +344,9 @@ control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type
                                                                                 plnpkdind);
         break;
     case 7:
-        handle.AddKernel("", "", "min.cl", "min_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
+        handle.AddKernel("", "", "min.cl", "min_batch", vld, vgd, "")(srcPtr1,
+                                                                      srcPtr2,
+                                                                      dstPtr,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -357,7 +360,9 @@ control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type
                                                                       plnpkdind);
         break;
     case 8:
-        handle.AddKernel("", "", "max.cl", "max_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
+        handle.AddKernel("", "", "max.cl", "max_batch", vld, vgd, "")(srcPtr1,
+                                                                      srcPtr2,
+                                                                      dstPtr,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -375,11 +380,10 @@ control_flow_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, Rpp32u type
     return RPP_SUCCESS;
 }
 
-/********************** Convert bit depth ************************/
+/******************** convert_bit_depth ********************/
 
 RppStatus
-convert_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u type,
-                     RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+convert_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u type, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     if (type == 1)
     {
@@ -415,27 +419,23 @@ convert_bit_depth_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u type
 }
 
 RppStatus
-convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
-                           Rpp32u type, rpp::Handle &handle,
-                           RppiChnFormat chnFormat, unsigned int channel)
+convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr, Rpp32u type, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 
 {
-
     int plnpkdind;
-
     if (chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
     if (type == 1)
     {
-        handle.AddKernel("", "", "convert_bit_depth.cl", "convert_bit_depth_batch_u8s8", vld, vgd, "")(srcPtr, dstPtr,
+        handle.AddKernel("", "", "convert_bit_depth.cl", "convert_bit_depth_batch_u8s8", vld, vgd, "")(srcPtr,
+                                                                                                       dstPtr,
                                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
                                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
@@ -446,7 +446,8 @@ convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
     }
     else if (type == 2)
     {
-        handle.AddKernel("", "", "convert_bit_depth.cl", "convert_bit_depth_batch_u8u16", vld, vgd, "")(srcPtr, dstPtr,
+        handle.AddKernel("", "", "convert_bit_depth.cl", "convert_bit_depth_batch_u8u16", vld, vgd, "")(srcPtr,
+                                                                                                        dstPtr,
                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
                                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
@@ -457,7 +458,8 @@ convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
     }
     else
     {
-        handle.AddKernel("", "", "convert_bit_depth.cl", "convert_bit_depth_batch_u8s16", vld, vgd, "")(srcPtr, dstPtr,
+        handle.AddKernel("", "", "convert_bit_depth.cl", "convert_bit_depth_batch_u8s16", vld, vgd, "")(srcPtr,
+                                                                                                        dstPtr,
                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
                                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
@@ -470,12 +472,10 @@ convert_bit_depth_cl_batch(cl_mem srcPtr, cl_mem dstPtr,
     return RPP_SUCCESS;
 }
 
-/********************** laplacian_image_pyramid ************************/
+/******************** laplacian_image_pyramid ********************/
 
 RppStatus
-laplacian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
-                           Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat,
-                           unsigned int channel, rpp::Handle &handle)
+laplacian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     Rpp32f *kernelMain = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
     generate_gaussian_kernel_gpu(stdDev, kernelMain, kernelSize);
@@ -543,8 +543,7 @@ laplacian_image_pyramid_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     return RPP_SUCCESS;
 }
 RppStatus
-laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                                 RppiChnFormat chnFormat, unsigned int channel)
+laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 
 {
     cl_context theContext;
@@ -580,7 +579,8 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
-            handle.AddKernel("", "", "laplacian_image_pyramid.cl", "gaussian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr, srcPtr1,
+            handle.AddKernel("", "", "laplacian_image_pyramid.cl", "gaussian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr,
+                                                                                                                     srcPtr1,
                                                                                                                      maxHeight,
                                                                                                                      maxWidth,
                                                                                                                      channel,
@@ -593,7 +593,8 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{maxWidth, maxHeight, channel};
-            handle.AddKernel("", "", "laplacian_image_pyramid.cl", "gaussian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr, srcPtr1,
+            handle.AddKernel("", "", "laplacian_image_pyramid.cl", "gaussian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr,
+                                                                                                                     srcPtr1,
                                                                                                                      maxHeight,
                                                                                                                      maxWidth,
                                                                                                                      channel,
@@ -607,7 +608,8 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{maxWidth, maxHeight, channel};
-            handle.AddKernel("", "", "laplacian_image_pyramid.cl", "laplacian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr1, dstPtr,
+            handle.AddKernel("", "", "laplacian_image_pyramid.cl", "laplacian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr1,
+                                                                                                                      dstPtr,
                                                                                                                       maxHeight,
                                                                                                                       maxWidth,
                                                                                                                       channel,
@@ -620,7 +622,8 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{maxWidth, maxHeight, channel};
-            handle.AddKernel("", "", "laplacian_image_pyramid.cl", "laplacian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr1, dstPtr,
+            handle.AddKernel("", "", "laplacian_image_pyramid.cl", "laplacian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr1,
+                                                                                                                      dstPtr,
                                                                                                                       maxHeight,
                                                                                                                       maxWidth,
                                                                                                                       channel,
@@ -637,12 +640,10 @@ laplacian_image_pyramid_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &hand
     return RPP_SUCCESS;
 }
 
-// /********************** canny_edge_detector ************************/
+/******************** canny_edge_detector ********************/
 
 RppStatus
-canny_edge_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp8u minThreshold,
-                       Rpp8u maxThreshold, RppiChnFormat chnFormat, unsigned int channel,
-                       rpp::Handle &handle)
+canny_edge_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp8u minThreshold, Rpp8u maxThreshold, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
@@ -808,8 +809,7 @@ canny_edge_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp8u min
 }
 
 RppStatus
-canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                             RppiChnFormat chnFormat, unsigned int channel)
+canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
@@ -843,7 +843,6 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim * channel, NULL, NULL);
     cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * imageDim * channel, NULL, NULL);
 
-    // int ctr;
     for (int i = 0; i < handle.GetBatchSize(); i++)
     {
         clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndex, 0, sizeof(unsigned char) * imageDim * channel, 0, NULL, NULL);
@@ -987,11 +986,10 @@ canny_edge_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     return RPP_SUCCESS;
 }
 
-// /********************** harris corner detector ************************/
+/******************** harris_corner_detector ********************/
+
 RppStatus
-harris_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
-                          Rpp32u gaussianKernelSize, Rpp32f stdDev, Rpp32u kernelSize, Rpp32f kValue,
-                          Rpp32f threshold, Rpp32u nonmaxKernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+harris_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u gaussianKernelSize, Rpp32f stdDev, Rpp32u kernelSize, Rpp32f kValue, Rpp32f threshold, Rpp32u nonmaxKernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     /* SETTING UP */
 
@@ -1282,9 +1280,9 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
                                                                                                                         maxWidth,
                                                                                                                         newChannel,
                                                                                                                         handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]);
-        
+
         clEnqueueCopyBuffer(handle.GetStream(), srcPtr1, dstPtr1, 0, 0, sizeof(unsigned char) * singleImageSize, 0, NULL, NULL);
-        
+
         if (chnFormat == RPPI_CHN_PACKED)
         {
             handle.AddKernel("", "", "harris_corner_detector.cl", "harris_corner_detector_pkd", vld, vgd, "")(dstPtr1,
@@ -1308,12 +1306,10 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
     return RPP_SUCCESS;
 }
 
-/********************** match template ************************/
+/******************** match_template ********************/
 
 RppStatus
-match_template_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
-                  cl_mem templateImage, RppiSize templateImageSize,
-                  RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+match_template_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem templateImage, RppiSize templateImageSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     int ctr = 0;
     cl_kernel theKernel;
@@ -1346,9 +1342,9 @@ match_template_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     }
     return RPP_SUCCESS;
 }
+
 RppStatus
-match_template_cl_batch(cl_mem srcPtr, RppiSize *srcSize, cl_mem dstPtr, cl_mem templateImage,
-                        RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+match_template_cl_batch(cl_mem srcPtr, RppiSize *srcSize, cl_mem dstPtr, cl_mem templateImage, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
@@ -1433,11 +1429,10 @@ match_template_cl_batch(cl_mem srcPtr, RppiSize *srcSize, cl_mem dstPtr, cl_mem 
     return RPP_SUCCESS;
 }
 
-/********************** fast corner ************************/
+/******************** fast_corner_detector ********************/
+
 RppStatus
-fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
-                        Rpp32u numOfPixels, Rpp8u threshold, Rpp32u nonmaxKernelSize,
-                        RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u numOfPixels, Rpp8u threshold, Rpp32u nonmaxKernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
@@ -1459,7 +1454,9 @@ fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     gDim3[2] = 1;
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
+
     /* RGB to GS */
+
     if (channel == 3)
     {
         if (chnFormat == RPPI_CHN_PACKED)
@@ -1483,10 +1480,8 @@ fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     /* FAST CORNER IMPLEMENTATION */
 
     unsigned int newChannel = 1;
-
     ctr = 0;
 
-    //---- Args Setter
     if (channel == 1)
     {
         handle.AddKernel("", "", "fast_corner_detector.cl", "fast_corner_detector", vld, vgd, "")(srcPtr,
@@ -1509,6 +1504,7 @@ fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
     }
 
     /* NON MAX SUPRESSION */
+
     clEnqueueCopyBuffer(handle.GetStream(), srcPtr, dstPtr, 0, 0, sizeof(unsigned char) * srcSize.width * srcSize.height * channel, 0, NULL, NULL);
     if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -1533,8 +1529,7 @@ fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr,
 }
 
 RppStatus
-fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
-                              RppiChnFormat chnFormat, unsigned int channel)
+fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
@@ -1581,6 +1576,7 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndex, 0, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
 
         /* RGB to GS */
+
         if (channel == 3)
         {
             if (chnFormat == RPPI_CHN_PACKED)
@@ -1602,11 +1598,9 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         }
 
         /* FAST CORNER IMPLEMENTATION */
+
         unsigned int newChannel = 1;
-
         ctr = 0;
-
-        //---- Args Setter
         if (channel == 1)
         {
             handle.AddKernel("", "", "fast_corner_detector.cl", "fast_corner_detector", vld, vgd, "")(srcPtr,
@@ -1629,6 +1623,7 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         }
 
         /* NON MAX SUPRESSION */
+
         clEnqueueCopyBuffer(handle.GetStream(), srcPtr1, dstPtr1, 0, 0, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
         if (chnFormat == RPPI_CHN_PACKED)
         {
@@ -1653,15 +1648,14 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
 
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
     }
+
     return RPP_SUCCESS;
 }
 
-/********************** Reconstruction of laplacian image pyramid ************************/
+/******************** reconstruction_laplacian_image_pyramid ********************/
 
 RppStatus
-reconstruction_laplacian_image_pyramid_cl(cl_mem srcPtr1, RppiSize srcSize1,
-                                          cl_mem srcPtr2, RppiSize srcSize2, cl_mem dstPtr, Rpp32f stdDev, Rpp32u kernelSize,
-                                          RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+reconstruction_laplacian_image_pyramid_cl(cl_mem srcPtr1, RppiSize srcSize1, cl_mem srcPtr2, RppiSize srcSize2, cl_mem dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     int ctr = 0;
     cl_context theContext;
@@ -1679,6 +1673,7 @@ reconstruction_laplacian_image_pyramid_cl(cl_mem srcPtr1, RppiSize srcSize1,
     gDim3[2] = channel;
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
+
     /* Resize the Source 2 */
     if (chnFormat == RPPI_CHN_PLANAR)
     {
@@ -1700,12 +1695,13 @@ reconstruction_laplacian_image_pyramid_cl(cl_mem srcPtr1, RppiSize srcSize1,
                                                                           srcSize1.width,
                                                                           channel);
     }
+
     /* Gaussian Blur */
     Rpp32f *kernelMain = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
     generate_gaussian_kernel_gpu(stdDev, kernelMain, kernelSize);
     cl_mem kernel = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, kernelSize * kernelSize * sizeof(Rpp32f), NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), kernel, CL_TRUE, 0, kernelSize * kernelSize * sizeof(Rpp32f), kernelMain, 0, NULL, NULL);
-    // ctr=0;
+
     if (chnFormat == RPPI_CHN_PACKED)
     {
         handle.AddKernel("", "", "gaussian_filter.cl", "gaussian_pkd", vld, vgd, "")(gsin,
@@ -1755,9 +1751,9 @@ reconstruction_laplacian_image_pyramid_cl(cl_mem srcPtr1, RppiSize srcSize1,
 
     return RPP_SUCCESS;
 }
+
 RppStatus
-reconstruction_laplacian_image_pyramid_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle,
-                                                RppiChnFormat chnFormat, unsigned int channel)
+reconstruction_laplacian_image_pyramid_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
@@ -1897,11 +1893,11 @@ reconstruction_laplacian_image_pyramid_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, 
 
     return RPP_SUCCESS;
 }
-/****************  Tensor convert bit depth *******************/
+
+/******************** tensor_convert_bit_depth ********************/
 
 RppStatus
-tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr,
-                            cl_mem dstPtr, Rpp32u type, rpp::Handle &handle)
+tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, cl_mem srcPtr, cl_mem dstPtr, Rpp32u type, rpp::Handle &handle)
 {
     size_t gDim3[3];
     if (tensorDimension == 1)
@@ -1963,11 +1959,11 @@ tensor_convert_bit_depth_cl(Rpp32u tensorDimension, Rpp32u *tensorDimensionValue
     }
     return RPP_SUCCESS;
 }
-/****************  Remap*******************/
+
+/******************** remap ********************/
 
 RppStatus
-remap_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable,
-         RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
+remap_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
@@ -2011,8 +2007,7 @@ remap_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u *rowRemapTable, 
 }
 
 RppStatus
-remap_cl_batch(cl_mem srcPtr, cl_mem dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, rpp::Handle &handle,
-               RppiChnFormat chnFormat, unsigned int channel)
+remap_cl_batch(cl_mem srcPtr, cl_mem dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nBatchSize = handle.GetBatchSize();
     cl_context theContext;
@@ -2088,246 +2083,11 @@ remap_cl_batch(cl_mem srcPtr, cl_mem dstPtr, Rpp32u *rowRemapTable, Rpp32u *colR
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
         mapIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * sizeof(unsigned int);
     }
-    /* Releasing of the stuff needs to be done */
     clReleaseMemObject(srcPtr1);
     clReleaseMemObject(dstPtr1);
     clReleaseMemObject(rowRemapTableGPU1);
     clReleaseMemObject(colRemapTableGPU1);
     clReleaseMemObject(rowRemapTableGPU);
     clReleaseMemObject(colRemapTableGPU);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-optical_flow_pyramid_cl(cl_mem srcPtr1,
-                        cl_mem srcPtr2,
-                        RppiSize srcSize,
-                        Rpp32u *oldPoints,
-                        Rpp32u *newPointsEstimates,
-                        Rpp32f *newPoints,
-                        Rpp32u numPoints,
-                        Rpp32f threshold,
-                        Rpp32u numIterations,
-                        Rpp32u kernelSize,
-                        RppiChnFormat chnFormat,
-                        unsigned int channel,
-                        rpp::Handle &handle)
-{
-    // cl_context theContext;
-    // cl_device_id theDevice;
-    // cl_kernel theKernel;
-    // cl_program theProgram;
-    // clGetCommandQueueInfo(theQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
-    // clGetCommandQueueInfo(theQueue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
-
-    // cl_mem clOldPoints = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32u) * 2 * numPoints, NULL, NULL);
-    // cl_mem clNewPointsEstimates = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32u) * 2 * numPoints, NULL, NULL);
-    // cl_mem clNewPoints = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32f) * 2 * numPoints, NULL, NULL);
-
-    // cl_mem gsin1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
-    // cl_mem gsin2 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
-    // cl_mem Ix = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32f) * srcSize.height * srcSize.width, NULL, NULL);
-    // cl_mem Iy = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32f) * srcSize.height * srcSize.width, NULL, NULL);
-    // cl_mem It = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32f) * srcSize.height * srcSize.width, NULL, NULL);
-
-    // for (int i = 0; i < numPoints * 2; i++)
-    // {
-    //     newPoints[i] = oldPoints[i];
-    // }
-
-    // clEnqueueWriteBuffer(theQueue, clOldPoints, CL_TRUE, 0, sizeof(Rpp32u) * 2 * numPoints, oldPoints, 0, NULL, NULL);
-    // clEnqueueWriteBuffer(theQueue, clNewPointsEstimates, CL_TRUE, 0, sizeof(Rpp32u) * 2 * numPoints, newPointsEstimates, 0, NULL, NULL);
-    // clEnqueueWriteBuffer(theQueue, clNewPoints, CL_TRUE, 0, sizeof(Rpp32u) * 2 * numPoints, newPoints, 0, NULL, NULL);
-
-    // size_t gDim3[3];
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = 1;
-
-    // int ctr;
-
-    // /********* RGB to GS *********/
-    // if (channel == 3)
-    // {
-    //     if (chnFormat == RPPI_CHN_PACKED)
-    //     {
-    //         CreateProgramFromBinary(theQueue, "canny_edge_detector.cl", "canny_edge_detector.cl.bin", "ced_pkd3_to_pln1", theProgram, theKernel);
-    //         clRetainKernel(theKernel);
-    //     }
-    //     else
-    //     {
-    //         CreateProgramFromBinary(theQueue, "canny_edge_detector.cl", "canny_edge_detector.cl.bin", "ced_pln3_to_pln1", theProgram, theKernel);
-    //         clRetainKernel(theKernel);
-    //     }
-
-    //     ctr = 0;
-    //     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr1); // 8U
-    //     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin1);   // 8U
-    //     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    //     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    //     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-
-    //     cl_kernel_implementer(theQueue, gDim3, NULL, theProgram, theKernel);
-
-    //     ctr = 0;
-    //     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr2); // 8U
-    //     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin2);   // 8U
-    //     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    //     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    //     clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-
-    //     cl_kernel_implementer(theQueue, gDim3, NULL, theProgram, theKernel);
-    // }
-
-    // unsigned int newChannel = 1;
-
-    // /********* FIND GX and GY *********/
-    // CreateProgramFromBinary(theQueue, "optical_flow_pyramid.cl", "optical_flow_pyramid.cl.bin", "optical_flow_pyramid_grad", theProgram, theKernel);
-    // clRetainKernel(theKernel);
-
-    // unsigned int Gx = 0;
-    // unsigned int Gy = 1;
-
-    // ctr = 0;
-    // if (channel == 1)
-    // {
-    //     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr1); // 8U
-    // }
-    // else
-    // {
-    //     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin1); // 8U
-    // }
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &Ix); // 32F
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &Gx);
-
-    // cl_kernel_implementer(theQueue, gDim3, NULL, theProgram, theKernel);
-
-    // ctr = 0;
-    // if (channel == 1)
-    // {
-    //     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr1); // 8U
-    // }
-    // else
-    // {
-    //     clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin1); // 8U
-    // }
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &Iy); // 32F
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &newChannel);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &Gy);
-
-    // cl_kernel_implementer(theQueue, gDim3, NULL, theProgram, theKernel);
-
-    // /********* OFP *********/
-    // CreateProgramFromBinary(theQueue, "optical_flow_pyramid.cl", "optical_flow_pyramid.cl.bin", "optical_flow_pyramid", theProgram, theKernel);
-    // clRetainKernel(theKernel);
-
-    // ctr = 0;
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin1); // 32F
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &gsin2); // 32F
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &Ix);    // 32F
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &Iy);    // 32F
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &It);    // 32F
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &clOldPoints);          // 32U
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &clNewPointsEstimates); // 32U
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &clNewPoints);          // 32U
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &numPoints);
-    // clSetKernelArg(theKernel, ctr++, sizeof(float), &threshold);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &numIterations);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &kernelSize);
-
-    // gDim3[0] = numPoints;
-    // gDim3[1] = 1;
-    // gDim3[2] = 1;
-
-    // cl_kernel_implementer(theQueue, gDim3, NULL, theProgram, theKernel);
-    // clEnqueueReadBuffer(theQueue, clNewPoints, CL_TRUE, 0, sizeof(Rpp32f) * 2 * numPoints, newPoints, 0, NULL, NULL);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-hog_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u *dstPtr, RppiSize Kernelsize, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
-{
-    // cl_context theContext;
-    // cl_device_id theDevice;
-    // cl_kernel theKernel;
-    // cl_program theProgram;
-    // clGetCommandQueueInfo(theQueue, CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
-    // clGetCommandQueueInfo(theQueue, CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
-
-    // int numOfBinsH = std::ceil(srcSize.height / Kernelsize.height);
-    // int numOfBinsW = std::ceil(srcSize.width / Kernelsize.width);
-    // int numOfBins = (numOfBinsH * numOfBinsW * channel * bins);
-
-    // cl_mem Im = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32u) * srcSize.height * srcSize.width * channel, NULL, NULL);
-    // cl_mem P = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32u) * srcSize.height * srcSize.width * channel, NULL, NULL);
-    // cl_mem clDest = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(Rpp32u) * numOfBins, NULL, NULL);
-
-    // int ctr;
-
-    // /* Gradiant, Magnitude, Phase */
-    // if (chnFormat == RPPI_CHN_PACKED)
-    // {
-    //     CreateProgramFromBinary(theQueue, "hog.cl", "hog.cl.bin", "hog_primary_pkd", theProgram, theKernel);
-    //     clRetainKernel(theKernel);
-    // }
-    // else
-    // {
-    //     CreateProgramFromBinary(theQueue, "hog.cl", "hog.cl.bin", "hog_primary_pln", theProgram, theKernel);
-    //     clRetainKernel(theKernel);
-    // }
-
-    // ctr = 0;
-    // size_t gDim3[3];
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &srcPtr); /* 8U */
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &Im);     /* 32U */
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &P);      /* 32U */
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-
-    // gDim3[0] = srcSize.width;
-    // gDim3[1] = srcSize.height;
-    // gDim3[2] = channel;
-
-    // cl_kernel_implementer(theQueue, gDim3, NULL, theProgram, theKernel);
-
-    // if (chnFormat == RPPI_CHN_PACKED)
-    // {
-    //     CreateProgramFromBinary(theQueue, "hog.cl", "hog.cl.bin", "hog_pkd", theProgram, theKernel);
-    //     clRetainKernel(theKernel);
-    // }
-    // else
-    // {
-    //     CreateProgramFromBinary(theQueue, "hog.cl", "hog.cl.bin", "hog_pln", theProgram, theKernel);
-    //     clRetainKernel(theKernel);
-    // }
-
-    // ctr = 0;
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &Im);     /* 32U */
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &P);      /* 32U */
-    // clSetKernelArg(theKernel, ctr++, sizeof(cl_mem), &clDest); /* 32U */
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &srcSize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &channel);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &Kernelsize.height);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &Kernelsize.width);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &bins);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &numOfBinsH);
-    // clSetKernelArg(theKernel, ctr++, sizeof(unsigned int), &numOfBinsW);
-
-    // gDim3[0] = numOfBinsW;
-    // gDim3[1] = numOfBinsH;
-    // gDim3[2] = channel;
-
-    // cl_kernel_implementer(theQueue, gDim3, NULL, theProgram, theKernel);
-    // clEnqueueReadBuffer(theQueue, clDest, CL_TRUE, 0, sizeof(Rpp32u) * numOfBins, dstPtr, 0, NULL, NULL);
-
     return RPP_SUCCESS;
 }
