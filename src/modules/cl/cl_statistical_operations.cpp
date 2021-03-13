@@ -1,14 +1,14 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
 
-/********************** thresholding ************************/
+/******************** thresholding ********************/
 
 RppStatus
-thresholding_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp8u min,
- Rpp8u max, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+thresholding_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp8u min, Rpp8u max, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+
     handle.AddKernel("", "", "thresholding.cl", "thresholding", vld, vgd, "")(srcPtr,
                                                                             dstPtr,
                                                                             srcSize.height,
@@ -21,160 +21,145 @@ thresholding_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp8u min,
 }
 
 RppStatus
-thresholding_cl_batch (   cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+thresholding_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "thresholding.cl", "thresholding_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
-                                                                handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
+
+    handle.AddKernel("", "", "thresholding.cl", "thresholding_batch", vld, vgd, "")(srcPtr,
+                                                                                    dstPtr,
+                                                                                    handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
+                                                                                    handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
+                                                                                    handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                                    handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                                    handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                                    handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                                    handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                    handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                    handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                    handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                    channel,
+                                                                                    handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                    plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-/********************** thresholding ************************/
+/******************** min ********************/
 
 RppStatus
-min_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
-                 RppiSize srcSize, cl_mem dstPtr,
-                 RppiChnFormat chnFormat, unsigned int channel,
-                 rpp::Handle& handle)
+min_cl(cl_mem srcPtr1,cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+
     handle.AddKernel("", "", "min.cl", "min", vld, vgd, "")(srcPtr1,
                                                             srcPtr2,
                                                             dstPtr,
                                                             srcSize.height,
                                                             srcSize.width,
                                                             channel);
-    return RPP_SUCCESS;
 
+    return RPP_SUCCESS;
 }
 
-
 RppStatus
-min_cl_batch ( cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+min_cl_batch(cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "min.cl", "min_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                        channel,
-                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                        plnpkdind
-                                                                                        );
+
+    handle.AddKernel("", "", "min.cl", "min_batch", vld, vgd, "")(srcPtr1,
+                                                                  srcPtr2,
+                                                                  dstPtr,
+                                                                  handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                  handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                  handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                  handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                  handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                  channel,
+                                                                  handle.GetInitHandle()->mem.mgpu.inc,
+                                                                  plnpkdind);
+
     return RPP_SUCCESS;
 }
-/********************** max ************************/
+
+/******************** max ********************/
 
 RppStatus
-max_cl ( cl_mem srcPtr1,cl_mem srcPtr2,
-                 RppiSize srcSize, cl_mem dstPtr,
-                 RppiChnFormat chnFormat, unsigned int channel,
-                 rpp::Handle& handle)
+max_cl(cl_mem srcPtr1, cl_mem srcPtr2, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+
     handle.AddKernel("", "", "max.cl", "max", vld, vgd, "")(srcPtr1,
                                                             srcPtr2,
                                                             dstPtr,
                                                             srcSize.height,
                                                             srcSize.width,
                                                             channel);
-    return RPP_SUCCESS;
 
+    return RPP_SUCCESS;
 }
 
-
 RppStatus
-max_cl_batch ( cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+max_cl_batch(cl_mem srcPtr1,cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "max.cl", "max_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                        channel,
-                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                        plnpkdind
-                                                                                        );
+
+    handle.AddKernel("", "", "max.cl", "max_batch", vld, vgd, "")(srcPtr1,
+                                                                  srcPtr2,
+                                                                  dstPtr,
+                                                                  handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                  handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                  handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                  handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                  handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                  handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                  channel,
+                                                                  handle.GetInitHandle()->mem.mgpu.inc,
+                                                                  plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-/********************** min_max_loc ************************/
+/******************** min_max_loc ********************/
+
 RppStatus
-min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* minLoc,
-                Rpp32u* maxLoc, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     int i;
 
     const int LIST_SIZE = srcSize.height * srcSize.width * channel;
     int numGroups = std::ceil(LIST_SIZE / 256);
-    
+
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
@@ -211,13 +196,14 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
     local_item_size[2] = 1;
     std::vector<size_t> vld{local_item_size[0], local_item_size[1], local_item_size[2]};
     std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
     handle.AddKernel("", "", "min_max_loc.cl", "min", vld, vgd, "")(srcPtr,
                                                                     b_mem_obj,
                                                                     b_mem_obj1);
-    
+
     clEnqueueReadBuffer(handle.GetStream(), b_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min, 0, NULL, NULL);
-    clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min_location, 0, NULL, NULL);   
-    
+    clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min_location, 0, NULL, NULL);
+
     for(i = 0; i < numGroups; i++)
     {
         if(minElement > partial_min[i])
@@ -232,11 +218,13 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
 
     std::vector<size_t> vld1{local_item_size[0], local_item_size[1], local_item_size[2]};
     std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
+
     handle.AddKernel("", "", "min_max_loc.cl", "max", vld1, vgd1, "")(srcPtr,
                                                                     c_mem_obj,
                                                                     c_mem_obj1);
-    clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL); 
-    clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max_location, 0, NULL, NULL); 
+
+    clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL);
+    clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max_location, 0, NULL, NULL);
     for(i = 0; i < numGroups; i++)
     {
         if(maxElement < partial_max[i])
@@ -249,14 +237,15 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
     *max = maxElement;
     *maxLoc=maxLocation;
 
-    clReleaseMemObject(b_mem_obj); 
+    clReleaseMemObject(b_mem_obj);
     free(partial_min);
-    clReleaseMemObject(c_mem_obj); 
+    clReleaseMemObject(c_mem_obj);
     free(partial_max);
-    clReleaseMemObject(b_mem_obj1); 
+    clReleaseMemObject(b_mem_obj1);
     free(partial_min_location);
-    clReleaseMemObject(c_mem_obj1); 
+    clReleaseMemObject(c_mem_obj1);
     free(partial_max_location);
+
     return RPP_SUCCESS;
 }
 
@@ -276,11 +265,11 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
     unsigned int *partial_max_location;
 
     int numGroups = 0;
-    
+
     unsigned int maxHeight, maxWidth;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
-    
+
     for(int i = 0 ; i < nBatchSize ; i++)
     {
         if(maxHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
@@ -315,7 +304,7 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
     size_t batchIndex = 0;
 
     for(int x = 0 ; x < nBatchSize ; x++)
-    {                
+    {
         clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndex, 0, sizeof(unsigned char) *
                             handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] *
                             handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * channel, 0, NULL, NULL);
@@ -350,11 +339,11 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
         handle.AddKernel("", "", "min_max_loc.cl", "min", vld, vgd, "")(srcPtr1,
                                                                     b_mem_obj,
                                                                     b_mem_obj1);
-        
+
         clEnqueueReadBuffer(handle.GetStream(), b_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min, 0, NULL, NULL);
-        
-        clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min_location, 0, NULL, NULL);   
-        
+
+        clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min_location, 0, NULL, NULL);
+
         for(i = 0; i < numGroups; i++)
         {
             if(minElement > partial_min[i])
@@ -372,10 +361,10 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
         handle.AddKernel("", "", "min_max_loc.cl", "max", vld1, vgd1, "")(srcPtr1,
                                                                         c_mem_obj,
                                                                         c_mem_obj1);
-        clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL); 
-        
-        clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max_location, 0, NULL, NULL); 
-        
+        clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL);
+
+        clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max_location, 0, NULL, NULL);
+
         for(i = 0; i < numGroups; i++)
         {
             if(maxElement < partial_max[i])
@@ -391,39 +380,39 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
         max++;
         minLoc++;
         maxLoc++;
-        
+
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * channel * sizeof(unsigned char);
     }
-    clReleaseMemObject(b_mem_obj); 
+    clReleaseMemObject(b_mem_obj);
     free(partial_min);
-    clReleaseMemObject(c_mem_obj); 
+    clReleaseMemObject(c_mem_obj);
     free(partial_max);
-    clReleaseMemObject(b_mem_obj1); 
+    clReleaseMemObject(b_mem_obj1);
     free(partial_min_location);
-    clReleaseMemObject(c_mem_obj1); 
+    clReleaseMemObject(c_mem_obj1);
     free(partial_max_location);
 
     return RPP_SUCCESS;
 }
 
-/********************** Integral ************************/
+/******************** integral ********************/
+
 RppStatus
 integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat,
              unsigned int channel, rpp::Handle& handle)
 {
 
     unsigned short counter=0;
-    
+
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
     cl_kernel theKernel;
     cl_program theProgram;
-    
-    cl_mem hInput = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned int)
-                     * srcSize.height * srcSize.width * channel, NULL, NULL);
-    
+
+    cl_mem hInput = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned int) * srcSize.height * srcSize.width * channel, NULL, NULL);
+
     /* FIRST COLUMN */
     if(chnFormat == RPPI_CHN_PACKED)
     {
@@ -502,7 +491,7 @@ integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFor
                                                                                     i,
                                                                                     temp);
         }
-        
+
         counter=0;
     }
     for(int i = 0 ; i < srcSize.width - 2 ; i++)
@@ -514,9 +503,7 @@ integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFor
             temp = srcSize.height - (i + srcSize.height - 1) + srcSize.width - 3;
         else
             temp = (srcSize.height - 1 <= srcSize.width - 1) ? srcSize.height - 1 : srcSize.width - 1;
-        
 
-        // gDim3[0] = temp;
         if(chnFormat == RPPI_CHN_PACKED)
         {
             std::vector<size_t> vld{32, 32, 1};
@@ -572,14 +559,14 @@ integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
     cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned int) * maxHeight * maxWidth * channel, NULL, NULL);
 
     int counter;
-           
+
     size_t gDim3[3];
 
     size_t batchIndexSrc = 0;
     size_t batchIndexDst = 0;
 
     for(int i = 0 ; i < nBatchSize ; i++)
-    {                
+    {
         clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndexSrc, 0, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
         /* FIRST COLUMN */
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
@@ -590,22 +577,22 @@ integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cl", "integral_pkd_col", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel);
+                                                                                      dstPtr1,
+                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                      channel);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cl", "integral_pln_col", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel);
+                                                                                      dstPtr1,
+                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                      channel);
         }
-        
+
         /* FIRST ROW */
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
         if(chnFormat == RPPI_CHN_PACKED)
@@ -613,20 +600,20 @@ integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cl", "integral_pkd_row", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel);
+                                                                                      dstPtr1,
+                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                      channel);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cl", "integral_pln_row", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel);
+                                                                                      dstPtr1,
+                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                      handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                      channel);
         }
         Rpp32u temp = 1;
 
@@ -644,24 +631,24 @@ integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cl", "integral_up_pkd", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel,
-                                                                                x,
-                                                                                temp);
+                                                                                     dstPtr1,
+                                                                                     handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                     handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                     channel,
+                                                                                     x,
+                                                                                     temp);
             }
             else
             {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cl", "integral_up_pln", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel,
-                                                                                x,
-                                                                                temp);
+                                                                                     dstPtr1,
+                                                                                     handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                     handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                     channel,
+                                                                                     x,
+                                                                                     temp);
             }
         }
         for(int x = 0 ; x < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 2 ; x++)
@@ -678,43 +665,45 @@ integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
                 std::vector<size_t> vld{32, 32, 1};
                 std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
                 handle.AddKernel("", "", "integral.cl", "integral_low_pkd", vld, vgd, "")(srcPtr1,
-                                                                                        dstPtr1,
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                        channel,
-                                                                                        x,
-                                                                                        temp);
+                                                                                          dstPtr1,
+                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                          channel,
+                                                                                          x,
+                                                                                          temp);
             }
             else
             {
                 std::vector<size_t> vld{32, 32, 1};
                 std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
                 handle.AddKernel("", "", "integral.cl", "integral_low_pln", vld, vgd, "")(srcPtr1,
-                                                                                        dstPtr1,
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                        channel,
-                                                                                        x,
-                                                                                        temp);
+                                                                                          dstPtr1,
+                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                          channel,
+                                                                                          x,
+                                                                                          temp);
             }
         }
         cl_int err = clEnqueueCopyBuffer(handle.GetStream(), dstPtr1, dstPtr, 0, batchIndexDst, sizeof(unsigned int) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, 0, NULL, NULL);
         batchIndexSrc += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
         batchIndexDst += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned int);
     }
+
     return RPP_SUCCESS;
 }
-// /********************** Mean std dev ************************/
+
+/******************** mean_stddev ********************/
 
 RppStatus
 mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
                 RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     int i;
-    
+
     const int LIST_SIZE = srcSize.height * srcSize.width * channel;
     int numGroups = std::ceil(LIST_SIZE / 256);
-    
+
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
@@ -744,9 +733,9 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
     std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
     handle.AddKernel("", "", "mean_stddev.cl", "sum", vld, vgd, "")(srcPtr,
                                                                     b_mem_obj);
-    
-    clEnqueueReadBuffer(handle.GetStream(), b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);   
-    
+
+    clEnqueueReadBuffer(handle.GetStream(), b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);
+
     for(i = 0; i < numGroups; i++)
     {
         sum += (float)partial_sum[i];
@@ -758,18 +747,18 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
     handle.AddKernel("", "", "mean_stddev.cl", "mean_stddev", vld, vgd, "")(srcPtr,
                                                                     c_mem_obj,
                                                                     meanCopy);
-    clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);  
+    clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);
     for(i = 0; i < numGroups; i++)
     {
         mean_sum += partial_mean_sum[i];
     }
-    
+
     mean_sum = mean_sum / LIST_SIZE ;
     *stddev = mean_sum;
 
-    clReleaseMemObject(b_mem_obj); 
+    clReleaseMemObject(b_mem_obj);
     free(partial_sum);
-    clReleaseMemObject(c_mem_obj); 
+    clReleaseMemObject(c_mem_obj);
     free(partial_mean_sum);
     return RPP_SUCCESS;
 }
@@ -788,11 +777,11 @@ mean_stddev_cl_batch(cl_mem srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& h
     float *partial_mean_sum;
 
     int numGroups = 0;
-    
+
     unsigned int maxHeight, maxWidth;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
-    
+
     for(int i = 0 ; i < nBatchSize ; i++)
     {
         if(maxHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
@@ -819,13 +808,13 @@ mean_stddev_cl_batch(cl_mem srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& h
     size_t batchIndex = 0;
 
     for(int x = 0 ; x < nBatchSize ; x++)
-    {                
+    {
         clEnqueueCopyBuffer(handle.GetStream(), srcPtr, srcPtr1, batchIndex, 0, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * channel, 0, NULL, NULL);
         int i;
 
         int LIST_SIZE = handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * channel;
         numGroups = std::ceil(LIST_SIZE / 256);
-        
+
         float sum = 0;
         clEnqueueWriteBuffer(handle.GetStream(), b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);
 
@@ -842,10 +831,12 @@ mean_stddev_cl_batch(cl_mem srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& h
         local_item_size[2] = 1;
         std::vector<size_t> vld{local_item_size[0], local_item_size[1], local_item_size[2]};
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
         handle.AddKernel("", "", "mean_stddev.cl", "sum", vld, vgd, "")(srcPtr1,
                                                                         b_mem_obj);
-        clEnqueueReadBuffer(handle.GetStream(), b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);   
-        
+
+        clEnqueueReadBuffer(handle.GetStream(), b_mem_obj, CL_TRUE, 0, numGroups * sizeof(long), partial_sum, 0, NULL, NULL);
+
         for(i = 0; i < numGroups; i++)
         {
             sum += (float)partial_sum[i];
@@ -853,15 +844,17 @@ mean_stddev_cl_batch(cl_mem srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& h
 
         *mean = (sum) / LIST_SIZE ;
         float meanCopy = *mean;
+
         handle.AddKernel("", "", "mean_stddev.cl", "sum", vld, vgd, "")(srcPtr1,
                                                                         c_mem_obj,
                                                                         meanCopy);
-        clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);  
+
+        clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);
         for(i = 0; i < numGroups; i++)
         {
             mean_sum += partial_mean_sum[i];
         }
-        
+
         mean_sum = mean_sum / LIST_SIZE ;
         *stddev = mean_sum;
 
@@ -871,14 +864,15 @@ mean_stddev_cl_batch(cl_mem srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& h
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * channel * sizeof(unsigned char);
     }
 
-    clReleaseMemObject(b_mem_obj); 
+    clReleaseMemObject(b_mem_obj);
     free(partial_sum);
-    clReleaseMemObject(c_mem_obj); 
+    clReleaseMemObject(c_mem_obj);
     free(partial_mean_sum);
 
     return RPP_SUCCESS;
 }
 
+/******************** histogram ********************/
 
 RppStatus
 histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
@@ -887,13 +881,9 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     cl_int err;
 
     cl_context theContext;
-    clGetCommandQueueInfo(  handle.GetStream(),
-                            CL_QUEUE_CONTEXT,
-                            sizeof(cl_context), &theContext, NULL);
+    clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
-    clGetCommandQueueInfo(  handle.GetStream(),
-                            CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
-
+    clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_DEVICE, sizeof(cl_device_id), &theDevice, NULL);
 
     cl_kernel theKernel;
     cl_program theProgram;
@@ -910,7 +900,6 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     gDim3[2] = 1;
     lDim3[2] = 1;
 
-
     numGroups = gDim3[0] * gDim3[1];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
@@ -919,7 +908,7 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
                                     sizeof(unsigned int)*256*channel*numGroups, NULL, NULL);
     cl_mem histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
                                     sizeof(unsigned int)*256*channel, NULL, NULL);
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         std::vector<size_t> vld{lDim3[0], lDim3[1], lDim3[2]};
@@ -927,23 +916,19 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
         if(channel > 1)
         {
             handle.AddKernel("", "", "hist.cl", "partial_histogram_pln", vld, vgd, "")(srcPtr,
-                                                                                        partialHistogram,
-                                                                                        srcSize.width,
-                                                                                        srcSize.height,
-                                                                                        channel);
+                                                                                       partialHistogram,
+                                                                                       srcSize.width,
+                                                                                       srcSize.height,
+                                                                                       channel);
         }
         else
         {
            handle.AddKernel("", "", "hist.cl", "partial_histogram_pln1", vld, vgd, "")(srcPtr,
-                                                                                        partialHistogram,
-                                                                                        srcSize.width,
-                                                                                        srcSize.height,
-                                                                                        channel);
-        }       
-        
-        // CreateProgramFromBinary(handle.GetStream(),"histogram.cl","histogram.cl.bin","partial_histogram_pln",
-        //                             theProgram,theKernel);
-        // clRetainKernel(theKernel);
+                                                                                       partialHistogram,
+                                                                                       srcSize.width,
+                                                                                       srcSize.height,
+                                                                                       channel);
+        }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -955,72 +940,28 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
                                                                                         srcSize.width,
                                                                                         srcSize.height,
                                                                                         channel);
-        // CreateProgramFromBinary(handle.GetStream(),"histogram.cl","histogram.cl.bin","partial_histogram_pkd",
-        //                             theProgram,theKernel);
-        // clRetainKernel(theKernel);
-
     }
     else
-    {std::cerr << "Internal error: Unknown Channel format";}
-
-    // counter = 0;
-    // err  = clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &srcPtr);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &partialHistogram);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.width);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &srcSize.height);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
-
-    // if (chnFormat == RPPI_CHN_PLANAR)
-    // {
-    //     if(channel > 1)
-    //         CreateProgramFromBinary(theQueue,"hist.cl","hist.cl.bin","partial_histogram_pln",
-    //                                 theProgram,theKernel);
-    //     else
-    //         CreateProgramFromBinary(theQueue,"hist.cl","hist.cl.bin","partial_histogram_pln1",
-    //                                 theProgram,theKernel);
-        
-    //     clRetainKernel(theKernel);
-    // }
-    // else if (chnFormat == RPPI_CHN_PACKED)
-    // {
-    //     CreateProgramFromBinary(theQueue,"hist.cl","hist.cl.bin","partial_histogram_pkd",
-    //                                 theProgram,theKernel);
-    //     clRetainKernel(theKernel);
-
-    // }
-    // else
-    // {std::cerr << "Internal error: Unknown Channel format";}
-
-    //cl_kernel_implementer (theQueue, gDim3, lDim3, theProgram, theKernel);
-
-
-    // For sum histogram kernel
-    // CreateProgramFromBinary(theQueue,"hist.cl","hist.cl.bin","histogram_sum_partial",
-    //                                                                 theProgram,theKernel);
-    //clRetainKernel(theKernel);
-
-    
-    // counter = 0;
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &partialHistogram);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(cl_mem), &histogram);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &numGroups);
-    // err |= clSetKernelArg(theKernel, counter++, sizeof(unsigned int), &channel);
+    {
+        std::cerr << "Internal error: Unknown Channel format";
+    }
 
     gDim3[0] = 256 * channel;
     lDim3[0] = 256;
-    gDim3[1] = 1; 
+    gDim3[1] = 1;
     gDim3[2] = 1;
     lDim3[1] = 1;
     lDim3[2] = 1;
     std::vector<size_t> vld{lDim3[0], lDim3[1], lDim3[2]};
     std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
     handle.AddKernel("", "", "hist.cl", "histogram_sum_partial", vld, vgd, "")(partialHistogram,
-                                                                                    histogram,
-                                                                                    numGroups, channel);
+                                                                               histogram,
+                                                                               numGroups, channel);
+
     const unsigned int totalBin = channel * 256;
     unsigned int *tempBin = (unsigned int *)calloc(totalBin, sizeof(unsigned int));
-    
-    //cl_kernel_implementer (handle.GetStream(), gDim3, lDim3, theProgram, theKernel);
+
     clEnqueueReadBuffer(handle.GetStream(), histogram, CL_TRUE, 0, sizeof(unsigned int)*256*channel, tempBin, 0, NULL, NULL );
     int noOfValuesInBins = (256 * channel) /bins;
     for(int i = 0 ; i < bins ; i++)
