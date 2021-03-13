@@ -1,6 +1,8 @@
 #include <cl/rpp_cl_common.hpp>
 #include "cl_declarations.hpp"
 
+/******************** non_linear_blend ********************/
+
 RppStatus
 non_linear_blend_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
@@ -30,6 +32,8 @@ non_linear_blend_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Ha
                                                                      in_plnpkdind, out_plnpkdind);
     return RPP_SUCCESS;
 }
+
+/******************** water ********************/
 
 RppStatus
 water_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
@@ -66,6 +70,8 @@ water_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunct
                                                                      in_plnpkdind, out_plnpkdind);
     return RPP_SUCCESS;
 }
+
+/******************** erase ********************/
 
 RppStatus
 erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colors, cl_mem box_offset,
@@ -107,6 +113,7 @@ erase_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem anchor_box_info, cl_mem colo
     return RPP_SUCCESS;
 }
 
+/******************** color_cast ********************/
 
 RppStatus
 color_cast_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
@@ -141,6 +148,8 @@ color_cast_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensor
     return RPP_SUCCESS;
 }
 
+/******************** lut ********************/
+
 RppStatus
 lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
@@ -166,6 +175,8 @@ lut_cl_batch(cl_mem srcPtr, cl_mem dstPtr, cl_mem lut, rpp::Handle &handle, RPPT
 
     return RPP_SUCCESS;
 }
+
+/******************** crop_and_patch ********************/
 
 RppStatus
 crop_and_patch_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
@@ -204,6 +215,8 @@ crop_and_patch_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, cl_mem dstPtr, rpp::Hand
 
     return RPP_SUCCESS;
 }
+
+/******************** glitch ********************/
 
 RppStatus
 glitch_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)

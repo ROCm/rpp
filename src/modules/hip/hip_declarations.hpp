@@ -552,24 +552,6 @@ RppStatus
 tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2, Rpp8u* dstPtr, rpp::Handle &handle);
 
 RppStatus
-occlusion_hip_batch (Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel);
-
-RppStatus
-occlusion_hip(   Rpp8u* srcPtr1,RppiSize srcSize1,
-                Rpp8u* srcPtr2,RppiSize srcSize2, Rpp8u* dstPtr,//Destiation Size is Same as the Second Image's Dimensions
-                const unsigned int x11,
-                const unsigned int y11,
-                const unsigned int x12,
-                const unsigned int y12,
-                const unsigned int x21,
-                const unsigned int y21,
-                const unsigned int x22,
-                const unsigned int y22,
-                RppiChnFormat chnFormat,unsigned int channel,
-                rpp::Handle& handle);
-
-RppStatus
 remap_hip(Rpp8u *srcPtr, RppiSize srcSize,Rpp8u *dstPtr, Rpp32u* rowRemapTable, Rpp32u* colRemapTable,
 RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 
