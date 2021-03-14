@@ -7,7 +7,7 @@ Radeon Performance Primitives (RPP) library is a comprehensive high-performance 
 
 ## Top level design
 
-<p align="center"><img width="60%" src="docs/images/rpp_structure.png" /></p>
+<p align="center"><img width="60%" src="docs/images/rpp_structure_3.png" /></p>
 
 RPP is developed for **Linux** operating system.
 
@@ -40,9 +40,11 @@ RPP is developed for **Linux** operating system.
     -   CentOS/RHEL : `sudo yum install clang`
 
 -   half.hpp
-        wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
-        unzip half-1.12.0.zip -d half-files
-        sudo cp half-files/include/half.hpp /usr/local/include/
+        `wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip`
+        
+        `unzip half-1.12.0.zip -d half-files`
+        
+        `sudo cp half-files/include/half.hpp /usr/local/include/`
 
 ## Supported Functionalities and Variants
 
@@ -200,9 +202,9 @@ Extended RPP support as a functionality through OpenVX [MIVisionX](https://githu
     // HIP initializations, allocate device memory and copy input data to device
     int *d_input, d_output;
     hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-    hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
+    hipMalloc(&d_output, ioBufferSize * sizeof(Rpp8u));
     hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-    hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+    hipMemcpy(d_output, output, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
 
     // Initialize values for any necessary parameters to the RPP function being called
     Rpp32f alpha[noOfImages];
@@ -225,7 +227,7 @@ Extended RPP support as a functionality through OpenVX [MIVisionX](https://githu
     rppi_brightness_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, noOfImages, handle);
 
     // Copy output data back to host
-    hipMemcpy(output, d_output, oBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
+    hipMemcpy(output, d_output, ioBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
 
 ### RPP with [GDF](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/utilities/runvx/README.md#amd-runvx)(uses OpenVX) code snippet
 
