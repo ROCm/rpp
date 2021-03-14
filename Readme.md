@@ -7,7 +7,7 @@ Radeon Performance Primitives (RPP) library is a comprehensive high-performance 
 
 ## Top level design
 
-<p align="center"><img width="60%" src="docs/images/rpp_structure_3.png" /></p>
+<p align="center"><img width="40%" src="docs/images/rpp_structure_3.png" /></p>
 
 RPP is developed for **Linux** operating system.
 
