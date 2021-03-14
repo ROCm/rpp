@@ -74,7 +74,6 @@ lens_correction_hip( Rpp8u* srcPtr,RppiSize srcSize, Rpp8u* dstPtr,
            RppiChnFormat chnFormat, unsigned int channel,
            rpp::Handle& handle)
 {
-    unsigned short counter=0;
     if (strength == 0)
         strength = 0.000001;
     float halfWidth = (float)srcSize.width / 2.0;
@@ -357,16 +356,8 @@ resize_crop_hip(Rpp8u * srcPtr, RppiSize srcSize,
 {
     unsigned int type = 0,  padding = 0;
     unsigned int width,height;
-    if(type == 1)
-    {
-        width = dstSize.width - padding * 2;
-        height = dstSize.height - padding * 2;
-    }
-    else
-    {
-        width = dstSize.width;
-        height = dstSize.height;
-    }
+    width = dstSize.width;
+    height = dstSize.height;
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -741,7 +732,6 @@ warp_perspective_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
 //     Rpp32u nBatchSize = handle.GetBatchSize();
 //     float perspective_inv[9];
 //     float det; //for Deteminent
-//     short counter;
 //     size_t gDim3[3];
 //     Rpp32f* perspective_array;
 //     hipMalloc(&perspective_array,sizeof(float)*9);
@@ -769,7 +759,6 @@ warp_perspective_hip_batch(Rpp8u * srcPtr, Rpp8u * dstPtr,  rpp::Handle& handle,
 //     Rpp8u * dstPtr1;
 //     hipMalloc(&dstPtr1, sizeof(unsigned char) * maxdstHeight * maxdstWidth * channel);
 
-//     int ctr;
 //     size_t srcbatchIndex = 0, dstbatchIndex = 0;
 //     size_t index =0;
 
@@ -840,7 +829,6 @@ scale_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr, RppiSize dstSize,
     percentage /= 100;
     unsigned int dstheight = (Rpp32s) (percentage * (Rpp32f) srcSize.height);
     unsigned int dstwidth = (Rpp32s) (percentage * (Rpp32f) srcSize.width);
-    unsigned short counter=0;
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -891,8 +879,6 @@ scale_hip_batch (Rpp8u * srcPtr, Rpp8u * dstPtr, rpp::Handle& handle,
         plnpkdind = 1;
     else
         plnpkdind = 3;
-    unsigned int padding = 0;
-    unsigned int type = 0;
 
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);

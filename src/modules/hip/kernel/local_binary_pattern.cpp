@@ -168,7 +168,6 @@ extern "C" __global__ void local_binary_pattern_batch(   unsigned char* input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;    int indextmp=0;
     long pixIdx = 0;
-    int pixel;
     if(id_x < width[id_z]-1 && id_y < height[id_z]-1 && id_x > 0 && id_y > 0)
     {
         pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
@@ -224,7 +223,7 @@ extern "C" __global__ void local_binary_pattern_batch(   unsigned char* input,
             pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
             for(int j = 0 ; j < channel ; j++)
             {
-                pixel = 0;
+                int pixel = 0;
                 for(int i = 0 ; i < 8 ; i++)
                 {
                     if(neighborhoodR[j][i] - input[pixIdx] >= 0)

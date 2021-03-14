@@ -21,7 +21,6 @@ unsigned int roundUp(unsigned int value, unsigned int multiple)
 RppStatus
 dilate_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    int ctr=0;
     cl_kernel theKernel;
     cl_program theProgram;
     if(chnFormat == RPPI_CHN_PACKED)
@@ -51,7 +50,6 @@ dilate_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, Rpp
     {
         std::vector<size_t> vld{16, 16, 1};
         std::vector<size_t> vgd{srcSize.width / 16 , srcSize.height ,channel};
-        uint p1_stride =srcSize.width, p0_stride = srcSize.width, p0_offset = 0, p1_offset =0 ;
 
 #if UNROLL
         handle.AddKernel("", "", "dilate.cl", "dilate_optimized_trail", vld, vgd, "")(srcPtr,
@@ -110,7 +108,6 @@ dilate_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle, RppiChnFormat
 RppStatus
 erode_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    int ctr=0;
     cl_kernel theKernel;
     cl_program theProgram;
     if(chnFormat == RPPI_CHN_PACKED)
