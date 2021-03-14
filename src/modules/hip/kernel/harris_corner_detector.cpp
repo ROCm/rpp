@@ -77,7 +77,7 @@ extern "C" __global__ void gaussian_pln_batch(    unsigned char* input,
             counter++;
         }
     }
-    output[OPpixIdx] = saturate_8u(sum); 
+    output[OPpixIdx] = saturate_8u(sum);
 }
 
 __device__ unsigned int hcd_power(unsigned int a, unsigned int b)
@@ -130,8 +130,6 @@ extern "C" __global__ void sobel_pln_batch(   unsigned char* input,
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
     int pixIdx = id_y * width + id_x;
-    int value = 0;
-    int value1 =0;
     int a[3][3];
     for(int i = -1 ; i <= 1 ; i++)
     {
@@ -150,22 +148,22 @@ extern "C" __global__ void sobel_pln_batch(   unsigned char* input,
     }
     if(sobelType == 2)
     {
-        value = hcd_calcSobelx(a);
-        value1 = hcd_calcSobely(a);
+        int value = hcd_calcSobelx(a);
+        int value1 = hcd_calcSobely(a);
         value = hcd_power(value,2);
         value1 = hcd_power(value1,2);
         value = sqrt( (float)(value + value1));
         output[pixIdx] = saturate_8u(value);
-        
+
     }
     if(sobelType == 1)
     {
-        value = hcd_calcSobely(a);
+        int value = hcd_calcSobely(a);
         output[pixIdx] = saturate_8u(value);
     }
     if(sobelType == 0)
     {
-        value = hcd_calcSobelx(a);
+        int value = hcd_calcSobelx(a);
         output[pixIdx] = saturate_8u(value);
     }
 }
@@ -186,7 +184,7 @@ extern "C" __global__ void harris_corner_detector_strength(   unsigned char* sob
     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    float sumXX = 0, sumYY = 0, sumXY = 0, valX = 0, valY = 0, det = 0, trace = 0, pixel = 0;
+    float sumXX = 0, sumYY = 0, sumXY = 0, det = 0, trace = 0, pixel = 0;
 
     int pixIdx = id_y * channel * width + id_x * channel + id_z;
     int bound = (kernelSize - 1) / 2;
@@ -197,11 +195,9 @@ extern "C" __global__ void harris_corner_detector_strength(   unsigned char* sob
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
                 unsigned int index = pixIdx + (j * channel) + (i * width * channel);
-                valX = sobelX[index];
-                valY = sobelY[index];
-                sumXX += (valX * valX);
-                sumYY += (valY * valY);
-                sumXY += (valX * valY);
+                sumXX += (sobelX[index] * sobelX[index]);
+                sumYY += (sobelY[index] * sobelY[index]);
+                sumXY += (sobelX[index] * sobelY[index]);
             }
         }
     }
@@ -231,7 +227,7 @@ extern "C" __global__ void harris_corner_detector_nonmax_supression(   float* in
     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    
+
     int pixIdx = id_y * width + id_x + id_z * width * height;
     int bound = (kernelSize - 1) / 2;
     float pixel = input[pixIdx];
@@ -249,7 +245,7 @@ extern "C" __global__ void harris_corner_detector_nonmax_supression(   float* in
             }
         }
     }
-    output[pixIdx] = input[pixIdx];  
+    output[pixIdx] = input[pixIdx];
 }
 
 extern "C" __global__ void harris_corner_detector_pln(   unsigned char* input,
@@ -286,7 +282,7 @@ extern "C" __global__ void harris_corner_detector_pln(   unsigned char* input,
                 }
             }
         }
-    } 
+    }
 }
 
 extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
@@ -381,7 +377,7 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
 //     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
 //     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    
+
 //     int pixIdx = id_y * width + id_x + id_z * width * height;
 //     int bound = (kernelSize - 1) / 2;
 //     float pixel = input[pixIdx];
@@ -399,7 +395,7 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
 //             }
 //         }
 //     }
-//     output[pixIdx] = input[pixIdx];  
+//     output[pixIdx] = input[pixIdx];
 // }
 
 // extern "C" __global__ void harris_corner_detector_pln_batch(  unsigned char* input,
@@ -415,9 +411,9 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
 //     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
 //     unsigned long pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
 //     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
-    
+
 //     pixIdx = (unsigned long)batchIndex + (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
-    
+
 //     unsigned int kernelSize = 5;
 //     int bound = (kernelSize - 1) / 2;
 //     for(int i = -bound ; i <= bound ; i++)
@@ -435,7 +431,7 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
 //                 }
 //             }
 //         }
-//     } 
+//     }
 // }
 
 // extern "C" __global__ void harris_corner_detector_pkd_batch(  unsigned char* input,
@@ -451,7 +447,7 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
 //     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
 //     unsigned long pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
 //     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
-    
+
 //     pixIdx = (unsigned long)batchIndex + (unsigned long)id_y * (unsigned long)channel * (unsigned long)width + (unsigned long)id_x * (unsigned long)channel;
 
 //     unsigned int kernelSize = 5;

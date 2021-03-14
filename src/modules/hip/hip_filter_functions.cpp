@@ -7,8 +7,6 @@ RppStatus
 sobel_filter_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u sobelType,
             RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    int ctr=0;
-    
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -33,9 +31,9 @@ sobel_filter_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u sobelT
                                                                         sobelType
                                                                         );
     }
-    
-    
-    return RPP_SUCCESS;    
+
+
+    return RPP_SUCCESS;
 }
 
 
@@ -87,8 +85,7 @@ box_filter_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kernelSize
     0.111, 0.111, 0.111,
     };
 
-    int ctr=0;
-    float* filtPtr;
+    float *filtPtr;
     hipMalloc(&filtPtr,sizeof(float)*3*3);
     hipMemcpy(filtPtr,box_3x3,sizeof(float)*3*3,hipMemcpyHostToDevice);
     kernelSize=3;
@@ -120,7 +117,7 @@ box_filter_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kernelSize
                                                                         );
     }
     hipFree(filtPtr);
-    return RPP_SUCCESS;  
+    return RPP_SUCCESS;
 
 }
 
@@ -163,7 +160,6 @@ box_filter_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 RppStatus
 median_filter_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    int ctr=0;
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -188,8 +184,8 @@ median_filter_hip ( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kerne
                                                                         kernelSize
                                                                         );
     }
-    
-    return RPP_SUCCESS;    
+
+    return RPP_SUCCESS;
 }
 
 RppStatus
@@ -232,7 +228,6 @@ median_filter_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 RppStatus
 non_max_suppression_hip( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    int ctr=0;
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -258,7 +253,7 @@ non_max_suppression_hip( Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u 
                                                                         );
     }
 
-    return RPP_SUCCESS;  
+    return RPP_SUCCESS;
 
 }
 
@@ -379,15 +374,15 @@ bilateral_filter_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle
 }
 
 /********************** gaussian_filter ************************/
+
 RppStatus
 gaussian_filter_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     Rpp32f *kernelMain = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
     generate_gaussian_kernel_gpu(stdDev, kernelMain, kernelSize);
-    
     Rpp32f *kernel;
     hipMemcpy(kernel,kernelMain,sizeof(Rpp32f)*kernelSize*kernelSize,hipMemcpyHostToDevice);
-    int ctr=0;
+
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
@@ -418,7 +413,7 @@ gaussian_filter_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32f stdDe
     }
     free(kernelMain);
     hipFree(kernel);
-    return RPP_SUCCESS;  
+    return RPP_SUCCESS;
 }
 
 RppStatus

@@ -54,9 +54,8 @@ extern "C" __global__ void look_up_table_batch(
   int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
   int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
   int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-  long pixIdx;
   if (id_x < width[id_z] && id_y < height[id_z]) {
-    pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
+    long pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
     int indextmp;
     if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
         (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
