@@ -16,33 +16,33 @@ RPP is developed for **Linux** operating system.
 -   OS
     -   Ubuntu `18.04`/`20.04`
     -   CentOS/RHEL `8.0`
+
 -   [ROCm supported hardware](https://rocm.github.io/hardware.html)
+
 -   [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
+
 -   CMake Version `3.5` or higher
+
 -   Boost
+
 -   Clang: minimum version required: 6.0
+
 -   IEEE 754-based half-precision floating-point library - half.hpp
 
 **NOTE:**
 
 -   boost
-    -   Ubuntu
-        sudo apt --yes install libboost-all-dev
-    -   CentOS/RHEL
-        sudo yum install boost-devel
+    -   Ubuntu : `sudo apt --yes install libboost-all-dev`
+    -   CentOS/RHEL : `sudo yum install boost-devel`
 
 -   clang
-    -   Ubuntu
-        sudo apt --yes install clang
-    -   CentOS/RHEL
-        sudo yum install clang
+    -   Ubuntu : `sudo apt --yes install clang`
+    -   CentOS/RHEL : `sudo yum install clang`
 
 -   half.hpp
-
-
-    wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
-    unzip half-1.12.0.zip -d half-files
-    sudo cp half-files/include/half.hpp /usr/local/include/
+        wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
+        unzip half-1.12.0.zip -d half-files
+        sudo cp half-files/include/half.hpp /usr/local/include/
 
 ## Supported Functionalities and Variants
 
