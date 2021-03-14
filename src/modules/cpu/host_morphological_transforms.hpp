@@ -79,12 +79,13 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             }
             else
             {
-                T *srcPtrImageTemp, *srcPtrBoundedROITemp;
+                T *srcPtrBoundedROITemp;
                 srcPtrBoundedROITemp = srcPtrBoundedROI;
 
                 srcPtrBoundedROITemp += bound;
                 for (int c = 0; c < channel; c++)
                 {
+                    T *srcPtrImageTemp;
                     srcPtrImageTemp = srcPtrImage + (c * imageDimMax) + ((Rpp32u) y1 * elementsInRowMax) + (Rpp32u) x1;
 
                     for (int i = 0; i < bound; i++)
@@ -290,7 +291,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
-                T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
+                T *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
                 dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
 
@@ -303,6 +304,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 }
                 else
                 {
+                    T *srcPtrWindow;
                     srcPtrWindow = srcPtrBoundedROI + (roiRowCount * elementsInRowBoundedROI);
                     for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                     {

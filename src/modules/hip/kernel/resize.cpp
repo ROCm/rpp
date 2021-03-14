@@ -254,7 +254,7 @@ extern "C" __global__ void resize_crop_batch(
       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
   float x_diff, y_diff, ya, yb;
 
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
 
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
@@ -326,7 +326,7 @@ extern "C" __global__ void resize_crop_batch_int8(
       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
   float x_diff, y_diff, ya, yb;
 
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
 
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
@@ -399,7 +399,7 @@ extern "C" __global__ void resize_crop_batch_int8(
 //       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
 //   float x_diff, y_diff, ya, yb;
 
-//   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+//   unsigned long dst_pixIdx = 0;
 
 //   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
 //     return;
@@ -466,7 +466,7 @@ extern "C" __global__ void resize_crop_batch_fp32(
       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
   float x_diff, y_diff, ya, yb;
 
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
 
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
@@ -533,7 +533,7 @@ extern "C" __global__ void resize_crop_batch_u8_fp32(
       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
   float x_diff, y_diff, ya, yb;
 
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
 
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
@@ -600,7 +600,7 @@ extern "C" __global__ void resize_crop_batch_u8_fp32(
 //       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
 //   float x_diff, y_diff, ya, yb;
 
-//   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+//   unsigned long dst_pixIdx = 0;
 
 //   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
 //     return;
@@ -667,7 +667,7 @@ extern "C" __global__ void resize_crop_batch_u8_int8(
       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
   float x_diff, y_diff, ya, yb;
 
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
 
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
@@ -735,7 +735,7 @@ extern "C" __global__ void resize_crop_mirror_batch(
       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
   float x_diff, y_diff, ya, yb;
 
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
 
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
@@ -805,7 +805,7 @@ extern "C" __global__ void resize_crop_mirror_batch_int8(
       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
   float x_diff, y_diff, ya, yb;
 
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
 
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
@@ -875,7 +875,7 @@ extern "C" __global__ void resize_crop_mirror_batch_int8(
 //       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
 //   float x_diff, y_diff, ya, yb;
 
-//   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+//   unsigned long dst_pixIdx = 0;
 
 //   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
 //     return;
@@ -944,7 +944,7 @@ extern "C" __global__ void resize_crop_mirror_batch_fp32(
       ((float)(yroi_end[id_z] - yroi_begin[id_z] - 1)) / dest_height[id_z];
   float x_diff, y_diff, ya, yb;
 
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
 
   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
     return;
@@ -1014,7 +1014,7 @@ extern "C" __global__ void random_crop_letterbox_batch(
   float x_diff, y_diff, ya, yb;
 
   int indextmp = 0;
-  unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+  unsigned long dst_pixIdx = 0;
   unsigned int minVal = ((dest_height[id_z] < dest_width[id_z]) ? dest_height[id_z] : dest_width[id_z]);
   padding = (5 * minVal / 100);
 

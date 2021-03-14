@@ -59,7 +59,6 @@ contrast_hip (    Rpp8u * srcPtr, RppiSize srcSize,
                             RppiChnFormat chnFormat, unsigned int channel,
                             rpp::Handle& handle)
 {
-    unsigned short counter=0;
     Rpp32u min = 0; /* Kernel has to be called */
     Rpp32u max = 255; /* Kernel has to be called */
     std::vector<size_t> vld{32, 32, 1};

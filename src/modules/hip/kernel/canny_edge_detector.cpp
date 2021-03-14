@@ -340,8 +340,6 @@ extern "C" __global__ void canny_edge(   unsigned char* input,
     int pixIdx = id_y * width + id_x + id_z * width * height;
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    int value = 0;
-    int value1 =0;
     if(input[pixIdx] == 0 || input[pixIdx] == 255)
     {
         output[pixIdx] = input[pixIdx];
@@ -388,8 +386,6 @@ extern "C" __global__ void canny_edge_batch(   unsigned char* input,
         OPpixIdx = (unsigned long)IPpixIdx;
 
     if (id_x >= width || id_y >= height || id_z >= channel) return;
-    int value = 0;
-    int value1 =0;
     if(input[IPpixIdx] == 0 || input[IPpixIdx] == 255)
     {
         output[OPpixIdx] = input[IPpixIdx];

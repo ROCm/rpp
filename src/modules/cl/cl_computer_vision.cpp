@@ -1429,8 +1429,6 @@ fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u n
     cl_program theProgram;
 
     cl_mem gsin = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
-    cl_mem gsout = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
-
     cl_mem tempDest1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
 
     size_t gDim3[3];
@@ -1537,8 +1535,6 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
 
     cl_mem gsin = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
-    cl_mem gsout = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
-
     cl_mem tempDest1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
 
     size_t gDim3[3];
