@@ -391,7 +391,6 @@ rain_hip(Rpp8u * srcPtr, RppiSize srcSize,Rpp8u * dstPtr, Rpp32f rainPercentage,
     }
     else
     {
-        int ctr=0;
         Rpp32u rainDrops= (Rpp32u)((rainPercentage * srcSize.width * srcSize.height )/100);
         Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / rainDrops);
         transparency /= 5;
@@ -487,7 +486,6 @@ snow_hip( Rpp8u * srcPtr,RppiSize srcSize, Rpp8u * dstPtr,
     }
     else
     {
-        int ctr=0;
         Rpp32u snowDrops= (Rpp32u)((snowCoefficient * srcSize.width * srcSize.height )/100);
         Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / snowDrops);
         size_t gDim3[3];
@@ -661,7 +659,6 @@ random_shadow_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u x1, Rpp
                  Rpp32u maxSizeY, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     Rpp32u row1, row2, column2, column1;
-    int i, j, ctr = 0;
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
     handle.AddKernel("", "", "random_shadow.cpp","random_shadow", vld, vgd, "")(srcPtr, dstPtr,
@@ -670,9 +667,8 @@ random_shadow_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u x1, Rpp
                                                                                 channel);
 
 
-    for(i = 0 ; i < numberOfShadows ; i++)
+    for(int i = 0 ; i < numberOfShadows ; i++)
     {
-        ctr = 0;
         do
         {
             row1 = rand() % srcSize.height;
@@ -946,8 +942,6 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
     hipMalloc(&srcPtr1,sizeof(unsigned char) * maxHeight * maxWidth * channel);
     Rpp8u* dstPtr1;
     hipMalloc(&dstPtr1,sizeof(unsigned char)* maxHeight * maxWidth * channel);
-
-    int ctr;
 
     size_t gDim3[3];
 

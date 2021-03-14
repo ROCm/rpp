@@ -204,7 +204,7 @@ extern "C" __global__ void resize_batch( unsigned char* srcPtr,
     float y_ratio = ((float)(source_height[id_z] -1 ))/dest_height[id_z];
     float x_diff, y_diff, ya, yb ;
 
-    unsigned long src_pixIdx = 0, dst_pixIdx = 0;
+    unsigned long dst_pixIdx = 0;
 
 
     if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z]) return;

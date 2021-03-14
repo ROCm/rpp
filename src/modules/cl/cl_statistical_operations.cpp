@@ -10,12 +10,12 @@ thresholding_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp8u min, Rpp8u
     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
 
     handle.AddKernel("", "", "thresholding.cl", "thresholding", vld, vgd, "")(srcPtr,
-                                                                            dstPtr,
-                                                                            srcSize.height,
-                                                                            srcSize.width,
-                                                                            channel,
-                                                                            min,
-                                                                            max);
+                                                                              dstPtr,
+                                                                              srcSize.height,
+                                                                              srcSize.width,
+                                                                              channel,
+                                                                              min,
+                                                                              max);
 
     return RPP_SUCCESS;
 }
@@ -220,8 +220,8 @@ min_max_loc_cl(cl_mem srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* 
     std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
 
     handle.AddKernel("", "", "min_max_loc.cl", "max", vld1, vgd1, "")(srcPtr,
-                                                                    c_mem_obj,
-                                                                    c_mem_obj1);
+                                                                      c_mem_obj,
+                                                                      c_mem_obj1);
 
     clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL);
     clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max_location, 0, NULL, NULL);
@@ -294,13 +294,8 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
     cl_mem c_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(unsigned char), NULL, NULL);
     cl_mem c_mem_obj1 = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(unsigned int), NULL, NULL);
 
-    cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char)
-                     * maxHeight * maxWidth * channel, NULL, NULL);
-    cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned int)
-                     * maxHeight * maxWidth * channel, NULL, NULL);
-
+    cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
     size_t gDim3[3];
-
     size_t batchIndex = 0;
 
     for(int x = 0 ; x < nBatchSize ; x++)
@@ -336,12 +331,12 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
         local_item_size[2] = 1;
         std::vector<size_t> vld{local_item_size[0], local_item_size[1], local_item_size[2]};
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
         handle.AddKernel("", "", "min_max_loc.cl", "min", vld, vgd, "")(srcPtr1,
-                                                                    b_mem_obj,
-                                                                    b_mem_obj1);
+                                                                        b_mem_obj,
+                                                                        b_mem_obj1);
 
         clEnqueueReadBuffer(handle.GetStream(), b_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min, 0, NULL, NULL);
-
         clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_min_location, 0, NULL, NULL);
 
         for(i = 0; i < numGroups; i++)
@@ -358,11 +353,12 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
 
         std::vector<size_t> vld1{local_item_size[0], local_item_size[1], local_item_size[2]};
         std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
-        handle.AddKernel("", "", "min_max_loc.cl", "max", vld1, vgd1, "")(srcPtr1,
-                                                                        c_mem_obj,
-                                                                        c_mem_obj1);
-        clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL);
 
+        handle.AddKernel("", "", "min_max_loc.cl", "max", vld1, vgd1, "")(srcPtr1,
+                                                                          c_mem_obj,
+                                                                          c_mem_obj1);
+
+        clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max, 0, NULL, NULL);
         clEnqueueReadBuffer(handle.GetStream(), b_mem_obj1, CL_TRUE, 0, numGroups * sizeof(unsigned char), partial_max_location, 0, NULL, NULL);
 
         for(i = 0; i < numGroups; i++)
@@ -398,12 +394,8 @@ min_max_loc_cl_batch(cl_mem srcPtr, Rpp8u *min, Rpp8u *max,
 /******************** integral ********************/
 
 RppStatus
-integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat,
-             unsigned int channel, rpp::Handle& handle)
+integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-
-    unsigned short counter=0;
-
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
@@ -411,28 +403,26 @@ integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFor
     cl_kernel theKernel;
     cl_program theProgram;
 
-    cl_mem hInput = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned int) * srcSize.height * srcSize.width * channel, NULL, NULL);
-
     /* FIRST COLUMN */
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, 1, channel};
         handle.AddKernel("", "", "integral.cl", "integral_pkd_col", vld, vgd, "")(srcPtr,
-                                                                                dstPtr,
-                                                                                srcSize.height,
-                                                                                srcSize.width,
-                                                                                channel);
+                                                                                  dstPtr,
+                                                                                  srcSize.height,
+                                                                                  srcSize.width,
+                                                                                  channel);
     }
     else
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, 1, channel};
         handle.AddKernel("", "", "integral.cl", "integral_pln_col", vld, vgd, "")(srcPtr,
-                                                                                dstPtr,
-                                                                                srcSize.height,
-                                                                                srcSize.width,
-                                                                                channel);
+                                                                                  dstPtr,
+                                                                                  srcSize.height,
+                                                                                  srcSize.width,
+                                                                                  channel);
     }
     /* FIRST ROW */
     if(chnFormat == RPPI_CHN_PACKED)
@@ -440,59 +430,56 @@ integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFor
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.height, 1, channel};
         handle.AddKernel("", "", "integral.cl", "integral_pkd_row", vld, vgd, "")(srcPtr,
-                                                                                dstPtr,
-                                                                                srcSize.height,
-                                                                                srcSize.width,
-                                                                                channel);
+                                                                                  dstPtr,
+                                                                                  srcSize.height,
+                                                                                  srcSize.width,
+                                                                                  channel);
     }
     else
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.height, 1, channel};
         handle.AddKernel("", "", "integral.cl", "integral_pln_row", vld, vgd, "")(srcPtr,
-                                                                                dstPtr,
-                                                                                srcSize.height,
-                                                                                srcSize.width,
-                                                                                channel);
+                                                                                  dstPtr,
+                                                                                  srcSize.height,
+                                                                                  srcSize.width,
+                                                                                  channel);
     }
-    Rpp32u temp = 1;
+    Rpp32u temp;
 
     for(int i = 0 ; i < srcSize.height - 1 ; i++)
     {
-
         if(i + 1 < ((srcSize.height - 1 <= srcSize.width - 1) ? srcSize.height - 1 : srcSize.width - 1))
             temp = i + 1;
         else if(i >= ((srcSize.height - 1 >= srcSize.width - 1) ? srcSize.height - 1 : srcSize.width - 1))
             temp = srcSize.height - i + srcSize.width - 3;
         else
             temp = (srcSize.height - 1 <= srcSize.width - 1) ? srcSize.height - 1 : srcSize.width - 1;
-        // gDim3[0] = temp;
+
         if(chnFormat == RPPI_CHN_PACKED)
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{temp, 1, channel};
             handle.AddKernel("", "", "integral.cl", "integral_up_pkd", vld, vgd, "")(srcPtr,
-                                                                                    dstPtr,
-                                                                                    srcSize.height,
-                                                                                    srcSize.width,
-                                                                                    channel,
-                                                                                    i,
-                                                                                    temp);
+                                                                                     dstPtr,
+                                                                                     srcSize.height,
+                                                                                     srcSize.width,
+                                                                                     channel,
+                                                                                     i,
+                                                                                     temp);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{temp, 1, channel};
             handle.AddKernel("", "", "integral.cl", "integral_up_pln", vld, vgd, "")(srcPtr,
-                                                                                    dstPtr,
-                                                                                    srcSize.height,
-                                                                                    srcSize.width,
-                                                                                    channel,
-                                                                                    i,
-                                                                                    temp);
+                                                                                     dstPtr,
+                                                                                     srcSize.height,
+                                                                                     srcSize.width,
+                                                                                     channel,
+                                                                                     i,
+                                                                                     temp);
         }
-
-        counter=0;
     }
     for(int i = 0 ; i < srcSize.width - 2 ; i++)
     {
@@ -509,32 +496,32 @@ integral_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiChnFormat chnFor
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{temp, 1, channel};
             handle.AddKernel("", "", "integral.cl", "integral_low_pkd", vld, vgd, "")(srcPtr,
-                                                                                    dstPtr,
-                                                                                    srcSize.height,
-                                                                                    srcSize.width,
-                                                                                    channel,
-                                                                                    i,
-                                                                                    temp);
+                                                                                      dstPtr,
+                                                                                      srcSize.height,
+                                                                                      srcSize.width,
+                                                                                      channel,
+                                                                                      i,
+                                                                                      temp);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{temp, 1, channel};
             handle.AddKernel("", "", "integral.cl", "integral_low_pln", vld, vgd, "")(srcPtr,
-                                                                                    dstPtr,
-                                                                                    srcSize.height,
-                                                                                    srcSize.width,
-                                                                                    channel,
-                                                                                    i,
-                                                                                    temp);
+                                                                                      dstPtr,
+                                                                                      srcSize.height,
+                                                                                      srcSize.width,
+                                                                                      channel,
+                                                                                      i,
+                                                                                      temp);
         }
     }
+
     return RPP_SUCCESS;
 }
 
 RppStatus
-integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
-                    RppiChnFormat chnFormat, unsigned int channel)
+integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nBatchSize = handle.GetBatchSize();
     cl_context theContext;
@@ -557,8 +544,6 @@ integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
 
     cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
     cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned int) * maxHeight * maxWidth * channel, NULL, NULL);
-
-    int counter;
 
     size_t gDim3[3];
 
@@ -626,6 +611,7 @@ integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
             else
                 temp = (handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] - 1 <= handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 1) ? handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] - 1 : handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 1;
             gDim3[0] = temp;
+
             if(chnFormat == RPPI_CHN_PACKED)
             {
             std::vector<size_t> vld{32, 32, 1};
@@ -696,8 +682,7 @@ integral_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle& handle,
 /******************** mean_stddev ********************/
 
 RppStatus
-mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
-                RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     int i;
 
@@ -744,9 +729,11 @@ mean_stddev_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
     *mean = (sum) / LIST_SIZE ;
 
     float meanCopy = *mean;
+
     handle.AddKernel("", "", "mean_stddev.cl", "mean_stddev", vld, vgd, "")(srcPtr,
-                                                                    c_mem_obj,
-                                                                    meanCopy);
+                                                                            c_mem_obj,
+                                                                            meanCopy);
+
     clEnqueueReadBuffer(handle.GetStream(), c_mem_obj, CL_TRUE, 0, numGroups * sizeof(float), partial_mean_sum, 0, NULL, NULL);
     for(i = 0; i < numGroups; i++)
     {
@@ -802,7 +789,6 @@ mean_stddev_cl_batch(cl_mem srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& h
     cl_mem c_mem_obj = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, numGroups * sizeof(float), NULL, NULL);
 
     cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
-    cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned int) * maxHeight * maxWidth * channel, NULL, NULL);
     size_t gDim3[3];
 
     size_t batchIndex = 0;
@@ -877,7 +863,6 @@ mean_stddev_cl_batch(cl_mem srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& h
 RppStatus
 histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    unsigned short counter=0;
     cl_int err;
 
     cl_context theContext;
@@ -904,10 +889,8 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
 
-    cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_WRITE,
-                                    sizeof(unsigned int)*256*channel*numGroups, NULL, NULL);
-    cl_mem histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY,
-                                    sizeof(unsigned int)*256*channel, NULL, NULL);
+    cl_mem partialHistogram = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned int)*256*channel*numGroups, NULL, NULL);
+    cl_mem histogram = clCreateBuffer(theContext, CL_MEM_READ_ONLY, sizeof(unsigned int)*256*channel, NULL, NULL);
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
@@ -962,7 +945,7 @@ histogram_cl(cl_mem srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bi
     const unsigned int totalBin = channel * 256;
     unsigned int *tempBin = (unsigned int *)calloc(totalBin, sizeof(unsigned int));
 
-    clEnqueueReadBuffer(handle.GetStream(), histogram, CL_TRUE, 0, sizeof(unsigned int)*256*channel, tempBin, 0, NULL, NULL );
+    clEnqueueReadBuffer(handle.GetStream(), histogram, CL_TRUE, 0, sizeof(unsigned int) * 256 * channel, tempBin, 0, NULL, NULL );
     int noOfValuesInBins = (256 * channel) /bins;
     for(int i = 0 ; i < bins ; i++)
     {

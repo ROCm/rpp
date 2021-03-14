@@ -1890,7 +1890,7 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
 
         for(int i = 0; i < srcSize.height; i++)
         {
-            T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
+            T *srcPtrTemp, *dstPtrTemp;
             srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
             dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
 
@@ -1903,6 +1903,7 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
             }
             else
             {
+                T *srcPtrWindow;
                 srcPtrWindow = srcPtrBoundedROI + (roiRowCount * elementsInRowBoundedROI);
                 for(int j = 0; j < srcSize.width; j++)
                 {
@@ -3558,7 +3559,7 @@ inline RppStatus compute_gradient_direction_host(T* gradientX, T* gradientY, Rpp
         {
             *gradientDirectionTemp = atan((Rpp32f) *gradientYTemp / (Rpp32f) *gradientXTemp);
         }
-        else if (*gradientXTemp == 0)
+        else
         {
             if (*gradientYTemp > 0)
             {

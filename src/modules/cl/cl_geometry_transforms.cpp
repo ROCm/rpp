@@ -256,7 +256,6 @@ scale_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize, Rpp32
     percentage /= 100;
     unsigned int dstheight = (Rpp32s)(percentage * (Rpp32f)srcSize.height);
     unsigned int dstwidth = (Rpp32s)(percentage * (Rpp32f)srcSize.width);
-    unsigned short counter = 0;
     cl_int err;
     cl_kernel theKernel;
     cl_program theProgram;
@@ -306,8 +305,6 @@ scale_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat 
         plnpkdind = 1;
     else
         plnpkdind = 3;
-    unsigned int padding = 0;
-    unsigned int type = 0;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
     std::vector<size_t> vld{32, 32, 1};
@@ -499,16 +496,8 @@ resize_crop_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize,
     unsigned int padding = 0;
     unsigned int type = 0;
     unsigned int width, height;
-    if (type == 1)
-    {
-        width = dstSize.width - padding * 2;
-        height = dstSize.height - padding * 2;
-    }
-    else
-    {
-        width = dstSize.width;
-        height = dstSize.height;
-    }
+    width = dstSize.width;
+    height = dstSize.height;
 
     if (chnFormat == RPPI_CHN_PACKED)
     {
@@ -744,7 +733,6 @@ rotate_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RPPTen
 RppStatus
 warp_affine_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize, float *affine, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
-    cl_int err;
     float affine_inv[6];
     float det;
     det = (affine[0] * affine[4]) - (affine[1] * affine[3]);
@@ -759,7 +747,7 @@ warp_affine_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, RppiSize dstSize,
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_mem affine_array = clCreateBuffer(theContext, CL_MEM_READ_ONLY, sizeof(float) * 6, NULL, NULL);
-    err = clEnqueueWriteBuffer(handle.GetStream(), affine_array, CL_TRUE, 0, sizeof(float) * 6, affine_inv, 0, NULL, NULL);
+    clEnqueueWriteBuffer(handle.GetStream(), affine_array, CL_TRUE, 0, sizeof(float) * 6, affine_inv, 0, NULL, NULL);
 
     if (chnFormat == RPPI_CHN_PLANAR)
     {
@@ -803,11 +791,10 @@ warp_affine_cl_batch(cl_mem srcPtr, cl_mem dstPtr,  rpp::Handle &handle, Rpp32f 
         plnpkdind = 1;
     else
         plnpkdind = 3;
-    cl_int err;
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_mem affine_array = clCreateBuffer(theContext, CL_MEM_READ_ONLY, sizeof(float) * 6 * handle.GetBatchSize(), NULL, NULL);
-    err = clEnqueueWriteBuffer(handle.GetStream(), affine_array, CL_TRUE, 0, sizeof(float) * 6 *handle.GetBatchSize(), affine, 0, NULL, NULL);
+    clEnqueueWriteBuffer(handle.GetStream(), affine_array, CL_TRUE, 0, sizeof(float) * 6 *handle.GetBatchSize(), affine, 0, NULL, NULL);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
     std::vector<size_t> vld{32, 32, 1};
@@ -844,11 +831,10 @@ warp_affine_cl_batch_tensor(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, R
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.cdstSize.height, handle_obj->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    cl_int err;
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_mem affine_array = clCreateBuffer(theContext, CL_MEM_READ_ONLY, sizeof(float) * 6 * handle.GetBatchSize(), NULL, NULL);
-    err = clEnqueueWriteBuffer(handle.GetStream(), affine_array, CL_TRUE, 0, sizeof(float) * 6 * handle.GetBatchSize(), affine, 0, NULL, NULL);
+    clEnqueueWriteBuffer(handle.GetStream(), affine_array, CL_TRUE, 0, sizeof(float) * 6 * handle.GetBatchSize(), affine, 0, NULL, NULL);
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width ,max_height , handle.GetBatchSize()};
     std::string kernel_file  = "warp_affine.cl";

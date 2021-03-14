@@ -22,19 +22,14 @@ extern "C" __global__ void box_filter_batch(   unsigned char* input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;    unsigned char valuer,valuer1,valueg,valueg1,valueb,valueb1;
     int kernelSizeTemp = kernelSize[id_z];
-    int indextmp=0;
-    long pixIdx = 0;
-    int temp;
-    // printf("%d", id_x);
-    int value = 0;
-    int value1 =0;
-    int r = 0, g = 0, b = 0;
+
     int bound = (kernelSizeTemp - 1) / 2;
     if(id_x < width[id_z] && id_y < height[id_z])
     {
-        pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
+        long pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
         if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
         {
+            int r = 0, g = 0, b = 0;
             for(int i = -bound ; i <= bound ; i++)
             {
                 for(int j = -bound ; j <= bound ; j++)
@@ -66,7 +61,7 @@ extern "C" __global__ void box_filter_batch(   unsigned char* input,
 
             if(id_x >= bound && id_x <= width[id_z] - bound - 1 && id_y >= bound && id_y <= height[id_z] - bound - 1 )
             {
-                temp = (int)(r / (kernelSizeTemp * kernelSizeTemp));
+                int temp = (int)(r / (kernelSizeTemp * kernelSizeTemp));
                 output[pixIdx] = saturate_8u(temp);
                 if(channel == 3)
                 {
@@ -78,7 +73,7 @@ extern "C" __global__ void box_filter_batch(   unsigned char* input,
             }
             else
             {
-                for(indextmp = 0; indextmp < channel; indextmp++)
+                for(int indextmp = 0; indextmp < channel; indextmp++)
                 {
                     output[pixIdx] = input[pixIdx];
                     pixIdx += inc[id_z];
@@ -87,7 +82,7 @@ extern "C" __global__ void box_filter_batch(   unsigned char* input,
         }
         else if((id_x < width[id_z] ) && (id_y < height[id_z]))
         {
-            for(indextmp = 0; indextmp < channel; indextmp++)
+            for(int indextmp = 0; indextmp < channel; indextmp++)
             {
                 output[pixIdx] = input[pixIdx];
                 pixIdx += inc[id_z];

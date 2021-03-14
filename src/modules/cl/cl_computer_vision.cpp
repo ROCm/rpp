@@ -661,8 +661,6 @@ canny_edge_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp8u min
     cl_mem sobelX = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
     cl_mem sobelY = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
 
-    int ctr;
-
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
@@ -1001,10 +999,8 @@ harris_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u
     cl_program theProgram;
 
     cl_mem gsin = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
-    cl_mem gsout = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
 
     cl_mem tempDest1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
-    cl_mem tempDest2 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
 
     cl_mem dstFloat = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(float) * srcSize.height * srcSize.width, NULL, NULL);
     cl_mem nonMaxDstFloat = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(float) * srcSize.height * srcSize.width, NULL, NULL);
@@ -1073,7 +1069,6 @@ harris_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u
                                                                                      gaussianKernelSize);
     }
 
-    unsigned int sobelType = 2;
     unsigned int sobelTypeX = 0;
     unsigned int sobelTypeY = 1;
     handle.AddKernel("", "", "sobel.cl", "sobel_pln", vld, vgd, "")(tempDest1,
@@ -1165,10 +1160,8 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
     cl_mem kernel = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, maxKernelSize * maxKernelSize * sizeof(Rpp32f), NULL, NULL);
 
     cl_mem gsin = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
-    cl_mem gsout = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
 
     cl_mem tempDest1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
-    cl_mem tempDest2 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
 
     cl_mem sobelX = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
     cl_mem sobelY = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
@@ -1311,7 +1304,6 @@ harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handl
 RppStatus
 match_template_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem templateImage, RppiSize templateImageSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
-    int ctr = 0;
     cl_kernel theKernel;
     cl_program theProgram;
     if (chnFormat == RPPI_CHN_PACKED)
@@ -1354,7 +1346,6 @@ match_template_cl_batch(cl_mem srcPtr, RppiSize *srcSize, cl_mem dstPtr, cl_mem 
     cl_program theProgram;
 
     unsigned int maxSrcHeight, maxSrcWidth, maxTmpHeight, maxTmpWidth;
-    unsigned long ioSrcBufferSize = 0, ioTmpBufferSize = 0;
     maxSrcHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxSrcWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
     maxTmpHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[0];
@@ -1370,15 +1361,11 @@ match_template_cl_batch(cl_mem srcPtr, RppiSize *srcSize, cl_mem dstPtr, cl_mem 
             maxTmpHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
         if (maxTmpWidth < handle.GetInitHandle()->mem.mgpu.cdstSize.width[i])
             maxTmpWidth = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
-        ioSrcBufferSize += handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel;
-        ioTmpBufferSize += handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * channel;
     }
 
     cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxSrcHeight * maxSrcWidth * channel, NULL, NULL);
     cl_mem templateImage1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxTmpHeight * maxTmpWidth * channel, NULL, NULL);
     cl_mem dstPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned short) * maxSrcHeight * maxSrcWidth * channel, NULL, NULL);
-
-    int ctr;
 
     size_t gDim3[3];
 
@@ -1446,8 +1433,6 @@ fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u n
 
     cl_mem tempDest1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * srcSize.height * srcSize.width, NULL, NULL);
 
-    int ctr;
-
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
@@ -1480,7 +1465,6 @@ fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u n
     /* FAST CORNER IMPLEMENTATION */
 
     unsigned int newChannel = 1;
-    ctr = 0;
 
     if (channel == 1)
     {
@@ -1539,7 +1523,6 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     cl_program theProgram;
 
     unsigned int maxHeight, maxWidth;
-    unsigned long ioBufferSize = 0;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
     for (int i = 0; i < handle.GetBatchSize(); i++)
@@ -1548,7 +1531,6 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
             maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
         if (maxWidth < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
             maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        ioBufferSize += handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel;
     }
 
     cl_mem srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth * channel, NULL, NULL);
@@ -1558,8 +1540,6 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
     cl_mem gsout = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
 
     cl_mem tempDest1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight * maxWidth, NULL, NULL);
-
-    int ctr;
 
     size_t gDim3[3];
 
@@ -1600,7 +1580,6 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
         /* FAST CORNER IMPLEMENTATION */
 
         unsigned int newChannel = 1;
-        ctr = 0;
         if (channel == 1)
         {
             handle.AddKernel("", "", "fast_corner_detector.cl", "fast_corner_detector", vld, vgd, "")(srcPtr,
@@ -1657,7 +1636,6 @@ fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle,
 RppStatus
 reconstruction_laplacian_image_pyramid_cl(cl_mem srcPtr1, RppiSize srcSize1, cl_mem srcPtr2, RppiSize srcSize2, cl_mem dstPtr, Rpp32f stdDev, Rpp32u kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle)
 {
-    int ctr = 0;
     cl_context theContext;
     clGetCommandQueueInfo(handle.GetStream(), CL_QUEUE_CONTEXT, sizeof(cl_context), &theContext, NULL);
     cl_device_id theDevice;
@@ -1763,7 +1741,6 @@ reconstruction_laplacian_image_pyramid_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, 
     cl_program theProgram;
 
     unsigned int maxHeight1, maxWidth1, maxHeight2, maxWidth2, maxKernelSize;
-    unsigned long ioBufferSize1 = 0, ioBufferSize2 = 0;
     maxHeight1 = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth1 = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
     maxHeight2 = handle.GetInitHandle()->mem.mgpu.cdstSize.height[0];
@@ -1775,12 +1752,10 @@ reconstruction_laplacian_image_pyramid_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, 
             maxHeight1 = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
         if (maxWidth1 < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
             maxWidth1 = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        ioBufferSize1 += handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel;
         if (maxHeight2 < handle.GetInitHandle()->mem.mgpu.cdstSize.height[i])
             maxHeight2 = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
         if (maxWidth2 < handle.GetInitHandle()->mem.mgpu.cdstSize.width[i])
             maxWidth2 = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
-        ioBufferSize2 += handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * channel;
         if (maxKernelSize < handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i])
             maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i];
     }
@@ -1795,8 +1770,6 @@ reconstruction_laplacian_image_pyramid_cl_batch(cl_mem srcPtr1, cl_mem srcPtr2, 
     cl_mem gsout = clCreateBuffer(theContext, CL_MEM_READ_WRITE, sizeof(unsigned char) * maxHeight1 * maxWidth1 * channel, NULL, NULL);
 
     cl_mem kernel = clCreateBuffer(theContext, CL_MEM_WRITE_ONLY, maxKernelSize * maxKernelSize * sizeof(Rpp32f), NULL, NULL);
-
-    int ctr;
 
     size_t gDim3[3];
 
@@ -2036,7 +2009,6 @@ remap_cl_batch(cl_mem srcPtr, cl_mem dstPtr, Rpp32u *rowRemapTable, Rpp32u *colR
     clEnqueueWriteBuffer(handle.GetStream(), colRemapTableGPU, CL_TRUE, 0, buffer_size, colRemapTable, 0, NULL, NULL);
     cl_mem rowRemapTableGPU1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, maxWidth * maxHeight * sizeof(Rpp32u), NULL, NULL);
     cl_mem colRemapTableGPU1 = clCreateBuffer(theContext, CL_MEM_READ_WRITE, maxWidth * maxHeight * sizeof(Rpp32u), NULL, NULL);
-    int ctr;
 
     size_t gDim3[3];
 
