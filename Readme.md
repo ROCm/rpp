@@ -7,7 +7,7 @@ Radeon Performance Primitives (RPP) library is a comprehensive high-performance 
 
 ## Top level design
 
-<p align="center"><img width="50%" src="docs/images/rpp_structure_3.png" /></p>
+<p align="center"><img width="50%" src="docs/images/rpp_structure_4.png" /></p>
 
 RPP is developed for **Linux** operating system.
 
@@ -24,8 +24,6 @@ RPP is developed for **Linux** operating system.
 -   CMake Version `3.5` or higher
 
 -   Boost Version `1.72` or higher (install from source - <https://www.boost.org/>)
-
--   Clang: Version `6.0` or higher (Available with ROCm installation)
 
 -   IEEE 754-based half-precision floating-point library - half.hpp
         ```
@@ -216,27 +214,3 @@ Extended RPP support as a functionality through OpenVX [MIVisionX](https://githu
 
     // Copy output data back to host
     hipMemcpy(output, d_output, ioBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
-
-### RPP with [GDF](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/utilities/runvx/README.md#amd-runvx)(uses OpenVX) code snippet
-
-    # specify input source for input image and request for displaying input and output images
-    read input  ../images/face.jpg
-    view input  inputWindow
-    view output brightnessWindow
-
-    # import RPP library
-    import vx_rpp
-    # create input and output images
-    data input  = image:480,360,RGB2
-    data output = image:480,360,U008
-
-    # compute luma image channel from input RGB image
-    data yuv  = image-virtual:0,0,IYUV
-    data luma = image-virtual:0,0,U008
-    node org.khronos.openvx.color_convert input yuv
-    node org.khronos.openvx.channel_extract yuv !CHANNEL_Y luma
-
-    # compute brightness and contrast in luma image using Brightness function
-    data alpha = scalar:FLOAT32,1.0  #contrast control
-    data beta = scalar:INT32,30    #brightness control
-    node org.rpp.Brightness luma output alpha beta
