@@ -398,8 +398,6 @@ RppStatus
 integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
 
-    unsigned short counter=0;
-
     Rpp32u* hInput;
     hipMalloc(&hInput, sizeof(unsigned int)* srcSize.height * srcSize.width * channel);
 
@@ -449,7 +447,7 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
     }
 
 
-    Rpp32u temp = 1;
+    Rpp32u temp;
 
     for(int i = 0 ; i < srcSize.height - 1 ; i++)
     {
@@ -484,8 +482,6 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                       i,
                                                                                       temp);
         }
-
-        counter=0;
     }
     for(int i = 0 ; i < srcSize.width - 2 ; i++)
     {
@@ -522,9 +518,6 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
                                                                                        i,
                                                                                        temp);
         }
-
-        counter=0;
-
     }
 
     return RPP_SUCCESS;
@@ -550,8 +543,6 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle, RppiChnFo
     hipMalloc(&srcPtr1, sizeof(unsigned char) * maxHeight * maxWidth * channel);
     Rpp32u* dstPtr1;
     hipMalloc(&dstPtr1, sizeof(unsigned int) * maxHeight * maxWidth * channel);
-
-    int counter;
 
     size_t gDim3[3];
 
@@ -685,8 +676,6 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle, RppiChnFo
                                                                                            x,
                                                                                            temp);
             }
-
-            counter=0;
         }
         hipMemcpy(dstPtr+batchIndexDst, dstPtr1, sizeof(unsigned int) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
         batchIndexSrc += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);

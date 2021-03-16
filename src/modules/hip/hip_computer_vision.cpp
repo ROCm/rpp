@@ -656,8 +656,6 @@ canny_edge_detector_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp8u mi
     Rpp8u* sobelY;
     hipMalloc(&sobelY, sizeof(unsigned char) * srcSize.height * srcSize.width);
 
-    int ctr;
-
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
@@ -1072,7 +1070,6 @@ harris_corner_detector_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr,
                                                                                       gaussianKernelSize);
     }
 
-    unsigned int sobelType = 2;
     unsigned int sobelTypeX = 0;
     unsigned int sobelTypeY = 1;
 
@@ -1355,7 +1352,6 @@ RppStatus
 match_template_hip_batch(Rpp8u *srcPtr, RppiSize *srcSize, Rpp16u *dstPtr, Rpp8u* templateImage, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     unsigned int maxSrcHeight, maxSrcWidth, maxTmpHeight, maxTmpWidth;
-    unsigned long ioSrcBufferSize = 0, ioTmpBufferSize = 0;
     maxSrcHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxSrcWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
     maxTmpHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[0];
@@ -1371,8 +1367,6 @@ match_template_hip_batch(Rpp8u *srcPtr, RppiSize *srcSize, Rpp16u *dstPtr, Rpp8u
             maxTmpHeight = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
         if(maxTmpWidth < handle.GetInitHandle()->mem.mgpu.cdstSize.width[i])
             maxTmpWidth = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
-        ioSrcBufferSize += handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel;
-        ioTmpBufferSize += handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * channel;
     }
 
     Rpp8u* srcPtr1;
@@ -1381,8 +1375,6 @@ match_template_hip_batch(Rpp8u *srcPtr, RppiSize *srcSize, Rpp16u *dstPtr, Rpp8u
     hipMalloc(&templateImage1, sizeof(unsigned char) * maxTmpHeight * maxTmpWidth * channel);
     Rpp16u* dstPtr1;
     hipMalloc(&dstPtr1, sizeof(unsigned short) * maxSrcHeight * maxSrcWidth * channel);
-
-    int ctr;
 
     size_t gDim3[3];
 
@@ -1446,8 +1438,6 @@ fast_corner_detector_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp32u 
     Rpp8u* tempDest1;
     hipMalloc(&tempDest1, sizeof(unsigned char) * srcSize.height * srcSize.width);
 
-    int ctr;
-
     size_t gDim3[3];
     gDim3[0] = srcSize.width;
     gDim3[1] = srcSize.height;
@@ -1479,7 +1469,6 @@ fast_corner_detector_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp32u 
     /* FAST CORNER IMPLEMENTATION */
 
     unsigned int newChannel = 1;
-    ctr = 0;
 
     if(channel == 1)
     {
@@ -1532,7 +1521,6 @@ RppStatus
 fast_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     unsigned int maxHeight, maxWidth;
-    unsigned long ioBufferSize = 0;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
     for(int i = 0 ; i < handle.GetBatchSize() ; i++)
@@ -1541,7 +1529,6 @@ fast_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
             maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
         if(maxWidth < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
             maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        ioBufferSize += handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel;
     }
 
     Rpp8u* srcPtr1;
@@ -1557,10 +1544,7 @@ fast_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
     Rpp8u* tempDest1;
     hipMalloc(&tempDest1, sizeof(unsigned char) * maxHeight * maxWidth);
 
-    int ctr;
-
     size_t gDim3[3];
-
     size_t batchIndex = 0;
 
     for(int i = 0 ; i < handle.GetBatchSize() ; i++)
@@ -1598,7 +1582,6 @@ fast_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
         /* FAST CORNER IMPLEMENTATION */
 
         unsigned int newChannel = 1;
-        ctr = 0;
 
         if(channel == 1)
         {
@@ -1753,7 +1736,6 @@ RppStatus
 reconstruction_laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     unsigned int maxHeight1, maxWidth1, maxHeight2, maxWidth2, maxKernelSize;
-    unsigned long ioBufferSize1 = 0, ioBufferSize2 = 0;
     maxHeight1 = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth1 = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
     maxHeight2 = handle.GetInitHandle()->mem.mgpu.cdstSize.height[0];
@@ -1765,12 +1747,10 @@ reconstruction_laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2,
             maxHeight1 = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
         if(maxWidth1 < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
             maxWidth1 = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        ioBufferSize1 += handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel;
         if(maxHeight2 < handle.GetInitHandle()->mem.mgpu.cdstSize.height[i])
             maxHeight2 = handle.GetInitHandle()->mem.mgpu.cdstSize.height[i];
         if(maxWidth2 < handle.GetInitHandle()->mem.mgpu.cdstSize.width[i])
             maxWidth2 = handle.GetInitHandle()->mem.mgpu.cdstSize.width[i];
-        ioBufferSize2 += handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * channel;
         if(maxKernelSize < handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i])
             maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i];
     }
@@ -1791,8 +1771,6 @@ reconstruction_laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2,
 
     Rpp32f* kernel;
     hipMalloc(&kernel,  maxKernelSize * maxKernelSize * sizeof(Rpp32f));
-
-    int ctr;
 
     size_t gDim3[3];
 
