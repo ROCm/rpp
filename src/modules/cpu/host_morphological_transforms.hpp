@@ -468,10 +468,11 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
-                T *srcPtrImageTemp, *srcPtrBoundedROITemp;
+                T *srcPtrBoundedROITemp;
                 srcPtrBoundedROITemp = srcPtrBoundedROI;
                 for (int c = 0; c < channel; c++)
                 {
+                    T *srcPtrImageTemp;
                     srcPtrImageTemp = srcPtrImage + (c * imageDimMax) + (((Rpp32u) y1 - bound) * batch_srcSizeMax[batchCount].width) + ((Rpp32u) x1 - bound);
                     for (int i = 0; i < srcSizeBoundedROI.height; i++)
                     {
@@ -518,7 +519,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
                 for(int i = 0; i < batch_srcSize[batchCount].height; i++)
                 {
-                    T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
+                    T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
 
@@ -531,6 +532,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                     }
                     else
                     {
+                        T *srcPtrWindow;
                         srcPtrWindow = srcPtrBoundedROIChannel + (roiRowCount * srcSizeBoundedROI.width);
                         for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                         {
