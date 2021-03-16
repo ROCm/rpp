@@ -1,483 +1,356 @@
 #include "hip/hip_runtime_api.h"
 #include "hip_declarations.hpp"
 
-/****************** Brightness ******************/
+/******************** brightness ********************/
 
 RppStatus
-brightness_hip ( Rpp8u * srcPtr, RppiSize srcSize,
-                            Rpp8u * dstPtr,
-                            Rpp32f alpha, Rpp32s beta,
-                            RppiChnFormat chnFormat, unsigned int channel,
-                            rpp::Handle& handle) {
-
+brightness_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp32f alpha, Rpp32s beta, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+{
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
-    handle.AddKernel("", "", "brightness_contrast.cpp", "brightness_contrast", vld, vgd, "")(srcPtr, dstPtr, alpha, beta, srcSize.height, srcSize.width, channel);
-    return RPP_SUCCESS;
 
+    handle.AddKernel("", "", "brightness_contrast.cpp", "brightness_contrast", vld, vgd, "")(srcPtr,
+                                                                                             dstPtr,
+                                                                                             alpha,
+                                                                                             beta,
+                                                                                             srcSize.height,
+                                                                                             srcSize.width,
+                                                                                             channel);
+
+    return RPP_SUCCESS;
 }
 
-RppStatus brightness_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
+RppStatus brightness_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "brightness_contrast.cpp", "brightness_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                                        handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                                        handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                        channel,
-                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                        plnpkdind
-                                                                                        );
+
+    handle.AddKernel("", "", "brightness_contrast.cpp", "brightness_batch", vld, vgd, "")(srcPtr,
+                                                                                          dstPtr,
+                                                                                          handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                                          handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                                          handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                          handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                          handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                          handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                          channel,
+                                                                                          handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                          plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-/***************** Contrast *********************/
+/******************** gamma_correction ********************/
+
 RppStatus
-contrast_hip (    Rpp8u * srcPtr, RppiSize srcSize,
-                            Rpp8u * dstPtr,
-                            Rpp32u newMin, Rpp32u newMax,
-                            RppiChnFormat chnFormat, unsigned int channel,
-                            rpp::Handle& handle)
+gamma_correction_hip(Rpp8u *srcPtr,RppiSize srcSize, Rpp8u *dstPtr, float gamma, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    Rpp32u min = 0; /* Kernel has to be called */
-    Rpp32u max = 255; /* Kernel has to be called */
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
-    handle.AddKernel("", "", "contrast_stretch.cpp", "contrast_stretch", vld, vgd, "")(srcPtr, dstPtr, min, max, newMin, newMax, srcSize.height, srcSize.width, channel);
-    return RPP_SUCCESS;
 
+    handle.AddKernel("", "", "gamma_correction.cpp", "gamma_correction", vld, vgd, "")(srcPtr,
+                                                                                       dstPtr,
+                                                                                       gamma,
+                                                                                       srcSize.height,
+                                                                                       srcSize.width,
+                                                                                       channel);
+
+    return RPP_SUCCESS;
 }
 
+RppStatus
+gamma_correction_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
+{
+    int plnpkdind;
+    if(chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
+    handle.AddKernel("", "", "gamma_correction.cpp", "gamma_correction_batch", vld, vgd, "")(srcPtr,
+                                                                                             dstPtr,
+                                                                                             handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                             channel,
+                                                                                             handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                             plnpkdind);
+
+    return RPP_SUCCESS;
+}
+
+/******************** contrast ********************/
 
 RppStatus
-contrast_hip_batch (  Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+contrast_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp32u newMin, Rpp32u newMax, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
+    Rpp32u min = 0;
+    Rpp32u max = 255;
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
 
+    handle.AddKernel("", "", "contrast_stretch.cpp", "contrast_stretch", vld, vgd, "")(srcPtr,
+                                                                                       dstPtr,
+                                                                                       min,
+                                                                                       max,
+                                                                                       newMin,
+                                                                                       newMax,
+                                                                                       srcSize.height,
+                                                                                       srcSize.width,
+                                                                                       channel);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+contrast_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
+{
     int plnpkdind;
     Rpp32u min = 0, max = 255;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "contrast.cpp", "contrast_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                                min,
-                                                                                max,
-                                                                                handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                                                                                handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                channel,
-                                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                plnpkdind
-                                                                                );
+
+    handle.AddKernel("", "", "contrast.cpp", "contrast_batch", vld, vgd, "")(srcPtr,
+                                                                             dstPtr,
+                                                                             min,
+                                                                             max,
+                                                                             handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                                                                             handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                             channel,
+                                                                             handle.GetInitHandle()->mem.mgpu.inc,
+                                                                             plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-/****************  Gamma correction *******************/
+/******************** blend ********************/
+
 RppStatus
-gamma_correction_hip ( Rpp8u * srcPtr,RppiSize srcSize,
-                 Rpp8u * dstPtr, float gamma,
-                 RppiChnFormat chnFormat, unsigned int channel,
-                 rpp::Handle& handle)
+blend_hip(Rpp8u *srcPtr1, Rpp8u *srcPtr2, RppiSize srcSize, Rpp8u* dstPtr, float alpha, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     std::vector<size_t> vld{32, 32, 1};
-         std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
-    handle.AddKernel("", "", "gamma_correction.cpp", "gamma_correction", vld, vgd, "")(srcPtr, dstPtr, gamma, srcSize.height, srcSize.width, channel);
-    return RPP_SUCCESS;
+    std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
 
+    handle.AddKernel("", "", "blend.cpp", "blend", vld, vgd, "")(srcPtr1,
+                                                                 srcPtr2,
+                                                                 dstPtr,
+                                                                 srcSize.height,
+                                                                 srcSize.width,
+                                                                 alpha,
+                                                                 channel);
+
+    return RPP_SUCCESS;
 }
 
 RppStatus
-gamma_correction_hip_batch ( Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+blend_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "gamma_correction.cpp", "gamma_correction_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                                        handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                        channel,
-                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                        plnpkdind
-                                                                                        );
+
+    handle.AddKernel("", "", "blend.cpp", "blend_batch", vld, vgd, "")(srcPtr1,
+                                                                       srcPtr2,
+                                                                       dstPtr,
+                                                                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                       channel,
+                                                                       handle.GetInitHandle()->mem.mgpu.inc,
+                                                                       plnpkdind);
+
     return RPP_SUCCESS;
 }
-/********************** Exposure modification ************************/
+
+/******************** pixelate ********************/
 
 RppStatus
-exposure_hip(Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * dstPtr, Rpp32f exposureValue, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+pixelate_hip(Rpp8u *srcPtr, RppiSize srcSize,Rpp8u *dstPtr, RppiChnFormat chnFormat, unsigned int channel,rpp::Handle& handle)
 {
-    std::vector<size_t> vld{32, 32, 1};
-         std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,  channel};
-    handle.AddKernel("", "", "exposure.cpp", "exposure", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                exposureValue
-                                                                );
     return RPP_SUCCESS;
 }
 
 RppStatus
-exposure_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+pixelate_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "exposure.cpp", "exposure_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
+
+    handle.AddKernel("", "", "pixelate.cpp", "pixelate_batch", vld, vgd, "")(srcPtr,
+                                                                             dstPtr,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                             channel,
+                                                                             handle.GetInitHandle()->mem.mgpu.inc,
+                                                                             plnpkdind);
+
     return RPP_SUCCESS;
 }
 
+/******************** jitter ********************/
 
-/********************** Jitter ************************/
 RppStatus
-jitter_hip( Rpp8u * srcPtr,RppiSize srcSize, Rpp8u * dstPtr,
-           unsigned int kernelSize,
-           RppiChnFormat chnFormat, unsigned int channel,
-           rpp::Handle& handle)
+jitter_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, unsigned int kernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+
     if(chnFormat == RPPI_CHN_PACKED)
     {
         handle.AddKernel("", "", "jitter.cpp", "jitter_pkd", vld, vgd, "")(srcPtr,
-                                                                     dstPtr,
-                                                                     srcSize.height,
-                                                                     srcSize.width,
-                                                                     channel,
-                                                                     kernelSize);
+                                                                           dstPtr,
+                                                                           srcSize.height,
+                                                                           srcSize.width,
+                                                                           channel,
+                                                                           kernelSize);
     }
     else if(chnFormat == RPPI_CHN_PLANAR)
     {
         handle.AddKernel("", "", "jitter.cpp", "jitter_pln", vld, vgd, "")(srcPtr,
-                                                                     dstPtr,
-                                                                     srcSize.height,
-                                                                     srcSize.width,
-                                                                     channel,
-                                                                     kernelSize);
+                                                                           dstPtr,
+                                                                           srcSize.height,
+                                                                           srcSize.width,
+                                                                           channel,
+                                                                           kernelSize);
     }
 
     return RPP_SUCCESS;
 }
 
 RppStatus
-jitter_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+jitter_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "jitter.cpp", "jitter_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
+
+    handle.AddKernel("", "", "jitter.cpp", "jitter_batch", vld, vgd, "")(srcPtr,
+                                                                         dstPtr,
+                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                         channel,
+                                                                         handle.GetInitHandle()->mem.mgpu.inc,
+                                                                         plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-/********************** Blend ************************/
+/******************** noise ********************/
 
 RppStatus
-blend_hip( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
-                 RppiSize srcSize, Rpp8u* dstPtr, float alpha,
-                 RppiChnFormat chnFormat, unsigned int channel,
-                 rpp::Handle& handle)
+noise_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp32f noiseProbability, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
-    handle.AddKernel("", "", "blend.cpp", "blend", vld, vgd, "")(srcPtr1,
-                                                                srcPtr2,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                alpha,
-                                                                channel);
     return RPP_SUCCESS;
 }
+
 RppStatus
-blend_hip_batch ( Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+noise_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "blend.cpp", "blend_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
-                                                                    handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                    handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                    handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                    handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                    handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                    handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                    handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                    handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                    handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                    channel,
-                                                                    handle.GetInitHandle()->mem.mgpu.inc,
-                                                                    plnpkdind
-                                                                    );
-    return RPP_SUCCESS;
-}
-
-//----
-/********************** ADDING NOISE ************************/
-
-
-RppStatus
-noise_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr,
-                Rpp32f noiseProbability,
-                RppiChnFormat chnFormat, unsigned int channel,
-                rpp::Handle& handle)
-{
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-noise_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
-{
-    int plnpkdind;
-
-    if(chnFormat == RPPI_CHN_PLANAR)
-        plnpkdind = 1;
-    else
-        plnpkdind = 3;
-
-    Rpp32u max_height, max_width;
-    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-    handle.AddKernel("", "", "noise.cpp", "noise_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
+
+    handle.AddKernel("", "", "noise.cpp", "noise_batch", vld, vgd, "")(srcPtr,
+                                                                       dstPtr,
+                                                                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                       channel,
+                                                                       handle.GetInitHandle()->mem.mgpu.inc,
+                                                                       plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-
-/********************** Rain ************************/
+/******************** snow ********************/
 
 RppStatus
-rain_hip(Rpp8u * srcPtr, RppiSize srcSize,Rpp8u * dstPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f transparency, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
-{
-    if(rainPercentage == 0)
-    {
-        hipMemcpy(dstPtr,srcPtr,sizeof(unsigned char) * srcSize.width * srcSize.height * channel,hipMemcpyDeviceToDevice);
-    }
-    else
-    {
-        Rpp32u rainDrops= (Rpp32u)((rainPercentage * srcSize.width * srcSize.height )/100);
-        Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / rainDrops);
-        transparency /= 5;
-        if(chnFormat == RPPI_CHN_PACKED)
-        {
-            std::cerr<<"\n Gonna call rain packed";
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{srcSize.width,srcSize.height,1};
-            handle.AddKernel("", "", "rain.cpp", "rain_pkd", vld, vgd, "")(dstPtr,
-                                                                    srcSize.height,
-                                                                    srcSize.width,
-                                                                    channel,
-                                                                    pixelDistance,
-                                                                    rainWidth,
-                                                                    rainHeight,
-                                                                    transparency
-                                                                    );
-        }
-        else if(chnFormat == RPPI_CHN_PLANAR)
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{srcSize.width,srcSize.height,1};
-            handle.AddKernel("", "", "rain.cpp", "rain_pln", vld, vgd, "")(dstPtr,
-                                                                    srcSize.height,
-                                                                    srcSize.width,
-                                                                    channel,
-                                                                    pixelDistance,
-                                                                    rainWidth,
-                                                                    rainHeight,
-                                                                    transparency
-                                                                    );
-        }
-
-
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{srcSize.width, srcSize.height,channel};
-        std::cerr<<"\n Gonna call rain\n";
-        handle.AddKernel("", "", "rain.cpp", "rain", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel
-                                                                );
-    }
-    std::cerr<<"\n Gonna return Success";
-    return RPP_SUCCESS;
-}
-RppStatus
-rain_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
-{
-    Rpp32u nbatchSize = handle.GetBatchSize();
-    int plnpkdind;
-
-    if(chnFormat == RPPI_CHN_PLANAR)
-        plnpkdind = 1;
-    else
-        plnpkdind = 3;
-
-    Rpp32u max_height, max_width;
-    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
-    hipMemcpy(dstPtr, srcPtr, max_height * max_width * channel * nbatchSize, hipMemcpyDeviceToDevice);
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "rain.cpp", "rain_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                                                                handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                                                                handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
-    return RPP_SUCCESS;
-}
-/********************** Snow ************************/
-RppStatus
-snow_hip( Rpp8u * srcPtr,RppiSize srcSize, Rpp8u * dstPtr,
-           float snowCoefficient,
-           RppiChnFormat chnFormat, unsigned int channel,
-           rpp::Handle& handle)
+snow_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, float snowCoefficient, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     if(snowCoefficient == 0)
     {
@@ -491,180 +364,260 @@ snow_hip( Rpp8u * srcPtr,RppiSize srcSize, Rpp8u * dstPtr,
         gDim3[0] = srcSize.width;
         gDim3[1] = srcSize.height;
         gDim3[2] = 1;
+
         if(chnFormat == RPPI_CHN_PACKED)
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
-            handle.AddKernel("", "", "snow.cpp", "snow_pkd", vld, vgd, "")(
-                                                                    dstPtr,
-                                                                    srcSize.height,
-                                                                    srcSize.width,
-                                                                    channel,
-                                                                    pixelDistance
-                                                                    );
-
+            handle.AddKernel("", "", "snow.cpp", "snow_pkd", vld, vgd, "")(dstPtr,
+                                                                           srcSize.height,
+                                                                           srcSize.width,
+                                                                           channel,
+                                                                           pixelDistance);
         }
         else if(chnFormat == RPPI_CHN_PLANAR)
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
-            handle.AddKernel("", "", "snow.cpp", "snow_pln", vld, vgd, "")(
-                                                                    dstPtr,
-                                                                    srcSize.height,
-                                                                    srcSize.width,
-                                                                    channel,
-                                                                    pixelDistance
-                                                                    );
-
+            handle.AddKernel("", "", "snow.cpp", "snow_pln", vld, vgd, "")(dstPtr,
+                                                                           srcSize.height,
+                                                                           srcSize.width,
+                                                                           channel,
+                                                                           pixelDistance);
         }
-
-
 
         gDim3[0] = srcSize.width;
         gDim3[1] = srcSize.height;
         gDim3[2] = channel;
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
         handle.AddKernel("", "", "snow.cpp", "snow", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel);
+                                                                   dstPtr,
+                                                                   srcSize.height,
+                                                                   srcSize.width,
+                                                                   channel);
     }
 
     return RPP_SUCCESS;
 }
 
 RppStatus
-snow_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+snow_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nbatchSize = handle.GetBatchSize();
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
     hipMemcpy(dstPtr, srcPtr, nbatchSize * max_height * max_width * channel * sizeof(unsigned char), hipMemcpyDeviceToDevice);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "snow.cpp", "snow_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
-    return RPP_SUCCESS;
-}
-/********************** Fog ************************/
 
-RppStatus
-fog_hip( Rpp8u * srcPtr, RppiSize srcSize, Rpp8u * temp, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
-{
+    handle.AddKernel("", "", "snow.cpp", "snow_batch", vld, vgd, "")(srcPtr,
+                                                                     dstPtr,
+                                                                     handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                     channel,
+                                                                     handle.GetInitHandle()->mem.mgpu.inc,
+                                                                     plnpkdind);
 
     return RPP_SUCCESS;
 }
+
+/******************** exposure ********************/
+
 RppStatus
-fog_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+exposure_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp32f exposureValue, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31,  channel};
 
+    handle.AddKernel("", "", "exposure.cpp", "exposure", vld, vgd, "")(srcPtr,
+                                                                       dstPtr,
+                                                                       srcSize.height,
+                                                                       srcSize.width,
+                                                                       channel,
+                                                                       exposureValue);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+exposure_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
+{
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "fog.cpp", "fog_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
-    return RPP_SUCCESS;
-}
 
-/********************** pixelate ************************/
-
-RppStatus
-pixelate_hip(Rpp8u * srcPtr, RppiSize srcSize,Rpp8u * dstPtr,
-            RppiChnFormat chnFormat,
-            unsigned int channel,rpp::Handle& handle)
-{
-
+    handle.AddKernel("", "", "exposure.cpp", "exposure_batch", vld, vgd, "")(srcPtr,
+                                                                             dstPtr,
+                                                                             handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                             channel,
+                                                                             handle.GetInitHandle()->mem.mgpu.inc,
+                                                                             plnpkdind);
 
     return RPP_SUCCESS;
 }
 
+/******************** rain ********************/
+
 RppStatus
-pixelate_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+rain_hip(Rpp8u *srcPtr, RppiSize srcSize,Rpp8u *dstPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f transparency, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
+    if(rainPercentage == 0)
+    {
+        hipMemcpy(dstPtr,srcPtr,sizeof(unsigned char) * srcSize.width * srcSize.height * channel,hipMemcpyDeviceToDevice);
+    }
+    else
+    {
+        Rpp32u rainDrops= (Rpp32u)((rainPercentage * srcSize.width * srcSize.height )/100);
+        Rpp32u pixelDistance= (Rpp32u)((srcSize.width * srcSize.height) / rainDrops);
+        transparency /= 5;
 
+        if(chnFormat == RPPI_CHN_PACKED)
+        {
+            std::cerr<<"\n Gonna call rain packed";
+            std::vector<size_t> vld{32, 32, 1};
+            std::vector<size_t> vgd{srcSize.width,srcSize.height,1};
+            handle.AddKernel("", "", "rain.cpp", "rain_pkd", vld, vgd, "")(dstPtr,
+                                                                           srcSize.height,
+                                                                           srcSize.width,
+                                                                           channel,
+                                                                           pixelDistance,
+                                                                           rainWidth,
+                                                                           rainHeight,
+                                                                           transparency);
+        }
+        else if(chnFormat == RPPI_CHN_PLANAR)
+        {
+            std::vector<size_t> vld{32, 32, 1};
+            std::vector<size_t> vgd{srcSize.width,srcSize.height,1};
+            handle.AddKernel("", "", "rain.cpp", "rain_pln", vld, vgd, "")(dstPtr,
+                                                                           srcSize.height,
+                                                                           srcSize.width,
+                                                                           channel,
+                                                                           pixelDistance,
+                                                                           rainWidth,
+                                                                           rainHeight,
+                                                                           transparency);
+        }
+
+        std::vector<size_t> vld{32, 32, 1};
+        std::vector<size_t> vgd{srcSize.width, srcSize.height,channel};
+
+        handle.AddKernel("", "", "rain.cpp", "rain", vld, vgd, "")(srcPtr,
+                                                                   dstPtr,
+                                                                   srcSize.height,
+                                                                   srcSize.width,
+                                                                   channel);
+    }
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rain_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
+{
+    Rpp32u nbatchSize = handle.GetBatchSize();
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
+    hipMemcpy(dstPtr, srcPtr, max_height * max_width * channel * nbatchSize, hipMemcpyDeviceToDevice);
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "pixelate.cpp", "pixelate_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
+
+    handle.AddKernel("", "", "rain.cpp", "rain_batch", vld, vgd, "")(srcPtr,
+                                                                     dstPtr,
+                                                                     handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                     channel,
+                                                                     handle.GetInitHandle()->mem.mgpu.inc,
+                                                                     plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-// /********************** Random Shadow ************************/
+/******************** fog ********************/
+
 RppStatus
-random_shadow_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u x1, Rpp32u y1,
-                 Rpp32u x2, Rpp32u y2, Rpp32u numberOfShadows, Rpp32u maxSizeX,
-                 Rpp32u maxSizeY, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+fog_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *temp, Rpp32f fogValue, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+{
+    return RPP_SUCCESS;
+}
+
+RppStatus
+fog_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
+{
+    int plnpkdind;
+    if(chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
+
+    handle.AddKernel("", "", "fog.cpp", "fog_batch", vld, vgd, "")(srcPtr,
+                                                                   dstPtr,
+                                                                   handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                   channel,
+                                                                   handle.GetInitHandle()->mem.mgpu.inc,
+                                                                   plnpkdind);
+
+    return RPP_SUCCESS;
+}
+
+/******************** random_shadow ********************/
+
+RppStatus
+random_shadow_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
+                    Rpp32u numberOfShadows, Rpp32u maxSizeX, Rpp32u maxSizeY, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     Rpp32u row1, row2, column2, column1;
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-    handle.AddKernel("", "", "random_shadow.cpp","random_shadow", vld, vgd, "")(srcPtr, dstPtr,
+
+    handle.AddKernel("", "", "random_shadow.cpp","random_shadow", vld, vgd, "")(srcPtr,
+                                                                                dstPtr,
                                                                                 srcSize.height,
                                                                                 srcSize.width,
                                                                                 channel);
-
 
     for(int i = 0 ; i < numberOfShadows ; i++)
     {
@@ -677,46 +630,46 @@ random_shadow_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u x1, Rpp
         {
             row2 = rand() % srcSize.height;
             column2 = rand() % srcSize.width;
-        } while ((row2 < row1 || column2 < column1) || (column2 <= x1 || column2 >= x2 || row2 <= y1 || row2 >= y2) || (row2 - row1 >= maxSizeY || column2 - column1 >= maxSizeX));
+        } while (
+            (row2 < row1 || column2 < column1) ||
+            (column2 <= x1 || column2 >= x2 || row2 <= y1 || row2 >= y2) ||
+            (row2 - row1 >= maxSizeY || column2 - column1 >= maxSizeX));
 
         if(RPPI_CHN_PACKED == chnFormat)
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{column2 - column1,row2 - row1,channel};
             handle.AddKernel("", "", "random_shadow.cpp", "random_shadow_packed", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                column1,
-                                                                row1,
-                                                                column2,
-                                                                row2
-                                                                );
+                                                                                                dstPtr,
+                                                                                                srcSize.height,
+                                                                                                srcSize.width,
+                                                                                                channel,
+                                                                                                column1,
+                                                                                                row1,
+                                                                                                column2,
+                                                                                                row2);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{column2 - column1,row2 - row1,channel};
             handle.AddKernel("", "", "random_shadow.cpp", "random_shadow_planar", vld, vgd, "")(srcPtr,
-                                                                dstPtr,
-                                                                srcSize.height,
-                                                                srcSize.width,
-                                                                channel,
-                                                                column1,
-                                                                row1,
-                                                                column2,
-                                                                row2
-                                                                );
-
+                                                                                                dstPtr,
+                                                                                                srcSize.height,
+                                                                                                srcSize.width,
+                                                                                                channel,
+                                                                                                column1,
+                                                                                                row1,
+                                                                                                column2,
+                                                                                                row2);
         }
     }
+
     return RPP_SUCCESS;
 }
 
 RppStatus
-random_shadow_hip_batch(   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
+random_shadow_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     unsigned int maxHeight, maxWidth, maxKernelSize;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
@@ -740,59 +693,66 @@ random_shadow_hip_batch(   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
 
         hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
         hipMemcpy(dstPtr1, srcPtr1,  sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
+
         for(x = 0 ; x < handle.GetInitHandle()->mem.mcpu.uintArr[4].uintmem[i]; x++)
         {
             do
             {
                 row1 = rand() % handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
                 column1 = rand() % handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-            } while (column1 <= handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] || column1 >= handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i] || row1 <= handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] || row1 >= handle.GetInitHandle()->mem.mcpu.uintArr[3].uintmem[i]);
+            } while (
+                column1 <= handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] ||
+                column1 >= handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i] ||
+                row1 <= handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] ||
+                row1 >= handle.GetInitHandle()->mem.mcpu.uintArr[3].uintmem[i]);
+
             do
             {
                 row2 = rand() % handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
                 column2 = rand() % handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-            } while ((row2 < row1 || column2 < column1) || (column2 <= handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] || column2 >= handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i]
-            || row2 <= handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] || row2 >= handle.GetInitHandle()->mem.mcpu.uintArr[3].uintmem[i]) || (row2 - row1 >= handle.GetInitHandle()->mem.mcpu.uintArr[6].uintmem[i]
-            || column2 - column1 >= handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]));
+            } while (
+                (row2 < row1 || column2 < column1) ||
+                (column2 <= handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] || column2 >= handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i] ||
+                row2 <= handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] || row2 >= handle.GetInitHandle()->mem.mcpu.uintArr[3].uintmem[i]) ||
+                (row2 - row1 >= handle.GetInitHandle()->mem.mcpu.uintArr[6].uintmem[i] || column2 - column1 >= handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]));
 
             if(RPPI_CHN_PACKED == chnFormat)
             {
                 std::vector<size_t> vld{32, 32, 1};
                 std::vector<size_t> vgd{column2 - column1,row2 - row1,channel};
                 handle.AddKernel("", "", "random_shadow.cpp", "random_shadow_packed", vld, vgd, "")(srcPtr1,
-                                                                                                   dstPtr1,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                   handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                                   channel,
-                                                                                                   column1,row1,
-                                                                                                   column2,row2);
+                                                                                                    dstPtr1,
+                                                                                                    handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                                    handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                    channel,
+                                                                                                    column1,row1,
+                                                                                                    column2,row2);
             }
             else
             {
                 std::vector<size_t> vld{32, 32, 1};
                 std::vector<size_t> vgd{column2 - column1,row2 - row1,channel};
                 handle.AddKernel("", "", "random_shadow.cpp", "random_shadow_planar", vld, vgd, "")(srcPtr1,
-                                                                                                   dstPtr1,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                                   handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                                   channel,
-                                                                                                   column1,row1,
-                                                                                                   column2,row2);
+                                                                                                    dstPtr1,
+                                                                                                    handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                                    handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                                    channel,
+                                                                                                    column1,row1,
+                                                                                                    column2,row2);
             }
 
         }
         hipMemcpy(dstPtr+batchIndex, dstPtr1, sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
         batchIndex += maxHeight * maxWidth * channel * sizeof(unsigned char);
     }
+
     return RPP_SUCCESS;
 }
 
-// /********************** Histogram balance ************************/
+/******************** histogram_balance ********************/
+
 RppStatus
-histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
-                Rpp8u* dstPtr,
-                RppiChnFormat chnFormat, unsigned int channel,
-                rpp::Handle& handle)
+histogram_balance_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     unsigned int numGroups;
 
@@ -806,7 +766,6 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
     lDim3[1] = num_pixels_per_work_item;
     gDim3[2] = 1;
     lDim3[2] = 1;
-
 
     numGroups = gDim3[0] * gDim3[1];
     gDim3[0] = srcSize.width;
@@ -822,10 +781,10 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
         std::vector<size_t> vld{lDim3[0], lDim3[1], lDim3[2]};
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
         handle.AddKernel("", "", "histogram.cpp", "partial_histogram_pln", vld, vgd, "")(srcPtr,
-                                                                                        partialHistogram,
-                                                                                        srcSize.width,
-                                                                                        srcSize.height,
-                                                                                        channel);
+                                                                                         partialHistogram,
+                                                                                         srcSize.width,
+                                                                                         srcSize.height,
+                                                                                         channel);
 
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -833,14 +792,15 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
         std::vector<size_t> vld{lDim3[0], lDim3[1], lDim3[2]};
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
         handle.AddKernel("", "", "histogram.cpp", "partial_histogram_pkd", vld, vgd, "")(srcPtr,
-                                                                                        partialHistogram,
-                                                                                        srcSize.width,
-                                                                                        srcSize.height,
-                                                                                        channel);
+                                                                                         partialHistogram,
+                                                                                         srcSize.width,
+                                                                                         srcSize.height,
+                                                                                         channel);
     }
     else
-    {std::cerr << "Internal error: Unknown Channel format";}
-
+    {
+        std::cerr << "Internal error: Unknown Channel format";
+    }
 
     // // For sum histogram kernel
     gDim3[0] = 256;
@@ -851,13 +811,16 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
     lDim3[2] = 1;
     std::vector<size_t> vld{lDim3[0], lDim3[1], lDim3[2]};
     std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
     handle.AddKernel("", "", "histogram.cpp", "histogram_sum_partial", vld, vgd, "")(partialHistogram,
-                                                                                    histogram,
-                                                                                    numGroups);
+                                                                                     histogram,
+                                                                                     numGroups);
 
     Rpp8u* cum_histogram;
-    hipMalloc(&cum_histogram,sizeof(unsigned int)*256);
+    hipMalloc(&cum_histogram,sizeof(unsigned int) * 256);
+
     // For scan kernel
+
     gDim3[0] = 256;
     gDim3[1] = 1;
     gDim3[2] = 1;
@@ -866,12 +829,9 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
     lDim3[2] = 1;
     std::vector<size_t> vld1{lDim3[0], lDim3[1], lDim3[2]};
     std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
+
     handle.AddKernel("", "", "scan.cpp", "scan", vld1, vgd1, "")(histogram,
-                                                             cum_histogram);
-
-
-
-
+                                                                 cum_histogram);
 
     // For histogram equalize
 
@@ -880,38 +840,37 @@ histogram_balance_hip(Rpp8u* srcPtr, RppiSize srcSize,
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width,srcSize.height,channel};
         handle.AddKernel("", "", "histogram.cpp", "histogram_equalize_pln", vld, vgd, "")(srcPtr,
-                                                                                        dstPtr,
-                                                                                        cum_histogram,
-                                                                                        srcSize.width,
-                                                                                        srcSize.height,
-                                                                                        channel);
+                                                                                          dstPtr,
+                                                                                          cum_histogram,
+                                                                                          srcSize.width,
+                                                                                          srcSize.height,
+                                                                                          channel);
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width,srcSize.height,channel};
         handle.AddKernel("", "", "histogram.cpp", "histogram_equalize_pkd", vld, vgd, "")(srcPtr,
-                                                                                        dstPtr,
-                                                                                        cum_histogram,
-                                                                                        srcSize.width,
-                                                                                        srcSize.height,
-                                                                                        channel);
-
+                                                                                          dstPtr,
+                                                                                          cum_histogram,
+                                                                                          srcSize.width,
+                                                                                          srcSize.height,
+                                                                                          channel);
     }
     else
     {
         std::cerr << "Internal error: Unknown Channel format";
     }
+
     hipFree(cum_histogram);
     hipFree(partialHistogram);
     hipFree(histogram);
-    //Freeing the Memory is yet to be done!
+
     return RPP_SUCCESS;
 }
 
 RppStatus
-histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
+histogram_balance_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nBatchSize = handle.GetBatchSize();
     unsigned int maxHeight, maxWidth;
@@ -958,20 +917,20 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         gDim3[2] = 1;
         lDim3[2] = 1;
 
-
         numGroups = gDim3[0] * gDim3[1];
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
         gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
         hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
+
         if (chnFormat == RPPI_CHN_PLANAR)
         {
             std::vector<size_t> vld{lDim3[0], lDim3[1], lDim3[2]};
             std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
             handle.AddKernel("", "", "histogram.cpp", "partial_histogram_pln", vld, vgd, "")(srcPtr,
-                                                                                            partialHistogram,
-                                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                            channel);
+                                                                                             partialHistogram,
+                                                                                             handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                             handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                             channel);
 
         }
         else if (chnFormat == RPPI_CHN_PACKED)
@@ -979,17 +938,18 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             std::vector<size_t> vld{lDim3[0], lDim3[1], lDim3[2]};
             std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
             handle.AddKernel("", "", "histogram.cpp", "partial_histogram_pkd", vld, vgd, "")(srcPtr,
-                                                                                            partialHistogram,
-                                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                            channel);
+                                                                                             partialHistogram,
+                                                                                             handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                             handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                             channel);
         }
         else
-        {std::cerr << "Internal error: Unknown Channel format";}
+        {
+            std::cerr << "Internal error: Unknown Channel format";
+        }
 
+        // For sum histogram kernel
 
-
-        // // For sum histogram kernel
         gDim3[0] = 256;
         lDim3[0] = 256;
         gDim3[1] = 1;
@@ -998,11 +958,13 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         lDim3[2] = 1;
         std::vector<size_t> vld{lDim3[0], lDim3[1], lDim3[2]};
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
         handle.AddKernel("", "", "histogram.cpp", "histogram_sum_partial", vld, vgd, "")(partialHistogram,
-                                                                                        histogram,
-                                                                                        numGroups);
+                                                                                         histogram,
+                                                                                         numGroups);
 
         // For scan kernel
+
         gDim3[0] = 256;
         gDim3[1] = 1;
         gDim3[2] = 1;
@@ -1011,9 +973,9 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
         lDim3[2] = 1;
         std::vector<size_t> vld1{lDim3[0], lDim3[1], lDim3[2]};
         std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
-        handle.AddKernel("", "", "scan.cpp", "scan", vld1, vgd1, "")(histogram,
-                                                             cum_histogram);
 
+        handle.AddKernel("", "", "scan.cpp", "scan", vld1, vgd1, "")(histogram,
+                                                                     cum_histogram);
 
         // For histogram equalize
 
@@ -1022,11 +984,11 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],channel};
             handle.AddKernel("", "", "histogram.cpp", "histogram_equalize_pln", vld, vgd, "")(srcPtr1,
-                                                                                        dstPtr1,
-                                                                                        cum_histogram,
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                        channel);
+                                                                                              dstPtr1,
+                                                                                              cum_histogram,
+                                                                                              handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                              handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                              channel);
 
         }
         else if (chnFormat == RPPI_CHN_PACKED)
@@ -1034,15 +996,16 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],channel};
             handle.AddKernel("", "", "histogram.cpp", "histogram_equalize_pkd", vld, vgd, "")(srcPtr1,
-                                                                                        dstPtr1,
-                                                                                        cum_histogram,
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                        channel);
-
+                                                                                              dstPtr1,
+                                                                                              cum_histogram,
+                                                                                              handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                              handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                              channel);
         }
         else
-        {std::cerr << "Internal error: Unknown Channel format";}
+        {
+            std::cerr << "Internal error: Unknown Channel format";
+        }
 
         hipMemcpy(dstPtr+batchIndex, dstPtr1, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
@@ -1051,5 +1014,6 @@ histogram_balance_hip_batch (Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
     hipFree(cum_histogram);
     hipFree(partialHistogram);
     hipFree(histogram);
+
     return RPP_SUCCESS;
 }

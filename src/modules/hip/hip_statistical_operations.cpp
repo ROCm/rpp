@@ -1,176 +1,164 @@
 #include "hip_declarations.hpp"
+
+/******************** thresholding ********************/
+
 RppStatus
-thresholding_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp8u min,
- Rpp8u max, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+thresholding_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp8u min, Rpp8u max, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
+
     handle.AddKernel("", "", "thresholding.cpp", "thresholding", vld, vgd, "")(srcPtr,
-                                                                            dstPtr,
-                                                                            srcSize.height,
-                                                                            srcSize.width,
-                                                                            channel,
-                                                                            min,
-                                                                            max);
-    
+                                                                               dstPtr,
+                                                                               srcSize.height,
+                                                                               srcSize.width,
+                                                                               channel,
+                                                                               min,
+                                                                               max);
+
     return RPP_SUCCESS;
 }
 
 RppStatus
-thresholding_hip_batch (   Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+thresholding_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "thresholding.cpp", "thresholding_batch", vld, vgd, "")(srcPtr, dstPtr,
-                                                                handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
-                                                                handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                channel,
-                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                plnpkdind
-                                                                );
+
+    handle.AddKernel("", "", "thresholding.cpp", "thresholding_batch", vld, vgd, "")(srcPtr,
+                                                                                     dstPtr,
+                                                                                     handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
+                                                                                     handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
+                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                     channel,
+                                                                                     handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                     plnpkdind);
+
     return RPP_SUCCESS;
 }
 
-/********************** thresholding ************************/
+/******************** min ********************/
 
 RppStatus
-min_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
-                 RppiSize srcSize, Rpp8u* dstPtr,
-                 RppiChnFormat chnFormat, unsigned int channel,
-                 rpp::Handle& handle)
+min_hip(Rpp8u* srcPtr1,Rpp8u* srcPtr2, RppiSize srcSize, Rpp8u* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
+
     handle.AddKernel("", "", "min.cpp", "min_hip", vld, vgd, "")(srcPtr1,
-                                                                                            srcPtr2,
-                                                                                            dstPtr,
-                                                                                            srcSize.height,
-                                                                                            srcSize.width,
-                                                                                            channel);
+                                                                 srcPtr2,
+                                                                 dstPtr,
+                                                                 srcSize.height,
+                                                                 srcSize.width,
+                                                                 channel);
 
     return RPP_SUCCESS;
-
 }
 
-
 RppStatus
-min_hip_batch ( Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+min_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "min.cpp", "min_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                        channel,
-                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                        plnpkdind
-                                                                                        );
+
+    handle.AddKernel("", "", "min.cpp", "min_batch", vld, vgd, "")(srcPtr1,
+                                                                   srcPtr2,
+                                                                   dstPtr,
+                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                   channel,
+                                                                   handle.GetInitHandle()->mem.mgpu.inc,
+                                                                   plnpkdind);
+
     return RPP_SUCCESS;
 }
-/********************** max ************************/
+
+/******************** max ********************/
 
 RppStatus
-max_hip ( Rpp8u* srcPtr1,Rpp8u* srcPtr2,
-                 RppiSize srcSize, Rpp8u* dstPtr,
-                 RppiChnFormat chnFormat, unsigned int channel,
-                 rpp::Handle& handle)
+max_hip(Rpp8u* srcPtr1,Rpp8u* srcPtr2, RppiSize srcSize, Rpp8u* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
-    handle.AddKernel("", "", "max.cpp", "max_hip", vld, vgd, "")(srcPtr1,
-                                                            srcPtr2,
-                                                            dstPtr,
-                                                            srcSize.height,
-                                                            srcSize.width,
-                                                            channel);
-    return RPP_SUCCESS;
 
+    handle.AddKernel("", "", "max.cpp", "max_hip", vld, vgd, "")(srcPtr1,
+                                                                 srcPtr2,
+                                                                 dstPtr,
+                                                                 srcSize.height,
+                                                                 srcSize.width,
+                                                                 channel);
+
+    return RPP_SUCCESS;
 }
 
-
 RppStatus
-max_hip_batch ( Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
-
+max_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-
     int plnpkdind;
-
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else
         plnpkdind = 3;
-
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-    handle.AddKernel("", "", "max.cpp", "max_batch", vld, vgd, "")(srcPtr1, srcPtr2, dstPtr,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                        channel,
-                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                        plnpkdind
-                                                                                        );
+
+    handle.AddKernel("", "", "max.cpp", "max_batch", vld, vgd, "")(srcPtr1,
+                                                                   srcPtr2,
+                                                                   dstPtr,
+                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                   channel,
+                                                                   handle.GetInitHandle()->mem.mgpu.inc,
+                                                                   plnpkdind);
+
     return RPP_SUCCESS;
 }
-/********************** min_max_loc ************************/
+
+/******************** min_max_loc ********************/
+
 RppStatus
-min_max_loc_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* minLoc,
-                Rpp32u* maxLoc, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+min_max_loc_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     int i;
 
     const int LIST_SIZE = srcSize.height * srcSize.width * channel;
     int numGroups = std::ceil(LIST_SIZE / 256);
-    
+
     unsigned char minElement = 255;
     unsigned int minLocation;
     unsigned char *partial_min;
@@ -206,13 +194,14 @@ min_max_loc_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u*
     local_item_size[2] = 1;
     std::vector<size_t> vld{local_item_size[0], local_item_size[1], local_item_size[2]};
     std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
     handle.AddKernel("", "", "min_max_loc.cpp", "min", vld, vgd, "")(srcPtr,
-                                                                    b_mem_obj,
-                                                                    b_mem_obj1);
-    
+                                                                     b_mem_obj,
+                                                                     b_mem_obj1);
+
     hipMemcpy(partial_min, b_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost);
-    hipMemcpy(partial_min_location, b_mem_obj1, numGroups * sizeof(unsigned char),hipMemcpyDeviceToHost );   
-    
+    hipMemcpy(partial_min_location, b_mem_obj1, numGroups * sizeof(unsigned char),hipMemcpyDeviceToHost );
+
     for(i = 0; i < numGroups; i++)
     {
         if(minElement > partial_min[i])
@@ -227,12 +216,13 @@ min_max_loc_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u*
 
     std::vector<size_t> vld1{local_item_size[0], local_item_size[1], local_item_size[2]};
     std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
-    handle.AddKernel("", "", "min_max_loc.cpp", "max", vld1, vgd1, "")(srcPtr,
-                                                                    c_mem_obj,
-                                                                    c_mem_obj1);
 
-    hipMemcpy(partial_max, c_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost); 
-    hipMemcpy(partial_max_location, b_mem_obj1, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost); 
+    handle.AddKernel("", "", "min_max_loc.cpp", "max", vld1, vgd1, "")(srcPtr,
+                                                                       c_mem_obj,
+                                                                       c_mem_obj1);
+
+    hipMemcpy(partial_max, c_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost);
+    hipMemcpy(partial_max_location, b_mem_obj1, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost);
     for(i = 0; i < numGroups; i++)
     {
         if(maxElement < partial_max[i])
@@ -245,22 +235,20 @@ min_max_loc_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* min, Rpp8u* max, Rpp32u*
     *max = maxElement;
     *maxLoc=maxLocation;
 
-    hipFree(b_mem_obj); 
+    hipFree(b_mem_obj);
     free(partial_min);
-    hipFree(c_mem_obj); 
+    hipFree(c_mem_obj);
     free(partial_max);
-    hipFree(b_mem_obj1); 
+    hipFree(b_mem_obj1);
     free(partial_min_location);
-    hipFree(c_mem_obj1); 
+    hipFree(c_mem_obj1);
     free(partial_max_location);
+
     return RPP_SUCCESS;
 }
 
 RppStatus
-min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
-                    Rpp32u *minLoc, Rpp32u *maxLoc, rpp::Handle& handle,
-                    RppiChnFormat chnFormat, unsigned int channel)
-
+min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max, Rpp32u *minLoc, Rpp32u *maxLoc, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nBatchSize = handle.GetBatchSize();
     unsigned char *partial_min;
@@ -269,11 +257,11 @@ min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
     unsigned int *partial_max_location;
 
     int numGroups = 0;
-    
+
     unsigned int maxHeight, maxWidth;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
-    
+
     for(int i = 0 ; i < nBatchSize ; i++)
     {
         if(maxHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
@@ -308,14 +296,13 @@ min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
     hipMalloc(&dstPtr1, sizeof(unsigned int)* maxHeight * maxWidth * channel);
 
     size_t gDim3[3];
-
     size_t batchIndex = 0;
 
     for(int x = 0 ; x < nBatchSize ; x++)
-    {                
-        hipMemcpy(srcPtr1, srcPtr+batchIndex ,sizeof(unsigned char) *
+    {
+        hipMemcpy(srcPtr1, srcPtr + batchIndex, sizeof(unsigned char) *
                         handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] *
-                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * channel,hipMemcpyDeviceToDevice);
+                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * channel, hipMemcpyDeviceToDevice);
 
         int i;
 
@@ -344,13 +331,14 @@ min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
         local_item_size[2] = 1;
         std::vector<size_t> vld{local_item_size[0], local_item_size[1], local_item_size[2]};
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
         handle.AddKernel("", "", "min_max_loc.cpp", "min", vld, vgd, "")(srcPtr1,
-                                                                    b_mem_obj,
-                                                                    b_mem_obj1);
+                                                                         b_mem_obj,
+                                                                         b_mem_obj1);
+
         hipMemcpy(partial_min,b_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost);
-        
-        hipMemcpy(partial_min_location,b_mem_obj1, numGroups * sizeof(unsigned char),hipMemcpyDeviceToHost );   
-        
+        hipMemcpy(partial_min_location,b_mem_obj1, numGroups * sizeof(unsigned char),hipMemcpyDeviceToHost );
+
         for(i = 0; i < numGroups; i++)
         {
             if(minElement > partial_min[i])
@@ -365,15 +353,14 @@ min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
 
         std::vector<size_t> vld1{local_item_size[0], local_item_size[1], local_item_size[2]};
         std::vector<size_t> vgd1{gDim3[0],gDim3[1],gDim3[2]};
+
         handle.AddKernel("", "", "min_max_loc.cpp", "max", vld1, vgd1, "")(srcPtr1,
-                                                                        c_mem_obj,
-                                                                        c_mem_obj1);
-    
-        
-        hipMemcpy(partial_max,c_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost); 
-        
-        hipMemcpy(partial_max_location,b_mem_obj1, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost); 
-        
+                                                                           c_mem_obj,
+                                                                           c_mem_obj1);
+
+        hipMemcpy(partial_max,c_mem_obj, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost);
+        hipMemcpy(partial_max_location,b_mem_obj1, numGroups * sizeof(unsigned char), hipMemcpyDeviceToHost);
+
         for(i = 0; i < numGroups; i++)
         {
             if(maxElement < partial_max[i])
@@ -389,54 +376,55 @@ min_max_loc_hip_batch(Rpp8u* srcPtr, Rpp8u *min, Rpp8u *max,
         max++;
         minLoc++;
         maxLoc++;
-        
+
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * channel * sizeof(unsigned char);
     }
-    hipFree(b_mem_obj); 
+
+    hipFree(b_mem_obj);
     free(partial_min);
-    hipFree(c_mem_obj); 
+    hipFree(c_mem_obj);
     free(partial_max);
-    hipFree(b_mem_obj1); 
+    hipFree(b_mem_obj1);
     free(partial_min_location);
-    hipFree(c_mem_obj1); 
+    hipFree(c_mem_obj1);
     free(partial_max_location);
 
     return RPP_SUCCESS;
 }
 
-/********************** Integral ************************/
+/******************** integral ********************/
+
 RppStatus
-integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnFormat,
-             unsigned int channel, rpp::Handle& handle)
+integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
 
     unsigned short counter=0;
-    
+
     Rpp32u* hInput;
     hipMalloc(&hInput, sizeof(unsigned int)* srcSize.height * srcSize.width * channel);
-    
+
     /* FIRST COLUMN */
     if(chnFormat == RPPI_CHN_PACKED)
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, 1, channel};
         handle.AddKernel("", "", "integral.cpp", "integral_pkd_col", vld, vgd, "")(srcPtr,
-                                                                                dstPtr,
-                                                                                srcSize.height,
-                                                                                srcSize.width,
-                                                                                channel);
+                                                                                   dstPtr,
+                                                                                   srcSize.height,
+                                                                                   srcSize.width,
+                                                                                   channel);
     }
     else
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, 1, channel};
         handle.AddKernel("", "", "integral.cpp", "integral_pln_col", vld, vgd, "")(srcPtr,
-                                                                                dstPtr,
-                                                                                srcSize.height,
-                                                                                srcSize.width,
-                                                                                channel);
+                                                                                   dstPtr,
+                                                                                   srcSize.height,
+                                                                                   srcSize.width,
+                                                                                   channel);
     }
-    
+
 
     /* FIRST ROW */
     if(chnFormat == RPPI_CHN_PACKED)
@@ -444,22 +432,22 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.height, 1, channel};
         handle.AddKernel("", "", "integral.cpp", "integral_pkd_row", vld, vgd, "")(srcPtr,
-                                                                                dstPtr,
-                                                                                srcSize.height,
-                                                                                srcSize.width,
-                                                                                channel);
+                                                                                   dstPtr,
+                                                                                   srcSize.height,
+                                                                                   srcSize.width,
+                                                                                   channel);
     }
     else
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.height, 1, channel};
         handle.AddKernel("", "", "integral.cpp", "integral_pln_row", vld, vgd, "")(srcPtr,
-                                                                                dstPtr,
-                                                                                srcSize.height,
-                                                                                srcSize.width,
-                                                                                channel);
+                                                                                   dstPtr,
+                                                                                   srcSize.height,
+                                                                                   srcSize.width,
+                                                                                   channel);
     }
-    
+
 
     Rpp32u temp = 1;
 
@@ -477,26 +465,26 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{temp, 1, channel};
             handle.AddKernel("", "", "integral.cpp", "integral_up_pkd", vld, vgd, "")(srcPtr,
-                                                                                    dstPtr,
-                                                                                    srcSize.height,
-                                                                                    srcSize.width,
-                                                                                    channel,
-                                                                                    i,
-                                                                                    temp);
+                                                                                      dstPtr,
+                                                                                      srcSize.height,
+                                                                                      srcSize.width,
+                                                                                      channel,
+                                                                                      i,
+                                                                                      temp);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{temp, 1, channel};
             handle.AddKernel("", "", "integral.cpp", "integral_up_pln", vld, vgd, "")(srcPtr,
-                                                                                    dstPtr,
-                                                                                    srcSize.height,
-                                                                                    srcSize.width,
-                                                                                    channel,
-                                                                                    i,
-                                                                                    temp);
+                                                                                      dstPtr,
+                                                                                      srcSize.height,
+                                                                                      srcSize.width,
+                                                                                      channel,
+                                                                                      i,
+                                                                                      temp);
         }
-        
+
         counter=0;
     }
     for(int i = 0 ; i < srcSize.width - 2 ; i++)
@@ -508,42 +496,42 @@ integral_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32u* dstPtr, RppiChnFormat chnF
             temp = srcSize.height - (i + srcSize.height - 1) + srcSize.width - 3;
         else
             temp = (srcSize.height - 1 <= srcSize.width - 1) ? srcSize.height - 1 : srcSize.width - 1;
-        
+
 
         if(chnFormat == RPPI_CHN_PACKED)
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{temp, 1, channel};
             handle.AddKernel("", "", "integral.cpp", "integral_low_pkd", vld, vgd, "")(srcPtr,
-                                                                                    dstPtr,
-                                                                                    srcSize.height,
-                                                                                    srcSize.width,
-                                                                                    channel,
-                                                                                    i,
-                                                                                    temp);
+                                                                                       dstPtr,
+                                                                                       srcSize.height,
+                                                                                       srcSize.width,
+                                                                                       channel,
+                                                                                       i,
+                                                                                       temp);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{temp, 1, channel};
             handle.AddKernel("", "", "integral.cpp", "integral_low_pln", vld, vgd, "")(srcPtr,
-                                                                                    dstPtr,
-                                                                                    srcSize.height,
-                                                                                    srcSize.width,
-                                                                                    channel,
-                                                                                    i,
-                                                                                    temp);
+                                                                                       dstPtr,
+                                                                                       srcSize.height,
+                                                                                       srcSize.width,
+                                                                                       channel,
+                                                                                       i,
+                                                                                       temp);
         }
-        
+
         counter=0;
 
     }
+
     return RPP_SUCCESS;
 }
 
 RppStatus
-integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
-                    RppiChnFormat chnFormat, unsigned int channel)
+integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nBatchSize = handle.GetBatchSize();
 
@@ -564,15 +552,17 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
     hipMalloc(&dstPtr1, sizeof(unsigned int) * maxHeight * maxWidth * channel);
 
     int counter;
-           
+
     size_t gDim3[3];
 
     size_t batchIndexSrc = 0;
     size_t batchIndexDst = 0;
 
     for(int i = 0 ; i < nBatchSize ; i++)
-    {                
-        hipMemcpy(srcPtr1, srcPtr+batchIndexSrc , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);        /* FIRST COLUMN */
+    {
+        hipMemcpy(srcPtr1, srcPtr+batchIndexSrc, sizeof(unsigned char) *
+            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel,
+            hipMemcpyDeviceToDevice);        /* FIRST COLUMN */
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
         gDim3[1] = 1;
         gDim3[2] = channel;
@@ -581,23 +571,23 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cpp", "integral_pkd_col", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel);
-            
+                                                                                       dstPtr1,
+                                                                                       handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                       handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                       channel);
+
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cpp", "integral_pln_col", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel);
+                                                                                       dstPtr1,
+                                                                                       handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                       handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                       channel);
         }
-        
+
         /* FIRST ROW */
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
         if(chnFormat == RPPI_CHN_PACKED)
@@ -605,20 +595,20 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cpp", "integral_pkd_row", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel);
+                                                                                       dstPtr1,
+                                                                                       handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                       handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                       channel);
         }
         else
         {
             std::vector<size_t> vld{32, 32, 1};
             std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
             handle.AddKernel("", "", "integral.cpp", "integral_pln_row", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel);
+                                                                                       dstPtr1,
+                                                                                       handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                       handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                       channel);
         }
 
         Rpp32u temp = 1;
@@ -632,33 +622,34 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
             else
                 temp = (handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] - 1 <= handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 1) ? handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] - 1 : handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 1;
             gDim3[0] = temp;
+
             if(chnFormat == RPPI_CHN_PACKED)
             {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
-            handle.AddKernel("", "", "integral.cpp", "integral_up_pkd", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel,
-                                                                                x,
-                                                                                temp);
+                std::vector<size_t> vld{32, 32, 1};
+                std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
+                handle.AddKernel("", "", "integral.cpp", "integral_up_pkd", vld, vgd, "")(srcPtr1,
+                                                                                          dstPtr1,
+                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                          channel,
+                                                                                          x,
+                                                                                          temp);
             }
             else
             {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
-            handle.AddKernel("", "", "integral.cpp", "integral_up_pln", vld, vgd, "")(srcPtr1,
-                                                                                dstPtr1,
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                channel,
-                                                                                x,
-                                                                                temp);
-               
+                std::vector<size_t> vld{32, 32, 1};
+                std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
+                handle.AddKernel("", "", "integral.cpp", "integral_up_pln", vld, vgd, "")(srcPtr1,
+                                                                                          dstPtr1,
+                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                          handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                          channel,
+                                                                                          x,
+                                                                                          temp);
+
             }
-            
-            
+
+
         }
         for(int x = 0 ; x < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 2 ; x++)
         {
@@ -669,51 +660,49 @@ integral_hip_batch(Rpp8u* srcPtr, Rpp32u* dstPtr, rpp::Handle& handle,
             else
                 temp = (handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] - 1 <= handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 1) ? handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] - 1 : handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] - 1;
             gDim3[0] = temp;
+
             if(chnFormat == RPPI_CHN_PACKED)
             {
                 std::vector<size_t> vld{32, 32, 1};
                 std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
                 handle.AddKernel("", "", "integral.cpp", "integral_low_pkd", vld, vgd, "")(srcPtr1,
-                                                                                        dstPtr1,
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                        channel,
-                                                                                        x,
-                                                                                        temp);
-               
+                                                                                           dstPtr1,
+                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                           channel,
+                                                                                           x,
+                                                                                           temp);
             }
             else
             {
                 std::vector<size_t> vld{32, 32, 1};
                 std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
                 handle.AddKernel("", "", "integral.cpp", "integral_low_pln", vld, vgd, "")(srcPtr1,
-                                                                                        dstPtr1,
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
-                                                                                        handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
-                                                                                        channel,
-                                                                                        x,
-                                                                                        temp);
-                
+                                                                                           dstPtr1,
+                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i],
+                                                                                           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i],
+                                                                                           channel,
+                                                                                           x,
+                                                                                           temp);
             }
-            
-            counter=0;
 
-            
+            counter=0;
         }
         hipMemcpy(dstPtr+batchIndexDst, dstPtr1, sizeof(unsigned int) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
         batchIndexSrc += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
         batchIndexDst += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned int);
     }
+
     return RPP_SUCCESS;
 }
-// /********************** Mean std dev ************************/
+
+/******************** mean_stddev ********************/
 
 RppStatus
-mean_stddev_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
-                RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+mean_stddev_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
 {
     int i;
-    
+
     const int LIST_SIZE = srcSize.height * srcSize.width * channel;
     int numGroups = std::ceil(LIST_SIZE / 256);
     float sum = 0;
@@ -740,11 +729,12 @@ mean_stddev_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
     local_item_size[2] = 1;
     std::vector<size_t> vld{local_item_size[0], local_item_size[1], local_item_size[2]};
     std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
     handle.AddKernel("", "", "mean_stddev.cpp", "sum", vld, vgd, "")(srcPtr,
-                                                                    b_mem_obj);
-    
-    hipMemcpy(partial_sum,b_mem_obj, numGroups * sizeof(long), hipMemcpyDeviceToHost);   
-    
+                                                                     b_mem_obj);
+
+    hipMemcpy(partial_sum,b_mem_obj, numGroups * sizeof(long), hipMemcpyDeviceToHost);
+
     for(i = 0; i < numGroups; i++)
     {
         sum += (float)partial_sum[i];
@@ -753,39 +743,41 @@ mean_stddev_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp32f *mean, Rpp32f *stddev,
     *mean = (sum) / LIST_SIZE ;
 
     float meanCopy = *mean;
+
     handle.AddKernel("", "", "mean_stddev.cpp", "mean_stddev", vld, vgd, "")(srcPtr,
-                                                                    c_mem_obj,
-                                                                    meanCopy);
-    hipMemcpy(partial_mean_sum,c_mem_obj, numGroups * sizeof(float), hipMemcpyDeviceToHost);  
+                                                                             c_mem_obj,
+                                                                             meanCopy);
+
+    hipMemcpy(partial_mean_sum,c_mem_obj, numGroups * sizeof(float), hipMemcpyDeviceToHost);
     for(i = 0; i < numGroups; i++)
     {
         mean_sum += partial_mean_sum[i];
     }
-    
+
     mean_sum = mean_sum / LIST_SIZE ;
     *stddev = mean_sum;
 
-    hipFree(b_mem_obj); 
+    hipFree(b_mem_obj);
     free(partial_sum);
-    hipFree(c_mem_obj); 
+    hipFree(c_mem_obj);
     free(partial_mean_sum);
+
     return RPP_SUCCESS;
 }
 
 RppStatus
-mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& handle,
-                        RppiChnFormat chnFormat, unsigned int channel)
+mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nBatchSize = handle.GetBatchSize();
     long *partial_sum;
     float *partial_mean_sum;
 
     int numGroups = 0;
-    
+
     unsigned int maxHeight, maxWidth;
     maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
     maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
-    
+
     for(int i = 0 ; i < nBatchSize ; i++)
     {
         if(maxHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
@@ -816,13 +808,13 @@ mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& 
     size_t batchIndex = 0;
 
     for(int x = 0 ; x < nBatchSize ; x++)
-    {                
+    {
         hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * channel, hipMemcpyDeviceToDevice);
         int i;
 
         int LIST_SIZE = handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * channel;
         numGroups = std::ceil(LIST_SIZE / 256);
-        
+
         float sum = 0;
         hipMemcpy(b_mem_obj,  partial_sum, numGroups * sizeof(long),hipMemcpyHostToDevice);
 
@@ -839,11 +831,12 @@ mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& 
         local_item_size[2] = 1;
         std::vector<size_t> vld{local_item_size[0], local_item_size[1], local_item_size[2]};
         std::vector<size_t> vgd{gDim3[0],gDim3[1],gDim3[2]};
+
         handle.AddKernel("", "", "mean_stddev.cpp", "sum", vld, vgd, "")(srcPtr1,
-                                                                        b_mem_obj);
-        
-        hipMemcpy( partial_sum,b_mem_obj, numGroups * sizeof(long),hipMemcpyDeviceToHost);   
-        
+                                                                         b_mem_obj);
+
+        hipMemcpy( partial_sum,b_mem_obj, numGroups * sizeof(long),hipMemcpyDeviceToHost);
+
         for(i = 0; i < numGroups; i++)
         {
             sum += (float)partial_sum[i];
@@ -851,15 +844,17 @@ mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& 
 
         *mean = (sum) / LIST_SIZE ;
         float meanCopy = *mean;
+
         handle.AddKernel("", "", "mean_stddev.cpp", "sum", vld, vgd, "")(srcPtr1,
-                                                                        c_mem_obj,
-                                                                        meanCopy);
-        hipMemcpy(partial_mean_sum,c_mem_obj, numGroups * sizeof(float),hipMemcpyDeviceToHost );  
+                                                                         c_mem_obj,
+                                                                         meanCopy);
+
+        hipMemcpy(partial_mean_sum,c_mem_obj, numGroups * sizeof(float), hipMemcpyDeviceToHost );
         for(i = 0; i < numGroups; i++)
         {
             mean_sum += partial_mean_sum[i];
         }
-        
+
         mean_sum = mean_sum / LIST_SIZE ;
         *stddev = mean_sum;
 
@@ -869,9 +864,9 @@ mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& 
         batchIndex += handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * channel * sizeof(unsigned char);
     }
 
-    hipFree(b_mem_obj); 
+    hipFree(b_mem_obj);
     free(partial_sum);
-    hipFree(c_mem_obj); 
+    hipFree(c_mem_obj);
     free(partial_mean_sum);
 
     return RPP_SUCCESS;
