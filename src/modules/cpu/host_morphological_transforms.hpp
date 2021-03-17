@@ -653,7 +653,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
-                T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
+                T *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrImage + (i * elementsInRowMax);
                 dstPtrTemp = dstPtrImage + (i * elementsInRowMax);
 
@@ -666,6 +666,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                 }
                 else
                 {
+                    T *srcPtrWindow;
                     srcPtrWindow = srcPtrBoundedROI + (roiRowCount * elementsInRowBoundedROI);
                     for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                     {
