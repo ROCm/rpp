@@ -347,10 +347,6 @@ harris_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u
 RppStatus
 harris_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
-match_template_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, cl_mem templateImage, RppiSize templateImageSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
-RppStatus
-match_template_cl_batch(cl_mem srcPtr, RppiSize *srcSize, cl_mem dstPtr, cl_mem templateImage, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
-RppStatus
 fast_corner_detector_cl(cl_mem srcPtr, RppiSize srcSize, cl_mem dstPtr, Rpp32u numOfPixels, Rpp8u threshold, Rpp32u nonmaxKernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle &handle);
 RppStatus
 fast_corner_detector_cl_batch(cl_mem srcPtr, cl_mem dstPtr, rpp::Handle &handle, RppiChnFormat chnFormat, unsigned int channel);

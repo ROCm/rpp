@@ -934,23 +934,6 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
                     const unsigned int width,
                     const unsigned int channel
 );
-extern "C" __global__ void match_template_pkd(   unsigned char* input,
-                     unsigned short* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                    unsigned char* template_img,
-                    const unsigned int tHeight,
-                    const unsigned int tWidth);
-extern "C" __global__ void match_template_pln(   unsigned char* input,
-                     unsigned short* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                     unsigned char* template_img,
-                    const unsigned int tHeight,
-                    const unsigned int tWidth
-);
 extern "C" __global__ void fast_corner_detector(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,
@@ -1708,8 +1691,6 @@ const std::map<std::string, const void*>& funMap1()
                                                         {"harris_corner_detector_nonmax_supression",reinterpret_cast<const void*>(harris_corner_detector_nonmax_supression)},
                                                         {"harris_corner_detector_pln",reinterpret_cast<const void*>(harris_corner_detector_pln)},
                                                         {"harris_corner_detector_pkd",reinterpret_cast<const void*>(harris_corner_detector_pkd)},
-                                                        {"match_template_pkd",reinterpret_cast<const void*>(match_template_pkd)},
-                                                        {"match_template_pln",reinterpret_cast<const void*>(match_template_pln)},
                                                         {"fast_corner_detector",reinterpret_cast<const void*>(fast_corner_detector)},
                                                         {"fast_corner_detector_nms_pln",reinterpret_cast<const void*>(fast_corner_detector_nms_pln)},
                                                         {"fast_corner_detector_nms_pkd",reinterpret_cast<const void*>(fast_corner_detector_nms_pkd)},
