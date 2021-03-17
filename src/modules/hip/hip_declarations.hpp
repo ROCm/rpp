@@ -311,10 +311,6 @@ harris_corner_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32
 RppStatus
 harris_corner_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr,rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
-match_template_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp16u* dstPtr, Rpp8u* templateImage, RppiSize templateImageSize, RppiChnFormat chnFormat,unsigned int channel, rpp::Handle& handle);
-RppStatus
-match_template_hip_batch(Rpp8u* srcPtr, RppiSize *srcSize, Rpp16u* dstPtr, Rpp8u* templateImage, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
-RppStatus
 fast_corner_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u numOfPixels, Rpp8u threshold, Rpp32u nonmaxKernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
 fast_corner_detector_hip_batch( Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
