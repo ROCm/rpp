@@ -13,7 +13,7 @@ extern "C" __global__ void temperature_planar(   unsigned char* input,
     if (id_x >= width || id_y >= height) return;
     int pixIdx = id_x + id_y * width;
     int c = width * height;
-    
+
     int res = input[pixIdx] + modificationValue;
     output[pixIdx] = saturate_8u(res);
     if( channel > 1)
@@ -34,9 +34,9 @@ extern "C" __global__ void temperature_packed(   unsigned char* input,
     int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
     if (id_x >= width || id_y >= height) return;
-    
+
     int pixIdx = id_y * width * channel + id_x * channel;
-    
+
     int res = input[pixIdx] + modificationValue;
     output[pixIdx] = saturate_8u(res);
 
@@ -46,13 +46,13 @@ extern "C" __global__ void temperature_packed(   unsigned char* input,
     output[pixIdx+2] = saturate_8u(res);
 }
 
-__device__ unsigned char temperature(unsigned char input, float value, unsigned char RGB){
+__device__ unsigned char temperature(unsigned char input, unsigned char value, int RGB){
     if(RGB == 0)
-        return saturate_8u(input + value);
+        return saturate_8u((short)input + (short)value);
     else if(RGB == 1)
         return (input);
     else
-        return saturate_8u(input - value);
+        return saturate_8u((short)input - (short)value);
 }
 
 extern "C" __global__ void color_temperature_batch(   unsigned char* input,
@@ -74,21 +74,18 @@ extern "C" __global__ void color_temperature_batch(   unsigned char* input,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    unsigned char valuergb;
     unsigned char modificationValuetmp = modificationValue[id_z];
-    int indextmp=0;
     long pixIdx = 0;
     pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z] ) * plnpkdindex ;
     if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {   
-        for(indextmp = 0; indextmp < channel; indextmp++){
-            valuergb = input[pixIdx];
-            output[pixIdx] = temperature(valuergb , modificationValuetmp, indextmp);
+    {
+        for(int indextmp = channel - 1; indextmp >= 0; indextmp--){
+            output[pixIdx] = temperature(input[pixIdx], modificationValuetmp, indextmp);
             pixIdx += inc[id_z];
         }
     }
     else if((id_x < width[id_z] ) && (id_y < height[id_z])){
-            for(indextmp = 0; indextmp < channel; indextmp++){
+            for(int indextmp = 0; indextmp < channel; indextmp++){
                 output[pixIdx] = input[pixIdx];
                 pixIdx += inc[id_z];
             }

@@ -513,7 +513,7 @@ inline void copy_dstMaxSize(RppiSize maxDstSize, rpp::Handle& handle)
 }
 
 
-inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = false)
+inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = true)
 {
     int i;
     handle.GetInitHandle()->mem.mcpu.srcBatchIndex[0] = 0;
@@ -550,7 +550,7 @@ inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
 #endif
 }
 
-inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = false)
+inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = true)
 {
     int i;
     handle.GetInitHandle()->mem.mcpu.dstBatchIndex[0] = 0;

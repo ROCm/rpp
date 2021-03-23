@@ -17,7 +17,7 @@ extern "C" __global__ void canny_ced_pln3_to_pln1(   unsigned char* input,
     float value = ((input[IPpixIdx] + input[IPpixIdx + ch] + input[IPpixIdx + ch * 2]) / 3);
     output[IPpixIdx] = (unsigned char)value ;
 }
-extern "C" __global__ void ced_pkd3_to_pln1(   unsigned char* input,
+extern "C" __global__ void canny_ced_pkd3_to_pln1(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,
                     const unsigned int width,
@@ -125,8 +125,6 @@ extern "C" __global__ void sobel_pln_batch(   unsigned char* input,
     else
         pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x + (unsigned long)id_z * (unsigned long)width * (unsigned long)height;
     OPpixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x + (unsigned long)id_z * (unsigned long)width * (unsigned long)height;
-    int value = 0;
-    int value1 =0;
     int a[3][3];
     for(int i = -1 ; i <= 1 ; i++)
     {
@@ -145,8 +143,8 @@ extern "C" __global__ void sobel_pln_batch(   unsigned char* input,
     }
     if(sobelType == 2)
     {
-        value = calcSobelxCanny(a);
-        value1 = calcSobelyCanny(a);
+        int value = calcSobelxCanny(a);
+        int value1 = calcSobelyCanny(a);
         value = power_canny(value,2);
         value1 = power_canny(value1,2);
         value = sqrt( (float)(value + value1));
@@ -155,12 +153,12 @@ extern "C" __global__ void sobel_pln_batch(   unsigned char* input,
     }
     if(sobelType == 1)
     {
-        value = calcSobelyCanny(a);
+        int value = calcSobelyCanny(a);
         output[OPpixIdx] = saturate_8u(value);
     }
     if(sobelType == 0)
     {
-        value = calcSobelxCanny(a);
+        int value = calcSobelxCanny(a);
         output[OPpixIdx] = saturate_8u(value);
     }
 }
@@ -190,7 +188,7 @@ extern "C" __global__ void ced_non_max_suppression(   unsigned char* input,
             pixel1 = input[pixIdx - 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != width - 1)
             pixel2 = input[pixIdx + 1];
         else
@@ -202,7 +200,7 @@ extern "C" __global__ void ced_non_max_suppression(   unsigned char* input,
             pixel1 = input[pixIdx - width - 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != width - 1 && id_y != height - 1)
             pixel2 = input[pixIdx + width + 1];
         else
@@ -214,7 +212,7 @@ extern "C" __global__ void ced_non_max_suppression(   unsigned char* input,
             pixel1 = input[pixIdx - width + 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != 0 && id_y != height - 1)
             pixel2 = input[pixIdx + width - 1];
         else
@@ -226,7 +224,7 @@ extern "C" __global__ void ced_non_max_suppression(   unsigned char* input,
             pixel1 = input[pixIdx - width];
         else
             pixel1 = 0;
-        
+
         if(id_y != height - 1)
             pixel2 = input[pixIdx + width];
         else
@@ -234,7 +232,7 @@ extern "C" __global__ void ced_non_max_suppression(   unsigned char* input,
     }
 
     if(input[pixIdx] >= pixel1 && input[pixIdx] >= pixel2)
-    {    
+    {
         if(input[pixIdx] >= max)
             output[pixIdx] = 255;
         else if(input[pixIdx] <= min)
@@ -271,7 +269,7 @@ extern "C" __global__ void ced_non_max_suppression_batch(   unsigned char* input
             pixel1 = input[pixIdx - 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != width - 1)
             pixel2 = input[pixIdx + 1];
         else
@@ -283,7 +281,7 @@ extern "C" __global__ void ced_non_max_suppression_batch(   unsigned char* input
             pixel1 = input[pixIdx - width - 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != width - 1 && id_y != height - 1)
             pixel2 = input[pixIdx + width + 1];
         else
@@ -295,7 +293,7 @@ extern "C" __global__ void ced_non_max_suppression_batch(   unsigned char* input
             pixel1 = input[pixIdx - width + 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != 0 && id_y != height - 1)
             pixel2 = input[pixIdx + width - 1];
         else
@@ -307,7 +305,7 @@ extern "C" __global__ void ced_non_max_suppression_batch(   unsigned char* input
             pixel1 = input[pixIdx - width];
         else
             pixel1 = 0;
-        
+
         if(id_y != height - 1)
             pixel2 = input[pixIdx + width];
         else
@@ -315,7 +313,7 @@ extern "C" __global__ void ced_non_max_suppression_batch(   unsigned char* input
     }
 
     if(input[pixIdx] >= pixel1 && input[pixIdx] >= pixel2)
-    {    
+    {
         if(input[pixIdx] >= max)
             output[pixIdx] = 255;
         else if(input[pixIdx] <= min)
@@ -342,8 +340,6 @@ extern "C" __global__ void canny_edge(   unsigned char* input,
     int pixIdx = id_y * width + id_x + id_z * width * height;
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    int value = 0;
-    int value1 =0;
     if(input[pixIdx] == 0 || input[pixIdx] == 255)
     {
         output[pixIdx] = input[pixIdx];
@@ -365,7 +361,7 @@ extern "C" __global__ void canny_edge(   unsigned char* input,
                 }
             }
         }
-    }    
+    }
 }
 
 extern "C" __global__ void canny_edge_batch(   unsigned char* input,
@@ -390,8 +386,6 @@ extern "C" __global__ void canny_edge_batch(   unsigned char* input,
         OPpixIdx = (unsigned long)IPpixIdx;
 
     if (id_x >= width || id_y >= height || id_z >= channel) return;
-    int value = 0;
-    int value1 =0;
     if(input[IPpixIdx] == 0 || input[IPpixIdx] == 255)
     {
         output[OPpixIdx] = input[IPpixIdx];
@@ -413,7 +407,7 @@ extern "C" __global__ void canny_edge_batch(   unsigned char* input,
                 }
             }
         }
-    }    
+    }
 }
 
 extern "C" __global__ void ced_pln1_to_pln3_batch(   unsigned char* input,
@@ -454,7 +448,7 @@ extern "C" __global__ void ced_pln1_to_pkd3_batch(   unsigned char* input,
     output[OPpixIdx + 1] = input[IPpixIdx];
     output[OPpixIdx + 2] = input[IPpixIdx];
 }
-extern "C" __global__ void ced_pln1_to_pln3(   unsigned char* input,
+extern "C" __global__ void canny_ced_pln1_to_pln3(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,
                     const unsigned int width,
@@ -471,7 +465,7 @@ extern "C" __global__ void ced_pln1_to_pln3(   unsigned char* input,
     output[IPpixIdx + ch] = input[IPpixIdx];
     output[IPpixIdx + ch * 2] = input[IPpixIdx];
 }
-extern "C" __global__ void ced_pln1_to_pkd3(   unsigned char* input,
+extern "C" __global__ void canny_ced_pln1_to_pkd3(   unsigned char* input,
                      unsigned char* output,
                     const unsigned int height,
                     const unsigned int width,
