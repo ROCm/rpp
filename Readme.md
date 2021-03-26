@@ -47,6 +47,7 @@ RPP is developed for **Linux** operating system.
 
 ## Prerequisites for Test Suite
 -   OpenCV 3.4.13
+
         wget https://github.com/opencv/opencv/archive/3.4.13.zip
         unzip 3.4.13.zip
         cd opencv-3.4.13/
