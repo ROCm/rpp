@@ -21,16 +21,40 @@ RPP is developed for **Linux** operating system.
 
 -   [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
 
+-   Clang Version `6.0`
+
+        sudo apt-get install clang-6.0
+        sudo ln -s /usr/bin/clang-6.0 /usr/bin/clang
+        sudo ln -s /usr/bin/clang++-6.0 /usr/bin/clang++
+
 -   CMake Version `3.5` or higher
 
--   Boost Version `1.72` or higher (install from source - <https://www.boost.org/>)
+        sudo apt-get install cmake
+
+-   Boost Version `1.72` (install from source: Easy Build and Install - <https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install>)
+
+        wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
+        tar -xzvf boost_1_72_0.tar.gz
+        cd boost_1_72_0
+        ./bootstrap.sh
+        ./b2 install
 
 -   IEEE 754-based half-precision floating-point library - half.hpp
-        ```
+
         wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
         unzip half-1.12.0.zip -d half-files
         sudo cp half-files/include/half.hpp /usr/local/include/
-        ```
+
+## Prerequisites for Test Suite
+-   OpenCV 3.4.13
+        wget https://github.com/opencv/opencv/archive/3.4.13.zip
+        unzip 3.4.13.zip
+        cd opencv-3.4.13/
+        mkdir build
+        cd build
+        cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local ..
+        make -j<number of threads>
+        sudo make install
 
 ## Supported Functionalities and Variants
 
