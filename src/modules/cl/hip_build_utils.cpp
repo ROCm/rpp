@@ -66,8 +66,6 @@ boost::filesystem::path HipBuild(boost::optional<TmpDir>& tmp_dir,
                      params + filename + " -o " + bin_file.string());
     if(!boost::filesystem::exists(bin_file))
         RPP_THROW(filename + " failed to compile");
-    // call extract kernel
-    tmp_dir->Execute("/opt/rocm/bin/extractkernel", " -i " + bin_file.string());
     auto hsaco = std::find_if(boost::filesystem::directory_iterator{tmp_dir->path},
                               {},
                               [](auto entry) { return (entry.path().extension() == ".hsaco"); });

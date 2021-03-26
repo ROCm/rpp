@@ -25,8 +25,6 @@ endif()
     # add_definitions(-DRPP_BACKEND_HIP)
     add_definitions( -DHIP_OC_COMPILER=${HIP_OC_COMPILER})
 
-    add_definitions(-DEXTRACTKERNEL_BIN=${EXTRACTKERNEL_BIN})
-
     set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_link_libraries (${PROJECT_NAME} ${OpenCL_LIBRARIES} )
     target_include_directories( ${PROJECT_NAME}
