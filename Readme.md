@@ -46,11 +46,11 @@ RPP is developed for **Linux** operating system.
         sudo cp half-files/include/half.hpp /usr/local/include/
 
 ## Prerequisites for Test Suite
--   OpenCV 3.4.13
+-   OpenCV 3.4.0
 
-        wget https://github.com/opencv/opencv/archive/3.4.13.zip
-        unzip 3.4.13.zip
-        cd opencv-3.4.13/
+        wget https://github.com/opencv/opencv/archive/3.4.0.zip
+        unzip 3.4.0.zip
+        cd opencv-3.4.0/
         mkdir build
         cd build
         cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local ..
