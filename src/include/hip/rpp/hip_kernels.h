@@ -793,15 +793,6 @@ extern "C" __global__ void ced_pkd3_to_pln1_batch(  unsigned char* input,
                     const unsigned int channel,
                     const unsigned long batchIndex
 );
-extern "C" __global__ void sobel_pln_batch(  unsigned char* input,
-                    unsigned char* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                    const unsigned int sobelType,
-                    const unsigned long batchIndex,
-                    const unsigned int originalChannel
-);
 extern "C" __global__ void ced_non_max_suppression(   unsigned char* input,
                      unsigned char* input1,
                      unsigned char* input2,
@@ -1672,9 +1663,6 @@ const std::map<std::string, const void*>& funMap1()
                                                         {"gaussian_image_pyramid_pln_batch",reinterpret_cast<const void*>(gaussian_image_pyramid_pln_batch)},
                                                         {"laplacian_image_pyramid_pkd_batch",reinterpret_cast<const void*>(laplacian_image_pyramid_pkd_batch)},
                                                         {"laplacian_image_pyramid_pln_batch",reinterpret_cast<const void*>(laplacian_image_pyramid_pln_batch)},
-                                                        {"ced_pln3_to_pln1_batch",reinterpret_cast<const void*>(ced_pln3_to_pln1_batch)},
-                                                        {"ced_pkd3_to_pln1_batch",reinterpret_cast<const void*>(ced_pkd3_to_pln1_batch)},
-                                                        {"sobel_pln_batch",reinterpret_cast<const void*>(sobel_pln_batch)},
                                                         {"ced_non_max_suppression_batch",reinterpret_cast<const void*>(ced_non_max_suppression_batch)},
                                                         {"ced_non_max_suppression",reinterpret_cast<const void*>(ced_non_max_suppression)},
                                                         {"canny_edge_batch",reinterpret_cast<const void*>(canny_edge_batch)},

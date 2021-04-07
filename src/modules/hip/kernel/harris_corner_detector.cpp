@@ -1,43 +1,6 @@
 #include <hip/hip_runtime.h>
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 
-extern "C" __global__ void ced_pln3_to_pln1_batch(   unsigned char* input,
-                     unsigned char* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                    const unsigned long batchIndex
-)
-{
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    if (id_x >= width || id_y >= height) return;
-
-    unsigned long IPpixIdx = (unsigned long)batchIndex + (unsigned long)id_x + (unsigned long)id_y * (unsigned long)width;
-    unsigned long OPpixIdx = (unsigned long)id_x + (unsigned long)id_y * (unsigned long)width;
-    int ch = height * width;
-    float value = ((input[IPpixIdx] + input[IPpixIdx + ch] + input[IPpixIdx + ch * 2]) / 3);
-    output[OPpixIdx] = (unsigned char)value ;
-}
-
-extern "C" __global__ void ced_pkd3_to_pln1_batch(   unsigned char* input,
-                     unsigned char* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                    const unsigned long batchIndex
-)
-{
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    if (id_x >= width || id_y >= height) return;
-
-    unsigned long OPpixIdx = (unsigned long)id_x + (unsigned long)id_y * (unsigned long)width;
-    unsigned long IPpixIdx = (unsigned long)batchIndex + (unsigned long)id_x * (unsigned long)channel + (unsigned long)id_y * (unsigned long)width * (unsigned long)channel;
-    float value = (input[IPpixIdx] + input[IPpixIdx + 1] + input[IPpixIdx + 2]) / 3;
-    output[OPpixIdx] = (unsigned char)value ;
-}
-
 extern "C" __global__ void gaussian_pln_batch(    unsigned char* input,
                                      unsigned char* output,
                                     const unsigned int height,
@@ -114,58 +77,6 @@ __device__ int hcd_calcSobely(int a[3][3])
         }
     }
     return sum;
-}
-
-extern "C" __global__ void sobel_pln_batch(   unsigned char* input,
-                                 unsigned char* output,
-                                const unsigned int height,
-                                const unsigned int width,
-                                const unsigned int channel,
-                                const unsigned int sobelType
-)
-{
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-    if (id_x >= width || id_y >= height || id_z >= channel) return;
-
-    int pixIdx = id_y * width + id_x;
-    int a[3][3];
-    for(int i = -1 ; i <= 1 ; i++)
-    {
-        for(int j = -1 ; j <= 1 ; j++)
-        {
-            if(id_x != 0 && id_x != width - 1 && id_y != 0 && id_y != height -1)
-            {
-                unsigned int index = pixIdx + j + (i * width);
-                a[i+1][j+1] = input[index];
-            }
-            else
-            {
-                a[i+1][j+1] = 0;
-            }
-        }
-    }
-    if(sobelType == 2)
-    {
-        int value = hcd_calcSobelx(a);
-        int value1 = hcd_calcSobely(a);
-        value = hcd_power(value,2);
-        value1 = hcd_power(value1,2);
-        value = sqrt( (float)(value + value1));
-        output[pixIdx] = saturate_8u(value);
-
-    }
-    if(sobelType == 1)
-    {
-        int value = hcd_calcSobely(a);
-        output[pixIdx] = saturate_8u(value);
-    }
-    if(sobelType == 0)
-    {
-        int value = hcd_calcSobelx(a);
-        output[pixIdx] = saturate_8u(value);
-    }
 }
 
 extern "C" __global__ void harris_corner_detector_strength(   unsigned char* sobelX,
