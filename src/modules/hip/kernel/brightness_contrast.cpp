@@ -1,10 +1,15 @@
 #include <hip/hip_runtime.h>
+
+#if defined(STATIC)
+#include "hip_kernel_decls.hpp"
+#endif
+
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 
 __device__  unsigned char brightness( unsigned char input_pixel, float alpha, float beta){
     return saturate_8u(alpha * input_pixel + beta);
 }
-__device__ unsigned int get_pln_index(unsigned int id_x, unsigned int id_y, unsigned int id_z, unsigned int width, 
+__device__ unsigned int get_pln_index(unsigned int id_x, unsigned int id_y, unsigned int id_z, unsigned int width,
                         unsigned int height, unsigned channel){
  return ( id_x + id_y * width + id_z * width * height);
 }
@@ -39,7 +44,7 @@ extern "C" __global__ void brightness_batch(   unsigned char* input,
                                      unsigned int *height,
                                      unsigned int *width,
                                      unsigned int *max_width,
-                                     unsigned long *batch_index,
+                                     unsigned long long *batch_index,
                                     const unsigned int channel,
                                      unsigned int *inc, // use width * height for pln and 1 for pkd
                                     const int plnpkdindex // use 1 pln 3 for pkd
@@ -48,7 +53,7 @@ extern "C" __global__ void brightness_batch(   unsigned char* input,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    
+
     unsigned char valuergb;
     float alphatmp = alpha[id_z], betatmp = beta[id_z];
     int indextmp=0;
@@ -70,3 +75,38 @@ extern "C" __global__ void brightness_batch(   unsigned char* input,
             }
         }
 }
+
+#if defined(STATIC)
+RppStatus hip_exec_brightness_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = (max_width + 31) & ~31;
+    int globalThreads_y = (max_height + 31) & ~31;
+    int globalThreads_z = handle.GetBatchSize();
+
+    hipLaunchKernelGGL(brightness_batch,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       0, //stream,
+                       srcPtr,
+                       dstPtr,
+                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                       handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                       channel,
+                       handle.GetInitHandle()->mem.mgpu.inc,
+                       plnpkdind);
+
+    return RPP_SUCCESS;
+}
+#endif
