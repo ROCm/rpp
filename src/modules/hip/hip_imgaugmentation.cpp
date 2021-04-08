@@ -1,6 +1,6 @@
 #include "hip/hip_runtime_api.h"
 #include "hip_declarations.hpp"
-#include "kernel/hip_kernel_decls.hpp"
+#include "kernel/rpp_hip_host_decls.hpp"
 
 /******************** brightness ********************/
 
@@ -10,13 +10,13 @@ brightness_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp32f alpha, Rpp
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(srcSize.width + 31) & ~31, (srcSize.height + 31) & ~31, channel};
 
-    handle.AddKernel("", "", "brightness_contrast.cpp", "brightness_contrast", vld, vgd, "")(srcPtr,
-                                                                                             dstPtr,
-                                                                                             alpha,
-                                                                                             beta,
-                                                                                             srcSize.height,
-                                                                                             srcSize.width,
-                                                                                             channel);
+    handle.AddKernel("", "", "brightness.cpp", "brightness", vld, vgd, "")(srcPtr,
+                                                                           dstPtr,
+                                                                           alpha,
+                                                                           beta,
+                                                                           srcSize.height,
+                                                                           srcSize.width,
+                                                                           channel);
 
     return RPP_SUCCESS;
 }
@@ -36,21 +36,21 @@ RppStatus brightness_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
-    handle.AddKernel("", "", "brightness_contrast.cpp", "brightness_batch", vld, vgd, "")(srcPtr,
-                                                                                          dstPtr,
-                                                                                          handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                                          handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                          handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                          handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                          handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                          handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                          channel,
-                                                                                          handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                          plnpkdind);
+    handle.AddKernel("", "", "brightness.cpp", "brightness_batch", vld, vgd, "")(srcPtr,
+                                                                                 dstPtr,
+                                                                                 handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                                 handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                                 handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                 handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                 handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                 handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                 channel,
+                                                                                 handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                 plnpkdind);
 
 #elif defined(STATIC)
 

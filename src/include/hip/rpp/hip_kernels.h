@@ -1063,7 +1063,7 @@ unsigned char blend_formula(unsigned char input_pixel1,unsigned char input_pixel
 
 // extern "C" __global__ void brightness_contrast_batch(unsigned char *input,unsigned char *output,float *alpha,float *beta,int *xroi_begin,int *xroi_end,int *yroi_begin,int *yroi_end,unsigned int *height,unsigned int *width,unsigned int *max_width,unsigned long *batch_index,const unsigned int channel,unsigned int *inc,const int plnpkdindex);
 // extern "C" __global__ void brightness_contrast_ROI(unsigned char *input,unsigned char *output,const float alpha,const float beta,const int x1,const int y1,const int roi_height,const int roi_width,const unsigned int batch_index,const unsigned int height,const unsigned int width,const unsigned int channel,const ushort pln);
-extern "C" __global__ void brightness_contrast(unsigned char *input,unsigned char *output,const float alpha,const int beta,const unsigned int height,const unsigned int width,const unsigned int channel);
+extern "C" __global__ void brightness(unsigned char *input,unsigned char *output,const float alpha,const int beta,const unsigned int height,const unsigned int width,const unsigned int channel);
 
 __device__ unsigned int get_pkd_index(unsigned int id_x,unsigned int id_y,unsigned int id_z,unsigned int width,unsigned int height,unsigned channel);
 unsigned int get_pkd_index(unsigned int id_x,unsigned int id_y,unsigned int id_z,unsigned int width,unsigned int height,unsigned channel);
@@ -1560,7 +1560,7 @@ const std::map<std::string, const void*>& funMap1()
                                                         {"exclusive_OR_batch",reinterpret_cast<const void*>(exclusive_OR_batch)},
                                                         {"inclusive_OR",reinterpret_cast<const void*>(inclusive_OR)},
                                                         {"inclusive_OR_batch",reinterpret_cast<const void*>(inclusive_OR_batch)},
-                                                        {"brightness_contrast",reinterpret_cast<const void*>(brightness_contrast)},
+                                                        {"brightness",reinterpret_cast<const void*>(brightness)},
                                                         {"brightness_batch", reinterpret_cast<const void*>(brightness_batch)},
                                                         {"gamma_correction_batch",reinterpret_cast<const void*>(gamma_correction_batch)},
                                                         {"gamma_correction",reinterpret_cast<const void*>(gamma_correction)},
