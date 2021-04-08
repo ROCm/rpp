@@ -17,12 +17,12 @@ __device__ unsigned int get_pln_index(unsigned int id_x, unsigned int id_y, unsi
 }
 
 extern "C" __global__ void brightness(unsigned char* input,
-                                               unsigned char* output,
-                                               const float alpha,
-                                               const int beta,
-                                               const unsigned int height,
-                                               const unsigned int width,
-                                               const unsigned int channel)
+                                      unsigned char* output,
+                                      const float alpha,
+                                      const int beta,
+                                      const unsigned int height,
+                                      const unsigned int width,
+                                      const unsigned int channel)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
