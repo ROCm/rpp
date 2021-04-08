@@ -3488,7 +3488,7 @@ int main(int argc, char **argv)
     }
 
     gpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    cout << "\nCPU Time - BatchPD : " << gpu_time_used;
+    cout << "\nGPU Time - BatchPD : " << gpu_time_used;
     printf("\n");
 
     string fileName = std::to_string(ip_bitDepth);
