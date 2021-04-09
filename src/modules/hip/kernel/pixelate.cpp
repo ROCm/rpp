@@ -109,7 +109,6 @@ extern "C" __global__ void pixelate_batch(unsigned char *input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int indextmp=0;
     long pixIdx = 0;
     int x,y;
 

@@ -53,7 +53,6 @@ extern "C" __global__ void blend_batch(unsigned char *input1,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    unsigned char valuergb1, valuergb2;
     float alphatmp = alpha[id_z];
     int indextmp=0;
     unsigned long pixIdx = 0;
@@ -64,8 +63,8 @@ extern "C" __global__ void blend_batch(unsigned char *input1,
     {
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
-            valuergb1 = input1[pixIdx];
-            valuergb2 = input2[pixIdx];
+            unsigned char valuergb1 = input1[pixIdx];
+            unsigned char valuergb2 = input2[pixIdx];
             output[pixIdx] = blend_formula(valuergb1, valuergb2, alphatmp);
             pixIdx += inc[id_z];
         }

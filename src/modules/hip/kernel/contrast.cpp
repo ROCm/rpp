@@ -53,7 +53,6 @@ extern "C" __global__ void contrast_batch(unsigned char *input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    unsigned char valuergb;
     float tmpmin = min;
     float tmpmax = max;
     float tmpnew_max = new_max[id_z];
@@ -67,7 +66,7 @@ extern "C" __global__ void contrast_batch(unsigned char *input,
     {
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
-            valuergb = input[pixIdx];
+            unsigned char valuergb = input[pixIdx];
             output[pixIdx] = saturate_8u((input[pixIdx] - tmpmin) * (tmpnew_max - tmpnew_min) / ((tmpmax - tmpmin) * 1.0) + tmpnew_min);
             pixIdx += inc[id_z];
         }

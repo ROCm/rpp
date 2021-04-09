@@ -55,7 +55,6 @@ extern "C" __global__ void gamma_correction_batch(unsigned char *input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    unsigned char valuergb;
     float gammatmp = gamma[id_z];
     int indextmp=0;
     long pixIdx = 0;
@@ -66,7 +65,7 @@ extern "C" __global__ void gamma_correction_batch(unsigned char *input,
     {
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
-            valuergb = input[pixIdx];
+            unsigned char valuergb = input[pixIdx];
             output[pixIdx] = gamma_correct(valuergb, gammatmp);
             pixIdx += inc[id_z];
         }

@@ -146,7 +146,8 @@ RppStatus
 contrast_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
     int plnpkdind;
-    Rpp32u min = 0, max = 255;
+    Rpp32u min = 0;
+    Rpp32u max = 255;
     if(chnFormat == RPPI_CHN_PLANAR)
         plnpkdind = 1;
     else

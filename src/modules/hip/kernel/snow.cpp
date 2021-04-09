@@ -51,11 +51,6 @@ extern "C" __global__ void snow_pkd(unsigned char *output,
         return;
     }
 
-    int snow_mat[5][5] = {{0,50,75,50,0},
-                          {40,80,120,80,40},
-                          {75,120,255,120,75},
-                          {40,80,120,80,40},
-                          {0,50,75,50,0}};
     const unsigned int snowWidth = width / 200 + 1;
     float transparency = 0.5;
     int pixIdx = id_y * width * channel + id_x * channel;
@@ -66,6 +61,12 @@ extern "C" __global__ void snow_pkd(unsigned char *output,
 
     if (pixIdx % pixelDistance == 0)
     {
+        int snow_mat[5][5] = {{0,50,75,50,0},
+                              {40,80,120,80,40},
+                              {75,120,255,120,75},
+                              {40,80,120,80,40},
+                              {0,50,75,50,0}};
+
         int rand_id = xorshift(pixIdx) % 997;
         rand_id -= rand_id % 3;
 
@@ -101,11 +102,6 @@ extern "C" __global__ void snow_pln(unsigned char *output,
         return;
     }
 
-    int snow_mat[5][5] = {{0,50,75,50,0},
-                          {40,80,120,80,40},
-                          {75,120,255,120,75},
-                          {40,80,120,80,40},
-                          {0,50,75,50,0}};
     const unsigned int snowWidth = width / 200 + 1;
     float transparency = 0.5;
     int pixIdx = id_y * width + id_x;
@@ -120,6 +116,12 @@ extern "C" __global__ void snow_pln(unsigned char *output,
 
     if (pixIdx % pixelDistance == 0)
     {
+        int snow_mat[5][5] = {{0,50,75,50,0},
+                              {40,80,120,80,40},
+                              {75,120,255,120,75},
+                              {40,80,120,80,40},
+                              {0,50,75,50,0}};
+
         int rand_id = xorshift(pixIdx) % 997;
         for (int i = 0; i < 5; i++)
         {
@@ -159,11 +161,6 @@ extern "C" __global__ void snow_batch(unsigned char *input,
     int indextmp = 0;
     long pixIdx = 0;
     int rand;
-    int snow_mat[5][5] = {{0,50,75,50,0},
-                          {40,80,120,80,40},
-                          {75,120,255,120,75},
-                          {40,80,120,80,40},
-                          {0,50,75,50,0}};
 
     if(id_x < width[id_z] && id_y < height[id_z])
     {
@@ -174,6 +171,12 @@ extern "C" __global__ void snow_batch(unsigned char *input,
             pixelDistance /= (rainProbTemp / 100);
             if((pixIdx - batch_index[id_z]) % (int)pixelDistance == 0)
             {
+                int snow_mat[5][5] = {{0,50,75,50,0},
+                                      {40,80,120,80,40},
+                                      {75,120,255,120,75},
+                                      {40,80,120,80,40},
+                                      {0,50,75,50,0}};
+
                 int rand_id = xorshift(pixIdx) % (9973);
                 rand_id = rand_id % (int)pixelDistance;
                 rand_id -= rand_id % 3;
