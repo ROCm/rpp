@@ -4,7 +4,7 @@
 #include "rpp_hip_host_decls.hpp"
 #endif
 
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
+#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
 __device__ unsigned char brighten(unsigned char input_pixel, float alpha, float beta)
 {
@@ -16,8 +16,8 @@ __device__ unsigned int get_pln_index(unsigned int id_x, unsigned int id_y, unsi
     return (id_x + id_y * width + id_z * width * height);
 }
 
-extern "C" __global__ void brightness(unsigned char* input,
-                                      unsigned char* output,
+extern "C" __global__ void brightness(unsigned char *input,
+                                      unsigned char *output,
                                       const float alpha,
                                       const int beta,
                                       const unsigned int height,
@@ -38,8 +38,8 @@ extern "C" __global__ void brightness(unsigned char* input,
     output[pixIdx] = saturate_8u(res);
 }
 
-extern "C" __global__ void brightness_batch(unsigned char* input,
-                                            unsigned char* output,
+extern "C" __global__ void brightness_batch(unsigned char *input,
+                                            unsigned char *output,
                                             float *alpha,
                                             float *beta,
                                             unsigned int *xroi_begin,
@@ -63,7 +63,7 @@ extern "C" __global__ void brightness_batch(unsigned char* input,
     int indextmp=0;
     long pixIdx = 0;
 
-    pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z]) * plnpkdindex;
+    pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
 
     if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
     {
