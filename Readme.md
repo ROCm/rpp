@@ -1,5 +1,5 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://travis-ci.org/GPUOpen-ProfessionalCompute-Libraries/rpp.svg?branch=master)](https://travis-ci.org/GPUOpen-ProfessionalCompute-Libraries/rpp)
+[![Build Status](https://travis-ci.com/GPUOpen-ProfessionalCompute-Libraries/rpp.svg?branch=master)](https://travis-ci.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
 
 # Radeon Performance Primitives Library
 
