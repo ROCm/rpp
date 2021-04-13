@@ -1,4 +1,6 @@
+#include "hip/hip_runtime_api.h"
 #include "hip_declarations.hpp"
+#include "kernel/rpp_hip_host_decls.hpp"
 
 /******************** absolute_difference ********************/
 
@@ -173,6 +175,9 @@ add_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -190,6 +195,12 @@ add_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
                                                                    channel,
                                                                    handle.GetInitHandle()->mem.mgpu.inc,
                                                                    plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_add_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
