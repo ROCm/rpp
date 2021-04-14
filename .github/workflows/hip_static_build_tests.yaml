@@ -25,7 +25,7 @@ jobs:
         git fetch origin pull/$PR_NUMBER/head:ar/pr
         git checkout ar/pr
         git log -5
-        sudo docker exec bd80a15bd618 /bin/bash -c "cd /media/abishek/github-workflows/rpp; mkdir build; cd build; cmake ..; sudo make -j20 install"
+        sudo docker exec bd80a15bd618 /bin/bash -c "cd /media/abishek/github-workflows/rpp; mkdir build; cd build; cmake -DBACKEND=HIP -DCOMPILE=STATIC ..; sudo make -j20 install"
     - name: Running RPP HIP performance tests
       run: |
         sudo docker exec bd80a15bd618 /bin/bash -c "cd /media/abishek/github-workflows/rpp/utilities/rpp-performancetests/HIP_NEW; python3 generatePerformanceLogs.py"
