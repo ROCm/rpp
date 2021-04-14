@@ -34,7 +34,6 @@
 #include <hip/hip_runtime.h>
 
 #if defined(STATIC)
-// #include "brightness_contrast.h"
 #include <hip/rpp/hip_kernels.h>
 #endif
 
@@ -82,7 +81,7 @@ void HIPOCKernelInvoke::run(void* args, std::size_t size) const
                                            stop.get());
 #elif defined(STATIC)
             //  std::cout<<"Going the static hipLaunchKernel"<<std::endl;
-           
+
             std::map<std::string, const void*> f = funMap1();
             auto status = hipLaunchKernel(f[name],
                                            dim3(gdims[0],gdims[1],gdims[2]),

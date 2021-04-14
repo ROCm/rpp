@@ -76,7 +76,7 @@ __kernel void gaussian_pln_batch(   __global unsigned char* input,
             counter++;
         }
     }
-    output[OPpixIdx] = saturate_8u(sum); 
+    output[OPpixIdx] = saturate_8u(sum);
 }
 
 unsigned int power(unsigned int a, unsigned int b)
@@ -113,60 +113,6 @@ int calcSobely(int (*a)[3])
         }
     }
     return sum;
-}
-
-__kernel void sobel_pln_batch(  __global unsigned char* input,
-                                __global unsigned char* output,
-                                const unsigned int height,
-                                const unsigned int width,
-                                const unsigned int channel,
-                                const unsigned int sobelType
-)
-{
-    int id_x = get_global_id(0);
-    int id_y = get_global_id(1);
-    int id_z = get_global_id(2);
-    if (id_x >= width || id_y >= height || id_z >= channel) return;
-
-    int pixIdx = id_y * width + id_x;
-    int value = 0;
-    int value1 =0;
-    int a[3][3];
-    for(int i = -1 ; i <= 1 ; i++)
-    {
-        for(int j = -1 ; j <= 1 ; j++)
-        {
-            if(id_x != 0 && id_x != width - 1 && id_y != 0 && id_y != height -1)
-            {
-                unsigned int index = pixIdx + j + (i * width);
-                a[i+1][j+1] = input[index];
-            }
-            else
-            {
-                a[i+1][j+1] = 0;
-            }
-        }
-    }
-    if(sobelType == 2)
-    {
-        value = calcSobelx(a);
-        value1 = calcSobely(a);
-        value = power(value,2);
-        value1 = power(value1,2);
-        value = sqrt( (float)(value + value1));
-        output[pixIdx] = saturate_8u(value);
-        
-    }
-    if(sobelType == 1)
-    {
-        value = calcSobely(a);
-        output[pixIdx] = saturate_8u(value);
-    }
-    if(sobelType == 0)
-    {
-        value = calcSobelx(a);
-        output[pixIdx] = saturate_8u(value);
-    }
 }
 
 __kernel void harris_corner_detector_strength(  __global unsigned char* sobelX,
@@ -230,7 +176,7 @@ __kernel void harris_corner_detector_nonmax_supression(  __global float* input,
     int id_z = get_global_id(2);
     if (id_x >= width || id_y >= height || id_z >= channel) return;
 
-    
+
     int pixIdx = id_y * width + id_x + id_z * width * height;
     int bound = (kernelSize - 1) / 2;
     float pixel = input[pixIdx];
@@ -248,7 +194,7 @@ __kernel void harris_corner_detector_nonmax_supression(  __global float* input,
             }
         }
     }
-    output[pixIdx] = input[pixIdx];  
+    output[pixIdx] = input[pixIdx];
 }
 
 __kernel void harris_corner_detector_pln(  __global unsigned char* input,
@@ -285,7 +231,7 @@ __kernel void harris_corner_detector_pln(  __global unsigned char* input,
                 }
             }
         }
-    } 
+    }
 }
 
 __kernel void harris_corner_detector_pkd(  __global unsigned char* input,

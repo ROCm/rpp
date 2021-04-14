@@ -105,64 +105,6 @@ __device__ int calcSobelyCanny(int a[3][3])
     return sum;
 }
 
-extern "C" __global__ void sobel_pln_batch(   unsigned char* input,
-                     unsigned char* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                    const unsigned int sobelType,
-                    const unsigned long batchIndex,
-                    const unsigned int originalChannel
-)
-{
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-    if (id_x >= width || id_y >= height || id_z >= channel) return;
-    unsigned long pixIdx, OPpixIdx;
-    if(originalChannel == 1)
-        pixIdx = batchIndex + (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x + (unsigned long)id_z * (unsigned long)width * (unsigned long)height;
-    else
-        pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x + (unsigned long)id_z * (unsigned long)width * (unsigned long)height;
-    OPpixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x + (unsigned long)id_z * (unsigned long)width * (unsigned long)height;
-    int a[3][3];
-    for(int i = -1 ; i <= 1 ; i++)
-    {
-        for(int j = -1 ; j <= 1 ; j++)
-        {
-            if(id_x != 0 && id_x != width - 1 && id_y != 0 && id_y != height -1)
-            {
-                unsigned long index = (unsigned long)pixIdx + (unsigned long)j + ((unsigned long)i * (unsigned long)width);
-                a[i+1][j+1] = input[index];
-            }
-            else
-            {
-                a[i+1][j+1] = 0;
-            }
-        }
-    }
-    if(sobelType == 2)
-    {
-        int value = calcSobelxCanny(a);
-        int value1 = calcSobelyCanny(a);
-        value = power_canny(value,2);
-        value1 = power_canny(value1,2);
-        value = sqrt( (float)(value + value1));
-        output[OPpixIdx] = saturate_8u(value);
-
-    }
-    if(sobelType == 1)
-    {
-        int value = calcSobelyCanny(a);
-        output[OPpixIdx] = saturate_8u(value);
-    }
-    if(sobelType == 0)
-    {
-        int value = calcSobelxCanny(a);
-        output[OPpixIdx] = saturate_8u(value);
-    }
-}
-
 extern "C" __global__ void ced_non_max_suppression(   unsigned char* input,
                      unsigned char* input1,
                      unsigned char* input2,

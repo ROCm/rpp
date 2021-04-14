@@ -104,66 +104,6 @@ int calcSobely(int (*a)[3])
     return sum;
 }
 
-__kernel void sobel_pln_batch(  __global unsigned char* input,
-                    __global unsigned char* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                    const unsigned int sobelType,
-                    const unsigned long batchIndex,
-                    const unsigned int originalChannel
-)
-{
-    int id_x = get_global_id(0);
-    int id_y = get_global_id(1);
-    int id_z = get_global_id(2);
-    if (id_x >= width || id_y >= height || id_z >= channel) return;
-    unsigned long pixIdx, OPpixIdx;
-    if(originalChannel == 1)
-        pixIdx = batchIndex + (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x + (unsigned long)id_z * (unsigned long)width * (unsigned long)height;
-    else
-        pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x + (unsigned long)id_z * (unsigned long)width * (unsigned long)height;
-    OPpixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x + (unsigned long)id_z * (unsigned long)width * (unsigned long)height;
-    int value = 0;
-    int value1 =0;
-    int a[3][3];
-    for(int i = -1 ; i <= 1 ; i++)
-    {
-        for(int j = -1 ; j <= 1 ; j++)
-        {
-            if(id_x != 0 && id_x != width - 1 && id_y != 0 && id_y != height -1)
-            {
-                unsigned long index = (unsigned long)pixIdx + (unsigned long)j + ((unsigned long)i * (unsigned long)width);
-                a[i+1][j+1] = input[index];
-            }
-            else
-            {
-                a[i+1][j+1] = 0;
-            }
-        }
-    }
-    if(sobelType == 2)
-    {
-        value = calcSobelx(a);
-        value1 = calcSobely(a);
-        value = power(value,2);
-        value1 = power(value1,2);
-        value = sqrt( (float)(value + value1));
-        output[OPpixIdx] = saturate_8u(value);
-        
-    }
-    if(sobelType == 1)
-    {
-        value = calcSobely(a);
-        output[OPpixIdx] = saturate_8u(value);
-    }
-    if(sobelType == 0)
-    {
-        value = calcSobelx(a);
-        output[OPpixIdx] = saturate_8u(value);
-    }
-}
-
 __kernel void ced_non_max_suppression(  __global unsigned char* input,
                     __global unsigned char* input1,
                     __global unsigned char* input2,
@@ -189,7 +129,7 @@ __kernel void ced_non_max_suppression(  __global unsigned char* input,
             pixel1 = input[pixIdx - 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != width - 1)
             pixel2 = input[pixIdx + 1];
         else
@@ -201,7 +141,7 @@ __kernel void ced_non_max_suppression(  __global unsigned char* input,
             pixel1 = input[pixIdx - width - 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != width - 1 && id_y != height - 1)
             pixel2 = input[pixIdx + width + 1];
         else
@@ -213,7 +153,7 @@ __kernel void ced_non_max_suppression(  __global unsigned char* input,
             pixel1 = input[pixIdx - width + 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != 0 && id_y != height - 1)
             pixel2 = input[pixIdx + width - 1];
         else
@@ -225,7 +165,7 @@ __kernel void ced_non_max_suppression(  __global unsigned char* input,
             pixel1 = input[pixIdx - width];
         else
             pixel1 = 0;
-        
+
         if(id_y != height - 1)
             pixel2 = input[pixIdx + width];
         else
@@ -233,7 +173,7 @@ __kernel void ced_non_max_suppression(  __global unsigned char* input,
     }
 
     if(input[pixIdx] >= pixel1 && input[pixIdx] >= pixel2)
-    {    
+    {
         if(input[pixIdx] >= max)
             output[pixIdx] = 255;
         else if(input[pixIdx] <= min)
@@ -270,7 +210,7 @@ __kernel void ced_non_max_suppression_batch(  __global unsigned char* input,
             pixel1 = input[pixIdx - 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != width - 1)
             pixel2 = input[pixIdx + 1];
         else
@@ -282,7 +222,7 @@ __kernel void ced_non_max_suppression_batch(  __global unsigned char* input,
             pixel1 = input[pixIdx - width - 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != width - 1 && id_y != height - 1)
             pixel2 = input[pixIdx + width + 1];
         else
@@ -294,7 +234,7 @@ __kernel void ced_non_max_suppression_batch(  __global unsigned char* input,
             pixel1 = input[pixIdx - width + 1];
         else
             pixel1 = 0;
-        
+
         if(id_x != 0 && id_y != height - 1)
             pixel2 = input[pixIdx + width - 1];
         else
@@ -306,7 +246,7 @@ __kernel void ced_non_max_suppression_batch(  __global unsigned char* input,
             pixel1 = input[pixIdx - width];
         else
             pixel1 = 0;
-        
+
         if(id_y != height - 1)
             pixel2 = input[pixIdx + width];
         else
@@ -314,7 +254,7 @@ __kernel void ced_non_max_suppression_batch(  __global unsigned char* input,
     }
 
     if(input[pixIdx] >= pixel1 && input[pixIdx] >= pixel2)
-    {    
+    {
         if(input[pixIdx] >= max)
             output[pixIdx] = 255;
         else if(input[pixIdx] <= min)
@@ -364,7 +304,7 @@ __kernel void canny_edge(  __global unsigned char* input,
                 }
             }
         }
-    }    
+    }
 }
 
 __kernel void canny_edge_batch(  __global unsigned char* input,
@@ -412,7 +352,7 @@ __kernel void canny_edge_batch(  __global unsigned char* input,
                 }
             }
         }
-    }    
+    }
 }
 
 __kernel void ced_pln1_to_pln3_batch(  __global unsigned char* input,
