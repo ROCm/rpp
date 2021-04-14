@@ -51,7 +51,7 @@ extern "C" __global__ void add_batch(unsigned char *input1,
     unsigned long pixIdx = 0;
 
     pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z] ) * plnpkdindex;
-    if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
+    if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
     {
         for(indextmp = 0; indextmp < channel; indextmp++)
         {

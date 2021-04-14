@@ -4,8 +4,8 @@ subprocess.call("./rawLogsGenScript.sh", shell=True)
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pkd3_hip_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln3_hip_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln1_hip_raw_performance_log.txt"
+    # "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln3_hip_raw_performance_log.txt",
+    # "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln1_hip_raw_performance_log.txt"
     ]
 
 for log_file in log_file_list:
