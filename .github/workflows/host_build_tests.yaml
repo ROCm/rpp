@@ -1,6 +1,6 @@
 # The workflow tests the RPP build for HOST backend and runs rpp-performancetests
 
-name: RPP HOST backend build and performance testing
+name: RPP HOST backend
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
 jobs:
 
   build:
-    name: RPP build and tests for HOST backend
+    name: Build and performance tests
     runs-on: [self-hosted, Linux, X64, cpu-gpu]
     steps:
     - name: Running RPP build for HOST backend

@@ -1,6 +1,6 @@
 # The workflow tests the RPP build for HIP backend (STATIC build) and runs rpp-performancetests
 
-name: RPP HIP backend (STATIC) build and performance testing
+name: RPP HIP backend (STATIC)
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
 jobs:
 
   build:
-    name: RPP build and tests for HIP backend (STATIC build)
+    name: Build and performance tests
     runs-on: [self-hosted, Linux, X64, cpu-gpu]
     steps:
     - name: Running RPP build for HIP backend (STATIC build)
