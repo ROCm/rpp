@@ -69,8 +69,8 @@ extern "C" __global__ void accumulate_squared(unsigned char *input,
     input[pixIdx] = saturate_8u(res);
 }
 
-extern "C" __global__ void accumulate_batch(unsigned char* input1,
-                                            unsigned char* input2,
+extern "C" __global__ void accumulate_batch(unsigned char *input1,
+                                            unsigned char *input2,
                                             unsigned int *xroi_begin,
                                             unsigned int *xroi_end,
                                             unsigned int *yroi_begin,
@@ -101,7 +101,8 @@ extern "C" __global__ void accumulate_batch(unsigned char* input1,
     }
 }
 
-__device__ unsigned char accumulate_weight_formula(unsigned char input_pixel1, unsigned char input_pixel2, float alpha){
+__device__ unsigned char accumulate_weight_formula(unsigned char input_pixel1, unsigned char input_pixel2, float alpha)
+{
     return saturate_8u(alpha * input_pixel1 + (1 - alpha) * input_pixel2);
 }
 
@@ -132,7 +133,8 @@ extern "C" __global__ void accumulate_weighted_batch(unsigned char *input1,
     pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
     if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
     {   
-        for(indextmp = 0; indextmp < channel; indextmp++){
+        for(indextmp = 0; indextmp < channel; indextmp++)
+        {
             valuergb1 = input1[pixIdx];
             valuergb2 = input2[pixIdx];
             input1[pixIdx] = accumulate_weight_formula(valuergb1, valuergb2, alphatmp);

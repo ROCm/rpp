@@ -58,13 +58,13 @@ extern "C" __global__ void phase_batch(unsigned char *input1,
     {   
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
-                res = atan((float)input1[pixIdx] / (float)input2[pixIdx]);
+                res = atan((float) input1[pixIdx] / (float) input2[pixIdx]);
                 res = (res/1.570796)*255;
                 output[pixIdx] = saturate_8u(res);
                 pixIdx += inc[id_z];
         }
     }
-    else if((id_x < width[id_z] ) && (id_y < height[id_z]))
+    else if((id_x < width[id_z]) && (id_y < height[id_z]))
     {
         for(indextmp = 0; indextmp < channel; indextmp++)
         {

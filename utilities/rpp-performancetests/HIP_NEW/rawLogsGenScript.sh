@@ -61,16 +61,16 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=55;case<57;case++))
+for ((case=0;case<82;case++))
 do
 printf "\n\n\n\n"
 echo "--------------------------------"
 printf "Running a New Functionality...\n"
 echo "--------------------------------"
-for ((bitDepth=0;bitDepth<1;bitDepth++))
+for ((bitDepth=0;bitDepth<7;bitDepth++))
 do
 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
+for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
 do
 
 SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
@@ -87,66 +87,66 @@ done
 
 
 
-# printf "\n\n\n\n\n"
-# echo "##########################################################################################"
-# echo "Running all PLN1 Inputs..."
-# echo "##########################################################################################"
+printf "\n\n\n\n\n"
+echo "##########################################################################################"
+echo "Running all PLN1 Inputs..."
+echo "##########################################################################################"
 
-# printf "\n\nUsage: ./BatchPD_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-# for ((case=0;case<82;case++))
-# do
-# printf "\n\n\n\n"
-# echo "--------------------------------"
-# printf "Running a New Functionality...\n"
-# echo "--------------------------------"
-# for ((bitDepth=0;bitDepth<7;bitDepth++))
-# do
-# printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-# for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
-# do
+for ((case=0;case<82;case++))
+do
+printf "\n\n\n\n"
+echo "--------------------------------"
+printf "Running a New Functionality...\n"
+echo "--------------------------------"
+for ((bitDepth=0;bitDepth<7;bitDepth++))
+do
+printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
+for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
+do
 
-# SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-# SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 
-# printf "\n./BatchPD_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-# ./BatchPD_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_hip_pln1_hip_raw_performance_log.txt"
-# echo "------------------------------------------------------------------------------------------"
-# done
-# done
-# done
-
-
+printf "\n./BatchPD_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+./BatchPD_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_hip_pln1_hip_raw_performance_log.txt"
+echo "------------------------------------------------------------------------------------------"
+done
+done
+done
 
 
 
-# printf "\n\n\n\n\n"
-# echo "##########################################################################################"
-# echo "Running all PLN3 Inputs..."
-# echo "##########################################################################################"
 
-# printf "\n\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-# for ((case=0;case<82;case++))
-# do
-# printf "\n\n\n\n"
-# echo "--------------------------------"
-# printf "Running a New Functionality...\n"
-# echo "--------------------------------"
-# for ((bitDepth=0;bitDepth<7;bitDepth++))
-# do
-# printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-# for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
-# do
+printf "\n\n\n\n\n"
+echo "##########################################################################################"
+echo "Running all PLN3 Inputs..."
+echo "##########################################################################################"
 
-# SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-# SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+printf "\n\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-# printf "\n./BatchPD_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-# ./BatchPD_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_hip_pln3_hip_raw_performance_log.txt"
-# echo "------------------------------------------------------------------------------------------"
-# done
-# done
-# done
+for ((case=0;case<82;case++))
+do
+printf "\n\n\n\n"
+echo "--------------------------------"
+printf "Running a New Functionality...\n"
+echo "--------------------------------"
+for ((bitDepth=0;bitDepth<7;bitDepth++))
+do
+printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
+for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
+do
 
-# # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
+SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+
+printf "\n./BatchPD_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+./BatchPD_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_hip_pln3_hip_raw_performance_log.txt"
+echo "------------------------------------------------------------------------------------------"
+done
+done
+done
+
+# <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>

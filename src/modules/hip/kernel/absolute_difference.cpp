@@ -61,13 +61,14 @@ extern "C" __global__ void absolute_difference_batch(unsigned char *input1,
             pixIdx += inc[id_z];
         }
     }
-    else if((id_x < width[id_z]) && (id_y < height[id_z])){
-            for(int indextmp = 0; indextmp < channel; indextmp++)
-            {
-                output[pixIdx] = input1[pixIdx];
-                pixIdx += inc[id_z];
-            }
+    else if((id_x < width[id_z]) && (id_y < height[id_z]))
+    {
+        for(int indextmp = 0; indextmp < channel; indextmp++)
+        {
+            output[pixIdx] = input1[pixIdx];
+            pixIdx += inc[id_z];
         }
+    }
 }
 
 #if defined(STATIC)
