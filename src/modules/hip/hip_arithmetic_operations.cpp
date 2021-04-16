@@ -512,7 +512,7 @@ accumulate_squared_hip_batch(Rpp8u* srcPtr, rpp::Handle& handle, RppiChnFormat c
 /******************** tensor_add ********************/
 
 RppStatus
-tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle)
+tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr,  rpp::Handle& handle)
 {
     size_t gDim3[3];
     if (tensorDimension == 1)
@@ -542,6 +542,9 @@ tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* src
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -552,6 +555,12 @@ tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* src
                                                                        dim1,
                                                                        dim2,
                                                                        dim3);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_add(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -589,6 +598,9 @@ tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -599,6 +611,12 @@ tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
                                                                             dim1,
                                                                             dim2,
                                                                             dim3);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_subtract(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -636,6 +654,9 @@ tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -646,6 +667,12 @@ tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
                                                                             dim1,
                                                                             dim2,
                                                                             dim3);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_multiply(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -664,6 +691,9 @@ tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensi
     b = tensorDimensionValues1[1];
     c = tensorDimensionValues2[0];
     d = tensorDimensionValues2[1];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -674,5 +704,12 @@ tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensi
                                                                                    b,
                                                                                    c,
                                                                                    d);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_matrix_multiply(srcPtr1, srcPtr2, dstPtr, handle, a, b, c, d, gDim3[0], gDim3[1], gDim3[2]);
+
+#endif
+
     return RPP_SUCCESS;
 }
