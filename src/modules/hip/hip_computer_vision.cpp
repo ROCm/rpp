@@ -1,5 +1,7 @@
 #include "hip_declarations.hpp"
 #include <hip/rpp_hip_common.hpp>
+#include "kernel/rpp_hip_host_decls.hpp"
+
 
 /******************** data_object_copy ********************/
 
@@ -63,6 +65,9 @@ local_binary_pattern_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -79,6 +84,12 @@ local_binary_pattern_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
                                                                                                      channel,
                                                                                                      handle.GetInitHandle()->mem.mgpu.inc,
                                                                                                      plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_local_binary_pattern_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -134,6 +145,9 @@ gaussian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& hand
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -148,6 +162,12 @@ gaussian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& hand
                                                                                                          channel,
                                                                                                          handle.GetInitHandle()->mem.mgpu.inc,
                                                                                                          plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_gaussian_image_pyramid_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -240,6 +260,9 @@ control_flow_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, Rpp32u typ
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -375,99 +398,39 @@ control_flow_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, Rpp32u typ
             break;
     }
 
-    return RPP_SUCCESS;
-}
+#elif defined(STATIC)
 
-/******************** convert_bit_depth ********************/
+    // switch(type)
+    // {
+    //     case 1:
+    //         hip_exec_bitwise_AND_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    //         break;
+    //     case 2:
+    //         hip_exec_inclusive_OR_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    //         break;
+    //     case 3:
+    //         hip_exec_exclusive_OR_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    //         break;
+    //     case 4:
+    //         hip_exec_add_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    //         break;
+    //     case 5:
+    //         hip_exec_subtract_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    //         break;
+    //     case 6:
+    //         hip_exec_multiply_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    //         break;
+    //     case 7:
+    //         hip_exec_min_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    //         break;
+    //     case 8:
+    //         hip_exec_max_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    //         break;
+    //     default:
+    //         break;
+    // }
 
-template <typename T, typename U>
-RppStatus
-convert_bit_depth_hip(T* srcPtr, RppiSize srcSize, U* dstPtr, Rpp32u type, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
-{
-    if(type == 1)
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_u8s8", vld, vgd, "")(srcPtr,
-                                                                                                  dstPtr,
-                                                                                                  srcSize.height,
-                                                                                                  srcSize.width,
-                                                                                                  channel);
-    }
-    else if(type == 2)
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_u8u16", vld, vgd, "")(srcPtr,
-                                                                                                   dstPtr,
-                                                                                                   srcSize.height,
-                                                                                                   srcSize.width,
-                                                                                                   channel);
-    }
-    else
-    {
-        std::vector<size_t> vld{32, 32, 1};
-        std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_u8s16", vld, vgd, "")(srcPtr,
-                                                                                                   dstPtr,
-                                                                                                   srcSize.height,
-                                                                                                   srcSize.width,
-                                                                                                   channel);
-    }
-
-    return RPP_SUCCESS;
-}
-
-template <typename T, typename U>
-RppStatus
-convert_bit_depth_hip_batch(T* srcPtr, U* dstPtr, Rpp32u type,rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
-{
-    int plnpkdind;
-    if(chnFormat == RPPI_CHN_PLANAR)
-        plnpkdind = 1;
-    else
-        plnpkdind = 3;
-    Rpp32u max_height, max_width;
-    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    if (type == 1)
-    {
-        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_batch_u8s8", vld, vgd, "")(srcPtr,
-                                                                                                        dstPtr,
-                                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                                        channel,
-                                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                                        plnpkdind);
-    }
-    else if (type == 2)
-    {
-        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_batch_u8u16", vld, vgd, "")(srcPtr,
-                                                                                                         dstPtr,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                                         channel,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                                         plnpkdind);
-    }
-    else
-    {
-        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_batch_u8s16", vld, vgd, "")(srcPtr,
-                                                                                                         dstPtr,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                                         channel,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                                         plnpkdind);
-    }
+#endif
 
     return RPP_SUCCESS;
 }
@@ -545,25 +508,24 @@ laplacian_image_pyramid_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, Rpp3
 RppStatus
 laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
-    unsigned int maxHeight, maxWidth, maxKernelSize;
-    maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[0];
-    maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[0];
-    maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[0];
+    Rpp32u maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[0];
     for(int i = 0 ; i < handle.GetBatchSize() ; i++)
     {
-        if(maxHeight < handle.GetInitHandle()->mem.mgpu.csrcSize.height[i])
-            maxHeight = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-        if(maxWidth < handle.GetInitHandle()->mem.mgpu.csrcSize.width[i])
-            maxWidth = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
         if(maxKernelSize < handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i])
             maxKernelSize = handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i];
     }
-    unsigned long batchIndex = 0;
+
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    Rpp32u batchIndex = 0;
     Rpp32f *kernelMain = (Rpp32f *)calloc(maxKernelSize * maxKernelSize, sizeof(Rpp32f));
-    Rpp8u* srcPtr1;
-    hipMalloc(&srcPtr1,  maxHeight * maxWidth * channel * sizeof(Rpp8u));
-    Rpp32f* kernel;
-    hipMalloc(&kernel,  maxKernelSize * maxKernelSize * sizeof(Rpp32f));
+    Rpp8u *srcPtr1;
+    hipMalloc(&srcPtr1, max_height * max_width * channel * sizeof(Rpp8u));
+    Rpp32f *kernel;
+    hipMalloc(&kernel, maxKernelSize * maxKernelSize * sizeof(Rpp32f));
+
+#if defined (HIPRTC)
 
     for(int i = 0 ; i < handle.GetBatchSize(); i++)
     {
@@ -629,6 +591,36 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
         }
         batchIndex += maxHeight * maxWidth * channel;
     }
+
+#elif defined(STATIC)
+
+    for(int i = 0 ; i < handle.GetBatchSize(); i++)
+    {
+        generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[0].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
+        hipMemcpy(kernel,kernelMain,handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * sizeof(Rpp32f), hipMemcpyHostToDevice);
+
+        if(chnFormat == RPPI_CHN_PACKED)
+        {
+            hip_exec_gaussian_image_pyramid_pkd_batch(srcPtr, srcPtr1, handle, chnFormat, channel, kernel, max_height, max_width, batchIndex, i);
+        }
+        else
+        {
+            hip_exec_gaussian_image_pyramid_pln_batch(srcPtr, srcPtr1, handle, chnFormat, channel, kernel, max_height, max_width, batchIndex, i);
+        }
+
+        if(chnFormat == RPPI_CHN_PACKED)
+        {
+            hip_exec_laplacian_image_pyramid_pkd_batch(srcPtr1, dstPtr, handle, chnFormat, channel, kernel, max_height, max_width, batchIndex, i);
+        }
+        else
+        {
+            hip_exec_laplacian_image_pyramid_pln_batch(srcPtr1, dstPtr, handle, chnFormat, channel, kernel, max_height, max_width, batchIndex, i);
+        }
+
+        batchIndex += max_height * max_width * channel;
+    }
+
+#endif
 
     hipFree(srcPtr1);
     hipFree(kernel);
@@ -1753,6 +1745,100 @@ reconstruction_laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2,
 
         batchIndex1 += handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * channel * sizeof(unsigned char);
         batchIndex2 += handle.GetInitHandle()->mem.mgpu.cdstSize.height[i] * handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] * channel * sizeof(unsigned char);
+    }
+
+    return RPP_SUCCESS;
+}
+
+/******************** convert_bit_depth ********************/
+
+template <typename T, typename U>
+RppStatus
+convert_bit_depth_hip(T* srcPtr, RppiSize srcSize, U* dstPtr, Rpp32u type, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+{
+    if(type == 1)
+    {
+        std::vector<size_t> vld{32, 32, 1};
+        std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_u8s8", vld, vgd, "")(srcPtr,
+                                                                                                  dstPtr,
+                                                                                                  srcSize.height,
+                                                                                                  srcSize.width,
+                                                                                                  channel);
+    }
+    else if(type == 2)
+    {
+        std::vector<size_t> vld{32, 32, 1};
+        std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_u8u16", vld, vgd, "")(srcPtr,
+                                                                                                   dstPtr,
+                                                                                                   srcSize.height,
+                                                                                                   srcSize.width,
+                                                                                                   channel);
+    }
+    else
+    {
+        std::vector<size_t> vld{32, 32, 1};
+        std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
+        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_u8s16", vld, vgd, "")(srcPtr,
+                                                                                                   dstPtr,
+                                                                                                   srcSize.height,
+                                                                                                   srcSize.width,
+                                                                                                   channel);
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T, typename U>
+RppStatus
+convert_bit_depth_hip_batch(T* srcPtr, U* dstPtr, Rpp32u type,rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
+{
+    int plnpkdind;
+    if(chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    std::vector<size_t> vld{32, 32, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
+    if (type == 1)
+    {
+        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_batch_u8s8", vld, vgd, "")(srcPtr,
+                                                                                                        dstPtr,
+                                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                                        handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                                        handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                                        handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                                        channel,
+                                                                                                        handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                                        plnpkdind);
+    }
+    else if (type == 2)
+    {
+        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_batch_u8u16", vld, vgd, "")(srcPtr,
+                                                                                                         dstPtr,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                                         channel,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                                         plnpkdind);
+    }
+    else
+    {
+        handle.AddKernel("", "", "convert_bit_depth.cpp", "convert_bit_depth_batch_u8s16", vld, vgd, "")(srcPtr,
+                                                                                                         dstPtr,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                                                         channel,
+                                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
+                                                                                                         plnpkdind);
     }
 
     return RPP_SUCCESS;
