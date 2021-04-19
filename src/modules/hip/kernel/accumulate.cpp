@@ -86,13 +86,13 @@ extern "C" __global__ void accumulate_batch(unsigned char *input1,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    
+
     int indextmp = 0;
     unsigned long pixIdx = 0;
 
     pixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z]) * plnpkdindex;
     if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {   
+    {
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
             input1[pixIdx] = saturate_8u(input1[pixIdx] + input2[pixIdx]);
@@ -125,18 +125,17 @@ extern "C" __global__ void accumulate_weighted_batch(unsigned char *input1,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    unsigned char valuergb1, valuergb2;
     float alphatmp = alpha[id_z];
     int indextmp = 0;
     unsigned long pixIdx = 0;
 
     pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
     if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {   
+    {
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
-            valuergb1 = input1[pixIdx];
-            valuergb2 = input2[pixIdx];
+            unsigned char valuergb1 = input1[pixIdx];
+            unsigned char valuergb2 = input2[pixIdx];
             input1[pixIdx] = accumulate_weight_formula(valuergb1, valuergb2, alphatmp);
             pixIdx += inc[id_z];
         }
@@ -165,7 +164,7 @@ extern "C" __global__ void accumulate_squared_batch(unsigned char *input,
 
     pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
     if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {   
+    {
         for(indextmp = 0; indextmp < channel; indextmp++)
         {
             int pixel = saturate_8u(input[pixIdx] * input[pixIdx]);
