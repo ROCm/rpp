@@ -48,15 +48,14 @@ extern "C" __global__ void phase_batch(unsigned char *input1,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int indextmp = 0;
     unsigned long pixIdx = 0;
     float res;
 
     pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
 
     if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {   
-        for(indextmp = 0; indextmp < channel; indextmp++)
+    {
+        for(int indextmp = 0; indextmp < channel; indextmp++)
         {
                 res = atan((float) input1[pixIdx] / (float) input2[pixIdx]);
                 res = (res/1.570796)*255;
@@ -66,7 +65,7 @@ extern "C" __global__ void phase_batch(unsigned char *input1,
     }
     else if((id_x < width[id_z]) && (id_y < height[id_z]))
     {
-        for(indextmp = 0; indextmp < channel; indextmp++)
+        for(int indextmp = 0; indextmp < channel; indextmp++)
         {
             output[pixIdx] = input1[pixIdx];
             pixIdx += inc[id_z];
