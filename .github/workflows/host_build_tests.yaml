@@ -1,0 +1,35 @@
+# The workflow tests the RPP build for HOST backend and runs rpp-performancetests
+
+name: RPP HOST backend
+
+on:
+  pull_request:
+    branches: [ ar/hip_color_opt ]
+
+jobs:
+
+  build:
+    name: Build and performance tests
+    runs-on: [self-hosted, Linux, X64, cpu-gpu]
+    steps:
+    - name: Running RPP build for HOST backend
+      env:
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        echo "PR#$PR_NUMBER is being verified."
+        cd ~/dockerMount/abishek/github-workflows
+        sudo rm -rf *
+        git clone git@github.com:r-abishek/rpp.git
+        cd rpp
+        git checkout ar/hip_color_opt
+        git fetch origin pull/$PR_NUMBER/head:ar/pr
+        git checkout ar/pr
+        git log -3
+        sudo docker exec bd80a15bd618 /bin/bash -c "cd /media/abishek/github-workflows/rpp; mkdir build; cd build; cmake ..; sudo make -j20 install"
+    - name: Running RPP HOST performance tests
+      run: |
+        sudo docker exec bd80a15bd618 /bin/bash -c "cd /media/abishek/github-workflows/rpp/utilities/rpp-performancetests/HOST_NEW; python3 generatePerformanceLogs.py"
+    - name: Clean up
+      run: |
+        cd ~/dockerMount/abishek/github-workflows
+        sudo rm -rf *
