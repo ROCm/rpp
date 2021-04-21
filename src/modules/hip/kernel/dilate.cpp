@@ -97,15 +97,16 @@ extern "C" __global__ void dilate_batch(unsigned char *input,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
     int kernelSizeTemp = kernelSize[id_z];
     int indextmp = 0;
     long pixIdx = 0;
     int temp;
-    // printf("%d", id_x);
     int value = 0;
     int value1 = 0;
     unsigned char r = 0, g = 0, b = 0;
     int checkR = 0, checkB = 0, checkG = 0;
+
     if(id_x < width[id_z] && id_y < height[id_z])
     {
         pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
@@ -114,10 +115,10 @@ extern "C" __global__ void dilate_batch(unsigned char *input,
         {
             g = input[pixIdx + inc[id_z]];
             b = input[pixIdx + inc[id_z] * 2];
-        } 
+        }
         int bound = (kernelSizeTemp - 1) / 2;
         if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-        {   
+        {
             for(int i = -bound; i <= bound; i++)
             {
                 for(int j = -bound; j <= bound; j++)

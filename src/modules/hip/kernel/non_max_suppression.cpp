@@ -104,7 +104,6 @@ extern "C" __global__ void non_max_suppression_batch(unsigned char *input,
     int indextmp = 0;
     long pixIdx = 0;
     int temp;
-    // printf("%d", id_x);
     int value = 0;
     int value1 = 0;
     int r = 0, g = 0, b = 0, checkR = 0, checkB = 0, checkG = 0;

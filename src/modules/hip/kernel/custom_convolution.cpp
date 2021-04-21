@@ -188,6 +188,7 @@ RppStatus hip_exec_custom_convolution_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::H
                        channel,
                        handle.GetInitHandle()->mem.mgpu.inc,
                        plnpkdind);
-return RPP_SUCCESS;
+
+    return RPP_SUCCESS;
 }
 #endif

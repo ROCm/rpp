@@ -45,7 +45,6 @@ extern "C" __global__ void bilateral_filter_planar(const unsigned char *input,
     if ((id_x < hfFiltSz) || (id_y < hfFiltSz) || (id_y >= (height-hfFiltSz)) || (id_x >= (width-hfFiltSz)))
     {
         output[pixIdx] = input[pixIdx];
-        //output[pixIdx] = 0;
         return;
     }
 

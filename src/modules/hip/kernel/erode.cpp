@@ -58,7 +58,7 @@ extern "C" __global__ void erode_pln(unsigned char *input,
     {
         return;
     }
-    
+
     int pixIdx = id_y * width + id_x + id_z * width * height;
     int bound = (kernelSize - 1) / 2;
     unsigned char pixel = input[pixIdx];
@@ -102,7 +102,6 @@ extern "C" __global__ void erode_batch(unsigned char *input,
     int indextmp = 0;
     long pixIdx = 0;
     int temp;
-    // printf("%d", id_x);
     int value = 0;
     int value1 = 0;
     unsigned char r = 0, g = 0, b = 0;
@@ -113,14 +112,14 @@ extern "C" __global__ void erode_batch(unsigned char *input,
     r = input[pixIdx];
 
     if(id_x < width[id_z] && id_y < height[id_z])
-    {    
+    {
         pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
         r = input[pixIdx];
         if(channel == 3)
         {
             g = input[pixIdx + inc[id_z]];
             b = input[pixIdx + inc[id_z] * 2];
-        }  
+        }
         if((id_y >= yroi_begin[id_z] ) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
         {
             for(int i = -bound; i <= bound; i++)
