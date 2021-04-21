@@ -106,7 +106,6 @@ extern "C" __global__ void custom_convolution_batch(unsigned char *input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int indextmp = 0;
     long pixIdx = 0;
     int temp;
     int boundy = (kHeight - 1) / 2;
@@ -148,7 +147,7 @@ extern "C" __global__ void custom_convolution_batch(unsigned char *input,
         }
         else if((id_x < width[id_z]) && (id_y < height[id_z]))
         {
-            for(indextmp = 0; indextmp < channel; indextmp++)
+            for(int indextmp = 0; indextmp < channel; indextmp++)
             {
                 output[pixIdx] = input[pixIdx];
                 pixIdx += inc[id_z];
