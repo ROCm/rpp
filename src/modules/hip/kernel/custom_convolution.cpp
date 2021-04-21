@@ -158,7 +158,7 @@ extern "C" __global__ void custom_convolution_batch(unsigned char *input,
 }
 
 #if defined(STATIC)
-RppStatus hip_exec_custom_convolution_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
+RppStatus hip_exec_custom_convolution_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32f *d_kernel, RppiSize kernelSize, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
     int localThreads_y = 32;
@@ -167,7 +167,7 @@ RppStatus hip_exec_custom_convolution_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::H
     int globalThreads_y = (max_height + 31) & ~31;
     int globalThreads_z = handle.GetBatchSize();
 
-    hipLaunchKernelGGL(bilateral_filter_batch,
+    hipLaunchKernelGGL(custom_convolution_batch,
                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                        dim3(localThreads_x, localThreads_y, localThreads_z),
                        0,
@@ -175,8 +175,8 @@ RppStatus hip_exec_custom_convolution_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::H
                        srcPtr,
                        dstPtr,
                        d_kernel,
-                       KernelSize.height,
-                       KernelSize.width,
+                       kernelSize.height,
+                       kernelSize.width,
                        handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                        handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                        handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -188,7 +188,6 @@ RppStatus hip_exec_custom_convolution_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::H
                        channel,
                        handle.GetInitHandle()->mem.mgpu.inc,
                        plnpkdind);
-
-    return RPP_SUCCESS;
+return RPP_SUCCESS;
 }
 #endif

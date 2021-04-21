@@ -470,10 +470,10 @@ gaussian_filter_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, Rpp
 /******************** custom_convolution ********************/
 
 RppStatus
-custom_convolution_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiSize KernelSize, rpp::Handle& handle,RppiChnFormat chnFormat, unsigned int channel)
+custom_convolution_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiSize kernelSize, rpp::Handle& handle,RppiChnFormat chnFormat, unsigned int channel)
 {
     Rpp32u nbatchSize = handle.GetBatchSize();
-    int buffer_size_kernel_size = nbatchSize * sizeof(float) * KernelSize.height * KernelSize.width;
+    int buffer_size_kernel_size = nbatchSize * sizeof(float) * kernelSize.height * kernelSize.width;
     Rpp32f *d_kernel;
     hipMalloc(&d_kernel, buffer_size_kernel_size);
     hipMemcpy(d_kernel, kernel, buffer_size_kernel_size, hipMemcpyHostToDevice);
@@ -493,8 +493,8 @@ custom_convolution_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiS
     handle.AddKernel("", "", "custom_convolution.cl", "custom_convolution_batch", vld, vgd, "")(srcPtr,
                                                                                                 dstPtr,
                                                                                                 d_kernel,
-                                                                                                KernelSize.height,
-                                                                                                KernelSize.width,
+                                                                                                kernelSize.height,
+                                                                                                kernelSize.width,
                                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.x,
                                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
                                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.y,
@@ -509,7 +509,7 @@ custom_convolution_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiS
 
 #elif defined(STATIC)
 
-    // hip_exec_custom_convolution_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+    hip_exec_custom_convolution_batch(srcPtr, dstPtr, handle, d_kernel, kernelSize, chnFormat, channel, plnpkdind, max_height, max_width);
 
 #endif
 
