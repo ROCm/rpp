@@ -1,4 +1,9 @@
 #include <hip/hip_runtime.h>
+
+#if defined(STATIC)
+#include "rpp_hip_host_decls.hpp"
+#endif
+
 #define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 #define amd_max3_hip(a,b,c) ((a > b) && (a > c) ? a : ((b > c) ? b : c))
 #define amd_min3_hip(a,b,c) ((a < b) && (a < c) ? a : ((b < c) ? b : c))
@@ -226,14 +231,14 @@ extern "C" __global__ void huergb_pln(unsigned char *input,
 extern "C" __global__ void hue_batch(unsigned char *input,
 									 unsigned char *output,
 									 float *hue,
-									 int *xroi_begin,
-									 int *xroi_end,
-									 int *yroi_begin,
-									 int *yroi_end,
+									 unsigned int *xroi_begin,
+									 unsigned int *xroi_end,
+									 unsigned int *yroi_begin,
+									 unsigned int *yroi_end,
 									 unsigned int *height,
 									 unsigned int *width,
 									 unsigned int *max_width,
-									 unsigned long *batch_index,
+									 unsigned long long *batch_index,
 									 unsigned int *inc, // use width * height for pln and 1 for pkd
 									 const int plnpkdindex) // use 1 pln 3 for pkd
 {
@@ -284,14 +289,14 @@ extern "C" __global__ void hue_batch(unsigned char *input,
 extern "C" __global__ void saturation_batch(unsigned char *input,
 									 		unsigned char *output,
 									 		float *sat,
-									 		int *xroi_begin,
-									 		int *xroi_end,
-									 		int *yroi_begin,
-									 		int *yroi_end,
+									 		unsigned int *xroi_begin,
+									 		unsigned int *xroi_end,
+									 		unsigned int *yroi_begin,
+									 		unsigned int *yroi_end,
 									 		unsigned int *height,
 									 		unsigned int *width,
 									 		unsigned int *max_width,
-									 		unsigned long *batch_index,
+									 		unsigned long long *batch_index,
 									 		unsigned int *inc, // use width * height for pln and 1 for pkd
 											const int plnpkdindex) // use 1 pln 3 for pkd
 {
@@ -427,3 +432,67 @@ extern "C" __global__ void convert_batch_hsv_rgb(float *input,
 		output[pixIdx + 2 * inc[id_z]] = 0;
 	}
 }
+
+#if defined(STATIC)
+RppStatus hip_exec_hueRGB_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = (max_width + 31) & ~31;
+    int globalThreads_y = (max_height + 31) & ~31;
+    int globalThreads_z = handle.GetBatchSize();
+
+    hipLaunchKernelGGL(hue_batch,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+					   dstPtr,
+					   handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+					   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+					   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+					   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+					   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+					   handle.GetInitHandle()->mem.mgpu.srcSize.height,
+					   handle.GetInitHandle()->mem.mgpu.srcSize.width,
+					   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+					   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+					   handle.GetInitHandle()->mem.mgpu.inc,
+					   plnpkdind);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_saturationRGB_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = (max_width + 31) & ~31;
+    int globalThreads_y = (max_height + 31) & ~31;
+    int globalThreads_z = handle.GetBatchSize();
+
+    hipLaunchKernelGGL(saturation_batch,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+					   dstPtr,
+					   handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+					   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+					   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+					   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+					   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+					   handle.GetInitHandle()->mem.mgpu.srcSize.height,
+					   handle.GetInitHandle()->mem.mgpu.srcSize.width,
+					   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+					   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+					   handle.GetInitHandle()->mem.mgpu.inc,
+					   plnpkdind);
+
+    return RPP_SUCCESS;
+}
+#endif
