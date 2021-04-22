@@ -42,9 +42,9 @@ extern "C" __global__ void tensor_subtract(const unsigned int tensorDimension,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if (id_x >= a || id_y >= b || id_z >= c)
-        {
-            return;
-        }
+    {
+        return;
+    }
 
     int pixIdx = id_y * c * a + id_x * c + id_z;
     unsigned int value = input1[pixIdx] - input2[pixIdx];
@@ -285,12 +285,12 @@ RppStatus hip_exec_tensor_look_up_table_batch(Rpp32u tensorDimension, Rpp8u *src
                        0,
                        handle.GetStream(),
                        tensorDimension,
-					   srcPtr,
-					   dstPtr,
-					   gdim1,
-					   gdim2,
-					   gdim3,
-					   hipLutPtr);
+                       srcPtr,
+                       dstPtr,
+                       gdim1,
+                       gdim2,
+                       gdim3,
+                       hipLutPtr);
 
     return RPP_SUCCESS;
 }

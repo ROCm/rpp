@@ -54,7 +54,8 @@ extern "C" __global__ void vignette_pln(unsigned char *input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= width || id_y >= height || id_z >= channel){
+    if (id_x >= width || id_y >= height || id_z >= channel)
+    {
         return;
     }
 
