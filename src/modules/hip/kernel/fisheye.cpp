@@ -107,7 +107,6 @@ extern "C" __global__ void fisheye_batch(unsigned char *input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int indextmp = 0;
     int dstpixIdx = 0;
     dstpixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z]) * plnpkdindex;
 
@@ -132,7 +131,7 @@ extern "C" __global__ void fisheye_batch(unsigned char *input,
             {
                 if(srcpixIdx >= batch_index[id_z] && srcpixIdx <= batch_index[id_z+1])
                 {
-                    for(indextmp = 0; indextmp < channel; indextmp++)
+                    for(int indextmp = 0; indextmp < channel; indextmp++)
                     {
                         output[dstpixIdx] = input[srcpixIdx];
                         dstpixIdx += inc[id_z];
@@ -144,7 +143,7 @@ extern "C" __global__ void fisheye_batch(unsigned char *input,
     }
     else
     {
-        for(indextmp = 0; indextmp < channel; indextmp++)
+        for(int indextmp = 0; indextmp < channel; indextmp++)
         {
             output[dstpixIdx] = (unsigned char) 0;
             dstpixIdx += inc[id_z];

@@ -365,12 +365,12 @@ RppStatus hip_exec_warp_affine_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& 
 
 RppStatus hip_exec_warp_affine_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle& handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = max_width;
-    int globalThreads_y = max_height;
-    int globalThreads_z = handle.GetBatchSize();
+    // int localThreads_x = 16;
+    // int localThreads_y = 16;
+    // int localThreads_z = 1;
+    // int globalThreads_x = max_width;
+    // int globalThreads_y = max_height;
+    // int globalThreads_z = handle.GetBatchSize();
 
     // hipLaunchKernelGGL(warp_affine_batch_fp16,
     //                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),

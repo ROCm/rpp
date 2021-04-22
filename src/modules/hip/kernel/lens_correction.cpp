@@ -145,7 +145,7 @@ extern "C" __global__ void lens_correction_batch(unsigned char *input,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int pix, pix_right, pix_right_down, pix_down, pixVal;
+    // int pix;
     int indextmp = 0;
     int dstpixIdx = 0;
     dstpixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z] ) * plnpkdindex;
@@ -186,8 +186,8 @@ extern "C" __global__ void lens_correction_batch(unsigned char *input,
     {
         for(indextmp=0; indextmp < channel; indextmp ++)
         {
-            pix = input[batch_index[id_z] + (x  + y * max_width[id_z]) * plnpkdindex + indextmp*inc[id_z]];
-            pixVal = (int)(pix * (1 - x_diff) * (1 - y_diff) + pix_right * (x_diff) * (1 - y_diff) + pix_right_down * (y_diff) * (1 - x_diff) +  pix_down * (x_diff * y_diff));
+            int pix = input[batch_index[id_z] + (x  + y * max_width[id_z]) * plnpkdindex + indextmp * inc[id_z]];
+            // pixVal = (int)(pix * (1 - x_diff) * (1 - y_diff) + pix_right * (x_diff) * (1 - y_diff) + pix_right_down * (y_diff) * (1 - x_diff) +  pix_down * (x_diff * y_diff));
             output[dstpixIdx + indextmp*inc[id_z]] =  saturate_8u(pix);
         }
     }

@@ -1230,28 +1230,28 @@ RppStatus hip_exec_resize_crop_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& 
 
 RppStatus hip_exec_resize_crop_batch_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32u padding, Rpp32u type, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = max_width;
-    int globalThreads_y = max_height;
-    int globalThreads_z = handle.GetBatchSize();
+    // int localThreads_x = 16;
+    // int localThreads_y = 16;
+    // int localThreads_z = 1;
+    // int globalThreads_x = max_width;
+    // int globalThreads_y = max_height;
+    // int globalThreads_z = handle.GetBatchSize();
 
-    Rpp32u *x, *roiWidth, *y, *roiHeight;
-    if (type == 0)
-    {
-        x = handle.GetInitHandle()->mem.mgpu.roiPoints.x;
-        roiWidth = handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth;
-        y = handle.GetInitHandle()->mem.mgpu.roiPoints.y;
-        roiHeight = handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight;
-    }
-    else if (type == 1)
-    {
-        x = handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem;
-        roiWidth = handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem;
-        y = handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem;
-        roiHeight = handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem;
-    }
+    // Rpp32u *x, *roiWidth, *y, *roiHeight;
+    // if (type == 0)
+    // {
+    //     x = handle.GetInitHandle()->mem.mgpu.roiPoints.x;
+    //     roiWidth = handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth;
+    //     y = handle.GetInitHandle()->mem.mgpu.roiPoints.y;
+    //     roiHeight = handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight;
+    // }
+    // else if (type == 1)
+    // {
+    //     x = handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem;
+    //     roiWidth = handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem;
+    //     y = handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem;
+    //     roiHeight = handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem;
+    // }
 
     // hipLaunchKernelGGL(resize_crop_batch_u8_fp16,
     //                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
@@ -1395,28 +1395,28 @@ RppStatus hip_exec_resize_crop_batch_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp::
 
 RppStatus hip_exec_resize_crop_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32u padding, Rpp32u type, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = max_width;
-    int globalThreads_y = max_height;
-    int globalThreads_z = handle.GetBatchSize();
+    // int localThreads_x = 16;
+    // int localThreads_y = 16;
+    // int localThreads_z = 1;
+    // int globalThreads_x = max_width;
+    // int globalThreads_y = max_height;
+    // int globalThreads_z = handle.GetBatchSize();
 
-    Rpp32u *x, *roiWidth, *y, *roiHeight;
-    if (type == 0)
-    {
-        x = handle.GetInitHandle()->mem.mgpu.roiPoints.x;
-        roiWidth = handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth;
-        y = handle.GetInitHandle()->mem.mgpu.roiPoints.y;
-        roiHeight = handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight;
-    }
-    else if (type == 1)
-    {
-        x = handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem;
-        roiWidth = handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem;
-        y = handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem;
-        roiHeight = handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem;
-    }
+    // Rpp32u *x, *roiWidth, *y, *roiHeight;
+    // if (type == 0)
+    // {
+    //     x = handle.GetInitHandle()->mem.mgpu.roiPoints.x;
+    //     roiWidth = handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth;
+    //     y = handle.GetInitHandle()->mem.mgpu.roiPoints.y;
+    //     roiHeight = handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight;
+    // }
+    // else if (type == 1)
+    // {
+    //     x = handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem;
+    //     roiWidth = handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem;
+    //     y = handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem;
+    //     roiHeight = handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem;
+    // }
 
     // hipLaunchKernelGGL(resize_crop_batch_fp16,
     //                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
@@ -1598,12 +1598,12 @@ RppStatus hip_exec_resize_crop_mirror_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::H
 
 RppStatus hip_exec_resize_crop_mirror_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = max_width;
-    int globalThreads_y = max_height;
-    int globalThreads_z = handle.GetBatchSize();
+    // int localThreads_x = 16;
+    // int localThreads_y = 16;
+    // int localThreads_z = 1;
+    // int globalThreads_x = max_width;
+    // int globalThreads_y = max_height;
+    // int globalThreads_z = handle.GetBatchSize();
 
     // hipLaunchKernelGGL(resize_crop_mirror_batch_fp16,
     //                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),

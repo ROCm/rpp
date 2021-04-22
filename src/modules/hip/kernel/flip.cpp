@@ -149,11 +149,12 @@ extern "C" __global__ void flip_batch(unsigned char *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     int indextmp = 0;
-    unsigned long src_pixIdx = 0;
-    unsigned long dst_pixIdx = 0;
+    unsigned long dst_pixIdx;
 
     if(id_y < yroi_end[id_z] && (id_y >=yroi_begin[id_z]) && id_x < xroi_end[id_z] && (id_x >=xroi_begin[id_z]))
     {
+        unsigned long src_pixIdx;
+
         if(flipAxis[id_z] == 0)
         {
             src_pixIdx = batch_index[id_z] + (id_x + (height[id_z] -1 -id_y) * max_width[id_z]) * plnpkdindex;
