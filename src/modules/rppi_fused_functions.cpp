@@ -58,35 +58,19 @@ RppStatus color_twist_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 	{
 		if (in_tensor_type == RPPTensorDataType::U8)
 		{
-			color_twist_hip_batch_tensor<Rpp8u, Rpp8u>(
-				static_cast<Rpp8u *>(srcPtr),
-				static_cast<Rpp8u *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			color_twist_hip_batch_tensor(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8u *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::FP16)
 		{
-			color_twist_hip_batch_tensor<Rpp16f, Rpp16f>(
-				static_cast<Rpp16f *>(srcPtr),
-				static_cast<Rpp16f *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			color_twist_hip_batch_tensor_fp16(static_cast<Rpp16f *>(srcPtr), static_cast<Rpp16f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::FP32)
 		{
-			color_twist_hip_batch_tensor<Rpp32f, Rpp32f>(
-				static_cast<Rpp32f *>(srcPtr),
-				static_cast<Rpp32f *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			color_twist_hip_batch_tensor_fp32(static_cast<Rpp32f *>(srcPtr), static_cast<Rpp32f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::I8)
 		{
-			color_twist_hip_batch_tensor<Rpp8s, Rpp8s>(
-				static_cast<Rpp8s *>(srcPtr),
-				static_cast<Rpp8s *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			color_twist_hip_batch_tensor_int8(static_cast<Rpp8s *>(srcPtr), static_cast<Rpp8s *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 	}
 #endif //BACKEND
@@ -3951,60 +3935,32 @@ crop_mirror_normalize_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 		{
 			if (out_tensor_type == RPPTensorDataType::U8)
 			{
-				crop_mirror_normalize_hip_batch_tensor<Rpp8u, Rpp8u>(
-					static_cast<Rpp8u *>(srcPtr),
-					static_cast<Rpp8u *>(dstPtr),
-					rpp::deref(rppHandle),
-					tensor_info);
+				crop_mirror_normalize_hip_batch_tensor(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8u *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 			}
 			else if (out_tensor_type == RPPTensorDataType::FP16)
 			{
-				crop_mirror_normalize_hip_batch_tensor<Rpp8u, Rpp16f>(
-					static_cast<Rpp8u *>(srcPtr),
-					static_cast<Rpp16f *>(dstPtr),
-					rpp::deref(rppHandle),
-					tensor_info);
+				crop_mirror_normalize_hip_batch_tensor_u8_fp16(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp16f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 			}
 			else if (out_tensor_type == RPPTensorDataType::FP32)
 			{
-				crop_mirror_normalize_hip_batch_tensor<Rpp8u, Rpp32f>(
-					static_cast<Rpp8u *>(srcPtr),
-					static_cast<Rpp32f *>(dstPtr),
-					rpp::deref(rppHandle),
-					tensor_info);
+				crop_mirror_normalize_hip_batch_tensor_u8_fp32(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp32f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 			}
 			else if (out_tensor_type == RPPTensorDataType::I8)
 			{
-				crop_mirror_normalize_hip_batch_tensor<Rpp8u, Rpp8s>(
-					static_cast<Rpp8u *>(srcPtr),
-					static_cast<Rpp8s *>(dstPtr),
-					rpp::deref(rppHandle),
-					tensor_info);
+				crop_mirror_normalize_hip_batch_tensor_u8_int8(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8s *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 			}
 		}
 		else if (in_tensor_type == RPPTensorDataType::FP16)
 		{
-			crop_mirror_normalize_hip_batch_tensor<Rpp16f, Rpp16f>(
-				static_cast<Rpp16f *>(srcPtr),
-				static_cast<Rpp16f *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			crop_mirror_normalize_hip_batch_tensor_fp16(static_cast<Rpp16f *>(srcPtr), static_cast<Rpp16f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::FP32)
 		{
-			crop_mirror_normalize_hip_batch_tensor<Rpp32f, Rpp32f>(
-				static_cast<Rpp32f *>(srcPtr),
-				static_cast<Rpp32f *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			crop_mirror_normalize_hip_batch_tensor_fp32(static_cast<Rpp32f *>(srcPtr), static_cast<Rpp32f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::I8)
 		{
-			crop_mirror_normalize_hip_batch_tensor<Rpp8s, Rpp8s>(
-				static_cast<Rpp8s *>(srcPtr),
-				static_cast<Rpp8s *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			crop_mirror_normalize_hip_batch_tensor_int8(static_cast<Rpp8s *>(srcPtr), static_cast<Rpp8s *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 	}
 #endif //BACKEND
@@ -4574,60 +4530,32 @@ crop_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 		{
 			if (out_tensor_type == RPPTensorDataType::U8)
 			{
-				crop_hip_batch_tensor<Rpp8u, Rpp8u>(
-					static_cast<Rpp8u *>(srcPtr),
-					static_cast<Rpp8u *>(dstPtr),
-					rpp::deref(rppHandle),
-					tensor_info);
+				crop_hip_batch_tensor(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8u *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 			}
 			else if (out_tensor_type == RPPTensorDataType::FP16)
 			{
-				crop_hip_batch_tensor<Rpp8u, Rpp16f>(
-					static_cast<Rpp8u *>(srcPtr),
-					static_cast<Rpp16f *>(dstPtr),
-					rpp::deref(rppHandle),
-					tensor_info);
+				crop_hip_batch_tensor_u8_fp16(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp16f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 			}
 			else if (out_tensor_type == RPPTensorDataType::FP32)
 			{
-				crop_hip_batch_tensor<Rpp8u, Rpp32f>(
-					static_cast<Rpp8u *>(srcPtr),
-					static_cast<Rpp32f *>(dstPtr),
-					rpp::deref(rppHandle),
-					tensor_info);
+				crop_hip_batch_tensor_u8_fp32(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp32f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 			}
 			else if (out_tensor_type == RPPTensorDataType::I8)
 			{
-				crop_hip_batch_tensor<Rpp8u, Rpp8s>(
-					static_cast<Rpp8u *>(srcPtr),
-					static_cast<Rpp8s *>(dstPtr),
-					rpp::deref(rppHandle),
-					tensor_info);
+				crop_hip_batch_tensor_u8_int8(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8s *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 			}
 		}
 		else if (in_tensor_type == RPPTensorDataType::FP16)
 		{
-			crop_hip_batch_tensor<Rpp16f, Rpp16f>(
-				static_cast<Rpp16f *>(srcPtr),
-				static_cast<Rpp16f *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			crop_hip_batch_tensor_fp16(static_cast<Rpp16f *>(srcPtr), static_cast<Rpp16f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::FP32)
 		{
-			crop_hip_batch_tensor<Rpp32f, Rpp32f>(
-				static_cast<Rpp32f *>(srcPtr),
-				static_cast<Rpp32f *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			crop_hip_batch_tensor_fp32(static_cast<Rpp32f *>(srcPtr), static_cast<Rpp32f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::I8)
 		{
-			crop_hip_batch_tensor<Rpp8s, Rpp8s>(
-				static_cast<Rpp8s *>(srcPtr),
-				static_cast<Rpp8s *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			crop_hip_batch_tensor_int8(static_cast<Rpp8s *>(srcPtr), static_cast<Rpp8s *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 	}
 #endif //BACKEND
@@ -5097,35 +5025,19 @@ resize_crop_mirror_helper(
 	{
 		if (in_tensor_type == RPPTensorDataType::U8)
 		{
-			resize_crop_mirror_hip_batch_tensor<Rpp8u, Rpp8u>(
-				static_cast<Rpp8u *>(srcPtr),
-				static_cast<Rpp8u *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			resize_crop_mirror_hip_batch_tensor(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8u *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::FP16)
 		{
-			resize_crop_mirror_hip_batch_tensor<Rpp16f, Rpp16f>(
-				static_cast<Rpp16f *>(srcPtr),
-				static_cast<Rpp16f *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			resize_crop_mirror_hip_batch_tensor_fp16(static_cast<Rpp16f *>(srcPtr), static_cast<Rpp16f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::FP32)
 		{
-			resize_crop_mirror_hip_batch_tensor<Rpp32f, Rpp32f>(
-				static_cast<Rpp32f *>(srcPtr),
-				static_cast<Rpp32f *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			resize_crop_mirror_hip_batch_tensor_fp32(static_cast<Rpp32f *>(srcPtr), static_cast<Rpp32f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 		else if (in_tensor_type == RPPTensorDataType::I8)
 		{
-			resize_crop_mirror_hip_batch_tensor<Rpp8s, Rpp8s>(
-				static_cast<Rpp8s *>(srcPtr),
-				static_cast<Rpp8s *>(dstPtr),
-				rpp::deref(rppHandle),
-				tensor_info);
+			resize_crop_mirror_hip_batch_tensor_int8(static_cast<Rpp8s *>(srcPtr), static_cast<Rpp8s *>(dstPtr), rpp::deref(rppHandle), tensor_info);
 		}
 	}
 #endif //BACKEND

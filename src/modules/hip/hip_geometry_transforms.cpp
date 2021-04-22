@@ -1,5 +1,6 @@
 #include "hip/rpp_hip_common.hpp"
 #include "hip_declarations.hpp"
+#include "kernel/rpp_hip_host_decls.hpp"
 
 /******************** fisheye ********************/
 
@@ -10,7 +11,7 @@ fisheye_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiChnFormat chnFor
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-        handle.AddKernel("", "", "fish_eye.cpp", "fisheye_planar", vld, vgd, "")(srcPtr,
+        handle.AddKernel("", "", "fisheye.cpp", "fisheye_planar", vld, vgd, "")(srcPtr,
                                                                                  dstPtr,
                                                                                  srcSize.height,
                                                                                  srcSize.width,
@@ -20,7 +21,7 @@ fisheye_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, RppiChnFormat chnFor
     {
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{srcSize.width, srcSize.height, channel};
-        handle.AddKernel("", "", "fish_eye.cpp", "fisheye_packed", vld, vgd, "")(srcPtr,
+        handle.AddKernel("", "", "fisheye.cpp", "fisheye_packed", vld, vgd, "")(srcPtr,
                                                                                  dstPtr,
                                                                                  srcSize.height,
                                                                                  srcSize.width,
@@ -43,19 +44,27 @@ fisheye_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnForm
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
-    handle.AddKernel("", "", "fish_eye.cpp", "fisheye_batch", vld, vgd, "")(srcPtr,
-                                                                            dstPtr,
-                                                                            handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                            handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                            handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                            handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                            handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                            handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                            handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                            handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                            channel,
-                                                                            handle.GetInitHandle()->mem.mgpu.inc,
-                                                                            plnpkdind);
+#if defined (HIPRTC)
+
+    handle.AddKernel("", "", "fisheye.cpp", "fisheye_batch", vld, vgd, "")(srcPtr,
+                                                                           dstPtr,
+                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                           handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                           handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                           channel,
+                                                                           handle.GetInitHandle()->mem.mgpu.inc,
+                                                                           plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_fisheye_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -122,6 +131,8 @@ lens_correction_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, Rpp
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
+#if defined (HIPRTC)
+
     handle.AddKernel("", "", "lens_correction.cpp", "lens_correction_batch", vld, vgd, "")(srcPtr,
                                                                                            dstPtr,
                                                                                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
@@ -137,6 +148,12 @@ lens_correction_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, Rpp
                                                                                            channel,
                                                                                            handle.GetInitHandle()->mem.mgpu.inc,
                                                                                            plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_lens_correction_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -226,6 +243,9 @@ flip_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat 
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -243,6 +263,12 @@ flip_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat 
                                                                      channel,
                                                                      handle.GetInitHandle()->mem.mgpu.inc,
                                                                      plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_flip_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -304,6 +330,9 @@ scale_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -327,6 +356,12 @@ scale_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat
                                                                        handle.GetInitHandle()->mem.mgpu.dstInc,
                                                                        plnpkdind);
 
+#elif defined(STATIC)
+
+    hip_exec_scale_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
+
     return RPP_SUCCESS;
 }
 
@@ -344,6 +379,9 @@ random_crop_letterbox_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handl
     unsigned int type = 1;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -368,6 +406,12 @@ random_crop_letterbox_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handl
                                                                                         type,
                                                                                         plnpkdind,
                                                                                         plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_random_crop_letterbox_batch(srcPtr, dstPtr, handle, chnFormat, channel, padding, type, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -441,6 +485,182 @@ resize_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnForma
                                                                               type,
                                                                               plnpkdind,
                                                                               plnpkdind);
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 0;
+    unsigned int type = 0;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+    std::string kernel_file = "resize.cpp";
+    std::string kernel_name = "resize_crop_batch";
+    get_kernel_name(kernel_name, tensor_info);
+
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr,
+                                                                     dstPtr,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                     tensor_info._in_channels,
+                                                                     handle.GetInitHandle()->mem.mgpu.inc,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                     padding,
+                                                                     type,
+                                                                     in_plnpkdind,
+                                                                     out_plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_hip_batch_tensor_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 0;
+    unsigned int type = 0;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_u8_fp16(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_hip_batch_tensor_u8_fp32(Rpp8u *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 0;
+    unsigned int type = 0;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_u8_fp32(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_hip_batch_tensor_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 0;
+    unsigned int type = 0;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_u8_int8(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 0;
+    unsigned int type = 0;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_fp16(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 0;
+    unsigned int type = 0;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_fp32(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 0;
+    unsigned int type = 0;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_int8(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
     return RPP_SUCCESS;
 }
 
@@ -533,6 +753,182 @@ resize_crop_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChn
     return RPP_SUCCESS;
 }
 
+RppStatus
+resize_crop_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+    std::string kernel_file = "resize.cpp";
+    std::string kernel_name = "resize_crop_batch";
+    get_kernel_name(kernel_name, tensor_info);
+
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr,
+                                                                     dstPtr,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                     tensor_info._in_channels,
+                                                                     handle.GetInitHandle()->mem.mgpu.inc,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                     padding,
+                                                                     type,
+                                                                     in_plnpkdind,
+                                                                     out_plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_crop_hip_batch_tensor_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_u8_fp16(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_crop_hip_batch_tensor_u8_fp32(Rpp8u *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_u8_fp32(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_crop_hip_batch_tensor_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_u8_int8(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_crop_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_fp16(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_crop_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_fp32(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+resize_crop_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_resize_crop_batch_int8(srcPtr, dstPtr, handle, tensor_info, padding, type, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
 /******************** rotate ********************/
 
 RppStatus
@@ -567,6 +963,7 @@ rotate_hip(Rpp8u *srcPtr, RppiSize srcSize, Rpp8u *dstPtr, RppiSize dstSize, flo
 
     return RPP_SUCCESS;
 }
+
 RppStatus
 rotate_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel)
 {
@@ -600,6 +997,116 @@ rotate_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnForma
                                                                          handle.GetInitHandle()->mem.mgpu.dstInc,
                                                                          plnpkdind,
                                                                          plnpkdind);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rotate_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+    std::string kernel_file = "rotate.cpp";
+    std::string kernel_name = "rotate_batch";
+    get_kernel_name(kernel_name, tensor_info);
+
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr,
+                                                                     dstPtr,
+                                                                     handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                     tensor_info._in_channels,
+                                                                     handle.GetInitHandle()->mem.mgpu.inc,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                     in_plnpkdind,
+                                                                     out_plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_rotate_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rotate_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_rotate_batch_fp16(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rotate_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_rotate_batch_fp32(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rotate_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_rotate_batch_int8(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -699,6 +1206,134 @@ warp_affine_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle,Rpp32f *
     return RPP_SUCCESS;
 }
 
+RppStatus
+warp_affine_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info)
+{
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    Rpp32f *hipAffine;
+    hipMalloc(&hipAffine, handle.GetBatchSize() * 6 * sizeof(Rpp32f));
+    hipMemcpy(hipAffine, affine, handle.GetBatchSize() * 6 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+
+#if defined (HIPRTC)
+
+    std::string kernel_file  = "warp_affine.cpp";
+    std::string kernel_name = "warp_affine_batch";
+    get_kernel_name(kernel_name, tensor_info);
+
+    std::vector<size_t> vld{16, 16, 1};
+    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
+
+    handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr,
+                                                                     dstPtr,
+                                                                     hipAffine,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstSize.height,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
+                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
+                                                                     tensor_info._in_channels,
+                                                                     handle.GetInitHandle()->mem.mgpu.inc,
+                                                                     handle.GetInitHandle()->mem.mgpu.dstInc,
+                                                                     in_plnpkdind,
+                                                                     out_plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_warp_affine_batch(srcPtr, dstPtr, handle, hipAffine, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    hipFree(hipAffine);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+warp_affine_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    Rpp32f *hipAffine;
+    hipMalloc(&hipAffine, handle.GetBatchSize() * 6 * sizeof(Rpp32f));
+    hipMemcpy(hipAffine, affine, handle.GetBatchSize() * 6 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_warp_affine_batch_fp16(srcPtr, dstPtr, handle, hipAffine, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+warp_affine_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    Rpp32f *hipAffine;
+    hipMalloc(&hipAffine, handle.GetBatchSize() * 6 * sizeof(Rpp32f));
+    hipMemcpy(hipAffine, affine, handle.GetBatchSize() * 6 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_warp_affine_batch_fp32(srcPtr, dstPtr, handle, hipAffine, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+warp_affine_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info)
+{
+    unsigned int padding = 10;
+    unsigned int type = 1;
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    Rpp32f *hipAffine;
+    hipMalloc(&hipAffine, handle.GetBatchSize() * 6 * sizeof(Rpp32f));
+    hipMemcpy(hipAffine, affine, handle.GetBatchSize() * 6 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+
+#if defined (HIPRTC)
+
+#elif defined(STATIC)
+
+    hip_exec_warp_affine_batch_int8(srcPtr, dstPtr, handle, hipAffine, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+
+#endif
+
+    return RPP_SUCCESS;
+}
+
 /******************** warp_perspective ********************/
 
 RppStatus
@@ -764,17 +1399,22 @@ warp_perspective_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rp
         plnpkdind = 1;
     else
         plnpkdind = 3;
-    Rpp32f* perspective_array;
-    hipMalloc(&perspective_array, sizeof(float) * 9 * handle.GetBatchSize());
-    hipMemcpy(perspective_array, perspective, sizeof(float) * 9 * handle.GetBatchSize(), hipMemcpyHostToDevice);
+
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    Rpp32f* hipPerspective;
+    hipMalloc(&hipPerspective, sizeof(float) * 9 * handle.GetBatchSize());
+    hipMemcpy(hipPerspective, perspective, sizeof(float) * 9 * handle.GetBatchSize(), hipMemcpyHostToDevice);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
     handle.AddKernel("", "", "warp_perspective.cpp", "warp_perspective_batch", vld, vgd, "")(srcPtr,
                                                                                              dstPtr,
-                                                                                             perspective_array,
+                                                                                             hipPerspective,
                                                                                              handle.GetInitHandle()->mem.mgpu.srcSize.height,
                                                                                              handle.GetInitHandle()->mem.mgpu.srcSize.width,
                                                                                              handle.GetInitHandle()->mem.mgpu.dstSize.height,
@@ -792,7 +1432,13 @@ warp_perspective_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rp
                                                                                              handle.GetInitHandle()->mem.mgpu.dstInc,
                                                                                              plnpkdind);
 
-    hipFree(perspective_array);
+    hipFree(hipPerspective);
+
+#elif defined(STATIC)
+
+    hip_exec_warp_perspective_batch(srcPtr, dstPtr, handle, hipPerspective, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
