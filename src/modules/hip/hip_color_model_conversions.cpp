@@ -1,4 +1,6 @@
+#include "hip/hip_runtime_api.h"
 #include "hip_declarations.hpp"
+#include "kernel/rpp_hip_host_decls.hpp"
 
 /******************** color_temperature ********************/
 
@@ -41,6 +43,9 @@ color_temperature_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, R
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -58,6 +63,12 @@ color_temperature_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, R
                                                                                                channel,
                                                                                                handle.GetInitHandle()->mem.mgpu.inc,
                                                                                                plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_color_temperature_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -80,6 +91,9 @@ vignette_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFor
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -93,6 +107,12 @@ vignette_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFor
                                                                              channel,
                                                                              handle.GetInitHandle()->mem.mgpu.inc,
                                                                              plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_vignette_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -115,6 +135,9 @@ channel_extract_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, Rpp
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -128,6 +151,12 @@ channel_extract_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, Rpp
                                                                                            channel,
                                                                                            handle.GetInitHandle()->mem.mgpu.inc,
                                                                                            plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_channel_extract_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -175,6 +204,9 @@ channel_combine_hip_batch(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* srcPtr3, Rpp8u*
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -190,6 +222,12 @@ channel_combine_hip_batch(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* srcPtr3, Rpp8u*
                                                                                            channel,
                                                                                            handle.GetInitHandle()->mem.mgpu.inc,
                                                                                            plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_channel_combine_batch(srcPtr1, srcPtr2, srcPtr3, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -235,6 +273,9 @@ hueRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnForma
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -251,6 +292,13 @@ hueRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnForma
                                                                    handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                    handle.GetInitHandle()->mem.mgpu.inc,
                                                                    plnpkdind);
+
+
+#elif defined(STATIC)
+
+    hip_exec_hueRGB_batch(srcPtr, dstPtr, handle, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -296,6 +344,9 @@ saturationRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiC
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -312,6 +363,13 @@ saturationRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiC
                                                                           handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
                                                                           handle.GetInitHandle()->mem.mgpu.inc,
                                                                           plnpkdind);
+
+
+#elif defined(STATIC)
+
+    hip_exec_saturationRGB_batch(srcPtr, dstPtr, handle, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -337,6 +395,9 @@ look_up_table_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr,rpp::Handle&
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
 
@@ -356,6 +417,13 @@ look_up_table_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr,rpp::Handle&
                                                                                        plnpkdind);
 
     hipFree(&hipLutPtr);
+
+
+#elif defined(STATIC)
+
+    hip_exec_look_up_table_batch(srcPtr, dstPtr, hipLutPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -396,6 +464,9 @@ tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, 
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -406,6 +477,12 @@ tensor_look_up_table_hip(Rpp32u tensorDimension, Rpp32u* tensorDimensionValues, 
                                                                                  dim2,
                                                                                  dim3,
                                                                                  hipLutPtr);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_look_up_table_batch(tensorDimension, srcPtr, dstPtr, hipLutPtr, handle, dim1, dim2, dim3);
+
+#endif
 
     return RPP_SUCCESS;
 }
