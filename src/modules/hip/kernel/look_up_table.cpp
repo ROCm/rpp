@@ -100,7 +100,7 @@ extern "C" __global__ void look_up_table_batch_tensor(unsigned char *input,
                                                       unsigned int *height,
                                                       unsigned int *width,
                                                       unsigned int *max_width,
-                                                      unsigned long *batch_index,
+                                                      unsigned long long *batch_index,
                                                       const unsigned int channel,
                                                       unsigned int *inc,
                                                       unsigned int *dst_inc, // use width * height for pln and 1 for pkd
@@ -160,7 +160,7 @@ extern "C" __global__ void look_up_table_batch_tensor_int8(signed char *input,
 }
 
 #if defined(STATIC)
-RppStatus hip_exec_lut_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
+RppStatus hip_exec_lut_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
     int localThreads_y = 32;
@@ -170,7 +170,7 @@ RppStatus hip_exec_lut_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Hand
     int globalThreads_z = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
 
-    hipLaunchKernelGGL(look_up_table_batch,
+    hipLaunchKernelGGL(look_up_table_batch_tensor,
                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                        dim3(localThreads_x, localThreads_y, localThreads_z),
                        0,
@@ -249,7 +249,7 @@ RppStatus hip_exec_lut_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32f* lut, r
                     //    in_plnpkdind,
                     //    out_plnpkdind);
 
-    // return RPP_SUCCESS;
+    return RPP_SUCCESS;
 }
 
 RppStatus hip_exec_lut_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp8s* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
