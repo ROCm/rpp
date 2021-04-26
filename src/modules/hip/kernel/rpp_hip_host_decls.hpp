@@ -28,8 +28,8 @@ RppStatus hip_exec_color_cast_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Ha
 RppStatus hip_exec_color_cast_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);
 
 RppStatus hip_exec_lut_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);
-RppStatus hip_exec_lut_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp16f* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);
-RppStatus hip_exec_lut_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32f* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);
+// RppStatus hip_exec_lut_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp16f* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);
+// RppStatus hip_exec_lut_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32f* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);
 RppStatus hip_exec_lut_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp8s* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);
 
 RppStatus hip_exec_crop_and_patch_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);

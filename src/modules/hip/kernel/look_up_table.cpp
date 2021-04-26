@@ -191,67 +191,6 @@ RppStatus hip_exec_lut_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rp
     return RPP_SUCCESS;
 }
 
-RppStatus hip_exec_lut_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp16f* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-//     int localThreads_x = 32;
-//     int localThreads_y = 32;
-//     int localThreads_z = 1;
-//     int globalThreads_x = (max_width + 31) & ~31;
-//     int globalThreads_y = (max_height + 31) & ~31;
-//     int globalThreads_z = handle.GetBatchSize();
-
-//     hipLaunchKernelGGL(lut_batch_fp16,
-//                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-//                        dim3(localThreads_x, localThreads_y, localThreads_z),
-//                        0,
-//                        handle.GetStream(),
-//                        srcPtr,
-                    //    dstPtr,
-                    //    lut,
-                    //    handle_obj->mem.mgpu.srcSize.height,
-                    //    handle_obj->mem.mgpu.srcSize.width,
-                    //    handle_obj->mem.mgpu.maxSrcSize.width,
-                    //    handle_obj->mem.mgpu.srcBatchIndex,
-                    //    tensor_info._in_channels,
-                    //    handle_obj->mem.mgpu.inc,
-                    //    handle_obj->mem.mgpu.dstInc,
-                    //    in_plnpkdind,
-                    //    out_plnpkdind);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus hip_exec_lut_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32f* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    // int localThreads_x = 32;
-    // int localThreads_y = 32;
-    // int localThreads_z = 1;
-    // int globalThreads_x = (max_width + 31) & ~31;
-    // int globalThreads_y = (max_height + 31) & ~31;
-    // int globalThreads_z = handle.GetBatchSize();
-    // InitHandle *handle_obj = handle.GetInitHandle();
-
-    // hipLaunchKernelGGL(lut_batch_fp32,
-    //                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-    //                    dim3(localThreads_x, localThreads_y, localThreads_z),
-    //                    0,
-    //                    handle.GetStream(),
-    //                    srcPtr,
-                    //    dstPtr,
-                    //    lut,
-                    //    handle_obj->mem.mgpu.srcSize.height,
-                    //    handle_obj->mem.mgpu.srcSize.width,
-                    //    handle_obj->mem.mgpu.maxSrcSize.width,
-                    //    handle_obj->mem.mgpu.srcBatchIndex,
-                    //    tensor_info._in_channels,
-                    //    handle_obj->mem.mgpu.inc,
-                    //    handle_obj->mem.mgpu.dstInc,
-                    //    in_plnpkdind,
-                    //    out_plnpkdind);
-
-    return RPP_SUCCESS;
-}
-
 RppStatus hip_exec_lut_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp8s* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
