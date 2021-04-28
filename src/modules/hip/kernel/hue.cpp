@@ -321,14 +321,7 @@ extern "C" __global__ void saturation_batch(unsigned char *input,
         hsv = convert_one_pixel_to_hsv(pixel);
         hsv.y *= sat[id_z];
 
-        if (hsv.y > 1.0)
-        {
-        hsv.y = 1.0;
-        }
-        else if (hsv.y < 0.0)
-        {
-        hsv.y = 0.0;
-        }
+        hsv.y = fmaxf(fminf(hsv.y, 1.0), 0.0);
 
         pixel = convert_one_pixel_to_rgb(hsv); // Converting to RGB back with saturation modification
         output[pixIdx] = pixel.x;
