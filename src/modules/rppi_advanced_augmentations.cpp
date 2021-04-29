@@ -1385,14 +1385,6 @@ RppStatus lut_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
         {
             lut_hip_batch_tensor(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8u *>(dstPtr), static_cast<Rpp8u *>(lut), rpp::deref(rppHandle), tensor_info);
         }
-        // else if (in_tensor_type == RPPTensorDataType::FP16)
-        // {
-        // 	lut_hip_batch_tensor_fp16(static_cast<Rpp16f *>(srcPtr), static_cast<Rpp16f *>(dstPtr), static_cast<Rpp16f *>(lut),  rpp::deref(rppHandle), tensor_info);
-        // }
-        // else if (in_tensor_type == RPPTensorDataType::FP32)
-        // {
-        // 	lut_hip_batch_tensor_fp32(static_cast<Rpp32f *>(srcPtr), static_cast<Rpp32f *>(dstPtr), static_cast<Rpp32f *>(lut), rpp::deref(rppHandle), tensor_info);
-        // }
         else if (in_tensor_type == RPPTensorDataType::I8)
         {
             lut_hip_batch_tensor_int8(static_cast<Rpp8s *>(srcPtr), static_cast<Rpp8s *>(dstPtr), static_cast<Rpp8s *>(lut), rpp::deref(rppHandle), tensor_info);

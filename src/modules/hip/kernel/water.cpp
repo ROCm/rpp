@@ -307,8 +307,8 @@ RppStatus hip_exec_water_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
     return RPP_SUCCESS;
 }
 
-// RppStatus hip_exec_water_batch_fp16(Rpp16f *srcPtr1, Rpp16f *srcPtr2, Rpp16f *dstPtr, rpp::Handle& handle, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-// {
+RppStatus hip_exec_water_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
+{
 //     int localThreads_x = 32;
 //     int localThreads_y = 32;
 //     int localThreads_z = 1;
@@ -344,8 +344,8 @@ RppStatus hip_exec_water_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
                         //   in_plnpkdind,
                         //   out_plnpkdind);
 
-//     return RPP_SUCCESS;
-// }
+    return RPP_SUCCESS;
+}
 
 RppStatus hip_exec_water_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {

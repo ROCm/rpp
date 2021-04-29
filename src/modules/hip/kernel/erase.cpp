@@ -453,7 +453,7 @@ RppStatus hip_exec_erase_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32u* anchor_box_
     return RPP_SUCCESS;
 }
 
-RppStatus hip_exec_erase_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp32u* anchor_box_info, Rpp16f* colors, Rpp32u* box_offset, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
+RppStatus hip_exec_erase_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp32u* anchor_box_info, Rpp16f* colors, rpp::Handle &handle, Rpp32u* box_offset, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
 //     int localThreads_x = 32;
 //     int localThreads_y = 32;

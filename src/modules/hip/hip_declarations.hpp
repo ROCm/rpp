@@ -22,7 +22,6 @@ RppStatus
 non_linear_blend_hip_batch_tensor_fp32(Rpp32f *srcPtr1, Rpp32f *srcPtr2, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 non_linear_blend_hip_batch_tensor_int8(Rpp8s *srcPtr1, Rpp8s *srcPtr2, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-
 RppStatus
 water_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
@@ -31,7 +30,6 @@ RppStatus
 water_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 water_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-
 RppStatus
 erase_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32u* anchor_box_info, Rpp8u* colors, Rpp32u* box_offset, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
@@ -40,7 +38,6 @@ RppStatus
 erase_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32u* anchor_box_info, Rpp32f* colors, Rpp32u* box_offset, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 erase_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp32u* anchor_box_info, Rpp8s* colors, Rpp32u* box_offset, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-
 RppStatus
 color_cast_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
@@ -49,16 +46,10 @@ RppStatus
 color_cast_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 color_cast_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-
 RppStatus
 lut_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u *lut,rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-// RppStatus
-// lut_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp16f *lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-// RppStatus
-// lut_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32f *lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 lut_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp8s *lut, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-
 RppStatus
 crop_and_patch_hip_batch_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
@@ -67,7 +58,6 @@ RppStatus
 crop_and_patch_hip_batch_tensor_fp32(Rpp32f *srcPtr1, Rpp32f *srcPtr2, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 crop_and_patch_hip_batch_tensor_int8(Rpp8s *srcPtr1, Rpp8s *srcPtr2, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-
 RppStatus
 glitch_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
@@ -76,7 +66,6 @@ RppStatus
 glitch_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
 RppStatus
 glitch_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info);
-
 
 /******************** image_augmentations ********************/
 

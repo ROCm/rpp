@@ -118,10 +118,10 @@ extern "C" __global__ void look_up_table_batch_tensor(unsigned char *input,
         int luptrIndex = id_z << 8;
         for (int indextmp = 0; indextmp < channel; indextmp++)
         {
-        int lutIndex = luptrIndex + input[in_pix_index];
-        output[out_pix_index] = lutPtr[lutIndex];
-        in_pix_index += inc[id_z];
-        out_pix_index += dst_inc[id_z];
+            int lutIndex = luptrIndex + input[in_pix_index];
+            output[out_pix_index] = lutPtr[lutIndex];
+            in_pix_index += inc[id_z];
+            out_pix_index += dst_inc[id_z];
         }
     }
 }
@@ -151,16 +151,16 @@ extern "C" __global__ void look_up_table_batch_tensor_int8(signed char *input,
 
         for (int indextmp = 0; indextmp < channel; indextmp++)
         {
-        int lutIndex = luptrIndex + input[in_pix_index] + 128;
-        output[out_pix_index] = lutPtr[lutIndex];
-        in_pix_index += inc[id_z];
-        out_pix_index += dst_inc[id_z];
+            int lutIndex = luptrIndex + input[in_pix_index] + 128;
+            output[out_pix_index] = lutPtr[lutIndex];
+            in_pix_index += inc[id_z];
+            out_pix_index += dst_inc[id_z];
         }
     }
 }
 
 #if defined(STATIC)
-RppStatus hip_exec_lut_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
+RppStatus hip_exec_lut_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
     int localThreads_y = 32;
