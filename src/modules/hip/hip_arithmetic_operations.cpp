@@ -1,4 +1,6 @@
+#include "hip/hip_runtime_api.h"
 #include "hip_declarations.hpp"
+#include "kernel/rpp_hip_host_decls.hpp"
 
 /******************** absolute_difference ********************/
 
@@ -28,6 +30,9 @@ absolute_difference_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp:
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -45,6 +50,11 @@ absolute_difference_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp:
                                                                                                    channel,
                                                                                                    handle.GetInitHandle()->mem.mgpu.inc,
                                                                                                    plnpkdind);
+#elif defined(STATIC)
+
+    hip_exec_absolute_difference_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -76,6 +86,9 @@ accumulate_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2,rpp::Handle& handle, RppiChnF
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -92,6 +105,11 @@ accumulate_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2,rpp::Handle& handle, RppiChnF
                                                                                  channel,
                                                                                  handle.GetInitHandle()->mem.mgpu.inc,
                                                                                  plnpkdind);
+#elif defined(STATIC)
+
+    hip_exec_accumulate_batch(srcPtr1, srcPtr2, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -124,6 +142,9 @@ accumulate_weighted_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2,rpp::Handle& handle,
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -142,6 +163,11 @@ accumulate_weighted_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2,rpp::Handle& handle,
                                                                                           handle.GetInitHandle()->mem.mgpu.inc,
                                                                                           plnpkdind);
 
+#elif defined(STATIC)
+
+    hip_exec_accumulate_weighted_batch(srcPtr1, srcPtr2, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
     return RPP_SUCCESS;
 }
 
@@ -173,6 +199,9 @@ add_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -190,6 +219,12 @@ add_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
                                                                    channel,
                                                                    handle.GetInitHandle()->mem.mgpu.inc,
                                                                    plnpkdind);
+
+#elif defined(STATIC)
+
+    hip_exec_add_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -222,6 +257,9 @@ subtract_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& ha
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+    
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -239,7 +277,11 @@ subtract_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& ha
                                                                              channel,
                                                                              handle.GetInitHandle()->mem.mgpu.inc,
                                                                              plnpkdind);
+#elif defined(STATIC)
 
+    hip_exec_subtract_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
     return RPP_SUCCESS;
 }
 
@@ -271,6 +313,9 @@ magnitude_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& h
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -288,6 +333,11 @@ magnitude_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& h
                                                                                channel,
                                                                                handle.GetInitHandle()->mem.mgpu.inc,
                                                                                plnpkdind);
+#elif defined(STATIC)
+
+    hip_exec_magnitude_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -320,6 +370,9 @@ multiply_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& ha
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -337,6 +390,11 @@ multiply_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& ha
                                                                              channel,
                                                                              handle.GetInitHandle()->mem.mgpu.inc,
                                                                              plnpkdind);
+#elif defined(STATIC)
+
+    hip_exec_multiply_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -369,6 +427,9 @@ phase_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handl
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -386,6 +447,11 @@ phase_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handl
                                                                        channel,
                                                                        handle.GetInitHandle()->mem.mgpu.inc,
                                                                        plnpkdind);
+#elif defined(STATIC)
+
+    hip_exec_phase_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -416,6 +482,9 @@ accumulate_squared_hip_batch(Rpp8u* srcPtr, rpp::Handle& handle, RppiChnFormat c
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
 
@@ -431,6 +500,11 @@ accumulate_squared_hip_batch(Rpp8u* srcPtr, rpp::Handle& handle, RppiChnFormat c
                                                                                          channel,
                                                                                          handle.GetInitHandle()->mem.mgpu.inc,
                                                                                          plnpkdind);
+#elif defined(STATIC)
+
+    hip_exec_accumulate_squared_batch(srcPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -438,7 +512,7 @@ accumulate_squared_hip_batch(Rpp8u* srcPtr, rpp::Handle& handle, RppiChnFormat c
 /******************** tensor_add ********************/
 
 RppStatus
-tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle &handle)
+tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr,  rpp::Handle& handle)
 {
     size_t gDim3[3];
     if (tensorDimension == 1)
@@ -468,6 +542,9 @@ tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* src
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -478,6 +555,12 @@ tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* src
                                                                        dim1,
                                                                        dim2,
                                                                        dim3);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_add(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -515,6 +598,9 @@ tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -525,6 +611,12 @@ tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
                                                                             dim1,
                                                                             dim2,
                                                                             dim3);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_subtract(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -562,6 +654,9 @@ tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
     dim1 = gDim3[0];
     dim2 = gDim3[1];
     dim3 = gDim3[2];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -572,6 +667,12 @@ tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
                                                                             dim1,
                                                                             dim2,
                                                                             dim3);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_multiply(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
+
+#endif
 
     return RPP_SUCCESS;
 }
@@ -590,6 +691,9 @@ tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensi
     b = tensorDimensionValues1[1];
     c = tensorDimensionValues2[0];
     d = tensorDimensionValues2[1];
+
+#if defined (HIPRTC)
+
     std::vector<size_t> vld{32, 32, 1};
     std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
@@ -600,5 +704,12 @@ tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensi
                                                                                    b,
                                                                                    c,
                                                                                    d);
+
+#elif defined(STATIC)
+
+    hip_exec_tensor_matrix_multiply(srcPtr1, srcPtr2, dstPtr, handle, a, b, c, d, gDim3[0], gDim3[1], gDim3[2]);
+
+#endif
+
     return RPP_SUCCESS;
 }
