@@ -94,7 +94,7 @@ extern "C" __global__ void look_up_table_batch(unsigned char *input,
     }
 }
 
-extern "C" __global__ void look_up_table_batch_tensor(unsigned char *input,
+extern "C" __global__ void lut_batch(unsigned char *input,
                                                       unsigned char *output,
                                                       unsigned char *lutPtr,
                                                       unsigned int *height,
@@ -126,7 +126,7 @@ extern "C" __global__ void look_up_table_batch_tensor(unsigned char *input,
     }
 }
 
-extern "C" __global__ void look_up_table_batch_tensor_int8(signed char *input,
+extern "C" __global__ void lut_batch_int8(signed char *input,
                                                            signed char *output,
                                                            signed char *lutPtr,
                                                            unsigned int *height,
@@ -170,7 +170,7 @@ RppStatus hip_exec_lut_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Hand
     int globalThreads_z = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
 
-    hipLaunchKernelGGL(look_up_table_batch_tensor,
+    hipLaunchKernelGGL(lut_batch,
                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                        dim3(localThreads_x, localThreads_y, localThreads_z),
                        0,
@@ -201,7 +201,7 @@ RppStatus hip_exec_lut_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp8s* lut, rpp:
     int globalThreads_z = handle.GetBatchSize();
     InitHandle *handle_obj = handle.GetInitHandle();
 
-    hipLaunchKernelGGL(look_up_table_batch_tensor_int8,
+    hipLaunchKernelGGL(lut_batch_int8,
                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                        dim3(localThreads_x, localThreads_y, localThreads_z),
                        0,
