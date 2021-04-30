@@ -69,7 +69,6 @@ extern "C" __global__ void channel_combine_batch(unsigned char *input1,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int indextmp = 0;
     unsigned long pixIdx = 0, InPixIdx = 0;
 
     if((id_y >= 0) && (id_y < height[id_z]) && (id_x >= 0) && (id_x < width[id_z]))
