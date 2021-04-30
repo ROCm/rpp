@@ -7,7 +7,6 @@
 RppStatus
 non_linear_blend_hip_batch_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
     InitHandle *handle_obj = handle.GetInitHandle();
     Rpp32u max_height, max_width;
     max_size(handle_obj->mem.mgpu.csrcSize.height, handle_obj->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
@@ -19,7 +18,8 @@ non_linear_blend_hip_batch_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr,
         std::string kernel_file = "non_linear_blend.cpp";
         std::string kernel_name = "non_linear_blend_batch";
         get_kernel_name(kernel_name, tensor_info);
-
+        int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+    
         handle.AddKernel("", "", kernel_file, kernel_name, vld, vgd, "")(srcPtr1,
                                                                         srcPtr2,
                                                                         dstPtr,
