@@ -400,35 +400,35 @@ control_flow_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, Rpp32u typ
 
 #elif defined(STATIC)
 
-    // switch(type)
-    // {
-    //     case 1:
-    //         hip_exec_bitwise_AND_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-    //         break;
-    //     case 2:
-    //         hip_exec_inclusive_OR_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-    //         break;
-    //     case 3:
-    //         hip_exec_exclusive_OR_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-    //         break;
-    //     case 4:
-    //         hip_exec_add_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-    //         break;
-    //     case 5:
-    //         hip_exec_subtract_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-    //         break;
-    //     case 6:
-    //         hip_exec_multiply_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-    //         break;
-    //     case 7:
-    //         hip_exec_min_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-    //         break;
-    //     case 8:
-    //         hip_exec_max_batch_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-    //         break;
-    //     default:
-    //         break;
-    // }
+    switch(type)
+    {
+        case 1:
+            hip_exec_bitwise_AND_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+            break;
+        case 2:
+            hip_exec_inclusive_OR_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+            break;
+        case 3:
+            hip_exec_exclusive_OR_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+            break;
+        case 4:
+            hip_exec_add_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+            break;
+        case 5:
+            hip_exec_subtract_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+            break;
+        case 6:
+            hip_exec_multiply_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+            break;
+        case 7:
+            hip_exec_min_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+            break;
+        case 8:
+            hip_exec_max_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
+            break;
+        default:
+            break;
+    }
 
 #endif
 
@@ -538,8 +538,8 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "gaussian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr,
                                                                                                                       srcPtr1,
-                                                                                                                      maxHeight,
-                                                                                                                      maxWidth,
+                                                                                                                      max_height,
+                                                                                                                      max_width,
                                                                                                                       channel,
                                                                                                                       kernel,
                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
@@ -552,8 +552,8 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "gaussian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr,
                                                                                                                       srcPtr1,
-                                                                                                                      maxHeight,
-                                                                                                                      maxWidth,
+                                                                                                                      max_height,
+                                                                                                                      max_width,
                                                                                                                       channel,
                                                                                                                       kernel,
                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
@@ -567,8 +567,8 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "laplacian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr1,
                                                                                                                        dstPtr,
-                                                                                                                       maxHeight,
-                                                                                                                       maxWidth,
+                                                                                                                       max_height,
+                                                                                                                       max_width,
                                                                                                                        channel,
                                                                                                                        kernel,
                                                                                                                        handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
@@ -581,15 +581,15 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
             std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
             handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "laplacian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr1,
                                                                                                                        dstPtr,
-                                                                                                                       maxHeight,
-                                                                                                                       maxWidth,
+                                                                                                                       max_height,
+                                                                                                                       max_width,
                                                                                                                        channel,
                                                                                                                        kernel,
                                                                                                                        handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                        handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
                                                                                                                        batchIndex);
         }
-        batchIndex += maxHeight * maxWidth * channel;
+        batchIndex += max_height * max_width * channel;
     }
 
 #elif defined(STATIC)
@@ -838,6 +838,8 @@ canny_edge_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle,
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
+#if defined (HIPRTC)
+
         if(channel == 3)
         {
             if(chnFormat == RPPI_CHN_PACKED)
@@ -965,6 +967,49 @@ canny_edge_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle,
                                                                                                             channel);
             }
         }
+
+#elif defined(STATIC)
+
+        unsigned int sobelType = 2;
+        unsigned int sobelTypeX = 0;
+        unsigned int sobelTypeY = 1;
+        unsigned int newChannel = 1;
+
+        if(channel == 1)
+        {
+            hip_exec_sobel_pln(srcPtr1, tempDest1, maxHeight, maxWidth, handle, newChannel, sobelType);
+            hip_exec_sobel_pln(srcPtr1, sobelX, maxHeight, maxWidth, handle, newChannel, sobelTypeX);
+            hip_exec_sobel_pln(srcPtr1, sobelY, maxHeight, maxWidth, handle, newChannel, sobelTypeY);
+            hip_exec_ced_non_max_suppression(tempDest1, sobelX, sobelY, tempDest2, maxHeight, maxWidth, handle, newChannel, i);
+            hip_exec_canny_edge(tempDest2, dstPtr1, maxHeight, maxWidth, handle, newChannel, i);
+        }
+        else if(channel == 3)
+        {
+            if(chnFormat == RPPI_CHN_PACKED)
+            {
+                hip_exec_canny_ced_pkd3_to_pln1(srcPtr1, gsin, maxHeight, maxWidth, handle, channel);
+            }
+            else
+            {
+                hip_exec_canny_ced_pln3_to_pln1(srcPtr1, gsin, maxHeight, maxWidth, handle, channel);
+            }
+            hip_exec_sobel_pln(gsin, tempDest1, maxHeight, maxWidth, handle, newChannel, sobelType);
+            hip_exec_sobel_pln(gsin, sobelX, maxHeight, maxWidth, handle, newChannel, sobelTypeX);
+            hip_exec_sobel_pln(gsin, sobelY, maxHeight, maxWidth, handle, newChannel, sobelTypeY);
+            hip_exec_ced_non_max_suppression(tempDest1, sobelX, sobelY, tempDest2, maxHeight, maxWidth, handle, newChannel, i);
+            hip_exec_canny_edge(tempDest2, gsout, maxHeight, maxWidth, handle, newChannel, i);
+            if(chnFormat == RPPI_CHN_PACKED)
+            {
+                hip_exec_canny_ced_pln1_to_pkd3(gsout, dstPtr1, maxHeight, maxWidth, handle, channel);
+            }
+            else
+            {
+                hip_exec_canny_ced_pln1_to_pln3(gsout, dstPtr1, maxHeight, maxWidth, handle, channel);
+            }
+        }
+
+#endif
+
         hipMemcpy(dstPtr + batchIndex, dstPtr1, sizeof(unsigned char) * imageDim * channel, hipMemcpyDeviceToHost);
         batchIndex += imageDim * channel;
     }
@@ -1192,19 +1237,27 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
         {
             if(chnFormat == RPPI_CHN_PACKED)
             {
-                handle.AddKernel("", "", "fast_corner_detector.cpp", "ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
-                                                                                                       gsin,
-                                                                                                       maxHeight,
-                                                                                                       maxWidth,
-                                                                                                       channel);
+#if defined (HIPRTC)
+                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
+                                                                                                            gsin,
+                                                                                                            maxHeight,
+                                                                                                            maxWidth,
+                                                                                                            channel);
+#elif defined(STATIC)
+                hip_exec_canny_ced_pkd3_to_pln1(srcPtr1, gsin, maxHeight, maxWidth, handle, channel);
+#endif
             }
             else
             {
-                handle.AddKernel("", "", "fast_corner_detector.cpp", "ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
-                                                                                                       gsin,
-                                                                                                       maxHeight,
-                                                                                                       maxWidth,
-                                                                                                       channel);
+#if defined (HIPRTC)
+                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
+                                                                                                            gsin,
+                                                                                                            maxHeight,
+                                                                                                            maxWidth,
+                                                                                                            channel);
+#elif defined(STATIC)
+                hip_exec_canny_ced_pln3_to_pln1(srcPtr1, gsin, maxHeight, maxWidth, handle, channel);
+#endif
             }
         }
 
@@ -1217,6 +1270,7 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
 
         if(channel == 1)
         {
+#if defined (HIPRTC)
             handle.AddKernel("", "", "gaussian_filter.cpp", "gaussian_pln", vld, vgd, "")(srcPtr1,
                                                                                           tempDest1,
                                                                                           maxHeight,
@@ -1225,9 +1279,13 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
                                                                                           kernel,
                                                                                           handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
                                                                                           handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
+#elif defined(STATIC)
+            hip_exec_gaussian_pln(srcPtr1, tempDest1, maxHeight, maxWidth, kernel, handle, newChannel, i);
+#endif
         }
         else
         {
+#if defined (HIPRTC)
             handle.AddKernel("", "", "gaussian_filter.cpp", "gaussian_pln", vld, vgd, "")(gsin,
                                                                                           tempDest1,
                                                                                           maxHeight,
@@ -1236,6 +1294,9 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
                                                                                           kernel,
                                                                                           handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
                                                                                           handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
+#elif defined(STATIC)
+            hip_exec_gaussian_pln(gsin, tempDest1, maxHeight, maxWidth, kernel, handle, newChannel, i);
+#endif
         }
 
         /* SOBEL X and Y */
@@ -1244,22 +1305,27 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
         unsigned int sobelTypeX = 0;
         unsigned int sobelTypeY = 1;
 
+#if defined (HIPRTC)
         handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(tempDest1,
                                                                          sobelX,
                                                                          maxHeight,
                                                                          maxWidth,
                                                                          newChannel,
                                                                          sobelTypeX);
-
         handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(tempDest1,
                                                                          sobelY,
                                                                          maxHeight,
                                                                          maxWidth,
                                                                          newChannel,
                                                                          sobelTypeY);
+#elif defined(STATIC)
+        hip_exec_sobel_pln(tempDest1, sobelX, maxHeight, maxWidth, handle, newChannel, sobelTypeX);
+        hip_exec_sobel_pln(tempDest1, sobelY, maxHeight, maxWidth, handle, newChannel, sobelTypeY);
+#endif
 
         /* HARRIS CORNER STRENGTH MATRIX */
 
+#if defined (HIPRTC)
         handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_strength", vld, vgd, "")(sobelX,
                                                                                                                 sobelY,
                                                                                                                 dstFloat,
@@ -1269,33 +1335,48 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
                                                                                                                 handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i],
                                                                                                                 handle.GetInitHandle()->mem.mcpu.floatArr[3].floatmem[i],
                                                                                                                 handle.GetInitHandle()->mem.mcpu.floatArr[4].floatmem[i]);
+#elif defined(STATIC)
+        hip_exec_harris_corner_detector_strength(sobelX, sobelY, dstFloat, maxHeight, maxWidth, handle, newChannel, i);
+#endif
 
         /* NON-MAX SUPRESSION */
 
+#if defined (HIPRTC)
         handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_nonmax_supression", vld, vgd, "")(dstFloat,
                                                                                                                          nonMaxDstFloat,
                                                                                                                          maxHeight,
                                                                                                                          maxWidth,
                                                                                                                          newChannel,
                                                                                                                          handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]);
+#elif defined(STATIC)
+        hip_exec_harris_corner_detector_nonmax_supression(dstFloat, nonMaxDstFloat, maxHeight, maxWidth, handle, newChannel, i);
+#endif
 
         hipMemcpy(dstPtr1, srcPtr1, sizeof(unsigned char) * singleImageSize, hipMemcpyDeviceToDevice);
 
         if(chnFormat == RPPI_CHN_PACKED)
         {
+#if defined (HIPRTC)
             handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_pkd", vld, vgd, "")(dstPtr1,
                                                                                                                nonMaxDstFloat,
                                                                                                                maxHeight,
                                                                                                                maxWidth,
                                                                                                                channel);
+#elif defined(STATIC)
+            hip_exec_harris_corner_detector_pkd(dstPtr1, nonMaxDstFloat, maxHeight, maxWidth, handle, channel);
+#endif
         }
         else
         {
+#if defined (HIPRTC)
             handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_pln", vld, vgd, "")(dstPtr1,
                                                                                                                nonMaxDstFloat,
                                                                                                                maxHeight,
                                                                                                                maxWidth,
                                                                                                                channel);
+#elif defined(STATIC)
+            hip_exec_harris_corner_detector_pln(dstPtr1, nonMaxDstFloat, maxHeight, maxWidth, handle, channel);
+#endif
         }
 
         hipMemcpy(dstPtr + batchIndex, dstPtr1, sizeof(unsigned char) * singleImageSize, hipMemcpyDeviceToDevice);

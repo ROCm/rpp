@@ -6,14 +6,27 @@
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
+__device__ float gaussian(int x,int y, float stdDev)
+{
+    float res, pi = 3.14;
+    res = 1 / (2 * pi * stdDev * stdDev);
+    float exp1, exp2;
+    exp1 = - (x * x) / (2 * stdDev * stdDev);
+    exp2 = - (y * y) / (2 * stdDev * stdDev);
+    exp1 = exp1 + exp2;
+    exp1 = exp(exp1);
+    res *= exp1;
+    return res;
+}
+
 extern "C" __global__ void gaussian_pkd(unsigned char *input,
                                         unsigned char *output,
                                         const unsigned int height,
                                         const unsigned int width,
                                         const unsigned int channel,
-                                        float *kernal,
-                                        const unsigned int kernalheight,
-                                        const unsigned int kernalwidth)
+                                        float *kernelArray,
+                                        const unsigned int kernelHeight,
+                                        const unsigned int kernelWidth)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -25,8 +38,8 @@ extern "C" __global__ void gaussian_pkd(unsigned char *input,
     }
 
     int pixIdx = id_y * channel * width + id_x * channel + id_z;
-    int boundx = (kernalwidth - 1) / 2;
-    int boundy = (kernalheight - 1) / 2;
+    int boundx = (kernelWidth - 1) / 2;
+    int boundy = (kernelHeight - 1) / 2;
     int sum = 0;
     int counter = 0;
 
@@ -37,7 +50,7 @@ extern "C" __global__ void gaussian_pkd(unsigned char *input,
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height - 1)
             {
                 unsigned int index = pixIdx + (j * channel) + (i * width * channel);
-                sum += input[index] * kernal[counter];
+                sum += input[index] * kernelArray[counter];
             }
             counter++;
         }
@@ -50,9 +63,9 @@ extern "C" __global__ void gaussian_pln(unsigned char *input,
                                         const unsigned int height,
                                         const unsigned int width,
                                         const unsigned int channel,
-                                        float *kernal,
-                                        const unsigned int kernalheight,
-                                        const unsigned int kernalwidth)
+                                        float *kernelArray,
+                                        const unsigned int kernelHeight,
+                                        const unsigned int kernelWidth)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -64,8 +77,8 @@ extern "C" __global__ void gaussian_pln(unsigned char *input,
     }
 
     int pixIdx = id_y * width + id_x + id_z * width * height;
-    int boundx = (kernalwidth - 1) / 2;
-    int boundy = (kernalheight - 1) / 2;
+    int boundx = (kernelWidth - 1) / 2;
+    int boundy = (kernelHeight - 1) / 2;
     int sum = 0;
     int counter = 0;
 
@@ -76,27 +89,13 @@ extern "C" __global__ void gaussian_pln(unsigned char *input,
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height - 1)
             {
                 unsigned int index = pixIdx + j + (i * width);
-                sum += input[index] * kernal[counter];
+                sum += input[index] * kernelArray[counter];
             }
             counter++;
         }
     }
     output[pixIdx] = saturate_8u(sum);
 }
-
-__device__ float gaussian(int x,int y, float stdDev)
-{
-    float res, pi = 3.14;
-    res = 1 / (2 * pi * stdDev * stdDev);
-    float exp1, exp2;
-    exp1 = - (x * x) / (2 * stdDev * stdDev);
-    exp2 = - (y * y) / (2 * stdDev * stdDev);
-    exp1 = exp1 + exp2;
-    exp1 = exp(exp1);
-    res *= exp1;
-	return res;
-}
-
 
 extern "C" __global__ void gaussian_filter_batch(unsigned char *input,
                                                  unsigned char *output,
@@ -170,6 +169,58 @@ extern "C" __global__ void gaussian_filter_batch(unsigned char *input,
 }
 
 #if defined(STATIC)
+RppStatus hip_exec_gaussian_pln(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u height, Rpp32u width, Rpp32f *kernelArray, rpp::Handle& handle, Rpp32u channel, Rpp32s i)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = width;
+    int globalThreads_y = height;
+    int globalThreads_z = 1;
+
+    hipLaunchKernelGGL(gaussian_pln,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       height,
+                       width,
+                       channel,
+                       kernelArray,
+                       handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
+                       handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_gaussian_pkd(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u height, Rpp32u width, Rpp32f *kernelArray, rpp::Handle& handle, Rpp32u channel, Rpp32s i)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = width;
+    int globalThreads_y = height;
+    int globalThreads_z = 1;
+
+    hipLaunchKernelGGL(gaussian_pkd,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       height,
+                       width,
+                       channel,
+                       kernelArray,
+                       handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
+                       handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
+
+    return RPP_SUCCESS;
+}
+
 RppStatus hip_exec_gaussian_filter_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
