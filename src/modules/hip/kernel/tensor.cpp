@@ -42,9 +42,9 @@ extern "C" __global__ void tensor_subtract(const unsigned int tensorDimension,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if (id_x >= a || id_y >= b || id_z >= c)
-        {
-            return;
-        }
+    {
+        return;
+    }
 
     int pixIdx = id_y * c * a + id_x * c + id_z;
     unsigned int value = input1[pixIdx] - input2[pixIdx];
@@ -269,7 +269,6 @@ extern "C" __global__ void tensor_look_up_table(const unsigned int tensorDimensi
     output[pixIdx] = pixel;
 }
 
-
 #if defined(STATIC)
 RppStatus hip_exec_tensor_add(Rpp32u tensorDimension, Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32u gdim1, Rpp32u gdim2, Rpp32u gdim3)
 {
@@ -295,9 +294,7 @@ RppStatus hip_exec_tensor_add(Rpp32u tensorDimension, Rpp8u *srcPtr1, Rpp8u *src
 
     return RPP_SUCCESS;
 }
-#endif
 
-#if defined(STATIC)
 RppStatus hip_exec_tensor_subtract(Rpp32u tensorDimension, Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32u gdim1, Rpp32u gdim2, Rpp32u gdim3)
 {
     int localThreads_x = 32;
@@ -322,9 +319,7 @@ RppStatus hip_exec_tensor_subtract(Rpp32u tensorDimension, Rpp8u *srcPtr1, Rpp8u
 
     return RPP_SUCCESS;
 }
-#endif
 
-#if defined(STATIC)
 RppStatus hip_exec_tensor_multiply(Rpp32u tensorDimension, Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32u gdim1, Rpp32u gdim2, Rpp32u gdim3)
 {
     int localThreads_x = 32;
@@ -349,9 +344,7 @@ RppStatus hip_exec_tensor_multiply(Rpp32u tensorDimension, Rpp8u *srcPtr1, Rpp8u
 
     return RPP_SUCCESS;
 }
-#endif
 
-#if defined(STATIC)
 RppStatus hip_exec_tensor_matrix_multiply(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32u a, Rpp32u b, Rpp32u c, Rpp32u d, Rpp32u gdim1, Rpp32u gdim2, Rpp32u gdim3)
 {
     int localThreads_x = 32;
@@ -373,6 +366,31 @@ RppStatus hip_exec_tensor_matrix_multiply(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u 
                        b,
                        c,
                        d);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_tensor_look_up_table_batch(Rpp32u tensorDimension, Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u *hipLutPtr, rpp::Handle& handle, Rpp32u gdim1, Rpp32u gdim2, Rpp32u gdim3)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = gdim1;
+    int globalThreads_y = gdim2;
+    int globalThreads_z = gdim3;
+
+    hipLaunchKernelGGL(tensor_look_up_table,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       tensorDimension,
+                       srcPtr,
+                       dstPtr,
+                       gdim1,
+                       gdim2,
+                       gdim3,
+                       hipLutPtr);
 
     return RPP_SUCCESS;
 }
