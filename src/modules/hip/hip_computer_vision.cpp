@@ -518,7 +518,6 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-    Rpp32u batchIndex = 0;
     Rpp32f *kernelMain = (Rpp32f *)calloc(maxKernelSize * maxKernelSize, sizeof(Rpp32f));
     Rpp8u *srcPtr1;
     hipMalloc(&srcPtr1, max_height * max_width * channel * sizeof(Rpp8u));
@@ -527,6 +526,7 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
 
 #if defined (HIPRTC)
 
+    Rpp32u batchIndex = 0;
     for(int i = 0 ; i < handle.GetBatchSize(); i++)
     {
         generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[0].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
@@ -594,6 +594,7 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
 
 #elif defined(STATIC)
 
+    Rpp32u batchIndex = 0;
     for(int i = 0 ; i < handle.GetBatchSize(); i++)
     {
         generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[0].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
