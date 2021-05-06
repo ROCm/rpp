@@ -49,8 +49,6 @@ color_twist_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChn
 RppStatus
 color_twist_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -59,6 +57,9 @@ color_twist_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, 
     std::string kernel_file = "color_twist.cpp";
     std::string kernel_name = "color_twist_batch";
     get_kernel_name(kernel_name, tensor_info);
+
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
 
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
@@ -84,6 +85,8 @@ color_twist_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, 
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_color_twist_batch(srcPtr, dstPtr, handle, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -153,8 +156,6 @@ color_twist_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &han
 RppStatus
 resize_crop_mirror_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -163,6 +164,9 @@ resize_crop_mirror_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &h
     std::string kernel_file = "resize.cpp";
     std::string kernel_name = "resize_crop_mirror_batch";
     get_kernel_name(kernel_name, tensor_info);
+
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
 
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
@@ -190,6 +194,8 @@ resize_crop_mirror_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &h
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_resize_crop_mirror_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -259,8 +265,6 @@ resize_crop_mirror_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Hand
 RppStatus
 crop_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -269,6 +273,9 @@ crop_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, RPPTens
     std::string kernel_file  = "crop.cpp";
     std::string kernel_name = "crop_batch";
     get_kernel_name(kernel_name, tensor_info);
+
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
 
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width , max_height, handle.GetBatchSize()};
@@ -292,6 +299,8 @@ crop_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, RPPTens
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -426,8 +435,6 @@ crop_mirror_normalize_hip(
 RppStatus
 crop_mirror_normalize_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -436,6 +443,9 @@ crop_mirror_normalize_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle
     std::string kernel_file = "crop_mirror_normalize.cpp";
     std::string kernel_name = "crop_mirror_normalize_batch";
     get_kernel_name(kernel_name, tensor_info);
+
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
 
     std::vector<size_t> vld{16, 16, 1};
     std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
@@ -462,6 +472,8 @@ crop_mirror_normalize_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_mirror_normalize_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
