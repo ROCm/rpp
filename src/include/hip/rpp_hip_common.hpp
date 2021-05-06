@@ -5,10 +5,11 @@
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_runtime.h>
 #include <hip/hip_ext.h>
-
 #include <rppdefs.h>
-
 #include <vector>
+#include <half.hpp>
+using half_float::half;
+typedef half Rpp16f;
 
 enum class RPPTensorDataType
 {
