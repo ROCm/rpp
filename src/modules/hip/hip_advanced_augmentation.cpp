@@ -40,6 +40,7 @@ non_linear_blend_hip_batch_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr,
 
     #elif defined(STATIC)
 
+        int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
         hip_exec_non_linear_blend_batch(srcPtr1, srcPtr2, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
     #endif
@@ -147,6 +148,7 @@ water_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, RPPTen
 
     #elif defined(STATIC)
 
+        int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
         hip_exec_water_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
     #endif
@@ -263,6 +265,7 @@ erase_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32u* anchor_box_info, Rp
 
     #elif defined(STATIC)
 
+        int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
         hip_exec_erase_batch(srcPtr, dstPtr, anchor_box_info, colors, handle, box_offset, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
     #endif
@@ -367,6 +370,7 @@ color_cast_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, R
 
     #elif defined(STATIC)
 
+            int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
             hip_exec_color_cast_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
     #endif
@@ -463,6 +467,7 @@ lut_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lut, rpp::Handle &hand
 
     #elif defined(STATIC)
 
+            int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
             hip_exec_lut_batch(srcPtr, dstPtr, lut, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
     #endif
@@ -534,6 +539,7 @@ crop_and_patch_hip_batch_tensor(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, r
 
     #elif defined(STATIC)
 
+        int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
         hip_exec_crop_and_patch_batch(srcPtr1, srcPtr2, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
     #endif
@@ -641,7 +647,8 @@ glitch_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, RPPTe
 
     #elif defined(STATIC)
 
-            hip_exec_glitch_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
+        int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
+        hip_exec_glitch_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
     #endif
 
