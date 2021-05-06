@@ -11,9 +11,9 @@ extern "C" __global__ void custom_convolution_pkd(unsigned char *input,
                                                   const unsigned int height,
                                                   const unsigned int width,
                                                   const unsigned int channel,
-                                                  float *kernal,
-                                                  const unsigned int kernalheight,
-                                                  const unsigned int kernalwidth)
+                                                  float *kernelArray,
+                                                  const unsigned int kernelHeight,
+                                                  const unsigned int kernelWidth)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -25,8 +25,8 @@ extern "C" __global__ void custom_convolution_pkd(unsigned char *input,
     }
 
     int pixIdx = id_y * channel * width + id_x * channel + id_z;
-    int boundx = (kernalwidth - 1) / 2;
-    int boundy = (kernalheight - 1) / 2;
+    int boundx = (kernelWidth - 1) / 2;
+    int boundy = (kernelHeight - 1) / 2;
     int sum = 0;
     int counter = 0;
 
@@ -37,7 +37,7 @@ extern "C" __global__ void custom_convolution_pkd(unsigned char *input,
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height - 1)
             {
                 unsigned int index = pixIdx + (j * channel) + (i * width * channel);
-                sum += input[index] * kernal[counter];
+                sum += input[index] * kernelArray[counter];
             }
             counter++;
         }
@@ -50,9 +50,9 @@ extern "C" __global__ void custom_convolution_pln(unsigned char *input,
                                                   const unsigned int height,
                                                   const unsigned int width,
                                                   const unsigned int channel,
-                                                  float *kernal,
-                                                  const unsigned int kernalheight,
-                                                  const unsigned int kernalwidth)
+                                                  float *kernelArray,
+                                                  const unsigned int kernelHeight,
+                                                  const unsigned int kernelWidth)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -64,8 +64,8 @@ extern "C" __global__ void custom_convolution_pln(unsigned char *input,
     }
 
     int pixIdx = id_y * width + id_x + id_z * width * height;
-    int boundx = (kernalwidth - 1) / 2;
-    int boundy = (kernalheight - 1) / 2;
+    int boundx = (kernelWidth - 1) / 2;
+    int boundy = (kernelHeight - 1) / 2;
     int sum = 0;
     int counter = 0;
 
@@ -76,7 +76,7 @@ extern "C" __global__ void custom_convolution_pln(unsigned char *input,
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height - 1)
             {
                 unsigned int index = pixIdx + j + (i * width);
-                sum += input[index] * kernal[counter];
+                sum += input[index] * kernelArray[counter];
             }
             counter++;
         }

@@ -885,17 +885,6 @@ extern "C" __global__ void convert_bit_depth_batch_u8s16(   unsigned char* input
                                      unsigned int *inc, // use width * height for pln and 1 for pkd
                                     const int plnpkdindex // use 1 pln 3 for pkd
                                     );
-extern "C" __global__ void gaussian_pln_batch(    unsigned char* input,
-                                     unsigned char* output,
-                                    const unsigned int height,
-                                    const unsigned int width,
-                                    const unsigned int channel,
-                                     float* kernal,
-                                    const unsigned int kernalheight,
-                                    const unsigned int kernalwidth,
-                                    const unsigned long batchIndex,
-                                    const unsigned int originalChannel
-);
 extern "C" __global__ void harris_corner_detector_strength(   unsigned char* sobelX,
                      unsigned char* sobelY,
                      float* output,
@@ -1674,7 +1663,6 @@ const std::map<std::string, const void*>& funMap1()
                                                         {"convert_bit_depth_batch_u8s8",reinterpret_cast<const void*>(convert_bit_depth_batch_u8s8)},
                                                         {"convert_bit_depth_batch_u8u16",reinterpret_cast<const void*>(convert_bit_depth_batch_u8u16)},
                                                         {"convert_bit_depth_batch_u8s16",reinterpret_cast<const void*>(convert_bit_depth_batch_u8s16)},
-                                                        {"gaussian_pln_batch",reinterpret_cast<const void*>(gaussian_pln_batch)},
                                                         {"harris_corner_detector_strength",reinterpret_cast<const void*>(harris_corner_detector_strength)},
                                                         {"harris_corner_detector_nonmax_supression",reinterpret_cast<const void*>(harris_corner_detector_nonmax_supression)},
                                                         {"harris_corner_detector_pln",reinterpret_cast<const void*>(harris_corner_detector_pln)},
