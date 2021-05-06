@@ -97,8 +97,6 @@ color_twist_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &handle, 
 RppStatus
 color_twist_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -106,6 +104,8 @@ color_twist_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &h
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_color_twist_batch_fp16(srcPtr, dstPtr, handle, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -116,8 +116,6 @@ color_twist_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &h
 RppStatus
 color_twist_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -125,6 +123,8 @@ color_twist_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &h
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_color_twist_batch_fp32(srcPtr, dstPtr, handle, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -135,8 +135,6 @@ color_twist_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &h
 RppStatus
 color_twist_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -144,6 +142,8 @@ color_twist_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &han
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_color_twist_batch_int8(srcPtr, dstPtr, handle, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -206,8 +206,6 @@ resize_crop_mirror_hip_batch_tensor(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle &h
 RppStatus
 resize_crop_mirror_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -215,6 +213,8 @@ resize_crop_mirror_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Ha
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_resize_crop_mirror_batch_fp16(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -225,8 +225,6 @@ resize_crop_mirror_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Ha
 RppStatus
 resize_crop_mirror_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -234,6 +232,8 @@ resize_crop_mirror_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Ha
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_resize_crop_mirror_batch_fp32(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -244,8 +244,6 @@ resize_crop_mirror_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Ha
 RppStatus
 resize_crop_mirror_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -253,6 +251,8 @@ resize_crop_mirror_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Hand
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_resize_crop_mirror_batch_int8(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -311,8 +311,6 @@ crop_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, RPPTens
 RppStatus
 crop_hip_batch_tensor_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -320,6 +318,8 @@ crop_hip_batch_tensor_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_batch_u8_fp16(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -330,8 +330,6 @@ crop_hip_batch_tensor_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle
 RppStatus
 crop_hip_batch_tensor_u8_fp32(Rpp8u *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -339,6 +337,8 @@ crop_hip_batch_tensor_u8_fp32(Rpp8u *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_batch_u8_fp32(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -349,8 +349,6 @@ crop_hip_batch_tensor_u8_fp32(Rpp8u *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle
 RppStatus
 crop_hip_batch_tensor_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -358,6 +356,8 @@ crop_hip_batch_tensor_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle,
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_batch_u8_int8(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -368,8 +368,6 @@ crop_hip_batch_tensor_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle,
 RppStatus
 crop_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -377,6 +375,8 @@ crop_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, 
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_batch_fp16(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -387,8 +387,6 @@ crop_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, 
 RppStatus
 crop_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -396,6 +394,8 @@ crop_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, 
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_batch_fp32(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -406,8 +406,6 @@ crop_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, 
 RppStatus
 crop_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -415,6 +413,8 @@ crop_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RP
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_batch_int8(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -484,8 +484,6 @@ crop_mirror_normalize_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle
 RppStatus
 crop_mirror_normalize_hip_batch_tensor_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -493,6 +491,8 @@ crop_mirror_normalize_hip_batch_tensor_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rp
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_mirror_normalize_batch_u8_fp16(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -503,8 +503,6 @@ crop_mirror_normalize_hip_batch_tensor_u8_fp16(Rpp8u *srcPtr, Rpp16f *dstPtr, rp
 RppStatus
 crop_mirror_normalize_hip_batch_tensor_u8_fp32(Rpp8u *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -512,6 +510,8 @@ crop_mirror_normalize_hip_batch_tensor_u8_fp32(Rpp8u *srcPtr, Rpp32f *dstPtr, rp
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_mirror_normalize_batch_u8_fp32(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -522,8 +522,6 @@ crop_mirror_normalize_hip_batch_tensor_u8_fp32(Rpp8u *srcPtr, Rpp32f *dstPtr, rp
 RppStatus
 crop_mirror_normalize_hip_batch_tensor_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -531,6 +529,8 @@ crop_mirror_normalize_hip_batch_tensor_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_mirror_normalize_batch_u8_int8(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -541,8 +541,6 @@ crop_mirror_normalize_hip_batch_tensor_u8_int8(Rpp8u *srcPtr, Rpp8s *dstPtr, rpp
 RppStatus
 crop_mirror_normalize_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -550,6 +548,8 @@ crop_mirror_normalize_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp:
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_mirror_normalize_batch_fp16(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -560,8 +560,6 @@ crop_mirror_normalize_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp:
 RppStatus
 crop_mirror_normalize_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -569,6 +567,8 @@ crop_mirror_normalize_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp:
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_mirror_normalize_batch_fp32(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
@@ -579,8 +579,6 @@ crop_mirror_normalize_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp:
 RppStatus
 crop_mirror_normalize_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle &handle, RPPTensorFunctionMetaData &tensor_info)
 {
-    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
-    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.cdstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
@@ -588,6 +586,8 @@ crop_mirror_normalize_hip_batch_tensor_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::H
 
 #elif defined(STATIC)
 
+    int in_plnpkdind = getplnpkdind(tensor_info._in_format);
+    int out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_crop_mirror_normalize_batch_int8(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
 #endif
