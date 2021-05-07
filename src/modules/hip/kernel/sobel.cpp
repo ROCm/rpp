@@ -280,6 +280,54 @@ extern "C" __global__ void sobel_batch(unsigned char *input,
 }
 
 #if defined(STATIC)
+RppStatus hip_exec_sobel_pln(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel, Rpp32u sobelType)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = width;
+    int globalThreads_y = height;
+    int globalThreads_z = 1;
+
+    hipLaunchKernelGGL(sobel_pln,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       height,
+                       width,
+                       channel,
+                       sobelType);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_sobel_pkd(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel, Rpp32u sobelType)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = width;
+    int globalThreads_y = height;
+    int globalThreads_z = 1;
+
+    hipLaunchKernelGGL(sobel_pkd,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       height,
+                       width,
+                       channel,
+                       sobelType);
+
+    return RPP_SUCCESS;
+}
+
 RppStatus hip_exec_sobel_filter_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;

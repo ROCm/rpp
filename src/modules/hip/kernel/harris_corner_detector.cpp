@@ -1,107 +1,38 @@
 #include <hip/hip_runtime.h>
-#define saturate_8u(value) ( (value) > 255 ? 255 : ((value) < 0 ? 0 : (value) ))
 
-extern "C" __global__ void gaussian_pln_batch(    unsigned char* input,
-                                     unsigned char* output,
-                                    const unsigned int height,
-                                    const unsigned int width,
-                                    const unsigned int channel,
-                                     float* kernal,
-                                    const unsigned int kernalheight,
-                                    const unsigned int kernalwidth,
-                                    const unsigned long batchIndex,
-                                    const unsigned int originalChannel
-)
+#if defined(STATIC)
+#include "rpp_hip_host_decls.hpp"
+#endif
+
+#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
+
+extern "C" __global__ void harris_corner_detector_strength(unsigned char *sobelX,
+                                                           unsigned char *sobelY,
+                                                           float *output,
+                                                           const unsigned int height,
+                                                           const unsigned int width,
+                                                           const unsigned int channel,
+                                                           const unsigned int kernelSize,
+                                                           const float kValue,
+                                                           const float threshold)
 {
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-    if (id_x >= width || id_y >= height || id_z >= channel) return;
-    unsigned long pixIdx, OPpixIdx;
-    if(originalChannel == 1)
-        pixIdx = batchIndex + (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
-    else
-        pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
-    OPpixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int boundx = (kernalwidth - 1) / 2;
-    int boundy = (kernalheight - 1) / 2;
-    int sum = 0;
-    int counter = 0;
-    for(int i = -boundy ; i <= boundy ; i++)
+    if (id_x >= width || id_y >= height || id_z >= channel)
     {
-        for(int j = -boundx ; j <= boundx ; j++)
-        {
-            if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-            {
-                unsigned long index = (unsigned long)pixIdx + (unsigned long)j + ((unsigned long)i * (unsigned long)width);
-                sum += input[index] * kernal[counter];
-            }
-            counter++;
-        }
+        return;
     }
-    output[OPpixIdx] = saturate_8u(sum);
-}
-
-__device__ unsigned int hcd_power(unsigned int a, unsigned int b)
-{
-    unsigned int sum = 1;
-    for(int i = 0; i < b; i++)
-        sum += sum * a;
-    return sum;
-}
-
-__device__ int hcd_calcSobelx(int a[3][3])
-{
-    int gx[3][3]={-1, 0, 1, -2, 0, 2, -1, 0, 1};
-    int sum = 0;
-    for(int i = 0 ; i < 3 ; i++)
-    {
-        for(int j = 0 ; j < 3 ; j++)
-        {
-            sum += a[i][j] * gx[i][j];
-        }
-    }
-    return sum;
-}
-
-__device__ int hcd_calcSobely(int a[3][3])
-{
-    int gy[3][3]={-1, -2, -1, 0, 0, 0, 1, 2, 1};
-    int sum = 0;
-    for(int i = 0 ; i < 3 ; i++)
-    {
-        for(int j = 0 ; j < 3 ; j++)
-        {
-            sum += a[i][j] * gy[i][j];
-        }
-    }
-    return sum;
-}
-
-extern "C" __global__ void harris_corner_detector_strength(   unsigned char* sobelX,
-                     unsigned char* sobelY,
-                     float* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                    const unsigned int kernelSize,
-                    const float kValue,
-                    const float threshold
-)
-{
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-    if (id_x >= width || id_y >= height || id_z >= channel) return;
 
     float sumXX = 0, sumYY = 0, sumXY = 0, det = 0, trace = 0, pixel = 0;
 
     int pixIdx = id_y * channel * width + id_x * channel + id_z;
     int bound = (kernelSize - 1) / 2;
-    for(int i = -bound ; i <= bound ; i++)
+
+    for(int i = -bound; i <= bound; i++)
     {
-        for(int j = -bound ; j <= bound ; j++)
+        for(int j = -bound; j <= bound; j++)
         {
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
@@ -112,9 +43,11 @@ extern "C" __global__ void harris_corner_detector_strength(   unsigned char* sob
             }
         }
     }
+
     det = (sumXX * sumYY) - (sumXY * sumXY);
     trace = sumXX + sumYY;
     pixel = (det) - (kValue * trace * trace);
+
     if (pixel > threshold)
     {
         output[pixIdx] = pixel;
@@ -125,26 +58,29 @@ extern "C" __global__ void harris_corner_detector_strength(   unsigned char* sob
     }
 }
 
-extern "C" __global__ void harris_corner_detector_nonmax_supression(   float* input,
-                     float* output,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel,
-                    const unsigned int kernelSize
-)
+extern "C" __global__ void harris_corner_detector_nonmax_supression(float *input,
+                                                                    float *output,
+                                                                    const unsigned int height,
+                                                                    const unsigned int width,
+                                                                    const unsigned int channel,
+                                                                    const unsigned int kernelSize)
 {
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-    if (id_x >= width || id_y >= height || id_z >= channel) return;
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
+    if (id_x >= width || id_y >= height || id_z >= channel)
+    {
+        return;
+    }
 
     int pixIdx = id_y * width + id_x + id_z * width * height;
     int bound = (kernelSize - 1) / 2;
     float pixel = input[pixIdx];
-    for(int i = -bound ; i <= bound ; i++)
+
+    for(int i = -bound; i <= bound; i++)
     {
-        for(int j = -bound ; j <= bound ; j++)
+        for(int j = -bound; j <= bound; j++)
         {
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
@@ -156,21 +92,25 @@ extern "C" __global__ void harris_corner_detector_nonmax_supression(   float* in
             }
         }
     }
+
     output[pixIdx] = input[pixIdx];
 }
 
-extern "C" __global__ void harris_corner_detector_pln(   unsigned char* input,
-                     float* inputFloat,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel
-)
+extern "C" __global__ void harris_corner_detector_pln(unsigned char *input,
+                                                      float *inputFloat,
+                                                      const unsigned int height,
+                                                      const unsigned int width,
+                                                      const unsigned int channel)
 {
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
     int pixIdx = id_y * width + id_x;
-    if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
+    if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0)
+    {
+        return;
+    }
 
     unsigned int kernelSize = 3;
     int bound = (kernelSize - 1) / 2;
@@ -196,25 +136,30 @@ extern "C" __global__ void harris_corner_detector_pln(   unsigned char* input,
     }
 }
 
-extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
-                     float* inputFloat,
-                    const unsigned int height,
-                    const unsigned int width,
-                    const unsigned int channel
-)
+extern "C" __global__ void harris_corner_detector_pkd(unsigned char *input,
+                                                      float *inputFloat,
+                                                      const unsigned int height,
+                                                      const unsigned int width,
+                                                      const unsigned int channel)
 {
-    int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
     int pixIdx = id_y * width + id_x;
-    if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
+
+    if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0)
+    {
+        return;
+    }
+
     pixIdx = id_y * channel * width + id_x * channel;
 
     unsigned int kernelSize = 3;
     int bound = (kernelSize - 1) / 2;
-    for(int i = -bound ; i <= bound ; i++)
+    for(int i = -bound; i <= bound; i++)
     {
-        for(int j = -bound ; j <= bound ; j++)
+        for(int j = -bound; j <= bound; j++)
         {
             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
             {
@@ -227,153 +172,102 @@ extern "C" __global__ void harris_corner_detector_pkd(   unsigned char* input,
     }
 }
 
-// extern "C" __global__ void harris_corner_detector_strength_batch(   unsigned char* sobelX,
-//                      unsigned char* sobelY,
-//                      float* output,
-//                     const unsigned int height,
-//                     const unsigned int width,
-//                     const unsigned int channel,
-//                     const unsigned int kernelSize,
-//                     const float kValue,
-//                     const float threshold
-// )
-// {
-//     int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-//     int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-//     if (id_x >= width || id_y >= height || id_z >= channel) return;
+#if defined(STATIC)
+RppStatus hip_exec_harris_corner_detector_strength(Rpp8u *sobelX, Rpp8u *sobelY, Rpp32f *dstFloat, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel, Rpp32s i)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = width;
+    int globalThreads_y = height;
+    int globalThreads_z = 1;
 
-//     float sumXX = 0, sumYY = 0, sumXY = 0, valX = 0, valY = 0, det = 0, trace = 0, pixel = 0;
+    hipLaunchKernelGGL(harris_corner_detector_strength,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       sobelX,
+                       sobelY,
+                       dstFloat,
+                       height,
+                       width,
+                       channel,
+                       handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i],
+                       handle.GetInitHandle()->mem.mcpu.floatArr[3].floatmem[i],
+                       handle.GetInitHandle()->mem.mcpu.floatArr[4].floatmem[i]);
 
-//     int pixIdx = id_y * channel * width + id_x * channel + id_z;
-//     int bound = (kernelSize - 1) / 2;
-//     for(int i = -bound ; i <= bound ; i++)
-//     {
-//         for(int j = -bound ; j <= bound ; j++)
-//         {
-//             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-//             {
-//                 unsigned int index = pixIdx + (j * channel) + (i * width * channel);
-//                 valX = sobelX[index];
-//                 valY = sobelY[index];
-//                 sumXX += (valX * valX);
-//                 sumYY += (valY * valY);
-//                 sumXY += (valX * valY);
-//             }
-//         }
-//     }
-//     det = (sumXX * sumYY) - (sumXY * sumXY);
-//     trace = sumXX + sumYY;
-//     pixel = (det) - (kValue * trace * trace);
-//     if (pixel > threshold)
-//     {
-//         output[pixIdx] = pixel;
-//     }
-//     else
-//     {
-//         output[pixIdx] = 0;
-//     }
-// }
+    return RPP_SUCCESS;
+}
 
-// extern "C" __global__ void harris_corner_detector_nonmax_supression_batch(   float* input,
-//                      float* output,
-//                     const unsigned int height,
-//                     const unsigned int width,
-//                     const unsigned int channel,
-//                     const unsigned int kernelSize
-// )
-// {
-//     int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-//     int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-//     if (id_x >= width || id_y >= height || id_z >= channel) return;
+RppStatus hip_exec_harris_corner_detector_nonmax_supression(Rpp32f *input, Rpp32f *output, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel, Rpp32s i)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = width;
+    int globalThreads_y = height;
+    int globalThreads_z = 1;
 
+    hipLaunchKernelGGL(harris_corner_detector_nonmax_supression,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       input,
+                       output,
+                       height,
+                       width,
+                       channel,
+                       handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]);
 
-//     int pixIdx = id_y * width + id_x + id_z * width * height;
-//     int bound = (kernelSize - 1) / 2;
-//     float pixel = input[pixIdx];
-//     for(int i = -bound ; i <= bound ; i++)
-//     {
-//         for(int j = -bound ; j <= bound ; j++)
-//         {
-//             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-//             {
-//                 unsigned int index = pixIdx + j + (i * width);
-//                 if(input[index] > pixel)
-//                 {
-//                     return;
-//                 }
-//             }
-//         }
-//     }
-//     output[pixIdx] = input[pixIdx];
-// }
+    return RPP_SUCCESS;
+}
 
-// extern "C" __global__ void harris_corner_detector_pln_batch(  unsigned char* input,
-//                                                  float* inputFloat,
-//                                                 const unsigned int height,
-//                                                 const unsigned int width,
-//                                                 const unsigned int channel,
-//                                                 const unsigned long batchIndex
-// )
-// {
-//     int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-//     int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-//     unsigned long pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
-//     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
+RppStatus hip_exec_harris_corner_detector_pkd(Rpp8u *input, Rpp32f *inputFloat, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = width;
+    int globalThreads_y = height;
+    int globalThreads_z = 1;
 
-//     pixIdx = (unsigned long)batchIndex + (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
+    hipLaunchKernelGGL(harris_corner_detector_pkd,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       input,
+                       inputFloat,
+                       height,
+                       width,
+                       channel);
 
-//     unsigned int kernelSize = 5;
-//     int bound = (kernelSize - 1) / 2;
-//     for(int i = -bound ; i <= bound ; i++)
-//     {
-//         for(int j = -bound ; j <= bound ; j++)
-//         {
-//             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-//             {
-//                 unsigned long index = (unsigned long)pixIdx + (unsigned long)j + ((unsigned long)i * (unsigned long)width);
-//                 input[index] = 255;
-//                 if(channel == 3)
-//                 {
-//                     input[index + (unsigned long)height * (unsigned long)width] = 0;
-//                     input[index + (unsigned long)height * (unsigned long)width * 2] = 0;
-//                 }
-//             }
-//         }
-//     }
-// }
+    return RPP_SUCCESS;
+}
 
-// extern "C" __global__ void harris_corner_detector_pkd_batch(  unsigned char* input,
-//                                                  float* inputFloat,
-//                                                 const unsigned int height,
-//                                                 const unsigned int width,
-//                                                 const unsigned int channel,
-//                                                 const unsigned long batchIndex
-// )
-// {
-//     int id_x = hipBlockIdx_x *hipBlockDim_x + hipThreadIdx_x;
-//     int id_y = hipBlockIdx_y *hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z *hipBlockDim_z + hipThreadIdx_z;
-//     unsigned long pixIdx = (unsigned long)id_y * (unsigned long)width + (unsigned long)id_x;
-//     if (id_x >= width || id_y >= height || id_z >= channel || inputFloat[pixIdx] == 0) return;
+RppStatus hip_exec_harris_corner_detector_pln(Rpp8u *input, Rpp32f *inputFloat, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = width;
+    int globalThreads_y = height;
+    int globalThreads_z = 1;
 
-//     pixIdx = (unsigned long)batchIndex + (unsigned long)id_y * (unsigned long)channel * (unsigned long)width + (unsigned long)id_x * (unsigned long)channel;
+    hipLaunchKernelGGL(harris_corner_detector_pln,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       input,
+                       inputFloat,
+                       height,
+                       width,
+                       channel);
 
-//     unsigned int kernelSize = 5;
-//     int bound = (kernelSize - 1) / 2;
-//     for(int i = -bound ; i <= bound ; i++)
-//     {
-//         for(int j = -bound ; j <= bound ; j++)
-//         {
-//             if(id_x + j >= 0 && id_x + j <= width - 1 && id_y + i >= 0 && id_y + i <= height -1)
-//             {
-//                 unsigned long index = (unsigned long)pixIdx + ((unsigned long)j * (unsigned long)channel) + ((unsigned long)i * (unsigned long)width * (unsigned long)channel);
-//                 input[index] = 255;
-//                 input[index+1] = 0;
-//                 input[index+2] = 0;
-//             }
-//         }
-//     }
-// }
+    return RPP_SUCCESS;
+}
+
+#endif
