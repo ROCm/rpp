@@ -1,3 +1,4 @@
+
 #include <hip/hip_runtime.h>
 
 #if defined(STATIC)
@@ -93,18 +94,18 @@ extern "C" __global__ void look_up_table_batch(unsigned char *input,
     }
 }
 
-extern "C" __global__ void look_up_table_batch_tensor(unsigned char *input,
-                                                      unsigned char *output,
-                                                      unsigned char *lutPtr,
-                                                      unsigned int *height,
-                                                      unsigned int *width,
-                                                      unsigned int *max_width,
-                                                      unsigned long *batch_index,
-                                                      const unsigned int channel,
-                                                      unsigned int *inc,
-                                                      unsigned int *dst_inc, // use width * height for pln and 1 for pkd
-                                                      const int in_pln_pkd_ind,
-                                                      const int out_pln_pkd_ind) // use 1 pln 3 for pkd
+extern "C" __global__ void lut_batch(unsigned char *input,
+                                     unsigned char *output,
+                                     unsigned char *lutPtr,
+                                     unsigned int *height,
+                                     unsigned int *width,
+                                     unsigned int *max_width,
+                                     unsigned long long *batch_index,
+                                     const unsigned int channel,
+                                     unsigned int *inc,
+                                     unsigned int *dst_inc, // use width * height for pln and 1 for pkd
+                                     const int in_pln_pkd_ind,
+                                     const int out_pln_pkd_ind) // use 1 pln 3 for pkd
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -117,26 +118,26 @@ extern "C" __global__ void look_up_table_batch_tensor(unsigned char *input,
         int luptrIndex = id_z << 8;
         for (int indextmp = 0; indextmp < channel; indextmp++)
         {
-        int lutIndex = luptrIndex + input[in_pix_index];
-        output[out_pix_index] = lutPtr[lutIndex];
-        in_pix_index += inc[id_z];
-        out_pix_index += dst_inc[id_z];
+            int lutIndex = luptrIndex + input[in_pix_index];
+            output[out_pix_index] = lutPtr[lutIndex];
+            in_pix_index += inc[id_z];
+            out_pix_index += dst_inc[id_z];
         }
     }
 }
 
-extern "C" __global__ void look_up_table_batch_tensor_int8(char *input,
-                                                           char *output,
-                                                           char *lutPtr,
-                                                           unsigned int *height,
-                                                           unsigned int *width,
-                                                           unsigned int *max_width,
-                                                           unsigned long *batch_index,
-                                                           const unsigned int channel,
-                                                           unsigned int *inc,
-                                                           unsigned int *dst_inc, // use width * height for pln and 1 for pkd
-                                                           const int in_pln_pkd_ind,
-                                                           const int out_pln_pkd_ind) // use 1 pln 3 for pkd
+extern "C" __global__ void lut_batch_int8(signed char *input,
+                                          signed char *output,
+                                          signed char *lutPtr,
+                                          unsigned int *height,
+                                          unsigned int *width,
+                                          unsigned int *max_width,
+                                          unsigned long long *batch_index,
+                                          const unsigned int channel,
+                                          unsigned int *inc,
+                                          unsigned int *dst_inc, // use width * height for pln and 1 for pkd
+                                          const int in_pln_pkd_ind,
+                                          const int out_pln_pkd_ind) // use 1 pln 3 for pkd
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -150,16 +151,16 @@ extern "C" __global__ void look_up_table_batch_tensor_int8(char *input,
 
         for (int indextmp = 0; indextmp < channel; indextmp++)
         {
-        int lutIndex = luptrIndex + input[in_pix_index] + 128;
-        output[out_pix_index] = lutPtr[lutIndex];
-        in_pix_index += inc[id_z];
-        out_pix_index += dst_inc[id_z];
+            int lutIndex = luptrIndex + input[in_pix_index] + 128;
+            output[out_pix_index] = lutPtr[lutIndex];
+            in_pix_index += inc[id_z];
+            out_pix_index += dst_inc[id_z];
         }
     }
 }
 
 #if defined(STATIC)
-RppStatus hip_exec_look_up_table_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u *hipLutPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
+RppStatus hip_exec_lut_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
     int localThreads_y = 32;
@@ -167,28 +168,57 @@ RppStatus hip_exec_look_up_table_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u *hipL
     int globalThreads_x = (max_width + 31) & ~31;
     int globalThreads_y = (max_height + 31) & ~31;
     int globalThreads_z = handle.GetBatchSize();
+    InitHandle *handle_obj = handle.GetInitHandle();
 
-    hipLaunchKernelGGL(look_up_table_batch,
+    hipLaunchKernelGGL(lut_batch,
                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                        dim3(localThreads_x, localThreads_y, localThreads_z),
                        0,
                        handle.GetStream(),
                        srcPtr,
                        dstPtr,
-                       hipLutPtr,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                       channel,
-                       handle.GetInitHandle()->mem.mgpu.inc,
-                       plnpkdind);
+                       lut,
+                       handle_obj->mem.mgpu.srcSize.height,
+                       handle_obj->mem.mgpu.srcSize.width,
+                       handle_obj->mem.mgpu.maxSrcSize.width,
+                       handle_obj->mem.mgpu.srcBatchIndex,
+                       tensor_info._in_channels,
+                       handle_obj->mem.mgpu.inc,
+                       handle_obj->mem.mgpu.dstInc,
+                       in_plnpkdind,
+                       out_plnpkdind);
 
     return RPP_SUCCESS;
 }
-#endif
 
+RppStatus hip_exec_lut_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp8s* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = (max_width + 31) & ~31;
+    int globalThreads_y = (max_height + 31) & ~31;
+    int globalThreads_z = handle.GetBatchSize();
+    InitHandle *handle_obj = handle.GetInitHandle();
+
+    hipLaunchKernelGGL(lut_batch_int8,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       lut,
+                       handle_obj->mem.mgpu.srcSize.height,
+                       handle_obj->mem.mgpu.srcSize.width,
+                       handle_obj->mem.mgpu.maxSrcSize.width,
+                       handle_obj->mem.mgpu.srcBatchIndex,
+                       tensor_info._in_channels,
+                       handle_obj->mem.mgpu.inc,
+                       handle_obj->mem.mgpu.dstInc,
+                       in_plnpkdind,
+                       out_plnpkdind);
+    return RPP_SUCCESS;
+}
+
+#endif
