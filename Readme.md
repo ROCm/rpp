@@ -85,7 +85,7 @@ RPP is developed for **Linux** operating system.
     $ cd build
     $ cmake -DBACKEND=OCL .. #for OCL and HOST
             or
-    $ cmake -DBACKEND=HIP -DCOMPILE=STATIC .. #for HIP
+    $ cmake -DBACKEND=HIP .. #for HIP
     $ make -j16
     $ sudo make install
 
