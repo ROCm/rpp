@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
@@ -255,7 +252,6 @@ extern "C" __global__ void laplacian_image_pyramid_pln_batch(unsigned char *inpu
     output[outPixIdx] = input[pixIdx] - saturate_8u(sum);
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_gaussian_image_pyramid_pkd_batch(Rpp8u *srcPtr, Rpp8u *srcPtr1, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32f *kernelArray, Rpp32u max_height, Rpp32u max_width, Rpp32u batchIndex, Rpp32s i)
 {
     int localThreads_x = 32;
@@ -363,4 +359,3 @@ RppStatus hip_exec_laplacian_image_pyramid_pln_batch(Rpp8u *srcPtr1, Rpp8u *dstP
 
     return RPP_SUCCESS;
 }
-#endif

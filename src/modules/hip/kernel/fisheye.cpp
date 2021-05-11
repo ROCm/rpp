@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 extern "C" __global__ void fisheye_planar(const unsigned char* input,
                                           unsigned char* output,
@@ -151,7 +148,6 @@ extern "C" __global__ void fisheye_batch(unsigned char *input,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_fisheye_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
@@ -182,4 +178,3 @@ RppStatus hip_exec_fisheye_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& hand
 
     return RPP_SUCCESS;
 }
-#endif
