@@ -214,9 +214,7 @@ endif()
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE   ${CPACK_PACKAGE_HOMEPAGE})
-# set(CPACK_DEBIAN_PACKAGE_DEPENDS    "miopen-opencl") # Remove Explict requirements
 set(CPACK_RPM_PACKAGE_URL           ${CPACK_PACKAGE_HOMEPAGE})
-# set(CPACK_RPM_PACKAGE_REQUIRES      "miopen-opencl") # Remove Explict requirements
 set(CPACK_RPM_PACKAGE_AUTOREQPROV   "no")
 
 if(APPLE)
