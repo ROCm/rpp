@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 extern "C" __global__ void exclusive_OR(unsigned char *input1,
                                         unsigned char *input2,
@@ -65,7 +62,6 @@ extern "C" __global__ void exclusive_OR_batch(unsigned char *input1,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_exclusive_OR_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
@@ -97,4 +93,3 @@ RppStatus hip_exec_exclusive_OR_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dst
 
     return RPP_SUCCESS;
 }
-#endif

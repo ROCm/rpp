@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 extern "C" __global__ void random_shadow(const unsigned char *input,
                                          unsigned char *output,
@@ -80,7 +77,6 @@ extern "C" __global__ void random_shadow_packed(unsigned char *input,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_random_shadow_packed(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32u channel, Rpp32u column1, Rpp32u row1, Rpp32u column2, Rpp32u row2, Rpp32s i)
 {
     int localThreads_x = 32;
@@ -134,4 +130,3 @@ RppStatus hip_exec_random_shadow_planar(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handl
 
     return RPP_SUCCESS;
 }
-#endif
