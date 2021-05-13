@@ -27,33 +27,39 @@ find_program(RPMBUILD_EXE rpmbuild)
 find_program(DPKG_EXE dpkg)
 
 # ROCm Path
+
 set(ROCM_PATH /opt/rocm CACHE PATH "ROCm installation path")
-# need to do this to avoid setting the default path to /usr/local
+
+# Avoid setting the default path to /usr/local
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH}/rpp CACHE PATH "RPP default ROCm installation path" FORCE)
+    set(CMAKE_INSTALL_PREFIX ${ROCM_PATH}/rpp CACHE PATH "RPP default ROCm installation path" FORCE)
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
-# set message options
+# Set message options
+
 if(NOT WIN32)
-  string(ASCII 27 Esc)
-  set(ColourReset "${Esc}[m")
-  set(Red         "${Esc}[31m")
-  set(Green       "${Esc}[32m")
-  set(Yellow      "${Esc}[33m")
-  set(Blue        "${Esc}[34m")
-  set(BoldBlue    "${Esc}[1;34m")
-  set(Magenta     "${Esc}[35m")
-  set(Cyan        "${Esc}[36m")
-  set(White       "${Esc}[37m")
+    string(ASCII 27 Esc)
+    set(ColourReset "${Esc}[m")
+    set(Red         "${Esc}[31m")
+    set(Green       "${Esc}[32m")
+    set(Yellow      "${Esc}[33m")
+    set(Blue        "${Esc}[34m")
+    set(BoldBlue    "${Esc}[1;34m")
+    set(Magenta     "${Esc}[35m")
+    set(Cyan        "${Esc}[36m")
+    set(White       "${Esc}[37m")
 endif()
 
 message("-- ${BoldBlue}Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
 message("-- ${BoldBlue}RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
-message("-- ${Yellow}cmake minimum version required: ${CMAKE_MINIMUM_REQUIRED_VERSION}${ColourReset}")
-message("-- ${Green}cmake version found: ${CMAKE_VERSION}${ColourReset}")
+message("-- ${Yellow}CMake minimum version required: ${CMAKE_MINIMUM_REQUIRED_VERSION}${ColourReset}")
+message("-- ${Green}CMake version found: ${CMAKE_VERSION}${ColourReset}")
 
 include(CheckCXXCompilerFlag)
-# set default backend to OPENCL
+
+# Set defaults
+
 if (NOT DEFINED BACKEND)
     SET(BACKEND "OCL")
 endif()
@@ -65,221 +71,80 @@ else()
 endif()
 
 # Cmake checks and setups
+
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-  message(FATAL_ERROR "-- ${Red}In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
+    message(FATAL_ERROR "-- ${Red}In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
 endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-# Set Compilers
-# set(COMPILER_FOR_OPENCL ${ROCM_PATH}/bin/hipcc)
-# set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
-# set(COMPILER_FOR_HIPOC ${ROCM_PATH}/bin/hipcc)
+# Set Compilers for HIP and OPENCL backends
+
 set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
 set(COMPILER_FOR_OPENCL clang++)
 
-include(ClangTidy)
-enable_clang_tidy(
-    CHECKS
-        *
-        -cert-env33-c
-        -android-cloexec-fopen
-        # Yea we shouldn't be using rand()
-        -cert-msc30-c
-        -cert-msc50-cpp
-        -clang-analyzer-alpha.core.CastToStruct
-        -clang-analyzer-optin.performance.Padding
-        -clang-diagnostic-deprecated-declarations
-        -clang-diagnostic-extern-c-compat
-        -clang-diagnostic-unused-command-line-argument
-        -cppcoreguidelines-pro-bounds-array-to-pointer-decay
-        -cppcoreguidelines-pro-bounds-constant-array-index
-        -cppcoreguidelines-pro-bounds-pointer-arithmetic
-        -cppcoreguidelines-pro-type-member-init
-        -cppcoreguidelines-pro-type-reinterpret-cast
-        -cppcoreguidelines-pro-type-union-access
-        -cppcoreguidelines-pro-type-vararg
-        -cppcoreguidelines-special-member-functions
-        -fuchsia-*
-        -google-explicit-constructor
-        -google-readability-braces-around-statements
-        -google-readability-todo
-        -google-runtime-int
-        -google-runtime-references
-        -hicpp-braces-around-statements
-        -hicpp-explicit-conversions
-        -hicpp-no-array-decay
-        # We really shouldn't use bitwise operators with signed integers, but
-        # opencl leaves us no choice
-        -hicpp-signed-bitwise
-        -hicpp-special-member-functions
-        -hicpp-use-equals-default
-        -hicpp-use-override
-        -llvm-header-guard
-        -llvm-include-order
-        -misc-misplaced-const
-        -modernize-pass-by-value
-        -modernize-use-default-member-init
-        -modernize-use-equals-default
-        -modernize-use-transparent-functors
-        -performance-unnecessary-value-param
-        -readability-braces-around-statements
-        -readability-else-after-return
-        -readability-named-parameter
-        -hicpp-use-auto
-	    -modernize-use-auto
-        -cppcoreguidelines-avoid-magic-numbers
-        -readability-magic-numbers
-        -cppcoreguidelines-macro-usage
-        -misc-non-private-member-variables-in-classes
-        -cppcoreguidelines-non-private-member-variables-in-classes
-        -readability-isolate-declaration
-        -cppcoreguidelines-avoid-c-arrays
-        -hicpp-avoid-c-arrays
-        -modernize-avoid-c-arrays
-        -readability-uppercase-literal-suffix
-        -hicpp-uppercase-literal-suffix
-        -cert-msc32-c
-        -cert-msc51-cpp
-        -bugprone-exception-escape
-
-        ${CLANG_TIDY_CHECKS}
-    ERRORS
-        *
-        -readability-inconsistent-declaration-parameter-name
-    HEADER_FILTER
-        ".*hpp"
-    EXTRA_ARGS
-
-)
-include(CppCheck)
-enable_cppcheck(
-    CHECKS
-        all
-    SUPPRESS
-        ConfigurationNotChecked
-        unmatchedSuppression
-        unusedFunction
-        # constStatement
-        noExplicitConstructor
-        passedByValue
-        # preprocessorErrorDirective
-        unusedStructMember
-        # Ignore initializer lists in the tests
-        useInitializationList:*test/*.cpp
-        *:*.cl
-        *:*src/kernels/*.h
-        knownConditionTrueFalse:*src/kernels/composable_kernel/*/*
-        wrongPrintfScanfArgNum:*src/kernels/composable_kernel/*/*
-        unusedScopedObject:*src/kernels/composable_kernel/*/*
-    FORCE
-    SOURCES
-        addkernels/
-        # driver/
-        include/
-        src/
-        test/
-    INCLUDE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_BINARY_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-
-)
-
-# Find required packages
-find_package(OpenCL REQUIRED) # OpenCL_INCLUDE_DIRS, OpenCL_LIBRARIES
-
-set( MODULES_LIST modules)
-
-foreach (MOD_NAME ${MODULES_LIST})
-    add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
-endforeach(MOD_NAME)
-
-# Backend Specific Settings
+# Backend specific settings
 
 if( "${BACKEND}" STREQUAL "HIP")
+
+    add_definitions(-DSTATIC) # This line is to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
+
+    # Find package
     find_package(HIP REQUIRED)
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
 
-    #set( LINK_LIST  ${ROCM_PATH}/lib/libhip_hcc.so  ${ROCM_PATH}/lib/libhip_hcc.so ${LINK_LIST})
-   find_program(HIP_OC_COMPILER clang-ocl
-        PATH_SUFFIXES bin
-        PATHS ${ROCM_PATH}
-    )
-    if(HIP_OC_COMPILER)
-        message(STATUS "${Green}hip compiler: ${HIP_OC_COMPILER}${ColourReset}")
-        set(HIP_OC_COMPILER "${HIP_OC_COMPILER}")
-    else()
-        message(FATAL_ERROR "${Red}clang-ocl not found${ColourReset}")
-    endif()
+    # Add modules
+    set(MODULES_LIST modules)
+    foreach(MOD_NAME ${MODULES_LIST})
+        add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+    endforeach(MOD_NAME)
 
+    # Set compiler and flags
     set(RPP_BACKEND_HIP 1)
-    find_program(HIP_OC_COMPILER clang-ocl
-        PATH_SUFFIXES bin
-        PATHS ${ROCM_PATH}
-    )
-    if(HIP_OC_COMPILER)
-        message(STATUS "${Green}hip compiler: ${HIP_OC_COMPILER}${ColourReset}")
-        set(HIP_OC_COMPILER "${HIP_OC_COMPILER}")
-    else()
-        message(FATAL_ERROR "${Red}clang-ocl not found${ColourReset}")
-    endif()
-
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+    set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
     link_libraries(stdc++)
 
-    # A hack to make this work without the device enumerator
-    link_libraries(-amdgpu-target=gfx803 -amdgpu-target=gfx900 -Wno-unused-command-line-argument)
-    CHECK_CXX_COMPILER_FLAG(-amdgpu-target=gfx906 -Werror, GFX_906_FLAG_VALID)
-    if(GFX_906_FLAG_VALID)
-        link_libraries(-amdgpu-target=gfx906)
-    endif()
-    # end hack
+    message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
 
-    set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
+elseif("${BACKEND}" STREQUAL "OCL")
 
-    link_libraries(stdc++)
+    # Find package
+    find_package(OpenCL REQUIRED)
 
-    # A hack to make this work without the device enumerator
-    link_libraries(-amdgpu-target=gfx803 -amdgpu-target=gfx900 -Wno-unused-command-line-argument)
-    CHECK_CXX_COMPILER_FLAG(-amdgpu-target=gfx906 -Werror, GFX_906_FLAG_VALID)
-    if(GFX_906_FLAG_VALID)
-        link_libraries(-amdgpu-target=gfx906)
-    endif()
-    # end hack
-    add_definitions( -DHIP_OC_COMPILER=${HIP_OC_COMPILER})
+    # Add modules
+    set(MODULES_LIST modules)
+    foreach(MOD_NAME ${MODULES_LIST})
+        add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+    endforeach(MOD_NAME)
 
-    set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-
-    if ("${COMPILE}" STREQUAL "HIPRTC")
-	add_definitions(-DHIPRTC)
-    elseif ("${COMPILE}" STREQUAL "HSACOO")
-	add_definitions(-DHSACOO)
-    elseif ("${COMPILE}" STREQUAL "STATIC")
-	add_definitions(-DSTATIC)
-    endif()
-elseif( "${BACKEND}" STREQUAL "OCL")
+    # Set compiler and flags
     set(RPP_BACKEND_OPENCL 1)
-    set(CMAKE_CXX_COMPILER  ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
-    set( LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
-    set( INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
+    set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
+    set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
+
+    message("-- ${Green}${PROJECT_NAME} set to build with OpenCL backend${ColourReset}")
 endif()
 
-if (NOT DEFINED SIMD_ENABLE)
+# Enable SIMD for HOST code (in both OpenCL and HIP backends)
+
+if(NOT DEFINED SIMD_ENABLE)
     SET(SIMD_ENABLE "1")
 endif()
 
 add_library(${PROJECT_NAME} SHARED include/rpp.h $<TARGET_OBJECTS:modules>)
-if( "${SIMD_ENABLE}" STREQUAL "1")
+if("${SIMD_ENABLE}" STREQUAL "1")
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=1)
-    message("-- ${Green}${PROJECT_NAME} built with ENABLE_SIMD_INTRINSICS${ColourReset}")
+    message("-- ${Green}${PROJECT_NAME} set to build with ENABLE_SIMD_INTRINSICS${ColourReset}")
 else()
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=0)
-    message("-- ${Red}${PROJECT_NAME} not built with ENABLE_SIMD_INTRINSICS${ColourReset}")
+    message("-- ${Red}${PROJECT_NAME} set to build without ENABLE_SIMD_INTRINSICS${ColourReset}")
 endif()
 
-# target setting
+# Target setting
+
 option(Boost_USE_STATIC_LIBS "Use boost static libraries" OFF)
 set(BOOST_COMPONENTS filesystem system)
 add_definitions(-DBOOST_ALL_NO_LIB=1)
@@ -301,10 +166,12 @@ target_include_directories(${PROJECT_NAME}
 add_subdirectory(addkernels)
 
 # Installation
-install (TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-install (DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-# set package information
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# Set package information
+
 set(CPACK_PACKAGE_VERSION       ${VERSION})
 set(CPACK_PACKAGE_NAME          "rpp")
 set(CPACK_PACKAGE_LICENSE       "MIT")
@@ -315,12 +182,12 @@ set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://gpuopen-professionalcompute-libraries.github.io/rpp/")
 
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION   "Radeon Performance Primitives library is a comprehensive high performance computer vision library
-  Radeon Performance Primitives (RPP) library is a comprehensive high performance \
-computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
+    Radeon Performance Primitives (RPP) library is a comprehensive high performance \
+    computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
 set(CPACK_RPM_PACKAGE_SUMMARY          "Radeon Performance Primitives (RPP) library is a comprehensive high performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
 
 if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
-  set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.$ENV{ROCM_LIBPATCH_VERSION}")
+    set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.$ENV{ROCM_LIBPATCH_VERSION}")
 endif()
 
 set(CPACK_DEBIAN_FILE_NAME       "DEB-DEFAULT")
@@ -329,10 +196,10 @@ set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 set(CPACK_RPM_PACKAGE_RELEASE    "local")
 
 if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
-  set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
+    set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
 endif()
 if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
-  set(CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE})
+    set(CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides
@@ -340,34 +207,32 @@ execute_process(COMMAND rpm --eval %{?dist}
                 RESULT_VARIABLE PROC_RESULT
                 OUTPUT_VARIABLE EVAL_RESULT
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-if (PROC_RESULT EQUAL "0" AND NOT EVAL_RESULT STREQUAL "")
-  string (APPEND CPACK_RPM_PACKAGE_RELEASE "%{?dist}")
+if(PROC_RESULT EQUAL "0" AND NOT EVAL_RESULT STREQUAL "")
+    string (APPEND CPACK_RPM_PACKAGE_RELEASE "%{?dist}")
 endif()
 
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE   ${CPACK_PACKAGE_HOMEPAGE})
-#set(CPACK_DEBIAN_PACKAGE_DEPENDS    "miopen-opencl") # Remove Explict requirements
 set(CPACK_RPM_PACKAGE_URL           ${CPACK_PACKAGE_HOMEPAGE})
-#set(CPACK_RPM_PACKAGE_REQUIRES      "miopen-opencl") # Remove Explict requirements
 set(CPACK_RPM_PACKAGE_AUTOREQPROV   "no")
 
 if(APPLE)
-  set(CPACK_GENERATOR "Bundle")
-  set(CPACK_BUNDLE_NAME ${CPACK_PACKAGE_NAME})
-  set(CPACK_BUNDLE_ICON ${CPACK_PACKAGE_ICON})
-  set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/.github/info.plist")
+    set(CPACK_GENERATOR "Bundle")
+    set(CPACK_BUNDLE_NAME ${CPACK_PACKAGE_NAME})
+    set(CPACK_BUNDLE_ICON ${CPACK_PACKAGE_ICON})
+    set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/.github/info.plist")
 else()
-  set(CPACK_GENERATOR "TGZ;ZIP")
-  if(EXISTS ${MAKE_NSIS_EXE})
-    list(APPEND CPACK_GENERATOR "NSIS")
-  endif()
-  if(EXISTS ${RPMBUILD_EXE})
-    list(APPEND CPACK_GENERATOR "RPM")
-  endif()
-  if(EXISTS ${DPKG_EXE})
-    list(APPEND CPACK_GENERATOR "DEB")
-  endif()
+    set(CPACK_GENERATOR "TGZ;ZIP")
+    if(EXISTS ${MAKE_NSIS_EXE})
+        list(APPEND CPACK_GENERATOR "NSIS")
+    endif()
+    if(EXISTS ${RPMBUILD_EXE})
+        list(APPEND CPACK_GENERATOR "RPM")
+    endif()
+    if(EXISTS ${DPKG_EXE})
+        list(APPEND CPACK_GENERATOR "DEB")
+    endif()
 endif()
 
 include(CPack)
