@@ -14,7 +14,7 @@ non_linear_blend_hip_batch_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr,
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_non_linear_blend_batch(srcPtr1, srcPtr2, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
-        return RPP_SUCCESS;
+    return RPP_SUCCESS;
 }
 
 RppStatus
@@ -134,7 +134,7 @@ erase_hip_batch_tensor_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp32u* anchor_box_i
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_erase_batch_fp16(srcPtr, dstPtr, anchor_box_info, colors, handle, box_offset, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
-        return RPP_SUCCESS;
+    return RPP_SUCCESS;
 }
 
 RppStatus
@@ -147,7 +147,7 @@ erase_hip_batch_tensor_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32u* anchor_box_i
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_erase_batch_fp32(srcPtr, dstPtr, anchor_box_info, colors, handle, box_offset, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
-        return RPP_SUCCESS;
+    return RPP_SUCCESS;
 }
 
 RppStatus
@@ -175,7 +175,7 @@ color_cast_hip_batch_tensor(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle &handle, R
     int in_plnpkdind = getplnpkdind(tensor_info._in_format), out_plnpkdind = getplnpkdind(tensor_info._out_format);
     hip_exec_color_cast_batch(srcPtr, dstPtr, handle, tensor_info, in_plnpkdind, out_plnpkdind, max_height, max_width);
 
-        return RPP_SUCCESS;
+    return RPP_SUCCESS;
 }
 
 RppStatus

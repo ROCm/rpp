@@ -263,7 +263,8 @@ look_up_table_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr,rpp::Handle&
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
     hip_exec_look_up_table_batch(srcPtr, dstPtr, hipLutPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
+    hipFree(&hipLutPtr);
+    
     return RPP_SUCCESS;
 }
 
