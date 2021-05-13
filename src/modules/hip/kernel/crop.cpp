@@ -1,10 +1,8 @@
 #include <hip/hip_runtime.h>
 #include <half.hpp>
-using half_float::half;
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
+
+using half_float::half;
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
@@ -303,7 +301,6 @@ extern "C" __global__ void crop_batch_u8_int8(unsigned char *input,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_crop_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 16;
@@ -541,4 +538,3 @@ RppStatus hip_exec_crop_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle& ha
 
     return RPP_SUCCESS;
 }
-#endif

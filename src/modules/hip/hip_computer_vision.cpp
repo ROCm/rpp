@@ -66,30 +66,7 @@ local_binary_pattern_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "local_binary_pattern.cpp", "local_binary_pattern_batch", vld, vgd, "")(srcPtr,
-                                                                                                     dstPtr,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                                     channel,
-                                                                                                     handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                                     plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_local_binary_pattern_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -146,28 +123,7 @@ gaussian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& hand
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "gaussian_image_pyramid.cpp", "gaussian_image_pyramid_batch", vld, vgd, "")(srcPtr,
-                                                                                                         dstPtr,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                                         channel,
-                                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                                         plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_gaussian_image_pyramid_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -261,145 +217,6 @@ control_flow_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, Rpp32u typ
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    switch(type)
-    {
-        case 1:
-            handle.AddKernel("", "", "bitwise_AND.cpp", "bitwise_AND_batch", vld, vgd, "")(srcPtr1,
-                                                                                           srcPtr2,
-                                                                                           dstPtr,
-                                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                           handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                           handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                           channel,
-                                                                                           handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                           plnpkdind);
-            break;
-        case 2:
-            handle.AddKernel("", "", "inclusive_OR.cpp", "inclusive_OR_batch", vld, vgd, "")(srcPtr1,
-                                                                                             srcPtr2,
-                                                                                             dstPtr,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                             channel,
-                                                                                             handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                             plnpkdind);
-            break;
-        case 3:
-            handle.AddKernel("", "", "exclusive_OR.cpp", "exclusive_OR_batch", vld, vgd, "")(srcPtr1,
-                                                                                             srcPtr2,
-                                                                                             dstPtr,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                             channel,
-                                                                                             handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                             plnpkdind);
-            break;
-        case 4:
-            handle.AddKernel("", "", "add.cpp", "add_batch", vld, vgd, "")(srcPtr1,
-                                                                           srcPtr2,
-                                                                           dstPtr,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                           handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                           channel,
-                                                                           handle.GetInitHandle()->mem.mgpu.inc,
-                                                                           plnpkdind);
-            break;
-        case 5:
-            handle.AddKernel("", "", "subtract.cpp", "subtract_batch", vld, vgd, "")(srcPtr1,
-                                                                                     srcPtr2,
-                                                                                     dstPtr,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                     channel,
-                                                                                     handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                     plnpkdind);
-            break;
-        case 6:
-            handle.AddKernel("", "", "multiply.cpp", "multiply_batch", vld, vgd, "")(srcPtr1,
-                                                                                     srcPtr2,
-                                                                                     dstPtr,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                     channel,
-                                                                                     handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                     plnpkdind);
-            break;
-        case 7:
-            handle.AddKernel("", "", "min.cpp", "min_batch", vld, vgd, "")(srcPtr1,
-                                                                           srcPtr2,
-                                                                           dstPtr,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                           handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                           channel,
-                                                                           handle.GetInitHandle()->mem.mgpu.inc,
-                                                                           plnpkdind);
-            break;
-        case 8:
-            handle.AddKernel("", "", "max.cpp", "max_batch", vld, vgd, "")(srcPtr1,
-                                                                           srcPtr2,
-                                                                           dstPtr,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                           handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                           handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                           channel,
-                                                                           handle.GetInitHandle()->mem.mgpu.inc,
-                                                                           plnpkdind);
-            break;
-    }
-
-#elif defined(STATIC)
-
     switch(type)
     {
         case 1:
@@ -429,8 +246,6 @@ control_flow_hip_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, Rpp32u typ
         default:
             break;
     }
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -524,76 +339,6 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
     Rpp32f *kernel;
     hipMalloc(&kernel, maxKernelSize * maxKernelSize * sizeof(Rpp32f));
 
-#if defined (HIPRTC)
-
-    Rpp32u batchIndex = 0;
-    for(int i = 0 ; i < handle.GetBatchSize(); i++)
-    {
-        generate_gaussian_kernel_gpu(handle.GetInitHandle()->mem.mcpu.floatArr[0].floatmem[i], kernelMain, handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i]);
-        hipMemcpy(kernel,kernelMain,handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] * sizeof(Rpp32f),hipMemcpyHostToDevice);
-
-        if(chnFormat == RPPI_CHN_PACKED)
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
-            handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "gaussian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr,
-                                                                                                                      srcPtr1,
-                                                                                                                      max_height,
-                                                                                                                      max_width,
-                                                                                                                      channel,
-                                                                                                                      kernel,
-                                                                                                                      handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                                                      handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                                                      batchIndex);
-        }
-        else
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
-            handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "gaussian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr,
-                                                                                                                      srcPtr1,
-                                                                                                                      max_height,
-                                                                                                                      max_width,
-                                                                                                                      channel,
-                                                                                                                      kernel,
-                                                                                                                      handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                                                      handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                                                      batchIndex);
-        }
-
-        if(chnFormat == RPPI_CHN_PACKED)
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
-            handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "laplacian_image_pyramid_pkd_batch", vld, vgd, "")(srcPtr1,
-                                                                                                                       dstPtr,
-                                                                                                                       max_height,
-                                                                                                                       max_width,
-                                                                                                                       channel,
-                                                                                                                       kernel,
-                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                                                       batchIndex);
-        }
-        else
-        {
-            std::vector<size_t> vld{32, 32, 1};
-            std::vector<size_t> vgd{handle.GetInitHandle()->mem.mgpu.csrcSize.width[i], handle.GetInitHandle()->mem.mgpu.csrcSize.height[i], channel};
-            handle.AddKernel("", "", "laplacian_image_pyramid.cpp", "laplacian_image_pyramid_pln_batch", vld, vgd, "")(srcPtr1,
-                                                                                                                       dstPtr,
-                                                                                                                       max_height,
-                                                                                                                       max_width,
-                                                                                                                       channel,
-                                                                                                                       kernel,
-                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                                                       handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i],
-                                                                                                                       batchIndex);
-        }
-        batchIndex += max_height * max_width * channel;
-    }
-
-#elif defined(STATIC)
-
     Rpp32u batchIndex = 0;
     for(int i = 0 ; i < handle.GetBatchSize(); i++)
     {
@@ -620,8 +365,6 @@ laplacian_image_pyramid_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& han
 
         batchIndex += max_height * max_width * channel;
     }
-
-#endif
 
     hipFree(srcPtr1);
     hipFree(kernel);
@@ -839,138 +582,6 @@ canny_edge_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle,
         std::vector<size_t> vld{32, 32, 1};
         std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
 
-#if defined (HIPRTC)
-
-        if(channel == 3)
-        {
-            if(chnFormat == RPPI_CHN_PACKED)
-            {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
-                                                                                                            gsin,
-                                                                                                            maxHeight,
-                                                                                                            maxWidth,
-                                                                                                            channel);
-            }
-            else
-            {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
-                                                                                                            gsin,
-                                                                                                            maxHeight,
-                                                                                                            maxWidth,
-                                                                                                            channel);
-            }
-        }
-        unsigned int sobelType = 2;
-        unsigned int sobelTypeX = 0;
-        unsigned int sobelTypeY = 1;
-        unsigned int newChannel = 1;
-        if(channel == 1)
-        {
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
-                                                                             tempDest1,
-                                                                             maxHeight,
-                                                                             maxWidth,
-                                                                             newChannel,
-                                                                             sobelType);
-        }
-        else
-        {
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(gsin,
-                                                                             tempDest1,
-                                                                             maxHeight,
-                                                                             maxWidth,
-                                                                             newChannel,
-                                                                             sobelType);
-        }
-        if(channel == 1)
-        {
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
-                                                                             sobelX,
-                                                                             maxHeight,
-                                                                             maxWidth,
-                                                                             newChannel,
-                                                                             sobelTypeX);
-        }
-        else
-        {
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(gsin,
-                                                                             sobelX,
-                                                                             maxHeight,
-                                                                             maxWidth,
-                                                                             newChannel,
-                                                                             sobelTypeX);
-        }
-        if(channel == 1)
-        {
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(srcPtr1,
-                                                                             sobelY,
-                                                                             maxHeight,
-                                                                             maxWidth,
-                                                                             newChannel,
-                                                                             sobelTypeY);
-        }
-        else
-        {
-            handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(gsin,
-                                                                             sobelY,
-                                                                             maxHeight,
-                                                                             maxWidth,
-                                                                             newChannel,
-                                                                             sobelTypeY);
-        }
-
-        handle.AddKernel("", "", "canny_edge_detector.cpp", "ced_non_max_suppression", vld, vgd, "")(tempDest1,
-                                                                                                     sobelX,
-                                                                                                     sobelY,
-                                                                                                     tempDest2,
-                                                                                                     maxHeight,
-                                                                                                     maxWidth,
-                                                                                                     newChannel,
-                                                                                                     handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
-                                                                                                     handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
-
-        if(channel == 1)
-        {
-            handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_edge", vld, vgd, "")(tempDest2,
-                                                                                            dstPtr1,
-                                                                                            maxHeight,
-                                                                                            maxWidth,
-                                                                                            newChannel,
-                                                                                            handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
-                                                                                            handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
-        }
-        else
-        {
-            handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_edge", vld, vgd, "")(tempDest2,
-                                                                                            gsout,
-                                                                                            maxHeight,
-                                                                                            maxWidth,
-                                                                                            newChannel,
-                                                                                            handle.GetInitHandle()->mem.mcpu.ucharArr[0].ucharmem[i],
-                                                                                            handle.GetInitHandle()->mem.mcpu.ucharArr[1].ucharmem[i]);
-        }
-        if(channel == 3)
-        {
-            if(chnFormat == RPPI_CHN_PACKED)
-            {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pln1_to_pkd3", vld, vgd, "")(gsout,
-                                                                                                            dstPtr1,
-                                                                                                            maxHeight,
-                                                                                                            maxWidth,
-                                                                                                            channel);
-            }
-            else
-            {
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pln1_to_pln3", vld, vgd, "")(gsout,
-                                                                                                            dstPtr1,
-                                                                                                            maxHeight,
-                                                                                                            maxWidth,
-                                                                                                            channel);
-            }
-        }
-
-#elif defined(STATIC)
-
         unsigned int sobelType = 2;
         unsigned int sobelTypeX = 0;
         unsigned int sobelTypeY = 1;
@@ -1008,9 +619,6 @@ canny_edge_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle,
                 hip_exec_canny_ced_pln1_to_pln3(gsout, dstPtr1, maxHeight, maxWidth, handle, channel);
             }
         }
-
-#endif
-
         hipMemcpy(dstPtr + batchIndex, dstPtr1, sizeof(unsigned char) * imageDim * channel, hipMemcpyDeviceToHost);
         batchIndex += imageDim * channel;
     }
@@ -1238,27 +846,11 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
         {
             if(chnFormat == RPPI_CHN_PACKED)
             {
-#if defined (HIPRTC)
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pkd3_to_pln1", vld, vgd, "")(srcPtr1,
-                                                                                                            gsin,
-                                                                                                            maxHeight,
-                                                                                                            maxWidth,
-                                                                                                            channel);
-#elif defined(STATIC)
                 hip_exec_canny_ced_pkd3_to_pln1(srcPtr1, gsin, maxHeight, maxWidth, handle, channel);
-#endif
             }
             else
             {
-#if defined (HIPRTC)
-                handle.AddKernel("", "", "canny_edge_detector.cpp", "canny_ced_pln3_to_pln1", vld, vgd, "")(srcPtr1,
-                                                                                                            gsin,
-                                                                                                            maxHeight,
-                                                                                                            maxWidth,
-                                                                                                            channel);
-#elif defined(STATIC)
                 hip_exec_canny_ced_pln3_to_pln1(srcPtr1, gsin, maxHeight, maxWidth, handle, channel);
-#endif
             }
         }
 
@@ -1271,33 +863,11 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
 
         if(channel == 1)
         {
-#if defined (HIPRTC)
-            handle.AddKernel("", "", "gaussian_filter.cpp", "gaussian_pln", vld, vgd, "")(srcPtr1,
-                                                                                          tempDest1,
-                                                                                          maxHeight,
-                                                                                          maxWidth,
-                                                                                          newChannel,
-                                                                                          kernel,
-                                                                                          handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
-                                                                                          handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
-#elif defined(STATIC)
             hip_exec_gaussian_pln(srcPtr1, tempDest1, maxHeight, maxWidth, kernel, handle, newChannel, i);
-#endif
         }
         else
         {
-#if defined (HIPRTC)
-            handle.AddKernel("", "", "gaussian_filter.cpp", "gaussian_pln", vld, vgd, "")(gsin,
-                                                                                          tempDest1,
-                                                                                          maxHeight,
-                                                                                          maxWidth,
-                                                                                          newChannel,
-                                                                                          kernel,
-                                                                                          handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i],
-                                                                                          handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i]);
-#elif defined(STATIC)
             hip_exec_gaussian_pln(gsin, tempDest1, maxHeight, maxWidth, kernel, handle, newChannel, i);
-#endif
         }
 
         /* SOBEL X and Y */
@@ -1306,78 +876,26 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
         unsigned int sobelTypeX = 0;
         unsigned int sobelTypeY = 1;
 
-#if defined (HIPRTC)
-        handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(tempDest1,
-                                                                         sobelX,
-                                                                         maxHeight,
-                                                                         maxWidth,
-                                                                         newChannel,
-                                                                         sobelTypeX);
-        handle.AddKernel("", "", "sobel.cpp", "sobel_pln", vld, vgd, "")(tempDest1,
-                                                                         sobelY,
-                                                                         maxHeight,
-                                                                         maxWidth,
-                                                                         newChannel,
-                                                                         sobelTypeY);
-#elif defined(STATIC)
         hip_exec_sobel_pln(tempDest1, sobelX, maxHeight, maxWidth, handle, newChannel, sobelTypeX);
         hip_exec_sobel_pln(tempDest1, sobelY, maxHeight, maxWidth, handle, newChannel, sobelTypeY);
-#endif
 
         /* HARRIS CORNER STRENGTH MATRIX */
 
-#if defined (HIPRTC)
-        handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_strength", vld, vgd, "")(sobelX,
-                                                                                                                sobelY,
-                                                                                                                dstFloat,
-                                                                                                                maxHeight,
-                                                                                                                maxWidth,
-                                                                                                                newChannel,
-                                                                                                                handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i],
-                                                                                                                handle.GetInitHandle()->mem.mcpu.floatArr[3].floatmem[i],
-                                                                                                                handle.GetInitHandle()->mem.mcpu.floatArr[4].floatmem[i]);
-#elif defined(STATIC)
         hip_exec_harris_corner_detector_strength(sobelX, sobelY, dstFloat, maxHeight, maxWidth, handle, newChannel, i);
-#endif
 
         /* NON-MAX SUPRESSION */
 
-#if defined (HIPRTC)
-        handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_nonmax_supression", vld, vgd, "")(dstFloat,
-                                                                                                                         nonMaxDstFloat,
-                                                                                                                         maxHeight,
-                                                                                                                         maxWidth,
-                                                                                                                         newChannel,
-                                                                                                                         handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]);
-#elif defined(STATIC)
         hip_exec_harris_corner_detector_nonmax_supression(dstFloat, nonMaxDstFloat, maxHeight, maxWidth, handle, newChannel, i);
-#endif
 
         hipMemcpy(dstPtr1, srcPtr1, sizeof(unsigned char) * singleImageSize, hipMemcpyDeviceToDevice);
 
         if(chnFormat == RPPI_CHN_PACKED)
         {
-#if defined (HIPRTC)
-            handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_pkd", vld, vgd, "")(dstPtr1,
-                                                                                                               nonMaxDstFloat,
-                                                                                                               maxHeight,
-                                                                                                               maxWidth,
-                                                                                                               channel);
-#elif defined(STATIC)
             hip_exec_harris_corner_detector_pkd(dstPtr1, nonMaxDstFloat, maxHeight, maxWidth, handle, channel);
-#endif
         }
         else
         {
-#if defined (HIPRTC)
-            handle.AddKernel("", "", "harris_corner_detector.cpp", "harris_corner_detector_pln", vld, vgd, "")(dstPtr1,
-                                                                                                               nonMaxDstFloat,
-                                                                                                               maxHeight,
-                                                                                                               maxWidth,
-                                                                                                               channel);
-#elif defined(STATIC)
             hip_exec_harris_corner_detector_pln(dstPtr1, nonMaxDstFloat, maxHeight, maxWidth, handle, channel);
-#endif
         }
 
         hipMemcpy(dstPtr + batchIndex, dstPtr1, sizeof(unsigned char) * singleImageSize, hipMemcpyDeviceToDevice);

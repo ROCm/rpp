@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 extern "C" __global__ void warp_perspective_pln(unsigned char *srcPtr,
                                                 unsigned char *dstPtr,
@@ -144,7 +141,6 @@ extern "C" __global__ void warp_perspective_batch(unsigned char *srcPtr,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_warp_perspective_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32f *perspective, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
@@ -181,4 +177,3 @@ RppStatus hip_exec_warp_perspective_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Han
 
     return RPP_SUCCESS;
 }
-#endif

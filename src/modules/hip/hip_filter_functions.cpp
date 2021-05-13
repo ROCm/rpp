@@ -45,31 +45,7 @@ sobel_filter_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiCh
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "sobel.cpp", "sobel_batch", vld, vgd, "")(srcPtr,
-                                                                       dstPtr,
-                                                                       handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                       channel,
-                                                                       handle.GetInitHandle()->mem.mgpu.inc,
-                                                                       plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_sobel_filter_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -130,31 +106,7 @@ box_filter_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnF
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "box_filter.cpp", "box_filter_batch", vld, vgd, "")(srcPtr,
-                                                                                 dstPtr,
-                                                                                 handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                 handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                 handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                 handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                 handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                 channel,
-                                                                                 handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                 plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_box_filter_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -202,31 +154,7 @@ median_filter_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiC
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "median_filter.cpp", "median_filter_batch", vld, vgd, "")(srcPtr,
-                                                                                       dstPtr,
-                                                                                       handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                       channel,
-                                                                                       handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                       plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_median_filter_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -275,31 +203,7 @@ non_max_suppression_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle,
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "non_max_suppression.cpp", "non_max_suppression_batch", vld, vgd, "")(srcPtr,
-                                                                                                   dstPtr,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                                   channel,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                                   plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_non_max_suppression_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -352,33 +256,7 @@ bilateral_filter_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, Rp
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "bilateral_filter.cpp", "bilateral_filter_batch", vld, vgd, "")(srcPtr,
-                                                                                             dstPtr,
-                                                                                             handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                                                                                             handle.GetInitHandle()->mem.mgpu.doubleArr[1].doublemem,
-                                                                                             handle.GetInitHandle()->mem.mgpu.doubleArr[2].doublemem,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                             channel,
-                                                                                             handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                             plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_bilateral_filter_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -437,32 +315,7 @@ gaussian_filter_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, Rpp
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "gaussian_filter.cpp", "gaussian_filter_batch", vld, vgd, "")(srcPtr,
-                                                                                           dstPtr,
-                                                                                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                                                                                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                           handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                           handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                           handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                           handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                           channel,
-                                                                                           handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                           plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_gaussian_filter_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -485,33 +338,7 @@ custom_convolution_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32f *kernel, RppiS
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "custom_convolution.cl", "custom_convolution_batch", vld, vgd, "")(srcPtr,
-                                                                                                dstPtr,
-                                                                                                d_kernel,
-                                                                                                kernelSize.height,
-                                                                                                kernelSize.width,
-                                                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                                handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                                handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                                handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                                handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                                handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                                channel,
-                                                                                                handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                                plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_custom_convolution_batch(srcPtr, dstPtr, handle, d_kernel, kernelSize, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }

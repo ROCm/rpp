@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
@@ -168,7 +165,6 @@ extern "C" __global__ void gaussian_filter_batch(unsigned char *input,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_gaussian_pln(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u height, Rpp32u width, Rpp32f *kernelArray, rpp::Handle& handle, Rpp32u channel, Rpp32s i)
 {
     int localThreads_x = 32;
@@ -253,4 +249,3 @@ RppStatus hip_exec_gaussian_filter_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Hand
 
     return RPP_SUCCESS;
 }
-#endif
