@@ -160,6 +160,38 @@ extern "C" __global__ void lut_batch_int8(signed char *input,
 }
 
 #if defined(STATIC)
+RppStatus hip_exec_look_up_table_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u *hipLutPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
+{
+    int localThreads_x = 32;
+    int localThreads_y = 32;
+    int localThreads_z = 1;
+    int globalThreads_x = (max_width + 31) & ~31;
+    int globalThreads_y = (max_height + 31) & ~31;
+    int globalThreads_z = handle.GetBatchSize();
+
+    hipLaunchKernelGGL(look_up_table_batch,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       hipLutPtr,
+                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                       channel,
+                       handle.GetInitHandle()->mem.mgpu.inc,
+                       plnpkdind);
+
+    return RPP_SUCCESS;
+}
+
 RppStatus hip_exec_lut_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u* lut, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
