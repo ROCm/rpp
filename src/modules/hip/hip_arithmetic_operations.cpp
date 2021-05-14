@@ -30,31 +30,8 @@ absolute_difference_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp:
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "absolute_difference.cpp", "absolute_difference_batch", vld, vgd, "")(srcPtr1,
-                                                                                                   srcPtr2,
-                                                                                                   dstPtr,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                                   channel,
-                                                                                                   handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                                   plnpkdind);
-#elif defined(STATIC)
 
     hip_exec_absolute_difference_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -87,29 +64,7 @@ accumulate_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2,rpp::Handle& handle, RppiChnF
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "accumulate.cpp", "accumulate_batch", vld, vgd, "")(srcPtr1,
-                                                                                 srcPtr2,
-                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                 handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                 handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                 handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                 handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                 handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                 channel,
-                                                                                 handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                 plnpkdind);
-#elif defined(STATIC)
-
     hip_exec_accumulate_batch(srcPtr1, srcPtr2, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -143,31 +98,8 @@ accumulate_weighted_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2,rpp::Handle& handle,
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "accumulate.cpp", "accumulate_weighted_batch", vld, vgd, "")(srcPtr1,
-                                                                                          srcPtr2,
-                                                                                          handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                          handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                          handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                          handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                          handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                          handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                          channel,
-                                                                                          handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                          plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_accumulate_weighted_batch(srcPtr1, srcPtr2, handle, chnFormat, channel, plnpkdind, max_height, max_width);
 
-#endif
     return RPP_SUCCESS;
 }
 
@@ -200,31 +132,7 @@ add_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "add.cpp", "add_batch", vld, vgd, "")(srcPtr1,
-                                                                   srcPtr2,
-                                                                   dstPtr,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                   channel,
-                                                                   handle.GetInitHandle()->mem.mgpu.inc,
-                                                                   plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_add_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -257,31 +165,9 @@ subtract_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& ha
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "subtract.cpp", "subtract_batch", vld, vgd, "")(srcPtr1,
-                                                                             srcPtr2,
-                                                                             dstPtr,
-                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                             channel,
-                                                                             handle.GetInitHandle()->mem.mgpu.inc,
-                                                                             plnpkdind);
-#elif defined(STATIC)
 
     hip_exec_subtract_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
 
-#endif
     return RPP_SUCCESS;
 }
 
@@ -314,30 +200,7 @@ magnitude_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& h
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "magnitude.cpp", "magnitude_batch", vld, vgd, "")(srcPtr1,
-                                                                               srcPtr2,
-                                                                               dstPtr,
-                                                                               handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                               handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                               handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                               handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                               handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                               handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                               handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                               handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                               channel,
-                                                                               handle.GetInitHandle()->mem.mgpu.inc,
-                                                                               plnpkdind);
-#elif defined(STATIC)
-
     hip_exec_magnitude_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -371,30 +234,7 @@ multiply_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& ha
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "multiply.cpp", "multiply_batch", vld, vgd, "")(srcPtr1,
-                                                                             srcPtr2,
-                                                                             dstPtr,
-                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                             handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                             handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                             handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                             handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                             channel,
-                                                                             handle.GetInitHandle()->mem.mgpu.inc,
-                                                                             plnpkdind);
-#elif defined(STATIC)
-
     hip_exec_multiply_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -428,30 +268,7 @@ phase_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handl
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "phase.cpp", "phase_batch", vld, vgd, "")(srcPtr1,
-                                                                       srcPtr2,
-                                                                       dstPtr,
-                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                       channel,
-                                                                       handle.GetInitHandle()->mem.mgpu.inc,
-                                                                       plnpkdind);
-#elif defined(STATIC)
-
     hip_exec_phase_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -483,28 +300,7 @@ accumulate_squared_hip_batch(Rpp8u* srcPtr, rpp::Handle& handle, RppiChnFormat c
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "accumulate.cpp", "accumulate_squared_batch", vld, vgd, "")(srcPtr,
-                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                         handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                         handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                         handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                         handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                         channel,
-                                                                                         handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                         plnpkdind);
-#elif defined(STATIC)
-
     hip_exec_accumulate_squared_batch(srcPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -543,24 +339,7 @@ tensor_add_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u* src
     dim2 = gDim3[1];
     dim3 = gDim3[2];
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
-
-    handle.AddKernel("", "", "tensor.cpp", "tensor_add", vld, vgd, "")(tensorDimension,
-                                                                       srcPtr1,
-                                                                       srcPtr2,
-                                                                       dstPtr,
-                                                                       dim1,
-                                                                       dim2,
-                                                                       dim3);
-
-#elif defined(STATIC)
-
     hip_exec_tensor_add(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -599,24 +378,7 @@ tensor_subtract_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
     dim2 = gDim3[1];
     dim3 = gDim3[2];
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
-
-    handle.AddKernel("", "", "tensor.cpp", "tensor_subtract", vld, vgd, "")(tensorDimension,
-                                                                            srcPtr1,
-                                                                            srcPtr2,
-                                                                            dstPtr,
-                                                                            dim1,
-                                                                            dim2,
-                                                                            dim3);
-
-#elif defined(STATIC)
-
     hip_exec_tensor_subtract(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -655,24 +417,7 @@ tensor_multiply_hip(Rpp32u tensorDimension, Rpp32u *tensorDimensionValues, Rpp8u
     dim2 = gDim3[1];
     dim3 = gDim3[2];
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
-
-    handle.AddKernel("", "", "tensor.cpp", "tensor_multiply", vld, vgd, "")(tensorDimension,
-                                                                            srcPtr1,
-                                                                            srcPtr2,
-                                                                            dstPtr,
-                                                                            dim1,
-                                                                            dim2,
-                                                                            dim3);
-
-#elif defined(STATIC)
-
     hip_exec_tensor_multiply(tensorDimension, srcPtr1, srcPtr2, dstPtr, handle, dim1, dim2, dim3);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -692,24 +437,7 @@ tensor_matrix_multiply_hip(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp32u *tensorDimensi
     c = tensorDimensionValues2[0];
     d = tensorDimensionValues2[1];
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{gDim3[0], gDim3[1], gDim3[2]};
-
-    handle.AddKernel("", "", "tensor.cpp", "tensor_matrix_multiply", vld, vgd, "")(srcPtr1,
-                                                                                   srcPtr2,
-                                                                                   dstPtr,
-                                                                                   a,
-                                                                                   b,
-                                                                                   c,
-                                                                                   d);
-
-#elif defined(STATIC)
-
     hip_exec_tensor_matrix_multiply(srcPtr1, srcPtr2, dstPtr, handle, a, b, c, d, gDim3[0], gDim3[1], gDim3[2]);
-
-#endif
 
     return RPP_SUCCESS;
 }

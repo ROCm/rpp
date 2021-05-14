@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
@@ -202,7 +199,6 @@ extern "C" __global__ void lens_correction_batch(unsigned char *input,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_lens_correction_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
@@ -235,4 +231,3 @@ RppStatus hip_exec_lens_correction_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Hand
 
     return RPP_SUCCESS;
 }
-#endif

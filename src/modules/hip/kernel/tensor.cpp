@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 #define saturate_8u_unsigned(value) ((value) > 255 ? 255 : value)
@@ -269,7 +266,6 @@ extern "C" __global__ void tensor_look_up_table(const unsigned int tensorDimensi
     output[pixIdx] = pixel;
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_tensor_add(Rpp32u tensorDimension, Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32u gdim1, Rpp32u gdim2, Rpp32u gdim3)
 {
     int localThreads_x = 32;
@@ -394,4 +390,3 @@ RppStatus hip_exec_tensor_look_up_table_batch(Rpp32u tensorDimension, Rpp8u *src
 
     return RPP_SUCCESS;
 }
-#endif
