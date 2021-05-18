@@ -31,32 +31,7 @@ thresholding_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiCh
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "thresholding.cpp", "thresholding_batch", vld, vgd, "")(srcPtr,
-                                                                                     dstPtr,
-                                                                                     handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
-                                                                                     handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                                     handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                                     handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                                     handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                                     channel,
-                                                                                     handle.GetInitHandle()->mem.mgpu.inc,
-                                                                                     plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_thresholding_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -90,31 +65,7 @@ min_hip_batch(Rpp8u* srcPtr1, Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "min.cpp", "min_batch", vld, vgd, "")(srcPtr1,
-                                                                   srcPtr2,
-                                                                   dstPtr,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                   channel,
-                                                                   handle.GetInitHandle()->mem.mgpu.inc,
-                                                                   plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_min_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }
@@ -148,31 +99,7 @@ max_hip_batch(Rpp8u* srcPtr1,Rpp8u* srcPtr2, Rpp8u* dstPtr, rpp::Handle& handle,
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
 
-#if defined (HIPRTC)
-
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{(max_width + 31) & ~31, (max_height + 31) & ~31, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "max.cpp", "max_batch", vld, vgd, "")(srcPtr1,
-                                                                   srcPtr2,
-                                                                   dstPtr,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                   channel,
-                                                                   handle.GetInitHandle()->mem.mgpu.inc,
-                                                                   plnpkdind);
-
-#elif defined(STATIC)
-
     hip_exec_max_batch(srcPtr1, srcPtr2, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
-
-#endif
 
     return RPP_SUCCESS;
 }

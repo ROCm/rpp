@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
@@ -172,7 +169,6 @@ extern "C" __global__ void harris_corner_detector_pkd(unsigned char *input,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_harris_corner_detector_strength(Rpp8u *sobelX, Rpp8u *sobelY, Rpp32f *dstFloat, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel, Rpp32s i)
 {
     int localThreads_x = 32;
@@ -269,5 +265,3 @@ RppStatus hip_exec_harris_corner_detector_pln(Rpp8u *input, Rpp32f *inputFloat, 
 
     return RPP_SUCCESS;
 }
-
-#endif

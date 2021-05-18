@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
@@ -418,8 +415,6 @@ extern "C" __global__ void erase_pln1_batch_fp32(float *input,
 //   }
 // }
 
-
-#if defined(STATIC)
 RppStatus hip_exec_erase_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32u* anchor_box_info, Rpp8u* colors, rpp::Handle &handle, Rpp32u* box_offset, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
@@ -549,5 +544,3 @@ RppStatus hip_exec_erase_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp32u* anchor
                        out_plnpkdind);
     return RPP_SUCCESS;
 }
-
-#endif

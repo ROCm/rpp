@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
 
 extern "C" __global__ void channel_extract_pln(unsigned char *input,
                                                unsigned char *output,
@@ -71,7 +68,6 @@ extern "C" __global__ void channel_extract_batch(unsigned char *input,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_channel_extract_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
@@ -99,4 +95,3 @@ RppStatus hip_exec_channel_extract_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Hand
 
     return RPP_SUCCESS;
 }
-#endif

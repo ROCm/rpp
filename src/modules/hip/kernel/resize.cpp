@@ -1,10 +1,8 @@
 #include <hip/hip_runtime.h>
 #include <half.hpp>
-using half_float::half;
-
-#if defined(STATIC)
 #include "rpp_hip_host_decls.hpp"
-#endif
+
+using half_float::half;
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 
@@ -1172,7 +1170,6 @@ extern "C" __global__ void random_crop_letterbox_batch(unsigned char *srcPtr,
     }
 }
 
-#if defined(STATIC)
 RppStatus hip_exec_resize_crop_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32u padding, Rpp32u type, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 16;
@@ -1748,4 +1745,3 @@ RppStatus hip_exec_random_crop_letterbox_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp
 
     return RPP_SUCCESS;
 }
-#endif
