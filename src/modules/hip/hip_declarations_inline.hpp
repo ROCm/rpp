@@ -6,43 +6,6 @@
 #include "hip/rpp_hip_common.hpp"
 #include "kernel/rpp_hip_host_decls.hpp"
 
-/******************** color_convert ********************/
-
-template <typename T, typename U>
-RppStatus
-color_convert_hip_batch(T* srcPtr, U* dstPtr, RppiColorConvertMode convert_mode, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
-{
-    int plnpkdind;
-    if(chnFormat == RPPI_CHN_PLANAR)
-        plnpkdind = 1;
-    else
-        plnpkdind = 3;
-    Rpp32u max_height, max_width;
-    std::string kernel_name ;
-    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    if (convert_mode == RGB_HSV)
-        kernel_name = "convert_batch_rgb_hsv";
-    if (convert_mode == HSV_RGB)
-        kernel_name = "convert_batch_hsv_rgb";
-    std::vector<size_t> vld{32, 32, 1};
-    std::vector<size_t> vgd{max_width, max_height, handle.GetBatchSize()};
-
-    handle.AddKernel("", "", "hue.cpp", kernel_name, vld, vgd, "")(srcPtr,
-                                                                   dstPtr,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                                                                   handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                                                                   handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                                                                   handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                                                                   handle.GetInitHandle()->mem.mgpu.inc,
-                                                                   plnpkdind);
-
-    return RPP_SUCCESS;
-}
-
 /******************** tensor_transpose ********************/
 
 template <typename T, typename U>

@@ -255,6 +255,10 @@ saturationRGB_hip(Rpp8u* srcPtr,RppiSize srcSize, Rpp8u* dstPtr, float saturatio
 RppStatus
 saturationRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
+color_convert_hip_batch_u8_fp32(Rpp8u* srcPtr, Rpp32f* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
+RppStatus
+color_convert_hip_batch_fp32_u8(Rpp32f* srcPtr, Rpp8u* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
+RppStatus
 channel_extract_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u extractChannelNumber, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
 channel_extract_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);

@@ -240,6 +240,40 @@ saturationRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiC
     return RPP_SUCCESS;
 }
 
+/******************** color_convert ********************/
+
+RppStatus
+color_convert_hip_batch_u8_fp32(Rpp8u* srcPtr, Rpp32f* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+{
+    int plnpkdind;
+    if(chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    hip_exec_convert_batch_rgb_hsv(srcPtr, dstPtr, handle, plnpkdind, max_width, max_height);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+color_convert_hip_batch_fp32_u8(Rpp32f* srcPtr, Rpp8u* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle)
+{
+    int plnpkdind;
+    if(chnFormat == RPPI_CHN_PLANAR)
+        plnpkdind = 1;
+    else
+        plnpkdind = 3;
+    Rpp32u max_height, max_width;
+    max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
+
+    hip_exec_convert_batch_hsv_rgb(srcPtr, dstPtr, handle, plnpkdind, max_width, max_height);
+
+    return RPP_SUCCESS;
+}
+
 /******************** look_up_table ********************/
 
 RppStatus
@@ -264,7 +298,7 @@ look_up_table_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp8u* lutPtr,rpp::Handle&
 
     hip_exec_look_up_table_batch(srcPtr, dstPtr, hipLutPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
     hipFree(&hipLutPtr);
-    
+
     return RPP_SUCCESS;
 }
 
