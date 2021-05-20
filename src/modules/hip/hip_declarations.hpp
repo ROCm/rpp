@@ -452,6 +452,14 @@ harris_corner_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32
 RppStatus
 harris_corner_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr,rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
+tensor_transpose_hip_u8(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32u* in_dims, Rpp32u *perm, rpp::Handle& handle);
+RppStatus
+tensor_transpose_hip_fp16(Rpp16f* srcPtr, Rpp16f* dstPtr, Rpp32u* in_dims, Rpp32u *perm, rpp::Handle& handle);
+RppStatus
+tensor_transpose_hip_fp32(Rpp32f* srcPtr, Rpp32f* dstPtr, Rpp32u* in_dims, Rpp32u *perm, rpp::Handle& handle);
+RppStatus
+tensor_transpose_hip_i8(Rpp8s* srcPtr, Rpp8s* dstPtr, Rpp32u* in_dims, Rpp32u *perm, rpp::Handle& handle);
+RppStatus
 fast_corner_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u numOfPixels, Rpp8u threshold, Rpp32u nonmaxKernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
 fast_corner_detector_hip_batch( Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
