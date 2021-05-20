@@ -392,12 +392,12 @@ RppStatus hip_exec_tensor_transpose(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u *d_out_
 
 RppStatus hip_exec_tensor_transpose_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle)
 {
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = out_dims[0];
-    int globalThreads_y = out_dims[1];
-    int globalThreads_z = out_dims[2] * out_dims[3];
+    // int localThreads_x = 16;
+    // int localThreads_y = 16;
+    // int localThreads_z = 1;
+    // int globalThreads_x = out_dims[0];
+    // int globalThreads_y = out_dims[1];
+    // int globalThreads_z = out_dims[2] * out_dims[3];
 
     // hipLaunchKernelGGL(tensor_transpose_fp16,
     //                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
