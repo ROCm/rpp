@@ -58,6 +58,8 @@ RppStatus hip_exec_channel_extract_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Hand
 RppStatus hip_exec_channel_combine_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *srcPtr3, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width);
 RppStatus hip_exec_hueRGB_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width);
 RppStatus hip_exec_saturationRGB_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width);
+RppStatus hip_exec_convert_batch_rgb_hsv(Rpp8u *srcPtr, Rpp32f *dstPtr, rpp::Handle& handle, Rpp32s plnpkdind, Rpp32u max_width, Rpp32u max_height);
+RppStatus hip_exec_convert_batch_hsv_rgb(Rpp32f *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32s plnpkdind, Rpp32u max_width, Rpp32u max_height);
 RppStatus hip_exec_look_up_table_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u *hipLutPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width);
 RppStatus hip_exec_tensor_look_up_table_batch(Rpp32u tensorDimension, Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp8u *hipLutPtr, rpp::Handle& handle, Rpp32u gdim1, Rpp32u gdim2, Rpp32u gdim3);
 
@@ -79,6 +81,10 @@ RppStatus hip_exec_harris_corner_detector_strength(Rpp8u *sobelX, Rpp8u *sobelY,
 RppStatus hip_exec_harris_corner_detector_nonmax_supression(Rpp32f *input, Rpp32f *output, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel, Rpp32s i);
 RppStatus hip_exec_harris_corner_detector_pkd(Rpp8u *input, Rpp32f *inputFloat, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel);
 RppStatus hip_exec_harris_corner_detector_pln(Rpp8u *input, Rpp32f *inputFloat, Rpp32u height, Rpp32u width, rpp::Handle& handle, Rpp32u channel);
+RppStatus hip_exec_tensor_transpose(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle);
+RppStatus hip_exec_tensor_transpose_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle);
+RppStatus hip_exec_tensor_transpose_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle);
+RppStatus hip_exec_tensor_transpose_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle);
 
 
 // filter_operations
