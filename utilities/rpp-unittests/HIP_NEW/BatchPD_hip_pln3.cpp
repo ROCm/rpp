@@ -3479,7 +3479,6 @@ int main(int argc, char **argv)
 
         break;
     }
-    
     case 76:
     {
         test_case_name = "reconstruction_laplacian_image_pyramid";
@@ -3615,14 +3614,14 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 81:
+    case 80:
     {
         test_case_name = "bilateral_filter";
         missingFuncFlag = 1;
 
         break;
     }
-    case 82:
+    case 81:
     {
         test_case_name = "match_template";
         missingFuncFlag = 1;

@@ -1051,9 +1051,6 @@ int main(int argc, char **argv)
 
         break;
     }
-    
-    
-    
     case 12:
     {
         test_case_name = "random_crop_letterbox";
@@ -1105,7 +1102,6 @@ int main(int argc, char **argv)
 
         break;
     }
-    
     case 13:
     {
         test_case_name = "exposure";
@@ -1674,7 +1670,6 @@ int main(int argc, char **argv)
 
         break;
     }
-    
     case 29:
     {
         test_case_name = "water";
@@ -3382,7 +3377,6 @@ int main(int argc, char **argv)
 
         break;
     }
-    
     case 76:
     {
         test_case_name = "reconstruction_laplacian_image_pyramid";
