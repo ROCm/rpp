@@ -374,7 +374,7 @@ int main(int argc, char **argv)
         strcpy(funcName, "glitch");
         break;
     }
-
+    
 
     if (outputFormatToggle == 0)
     {
@@ -471,7 +471,7 @@ int main(int argc, char **argv)
     strcat(funcName, funcType);
     strcat(dst, "/");
     strcat(dst, funcName);
-
+    
     DIR *dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
     {
@@ -756,7 +756,7 @@ int main(int argc, char **argv)
         }
 
         start = clock();
-
+    
         if (ip_bitDepth == 0)
             rppi_brightness_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, noOfImages, handle);
         else if (ip_bitDepth == 1)
@@ -3549,7 +3549,38 @@ int main(int argc, char **argv)
         imwrite(temp, mat_op_image);
         free(temp_output);
     }
+    // elementsInRowMax = maxWidth * ip_channel;
 
+    // for (j = 0; j < noOfImages; j++)
+    // {   
+    //     int height = srcSize[j].height; 
+    //     int width = srcSize[j].width;
+
+    //     int op_size = height * width * ip_channel;
+    //     Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
+    //     Rpp8u *temp_output_row;
+    //     temp_output_row = temp_output;
+    //     Rpp32u elementsInRow = width * ip_channel;
+    //     Rpp8u *output_row = output + count;
+
+    //     for (int k = 0; k < height; k++)
+    //     {
+    //         memcpy(temp_output_row, (output_row), elementsInRow * sizeof (Rpp8u));
+    //         temp_output_row += elementsInRow;
+    //         output_row += elementsInRowMax;
+    //     }
+    //     count += maxHeight * maxWidth * ip_channel;
+    
+    //     char temp[1000];
+    //     strcpy(temp, dst);
+    //     strcat(temp, imageNames[j]);
+        
+    //     Mat mat_op_image;
+    //     mat_op_image = Mat(height, width, CV_8UC3, temp_output);
+    //     imwrite(temp, mat_op_image);
+        
+    //     free(temp_output);
+    // }
     free(srcSize);
     free(dstSize);
     free(input);
