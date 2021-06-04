@@ -1363,64 +1363,6 @@ RppStatus
     return RPP_SUCCESS;
 }
 
-RppStatus
-    rpp_i8_control_flow(Rpp8s num1, Rpp8s num2, Rpp8s *output, RppOp operation, rppHandle_t rppHandle)
-{
-    if(operation == RPP_SCALAR_OP_ADD)
-        *output = num1 + num2;
-    if(operation == RPP_SCALAR_OP_SUBTRACT)
-        *output = num1 - num2;
-    if(operation == RPP_SCALAR_OP_MULTIPLY)
-        *output = num1 * num2;
-    if(operation == RPP_SCALAR_OP_MODULUS)
-        *output = num1 % num2;
-    if(operation == RPP_SCALAR_OP_DIVIDE)
-        *output = num1 / num2;
-    if(operation == RPP_SCALAR_OP_MIN)
-        *output = std::min(num1, num2);
-    if(operation == RPP_SCALAR_OP_MAX)
-        *output = std::max(num1, num2);
-    if(operation == RPP_SCALAR_OP_NOTEQUAL)
-        *output = (num1 != num2);
-    if(operation == RPP_SCALAR_OP_LESS)
-        *output = (num1 < num2);
-    if(operation == RPP_SCALAR_OP_LESSEQ)
-        *output = (num1 <= num2);
-    if(operation == RPP_SCALAR_OP_GREATER)
-        *output = (num1 > num2);
-    if(operation == RPP_SCALAR_OP_GREATEREQ)
-        *output = (num1 >= num2);
-    return RPP_SUCCESS;
-}
-
-RppStatus
-    rpp_f32_control_flow(Rpp32f num1, Rpp32f num2, Rpp32f *output, RppOp operation, rppHandle_t rppHandle)
-{
-    if(operation == RPP_SCALAR_OP_ADD)
-        *output = num1 + num2;
-    if(operation == RPP_SCALAR_OP_SUBTRACT)
-        *output = num1 - num2;
-    if(operation == RPP_SCALAR_OP_MULTIPLY)
-        *output = num1 * num2;
-    if(operation == RPP_SCALAR_OP_DIVIDE)
-        *output = num1 / num2;
-    if(operation == RPP_SCALAR_OP_MIN)
-        *output = std::min(num1, num2);
-    if(operation == RPP_SCALAR_OP_MAX)
-        *output = std::max(num1, num2);
-    if(operation == RPP_SCALAR_OP_NOTEQUAL)
-        *output = (num1 != num2);
-    if(operation == RPP_SCALAR_OP_LESS)
-        *output = (num1 < num2);
-    if(operation == RPP_SCALAR_OP_LESSEQ)
-        *output = (num1 <= num2);
-    if(operation == RPP_SCALAR_OP_GREATER)
-        *output = (num1 > num2);
-    if(operation == RPP_SCALAR_OP_GREATEREQ)
-        *output = (num1 >= num2);
-    return RPP_SUCCESS;
-}
-
 /*************************************** hog ************************************/
 
 RppStatus
