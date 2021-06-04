@@ -3532,23 +3532,6 @@ int main(int argc, char **argv)
     mkdir(dst, 0700);
     strcat(dst, "/");
     count = 0;
-    // for (j = 0; j < noOfImages; j++)
-    // {
-    //     int op_size = maxHeight * maxWidth * ip_channel;
-    //     Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
-    //     for (i = 0; i < op_size; i++)
-    //     {
-    //         temp_output[i] = output[count];
-    //         count++;
-    //     }
-    //     char temp[1000];
-    //     strcpy(temp, dst);
-    //     strcat(temp, imageNames[j]);
-    //     Mat mat_op_image;
-    //     mat_op_image = Mat(maxHeight, maxWidth, CV_8UC3, temp_output);
-    //     imwrite(temp, mat_op_image);
-    //     free(temp_output);
-    // }
     elementsInRowMax = maxWidth * ip_channel;
 
     for (j = 0; j < noOfImages; j++)
