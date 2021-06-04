@@ -3306,7 +3306,7 @@ int main(int argc, char **argv)
         strcat(temp, imageNames[j]);
         
         Mat mat_op_image;
-        mat_op_image = Mat(height, width, CV_8UC3, temp_output);
+        mat_op_image = Mat(height, width, CV_8UC1, temp_output);
         imwrite(temp, mat_op_image);
         
         free(temp_output);

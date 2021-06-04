@@ -3551,8 +3551,8 @@ int main(int argc, char **argv)
 
     for (j = 0; j < noOfImages; j++)
     {   
-        int height = srcSize[j].height; 
-        int width = srcSize[j].width;
+        int height = dstSize[j].height; 
+        int width = dstSize[j].width;
 
         int op_size = height * width * ip_channel;
         Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
