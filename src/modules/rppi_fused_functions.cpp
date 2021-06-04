@@ -321,6 +321,80 @@ rppi_color_twist_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSi
 }
 
 RppStatus
+crop_mirror_normalize_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
+							 RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type,
+							 RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize,
+							 RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize,
+							 Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev,
+							 Rpp32u *mirrorFlag, Rpp32u outputFormatToggle,
+							 Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	Rpp32u paramIndex = 0;
+	bool is_padded = true;
+
+	RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
+										  (bool)outputFormatToggle);
+
+	copy_srcSize(srcSize, rpp::deref(rppHandle));
+	copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+	copy_dstSize(dstSize, rpp::deref(rppHandle));
+	copy_dstMaxSize(maxDstSize, rpp::deref(rppHandle));
+	get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
+	get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format, is_padded);
+	copy_param_uint(crop_pos_x, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint(crop_pos_y, rpp::deref(rppHandle), paramIndex++);
+	copy_param_float(mean, rpp::deref(rppHandle), paramIndex++);
+	copy_param_float(std_dev, rpp::deref(rppHandle), paramIndex++);
+	copy_param_uint(mirrorFlag, rpp::deref(rppHandle), paramIndex++);
+
+#ifdef OCL_COMPILE
+	{
+		crop_mirror_normalize_cl_batch(
+			static_cast<cl_mem>(srcPtr),
+			static_cast<cl_mem>(dstPtr),
+			rpp::deref(rppHandle),
+			tensor_info);
+	}
+#elif defined(HIP_COMPILE)
+	{
+		if (in_tensor_type == RPPTensorDataType::U8)
+		{
+			if (out_tensor_type == RPPTensorDataType::U8)
+			{
+				crop_mirror_normalize_hip_batch_tensor(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8u *>(dstPtr), rpp::deref(rppHandle), tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::FP16)
+			{
+				crop_mirror_normalize_hip_batch_tensor_u8_fp16(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp16f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::FP32)
+			{
+				crop_mirror_normalize_hip_batch_tensor_u8_fp32(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp32f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
+			}
+			else if (out_tensor_type == RPPTensorDataType::I8)
+			{
+				crop_mirror_normalize_hip_batch_tensor_u8_int8(static_cast<Rpp8u *>(srcPtr), static_cast<Rpp8s *>(dstPtr), rpp::deref(rppHandle), tensor_info);
+			}
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP16)
+		{
+			crop_mirror_normalize_hip_batch_tensor_fp16(static_cast<Rpp16f *>(srcPtr), static_cast<Rpp16f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::FP32)
+		{
+			crop_mirror_normalize_hip_batch_tensor_fp32(static_cast<Rpp32f *>(srcPtr), static_cast<Rpp32f *>(dstPtr), rpp::deref(rppHandle), tensor_info);
+		}
+		else if (in_tensor_type == RPPTensorDataType::I8)
+		{
+			crop_mirror_normalize_hip_batch_tensor_int8(static_cast<Rpp8s *>(srcPtr), static_cast<Rpp8s *>(dstPtr), rpp::deref(rppHandle), tensor_info);
+		}
+	}
+#endif //BACKEND
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
 rppi_crop_mirror_normalize_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *crop_pos_x, Rpp32u *crop_pos_y, Rpp32f *mean, Rpp32f *std_dev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
 {
 	return (crop_mirror_normalize_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8,
