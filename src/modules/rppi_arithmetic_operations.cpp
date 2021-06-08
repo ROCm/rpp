@@ -5,7 +5,6 @@
 #ifdef HIP_COMPILE
 #include <hip/rpp_hip_common.hpp>
 #include "hip/hip_declarations.hpp"
-#include "hip/hip_declarations_inline.hpp"
 
 #elif defined(OCL_COMPILE)
 #include <cl/rpp_cl_common.hpp>
@@ -29823,8 +29822,8 @@ rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tenso
  	 } 
 #elif defined (HIP_COMPILE) 
  	 {
-		tensor_transpose_hip<Rpp8u, Rpp8u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), 
-		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::U8, rpp::deref(rppHandle));
+		tensor_transpose_hip_u8(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 	return RPP_SUCCESS;
@@ -29840,8 +29839,8 @@ rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tens
  	 } 
 #elif defined (HIP_COMPILE) 
  	 {
-		tensor_transpose_hip<Rpp16f, Rpp16f>(static_cast<Rpp16f*>(srcPtr), static_cast<Rpp16f*>(dstPtr), 
-		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP16, rpp::deref(rppHandle));
+		tensor_transpose_hip_fp16(static_cast<Rpp16f*>(srcPtr), static_cast<Rpp16f*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 	return RPP_SUCCESS;
@@ -29857,8 +29856,8 @@ rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tens
  	 } 
 #elif defined (HIP_COMPILE) 
  	 {
-		tensor_transpose_hip<Rpp32f, Rpp32f>(static_cast<Rpp32f*>(srcPtr), static_cast<Rpp32f*>(dstPtr), 
-		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::FP32, rpp::deref(rppHandle));
+		tensor_transpose_hip_fp32(static_cast<Rpp32f*>(srcPtr), static_cast<Rpp32f*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 	return RPP_SUCCESS;
@@ -29874,8 +29873,8 @@ rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t in_tenso
  	 } 
 #elif defined (HIP_COMPILE) 
  	 {
-		tensor_transpose_hip<Rpp8s, Rpp8s>(static_cast<Rpp8s*>(srcPtr), static_cast<Rpp8s*>(dstPtr), 
-		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), RPPTensorDataType::I8, rpp::deref(rppHandle));
+		tensor_transpose_hip_i8(static_cast<Rpp8s*>(srcPtr), static_cast<Rpp8s*>(dstPtr), 
+		 static_cast<Rpp32u*>(in_tensor_dims), static_cast<Rpp32u*>(perm), rpp::deref(rppHandle));
  	 } 
 #endif //BACKEND 
 	return RPP_SUCCESS;

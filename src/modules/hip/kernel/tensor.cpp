@@ -162,8 +162,8 @@ extern "C" __global__ void tensor_transpose_fp32(float *input,
     output[dst_idx] = input[src_idx];
 }
 
-extern "C" __global__ void tensor_transpose_int8(char *input,
-                                                 char *output,
+extern "C" __global__ void tensor_transpose_int8(signed char *input,
+                                                 signed char *output,
                                                  unsigned int *out_dims,
                                                  unsigned int *perm,
                                                  unsigned int *dst_strides,
@@ -362,6 +362,102 @@ RppStatus hip_exec_tensor_matrix_multiply(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u 
                        b,
                        c,
                        d);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_tensor_transpose(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle)
+{
+    int localThreads_x = 16;
+    int localThreads_y = 16;
+    int localThreads_z = 1;
+    int globalThreads_x = out_dims[0];
+    int globalThreads_y = out_dims[1];
+    int globalThreads_z = out_dims[2] * out_dims[3];
+
+    hipLaunchKernelGGL(tensor_transpose,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       d_out_dims,
+                       d_perm,
+                       d_out_strides,
+                       d_in_strides);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_tensor_transpose_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle)
+{
+    // int localThreads_x = 16;
+    // int localThreads_y = 16;
+    // int localThreads_z = 1;
+    // int globalThreads_x = out_dims[0];
+    // int globalThreads_y = out_dims[1];
+    // int globalThreads_z = out_dims[2] * out_dims[3];
+
+    // hipLaunchKernelGGL(tensor_transpose_fp16,
+    //                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+    //                    dim3(localThreads_x, localThreads_y, localThreads_z),
+    //                    0,
+    //                    handle.GetStream(),
+    //                    srcPtr,
+    //                    dstPtr,
+    //                    d_out_dims,
+    //                    d_perm,
+    //                    d_out_strides,
+    //                    d_in_strides);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_tensor_transpose_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle)
+{
+    int localThreads_x = 16;
+    int localThreads_y = 16;
+    int localThreads_z = 1;
+    int globalThreads_x = out_dims[0];
+    int globalThreads_y = out_dims[1];
+    int globalThreads_z = out_dims[2] * out_dims[3];
+
+    hipLaunchKernelGGL(tensor_transpose_fp32,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       d_out_dims,
+                       d_perm,
+                       d_out_strides,
+                       d_in_strides);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_tensor_transpose_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp32u *d_out_dims, Rpp32u *d_perm, Rpp32u *d_out_strides, Rpp32u *d_in_strides, Rpp32u *out_dims, rpp::Handle& handle)
+{
+    int localThreads_x = 16;
+    int localThreads_y = 16;
+    int localThreads_z = 1;
+    int globalThreads_x = out_dims[0];
+    int globalThreads_y = out_dims[1];
+    int globalThreads_z = out_dims[2] * out_dims[3];
+
+    hipLaunchKernelGGL(tensor_transpose_int8,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       dstPtr,
+                       d_out_dims,
+                       d_perm,
+                       d_out_strides,
+                       d_in_strides);
 
     return RPP_SUCCESS;
 }

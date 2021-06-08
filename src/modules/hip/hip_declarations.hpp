@@ -255,6 +255,10 @@ saturationRGB_hip(Rpp8u* srcPtr,RppiSize srcSize, Rpp8u* dstPtr, float saturatio
 RppStatus
 saturationRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
 RppStatus
+color_convert_hip_batch_u8_fp32(Rpp8u* srcPtr, Rpp32f* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
+RppStatus
+color_convert_hip_batch_fp32_u8(Rpp32f* srcPtr, Rpp8u* dstPtr, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
+RppStatus
 channel_extract_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u extractChannelNumber, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
 channel_extract_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
@@ -447,6 +451,14 @@ RppStatus
 harris_corner_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u gaussianKernelSize, Rpp32f stdDev, Rpp32u kernelSize, Rpp32f kValue, Rpp32f threshold, Rpp32u nonmaxKernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus
 harris_corner_detector_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr,rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
+RppStatus
+tensor_transpose_hip_u8(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32u* in_dims, Rpp32u *perm, rpp::Handle& handle);
+RppStatus
+tensor_transpose_hip_fp16(Rpp16f* srcPtr, Rpp16f* dstPtr, Rpp32u* in_dims, Rpp32u *perm, rpp::Handle& handle);
+RppStatus
+tensor_transpose_hip_fp32(Rpp32f* srcPtr, Rpp32f* dstPtr, Rpp32u* in_dims, Rpp32u *perm, rpp::Handle& handle);
+RppStatus
+tensor_transpose_hip_i8(Rpp8s* srcPtr, Rpp8s* dstPtr, Rpp32u* in_dims, Rpp32u *perm, rpp::Handle& handle);
 RppStatus
 fast_corner_detector_hip(Rpp8u* srcPtr, RppiSize srcSize, Rpp8u* dstPtr, Rpp32u numOfPixels, Rpp8u threshold, Rpp32u nonmaxKernelSize, RppiChnFormat chnFormat, unsigned int channel, rpp::Handle& handle);
 RppStatus

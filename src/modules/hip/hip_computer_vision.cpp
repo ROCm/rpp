@@ -905,6 +905,148 @@ harris_corner_detector_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr,rpp::Handle& handl
     return RPP_SUCCESS;
 }
 
+/******************** tensor_transpose ********************/
+
+RppStatus
+tensor_transpose_hip_u8(Rpp8u *srcPtr, Rpp8u *dstPtr, Rpp32u *in_dims, Rpp32u *perm, rpp::Handle& handle)
+{
+    unsigned int out_dims[4];
+    out_dims[0] = in_dims[perm[0]];
+    out_dims[1] = in_dims[perm[1]];
+    out_dims[2] = in_dims[perm[2]];
+    out_dims[3] = in_dims[perm[3]];
+
+    unsigned int in_strides[4], out_strides[4];
+    in_strides[0] = in_dims[1] * in_dims[2] * in_dims[3];
+    in_strides[1] = in_dims[2] * in_dims[3];
+    in_strides[2] = in_dims[3];
+    in_strides[3] = 1;
+
+    out_strides[0] = out_dims[1] * out_dims[2] * out_dims[3];
+    out_strides[1] = out_dims[2] * out_dims[3];
+    out_strides[2] = out_dims[3];
+    out_strides[3] = 1;
+
+    Rpp32u *d_perm, *d_in_strides, *d_out_strides, *d_out_dims;
+    hipMalloc(&d_perm, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_in_strides, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_out_strides, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_out_dims, 4 * sizeof(Rpp32u));
+    hipMemcpy(d_perm, perm, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_in_strides, in_strides, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_out_strides, out_strides, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_out_dims, out_dims, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+
+    hip_exec_tensor_transpose(srcPtr, dstPtr, d_out_dims, d_perm, d_out_strides, d_in_strides, out_dims, handle);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+tensor_transpose_hip_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp32u *in_dims, Rpp32u *perm, rpp::Handle& handle)
+{
+    unsigned int out_dims[4];
+    out_dims[0] = in_dims[perm[0]];
+    out_dims[1] = in_dims[perm[1]];
+    out_dims[2] = in_dims[perm[2]];
+    out_dims[3] = in_dims[perm[3]];
+
+    unsigned int in_strides[4], out_strides[4];
+    in_strides[0] = in_dims[1] * in_dims[2] * in_dims[3];
+    in_strides[1] = in_dims[2] * in_dims[3];
+    in_strides[2] = in_dims[3];
+    in_strides[3] = 1;
+
+    out_strides[0] = out_dims[1] * out_dims[2] * out_dims[3];
+    out_strides[1] = out_dims[2] * out_dims[3];
+    out_strides[2] = out_dims[3];
+    out_strides[3] = 1;
+
+    Rpp32u *d_perm, *d_in_strides, *d_out_strides, *d_out_dims;
+    hipMalloc(&d_perm, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_in_strides, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_out_strides, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_out_dims, 4 * sizeof(Rpp32u));
+    hipMemcpy(d_perm, perm, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_in_strides, in_strides, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_out_strides, out_strides, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_out_dims, out_dims, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+
+    hip_exec_tensor_transpose_fp16(srcPtr, dstPtr, d_out_dims, d_perm, d_out_strides, d_in_strides, out_dims, handle);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+tensor_transpose_hip_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32u *in_dims, Rpp32u *perm, rpp::Handle& handle)
+{
+    unsigned int out_dims[4];
+    out_dims[0] = in_dims[perm[0]];
+    out_dims[1] = in_dims[perm[1]];
+    out_dims[2] = in_dims[perm[2]];
+    out_dims[3] = in_dims[perm[3]];
+
+    unsigned int in_strides[4], out_strides[4];
+    in_strides[0] = in_dims[1] * in_dims[2] * in_dims[3];
+    in_strides[1] = in_dims[2] * in_dims[3];
+    in_strides[2] = in_dims[3];
+    in_strides[3] = 1;
+
+    out_strides[0] = out_dims[1] * out_dims[2] * out_dims[3];
+    out_strides[1] = out_dims[2] * out_dims[3];
+    out_strides[2] = out_dims[3];
+    out_strides[3] = 1;
+
+    Rpp32u *d_perm, *d_in_strides, *d_out_strides, *d_out_dims;
+    hipMalloc(&d_perm, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_in_strides, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_out_strides, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_out_dims, 4 * sizeof(Rpp32u));
+    hipMemcpy(d_perm, perm, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_in_strides, in_strides, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_out_strides, out_strides, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_out_dims, out_dims, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+
+    hip_exec_tensor_transpose_fp32(srcPtr, dstPtr, d_out_dims, d_perm, d_out_strides, d_in_strides, out_dims, handle);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+tensor_transpose_hip_i8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp32u *in_dims, Rpp32u *perm, rpp::Handle& handle)
+{
+    unsigned int out_dims[4];
+    out_dims[0] = in_dims[perm[0]];
+    out_dims[1] = in_dims[perm[1]];
+    out_dims[2] = in_dims[perm[2]];
+    out_dims[3] = in_dims[perm[3]];
+
+    unsigned int in_strides[4], out_strides[4];
+    in_strides[0] = in_dims[1] * in_dims[2] * in_dims[3];
+    in_strides[1] = in_dims[2] * in_dims[3];
+    in_strides[2] = in_dims[3];
+    in_strides[3] = 1;
+
+    out_strides[0] = out_dims[1] * out_dims[2] * out_dims[3];
+    out_strides[1] = out_dims[2] * out_dims[3];
+    out_strides[2] = out_dims[3];
+    out_strides[3] = 1;
+
+    Rpp32u *d_perm, *d_in_strides, *d_out_strides, *d_out_dims;
+    hipMalloc(&d_perm, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_in_strides, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_out_strides, 4 * sizeof(Rpp32u));
+    hipMalloc(&d_out_dims, 4 * sizeof(Rpp32u));
+    hipMemcpy(d_perm, perm, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_in_strides, in_strides, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_out_strides, out_strides, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(d_out_dims, out_dims, 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+
+    hip_exec_tensor_transpose_int8(srcPtr, dstPtr, d_out_dims, d_perm, d_out_strides, d_in_strides, out_dims, handle);
+
+    return RPP_SUCCESS;
+}
+
 /******************** fast_corner_detector ********************/
 
 RppStatus
