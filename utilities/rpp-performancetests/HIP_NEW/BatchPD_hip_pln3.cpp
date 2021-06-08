@@ -175,7 +175,7 @@ int main(int argc, char **argv)
     case 27:
         strcpy(funcName, "scale");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 28:
         strcpy(funcName, "warp_perspective");
         outputFormatToggle = 0;
@@ -348,7 +348,7 @@ int main(int argc, char **argv)
     case 73:
         strcpy(funcName, "canny_edge_detector");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 74:
         strcpy(funcName, "harris_corner_detector");
         outputFormatToggle = 0;
@@ -428,12 +428,13 @@ int main(int argc, char **argv)
     strcpy(func, funcName);
     strcat(func, funcType);
 
-    int ip_bitDepth_1_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};
-    int ip_bitDepth_2_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};
-    int ip_bitDepth_3_cases[3] = {19, 62, 63};
-    int ip_bitDepth_4_cases[3] = {19, 62, 63};
-    int ip_bitDepth_5_cases[15] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 80, 81};
-    int ip_bitDepth_6_cases[3] = {19, 62, 63};
+    int ip_bitDepth_1_cases[14] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39};
+    int ip_bitDepth_2_cases[14] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39};
+    int ip_bitDepth_3_cases[3]  = {21, 37, 38};
+    int ip_bitDepth_4_cases[3]  = {21, 37, 38};
+    int ip_bitDepth_5_cases[15] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39};
+    int ip_bitDepth_6_cases[3]  = {21, 37, 38};
+
     bool functionality_existence;
     if (ip_bitDepth == 0)
         functionality_existence = 1;
