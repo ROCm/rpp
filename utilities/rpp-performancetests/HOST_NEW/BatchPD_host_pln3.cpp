@@ -163,7 +163,7 @@ int main(int argc, char **argv)
     case 27:
         strcpy(funcName, "scale");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 28:
         strcpy(funcName, "warp_perspective");
         outputFormatToggle = 0;
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
     case 73:
         strcpy(funcName, "canny_edge_detector");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 74:
         strcpy(funcName, "harris_corner_detector");
         outputFormatToggle = 0;
@@ -362,14 +362,6 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 80:
-        strcpy(funcName, "bilateral_filter");
-        outputFormatToggle = 0;
-        break;
-    case 81:
-        strcpy(funcName, "match_template");
-        outputFormatToggle = 0;
-        break;
-    case 82:
         strcpy(funcName, "resize_mirror_normalize");
         break;
     }
@@ -3616,20 +3608,6 @@ int main(int argc, char **argv)
         }
         case 80:
         {
-            test_case_name = "bilateral_filter";
-            missingFuncFlag = 1;
-
-            break;
-        }
-        case 81:
-        {
-            test_case_name = "match_template";
-            missingFuncFlag = 1;
-
-            break;
-        }
-        case 82:
-        {
             test_case_name = "resize_mirror_normalize";
 
             Rpp32f mean[images];
@@ -3692,14 +3670,14 @@ int main(int argc, char **argv)
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
         omp_time_used = end_omp - start_omp;
         if (cpu_time_used > max_time_used)
-			max_time_used = cpu_time_used;
-		if (cpu_time_used < min_time_used)
-			min_time_used = cpu_time_used;
-		avg_time_used += cpu_time_used;
+            max_time_used = cpu_time_used;
+        if (cpu_time_used < min_time_used)
+            min_time_used = cpu_time_used;
+        avg_time_used += cpu_time_used;
     }
 
     avg_time_used /= 100;
-	cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
+    cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
 
     rppDestroyHost(handle);
 

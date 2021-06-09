@@ -27,12 +27,12 @@ typedef half Rpp16f;
 
 void check_hip_error(void)
 {
-	hipError_t err = hipGetLastError();
-	if (err != hipSuccess)
-	{
-		cerr<< "Error: "<< hipGetErrorString(err)<<endl;
-		exit(err);
-	}
+    hipError_t err = hipGetLastError();
+    if (err != hipSuccess)
+    {
+        cerr<< "Error: "<< hipGetErrorString(err)<<endl;
+        exit(err);
+    }
 }
 
 int main(int argc, char **argv)
@@ -379,14 +379,6 @@ int main(int argc, char **argv)
         strcpy(funcName, "remap");
         outputFormatToggle = 0;
         break;
-    case 80:
-        strcpy(funcName, "bilateral_filter");
-        outputFormatToggle = 0;
-        break;
-    case 81:
-        strcpy(funcName, "match_template");
-        outputFormatToggle = 0;
-        break;
     }
 
     if (ip_bitDepth == 0)
@@ -586,7 +578,7 @@ int main(int argc, char **argv)
     Rpp32f *inputf32, *inputf32_second, *outputf32;
     Rpp8s *inputi8, *inputi8_second, *outputi8;
     int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
-	int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
+    int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
 
     if (ip_bitDepth == 0)
     {
@@ -726,7 +718,7 @@ int main(int argc, char **argv)
 
     rppHandle_t handle;
     hipStream_t stream;
-	hipStreamCreate(&stream);
+    hipStreamCreate(&stream);
     rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
 
     clock_t start, end;
@@ -3131,20 +3123,6 @@ int main(int argc, char **argv)
 
             break;
         }
-        case 80:
-        {
-            test_case_name = "bilateral_filter";
-            missingFuncFlag = 1;
-
-            break;
-        }
-        case 81:
-        {
-            test_case_name = "match_template";
-            missingFuncFlag = 1;
-
-            break;
-        }
         default:
             missingFuncFlag = 1;
             break;
@@ -3158,43 +3136,77 @@ int main(int argc, char **argv)
 
         gpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
         if (gpu_time_used > max_time_used)
-			max_time_used = gpu_time_used;
-		if (gpu_time_used < min_time_used)
-			min_time_used = gpu_time_used;
-		avg_time_used += gpu_time_used;
+            max_time_used = gpu_time_used;
+        if (gpu_time_used < min_time_used)
+            min_time_used = gpu_time_used;
+        avg_time_used += gpu_time_used;
     }
 
     avg_time_used /= 100;
-	cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
+    cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
 
     rppDestroyGPU(handle);
 
-    // free(srcSize);
-    // free(dstSize);
-    // free(input);
-    // free(input_second);
-    // free(output);
-    // free(inputf16);
-    // free(inputf16_second);
-    // free(outputf16);
-    // free(inputf32);
-    // free(inputf32_second);
-    // free(inputi8);
-    // free(inputi8_second);
-    // free(outputf32);
-    // free(outputi8);
-    // hipFree(d_input);
-    // hipFree(d_input_second);
-    // hipFree(d_output);
-    // hipFree(d_inputf16);
-    // hipFree(d_inputf16_second);
-    // hipFree(d_outputf16);
-    // hipFree(d_inputf32);
-    // hipFree(d_inputf32_second);
-    // hipFree(d_outputf32);
-    // hipFree(d_inputi8);
-    // hipFree(d_inputi8_second);
-    // hipFree(d_outputi8);
+    free(srcSize);
+    free(dstSize);
+    free(input);
+    free(input_second);
+    free(output);
+
+    if (ip_bitDepth == 0)
+    {
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_output);
+    }
+    else if (ip_bitDepth == 1)
+    {
+        free(inputf16);
+        free(inputf16_second);
+        free(outputf16);
+        hipFree(d_inputf16);
+        hipFree(d_inputf16_second);
+        hipFree(d_outputf16);
+    }
+    else if (ip_bitDepth == 2)
+    {
+        free(inputf32);
+        free(inputf32_second);
+        free(outputf32);
+        hipFree(d_inputf32);
+        hipFree(d_inputf32_second);
+        hipFree(d_outputf32);
+    }
+    else if (ip_bitDepth == 3)
+    {
+        free(outputf16);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputf16);
+    }
+    else if (ip_bitDepth == 4)
+    {
+        free(outputf32);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputf32);
+    }
+    else if (ip_bitDepth == 5)
+    {
+        free(inputi8);
+        free(inputi8_second);
+        free(outputi8);
+        hipFree(d_inputi8);
+        hipFree(d_inputi8_second);
+        hipFree(d_outputi8);
+    }
+    else if (ip_bitDepth == 6)
+    {
+        free(outputi8);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputi8);
+    }
 
     return 0;
 }
