@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     case 27:
         strcpy(funcName, "scale");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 28:
         strcpy(funcName, "warp_perspective");
         outputFormatToggle = 0;
@@ -342,7 +342,7 @@ int main(int argc, char **argv)
     case 73:
         strcpy(funcName, "canny_edge_detector");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 74:
         strcpy(funcName, "harris_corner_detector");
         outputFormatToggle = 0;
@@ -367,15 +367,6 @@ int main(int argc, char **argv)
         strcpy(funcName, "remap");
         outputFormatToggle = 0;
         break;
-    case 80:
-        strcpy(funcName, "bilateral_filter");
-        outputFormatToggle = 0;
-        break;
-    case 81:
-        strcpy(funcName, "match_template");
-        outputFormatToggle = 0;
-        break;
-    }
 
     if (outputFormatToggle == 0)
     {
@@ -3462,20 +3453,6 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 80:
-    {
-        test_case_name = "bilateral_filter";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 81:
-    {
-        test_case_name = "match_template";
-        missingFuncFlag = 1;
-
-        break;
-    }
     default:
         missingFuncFlag = 1;
         break;
@@ -3660,27 +3637,61 @@ int main(int argc, char **argv)
     free(input);
     free(input_second);
     free(output);
-    free(inputf16);
-    free(inputf16_second);
-    free(outputf16);
-    free(inputf32);
-    free(inputf32_second);
-    free(inputi8);
-    free(inputi8_second);
-    free(outputf32);
-    free(outputi8);
-    clReleaseMemObject(d_input);
-    clReleaseMemObject(d_input_second);
-    clReleaseMemObject(d_output);
-    clReleaseMemObject(d_inputf16);
-    clReleaseMemObject(d_inputf16_second);
-    clReleaseMemObject(d_outputf16);
-    clReleaseMemObject(d_inputf32);
-    clReleaseMemObject(d_inputf32_second);
-    clReleaseMemObject(d_outputf32);
-    clReleaseMemObject(d_inputi8);
-    clReleaseMemObject(d_inputi8_second);
-    clReleaseMemObject(d_outputi8);
+
+    if (ip_bitDepth == 0)
+    {
+        clReleaseMemObject(d_input);
+        clReleaseMemObject(d_input_second);
+        clReleaseMemObject(d_output);
+    }
+    else if (ip_bitDepth == 1)
+    {
+        free(inputf16);
+        free(inputf16_second);
+        free(outputf16);
+        clReleaseMemObject(d_inputf16);
+        clReleaseMemObject(d_inputf16_second);
+        clReleaseMemObject(d_outputf16);
+    }
+    else if (ip_bitDepth == 2)
+    {
+        free(inputf32);
+        free(inputf32_second);
+        free(outputf32);
+        clReleaseMemObject(d_inputf32);
+        clReleaseMemObject(d_inputf32_second);
+        clReleaseMemObject(d_outputf32);
+    }
+    else if (ip_bitDepth == 3)
+    {
+        free(outputf16);
+        clReleaseMemObject(d_input);
+        clReleaseMemObject(d_input_second);
+        clReleaseMemObject(d_outputf16);
+    }
+    else if (ip_bitDepth == 4)
+    {
+        free(outputf32);
+        clReleaseMemObject(d_input);
+        clReleaseMemObject(d_input_second);
+        clReleaseMemObject(d_outputf32);
+    }
+    else if (ip_bitDepth == 5)
+    {
+        free(inputi8);
+        free(inputi8_second);
+        free(outputi8);
+        clReleaseMemObject(d_inputi8);
+        clReleaseMemObject(d_inputi8_second);
+        clReleaseMemObject(d_outputi8);
+    }
+    else if (ip_bitDepth == 6)
+    {
+        free(outputi8);
+        clReleaseMemObject(d_input);
+        clReleaseMemObject(d_input_second);
+        clReleaseMemObject(d_outputi8);
+    }
 
     return 0;
 }

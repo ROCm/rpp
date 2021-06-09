@@ -10,9 +10,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-#include <omp.h>
 #include <half.hpp>
 #include <fstream>
+#include <algorithm>
+#include <iterator>
+#include "hip/hip_runtime_api.h"
 
 using namespace cv;
 using namespace std;
@@ -22,6 +24,16 @@ typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 
+void check_hip_error(void)
+{
+    hipError_t err = hipGetLastError();
+    if (err != hipSuccess)
+    {
+        cerr<< "Error: "<< hipGetErrorString(err)<<endl;
+        exit(err);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 8;
@@ -29,7 +41,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
+        printf("\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
         return -1;
     }
 
@@ -41,7 +53,7 @@ int main(int argc, char **argv)
         printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (1:7) = %s", argv[6]);
+        printf("\ncase number (0:81) = %s", argv[6]);
     }
 
     char *src = argv[1];
@@ -53,7 +65,7 @@ int main(int argc, char **argv)
 
     int ip_channel = 3;
 
-    char funcType[1000] = {"BatchPD_HOST_PLN3"};
+    char funcType[1000] = {"BatchPD_HIP_PLN3"};
 
     char funcName[1000];
     switch (test_case)
@@ -165,7 +177,7 @@ int main(int argc, char **argv)
     case 27:
         strcpy(funcName, "scale");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 28:
         strcpy(funcName, "warp_perspective");
         outputFormatToggle = 0;
@@ -338,7 +350,7 @@ int main(int argc, char **argv)
     case 73:
         strcpy(funcName, "canny_edge_detector");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 74:
         strcpy(funcName, "harris_corner_detector");
         outputFormatToggle = 0;
@@ -362,17 +374,6 @@ int main(int argc, char **argv)
     case 79:
         strcpy(funcName, "remap");
         outputFormatToggle = 0;
-        break;
-    case 80:
-        strcpy(funcName, "bilateral_filter");
-        outputFormatToggle = 0;
-        break;
-    case 81:
-        strcpy(funcName, "match_template");
-        outputFormatToggle = 0;
-        break;
-    case 82:
-        strcpy(funcName, "resize_mirror_normalize");
         break;
     }
 
@@ -418,6 +419,35 @@ int main(int argc, char **argv)
     strcpy(func, funcName);
     strcat(func, funcType);
     printf("\nRunning %s...", func);
+
+    int ip_bitDepth_1_cases[14] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39};
+    int ip_bitDepth_2_cases[14] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39};
+    int ip_bitDepth_3_cases[3]  = {21, 37, 38};
+    int ip_bitDepth_4_cases[3]  = {21, 37, 38};
+    int ip_bitDepth_5_cases[15] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39};
+    int ip_bitDepth_6_cases[3]  = {21, 37, 38};
+
+    bool functionality_existence;
+    if (ip_bitDepth == 0)
+        functionality_existence = 1;
+    else if (ip_bitDepth == 1)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_1_cases), std::end(ip_bitDepth_1_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 2)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_2_cases), std::end(ip_bitDepth_2_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 3)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_3_cases), std::end(ip_bitDepth_3_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 4)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_4_cases), std::end(ip_bitDepth_4_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 5)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_5_cases), std::end(ip_bitDepth_5_cases), [&](int i) {return i == test_case;});
+    else if (ip_bitDepth == 6)
+        functionality_existence = std::any_of(std::begin(ip_bitDepth_6_cases), std::end(ip_bitDepth_6_cases), [&](int i) {return i == test_case;});
+
+    if (functionality_existence == 0)
+    {
+        printf("\nThe functionality %s doesn't yet exist in RPP\n", func);
+        return -1;
+    }
 
     int missingFuncFlag = 0;
 
@@ -501,18 +531,6 @@ int main(int argc, char **argv)
     Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     Rpp8u *output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
 
-    Rpp16f *inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-
-    Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-
-    Rpp8s *inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-
     RppiSize maxSize, maxDstSize;
     maxSize.height = maxHeight;
     maxSize.width = maxWidth;
@@ -523,14 +541,14 @@ int main(int argc, char **argv)
     DIR *dr2_second = opendir(src_second);
     count = 0;
     i = 0;
-    unsigned long long imageDimMaxCopy = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
+    unsigned long long imageDimMaxIncrement = (unsigned long long)maxHeight * (unsigned long long)maxWidth * (unsigned long long)ip_channel;
     Rpp32u elementsInRowMax = maxWidth * ip_channel;
+
     while ((de = readdir(dr2)) != NULL)
     {
         Rpp8u *input_temp, *input_second_temp;
-        input_temp = input + (i * imageDimMaxCopy);
-        input_second_temp = input_second + (i * imageDimMaxCopy);
-
+        input_temp = input + (i * imageDimMaxIncrement);
+        input_second_temp = input_second + (i * imageDimMaxIncrement);
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
 
@@ -558,7 +576,7 @@ int main(int argc, char **argv)
             input_second_temp += elementsInRowMax;
         }
         i++;
-        count += imageDimMaxCopy;
+        count += imageDimMaxIncrement;
     }
     closedir(dr2);
 
@@ -666,8 +684,27 @@ int main(int argc, char **argv)
 
     free(inputSecondCopy);
 
-    if (ip_bitDepth == 1)
+    Rpp16f *inputf16, *inputf16_second, *outputf16;
+    Rpp32f *inputf32, *inputf32_second, *outputf32;
+    Rpp8s *inputi8, *inputi8_second, *outputi8;
+    int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
+    int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
+
+    if (ip_bitDepth == 0)
     {
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 1)
+    {
+        inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp16f *inputf16Temp, *inputf16_secondTemp;
 
@@ -686,9 +723,20 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputf16_secondTemp++;
         }
+
+        hipMalloc(&d_inputf16, ioBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
+        hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 2)
     {
+        inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
 
@@ -707,9 +755,40 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputf32_secondTemp++;
         }
+
+        hipMalloc(&d_inputf32, ioBufferSize * sizeof(Rpp32f));
+        hipMalloc(&d_inputf32_second, ioBufferSize * sizeof(Rpp32f));
+        hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
+        hipMemcpy(d_inputf32, inputf32, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 3)
+    {
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 4)
+    {
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 5)
     {
+        inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
 
@@ -728,13 +807,32 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputi8_secondTemp++;
         }
+
+        hipMalloc(&d_inputi8, ioBufferSize * sizeof(Rpp8s));
+        hipMalloc(&d_inputi8_second, ioBufferSize * sizeof(Rpp8s));
+        hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
+        hipMemcpy(d_inputi8, inputi8, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 6)
+    {
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
     }
 
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
+    hipStream_t stream;
+    hipStreamCreate(&stream);
+    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
+
     clock_t start, end;
-    double start_omp, end_omp;
-    double cpu_time_used, omp_time_used;
+    double gpu_time_used;
 
     string test_case_name;
 
@@ -752,10 +850,10 @@ int main(int argc, char **argv)
             beta[i] = 50;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_brightness_u8_pln3_batchPD_host(input, srcSize, maxSize, output, alpha, beta, noOfImages, handle);
+            rppi_brightness_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -770,8 +868,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -785,10 +883,10 @@ int main(int argc, char **argv)
             gamma[i] = 1.9;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_gamma_correction_u8_pln3_batchPD_host(input, srcSize, maxSize, output, gamma, noOfImages, handle);
+            rppi_gamma_correction_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, gamma, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -803,8 +901,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -815,13 +913,13 @@ int main(int argc, char **argv)
         Rpp32f alpha[images];
         for (i = 0; i < images; i++)
         {
-            alpha[i] = 0.40;
+            alpha[i] = 0.4;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_blend_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, alpha, noOfImages, handle);
+            rppi_blend_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, alpha, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -836,8 +934,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -851,10 +949,10 @@ int main(int argc, char **argv)
             kernelSize[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_blur_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernelSize, noOfImages, handle);
+            rppi_blur_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -869,8 +967,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -886,10 +984,10 @@ int main(int argc, char **argv)
             newMax[i] = 100;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_contrast_u8_pln3_batchPD_host(input, srcSize, maxSize, output, newMin, newMax, noOfImages, handle);
+            rppi_contrast_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, newMin, newMax, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -904,8 +1002,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -913,10 +1011,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "pixelate";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_pixelate_u8_pln3_batchPD_host(input, srcSize, maxSize, output, noOfImages, handle);
+            rppi_pixelate_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -931,8 +1029,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -946,10 +1044,10 @@ int main(int argc, char **argv)
             kernelSize[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_jitter_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernelSize, noOfImages, handle);
+            rppi_jitter_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -964,8 +1062,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -979,10 +1077,10 @@ int main(int argc, char **argv)
             snowPercentage[i] = 0.15;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_snow_u8_pln3_batchPD_host(input, srcSize, maxSize, output, snowPercentage, noOfImages, handle);
+            rppi_snow_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, snowPercentage, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -997,8 +1095,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1012,10 +1110,10 @@ int main(int argc, char **argv)
             noiseProbability[i] = 0.2;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_noise_u8_pln3_batchPD_host(input, srcSize, maxSize, output, noiseProbability, noOfImages, handle);
+            rppi_noise_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noiseProbability, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1030,8 +1128,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1043,24 +1141,24 @@ int main(int argc, char **argv)
         Rpp32u y1[images];
         Rpp32u x2[images];
         Rpp32u y2[images];
-        Rpp32u numbeoOfShadows[images];
+        Rpp32u numberOfShadows[images];
         Rpp32u maxSizeX[images];
-        Rpp32u maxSizey[images];
+        Rpp32u maxSizeY[images];
         for (i = 0; i < images; i++)
         {
             x1[i] = 0;
             y1[i] = 0;
             x2[i] = 100;
             y2[i] = 100;
-            numbeoOfShadows[i] = 10;
+            numberOfShadows[i] = 10;
             maxSizeX[i] = 12;
-            maxSizey[i] = 15;
+            maxSizeY[i] = 15;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_random_shadow_u8_pln3_batchPD_host(input, srcSize, maxSize, output, x1, y1, x2, y2, numbeoOfShadows, maxSizeX, maxSizey, noOfImages, handle);
+            rppi_random_shadow_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x1, y1, x2, y2, numberOfShadows, maxSizeX, maxSizeY, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1075,8 +1173,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1090,10 +1188,10 @@ int main(int argc, char **argv)
             fogValue[i] = 0.2;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_fog_u8_pln3_batchPD_host(input, srcSize, maxSize, output, fogValue, noOfImages, handle);
+            rppi_fog_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, fogValue, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1108,8 +1206,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1123,16 +1221,16 @@ int main(int argc, char **argv)
         Rpp32f transparency[images];
         for (i = 0; i < images; i++)
         {
-            rainPercentage[i] = 1.0;
+            rainPercentage[i] = 0.75;
             rainWidth[i] = 1;
             rainHeight[i] = 12;
-            transparency[i] = 1;
+            transparency[i] = 0.3;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_rain_u8_pln3_batchPD_host(input, srcSize, maxSize, output, rainPercentage, rainWidth, rainHeight, transparency, noOfImages, handle);
+            rppi_rain_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, rainPercentage, rainWidth, rainHeight, transparency, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1147,8 +1245,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1180,10 +1278,10 @@ int main(int argc, char **argv)
         maxDstSize.height = maxDstHeight;
         maxDstSize.width = maxDstWidth;
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_random_crop_letterbox_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
+            rppi_random_crop_letterbox_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1198,8 +1296,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1213,10 +1311,10 @@ int main(int argc, char **argv)
             exposureFactor[i] = 1.4;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_exposure_u8_pln3_batchPD_host(input, srcSize, maxSize, output, exposureFactor, noOfImages, handle);
+            rppi_exposure_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, exposureFactor, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1231,35 +1329,15 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
     case 14:
     {
         test_case_name = "histogram_balance";
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_histogram_balance_u8_pln3_batchPD_host(input, srcSize, maxSize, output, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
+        missingFuncFlag = 1;
 
         break;
     }
@@ -1275,10 +1353,10 @@ int main(int argc, char **argv)
             max[i] = 100;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_thresholding_u8_pln3_batchPD_host(input, srcSize, maxSize, output, min, max, noOfImages, handle);
+            rppi_thresholding_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, min, max, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1293,8 +1371,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1302,10 +1380,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "min";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_min_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_min_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1320,8 +1398,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1329,10 +1407,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "max";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_max_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_max_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1347,92 +1425,22 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
     case 18:
     {
         test_case_name = "integral";
-
-        Rpp32u singleImageBuffer = maxDstHeight * maxDstWidth * ip_channel;
-        Rpp32u *output32u = (Rpp32u *)calloc(oBufferSize, sizeof(Rpp32u));
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_integral_u8_pln3_batchPD_host(input, srcSize, maxSize, output32u, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
-
-        Rpp8u *outputTemp;
-        outputTemp = output;
-
-        for (int count = 0; count < noOfImages; count++)
-        {
-            Rpp32u *output32uTemp;
-            output32uTemp = output32u + (count * singleImageBuffer);
-
-            Rpp32u min, max;
-            min = *output32uTemp;
-            max = *output32uTemp;
-            for (int i = 0; i < singleImageBuffer; i++)
-            {
-                if (*output32uTemp > max)
-                    max = *output32uTemp;
-                output32uTemp++;
-            }
-
-            output32uTemp = output32u + (count * singleImageBuffer);
-            for (int i = 0; i < singleImageBuffer; i++)
-            {
-                *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (*output32uTemp - min)) / (Rpp32f) (max - min) * (Rpp32f) 255);
-                outputTemp++;
-                output32uTemp++;
-            }
-        }
+        missingFuncFlag = 1;
 
         break;
     }
     case 19:
     {
         test_case_name = "histogram_equalization";
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_histogram_equalization_u8_pln3_batchPD_host(input, srcSize, maxSize, output, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
+        missingFuncFlag = 1;
 
         break;
     }
@@ -1446,10 +1454,10 @@ int main(int argc, char **argv)
             flipAxis[i] = 1;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_flip_u8_pln3_batchPD_host(input, srcSize, maxSize, output, flipAxis, noOfImages, handle);
+            rppi_flip_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, flipAxis, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1464,8 +1472,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1489,26 +1497,26 @@ int main(int argc, char **argv)
         maxDstSize.height = maxDstHeight;
         maxDstSize.width = maxDstWidth;
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_resize_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
+            rppi_resize_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_resize_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_resize_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_resize_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
+            rppi_resize_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
-            rppi_resize_u8_f16_pln3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_resize_u8_f16_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 4)
-            rppi_resize_u8_f32_pln3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
+            rppi_resize_u8_f32_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 5)
-            rppi_resize_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
+            rppi_resize_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
-            rppi_resize_u8_i8_pln3_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
+            rppi_resize_u8_i8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1540,26 +1548,26 @@ int main(int argc, char **argv)
         maxDstSize.height = maxDstHeight;
         maxDstSize.width = maxDstWidth;
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_resize_crop_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
+            rppi_resize_crop_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_resize_crop_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_resize_crop_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_resize_crop_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
+            rppi_resize_crop_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_resize_crop_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
+            rppi_resize_crop_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, x1, x2, y1, y2, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1573,26 +1581,26 @@ int main(int argc, char **argv)
             angle[i] = 50;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_rotate_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, angle, outputFormatToggle, noOfImages, handle);
+            rppi_rotate_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, angle, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_rotate_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, angle, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_rotate_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, angle, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_rotate_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, angle, outputFormatToggle, noOfImages, handle);
+            rppi_rotate_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, angle, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_rotate_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, angle, outputFormatToggle, noOfImages, handle);
+            rppi_rotate_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, angle, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1611,26 +1619,26 @@ int main(int argc, char **argv)
             affine_array[i + 5] = 0.0;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_warp_affine_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+            rppi_warp_affine_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_warp_affine_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_warp_affine_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_warp_affine_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+            rppi_warp_affine_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_warp_affine_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
+            rppi_warp_affine_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, affine_array, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1638,10 +1646,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "fisheye";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_fisheye_u8_pln3_batchPD_host(input, srcSize, maxSize, output, noOfImages, handle);
+            rppi_fisheye_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1656,8 +1664,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1673,10 +1681,10 @@ int main(int argc, char **argv)
             zoom[i] = 1;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_lens_correction_u8_pln3_batchPD_host(input, srcSize, maxSize, output, strength, zoom, noOfImages, handle);
+            rppi_lens_correction_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, strength, zoom, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1691,8 +1699,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1706,10 +1714,10 @@ int main(int argc, char **argv)
             percentage[i] = 75;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_scale_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, percentage, noOfImages, handle);
+            rppi_scale_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, percentage, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1724,8 +1732,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1748,10 +1756,10 @@ int main(int argc, char **argv)
             perspective[8 + i * 9] = 1;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_warp_perspective_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, perspective, noOfImages, handle);
+            rppi_warp_perspective_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, perspective, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -1766,8 +1774,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1792,26 +1800,26 @@ int main(int argc, char **argv)
             phase_y[i] = 15;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_water_u8_pln3_batchPD_host(input, srcSize, maxSize, output, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, outputFormatToggle, noOfImages, handle);
+            rppi_water_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_water_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_water_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_water_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, outputFormatToggle, noOfImages, handle);
+            rppi_water_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_water_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, outputFormatToggle, noOfImages, handle);
+            rppi_water_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, ampl_x, ampl_y, freq_x, freq_y, phase_x, phase_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1825,26 +1833,26 @@ int main(int argc, char **argv)
             std_dev[i] = 50.0;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_non_linear_blend_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, std_dev, outputFormatToggle, noOfImages, handle);
+            rppi_non_linear_blend_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, std_dev, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_non_linear_blend_f16_pln3_batchPD_host(inputf16, inputf16_second, srcSize, maxSize, outputf16, std_dev, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_non_linear_blend_f16_pln3_batchPD_gpu(d_inputf16, d_inputf16_second, srcSize, maxSize, d_outputf16, std_dev, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_non_linear_blend_f32_pln3_batchPD_host(inputf32, inputf32_second, srcSize, maxSize, outputf32, std_dev, outputFormatToggle, noOfImages, handle);
+            rppi_non_linear_blend_f32_pln3_batchPD_gpu(d_inputf32, d_inputf32_second, srcSize, maxSize, d_outputf32, std_dev, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_non_linear_blend_i8_pln3_batchPD_host(inputi8, inputi8_second, srcSize, maxSize, outputi8, std_dev, outputFormatToggle, noOfImages, handle);
+            rppi_non_linear_blend_i8_pln3_batchPD_gpu(d_inputi8, d_inputi8_second, srcSize, maxSize, d_outputi8, std_dev, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1864,26 +1872,26 @@ int main(int argc, char **argv)
             alpha[i] = 0.5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_color_cast_u8_pln3_batchPD_host(input, srcSize, maxSize, output, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+            rppi_color_cast_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_color_cast_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_color_cast_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_color_cast_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+            rppi_color_cast_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_color_cast_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
+            rppi_color_cast_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, r, g, b, alpha, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1970,26 +1978,47 @@ int main(int argc, char **argv)
             colorsi8[(boxesInEachImage * 3 * i) + 8] = (Rpp8s) (240 - 128);
         }
 
-        start_omp = omp_get_wtime();
+        int *d_anchor_box_info, *d_box_offset, *d_colorsu8, *d_colorsf16, *d_colorsf32, *d_colorsi8;
+        hipMalloc(&d_anchor_box_info, images * boxesInEachImage * 4 * sizeof(Rpp32u));
+        hipMalloc(&d_box_offset, images * sizeof(Rpp32u));
+        hipMalloc(&d_colorsu8, images * boxesInEachImage * 3 * sizeof(Rpp8u));
+        hipMalloc(&d_colorsf16, images * boxesInEachImage * 3 * sizeof(Rpp16f));
+        hipMalloc(&d_colorsf32, images * boxesInEachImage * 3 * sizeof(Rpp32f));
+        hipMalloc(&d_colorsi8, images * boxesInEachImage * 3 * sizeof(Rpp8s));
+        hipMemcpy(d_anchor_box_info, anchor_box_info, images * boxesInEachImage * 4 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+        hipMemcpy(d_box_offset, box_offset, images * sizeof(Rpp32u), hipMemcpyHostToDevice);
+        hipMemcpy(d_colorsu8, colorsu8, images * boxesInEachImage * 3 * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_colorsf16, colorsf16, images * boxesInEachImage * 3 * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_colorsf32, colorsf32, images * boxesInEachImage * 3 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_colorsi8, colorsi8, images * boxesInEachImage * 3 * sizeof(Rpp8s), hipMemcpyHostToDevice);
+
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_erase_u8_pln3_batchPD_host(input, srcSize, maxSize, output, anchor_box_info, colorsu8, box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+            rppi_erase_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_anchor_box_info, d_colorsu8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_erase_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, anchor_box_info, colorsf16, box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_erase_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, d_anchor_box_info, d_colorsf16, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_erase_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, anchor_box_info, colorsf32, box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+            rppi_erase_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, d_anchor_box_info, d_colorsf32, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_erase_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, anchor_box_info, colorsi8, box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
+            rppi_erase_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_anchor_box_info, d_colorsi8, d_box_offset, num_of_boxes, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
+
+        hipFree(d_anchor_box_info);
+        hipFree(d_box_offset);
+        hipFree(d_colorsu8);
+        hipFree(d_colorsf16);
+        hipFree(d_colorsf32);
+        hipFree(d_colorsi8);
 
         break;
     }
@@ -2018,26 +2047,26 @@ int main(int argc, char **argv)
             y22[i] = (Rpp32u) (((Rpp32f) srcSize[i].height) * 0.75);
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_crop_and_patch_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+            rppi_crop_and_patch_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_crop_and_patch_f16_pln3_batchPD_host(inputf16, inputf16_second, srcSize, maxSize, outputf16, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_crop_and_patch_f16_pln3_batchPD_gpu(d_inputf16, d_inputf16_second, srcSize, maxSize, d_outputf16, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_crop_and_patch_f32_pln3_batchPD_host(inputf32, inputf32_second, srcSize, maxSize, outputf32, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+            rppi_crop_and_patch_f32_pln3_batchPD_gpu(d_inputf32, d_inputf32_second, srcSize, maxSize, d_outputf32, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_crop_and_patch_i8_pln3_batchPD_host(inputi8, inputi8_second, srcSize, maxSize, outputi8, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+            rppi_crop_and_patch_i8_pln3_batchPD_gpu(d_inputi8, d_inputi8_second, srcSize, maxSize, d_outputi8, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2055,13 +2084,18 @@ int main(int argc, char **argv)
                 lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
                 lut8s[(i * 256) + j] = (Rpp8u)(255 - j - 128);
             }
-
         }
 
-        start_omp = omp_get_wtime();
+        int *d_lut8u, *d_lut8s;
+        hipMalloc(&d_lut8u, images * 256 * sizeof(Rpp8u));
+        hipMalloc(&d_lut8s, images * 256 * sizeof(Rpp8s));
+        hipMemcpy(d_lut8u, lut8u, images * 256 * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_lut8s, lut8s, images * 256 * sizeof(Rpp8s), hipMemcpyHostToDevice);
+
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_lut_u8_pln3_batchPD_host(input, srcSize, maxSize, output, lut8u, outputFormatToggle, noOfImages, handle);
+            rppi_lut_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, d_lut8u, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2071,13 +2105,16 @@ int main(int argc, char **argv)
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_lut_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, lut8s, outputFormatToggle, noOfImages, handle);
+            rppi_lut_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, d_lut8s, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
+
+        hipFree(d_lut8u);
+        hipFree(d_lut8s);
 
         break;
     }
@@ -2103,26 +2140,26 @@ int main(int argc, char **argv)
 
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_glitch_u8_pln3_batchPD_host(input, srcSize, maxSize, output, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
+            rppi_glitch_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_glitch_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_glitch_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_glitch_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
+            rppi_glitch_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_glitch_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
+            rppi_glitch_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2142,26 +2179,26 @@ int main(int argc, char **argv)
             saturationFactor[i] = 1.9;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_color_twist_u8_pln3_batchPD_host(input, srcSize, maxSize, output, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
+            rppi_color_twist_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_color_twist_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_color_twist_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_color_twist_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
+            rppi_color_twist_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_color_twist_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
+            rppi_color_twist_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, alpha, beta, hueShift, saturationFactor, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2187,26 +2224,26 @@ int main(int argc, char **argv)
             crop_pos_y[i] = 50;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_crop_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
+            rppi_crop_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_crop_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_crop_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_crop_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
+            rppi_crop_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
-            rppi_crop_u8_f16_pln3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_crop_u8_f16_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 4)
-            rppi_crop_u8_f32_pln3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
+            rppi_crop_u8_f32_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 5)
-            rppi_crop_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
+            rppi_crop_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
-            rppi_crop_u8_i8_pln3_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
+            rppi_crop_u8_i8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2238,26 +2275,26 @@ int main(int argc, char **argv)
             mirrorFlag[i] = 1;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_crop_mirror_normalize_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            rppi_crop_mirror_normalize_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_crop_mirror_normalize_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_crop_mirror_normalize_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_crop_mirror_normalize_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            rppi_crop_mirror_normalize_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
-            rppi_crop_mirror_normalize_u8_f16_pln3_batchPD_host(input, srcSize, maxSize, outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_crop_mirror_normalize_u8_f16_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 4)
-            rppi_crop_mirror_normalize_u8_f32_pln3_batchPD_host(input, srcSize, maxSize, outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            rppi_crop_mirror_normalize_u8_f32_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 5)
-            rppi_crop_mirror_normalize_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            rppi_crop_mirror_normalize_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
-            rppi_crop_mirror_normalize_u8_i8_pln3_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            rppi_crop_mirror_normalize_u8_i8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2291,26 +2328,26 @@ int main(int argc, char **argv)
         maxDstSize.height = maxDstHeight;
         maxDstSize.width = maxDstWidth;
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_resize_crop_mirror_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            rppi_resize_crop_mirror_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 1)
-            rppi_resize_crop_mirror_f16_pln3_batchPD_host(inputf16, srcSize, maxSize, outputf16, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            missingFuncFlag = 1; // rppi_resize_crop_mirror_f16_pln3_batchPD_gpu(d_inputf16, srcSize, maxSize, d_outputf16, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 2)
-            rppi_resize_crop_mirror_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            rppi_resize_crop_mirror_f32_pln3_batchPD_gpu(d_inputf32, srcSize, maxSize, d_outputf32, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_resize_crop_mirror_i8_pln3_batchPD_host(inputi8, srcSize, maxSize, outputi8, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
+            rppi_resize_crop_mirror_i8_pln3_batchPD_gpu(d_inputi8, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, x1, x2, y1, y2, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2324,10 +2361,10 @@ int main(int argc, char **argv)
             kernelSize[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_erode_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernelSize, noOfImages, handle);
+            rppi_erode_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2342,8 +2379,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2357,10 +2394,10 @@ int main(int argc, char **argv)
             kernelSize[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_dilate_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernelSize, noOfImages, handle);
+            rppi_dilate_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2375,8 +2412,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2390,10 +2427,10 @@ int main(int argc, char **argv)
             hueShift[i] = 60;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_hueRGB_u8_pln3_batchPD_host(input, srcSize, maxSize, output, hueShift, noOfImages, handle);
+            rppi_hueRGB_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, hueShift, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2408,8 +2445,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2423,10 +2460,10 @@ int main(int argc, char **argv)
             saturationFactor[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_saturationRGB_u8_pln3_batchPD_host(input, srcSize, maxSize, output, saturationFactor, noOfImages, handle);
+            rppi_saturationRGB_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, saturationFactor, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2441,8 +2478,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2450,15 +2487,17 @@ int main(int argc, char **argv)
     {
         test_case_name = "color_convert";
 
+        hipMalloc(&d_outputf32, ioBufferSize * sizeof(Rpp32f));
+
         RppiColorConvertMode convert_mode_1 = RppiColorConvertMode::RGB_HSV;
         RppiColorConvertMode convert_mode_2 = RppiColorConvertMode::HSV_RGB;
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
         {
-            rppi_color_convert_u8_pln3_batchPS_host(input, srcSize, maxSize, outputf32, convert_mode_1, noOfImages, handle);
-            rppi_color_convert_u8_pln3_batchPS_host(outputf32, srcSize, maxSize, output, convert_mode_2, noOfImages, handle);
+            rppi_color_convert_u8_pln3_batchPS_gpu(d_input, srcSize, maxSize, d_outputf32, convert_mode_1, noOfImages, handle);
+            rppi_color_convert_u8_pln3_batchPS_gpu(d_outputf32, srcSize, maxSize, d_output, convert_mode_2, noOfImages, handle);
         }
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
@@ -2474,13 +2513,13 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
+
+        hipFree(d_outputf32);
 
         start /= 2;
         end /= 2;
-        start_omp /= 2;
-        end_omp /= 2;
 
         break;
     }
@@ -2494,10 +2533,10 @@ int main(int argc, char **argv)
             adjustmentValue[i] = 70;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_color_temperature_u8_pln3_batchPD_host(input, srcSize, maxSize, output, adjustmentValue, noOfImages, handle);
+            rppi_color_temperature_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, adjustmentValue, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2512,8 +2551,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2527,10 +2566,10 @@ int main(int argc, char **argv)
             stdDev[i] = 75.0;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_vignette_u8_pln3_batchPD_host(input, srcSize, maxSize, output, stdDev, noOfImages, handle);
+            rppi_vignette_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, stdDev, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2545,57 +2584,15 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
     case 47:
     {
         test_case_name = "channel_extract and channel_combine";
-
-        Rpp32u extractChannelNumber1[images], extractChannelNumber2[images], extractChannelNumber3[images];
-        Rpp32u singleChannelBufferSize = (unsigned long long)maxDstHeight * (unsigned long long)maxDstWidth * (unsigned long long)noOfImages;
-        Rpp8u *channel1 = (Rpp8u *)calloc(singleChannelBufferSize, sizeof(Rpp8u));
-        Rpp8u *channel2 = (Rpp8u *)calloc(singleChannelBufferSize, sizeof(Rpp8u));
-        Rpp8u *channel3 = (Rpp8u *)calloc(singleChannelBufferSize, sizeof(Rpp8u));
-
-        for (i = 0; i < images; i++)
-        {
-            extractChannelNumber1[i] = 0;
-            extractChannelNumber2[i] = 1;
-            extractChannelNumber3[i] = 2;
-        }
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-        {
-            rppi_channel_extract_u8_pln3_batchPD_host(input, srcSize, maxSize, channel1, extractChannelNumber1, noOfImages, handle);
-            rppi_channel_extract_u8_pln3_batchPD_host(input, srcSize, maxSize, channel2, extractChannelNumber2, noOfImages, handle);
-            rppi_channel_extract_u8_pln3_batchPD_host(input, srcSize, maxSize, channel3, extractChannelNumber3, noOfImages, handle);
-            rppi_channel_combine_u8_pln3_batchPD_host(channel1, channel2, channel3, srcSize, maxSize, output, noOfImages, handle);
-        }
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
-
-        free(channel1);
-        free(channel2);
-        free(channel3);
+        missingFuncFlag = 1;
 
         break;
     }
@@ -2603,21 +2600,29 @@ int main(int argc, char **argv)
     {
         test_case_name = "look_up_table";
 
-        Rpp8u lut8u[images * 256];
+        Rpp8u lookUpTableU8Pln[images * ip_channel * 256];
+        Rpp8u *lookUpTableU8PlnTemp;
+        lookUpTableU8PlnTemp = lookUpTableU8Pln;
 
         for (i = 0; i < images; i++)
         {
-            for (j = 0; j < 256; j++)
+            for (int c = 0; c < ip_channel; c++)
             {
-                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
+                for (j = 0; j < 256; j++)
+                {
+                    if (c == 0)
+                        *lookUpTableU8PlnTemp = (Rpp8u)(255 - j);
+                    else
+                        *lookUpTableU8PlnTemp = (Rpp8u)(j);
+                    lookUpTableU8PlnTemp++;
+                }
             }
-
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_look_up_table_u8_pln3_batchPD_host(input, srcSize, maxSize, output, lut8u, noOfImages, handle);
+            rppi_look_up_table_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, lookUpTableU8Pln, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2632,8 +2637,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2647,10 +2652,10 @@ int main(int argc, char **argv)
             kernelSize[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_box_filter_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernelSize, noOfImages, handle);
+            rppi_box_filter_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2665,8 +2670,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2680,10 +2685,10 @@ int main(int argc, char **argv)
             sobelType[i] = 1;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_sobel_filter_u8_pln3_batchPD_host(input, srcSize, maxSize, output, sobelType, noOfImages, handle);
+            rppi_sobel_filter_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, sobelType, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2698,8 +2703,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2713,10 +2718,10 @@ int main(int argc, char **argv)
             kernelSize[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_median_filter_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernelSize, noOfImages, handle);
+            rppi_median_filter_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2731,48 +2736,15 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
     case 52:
     {
         test_case_name = "custom_convolution";
-
-        RppiSize kernelSize[images];
-        Rpp32f kernel[images * 225];
-        Rpp32f value = (Rpp32f) (1.0 / 225);
-        for (i = 0; i < images; i++)
-        {
-            kernelSize[i].height = 15;
-            kernelSize[i].width = 15;
-            for (j = 0; j < 225; j++)
-            {
-                kernel[(i * 225) + j] = value;
-            }
-        }
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_custom_convolution_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernel, kernelSize, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
+        missingFuncFlag = 1;
 
         break;
     }
@@ -2786,10 +2758,10 @@ int main(int argc, char **argv)
             kernelSize[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_non_max_suppression_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernelSize, noOfImages, handle);
+            rppi_non_max_suppression_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2804,8 +2776,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2821,10 +2793,10 @@ int main(int argc, char **argv)
             stdDev[i] = 5.0;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_gaussian_filter_u8_pln3_batchPD_host(input, srcSize, maxSize, output, stdDev, kernelSize, noOfImages, handle);
+            rppi_gaussian_filter_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, stdDev, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2839,8 +2811,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2854,10 +2826,10 @@ int main(int argc, char **argv)
             kernelSize[i] = 5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_nonlinear_filter_u8_pln3_batchPD_host(input, srcSize, maxSize, output, kernelSize, noOfImages, handle);
+            rppi_nonlinear_filter_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2872,8 +2844,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2881,10 +2853,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "absolute_difference";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_absolute_difference_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_absolute_difference_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2899,8 +2871,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2914,10 +2886,10 @@ int main(int argc, char **argv)
             alpha[i] = 0.5;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_accumulate_weighted_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, alpha, noOfImages, handle);
+            rppi_accumulate_weighted_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, alpha, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2932,10 +2904,10 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
-        memcpy(output, input, noOfImages * maxSize.height * maxSize.width * ip_channel * sizeof(Rpp8u));
+        end = clock();
+
+        hipMemcpy(d_output, d_input, oBufferSize * sizeof(Rpp8u),hipMemcpyDeviceToDevice);
 
         break;
     }
@@ -2943,10 +2915,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "accumulate";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_accumulate_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, noOfImages, handle);
+            rppi_accumulate_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2961,10 +2933,10 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
-        memcpy(output, input, noOfImages * maxSize.height * maxSize.width * ip_channel * sizeof(Rpp8u));
+        end = clock();
+
+        hipMemcpy(d_output, d_input, oBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToDevice);
 
         break;
     }
@@ -2972,10 +2944,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "add";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_add_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_add_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -2990,8 +2962,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2999,10 +2971,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "subtract";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_subtract_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_subtract_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3017,8 +2989,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3026,10 +2998,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "magnitude";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_magnitude_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_magnitude_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3044,8 +3016,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3053,10 +3025,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "multiply";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_multiply_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_multiply_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3071,8 +3043,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3080,10 +3052,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "phase";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_phase_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_phase_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3098,8 +3070,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3107,10 +3079,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "accumulate_squared";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_accumulate_squared_u8_pln3_batchPD_host(input, srcSize, maxSize, noOfImages, handle);
+            rppi_accumulate_squared_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3125,10 +3097,10 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
-        memcpy(output, input, noOfImages * maxSize.height * maxSize.width * ip_channel * sizeof(Rpp8u));
+        end = clock();
+
+        hipMemcpy(d_output, d_input, oBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToDevice);
 
         break;
     }
@@ -3136,10 +3108,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "bitwise_AND";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_bitwise_AND_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_bitwise_AND_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3154,8 +3126,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3163,10 +3135,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "bitwise_NOT";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_bitwise_NOT_u8_pln3_batchPD_host(input, srcSize, maxSize, output, noOfImages, handle);
+            rppi_bitwise_NOT_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3181,8 +3153,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3190,10 +3162,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "exclusive_OR";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_exclusive_OR_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_exclusive_OR_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3208,8 +3180,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3217,10 +3189,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "inclusive_OR";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_inclusive_OR_u8_pln3_batchPD_host(input, input_second, srcSize, maxSize, output, noOfImages, handle);
+            rppi_inclusive_OR_u8_pln3_batchPD_gpu(d_input, d_input_second, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3235,8 +3207,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3244,10 +3216,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "local_binary_pattern";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_local_binary_pattern_u8_pln3_batchPD_host(input, srcSize, maxSize, output, noOfImages, handle);
+            rppi_local_binary_pattern_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3262,8 +3234,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3271,10 +3243,10 @@ int main(int argc, char **argv)
     {
         test_case_name = "data_object_copy";
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_data_object_copy_u8_pln3_batchPD_host(input, srcSize, maxSize, output, noOfImages, handle);
+            rppi_data_object_copy_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3289,8 +3261,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3306,10 +3278,10 @@ int main(int argc, char **argv)
             stdDev[i] = 5.0;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_gaussian_image_pyramid_u8_pln3_batchPD_host(input, srcSize, maxSize, output, stdDev, kernelSize, noOfImages, handle);
+            rppi_gaussian_image_pyramid_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, stdDev, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3324,8 +3296,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3341,10 +3313,10 @@ int main(int argc, char **argv)
             stdDev[i] = 5.0;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_laplacian_image_pyramid_u8_pln3_batchPD_host(input, srcSize, maxSize, output, stdDev, kernelSize, noOfImages, handle);
+            rppi_laplacian_image_pyramid_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, stdDev, kernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3359,8 +3331,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3376,10 +3348,10 @@ int main(int argc, char **argv)
             maxThreshold[i] = 30;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_canny_edge_detector_u8_pln3_batchPD_host(input, srcSize, maxSize, output, minThreshold, maxThreshold, noOfImages, handle);
+            rppi_canny_edge_detector_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, minThreshold, maxThreshold, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3394,8 +3366,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3419,10 +3391,10 @@ int main(int argc, char **argv)
             nonmaxKernelSize[i] = 3;
         }
 
-        start_omp = omp_get_wtime();
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppi_harris_corner_detector_u8_pln3_batchPD_host(input, srcSize, maxSize, output, gaussianKernelSize, stdDev, kernelSize, kValue, threshold, nonmaxKernelSize, noOfImages, handle);
+            rppi_harris_corner_detector_u8_pln3_batchPD_gpu(d_input, srcSize, maxSize, d_output, gaussianKernelSize, stdDev, kernelSize, kValue, threshold, nonmaxKernelSize, noOfImages, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -3437,111 +3409,28 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
     case 75:
     {
         test_case_name = "fast_corner_detector";
-
-        Rpp32u numOfPixels[images];
-        Rpp8u threshold[images];
-        Rpp32u nonmaxKernelSize[images];
-        for (i = 0; i < images; i++)
-        {
-            numOfPixels[i] = 14;
-            threshold[i] = 5;
-            nonmaxKernelSize[i] = 15;
-        }
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_fast_corner_detector_u8_pln3_batchPD_host(input, srcSize, maxSize, output, numOfPixels, threshold, nonmaxKernelSize, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
+        missingFuncFlag = 1;
 
         break;
     }
     case 76:
     {
         test_case_name = "reconstruction_laplacian_image_pyramid";
-
-        Rpp32u kernelSize[images];
-        Rpp32f stdDev[images];
-        RppiSize srcSizeHalf[images];
-        for (i = 0; i < images; i++)
-        {
-            kernelSize[i] = 3;
-            stdDev[i] = 20;
-            srcSizeHalf[i].height = srcSize[i].height / 2;
-            srcSizeHalf[i].width = srcSize[i].width / 2;
-        }
-
-        RppiSize srcSize1Max, srcSize2Max;
-        srcSize1Max.height = maxSize.height;
-        srcSize1Max.width = maxSize.width;
-        srcSize2Max.height = maxSize.height / 2;
-        srcSize2Max.width = maxSize.width / 2;
-
-        Rpp8u *srcPtr1 = (Rpp8u*) calloc(noOfImages * srcSize1Max.height * srcSize1Max.width * ip_channel, sizeof(Rpp8u));
-        Rpp8u *srcPtr2 = (Rpp8u*) calloc(noOfImages * srcSize2Max.height * srcSize2Max.width * ip_channel, sizeof(Rpp8u));
-
-        rppi_resize_u8_pln3_batchPD_host(input, srcSize, srcSize1Max, srcPtr2, srcSizeHalf, srcSize2Max, outputFormatToggle, noOfImages, handle);
-
-        rppi_laplacian_image_pyramid_u8_pln3_batchPD_host(input, srcSize, maxSize, srcPtr1, stdDev, kernelSize, noOfImages, handle);
-        memcpy(input, srcPtr1, ioBufferSize * sizeof(Rpp8u));
-        memset(srcPtr1, 0, ioBufferSize * sizeof(Rpp8u));
-
-        rppi_resize_u8_pln3_batchPD_host(input, srcSizeHalf, srcSize1Max, srcPtr1, srcSize, srcSize1Max, outputFormatToggle, noOfImages, handle);
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_reconstruction_laplacian_image_pyramid_u8_pln3_batchPD_host(srcPtr1, srcSize, srcSize1Max, srcPtr2, srcSizeHalf, srcSize2Max, output, stdDev, kernelSize, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
-
-        free(srcPtr1);
-        free(srcPtr2);
+        missingFuncFlag = 1;
 
         break;
     }
     case 77:
     {
         test_case_name = "hough_lines";
-
-        printf("\nThe hough_lines algorithm only has a single channel image input. The input must be an output of a canny edge detector!");
         missingFuncFlag = 1;
 
         break;
@@ -3549,7 +3438,6 @@ int main(int argc, char **argv)
     case 78:
     {
         test_case_name = "hog";
-
         missingFuncFlag = 1;
 
         break;
@@ -3557,124 +3445,7 @@ int main(int argc, char **argv)
     case 79:
     {
         test_case_name = "remap";
-
-        Rpp32u *rowRemapTable = (Rpp32u*) calloc(ioBufferSize,sizeof(Rpp32u));
-        Rpp32u *colRemapTable = (Rpp32u*) calloc(ioBufferSize,sizeof(Rpp32u));
-
-        Rpp32u *rowRemapTableTemp, *colRemapTableTemp;
-        rowRemapTableTemp = rowRemapTable;
-        colRemapTableTemp = colRemapTable;
-
-        for (Rpp32u count = 0; count < noOfImages; count++)
-        {
-            Rpp32u halfWidth = srcSize[count].width / 2;
-            for (Rpp32u i = 0; i < srcSize[count].height; i++)
-            {
-                Rpp32u j = 0;
-                for (; j < halfWidth; j++)
-                {
-                    *rowRemapTableTemp = i;
-                    *colRemapTableTemp = halfWidth - j;
-
-                    rowRemapTableTemp++;
-                    colRemapTableTemp++;
-                }
-                for (; j < srcSize[count].width; j++)
-                {
-                    *rowRemapTableTemp = i;
-                    *colRemapTableTemp = j;
-
-                    rowRemapTableTemp++;
-                    colRemapTableTemp++;
-                }
-
-            }
-        }
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_remap_u8_pln3_batchPD_host(input, srcSize, maxSize, output, rowRemapTable, colRemapTable, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
-
-        break;
-    }
-    case 80:
-    {
-        test_case_name = "bilateral_filter";
         missingFuncFlag = 1;
-
-        break;
-    }
-    case 81:
-    {
-        test_case_name = "match_template";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 82:
-    {
-        test_case_name = "resize_mirror_normalize";
-
-        Rpp32f mean[images];
-        Rpp32f stdDev[images];
-        Rpp32u mirrorFlag[images];
-        for (i = 0; i < images; i++)
-        {
-            dstSize[i].height = srcSize[i].height / 3;
-            dstSize[i].width = srcSize[i].width / 1.1;
-            if (maxDstHeight < dstSize[i].height)
-                maxDstHeight = dstSize[i].height;
-            if (maxDstWidth < dstSize[i].width)
-                maxDstWidth = dstSize[i].width;
-            if (minDstHeight > dstSize[i].height)
-                minDstHeight = dstSize[i].height;
-            if (minDstWidth > dstSize[i].width)
-                minDstWidth = dstSize[i].width;
-            mean[i] = 100.0;
-            stdDev[i] = 1.0;
-            mirrorFlag[i] = 1;
-        }
-        maxDstSize.height = maxDstHeight;
-        maxDstSize.width = maxDstWidth;
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppi_resize_mirror_normalize_u8_pln3_batchPD_host(input, srcSize, maxSize, output, dstSize, maxDstSize, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-            // rppi_resize_mirror_normalize_f32_pln3_batchPD_host(inputf32, srcSize, maxSize, outputf32, dstSize, maxDstSize, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3689,10 +3460,8 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    omp_time_used = end_omp - start_omp;
-    cout << "\nCPU Time - BatchPD : " << cpu_time_used;
-    cout << "\nOMP Time - BatchPD : " << omp_time_used;
+    gpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    cout << "\nGPU Time - BatchPD : " << gpu_time_used;
     printf("\n");
 
     string fileName = std::to_string(ip_bitDepth);
@@ -3700,6 +3469,7 @@ int main(int argc, char **argv)
 
     if (ip_bitDepth == 0)
     {
+        hipMemcpy(output, d_output, oBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
 
@@ -3718,6 +3488,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 1) || (ip_bitDepth == 3))
     {
+        hipMemcpy(outputf16, d_outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp16f *outputf16Temp;
@@ -3740,6 +3511,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 2) || (ip_bitDepth == 4))
     {
+        hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp32f *outputf32Temp;
@@ -3761,6 +3533,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 5) || (ip_bitDepth == 6))
     {
+        hipMemcpy(outputi8, d_outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp8s *outputi8Temp;
@@ -3832,7 +3605,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyHost(handle);
+    rppDestroyGPU(handle);
 
     mkdir(dst, 0700);
     strcat(dst, "/");
@@ -3860,12 +3633,61 @@ int main(int argc, char **argv)
     free(input);
     free(input_second);
     free(output);
-    free(inputf16);
-    free(inputf16_second);
-    free(outputf16);
-    free(inputf32);
-    free(inputf32_second);
-    free(outputf32);
+
+    if (ip_bitDepth == 0)
+    {
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_output);
+    }
+    else if (ip_bitDepth == 1)
+    {
+        free(inputf16);
+        free(inputf16_second);
+        free(outputf16);
+        hipFree(d_inputf16);
+        hipFree(d_inputf16_second);
+        hipFree(d_outputf16);
+    }
+    else if (ip_bitDepth == 2)
+    {
+        free(inputf32);
+        free(inputf32_second);
+        free(outputf32);
+        hipFree(d_inputf32);
+        hipFree(d_inputf32_second);
+        hipFree(d_outputf32);
+    }
+    else if (ip_bitDepth == 3)
+    {
+        free(outputf16);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputf16);
+    }
+    else if (ip_bitDepth == 4)
+    {
+        free(outputf32);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputf32);
+    }
+    else if (ip_bitDepth == 5)
+    {
+        free(inputi8);
+        free(inputi8_second);
+        free(outputi8);
+        hipFree(d_inputi8);
+        hipFree(d_inputi8_second);
+        hipFree(d_outputi8);
+    }
+    else if (ip_bitDepth == 6)
+    {
+        free(outputi8);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputi8);
+    }
 
     return 0;
 }

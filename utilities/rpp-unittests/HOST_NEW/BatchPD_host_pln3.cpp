@@ -165,7 +165,7 @@ int main(int argc, char **argv)
     case 27:
         strcpy(funcName, "scale");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 28:
         strcpy(funcName, "warp_perspective");
         outputFormatToggle = 0;
@@ -338,7 +338,7 @@ int main(int argc, char **argv)
     case 73:
         strcpy(funcName, "canny_edge_detector");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 74:
         strcpy(funcName, "harris_corner_detector");
         outputFormatToggle = 0;
@@ -364,14 +364,6 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 80:
-        strcpy(funcName, "bilateral_filter");
-        outputFormatToggle = 0;
-        break;
-    case 81:
-        strcpy(funcName, "match_template");
-        outputFormatToggle = 0;
-        break;
-    case 82:
         strcpy(funcName, "resize_mirror_normalize");
         break;
     }
@@ -3479,7 +3471,6 @@ int main(int argc, char **argv)
 
         break;
     }
-    
     case 76:
     {
         test_case_name = "reconstruction_laplacian_image_pyramid";
@@ -3616,20 +3607,6 @@ int main(int argc, char **argv)
         break;
     }
     case 80:
-    {
-        test_case_name = "bilateral_filter";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 81:
-    {
-        test_case_name = "match_template";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 82:
     {
         test_case_name = "resize_mirror_normalize";
 

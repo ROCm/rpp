@@ -137,7 +137,7 @@ int main(int argc, char **argv)
     case 19:
         strcpy(funcName, "histogram_equalization");
         outputFormatToggle = 0;
-        break; 
+        break;
     case 20:
         strcpy(funcName, "flip");
         outputFormatToggle = 0;
@@ -363,20 +363,10 @@ int main(int argc, char **argv)
         strcpy(funcName, "remap");
         outputFormatToggle = 0;
         break;
-
     case 80:
-        strcpy(funcName, "bilateral_filter");
-        outputFormatToggle = 0;
-        break;
-    case 81:
-        strcpy(funcName, "match_template");
-        outputFormatToggle = 0;
-        break;
-    case 82:
         strcpy(funcName, "resize_mirror_normalize");
         break;
     }
-
 
     if (outputFormatToggle == 0)
     {
@@ -867,7 +857,6 @@ int main(int argc, char **argv)
 
         break;
     }
-      
     case 7:
     {
         test_case_name = "snow";
@@ -2802,7 +2791,8 @@ int main(int argc, char **argv)
         end_omp = omp_get_wtime();
 
         break;
-    }case 57:
+    }
+    case 57:
     {
         test_case_name = "accumulate_weighted";
 
@@ -3450,6 +3440,7 @@ int main(int argc, char **argv)
         missingFuncFlag = 1;
 
         break;
+    }
     case 79:
     {
         test_case_name = "remap";
@@ -3510,21 +3501,6 @@ int main(int argc, char **argv)
         break;
     }
     case 80:
-    {
-        test_case_name = "bilateral_filter";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    }
-    case 81:
-    {
-        test_case_name = "match_template";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 82:
     {
         test_case_name = "resize_mirror_normalize";
 

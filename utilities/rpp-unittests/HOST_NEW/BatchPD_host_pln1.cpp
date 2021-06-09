@@ -272,7 +272,7 @@ int main(int argc, char **argv)
     case 55:
         strcpy(funcName, "nonlinear_filter");
         outputFormatToggle = 0;
-        break;    
+        break;
     case 56:
         strcpy(funcName, "absolute_difference");
         outputFormatToggle = 0;
@@ -370,14 +370,6 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 80:
-        strcpy(funcName, "bilateral_filter");
-        outputFormatToggle = 0;
-        break;
-    case 81:
-        strcpy(funcName, "match_template");
-        outputFormatToggle = 0;
-        break;
-    case 82:
         strcpy(funcName, "resize_mirror_normalize");
         break;
     }
@@ -3430,20 +3422,6 @@ int main(int argc, char **argv)
         break;
     }
     case 80:
-    {
-        test_case_name = "bilateral_filter";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 81:
-    {
-        test_case_name = "match_template";
-        missingFuncFlag = 1;
-
-        break;
-    }
-    case 82:
     {
         test_case_name = "resize_mirror_normalize";
 
