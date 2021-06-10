@@ -79,19 +79,19 @@ do
         for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
         do
 
-            if [[ "$case" -eq 66 ]]
-            then
-                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-            elif [[ "$case" -eq 67 ]]
+            if [[ "$case" -eq 74 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-            elif [[ "$case" -eq 68 ]]
+            elif [[ "$case" -eq 75 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 77 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-            elif [[ "$case" -eq 73 ]]
+            elif [[ "$case" -eq 78 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
@@ -132,19 +132,19 @@ do
         for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
         do
 
-            if [[ "$case" -eq 66 ]]
-            then
-                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-            elif [[ "$case" -eq 67 ]]
+            if [[ "$case" -eq 74 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-            elif [[ "$case" -eq 68 ]]
+            elif [[ "$case" -eq 75 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 77 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-            elif [[ "$case" -eq 73 ]]
+            elif [[ "$case" -eq 78 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
@@ -185,19 +185,19 @@ do
         for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
         do
 
-            if [[ "$case" -eq 66 ]]
-            then
-                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-            elif [[ "$case" -eq 67 ]]
+            if [[ "$case" -eq 74 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-            elif [[ "$case" -eq 68 ]]
+            elif [[ "$case" -eq 75 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 77 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-            elif [[ "$case" -eq 73 ]]
+            elif [[ "$case" -eq 78 ]]
             then
                 SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
                 SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
