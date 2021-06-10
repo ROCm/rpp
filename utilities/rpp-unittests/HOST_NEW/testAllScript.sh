@@ -52,6 +52,49 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
+directory_name_generator() {
+
+    AFFINITY=$1
+    TYPE=$2
+    CASE=$3
+
+    if [[ "$case" -lt 15 ]]
+    then
+        FUNCTIONALITY_GROUP="image_augmentations"
+    elif [[ "$case" -lt 20 ]]
+    then
+        FUNCTIONALITY_GROUP="statistical_functions"
+    elif [[ "$case" -lt 29 ]]
+    then
+        FUNCTIONALITY_GROUP="geometry_transforms"
+    elif [[ "$case" -lt 36 ]]
+    then
+        FUNCTIONALITY_GROUP="advanced_augmentations"
+    elif [[ "$case" -lt 40 ]]
+    then
+        FUNCTIONALITY_GROUP="fused_functions"
+    elif [[ "$case" -lt 42 ]]
+    then
+        FUNCTIONALITY_GROUP="morphological_transforms"
+    elif [[ "$case" -lt 49 ]]
+    then
+        FUNCTIONALITY_GROUP="color_model_conversions"
+    elif [[ "$case" -lt 56 ]]
+    then
+        FUNCTIONALITY_GROUP="filter_operations"
+    elif [[ "$case" -lt 65 ]]
+    then
+        FUNCTIONALITY_GROUP="arithmetic_operations"
+    elif [[ "$case" -lt 69 ]]
+    then
+        FUNCTIONALITY_GROUP="logical_operations"
+    else
+        FUNCTIONALITY_GROUP="computer_vision"
+    fi
+
+    DST_FOLDER_TEMP="$DST_FOLDER""/rpp_""$AFFINITY""_""$TYPE""_""$FUNCTIONALITY_GROUP"
+}
+
 rm -rvf "$DST_FOLDER"/*
 shopt -s extglob
 mkdir build
@@ -69,6 +112,9 @@ printf "\n\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as
 
 for ((case=0;case<80;case++))
 do
+    directory_name_generator "host" "pkd3" "$case"
+    mkdir $DST_FOLDER_TEMP
+
     printf "\n\n\n\n"
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
@@ -100,8 +146,8 @@ do
                 SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
             fi
 
-            printf "\n./BatchPD_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-            ./BatchPD_host_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
+            printf "\n./BatchPD_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case 0"
+            ./BatchPD_host_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0"
             echo "------------------------------------------------------------------------------------------"
         done
     done
@@ -122,6 +168,9 @@ printf "\n\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as
 
 for ((case=0;case<80;case++))
 do
+    directory_name_generator "host" "pln1" "$case"
+    mkdir $DST_FOLDER_TEMP
+
     printf "\n\n\n\n"
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
@@ -153,8 +202,8 @@ do
                 SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
             fi
 
-            printf "\n./BatchPD_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-            ./BatchPD_host_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
+            printf "\n./BatchPD_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case 0"
+            ./BatchPD_host_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0"
             echo "------------------------------------------------------------------------------------------"
         done
     done
@@ -175,6 +224,9 @@ printf "\n\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as
 
 for ((case=0;case<80;case++))
 do
+    directory_name_generator "host" "pln3" "$case"
+    mkdir $DST_FOLDER_TEMP
+
     printf "\n\n\n\n"
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
@@ -206,8 +258,8 @@ do
                 SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
             fi
 
-            printf "\n./BatchPD_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-            ./BatchPD_host_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
+            printf "\n./BatchPD_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case 0"
+            ./BatchPD_host_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0"
             echo "------------------------------------------------------------------------------------------"
         done
     done
