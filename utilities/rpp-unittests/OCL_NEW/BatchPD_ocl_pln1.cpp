@@ -408,12 +408,12 @@ int main(int argc, char **argv)
     strcat(func, funcType);
     printf("\nRunning %s...", func);
 
-    int ip_bitDepth_1_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};
-    int ip_bitDepth_2_cases[14] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 81};
-    int ip_bitDepth_3_cases[3] = {19, 62, 63};
-    int ip_bitDepth_4_cases[3] = {19, 62, 63};
-    int ip_bitDepth_5_cases[15] = {17, 18, 19, 20, 61, 62, 63, 64, 75, 76, 77, 78, 79, 80, 81};
-    int ip_bitDepth_6_cases[3] = {19, 62, 63};
+    int ip_bitDepth_1_cases[14] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39};
+    int ip_bitDepth_2_cases[14] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39};
+    int ip_bitDepth_3_cases[3]  = {21, 37, 38};
+    int ip_bitDepth_4_cases[3]  = {21, 37, 38};
+    int ip_bitDepth_5_cases[15] = {21, 22, 23, 24, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39};
+    int ip_bitDepth_6_cases[3]  = {21, 37, 38};
 
     bool functionality_existence;
 
@@ -3255,8 +3255,8 @@ int main(int argc, char **argv)
     elementsInRowMax = maxWidth * ip_channel;
 
     for (j = 0; j < noOfImages; j++)
-    {   
-        int height = dstSize[j].height; 
+    {
+        int height = dstSize[j].height;
         int width = dstSize[j].width;
 
         int op_size = height * width * ip_channel;
@@ -3273,15 +3273,15 @@ int main(int argc, char **argv)
             output_row += elementsInRowMax;
         }
         count += maxHeight * maxWidth * ip_channel;
-    
+
         char temp[1000];
         strcpy(temp, dst);
         strcat(temp, imageNames[j]);
-        
+
         Mat mat_op_image;
         mat_op_image = Mat(height, width, CV_8UC1, temp_output);
         imwrite(temp, mat_op_image);
-        
+
         free(temp_output);
     }
     free(srcSize);
@@ -3347,4 +3347,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
