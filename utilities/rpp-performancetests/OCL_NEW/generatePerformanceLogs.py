@@ -42,7 +42,7 @@ for log_file in log_file_list:
     print("Functionalities - ", len(functions))
 
     # Print summary of log
-    print("\n\nFunctionality\t\t\t\t\t\t\t\tFrames Count\tmax(s)\t\tmin(s)\t\tavg(s)\n")
+    print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(s)\t\tmin(s)\t\tavg(s)\n")
     maxCharLength = len(max(functions, key=len))
     functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
     for i, func in enumerate(functions):

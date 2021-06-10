@@ -67,44 +67,44 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<82;case++))
+for ((case=0;case<80;case++))
 do
-printf "\n\n\n\n"
-echo "--------------------------------"
-printf "Running a New Functionality...\n"
-echo "--------------------------------"
-for ((bitDepth=0;bitDepth<7;bitDepth++))
-do
-printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
-do
+    printf "\n\n\n\n"
+    echo "--------------------------------"
+    printf "Running a New Functionality...\n"
+    echo "--------------------------------"
+    for ((bitDepth=0;bitDepth<7;bitDepth++))
+    do
+        printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
+        for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
+        do
 
-if [[ "$case" -eq 66 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-elif [[ "$case" -eq 67 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-elif [[ "$case" -eq 68 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-elif [[ "$case" -eq 73 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
-else
-    SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-    SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
-fi
+            if [[ "$case" -eq 66 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 67 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 68 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+            elif [[ "$case" -eq 73 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
+            else
+                SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+                SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+            fi
 
-printf "\n./BatchPD_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
-echo "------------------------------------------------------------------------------------------"
-done
-done
+            printf "\n./BatchPD_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
+            ./BatchPD_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
+            echo "------------------------------------------------------------------------------------------"
+        done
+    done
 done
 
 mkdir "$DST_FOLDER/PKD3"
@@ -120,44 +120,44 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<82;case++))
+for ((case=0;case<80;case++))
 do
-printf "\n\n\n\n"
-echo "--------------------------------"
-printf "Running a New Functionality...\n"
-echo "--------------------------------"
-for ((bitDepth=0;bitDepth<7;bitDepth++))
-do
-printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
-do
+    printf "\n\n\n\n"
+    echo "--------------------------------"
+    printf "Running a New Functionality...\n"
+    echo "--------------------------------"
+    for ((bitDepth=0;bitDepth<7;bitDepth++))
+    do
+        printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
+        for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
+        do
 
-if [[ "$case" -eq 66 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-elif [[ "$case" -eq 67 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-elif [[ "$case" -eq 68 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-elif [[ "$case" -eq 73 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
-else
-    SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-    SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
-fi
+            if [[ "$case" -eq 66 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 67 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 68 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+            elif [[ "$case" -eq 73 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
+            else
+                SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+                SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+            fi
 
-printf "\n./BatchPD_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
-echo "------------------------------------------------------------------------------------------"
-done
-done
+            printf "\n./BatchPD_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
+            ./BatchPD_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
+            echo "------------------------------------------------------------------------------------------"
+        done
+    done
 done
 
 mkdir "$DST_FOLDER/PLN1"
@@ -173,44 +173,44 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<82;case++))
+for ((case=0;case<80;case++))
 do
-printf "\n\n\n\n"
-echo "--------------------------------"
-printf "Running a New Functionality...\n"
-echo "--------------------------------"
-for ((bitDepth=0;bitDepth<7;bitDepth++))
-do
-printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
-do
+    printf "\n\n\n\n"
+    echo "--------------------------------"
+    printf "Running a New Functionality...\n"
+    echo "--------------------------------"
+    for ((bitDepth=0;bitDepth<7;bitDepth++))
+    do
+        printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
+        for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
+        do
 
-if [[ "$case" -eq 66 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-elif [[ "$case" -eq 67 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-elif [[ "$case" -eq 68 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-elif [[ "$case" -eq 73 ]]
-then
-    SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
-    SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
-else
-    SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-    SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
-fi
+            if [[ "$case" -eq 66 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 67 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
+            elif [[ "$case" -eq 68 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
+            elif [[ "$case" -eq 73 ]]
+            then
+                SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
+                SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
+            else
+                SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+                SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+            fi
 
-printf "\n./BatchPD_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
-./BatchPD_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
-echo "------------------------------------------------------------------------------------------"
-done
-done
+            printf "\n./BatchPD_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER $bitDepth $outputFormatToggle $case 0"
+            ./BatchPD_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER" "$bitDepth" "$outputFormatToggle" "$case" "0"
+            echo "------------------------------------------------------------------------------------------"
+        done
+    done
 done
 
 mkdir "$DST_FOLDER/PLN3"
@@ -228,17 +228,17 @@ printf "\n\nUsage: ./uniqueFunctionalities_hip <u8 = 0 / f16 = 1 / f32 = 2 / u8-
 
 for ((case=0;case<13;case++))
 do
-printf "\n\n\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
-echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
-printf "Running a New Functionality...\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
-echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
-for ((bitDepth=0;bitDepth<7;bitDepth++))
-do
-printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
-echo "./uniqueFunctionalities_hip $bitDepth $case" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
-./uniqueFunctionalities_hip "$bitDepth" "$case" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
-echo "------------------------------------------------------------------------------------------"
-done
+    printf "\n\n\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+    echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+    printf "Running a New Functionality...\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+    echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+    for ((bitDepth=0;bitDepth<7;bitDepth++))
+    do
+        printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+        echo "./uniqueFunctionalities_hip $bitDepth $case" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+        ./uniqueFunctionalities_hip "$bitDepth" "$case" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
+        echo "------------------------------------------------------------------------------------------"
+    done
 done
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
