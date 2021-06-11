@@ -35,6 +35,7 @@ for log_file in log_file_list:
     functions = []
     frames = []
     prevLine = ""
+    funcCount = 0
 
     # Loop over each line
     for line in f:
@@ -59,12 +60,13 @@ for log_file in log_file_list:
                 maxVals.append(stats[0])
                 minVals.append(stats[1])
                 avgVals.append(stats[2])
+                funcCount += 1
 
         if line != "\n":
             prevLine = line
 
     # Print log lengths
-    print("Functionalities - ", len(functions))
+    print("Functionalities - ", funcCount)
 
     # Print summary of log
     print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(s)\t\tmin(s)\t\tavg(s)\n")
