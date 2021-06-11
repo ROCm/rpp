@@ -46,6 +46,48 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
+group_name_generator() {
+
+    CASE=$1
+
+    FUNCTIONALITY_GROUP=""
+
+    if [[ "$case" -eq 0 ]]
+    then
+        FUNCTIONALITY_GROUP="image_augmentations"
+    elif [[ "$case" -eq 15 ]]
+    then
+        FUNCTIONALITY_GROUP="statistical_functions"
+    elif [[ "$case" -eq 20 ]]
+    then
+        FUNCTIONALITY_GROUP="geometry_transforms"
+    elif [[ "$case" -eq 29 ]]
+    then
+        FUNCTIONALITY_GROUP="advanced_augmentations"
+    elif [[ "$case" -eq 36 ]]
+    then
+        FUNCTIONALITY_GROUP="fused_functions"
+    elif [[ "$case" -eq 40 ]]
+    then
+        FUNCTIONALITY_GROUP="morphological_transforms"
+    elif [[ "$case" -eq 42 ]]
+    then
+        FUNCTIONALITY_GROUP="color_model_conversions"
+    elif [[ "$case" -eq 49 ]]
+    then
+        FUNCTIONALITY_GROUP="filter_operations"
+    elif [[ "$case" -eq 56 ]]
+    then
+        FUNCTIONALITY_GROUP="arithmetic_operations"
+    elif [[ "$case" -eq 65 ]]
+    then
+        FUNCTIONALITY_GROUP="logical_operations"
+    elif [[ "$case" -eq 69 ]]
+    then
+        FUNCTIONALITY_GROUP="computer_vision"
+    fi
+}
+
 rm -rvf "$DST_FOLDER"/*
 shopt -s extglob
 mkdir build
@@ -63,6 +105,9 @@ printf "\n\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as
 
 for ((case=0;case<80;case++))
 do
+    group_name_generator "$case"
+    printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_host_pkd3_host_raw_performance_log.txt"
+
     printf "\n\n\n\n"
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
@@ -96,6 +141,9 @@ printf "\n\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as
 
 for ((case=0;case<80;case++))
 do
+    group_name_generator "$case"
+    printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_host_pln1_host_raw_performance_log.txt"
+
     printf "\n\n\n\n"
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
@@ -129,6 +177,9 @@ printf "\n\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as
 
 for ((case=0;case<80;case++))
 do
+    group_name_generator "$case"
+    printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_host_pln3_host_raw_performance_log.txt"
+
     printf "\n\n\n\n"
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
