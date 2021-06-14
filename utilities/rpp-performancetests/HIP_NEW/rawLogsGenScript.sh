@@ -96,8 +96,10 @@ if (( "$#" < 1 )); then
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
-    echo "Syntax: ./rawLogsGenScript.sh <P>"
+    echo "Syntax: ./rawLogsGenScript.sh <P> <S> <E>"
     echo "P     PROFILING_OPTION (0 = Run without profiling (end to end api time) / 1 = Run with profiling (kernel time))"
+    echo "S     CASE_START (Starting case# (0-79))"
+    echo "E     CASE_END (Ending case# (0-79))"
     exit 1
 fi
 
@@ -108,7 +110,19 @@ if [ "$1" -ne 0 ]; then
     fi
 fi
 
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 79 ]]; then
+    echo "The starting case# must be in the 0-79 range!"
+    exit 1
+fi
+
+if [[ "$3" -lt 0 ]] | [[ "$3" -gt 79 ]]; then
+    echo "The ending case# must be in the 0-79 range!"
+    exit 1
+fi
+
 PROFILING_OPTION="$1"
+CASE_START="$2"
+CASE_END="$3"
 
 rm -rvf "$DST_FOLDER"/*
 shopt -s extglob
@@ -132,7 +146,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<80;case++))
+for ((case=$CASE_START;case<=$CASE_END;case++))
 do
     group_name_generator "$case"
     printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_hip_pkd3_hip_raw_performance_log.txt"
@@ -176,7 +190,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<80;case++))
+for ((case=$CASE_START;case<=$CASE_END;case++))
 do
     group_name_generator "$case"
     printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_hip_pln1_hip_raw_performance_log.txt"
@@ -220,7 +234,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<80;case++))
+for ((case=$CASE_START;case<=$CASE_END;case++))
 do
     group_name_generator "$case"
     printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_hip_pln3_hip_raw_performance_log.txt"

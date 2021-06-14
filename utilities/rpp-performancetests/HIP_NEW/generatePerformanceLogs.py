@@ -4,13 +4,29 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profiling', type=str, default='NO', help='Run with profiler? - (YES/NO)')
+parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-79)')
+parser.add_argument('--case_end', type=str, default='79', help='Testing range ending case # - (0-79)')
 args = parser.parse_args()
 
 profilingOption = args.profiling
+caseStart = args.case_start
+caseEnd = args.case_end
+
+if caseEnd < caseStart:
+    print("Ending case# must be greater than starting case#. Aborting!")
+    exit(0)
+
+if caseStart < "0" or caseStart > "79":
+    print("Starting case# must be in the 0-79 range. Aborting!")
+    exit(0)
+
+if caseEnd < "0" or caseEnd > "79":
+    print("Ending case# must be in the 0-79 range. Aborting!")
+    exit(0)
 
 if profilingOption == "NO":
 
-    subprocess.call(["./rawLogsGenScript.sh", "0"])
+    subprocess.call(["./rawLogsGenScript.sh", "0", caseStart, caseEnd])
 
     log_file_list = [
         "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pkd3_hip_raw_performance_log.txt",
@@ -117,7 +133,7 @@ elif profilingOption == "YES":
         elif case_number == 69:
             return "computer_vision"
 
-    subprocess.call(["./rawLogsGenScript.sh", "1"])
+    subprocess.call(["./rawLogsGenScript.sh", "1", caseStart, caseEnd])
 
     RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW"
     print("RESULTS_DIR = " + RESULTS_DIR)
@@ -126,7 +142,7 @@ elif profilingOption == "YES":
     CONSOLIDATED_FILE_PLN3 = RESULTS_DIR + "/consolidated_results_pln3.stats.csv"
 
     TYPE_LIST = ["PKD3", "PLN1", "PLN3"]
-    CASE_NUM_LIST = range(0, 80, 1)
+    CASE_NUM_LIST = range(int(caseStart), int(caseEnd) + 1, 1)
     BIT_DEPTH_LIST = range(0, 7, 1)
     OFT_LIST = range(0, 2, 1)
     d_counter = {"PKD3":0, "PLN1":0, "PLN3":0}

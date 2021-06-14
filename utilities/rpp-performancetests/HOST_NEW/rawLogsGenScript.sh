@@ -92,6 +92,31 @@ group_name_generator() {
     fi
 }
 
+if [[ "$1" -lt 0 ]] | [[ "$1" -gt 79 ]]; then
+    echo "The starting case# must be in the 0-79 range!"
+    echo
+    echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
+    echo
+    echo "Syntax: ./rawLogsGenScript.sh <S> <E>"
+    echo "S     CASE_START (Starting case# (0-79))"
+    echo "E     CASE_END (Ending case# (0-79))"
+    exit 1
+fi
+
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 79 ]]; then
+    echo "The ending case# must be in the 0-79 range!"
+    echo
+    echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
+    echo
+    echo "Syntax: ./rawLogsGenScript.sh <S> <E>"
+    echo "S     CASE_START (Starting case# (0-79))"
+    echo "E     CASE_END (Ending case# (0-79))"
+    exit 1
+fi
+
+CASE_START="$1"
+CASE_END="$2"
+
 rm -rvf "$DST_FOLDER"/*
 shopt -s extglob
 mkdir build
@@ -107,7 +132,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<80;case++))
+for ((case=$CASE_START;case<=$CASE_END;case++))
 do
     group_name_generator "$case"
     printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_host_pkd3_host_raw_performance_log.txt"
@@ -143,7 +168,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<80;case++))
+for ((case=$CASE_START;case<=$CASE_END;case++))
 do
     group_name_generator "$case"
     printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_host_pln1_host_raw_performance_log.txt"
@@ -179,7 +204,7 @@ echo "##########################################################################
 
 printf "\n\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
 
-for ((case=0;case<80;case++))
+for ((case=$CASE_START;case<=$CASE_END;case++))
 do
     group_name_generator "$case"
     printf "\n\n$FUNCTIONALITY_GROUP\n\n" | tee -a "$DST_FOLDER/BatchPD_host_pln3_host_raw_performance_log.txt"

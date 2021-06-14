@@ -1,6 +1,28 @@
+import os
 import subprocess
+import argparse
 
-subprocess.call("./rawLogsGenScript.sh", shell=True)
+parser = argparse.ArgumentParser()
+parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-79)')
+parser.add_argument('--case_end', type=str, default='79', help='Testing range ending case # - (0-79)')
+args = parser.parse_args()
+
+caseStart = args.case_start
+caseEnd = args.case_end
+
+if caseEnd < caseStart:
+    print("Ending case# must be greater than starting case#. Aborting!")
+    exit(0)
+
+if caseStart < "0" or caseStart > "79":
+    print("Starting case# must be in the 0-79 range. Aborting!")
+    exit(0)
+
+if caseEnd < "0" or caseEnd > "79":
+    print("Ending case# must be in the 0-79 range. Aborting!")
+    exit(0)
+
+subprocess.call(["./rawLogsGenScript.sh", caseStart, caseEnd])
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/BatchPD_host_pkd3_host_raw_performance_log.txt",
