@@ -92,6 +92,24 @@ group_name_generator() {
     fi
 }
 
+if (( "$#" < 1 )); then
+    echo
+    echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
+    echo
+    echo "Syntax: ./rawLogsGenScript.sh <P>"
+    echo "P     PROFILING_OPTION (0 = Run without profiling (end to end api time) / 1 = Run with profiling (kernel time))"
+    exit 1
+fi
+
+if [ "$1" -ne 0 ]; then
+    if [ "$1" -ne 1 ]; then
+        echo "The profiling option must be 0/1!"
+        exit 1
+    fi
+fi
+
+PROFILING_OPTION="$1"
+
 rm -rvf "$DST_FOLDER"/*
 shopt -s extglob
 mkdir build
@@ -99,6 +117,13 @@ cd build
 rm -rvf ./*
 cmake ..
 make -j16
+
+if [[ "$PROFILING_OPTION" -eq 1 ]]
+then
+    mkdir "$DST_FOLDER/PKD3"
+    mkdir "$DST_FOLDER/PLN1"
+    mkdir "$DST_FOLDER/PLN3"
+fi
 
 printf "\n\n\n\n\n"
 echo "##########################################################################################"
@@ -125,8 +150,16 @@ do
             SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
             SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 
-            printf "\n./BatchPD_ocl_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-            ./BatchPD_ocl_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pkd3_ocl_raw_performance_log.txt"
+            if [[ "$PROFILING_OPTION" -eq 0 ]]
+            then
+                printf "\n./BatchPD_ocl_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                ./BatchPD_ocl_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pkd3_ocl_raw_performance_log.txt"
+            elif [[ "$PROFILING_OPTION" -eq 1 ]]
+            then
+                mkdir "$DST_FOLDER/PKD3/case_$case"
+                printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./BatchPD_ocl_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./BatchPD_ocl_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pkd3_ocl_raw_performance_log.txt"
+            fi
             echo "------------------------------------------------------------------------------------------"
         done
     done
@@ -161,8 +194,16 @@ do
             SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
             SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 
-            printf "\n./BatchPD_ocl_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-            ./BatchPD_ocl_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pln1_ocl_raw_performance_log.txt"
+            if [[ "$PROFILING_OPTION" -eq 0 ]]
+            then
+                printf "\n./BatchPD_ocl_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                ./BatchPD_ocl_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pln1_ocl_raw_performance_log.txt"
+            elif [[ "$PROFILING_OPTION" -eq 1 ]]
+            then
+                mkdir "$DST_FOLDER/PLN1/case_$case"
+                printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./BatchPD_ocl_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./BatchPD_ocl_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pln1_ocl_raw_performance_log.txt"
+            fi
             echo "------------------------------------------------------------------------------------------"
         done
     done
@@ -197,8 +238,16 @@ do
             SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
             SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 
-            printf "\n./BatchPD_ocl_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-            ./BatchPD_ocl_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pln3_ocl_raw_performance_log.txt"
+            if [[ "$PROFILING_OPTION" -eq 0 ]]
+            then
+                printf "\n./BatchPD_ocl_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                ./BatchPD_ocl_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pln3_ocl_raw_performance_log.txt"
+            elif [[ "$PROFILING_OPTION" -eq 1 ]]
+            then
+                mkdir "$DST_FOLDER/PLN3/case_$case"
+                printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./BatchPD_ocl_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./BatchPD_ocl_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_ocl_pln3_ocl_raw_performance_log.txt"
+            fi
             echo "------------------------------------------------------------------------------------------"
         done
     done
