@@ -82,6 +82,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
 set(COMPILER_FOR_OPENCL clang++)
 
+# Add modules
+set(MODULES_LIST modules)
+foreach(MOD_NAME ${MODULES_LIST})
+    add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+endforeach(MOD_NAME)
+
 # Backend specific settings
 
 if( "${BACKEND}" STREQUAL "HIP")
@@ -90,12 +96,6 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Find package
     find_package(HIP REQUIRED)
-
-    # Add modules
-    set(MODULES_LIST modules)
-    foreach(MOD_NAME ${MODULES_LIST})
-        add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
-    endforeach(MOD_NAME)
 
     # Set compiler and flags
     set(RPP_BACKEND_HIP 1)
@@ -109,23 +109,20 @@ if( "${BACKEND}" STREQUAL "HIP")
 elseif("${BACKEND}" STREQUAL "OCL")
 
     # Find package
-    find_package(OpenCL REQUIRED)
-
-    # Add modules
-    set(MODULES_LIST modules)
-    foreach(MOD_NAME ${MODULES_LIST})
-        add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
-    endforeach(MOD_NAME)
-
-    # Set compiler and flags
-    set(RPP_BACKEND_OPENCL 1)
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
-    set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
-    set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
-    add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
-
-    message("-- ${Green}${PROJECT_NAME} set to build with OpenCL backend${ColourReset}")
+    find_package(OpenCL QUIET)
+    if(OpenCL_FOUND)
+        set(RPP_BACKEND_OPENCL 1)
+        set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
+        set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
+        set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
+        message("-- ${Green}${PROJECT_NAME} set to build with OpenCL backend${ColourReset}")
+        message("-- ${Blue}Using OpenCL Library -- ${OpenCL_LIBRARIES}${ColourReset}")
+    else()
+        set(RPP_BACKEND_OPENCL 0)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
+        message("-- ${Yellow}WARNING:OpenCL Not Found -- {PROJECT_NAME} built for CPU only${ColourReset}")
+    endif()
 endif()
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
