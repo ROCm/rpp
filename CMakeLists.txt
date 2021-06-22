@@ -82,12 +82,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
 set(COMPILER_FOR_OPENCL clang++)
 
-# Add modules
-set(MODULES_LIST modules)
-foreach(MOD_NAME ${MODULES_LIST})
-    add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
-endforeach(MOD_NAME)
-
 # Backend specific settings
 
 if( "${BACKEND}" STREQUAL "HIP")
@@ -127,6 +121,12 @@ elseif("${BACKEND}" STREQUAL "OCL")
     endif()
 
 endif()
+
+# Add modules
+set(MODULES_LIST modules)
+foreach(MOD_NAME ${MODULES_LIST})
+    add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+endforeach(MOD_NAME)
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 
