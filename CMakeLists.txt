@@ -91,6 +91,12 @@ if( "${BACKEND}" STREQUAL "HIP")
     # Find package
     find_package(HIP REQUIRED)
 
+    # Add modules
+    set(MODULES_LIST modules)
+    foreach(MOD_NAME ${MODULES_LIST})
+        add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+    endforeach(MOD_NAME)
+
     # Set compiler and flags
     set(RPP_BACKEND_HIP 1)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
@@ -107,6 +113,13 @@ elseif("${BACKEND}" STREQUAL "OCL")
     if(OpenCL_FOUND)
         message("-- ${Blue}Using OpenCL Library -- ${OpenCL_LIBRARIES}${ColourReset}")
         message("-- ${Blue}Using OpenCL Include Directory -- ${OpenCL_INCLUDE_DIRS}${ColourReset}")
+
+        # Add modules
+        set(MODULES_LIST modules)
+        foreach(MOD_NAME ${MODULES_LIST})
+            add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+        endforeach(MOD_NAME)
+
         set(RPP_BACKEND_OPENCL 1)
         set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
@@ -121,12 +134,6 @@ elseif("${BACKEND}" STREQUAL "OCL")
     endif()
 
 endif()
-
-# Add modules
-set(MODULES_LIST modules)
-foreach(MOD_NAME ${MODULES_LIST})
-    add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
-endforeach(MOD_NAME)
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 
