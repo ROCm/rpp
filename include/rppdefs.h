@@ -8,9 +8,11 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #ifdef OCL_COMPILE
 #include <CL/cl.h>
 #endif
+
 
 typedef unsigned char       Rpp8u;
 typedef signed char         Rpp8s;
@@ -22,7 +24,8 @@ typedef unsigned long long  Rpp64u;
 typedef long long           Rpp64s;
 typedef float               Rpp32f;
 typedef double              Rpp64f;
-typedef void*              RppPtr_t;
+typedef void*               RppPtr_t;
+typedef size_t              RppSize_t;
 
 typedef enum
 {
@@ -140,6 +143,25 @@ typedef enum{
     RGB,
     HSV
 } RppiFormat;
+
+typedef enum
+{
+    U8,
+    FLOAT32,
+    FLOAT16,
+    INT8
+} RpptDataType;
+
+typedef enum
+{
+    NCHW,
+    NHWC
+} RpptTensorLayout;
+
+typedef struct
+{
+    int x1, x2, y1, y2;
+} RpptRoi, *pRpptRoi;
 
 typedef struct {
        Rpp32f rho;
@@ -335,6 +357,16 @@ typedef struct{
     Rpp32u nbatchSize;
     memMgmt mem;
 } InitHandle;
+
+typedef struct {
+  RppSize_t num_dims;
+  Rpp32u offset;
+  RpptDataType data_type;
+  RpptTensorLayout layout;
+  Rpp32u n, c, h, w;
+  Rpp32u stride[4];
+} RppTensorDesc, *RppTensorDescPtr;
+
 
 #define RPP_MIN_8U      ( 0 )
 #define RPP_MAX_8U      ( 255 )
