@@ -39,7 +39,7 @@ RppStatus brightness_host_tensor(T* srcPtr,
                                  Rpp32f *alphaTensor,
                                  Rpp32f *betaTensor,
                                  RpptROIPtr roiTensorPtrSrc,
-                                 RppArrangementParams argtParams)
+                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault;
     RpptROIPtr roiPtrDefault;
@@ -70,7 +70,7 @@ RppStatus brightness_host_tensor(T* srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = (roiPtr->x2 + 1 - roiPtr->x1) * argtParams.bufferMultiplier;
+        Rpp32u bufferLength = (roiPtr->x2 + 1 - roiPtr->x1) * layoutParams.bufferMultiplier;
         Rpp32u alignedLength = bufferLength & ~15;
 
         __m128i const zero = _mm_setzero_si128();
@@ -80,10 +80,10 @@ RppStatus brightness_host_tensor(T* srcPtr,
         __m128i px0, px1, px2, px3;
 
         T *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->y1 * srcDescPtr->strides.hStride) + (roiPtr->x1 * argtParams.bufferMultiplier);
-        dstPtrChannel = dstPtrImage + (roiPtr->y1 * dstDescPtr->strides.hStride) + (roiPtr->x1 * argtParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roiPtr->y1 * srcDescPtr->strides.hStride) + (roiPtr->x1 * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage + (roiPtr->y1 * dstDescPtr->strides.hStride) + (roiPtr->x1 * layoutParams.bufferMultiplier);
 
-        for(int c = 0; c < argtParams.channelParam; c++)
+        for(int c = 0; c < layoutParams.channelParam; c++)
         {
             T *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;

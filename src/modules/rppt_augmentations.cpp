@@ -113,7 +113,7 @@ rppt_brightness_host(RppPtr_t srcPtr,
                      RpptROIPtr roiTensorPtrSrc,
                      rppHandle_t rppHandle)
 {
-    RppArrangementParams argtParams = get_arrangement_params(srcDescPtr->layout, srcDescPtr->c);
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     brightness_host_tensor<Rpp8u>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
                                   srcDescPtr,
@@ -122,7 +122,7 @@ rppt_brightness_host(RppPtr_t srcPtr,
                                   alphaTensor,
                                   betaTensor,
                                   roiTensorPtrSrc,
-                                  argtParams);
+                                  layoutParams);
 
     return RPP_SUCCESS;
 }

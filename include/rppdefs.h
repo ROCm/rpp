@@ -95,7 +95,7 @@ typedef struct
 {
     Rpp32u channelParam;
     Rpp32u bufferMultiplier;
-} RppArrangementParams;
+} RppLayoutParams;
 
 
 

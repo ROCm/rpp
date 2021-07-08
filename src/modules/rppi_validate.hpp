@@ -12,32 +12,32 @@
 #include <hip/hip_runtime_api.h>
 #endif
 
-inline RppArrangementParams get_arrangement_params(RpptLayout layout, Rpp32u channels)
+inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
 {
-    RppArrangementParams argtParams;
+    RppLayoutParams layoutParams;
     if(layout == RpptLayout::NCHW)
     {
         if (channels == 1)
         {
-            argtParams.channelParam = 1;
-            argtParams.bufferMultiplier = 1;
+            layoutParams.channelParam = 1;
+            layoutParams.bufferMultiplier = 1;
         }
         else if (channels == 3)
         {
-            argtParams.channelParam = 3;
-            argtParams.bufferMultiplier = 1;
+            layoutParams.channelParam = 3;
+            layoutParams.bufferMultiplier = 1;
         }
     }
     else if(layout == RpptLayout::NHWC)
     {
         if (channels == 3)
         {
-            argtParams.channelParam = 1;
-            argtParams.bufferMultiplier = 3;
+            layoutParams.channelParam = 1;
+            layoutParams.bufferMultiplier = 3;
         }
     }
 
-    return argtParams;
+    return layoutParams;
 }
 
 inline void copy_srcSize(RppiSize srcSize, rpp::Handle& handle)
