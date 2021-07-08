@@ -21,15 +21,14 @@ THE SOFTWARE.
 */
 
 #include <rppt_augmentations.h>
-#include <rppi_geometry_transforms.h>
 #include <rppdefs.h>
 #include "rppi_validate.hpp"
 
 #ifdef HIP_COMPILE
-  #include "hip/hip_declarations.hpp"
+    #include "hip/hip_declarations.hpp"
 #elif defined(OCL_COMPILE)
-  #include <cl/rpp_cl_common.hpp>
-  #include "cl/cl_declarations.hpp"
+    #include <cl/rpp_cl_common.hpp>
+    #include "cl/cl_declarations.hpp"
 #endif //backend
 
 #include <stdio.h>
@@ -41,18 +40,19 @@ using namespace std::chrono;
 #include "cpu/host_tensor_augmentations.hpp"
 
 RppStatus
-rppt_brightness_gpu(RppPtr_t srcPtr, RppTensorDescPtr srcDesc, RppPtr_t dstPtr , RppTensorDescPtr dstDesc, Rpp32u *roiTensorSrc, Rpp32f* alphaTensor, Rpp32f* betaTensor, rppHandle_t rppHandle )
+rppt_brightness_gpu(RppPtr_t srcPtr, RpptDescPtr srcDesc, RppPtr_t dstPtr, RpptDescPtr dstDesc, Rpp32u *roiTensorSrc, Rpp32f* alphaTensor, Rpp32f* betaTensor, rppHandle_t rppHandle)
 {
-  // global_id(0) for width, global_id(1) for height and global_id(2) for n
-  // if there are 3 channels process all in the same kernel
+    // global_id(0) for width, global_id(1) for height and global_id(2) for n
+    // if there are 3 channels process all in the same kernel
+
 #ifdef OCL_COMPILE
-  {
-    if (srcDesc->layout == RpptTensorLayout::NCHW) {
+    if (srcDesc->layout == RpptLayout::NCHW)
+    {
       // copy roi from roiTensorSrc to gpu mem
       // copy alpha and beta tensor to corresponding gpu mem
       // brightness_tensor_nchw_cl(
       //   static_cast<cl_mem>(srcPtr),
-      //   c,    
+      //   c,
       //   uint4 in_stride,
       //   uint4 out_stride,
       //   static_cast<cl_mem>(dstPtr),
@@ -60,10 +60,12 @@ rppt_brightness_gpu(RppPtr_t srcPtr, RppTensorDescPtr srcDesc, RppPtr_t dstPtr ,
       //   static_cast<cl_mem>(alpha_mem),
       //   static_cast<cl_mem>(beta_mem),
       //   rpp::deref(rppHandle));
-    } else{
+    }
+    else
+    {
       // brightness_tensor_nhwc_cl(
       //   static_cast<cl_mem>(srcPtr),
-      //   c,    
+      //   c,
       //   uint4 in_stride,
       //   uint4 out_stride,
       //   static_cast<cl_mem>(dstPtr),
@@ -71,15 +73,14 @@ rppt_brightness_gpu(RppPtr_t srcPtr, RppTensorDescPtr srcDesc, RppPtr_t dstPtr ,
       //   static_cast<cl_mem>(alpha_mem),
       //   rpp::deref(rppHandle));
     }
-  }
 #elif defined (HIP_COMPILE)
-  {
-    if (srcDesc->layout == RpptTensorLayout::NCHW) {
+    if (srcDesc->layout == RpptLayout::NCHW)
+    {
       // copy roi from roiTensorSrc to gpu mem
       // copy alpha and beta tensor to corresponding gpu mem
       // brightness_tensor_nchw_hip(
       //   static_cast<cl_mem>(srcPtr),
-      //   c,    
+      //   c,
       //   uint4 in_stride,
       //   uint4 out_stride,
       //   static_cast<cl_mem>(dstPtr),
@@ -87,10 +88,12 @@ rppt_brightness_gpu(RppPtr_t srcPtr, RppTensorDescPtr srcDesc, RppPtr_t dstPtr ,
       //   static_cast<cl_mem>(alpha_mem),
       //   static_cast<cl_mem>(beta_mem),
       //   rpp::deref(rppHandle));
-    } else{
+    }
+    else
+    {
       // brightness_tensor_nhwc_hip(
       //   static_cast<cl_mem>(srcPtr),
-      //   c,    
+      //   c,
       //   uint4 in_stride,
       //   uint4 out_stride,
       //   static_cast<cl_mem>(dstPtr),
@@ -98,25 +101,22 @@ rppt_brightness_gpu(RppPtr_t srcPtr, RppTensorDescPtr srcDesc, RppPtr_t dstPtr ,
       //   static_cast<cl_mem>(alpha_mem),
       //   rpp::deref(rppHandle));
     }
-  }
 #endif //BACKEND
 
-  return RPP_SUCCESS;
+    return RPP_SUCCESS;
 }
 
 // Assumption: source and destination need to be on the same layout for this augmentation?
 RppStatus
-rppt_brightness_host(RppPtr_t srcPtr, RppTensorDescPtr srcDesc, RppPtr_t dstPtr , RppTensorDescPtr dstDesc, Rpp32u *roiTensorSrc, Rpp32f* alphaTensor, Rpp32f* betaTensor, rppHandle_t rppHandle )
+rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROI *roiTensorSrc, Rpp32f *alphaTensor, Rpp32f *betaTensor, rppHandle_t rppHandle)
 {
-  brightness_host_tensor<Rpp8u>(
-    static_cast<Rpp8u*>(srcPtr),
-    srcDesc,
-    static_cast<Rpp8u*>(dstPtr),
-    dstDesc,
-    alphaTensor,
-    betaTensor,
-    (RpptRoi *)roiTensorSrc
-  );
-  return RPP_SUCCESS;
-}
+    brightness_host_tensor<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+                                  srcDescPtr,
+                                  static_cast<Rpp8u*>(dstPtr),
+                                  dstDescPtr,
+                                  alphaTensor,
+                                  betaTensor,
+                                  roiTensorSrc);
 
+    return RPP_SUCCESS;
+}
