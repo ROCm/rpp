@@ -22,208 +22,125 @@ THE SOFTWARE.
 
 #ifndef HOST_TENSOR_AUGMENTATIONS_HPP
 #define HOST_TENSOR_AUGMENTATIONS_HPP
+
 #include "cpu/rpp_cpu_simd.hpp"
 #include <cpu/rpp_cpu_common.hpp>
 #include <stdlib.h>
 #include <time.h>
 #include <algorithm>
 
-
 /************ brightness ************/
 
 template <typename T>
 RppStatus brightness_host_tensor(T* srcPtr,
-                                 RpptDescPtr srcDesc,
+                                 RpptDescPtr srcDescPtr,
                                  T* dstPtr,
-                                 RpptDescPtr dstDesc,
+                                 RpptDescPtr dstDescPtr,
                                  Rpp32f *alphaTensor,
                                  Rpp32f *betaTensor,
-                                 RpptROI *roiTensorSrc)
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RppArrangementParams argtParams)
 {
-    if(srcDesc->layout == RpptLayout::NCHW)
+    RpptROI roiDefault;
+    RpptROIPtr roiPtrDefault;
+    roiPtrDefault = &roiDefault;
+    roiPtrDefault->x1 = 0;
+    roiPtrDefault->y1 = 0;
+    roiPtrDefault->x2 = srcDescPtr->w;
+    roiPtrDefault->y2 = srcDescPtr->h;
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(srcDescPtr->n)
+    for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
-        // int n = srcDesc->n;
-        // int c = srcDesc->c;
-        // int h = srcDesc->h;
-        // int w = srcDesc->w;
-        // RpptROI roi_default = {0, w, 0, h};
-//         omp_set_dynamic(0);
-// #pragma omp parallel for num_threads(srcDesc->n)
-//         for(int batchCount = 0; batchCount < srcDesc->n; batchCount++)
-//         {
-//             // Rpp32u imageDimMax = srcDesc->strides.cStride;
-//             // RpptROIPtr proi = roiTensorSrc? &roiTensorSrc[batchCount] : &roi_default;
-//             Rpp32f alpha = alphaTensor[batchCount];
-//             Rpp32f beta = betaTensor[batchCount];
-//             // Rpp32u x1 = std::max(0, proi->x1);
-//             // Rpp32u y1 = std::max(0, proi->y1);;
-//             // Rpp32u x2 = std::min(proi->x2, w);
-//             // Rpp32u y2 = std::min(proi->y2, h);
-//             Rpp32u srcRemainingElementsAfterROI = srcDesc->strides.hStride - srcDesc->w;
-//             Rpp32u dstRemainingElementsAfterROI = dstDesc->strides.hStride - dstDesc->w;
+        RpptROIPtr roiPtrImage = &roiTensorPtrSrc[batchCount];
 
-//             T *srcPtrImage, *dstPtrImage;
-//             srcPtrImage = srcPtr + batchCount * srcDesc->strides.nStride;
-//             dstPtrImage = dstPtr + batchCount * dstDesc->strides.nStride;
+        RpptROI roi;
+        RpptROIPtr roiPtr;
+        roiPtr = &roi;
+        roiPtr->x1 = RPPMAX2(roiPtrDefault->x1, roiPtrImage->x1);
+        roiPtr->y1 = RPPMAX2(roiPtrDefault->y1, roiPtrImage->y1);
+        roiPtr->x2 = RPPMIN2(roiPtrDefault->x2, roiPtrImage->x2);
+        roiPtr->y2 = RPPMIN2(roiPtrDefault->y2, roiPtrImage->y2);
 
-//             T *srcPtrChannel, *dstPtrChannel;
-//             srcPtrChannel = srcPtrImage;
-//             dstPtrChannel = dstPtrImage;
+        Rpp32f alpha = alphaTensor[batchCount];
+        Rpp32f beta = betaTensor[batchCount];
 
-//             for(int chnl = 0; chnl < srcDesc->c; chnl++)
-//             {
-//                 // T *srcPtrChannel, *dstPtrChannel;
-//                 // srcPtrChannel = srcPtrImage + (chnl * srcDesc->stride[2]);
-//                 // dstPtrChannel = dstPtrImage + (chnl * dstDesc->stride[2]);
+        T *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-//                 T *srcPtrTemp, *dstPtrTemp;
-//                 srcPtrTemp = srcPtrChannel;
-//                 dstPtrTemp = dstPtrChannel;
+        Rpp32u bufferLength = (roiPtr->x2 + 1 - roiPtr->x1) * argtParams.bufferMultiplier;
+        Rpp32u alignedLength = bufferLength & ~15;
 
-//                 for(int i = 0; i < srcDesc->h; i++)
-//                 {
-//                     // T *srcPtrTemp, *dstPtrTemp;
-//                     // srcPtrTemp = srcPtrChannel + (i * srcDesc->stride[1]) + x1;
-//                     // dstPtrTemp = dstPtrChannel + (i * dstDesc->stride[1]) + x1;
-//                     Rpp32u bufferLength = srcDesc->w;
-//                     Rpp32u alignedLength = bufferLength & ~15;
+        __m128i const zero = _mm_setzero_si128();
+        __m128 pMul = _mm_set1_ps(alpha);
+        __m128 pAdd = _mm_set1_ps(beta);
+        __m128 p0, p1, p2, p3;
+        __m128i px0, px1, px2, px3;
 
-//                     __m128i const zero = _mm_setzero_si128();
-//                     __m128 pMul = _mm_set1_ps(alpha);
-//                     __m128 pAdd = _mm_set1_ps(beta);
-//                     __m128 p0, p1, p2, p3;
-//                     __m128i px0, px1, px2, px3;
-//                     int vectorLoopCount = 0;
-//                     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
-//                     {
-//                         px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
+        T *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roiPtr->y1 * srcDescPtr->strides.hStride) + (roiPtr->x1 * argtParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage + (roiPtr->y1 * dstDescPtr->strides.hStride) + (roiPtr->x1 * argtParams.bufferMultiplier);
 
-//                         px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
-//                         px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
-//                         p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
-//                         p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
-//                         p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
-//                         p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
+        for(int c = 0; c < argtParams.channelParam; c++)
+        {
+            T *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
 
-//                         p0 = _mm_mul_ps(p0, pMul);
-//                         p1 = _mm_mul_ps(p1, pMul);
-//                         p2 = _mm_mul_ps(p2, pMul);
-//                         p3 = _mm_mul_ps(p3, pMul);
-//                         px0 = _mm_cvtps_epi32(_mm_add_ps(p0, pAdd));
-//                         px1 = _mm_cvtps_epi32(_mm_add_ps(p1, pAdd));
-//                         px2 = _mm_cvtps_epi32(_mm_add_ps(p2, pAdd));
-//                         px3 = _mm_cvtps_epi32(_mm_add_ps(p3, pAdd));
+            for(int i = roiPtr->y1; i <= roiPtr->y2; i++)
+            {
+                T *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
 
-//                         px0 = _mm_packus_epi32(px0, px1);
-//                         px1 = _mm_packus_epi32(px2, px3);
-//                         px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                {
+                    px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
+                    px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
+                    px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
+                    p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
+                    p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
+                    p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
+                    p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
+                    p0 = _mm_mul_ps(p0, pMul);
+                    p1 = _mm_mul_ps(p1, pMul);
+                    p2 = _mm_mul_ps(p2, pMul);
+                    p3 = _mm_mul_ps(p3, pMul);
+                    px0 = _mm_cvtps_epi32(_mm_add_ps(p0, pAdd));
+                    px1 = _mm_cvtps_epi32(_mm_add_ps(p1, pAdd));
+                    px2 = _mm_cvtps_epi32(_mm_add_ps(p2, pAdd));
+                    px3 = _mm_cvtps_epi32(_mm_add_ps(p3, pAdd));
 
-//                         _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
+                    px0 = _mm_packus_epi32(px0, px1);
+                    px1 = _mm_packus_epi32(px2, px3);
+                    px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
 
-//                         srcPtrTemp +=16;
-//                         dstPtrTemp +=16;
-//                     }
-//                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-//                     {
-//                         *dstPtrTemp++ = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp++)) * alpha) + beta);
-//                     }
-//                     srcPtrTemp += srcRemainingElementsAfterROI;
-//                     dstPtrTemp += dstRemainingElementsAfterROI;
-//                 }
-//                 srcPtrChannel += srcDesc->strides.cStride;
-//                 dstPtrChannel += dstDesc->strides.cStride;
-//             }
-//         }
+                    _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
+
+                    srcPtrTemp +=16;
+                    dstPtrTemp +=16;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    *dstPtrTemp = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
+
+                    dstPtrTemp++;
+                    srcPtrTemp++;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+
+            srcPtrChannel += srcDescPtr->strides.cStride;
+            dstPtrChannel += dstDescPtr->strides.cStride;
+        }
     }
-    else if (srcDesc->layout == RpptLayout::NHWC)
-    {
-        printf("\nHere  in packed!");
-        printf("\n n = %d", srcDesc->n);
-        printf("\n c = %d", srcDesc->c);
-        printf("\n h = %d", srcDesc->h);
-        printf("\n w = %d", srcDesc->w);
-        // int n = srcDesc->n;
-        // int h = srcDesc->h;
-        // int w = srcDesc->w;
-        // int c = srcDesc->c;
-        // RpptROI roi_default = {0, w, 0, h};
-//         omp_set_dynamic(0);
-// #pragma omp parallel for num_threads(srcDesc->n)
-//         for(int batchCount = 0; batchCount < srcDesc->n; batchCount ++)
-//         {
-//             // Rpp32u imageDimMax = srcDesc->stride[2];
-//             // RpptROIPtr proi = roiTensorSrc ? &roiTensorSrc[batchCount] : &roi_default;
-//             // Rpp32u x1 = std::max(0, proi->x1);
-//             // Rpp32u y1 = std::max(0, proi->y1);;
-//             // Rpp32u x2 = std::min(proi->x2, w);
-//             // Rpp32u y2 = std::min(proi->y2, h);
-//             // Rpp32u roi_width = x2-x1;
-//             Rpp32f alpha = alphaTensor[batchCount];
-//             Rpp32f beta = betaTensor[batchCount];
-//             // Rpp32u elementsBeforeROI = c * x1;
-//             Rpp32u srcRemainingElementsAfterROI = srcDesc->strides.hStride - srcDesc->w;
-//             T *srcPtrImage, *dstPtrImage;
-//             srcPtrImage = srcPtr + batchCount * srcDesc->stride[3];
-//             dstPtrImage = dstPtr + batchCount * dstDesc->stride[3];
-//             Rpp32u elementsInRow = c * w;
-//             Rpp32u elementsInRowMax = srcDesc->stride[1];
 
-//             for(int i = y1; i < y2; i++)
-//             {
-//                 T *srcPtrTemp, *dstPtrTemp;
-//                 srcPtrTemp = srcPtrImage + (i * srcDesc->stride[2]);
-//                 dstPtrTemp = dstPtrImage + (i * dstDesc->stride[2]);
-
-//                 memcpy(dstPtrTemp, srcPtrTemp, elementsBeforeROI * sizeof(T));
-//                 srcPtrTemp += elementsBeforeROI;
-//                 dstPtrTemp += elementsBeforeROI;
-//                 Rpp32u bufferLength = srcDesc->stride[1] * roi_width;
-//                 Rpp32u alignedLength = bufferLength & ~15;
-
-//                 __m128i const zero = _mm_setzero_si128();
-//                 __m128 pMul = _mm_set1_ps(alpha);
-//                 __m128 pAdd = _mm_set1_ps(beta);
-//                 __m128 p0, p1, p2, p3;
-//                 __m128i px0, px1, px2, px3;
-
-//                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
-//                 {
-//                     px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
-//                     px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
-//                     px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
-//                     p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
-//                     p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
-//                     p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
-//                     p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-//                     p0 = _mm_mul_ps(p0, pMul);
-//                     p1 = _mm_mul_ps(p1, pMul);
-//                     p2 = _mm_mul_ps(p2, pMul);
-//                     p3 = _mm_mul_ps(p3, pMul);
-//                     px0 = _mm_cvtps_epi32(_mm_add_ps(p0, pAdd));
-//                     px1 = _mm_cvtps_epi32(_mm_add_ps(p1, pAdd));
-//                     px2 = _mm_cvtps_epi32(_mm_add_ps(p2, pAdd));
-//                     px3 = _mm_cvtps_epi32(_mm_add_ps(p3, pAdd));
-
-//                     px0 = _mm_packus_epi32(px0, px1);
-//                     px1 = _mm_packus_epi32(px2, px3);
-//                     px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
-
-//                     _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
-
-//                     srcPtrTemp +=16;
-//                     dstPtrTemp +=16;
-//                 }
-//                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-//                 {
-//                     *dstPtrTemp++ = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp++)) * alpha) + beta);
-//                 }
-
-//                 srcPtrTemp += remainingElementsAfterROI;
-//                 dstPtrTemp += remainingElementsAfterROI;
-//             }
-//         }
-    }
     return RPP_SUCCESS;
 }
-#endif
+
+#endif // HOST_TENSOR_AUGMENTATIONS_HPP

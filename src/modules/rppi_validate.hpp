@@ -12,6 +12,34 @@
 #include <hip/hip_runtime_api.h>
 #endif
 
+inline RppArrangementParams get_arrangement_params(RpptLayout layout, Rpp32u channels)
+{
+    RppArrangementParams argtParams;
+    if(layout == RpptLayout::NCHW)
+    {
+        if (channels == 1)
+        {
+            argtParams.channelParam = 1;
+            argtParams.bufferMultiplier = 1;
+        }
+        else if (channels == 3)
+        {
+            argtParams.channelParam = 3;
+            argtParams.bufferMultiplier = 1;
+        }
+    }
+    else if(layout == RpptLayout::NHWC)
+    {
+        if (channels == 3)
+        {
+            argtParams.channelParam = 1;
+            argtParams.bufferMultiplier = 3;
+        }
+    }
+
+    return argtParams;
+}
+
 inline void copy_srcSize(RppiSize srcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize() ; i++)
@@ -79,7 +107,7 @@ inline void copy_host_srcSize(RppiSize srcSize, rpp::Handle& handle)
     {
  	 	 handle.GetInitHandle()->mem.mcpu.srcSize[i].height = srcSize.height;
  	 	 handle.GetInitHandle()->mem.mcpu.srcSize[i].width = srcSize.width;
-    }   
+    }
 }
 
 inline void copy_host_dstSize(RppiSize dstSize, rpp::Handle& handle)

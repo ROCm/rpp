@@ -91,6 +91,12 @@ typedef struct
     Rpp32f theta;
 } RppPointPolar;
 
+typedef struct
+{
+    Rpp32u channelParam;
+    Rpp32u bufferMultiplier;
+} RppArrangementParams;
+
 
 
 

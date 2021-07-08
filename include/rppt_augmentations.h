@@ -44,7 +44,7 @@ extern "C" {
 *retval RPP_ERROR : Error
 */
 RppStatus
- rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROI *roiTensorSrc, Rpp32f *alphaTensor, Rpp32f *betaTensor, rppHandle_t rppHandle);
+ rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alphaTensor, Rpp32f *betaTensor, RpptROIPtr roiTensorPtrSrc, rppHandle_t rppHandle);
 
 // ----------------------------------------
 // GPU brightness functions declaration
