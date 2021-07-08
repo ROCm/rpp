@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-#include "rppt_augmentations.h"
+#include "rppt_tensor_augmentations.h"
 
 #ifdef __cplusplus
 }

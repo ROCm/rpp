@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <rppt_augmentations.h>
+#include <rppt_tensor_augmentations.h>
 #include <rppdefs.h>
 #include "rppi_validate.hpp"
 
