@@ -2078,6 +2078,16 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions
 
+inline RppStatus compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
+{
+    roiPtrImage->xywhROI.xy.x = roiPtrInput->ltrbROI.lt.x;
+    roiPtrImage->xywhROI.xy.y = roiPtrInput->ltrbROI.lt.y;
+    roiPtrImage->xywhROI.roiWidth = roiPtrInput->ltrbROI.rb.x - roiPtrInput->ltrbROI.lt.x + 1;
+    roiPtrImage->xywhROI.roiHeight = roiPtrInput->ltrbROI.rb.y - roiPtrInput->ltrbROI.lt.y + 1;
+
+    return RPP_SUCCESS;
+}
+
 template<typename T>
 inline RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage,
                                          RppiSize size, RppiSize *sizeSubImage,

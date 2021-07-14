@@ -39,29 +39,43 @@ RppStatus brightness_host_tensor(T* srcPtr,
                                  Rpp32f *alphaTensor,
                                  Rpp32f *betaTensor,
                                  RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault;
     RpptROIPtr roiPtrDefault;
     roiPtrDefault = &roiDefault;
-    roiPtrDefault->x1 = 0;
-    roiPtrDefault->y1 = 0;
-    roiPtrDefault->x2 = srcDescPtr->w;
-    roiPtrDefault->y2 = srcDescPtr->h;
+    roiPtrDefault->xywhROI.xy.x = 0;
+    roiPtrDefault->xywhROI.xy.y = 0;
+    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
+    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
-        RpptROIPtr roiPtrImage = &roiTensorPtrSrc[batchCount];
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+
+        RpptROI roiImage;
+        RpptROIPtr roiPtrImage;
+
+        if (roiType == RpptRoiType::LTRB)
+        {
+            roiPtrImage = &roiImage;
+            compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
+        }
+        else if (roiType == RpptRoiType::XYWH)
+        {
+            roiPtrImage = roiPtrInput;
+        }
 
         RpptROI roi;
         RpptROIPtr roiPtr;
         roiPtr = &roi;
-        roiPtr->x1 = RPPMAX2(roiPtrDefault->x1, roiPtrImage->x1);
-        roiPtr->y1 = RPPMAX2(roiPtrDefault->y1, roiPtrImage->y1);
-        roiPtr->x2 = RPPMIN2(roiPtrDefault->x2, roiPtrImage->x2);
-        roiPtr->y2 = RPPMIN2(roiPtrDefault->y2, roiPtrImage->y2);
+        roiPtr->xywhROI.xy.x = RPPMAX2(roiPtrDefault->xywhROI.xy.x, roiPtrImage->xywhROI.xy.x);
+        roiPtr->xywhROI.xy.y = RPPMAX2(roiPtrDefault->xywhROI.xy.y, roiPtrImage->xywhROI.xy.y);
+        roiPtr->xywhROI.roiWidth = RPPMIN2(roiPtrDefault->xywhROI.roiWidth - roiPtrImage->xywhROI.xy.x, roiPtrImage->xywhROI.roiWidth);
+        roiPtr->xywhROI.roiHeight = RPPMIN2(roiPtrDefault->xywhROI.roiHeight - roiPtrImage->xywhROI.xy.y, roiPtrImage->xywhROI.roiHeight);
 
         Rpp32f alpha = alphaTensor[batchCount];
         Rpp32f beta = betaTensor[batchCount];
@@ -70,7 +84,7 @@ RppStatus brightness_host_tensor(T* srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = (roiPtr->x2 + 1 - roiPtr->x1) * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u alignedLength = bufferLength & ~15;
 
         __m128i const zero = _mm_setzero_si128();
@@ -80,8 +94,8 @@ RppStatus brightness_host_tensor(T* srcPtr,
         __m128i px0, px1, px2, px3;
 
         T *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->y1 * srcDescPtr->strides.hStride) + (roiPtr->x1 * layoutParams.bufferMultiplier);
-        dstPtrChannel = dstPtrImage + (roiPtr->y1 * dstDescPtr->strides.hStride) + (roiPtr->x1 * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
 
         for(int c = 0; c < layoutParams.channelParam; c++)
         {
@@ -89,7 +103,7 @@ RppStatus brightness_host_tensor(T* srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = roiPtr->y1; i <= roiPtr->y2; i++)
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
             {
                 T *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrRow;

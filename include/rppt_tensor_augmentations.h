@@ -31,39 +31,40 @@ extern "C" {
 // ----------------------------------------
 // CPU brightness functions declaration
 // ----------------------------------------
-/* Computes brightness of a tensor.
-*param[in] srcPtr input tensor memory
+/* Brightness augmentation for a NCHW/NHWC layout tensor
+*param[in] srcPtr source tensor memory
 *param[in] srcDesc source tensor descriptor
-*param[in] dstPtr output tensor memory
-*param[in] dstDesc output tensor descriptor
-*param[in] roiTensorSrc source (of size n * 4 where 4 values represent (x,y,w,h))
-*param[in] alphaTensor alpha values for brightness calculation and value should be between 0 and 20 (of size n/batch_size)
-*param[in] betaTensor beta  values for brightness calculation and value should be between 0 and 255 (of size n)
+*param[out] dstPtr destination tensor memory
+*param[in] dstDesc destination tensor descriptor
+*param[in] alphaTensor alpha values for brightness calculation (1D tensor of size batchSize with 0 <= alpha <= 20 for each image in batch)
+*param[in] betaTensor beta values for brightness calculation (1D tensor of size batchSize with 0 <= beta <= 255 for each image in batch)
+*param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+*param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 *returns a  RppStatus enumeration.
 *retval RPP_SUCCESS : succesful completion
 *retval RPP_ERROR : Error
 */
 RppStatus
- rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alphaTensor, Rpp32f *betaTensor, RpptROIPtr roiTensorPtrSrc, rppHandle_t rppHandle);
+rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alphaTensor, Rpp32f *betaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 // ----------------------------------------
 // GPU brightness functions declaration
 // ----------------------------------------
-/* Computes brightness of an image.
-*param[in] srcPtr input tensor memory
+/* Brightness augmentation for a NCHW/NHWC layout tensor
+*param[in] srcPtr source tensor memory
 *param[in] srcDesc source tensor descriptor
-*param[in] dstPtr output tensor memory
-*param[in] dstDesc output tensor descriptor
-*param[in] roiTensorSrc source  (of size n*4 where 4 values represent (x,y,w,h))
-*param[in] alphaTensor alpha values for brightness calculation and value should be between 0 and 20 (of size n/batch_size)
-*param[in] betaTensor beta  values for brightness calculation and value should be between 0 and 255 (of size n)
+*param[out] dstPtr destination tensor memory
+*param[in] dstDesc destination tensor descriptor
+*param[in] alphaTensor alpha values for brightness calculation (1D tensor of size batchSize with 0 <= alpha <= 20 for each image in batch)
+*param[in] betaTensor beta values for brightness calculation (1D tensor of size batchSize with 0 <= beta <= 255 for each image in batch)
+*param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+*param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 *returns a  RppStatus enumeration.
 *retval RPP_SUCCESS : succesful completion
 *retval RPP_ERROR : Error
 */
 RppStatus
- rppt_brightness_gpu(RppPtr_t srcPtr, RpptDesc srcDesc, RppPtr_t dstPtr, RpptDesc dstDesc, Rpp32u *roiTensorSrc, Rpp32f* alphaTensor, Rpp32f* betaTensor, rppHandle_t rppHandle);
-
+rppt_brightness_gpu(RppPtr_t srcPtr, RpptDesc srcDesc, RppPtr_t dstPtr, RpptDesc dstDesc, Rpp32u *roiTensorSrc, Rpp32f* alphaTensor, Rpp32f* betaTensor, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }

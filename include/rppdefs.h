@@ -192,9 +192,31 @@ typedef enum
     NHWC
 } RpptLayout;
 
+typedef enum
+{
+    LTRB,
+    XYWH
+
+} RpptRoiType;
+
 typedef struct
 {
-    int x1, y1, x2, y2;
+    RppiPoint lt, rb;
+
+} RpptRoiLtrb;
+
+typedef struct
+{
+    RppiPoint xy;
+    int roiWidth, roiHeight;
+
+} RpptRoiXywh;
+
+typedef union
+{
+    RpptRoiLtrb ltrbROI;
+    RpptRoiXywh xywhROI;
+
 } RpptROI, *RpptROIPtr;
 
 typedef struct

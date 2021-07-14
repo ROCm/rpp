@@ -40,13 +40,20 @@ using namespace std::chrono;
 #include "cpu/host_tensor_augmentations.hpp"
 
 RppStatus
-rppt_brightness_gpu(RppPtr_t srcPtr, RpptDescPtr srcDesc, RppPtr_t dstPtr, RpptDescPtr dstDesc, Rpp32u *roiTensorSrc, Rpp32f* alphaTensor, Rpp32f* betaTensor, rppHandle_t rppHandle)
+rppt_brightness_gpu(RppPtr_t srcPtr,
+                    RpptDescPtr srcDescPtr,
+                    RppPtr_t dstPtr,
+                    RpptDescPtr dstDescPtr,
+                    Rpp32f *alphaTensor,
+                    Rpp32f *betaTensor,
+                    RpptROIPtr roiTensorPtrSrc,
+                    rppHandle_t rppHandle)
 {
     // global_id(0) for width, global_id(1) for height and global_id(2) for n
     // if there are 3 channels process all in the same kernel
 
 #ifdef OCL_COMPILE
-    if (srcDesc->layout == RpptLayout::NCHW)
+    if (srcDescPtr->layout == RpptLayout::NCHW)
     {
         // copy roi from roiTensorSrc to gpu mem
         // copy alpha and beta tensor to corresponding gpu mem
@@ -72,7 +79,27 @@ rppt_brightness_gpu(RppPtr_t srcPtr, RpptDescPtr srcDesc, RppPtr_t dstPtr, RpptD
         //                           rpp::deref(rppHandle));
     }
 #elif defined (HIP_COMPILE)
-    if (srcDesc->layout == RpptLayout::NCHW)
+
+    // Rpp32u paramIndex = 0;
+    // copy_param_float(alpha, rpp::deref(rppHandle), paramIndex++);
+    // copy_param_float(beta, rpp::deref(rppHandle), paramIndex++);
+
+    // get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+
+    // RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    // brightness_hip_tensor<Rpp8u>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
+    //                               srcDescPtr,
+    //                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+    //                               dstDescPtr,
+    //                             //   alphaTensor,
+    //                             //   betaTensor,
+    //                             //   roiTensorPtrSrc,
+    //                               rppHandle,
+    //                               layoutParams);
+
+
+    if (srcDescPtr->layout == RpptLayout::NCHW)
     {
         // copy roi from roiTensorSrc to gpu mem
         // copy alpha and beta tensor to corresponding gpu mem
@@ -102,7 +129,7 @@ rppt_brightness_gpu(RppPtr_t srcPtr, RpptDescPtr srcDesc, RppPtr_t dstPtr, RpptD
     return RPP_SUCCESS;
 }
 
-// Assumption: source and destination need to be on the same layout for this augmentation?
+// Assumption: source and destination are on the same layout
 RppStatus
 rppt_brightness_host(RppPtr_t srcPtr,
                      RpptDescPtr srcDescPtr,
@@ -111,6 +138,7 @@ rppt_brightness_host(RppPtr_t srcPtr,
                      Rpp32f *alphaTensor,
                      Rpp32f *betaTensor,
                      RpptROIPtr roiTensorPtrSrc,
+                     RpptRoiType roiType,
                      rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
@@ -122,6 +150,7 @@ rppt_brightness_host(RppPtr_t srcPtr,
                                   alphaTensor,
                                   betaTensor,
                                   roiTensorPtrSrc,
+                                  roiType,
                                   layoutParams);
 
     return RPP_SUCCESS;
