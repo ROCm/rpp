@@ -101,7 +101,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(RPP_BACKEND_HIP 1)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
     set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
     link_libraries(stdc++)
 
     message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
@@ -120,7 +120,7 @@ elseif("${BACKEND}" STREQUAL "OCL")
     # Set compiler and flags
     set(RPP_BACKEND_OPENCL 1)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
     set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
     set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")

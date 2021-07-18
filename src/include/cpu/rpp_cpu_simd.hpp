@@ -124,7 +124,7 @@ static inline Rpp32u HorMin(__m128i pmin)
     pmin = _mm_min_epu8(pmin, _mm_shuffle_epi32(pmin, _MM_SHUFFLE(1, 1, 1, 1)));
     pmin = _mm_min_epu8(pmin, _mm_shufflelo_epi16(pmin, _MM_SHUFFLE(1, 1, 1, 1)));
     pmin = _mm_min_epu8(pmin, _mm_srli_epi16(pmin, 8));
-    return (_mm_cvtsi128_si32(pmin) & 0x000000FF);    
+    return (_mm_cvtsi128_si32(pmin) & 0x000000FF);
 }
 
 static inline Rpp32u HorMax(__m128i pmax)
@@ -156,7 +156,7 @@ static inline Rpp32u HorMax256(__m256i pmax)
     pmax_128 = M256I(pmax).m256i_i128[0];
     pmax_128 = _mm_max_epi8(pmax_128, _mm_shufflelo_epi16(pmax_128, _MM_SHUFFLE(1, 1, 1, 1)));
     pmax_128 = _mm_max_epi8(pmax_128, _mm_srli_epi16(pmax_128, 8));
-    return (_mm_cvtsi128_si32(pmax_128) & 0x000000FF);    
+    return (_mm_cvtsi128_si32(pmax_128) & 0x000000FF);
 }
 #endif
 
@@ -171,7 +171,7 @@ static  inline __m128 fast_exp_sse (__m128 x)
     __m128 c1  = _mm_set1_ps (0.657636276f);
     __m128 c2  = _mm_set1_ps (1.00172476f);
 
-    /* exp(x) = 2^i * 2^f; i = floor (log2(e) * x), 0 <= f <= 1 */   
+    /* exp(x) = 2^i * 2^f; i = floor (log2(e) * x), 0 <= f <= 1 */
     t = _mm_mul_ps (x, l2e);             /* t = log2(e) * x */
 #ifdef __SSE4_1__
     e = _mm_floor_ps (t);                /* floor(t) */
@@ -234,10 +234,10 @@ static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
   __m128 sign_bit_sin = _mm_and_ps(x, _ps_sign_mask);
   /* take the absolute value */
   x = _mm_xor_ps(x, sign_bit_sin);
-  
+
   /* scale by 4/Pi */
   __m128 y = _mm_mul_ps(x, _ps_cephes_FOPI);
-    
+
   /* store the integer part of y in emm2 */
   __m128i emm2 = _mm_cvttps_epi32(y);
 
@@ -257,7 +257,7 @@ static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
   emm2 = _mm_and_si128(emm2, _pi32_2);
   emm2 = _mm_cmpeq_epi32(emm2, _mm_setzero_si128());
   __m128 poly_mask = _mm_castsi128_ps(emm2);
-  /* The magic pass: "Extended precision modular arithmetic" 
+  /* The magic pass: "Extended precision modular arithmetic"
      x = ((x - y * DP1) - y * DP2) - y * DP3; */
   __m128 xmm1 = _mm_mul_ps(y, _ps_minus_cephes_DP1);
   __m128 xmm2 = _mm_mul_ps(y, _ps_minus_cephes_DP2);
@@ -270,7 +270,7 @@ static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
   __m128 sign_bit_cos = _mm_castsi128_ps(emm4);
 
   sign_bit_sin = _mm_xor_ps(sign_bit_sin, swap_sign_bit_sin);
-  
+
   /* Evaluate the first polynom  (0 <= x <= Pi/4) */
   __m128 z = _mm_mul_ps(x,x);
   y = _ps_coscof_p0;
@@ -283,7 +283,7 @@ static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
   __m128 tmp = _mm_mul_ps(z, _ps_0p5);
   y = _mm_sub_ps(y, tmp);
   y = _mm_add_ps(y, _ps_1);
-  
+
   /* Evaluate the second polynom  (Pi/4 <= x <= 0) */
 
   __m128 y2 = _ps_sincof_p0;
@@ -294,7 +294,7 @@ static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
   y2 = _mm_mul_ps(y2, _mm_mul_ps(z, x));
   y2 = _mm_add_ps(y2, x);
 
-  /* select the correct result from the two polynoms */  
+  /* select the correct result from the two polynoms */
   xmm3 = poly_mask;
   __m128 ysin2 = _mm_and_ps(xmm3, y2);
   __m128 ysin1 = _mm_andnot_ps(xmm3, y);
@@ -303,7 +303,7 @@ static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
 
   xmm1 = _mm_add_ps(ysin1,ysin2);
   xmm2 = _mm_add_ps(y,y2);
- 
+
   /* update the sign */
   *s = _mm_xor_ps(xmm1, sign_bit_sin);
   *c = _mm_xor_ps(xmm2, sign_bit_cos);
@@ -426,6 +426,51 @@ static inline __m128 atan2_ps( __m128 y, __m128 x )
 	result = _mm_or_ps( result, pi_result );
 
 	return result;
+}
+
+static inline void fast_matmul_sse(float *A, float *B, float *C)
+{
+    __m128 row1 = _mm_load_ps(&B[0]);
+    __m128 row2 = _mm_load_ps(&B[4]);
+    __m128 row3 = _mm_load_ps(&B[8]);
+    __m128 row4 = _mm_load_ps(&B[12]);
+
+    for(int i=0; i<4; i++)
+    {
+        __m128 brod1 = _mm_set1_ps(A[4 * i + 0]);
+        __m128 brod2 = _mm_set1_ps(A[4 * i + 1]);
+        __m128 brod3 = _mm_set1_ps(A[4 * i + 2]);
+        __m128 brod4 = _mm_set1_ps(A[4 * i + 3]);
+
+        __m128 row = _mm_add_ps(
+                        _mm_add_ps(
+                            _mm_mul_ps(brod1, row1),
+                            _mm_mul_ps(brod2, row2)),
+                        _mm_add_ps(
+                            _mm_mul_ps(brod3, row3),
+                            _mm_mul_ps(brod4, row4)));
+
+        _mm_store_ps(&C[4*i], row);
+    }
+}
+
+static inline void fast_matmul_sse_2( float * a,  float * b, float * r)
+{
+  __m128 a_line, b_line, r_line;
+
+  for (int i=0; i<16; i+=4) {
+    // unroll the first step of the loop to avoid having to initialize r_line to zero
+    a_line = _mm_load_ps(a);         // a_line = vec4(column(a, 0))
+    b_line = _mm_set1_ps(b[i]);      // b_line = vec4(b[i][0])
+    r_line = _mm_mul_ps(a_line, b_line); // r_line = a_line * b_line
+    for (int j=1; j<4; j++) {
+      a_line = _mm_load_ps(&a[j*4]); // a_line = vec4(column(a, j))
+      b_line = _mm_set1_ps(b[i+j]);  // b_line = vec4(b[i][j])
+                                     // r_line += a_line * b_line
+      r_line = _mm_add_ps(_mm_mul_ps(a_line, b_line), r_line);
+    }
+    _mm_store_ps(&r[i], r_line);     // r[i] = r_line
+  }
 }
 
 #endif

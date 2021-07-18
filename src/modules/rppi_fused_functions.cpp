@@ -19,6 +19,39 @@ using namespace std::chrono;
 
 #include "cpu/host_fused_functions.hpp"
 
+RppStatus color_jitter_host_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
+								  RPPTensorDataType tensor_type,
+								  RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *brightness, Rpp32f *contrast,
+								  Rpp32f *hue, Rpp32f *saturation, Rpp32u outputFormatToggle,
+								  Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+	if (tensor_type == RPPTensorDataType::U8)
+	{
+		color_jitter_host_batch<Rpp8u>(
+			static_cast<Rpp8u *>(srcPtr),
+			srcSize,
+			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+			static_cast<Rpp8u *>(dstPtr),
+			brightness,
+			contrast,
+			hue,
+			saturation,
+			outputFormatToggle,
+			rpp::deref(rppHandle).GetBatchSize(),
+			chn_format, num_of_channels);
+	}
+
+	return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_color_jitter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *brightness, Rpp32f *contrast, Rpp32f *hue, Rpp32f *saturation, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+	return (color_jitter_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, srcPtr, srcSize, maxSrcSize, dstPtr, brightness, contrast, hue, saturation, outputFormatToggle, nbatchSize, rppHandle));
+}
+
 RppStatus color_twist_helper(RppiChnFormat chn_format, Rpp32u num_of_channels,
 							 RPPTensorDataType in_tensor_type, RPPTensorDataType out_tensor_type, Rpp8u outputFormatToggle,
 							 RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta,
@@ -5327,7 +5360,7 @@ resize_mirror_normalize_host_helper(
 	RPPTensorDataType tensor_type,
 	RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize,
 	RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize,
-	Rpp32f *batch_mean, Rpp32f *batch_stdDev, 
+	Rpp32f *batch_mean, Rpp32f *batch_stdDev,
 	Rpp32u *mirrorFlag,
 	Rpp32u outputFormatToggle,
 	Rpp32u nbatchSize, rppHandle_t rppHandle)
@@ -5344,7 +5377,7 @@ resize_mirror_normalize_host_helper(
 			static_cast<Rpp8u *>(dstPtr),
 			dstSize,
 			rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize,
-			batch_mean, batch_stdDev, 
+			batch_mean, batch_stdDev,
 			mirrorFlag,
 			outputFormatToggle,
 			rpp::deref(rppHandle).GetBatchSize(),
@@ -5359,7 +5392,7 @@ resize_mirror_normalize_host_helper(
 	// 		static_cast<Rpp32f *>(dstPtr),
 	// 		dstSize,
 	// 		rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxDstSize,
-	// 		batch_mean, batch_stdDev, 
+	// 		batch_mean, batch_stdDev,
 	// 		mirrorFlag,
 	// 		outputFormatToggle,
 	// 		rpp::deref(rppHandle).GetBatchSize(),
