@@ -366,6 +366,9 @@ int main(int argc, char **argv)
     case 80:
         strcpy(funcName, "resize_mirror_normalize");
         break;
+    case 81:
+        strcpy(funcName, "color_jitter");
+        break;
     }
 
     if (outputFormatToggle == 0)
@@ -3550,6 +3553,50 @@ int main(int argc, char **argv)
 
         break;
     }
+    case 81:
+    {
+        test_case_name = "color_jitter";
+
+        Rpp32f brightness[images];
+        Rpp32f contrast[images];
+        Rpp32f hue[images];
+        Rpp32f saturation[images];
+        for (i = 0; i < images; i++)
+        {
+            brightness[i] = 1.02;
+            contrast[i] = 1.1;
+            hue[i] = 0.02;
+            saturation[i] = 1.3;
+
+            // brightness[i] = 1.625;
+            // contrast[i] = 1.5;
+            // hue[i] = 0.0;
+            // saturation[i] = 1.0;
+        }
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_color_jitter_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, brightness, contrast, hue, saturation, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end = clock();
+        end_omp = omp_get_wtime();
+
+        break;
+    }
     default:
         missingFuncFlag = 1;
         break;
@@ -3712,8 +3759,8 @@ int main(int argc, char **argv)
     elementsInRowMax = maxWidth * ip_channel;
 
     for (j = 0; j < noOfImages; j++)
-    {   
-        int height = dstSize[j].height; 
+    {
+        int height = dstSize[j].height;
         int width = dstSize[j].width;
 
         int op_size = height * width * ip_channel;
@@ -3730,15 +3777,15 @@ int main(int argc, char **argv)
             output_row += elementsInRowMax;
         }
         count += maxHeight * maxWidth * ip_channel;
-    
+
         char temp[1000];
         strcpy(temp, dst);
         strcat(temp, imageNames[j]);
-        
+
         Mat mat_op_image;
         mat_op_image = Mat(height, width, CV_8UC3, temp_output);
         imwrite(temp, mat_op_image);
-        
+
         free(temp_output);
     }
 

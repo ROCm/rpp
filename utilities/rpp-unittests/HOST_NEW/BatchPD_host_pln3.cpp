@@ -366,6 +366,9 @@ int main(int argc, char **argv)
     case 80:
         strcpy(funcName, "resize_mirror_normalize");
         break;
+    case 81:
+        strcpy(funcName, "color_jitter");
+        break;
     }
 
     if (outputFormatToggle == 0)
@@ -3656,6 +3659,11 @@ int main(int argc, char **argv)
 
         break;
     }
+    case 81:
+    {
+        test_case_name = "color_jitter";
+        missingFuncFlag = 1;
+    }
     default:
         missingFuncFlag = 1;
         break;
@@ -3818,8 +3826,8 @@ int main(int argc, char **argv)
     elementsInRowMax = maxWidth * ip_channel;
 
     for (j = 0; j < noOfImages; j++)
-    {   
-        int height = dstSize[j].height; 
+    {
+        int height = dstSize[j].height;
         int width = dstSize[j].width;
 
         int op_size = height * width * ip_channel;
@@ -3836,15 +3844,15 @@ int main(int argc, char **argv)
             output_row += elementsInRowMax;
         }
         count += maxHeight * maxWidth * ip_channel;
-    
+
         char temp[1000];
         strcpy(temp, dst);
         strcat(temp, imageNames[j]);
-        
+
         Mat mat_op_image;
         mat_op_image = Mat(height, width, CV_8UC3, temp_output);
         imwrite(temp, mat_op_image);
-        
+
         free(temp_output);
     }
     free(srcSize);
