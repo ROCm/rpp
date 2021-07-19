@@ -89,28 +89,31 @@ group_name_generator() {
     elif [[ "$case" -eq 69 ]]
     then
         FUNCTIONALITY_GROUP="computer_vision"
+    elif [[ "$case" -eq 79 ]]
+    then
+        FUNCTIONALITY_GROUP="miscellaneous"
     fi
 }
 
-if [[ "$1" -lt 0 ]] | [[ "$1" -gt 79 ]]; then
-    echo "The starting case# must be in the 0-79 range!"
+if [[ "$1" -lt 0 ]] | [[ "$1" -gt 81 ]]; then
+    echo "The starting case# must be in the 0-81 range!"
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./rawLogsGenScript.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-79))"
-    echo "E     CASE_END (Ending case# (0-79))"
+    echo "S     CASE_START (Starting case# (0-81))"
+    echo "E     CASE_END (Ending case# (0-81))"
     exit 1
 fi
 
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 79 ]]; then
-    echo "The ending case# must be in the 0-79 range!"
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 81 ]]; then
+    echo "The ending case# must be in the 0-81 range!"
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./rawLogsGenScript.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-79))"
-    echo "E     CASE_END (Ending case# (0-79))"
+    echo "S     CASE_START (Starting case# (0-81))"
+    echo "E     CASE_END (Ending case# (0-81))"
     exit 1
 fi
 
