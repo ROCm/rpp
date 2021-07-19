@@ -87,8 +87,8 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
                               -.497, .292, -.203, 0.0,
                               0.0, 0.0, 0.0, 0.0};
 
-        Rpp32f sch = saturation * cos(hue * PI / 180.0);
-        Rpp32f ssh = saturation * sin(hue * PI / 180.0);
+        Rpp32f sch = saturation * cos(hue * PI_OVER_180);
+        Rpp32f ssh = saturation * sin(hue * PI_OVER_180);
 
         __m128 psch = _mm_set1_ps(sch);
         __m128 pssh = _mm_set1_ps(ssh);
@@ -107,24 +107,17 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
         }
 
         Rpp32f scale = contrast + 1.0;
-        Rpp32f contrast_matrix[16] = {scale, 0., 0., 0.,
-                                      0., scale, 0., 0.,
-                                      0., 0., scale, 0.,
-                                      0., 0., 0., 1.};
-
-        Rpp32f brightness_matrix[16] = {1., 0., 0., 0.,
-                                        0., 1., 0., 0.,
-                                        0., 0., 1., 0.,
-                                        brightness, brightness, brightness, 1.};
+        Rpp32f brightness_contrast_matrix[16] = {scale, 0., 0., 0.,
+                                                 0., scale, 0., 0.,
+                                                 0., 0., scale, 0.,
+                                                 brightness, brightness, brightness, 1.};
 
         Rpp32f ctm[16] = {1., 0., 0., 0.,
                           0., 1., 0., 0.,
                           0., 0., 1., 0.,
                           0., 0., 0., 1.};
 
-        fast_matmul_sse(ctm, hue_saturation_matrix, sch_mat);
-        fast_matmul_sse(contrast_matrix, brightness_matrix, ssh_mat);
-        fast_matmul_sse(sch_mat, ssh_mat, ctm);
+        fast_matmul_sse(hue_saturation_matrix, brightness_contrast_matrix, ctm);
 
         T *srcPtrTemp, *dstPtrTemp;
         srcPtrTemp = srcPtr;

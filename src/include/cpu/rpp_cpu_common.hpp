@@ -13,6 +13,7 @@ typedef half                Rpp16f;
 #include "rpp_cpu_simd.hpp"
 
 #define PI                              3.14159265
+#define PI_OVER_180                     0.0174532925
 #define RAD(deg)                        (deg * PI / 180)
 #define RPPABS(a)                       ((a < 0) ? (-a) : (a))
 #define RPPMIN2(a,b)                    ((a < b) ? a : b)
