@@ -12,6 +12,11 @@ void get_kernel_name(std::string &kernel_name, const RPPTensorFunctionMetaData &
 
 //===== Internal HIP functions
 
+/******************** tensor_augmentations ********************/
+
+RppStatus
+brightness_hip_tensor(Rpp8u *srcPtr, RpptDescPtr srcDescPtr, Rpp8u *dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, RppLayoutParams layoutParams, rpp::Handle& handle);
+
 /******************** advanced_augmentations ********************/
 
 RppStatus

@@ -47,6 +47,7 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
                     Rpp32f *alphaTensor,
                     Rpp32f *betaTensor,
                     RpptROIPtr roiTensorPtrSrc,
+                    RpptRoiType roiType,
                     rppHandle_t rppHandle)
 {
     // global_id(0) for width, global_id(1) for height and global_id(2) for n
@@ -80,23 +81,22 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     }
 #elif defined (HIP_COMPILE)
 
-    // Rpp32u paramIndex = 0;
-    // copy_param_float(alpha, rpp::deref(rppHandle), paramIndex++);
-    // copy_param_float(beta, rpp::deref(rppHandle), paramIndex++);
+    Rpp32u paramIndex = 0;
+    copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float(betaTensor, rpp::deref(rppHandle), paramIndex++);
 
     // get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
 
-    // RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
-    // brightness_hip_tensor<Rpp8u>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
-    //                               srcDescPtr,
-    //                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
-    //                               dstDescPtr,
-    //                             //   alphaTensor,
-    //                             //   betaTensor,
-    //                             //   roiTensorPtrSrc,
-    //                               rppHandle,
-    //                               layoutParams);
+    brightness_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
+                          srcDescPtr,
+                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+                          dstDescPtr,
+                          roiTensorPtrSrc,
+                          roiType,
+                          layoutParams,
+                          rpp::deref(rppHandle));
 
 
     if (srcDescPtr->layout == RpptLayout::NCHW)

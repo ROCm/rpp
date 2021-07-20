@@ -40,6 +40,65 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
     return layoutParams;
 }
 
+// inline void copy_roiTensor(RpptROIPtr roiTensorPtrSrc, rpp::Handle& handle)
+// {
+//     #ifdef OCL_COMPILE
+//     {
+//         // clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, 0, NULL, NULL);
+//     }
+//     #elif defined(HIP_COMPILE)
+//     {
+//         hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+//         // hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+//         // hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.x, handle.GetInitHandle()->mem.mgpu.croiPoints.x, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+//         // hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.y, handle.GetInitHandle()->mem.mgpu.croiPoints.y, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+
+//     }
+//     #endif
+
+//     for(int i = 0; i < handle.GetBatchSize(); i++)
+//     {
+//         #if defined(OCL_COMPILE) || defined (HIP_COMPILE)
+//         {
+//             if(roiPoints.roiHeight == 0 && roiPoints.roiWidth == 0)
+//             {
+//                 handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight[i] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
+//                 handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth[i] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
+//             }
+//             else
+//             {
+//                 handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight[i] = roiPoints.roiHeight + roiPoints.y;
+//                 handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth[i] = roiPoints.roiWidth + roiPoints.x;
+//             }
+//         }
+//         #else
+//         {
+//             handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight[i] = roiPoints.roiHeight;
+//             handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth[i] = roiPoints.roiWidth;
+//         }
+//         #endif
+//         handle.GetInitHandle()->mem.mgpu.croiPoints.x[i] = roiPoints.x;
+//         handle.GetInitHandle()->mem.mgpu.croiPoints.y[i] = roiPoints.y;
+//     }
+//     #ifdef OCL_COMPILE
+//     {
+//         clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, 0, NULL, NULL);
+//         clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, 0, NULL, NULL);
+//         clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.x, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.x, 0, NULL, NULL);
+//         clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.y, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.y, 0, NULL, NULL);
+//     }
+//     // for hip
+//     #elif defined(HIP_COMPILE)
+//     {
+//         hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+//         hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+//         hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.x, handle.GetInitHandle()->mem.mgpu.croiPoints.x, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+//         hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.y, handle.GetInitHandle()->mem.mgpu.croiPoints.y, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+
+//     }
+//     #endif
+// }
+
 inline void copy_srcSize(RppiSize srcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize() ; i++)

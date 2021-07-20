@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
+        printf("\nUsage: ./Tensor_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
         return -1;
     }
 
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 
     // Set case names
 
-    char funcType[1000] = {"Tensor_HOST_PKD3"};
+    char funcType[1000] = {"Tensor_HIP_PKD3"};
 
     char funcName[1000];
     switch (test_case)
@@ -185,6 +185,10 @@ int main(int argc, char **argv)
     RpptROI *roiTensorPtrSrc = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
     RpptROI *roiTensorPtrDst = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
 
+    RpptROI *d_roiTensorPtrSrc, *d_roiTensorPtrDst;
+    hipMalloc(&d_roiTensorPtrSrc, noOfImages * sizeof(RpptROI));
+    hipMalloc(&d_roiTensorPtrDst, noOfImages * sizeof(RpptROI));
+
     // Set ROI tensors types for src/dst
 
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -227,7 +231,7 @@ int main(int argc, char **argv)
     }
     closedir(dr1);
 
-    // Set numDims, offset, n/c/h/w values, n/c/h/w strides for src/dst
+    // Set numDims, offset, n/c/h/w values for src/dst
 
     srcDescPtr->numDims = 4;
     dstDescPtr->numDims = 4;
@@ -245,28 +249,30 @@ int main(int argc, char **argv)
     dstDescPtr->w = maxDstWidth;
     dstDescPtr->c = ip_channel;
 
-    Rpp32u multipleOf8StrideSrc = srcDescPtr->w;
-    Rpp32u multipleOf8StrideDst = dstDescPtr->w;
-    // Rpp32u multipleOf8StrideSrc = ((srcDescPtr->w / 8) * 8) + 8;
-    // Rpp32u multipleOf8StrideDst = ((dstDescPtr->w / 8) * 8) + 8;
+    // Optionally set w stride as a multiple of 8 for src/dst
 
-    srcDescPtr->strides.nStride = ip_channel * multipleOf8StrideSrc * srcDescPtr->h;
-    srcDescPtr->strides.hStride = ip_channel * multipleOf8StrideSrc;
+    srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
+    dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
+
+    // Set n/c/h/w strides for src/dst
+
+    srcDescPtr->strides.nStride = ip_channel * srcDescPtr->w * srcDescPtr->h;
+    srcDescPtr->strides.hStride = ip_channel * srcDescPtr->w;
     srcDescPtr->strides.wStride = ip_channel;
     srcDescPtr->strides.cStride = 1;
 
     if (dstDescPtr->layout == RpptLayout::NHWC)
     {
-        dstDescPtr->strides.nStride = ip_channel * multipleOf8StrideDst * dstDescPtr->h;
-        dstDescPtr->strides.hStride = ip_channel * multipleOf8StrideDst;
+        dstDescPtr->strides.nStride = ip_channel * dstDescPtr->w * dstDescPtr->h;
+        dstDescPtr->strides.hStride = ip_channel * dstDescPtr->w;
         dstDescPtr->strides.wStride = ip_channel;
         dstDescPtr->strides.cStride = 1;
     }
     else if (dstDescPtr->layout == RpptLayout::NCHW)
     {
-        dstDescPtr->strides.nStride = ip_channel * multipleOf8StrideDst * dstDescPtr->h;
-        dstDescPtr->strides.cStride = multipleOf8StrideDst * dstDescPtr->h;
-        dstDescPtr->strides.hStride = multipleOf8StrideDst;
+        dstDescPtr->strides.nStride = ip_channel * dstDescPtr->w * dstDescPtr->h;
+        dstDescPtr->strides.cStride = dstDescPtr->w * dstDescPtr->h;
+        dstDescPtr->strides.hStride = dstDescPtr->w;
         dstDescPtr->strides.wStride = 1;
     }
 
@@ -275,23 +281,11 @@ int main(int argc, char **argv)
     ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
     oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
 
-    // Initialize host buffers for src/dst
+    // Initialize 8u host buffers for src/dst
 
     Rpp8u *input = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
     Rpp8u *output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
-
-    Rpp16f *inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-
-    Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-
-    Rpp8s *inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
 
     // Set 8u host buffers for src/dst
 
@@ -339,10 +333,29 @@ int main(int argc, char **argv)
     }
     closedir(dr2);
 
-    // Convert inputs to test various other bit depths
+    // Convert inputs to test various other bit depths and copy to hip buffers
 
-    if (ip_bitDepth == 1)
+    Rpp16f *inputf16, *inputf16_second, *outputf16;
+    Rpp32f *inputf32, *inputf32_second, *outputf32;
+    Rpp8s *inputi8, *inputi8_second, *outputi8;
+    int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
+    int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
+
+    if (ip_bitDepth == 0)
     {
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 1)
+    {
+        inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp16f *inputf16Temp, *inputf16_secondTemp;
 
@@ -361,9 +374,20 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputf16_secondTemp++;
         }
+
+        hipMalloc(&d_inputf16, ioBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
+        hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 2)
     {
+        inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
 
@@ -382,9 +406,40 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputf32_secondTemp++;
         }
+
+        hipMalloc(&d_inputf32, ioBufferSize * sizeof(Rpp32f));
+        hipMalloc(&d_inputf32_second, ioBufferSize * sizeof(Rpp32f));
+        hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
+        hipMemcpy(d_inputf32, inputf32, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 3)
+    {
+        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 4)
+    {
+        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 5)
     {
+        inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
+
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
 
@@ -403,15 +458,34 @@ int main(int argc, char **argv)
             input_secondTemp++;
             inputi8_secondTemp++;
         }
+
+        hipMalloc(&d_inputi8, ioBufferSize * sizeof(Rpp8s));
+        hipMalloc(&d_inputi8_second, ioBufferSize * sizeof(Rpp8s));
+        hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
+        hipMemcpy(d_inputi8, inputi8, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+    }
+    else if (ip_bitDepth == 6)
+    {
+        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
+        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
+        hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
+        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
     }
 
     // Run case-wise RPP API and measure time
 
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
+    hipStream_t stream;
+    hipStreamCreate(&stream);
+    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
+
     clock_t start, end;
-    double start_omp, end_omp;
-    double cpu_time_used, omp_time_used;
+    double gpu_time_used;
 
     string test_case_name;
 
@@ -445,10 +519,13 @@ int main(int argc, char **argv)
         // roiTypeSrc = RpptRoiType::LTRB;
         // roiTypeDst = RpptRoiType::LTRB;
 
-        start_omp = omp_get_wtime();
+
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
+
         if (ip_bitDepth == 0)
-            rppt_brightness_host(input, srcDescPtr, output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 2)
@@ -463,8 +540,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
         end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -481,10 +558,8 @@ int main(int argc, char **argv)
 
     // Display measured times
 
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    omp_time_used = end_omp - start_omp;
-    cout << "\nCPU Time - BatchPD : " << cpu_time_used;
-    cout << "\nOMP Time - BatchPD : " << omp_time_used;
+    gpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    cout << "\nGPU Time - BatchPD : " << gpu_time_used;
     printf("\n");
 
     // Reconvert other bit depths to 8u for output display purposes
@@ -494,6 +569,7 @@ int main(int argc, char **argv)
 
     if (ip_bitDepth == 0)
     {
+        hipMemcpy(output, d_output, oBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
 
@@ -512,6 +588,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 1) || (ip_bitDepth == 3))
     {
+        hipMemcpy(outputf16, d_outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp16f *outputf16Temp;
@@ -534,6 +611,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 2) || (ip_bitDepth == 4))
     {
+        hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp32f *outputf32Temp;
@@ -555,6 +633,7 @@ int main(int argc, char **argv)
     }
     else if ((ip_bitDepth == 5) || (ip_bitDepth == 6))
     {
+        hipMemcpy(outputi8, d_outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyDeviceToHost);
         Rpp8u *outputTemp;
         outputTemp = output;
         Rpp8s *outputi8Temp;
@@ -692,18 +771,66 @@ int main(int argc, char **argv)
 
     free(roiTensorPtrSrc);
     free(roiTensorPtrDst);
+    hipFree(d_roiTensorPtrSrc);
+    hipFree(d_roiTensorPtrDst);
     free(input);
     free(input_second);
     free(output);
-    free(inputf16);
-    free(inputf16_second);
-    free(outputf16);
-    free(inputf32);
-    free(inputf32_second);
-    free(outputf32);
-    free(inputi8);
-    free(inputi8_second);
-    free(outputi8);
+
+    if (ip_bitDepth == 0)
+    {
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_output);
+    }
+    else if (ip_bitDepth == 1)
+    {
+        free(inputf16);
+        free(inputf16_second);
+        free(outputf16);
+        hipFree(d_inputf16);
+        hipFree(d_inputf16_second);
+        hipFree(d_outputf16);
+    }
+    else if (ip_bitDepth == 2)
+    {
+        free(inputf32);
+        free(inputf32_second);
+        free(outputf32);
+        hipFree(d_inputf32);
+        hipFree(d_inputf32_second);
+        hipFree(d_outputf32);
+    }
+    else if (ip_bitDepth == 3)
+    {
+        free(outputf16);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputf16);
+    }
+    else if (ip_bitDepth == 4)
+    {
+        free(outputf32);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputf32);
+    }
+    else if (ip_bitDepth == 5)
+    {
+        free(inputi8);
+        free(inputi8_second);
+        free(outputi8);
+        hipFree(d_inputi8);
+        hipFree(d_inputi8_second);
+        hipFree(d_outputi8);
+    }
+    else if (ip_bitDepth == 6)
+    {
+        free(outputi8);
+        hipFree(d_input);
+        hipFree(d_input_second);
+        hipFree(d_outputi8);
+    }
 
     return 0;
 }

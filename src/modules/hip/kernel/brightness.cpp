@@ -79,6 +79,107 @@ extern "C" __global__ void brightness_batch(unsigned char *input,
     }
 }
 
+extern "C" __global__ void brightness_pkd_tensor(uchar *srcPtr,
+                                                 RpptDescPtr srcDescPtr,
+                                                 uchar *dstPtr,
+                                                 RpptDescPtr dstDescPtr,
+                                                 float *alpha,
+                                                 float *beta,
+                                                 RpptROIPtr roiTensorPtrSrc,
+                                                 RpptRoiType roiType)
+                                                // uint *srcWidth,
+                                                // uint *srcHeight,
+                                                // uint srcStride,
+                                                // uint dstStride,
+                                                // unsigned long long *batch_index)
+                                                // srcPtr,
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    // if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth * 3))
+    // {
+    //     return;
+    // }
+
+    if ((id_y >= 25) || (id_x >= 75))
+    {
+        return;
+    }
+
+    // uint srcIdx = (id_z * srcDescPtr->strides.nStride) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcDescPtr->strides.hStride) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstDescPtr->strides.nStride) + (id_y * dstDescPtr->strides.hStride) + id_x;
+
+    // uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
+    // uint2 dst;
+
+    // float4 alpha4 = (float4)alpha[id_z];
+    // float4 beta4 = (float4)beta[id_z];
+
+    // dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
+    // dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
+
+    // *((uint2 *)(&dstPtr[dstIdx])) = dst;
+
+
+
+
+
+    // uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
+    uint2 dst;
+
+    float4 alpha4 = (float4)alpha[id_z];
+    float4 beta4 = (float4)beta[id_z];
+    float4 pix4 = (float4)50.0;
+
+    dst.x = rpp_hip_pack(pix4 * alpha4 + beta4);
+    dst.y = rpp_hip_pack(pix4 * alpha4 + beta4);
+
+    *((uint2 *)(&dstPtr[dstIdx])) = dst;
+
+
+
+
+
+
+
+
+    // int srcElementsInRow = srcWidth[id_z] * 3;
+
+    // if ((id_y >= srcHeight[id_z]) || (id_x >= srcElementsInRow))
+    // {
+    //     return;
+    // }
+
+    // uint srcIdx = batch_index[id_z] + id_y * srcStride + id_x;
+    // uint dstIdx = (id_z * dstDescPtr->nStride) + (id_y * dstDescPtr->hStride) + id_x;
+
+    // // if (id_x + 7 >= srcElementsInRow)
+    // // {
+    // //     int diff = srcElementsInRow - id_x;
+    // //     for (int x = 0; x < diff; x++)
+    // //     {
+    // //         dstPtr[dstIdx] = brighten_fmaf((float)srcPtr[srcIdx], alpha[id_z], beta[id_z]);
+    // //         srcIdx++;
+    // //         dstIdx++;
+    // //     }
+
+    // //     return;
+    // // }
+
+    // uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
+    // uint2 dst;
+
+    // float4 alpha4 = (float4)alpha[id_z];
+    // float4 beta4 = (float4)beta[id_z];
+
+    // dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
+    // dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
+
+    // *((uint2 *)(&dstPtr[dstIdx])) = dst;
+}
+
 RppStatus hip_exec_brightness_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
 {
     int localThreads_x = 32;
@@ -108,6 +209,61 @@ RppStatus hip_exec_brightness_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& h
                        channel,
                        handle.GetInitHandle()->mem.mgpu.inc,
                        plnpkdind);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_brightness_tensor(Rpp8u *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle)
+                                    //  rpp::Handle& handle,
+                                    //  RppLayoutParams layoutParams)
+                                    //  RppiChnFormat chnFormat,
+                                    //  Rpp32u channel,
+                                    //  Rpp32s plnpkdind,
+                                    //  Rpp32u max_height,
+                                    //  Rpp32u max_width)
+{
+    int localThreads_x = 16;
+    int localThreads_y = 16;
+    int localThreads_z = 1;
+    int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+    int globalThreads_y = dstDescPtr->h;
+    int globalThreads_z = handle.GetBatchSize();
+
+    std::cerr << "\nglobalThreads_x = " << globalThreads_x;
+    std::cerr << "\nglobalThreads_y = " << globalThreads_y;
+    std::cerr << "\nglobalThreads_z = " << globalThreads_z;
+
+    hipLaunchKernelGGL(brightness_pkd_tensor,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       srcDescPtr,
+                       dstPtr,
+                       dstDescPtr,
+                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                       handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                       roiTensorPtrSrc,
+                       roiType);
+                    //    handle.GetInitHandle()->mem.mgpu.roiPoints.x,
+                    //    handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
+                    //    handle.GetInitHandle()->mem.mgpu.roiPoints.y,
+                    //    handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
+                    //    handle.GetInitHandle()->mem.mgpu.srcSize.height,
+                    //    handle.GetInitHandle()->mem.mgpu.srcSize.width,
+                    //    handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
+                    //    handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
+                    //    channel,
+                    //    handle.GetInitHandle()->mem.mgpu.inc,
+                    //    plnpkdind);
 
     return RPP_SUCCESS;
 }

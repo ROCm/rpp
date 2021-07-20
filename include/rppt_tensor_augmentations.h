@@ -64,7 +64,7 @@ rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, R
 *retval RPP_ERROR : Error
 */
 RppStatus
-rppt_brightness_gpu(RppPtr_t srcPtr, RpptDesc srcDesc, RppPtr_t dstPtr, RpptDesc dstDesc, Rpp32u *roiTensorSrc, Rpp32f* alphaTensor, Rpp32f* betaTensor, rppHandle_t rppHandle);
+rppt_brightness_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alphaTensor, Rpp32f *betaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }

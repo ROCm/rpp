@@ -44,6 +44,8 @@ struct RPPTensorFunctionMetaData
     }
 };
 
+// Host functions
+
 inline int getplnpkdind(RppiChnFormat &format)
 {
     return format == RPPI_CHN_PLANAR ? 1 : 3;
@@ -72,4 +74,40 @@ inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp
 
     return RPP_SUCCESS;
 }
+
+// Device functions
+
+__device__ __forceinline__ uint rpp_hip_pack(float4 src)
+{
+    return __builtin_amdgcn_cvt_pk_u8_f32(src.w, 3,
+           __builtin_amdgcn_cvt_pk_u8_f32(src.z, 2,
+           __builtin_amdgcn_cvt_pk_u8_f32(src.y, 1,
+           __builtin_amdgcn_cvt_pk_u8_f32(src.x, 0, 0))));
+}
+
+__device__ __forceinline__ float rpp_hip_unpack0(uint src)
+{
+    return (float)(src & 0xFF);
+}
+
+__device__ __forceinline__ float rpp_hip_unpack1(uint src)
+{
+    return (float)((src >> 8) & 0xFF);
+}
+
+__device__ __forceinline__ float rpp_hip_unpack2(uint src)
+{
+    return (float)((src >> 16) & 0xFF);
+}
+
+__device__ __forceinline__ float rpp_hip_unpack3(uint src)
+{
+    return (float)((src >> 24) & 0xFF);
+}
+
+__device__ __forceinline__ float4 rpp_hip_unpack(uint src)
+{
+    return make_float4(rpp_hip_unpack0(src), rpp_hip_unpack1(src), rpp_hip_unpack2(src), rpp_hip_unpack3(src));
+}
+
 #endif //RPP_HIP_COMMON_H
