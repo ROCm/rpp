@@ -227,7 +227,7 @@ int main(int argc, char **argv)
     }
     closedir(dr1);
 
-    // Set numDims, offset, n/c/h/w values, n/c/h/w strides for src/dst
+    // Set numDims, offset, n/c/h/w values for src/dst
 
     srcDescPtr->numDims = 4;
     dstDescPtr->numDims = 4;
@@ -245,28 +245,30 @@ int main(int argc, char **argv)
     dstDescPtr->h = maxDstHeight;
     dstDescPtr->w = maxDstWidth;
 
-    Rpp32u multipleOf8StrideSrc = srcDescPtr->w;
-    Rpp32u multipleOf8StrideDst = dstDescPtr->w;
-    // Rpp32u multipleOf8StrideSrc = ((srcDescPtr->w / 8) * 8) + 8;
-    // Rpp32u multipleOf8StrideDst = ((dstDescPtr->w / 8) * 8) + 8;
+    // Optionally set w stride as a multiple of 8 for src/dst
 
-    srcDescPtr->strides.nStride = ip_channel * multipleOf8StrideSrc * srcDescPtr->h;
-    srcDescPtr->strides.cStride = multipleOf8StrideSrc * srcDescPtr->h;
-    srcDescPtr->strides.hStride = multipleOf8StrideSrc;
+    srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
+    dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
+
+    // Set n/c/h/w strides for src/dst
+
+    srcDescPtr->strides.nStride = ip_channel * srcDescPtr->w * srcDescPtr->h;
+    srcDescPtr->strides.cStride = srcDescPtr->w * srcDescPtr->h;
+    srcDescPtr->strides.hStride = srcDescPtr->w;
     srcDescPtr->strides.wStride = 1;
 
     if (dstDescPtr->layout == RpptLayout::NHWC)
     {
-        dstDescPtr->strides.nStride = ip_channel * multipleOf8StrideDst * dstDescPtr->h;
-        dstDescPtr->strides.hStride = ip_channel * multipleOf8StrideDst;
+        dstDescPtr->strides.nStride = ip_channel * dstDescPtr->w * dstDescPtr->h;
+        dstDescPtr->strides.hStride = ip_channel * dstDescPtr->w;
         dstDescPtr->strides.wStride = ip_channel;
         dstDescPtr->strides.cStride = 1;
     }
     else if (dstDescPtr->layout == RpptLayout::NCHW)
     {
-        dstDescPtr->strides.nStride = ip_channel * multipleOf8StrideDst * dstDescPtr->h;
-        dstDescPtr->strides.cStride = multipleOf8StrideDst * dstDescPtr->h;
-        dstDescPtr->strides.hStride = multipleOf8StrideDst;
+        dstDescPtr->strides.nStride = ip_channel * dstDescPtr->w * dstDescPtr->h;
+        dstDescPtr->strides.cStride = dstDescPtr->w * dstDescPtr->h;
+        dstDescPtr->strides.hStride = dstDescPtr->w;
         dstDescPtr->strides.wStride = 1;
     }
 
