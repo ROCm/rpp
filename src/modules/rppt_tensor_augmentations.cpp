@@ -86,8 +86,7 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     copy_param_float(betaTensor, rpp::deref(rppHandle), paramIndex++);
 
     // get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
-
-    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    // RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     brightness_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
                           srcDescPtr,
@@ -95,35 +94,8 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
                           dstDescPtr,
                           roiTensorPtrSrc,
                           roiType,
-                          layoutParams,
                           rpp::deref(rppHandle));
 
-
-    if (srcDescPtr->layout == RpptLayout::NCHW)
-    {
-        // copy roi from roiTensorSrc to gpu mem
-        // copy alpha and beta tensor to corresponding gpu mem
-        // brightness_tensor_nchw_hip(static_cast<cl_mem>(srcPtr),
-        //                            c,
-        //                            uint4 in_stride,
-        //                            uint4 out_stride,
-        //                            static_cast<cl_mem>(dstPtr),
-        //                            static_cast<cl_mem>(src_roi_mem),
-        //                            static_cast<cl_mem>(alpha_mem),
-        //                            static_cast<cl_mem>(beta_mem),
-        //                            rpp::deref(rppHandle));
-    }
-    else
-    {
-        // brightness_tensor_nhwc_hip(static_cast<cl_mem>(srcPtr),
-        //                            c,
-        //                            uint4 in_stride,
-        //                            uint4 out_stride,
-        //                            static_cast<cl_mem>(dstPtr),
-        //                            static_cast<cl_mem>(alpha_mem),
-        //                            static_cast<cl_mem>(alpha_mem),
-        //                            rpp::deref(rppHandle));
-    }
 #endif //BACKEND
 
     return RPP_SUCCESS;

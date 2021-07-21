@@ -7,7 +7,7 @@
 
 // tensor_augmentations
 
-RppStatus hip_exec_brightness_tensor(Rpp8u *srcPtr, RpptDescPtr srcDescPtr, Rpp8u *dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, RppLayoutParams layoutParams, rpp::Handle& handle);
+RppStatus hip_exec_brightness_tensor(Rpp8u *srcPtr, RpptDescPtr srcDescPtr, Rpp8u *dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rpp::Handle& handle);
 
 // advanced_augmentations
 
