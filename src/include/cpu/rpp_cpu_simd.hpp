@@ -12,43 +12,44 @@
 #define __AVX2__ 1
 
 #define M256I(m256i_register) (*((_m256i_union*)&m256i_register))
-typedef union {
-    char               m256i_i8[32];
-    short              m256i_i16[16];
-    int                m256i_i32[8];
-    long long          m256i_i64[4];
-    __m128i            m256i_i128[2];
-}_m256i_union;
+typedef union
+{
+    char m256i_i8[32];
+    short m256i_i16[16];
+    int m256i_i32[8];
+    long long m256i_i64[4];
+    __m128i m256i_i128[2];
+} _m256i_union;
 
 #if defined(_MSC_VER)
 #define SIMD_ALIGN_VAR(type, name, alignment) \
-  __declspec(align(alignment)) type name
+    __declspec(align(alignment)) type name
 #else
 #define SIMD_ALIGN_VAR(type, name, alignment) \
-  type __attribute__((__aligned__(alignment))) name
+    type __attribute__((__aligned__(alignment))) name
 #endif // _MSC_VER
 
 #define SIMD_CONST_PI(name, val0, val1, val2, val3) \
-  SIMD_ALIGN_VAR(static const int, _xmm_const_##name[4], 16) = { \
-    static_cast<int>(val3), \
-    static_cast<int>(val2), \
-    static_cast<int>(val1), \
-    static_cast<int>(val0)  \
-  }
+    SIMD_ALIGN_VAR(static const int, _xmm_const_##name[4], 16) = { \
+        static_cast<int>(val3), \
+        static_cast<int>(val2), \
+        static_cast<int>(val1), \
+        static_cast<int>(val0)  \
+    }
 
 #define SIMD_CONST_PS(name, val0, val1, val2, val3) \
-  SIMD_ALIGN_VAR(static const float, _xmm_const_##name[4], 16) = { \
-    static_cast<float>(val3), \
-    static_cast<float>(val2), \
-    static_cast<float>(val1), \
-    static_cast<float>(val0)  \
-  }
+    SIMD_ALIGN_VAR(static const float, _xmm_const_##name[4], 16) = { \
+        static_cast<float>(val3), \
+        static_cast<float>(val2), \
+        static_cast<float>(val1), \
+        static_cast<float>(val0)  \
+    }
 
 #define SIMD_GET_PS(name) (*(const __m128  *)_xmm_const_##name)
 
 // Shuffle floats in `src` by using SSE2 `pshufd` instead of `shufps`, if possible.
 #define SIMD_SHUFFLE_PS(src, imm) \
-  _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128(src), imm))
+    _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128(src), imm))
 
 SIMD_CONST_PI(full       , 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 SIMD_CONST_PI(sn         , 0x80000000, 0x80000000, 0x80000000, 0x80000000);
@@ -82,35 +83,35 @@ inline __m128i _mm_mullo_epi8(__m128i a, __m128i b)
 
 inline void _mm_print_epi8(__m128i vPrintArray)
 {
-  char printArray[16];
-  _mm_storeu_si128((__m128i *)printArray, vPrintArray);
-  printf("\n");
-  for (int ct = 0; ct < 16; ct++)
-  {
-      printf("%d ", printArray[ct]);
-  }
+    char printArray[16];
+    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 16; ct++)
+    {
+        printf("%d ", printArray[ct]);
+    }
 }
 
 inline void _mm_print_epi32(__m128i vPrintArray)
 {
-  int printArray[4];
-  _mm_storeu_si128((__m128i *)printArray, vPrintArray);
-  printf("\n");
-  for (int ct = 0; ct < 4; ct++)
-  {
-      printf("%d ", printArray[ct]);
-  }
+    int printArray[4];
+    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 4; ct++)
+    {
+        printf("%d ", printArray[ct]);
+    }
 }
 
 inline void _mm_print_ps(__m128 vPrintArray)
 {
-  float printArray[4];
-  _mm_storeu_ps(printArray, vPrintArray);
-  printf("\n");
-  for (int ct = 0; ct < 4; ct++)
-  {
-      printf("%0.6f ", printArray[ct]);
-  }
+    float printArray[4];
+    _mm_storeu_ps(printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 4; ct++)
+    {
+        printf("%0.6f ", printArray[ct]);
+    }
 }
 
 #define CHECK_SIMD  0
@@ -221,92 +222,92 @@ static const __m128 _ps_coscof_p1 = _mm_set1_ps(-1.388731625493765E-003f);
 static const __m128 _ps_coscof_p2 = _mm_set1_ps( 4.166664568298827E-002f);
 static const __m128 _ps_cephes_FOPI = _mm_set1_ps(1.27323954473516f); // 4 / M_PI
 
-static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
+static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c)
+{
 
 #if 0
 #ifdef MATH_SSE41 // _mm_round_ps is SSE4.1
-  // XXX Added in MathGeoLib: Take a modulo of the input in 2pi to try to enhance the precision with large input values.
-  x = modf_ps(x, _mm_set1_ps(2.f*3.141592654f));
+     // XXX Added in MathGeoLib: Take a modulo of the input in 2pi to try to enhance the precision with large input values.
+    x = modf_ps(x, _mm_set1_ps(2.f*3.141592654f));
 #endif
 #endif
 
-  /* extract the sign bit (upper one) */
-  __m128 sign_bit_sin = _mm_and_ps(x, _ps_sign_mask);
-  /* take the absolute value */
-  x = _mm_xor_ps(x, sign_bit_sin);
+    // Extract the sign bit (upper one)
+    __m128 sign_bit_sin = _mm_and_ps(x, _ps_sign_mask);
+    // take the absolute value
+    x = _mm_xor_ps(x, sign_bit_sin);
 
-  /* scale by 4/Pi */
-  __m128 y = _mm_mul_ps(x, _ps_cephes_FOPI);
+    // Scale by 4/Pi
+    __m128 y = _mm_mul_ps(x, _ps_cephes_FOPI);
 
-  /* store the integer part of y in emm2 */
-  __m128i emm2 = _mm_cvttps_epi32(y);
+    // Store the integer part of y in emm2
+    __m128i emm2 = _mm_cvttps_epi32(y);
 
-  /* j=(j+1) & (~1) (see the cephes sources) */
-  emm2 = _mm_add_epi32(emm2, _pi32_1);
-  emm2 = _mm_and_si128(emm2, _pi32_inv1);
-  y = _mm_cvtepi32_ps(emm2);
+    // j=(j+1) & (~1) (see the cephes sources)
+    emm2 = _mm_add_epi32(emm2, _pi32_1);
+    emm2 = _mm_and_si128(emm2, _pi32_inv1);
+    y = _mm_cvtepi32_ps(emm2);
 
-  __m128i emm4 = emm2;
+    __m128i emm4 = emm2;
 
-  /* get the swap sign flag for the sine */
-  __m128i emm0 = _mm_and_si128(emm2, _pi32_4);
-  emm0 = _mm_slli_epi32(emm0, 29);
-  __m128 swap_sign_bit_sin = _mm_castsi128_ps(emm0);
+    // Get the swap sign flag for the sine
+    __m128i emm0 = _mm_and_si128(emm2, _pi32_4);
+    emm0 = _mm_slli_epi32(emm0, 29);
+    __m128 swap_sign_bit_sin = _mm_castsi128_ps(emm0);
 
-  /* get the polynom selection mask for the sine*/
-  emm2 = _mm_and_si128(emm2, _pi32_2);
-  emm2 = _mm_cmpeq_epi32(emm2, _mm_setzero_si128());
-  __m128 poly_mask = _mm_castsi128_ps(emm2);
-  /* The magic pass: "Extended precision modular arithmetic"
-     x = ((x - y * DP1) - y * DP2) - y * DP3; */
-  __m128 xmm1 = _mm_mul_ps(y, _ps_minus_cephes_DP1);
-  __m128 xmm2 = _mm_mul_ps(y, _ps_minus_cephes_DP2);
-  __m128 xmm3 = _mm_mul_ps(y, _ps_minus_cephes_DP3);
-  x = _mm_add_ps(_mm_add_ps(x, xmm1), _mm_add_ps(xmm2, xmm3));
+    // Get the polynom selection mask for the sine
+    emm2 = _mm_and_si128(emm2, _pi32_2);
+    emm2 = _mm_cmpeq_epi32(emm2, _mm_setzero_si128());
+    __m128 poly_mask = _mm_castsi128_ps(emm2);
+    // The magic pass: "Extended precision modular arithmetic - x = ((x - y * DP1) - y * DP2) - y * DP3;
+    __m128 xmm1 = _mm_mul_ps(y, _ps_minus_cephes_DP1);
+    __m128 xmm2 = _mm_mul_ps(y, _ps_minus_cephes_DP2);
+    __m128 xmm3 = _mm_mul_ps(y, _ps_minus_cephes_DP3);
+    x = _mm_add_ps(_mm_add_ps(x, xmm1), _mm_add_ps(xmm2, xmm3));
 
-  emm4 = _mm_sub_epi32(emm4, _pi32_2);
-  emm4 = _mm_andnot_si128(emm4, _pi32_4);
-  emm4 = _mm_slli_epi32(emm4, 29);
-  __m128 sign_bit_cos = _mm_castsi128_ps(emm4);
+    emm4 = _mm_sub_epi32(emm4, _pi32_2);
+    emm4 = _mm_andnot_si128(emm4, _pi32_4);
+    emm4 = _mm_slli_epi32(emm4, 29);
+    __m128 sign_bit_cos = _mm_castsi128_ps(emm4);
 
-  sign_bit_sin = _mm_xor_ps(sign_bit_sin, swap_sign_bit_sin);
+    sign_bit_sin = _mm_xor_ps(sign_bit_sin, swap_sign_bit_sin);
 
-  /* Evaluate the first polynom  (0 <= x <= Pi/4) */
-  __m128 z = _mm_mul_ps(x,x);
-  y = _ps_coscof_p0;
+    // Evaluate the first polynom  (0 <= x <= Pi/4)
+    __m128 z = _mm_mul_ps(x,x);
+    y = _ps_coscof_p0;
 
-  y = _mm_mul_ps(y, z);
-  y = _mm_add_ps(y, _ps_coscof_p1);
-  y = _mm_mul_ps(y, z);
-  y = _mm_add_ps(y, _ps_coscof_p2);
-  y = _mm_mul_ps(y, _mm_mul_ps(z, z));
-  __m128 tmp = _mm_mul_ps(z, _ps_0p5);
-  y = _mm_sub_ps(y, tmp);
-  y = _mm_add_ps(y, _ps_1);
+    y = _mm_mul_ps(y, z);
+    y = _mm_add_ps(y, _ps_coscof_p1);
+    y = _mm_mul_ps(y, z);
+    y = _mm_add_ps(y, _ps_coscof_p2);
+    y = _mm_mul_ps(y, _mm_mul_ps(z, z));
+    __m128 tmp = _mm_mul_ps(z, _ps_0p5);
+    y = _mm_sub_ps(y, tmp);
+    y = _mm_add_ps(y, _ps_1);
 
-  /* Evaluate the second polynom  (Pi/4 <= x <= 0) */
+    // Evaluate the second polynom  (Pi/4 <= x <= 0)
 
-  __m128 y2 = _ps_sincof_p0;
-  y2 = _mm_mul_ps(y2, z);
-  y2 = _mm_add_ps(y2, _ps_sincof_p1);
-  y2 = _mm_mul_ps(y2, z);
-  y2 = _mm_add_ps(y2, _ps_sincof_p2);
-  y2 = _mm_mul_ps(y2, _mm_mul_ps(z, x));
-  y2 = _mm_add_ps(y2, x);
+    __m128 y2 = _ps_sincof_p0;
+    y2 = _mm_mul_ps(y2, z);
+    y2 = _mm_add_ps(y2, _ps_sincof_p1);
+    y2 = _mm_mul_ps(y2, z);
+    y2 = _mm_add_ps(y2, _ps_sincof_p2);
+    y2 = _mm_mul_ps(y2, _mm_mul_ps(z, x));
+    y2 = _mm_add_ps(y2, x);
 
-  /* select the correct result from the two polynoms */
-  xmm3 = poly_mask;
-  __m128 ysin2 = _mm_and_ps(xmm3, y2);
-  __m128 ysin1 = _mm_andnot_ps(xmm3, y);
-  y2 = _mm_sub_ps(y2,ysin2);
-  y = _mm_sub_ps(y, ysin1);
+    // Select the correct result from the two polynoms
+    xmm3 = poly_mask;
+    __m128 ysin2 = _mm_and_ps(xmm3, y2);
+    __m128 ysin1 = _mm_andnot_ps(xmm3, y);
+    y2 = _mm_sub_ps(y2,ysin2);
+    y = _mm_sub_ps(y, ysin1);
 
-  xmm1 = _mm_add_ps(ysin1,ysin2);
-  xmm2 = _mm_add_ps(y,y2);
+    xmm1 = _mm_add_ps(ysin1,ysin2);
+    xmm2 = _mm_add_ps(y,y2);
 
-  /* update the sign */
-  *s = _mm_xor_ps(xmm1, sign_bit_sin);
-  *c = _mm_xor_ps(xmm2, sign_bit_cos);
+    // Update the sign
+    *s = _mm_xor_ps(xmm1, sign_bit_sin);
+    *c = _mm_xor_ps(xmm2, sign_bit_cos);
 }
 
 static const __m128 _ps_atanrange_hi = _mm_set1_ps(2.414213562373095);
@@ -322,155 +323,136 @@ static const __m128 _ps_atancof_p3 = _mm_set1_ps(3.33329491539E-1);
 
 static inline __m128 atan_ps( __m128 x )
 {
-	__m128 sign_bit, y;
+    __m128 sign_bit, y;
 
-	sign_bit = x;
-	/* take the absolute value */
-	x = _mm_and_ps( x, _ps_inv_sign_mask );
-	/* extract the sign bit (upper one) */
-	sign_bit = _mm_and_ps( sign_bit, _ps_sign_mask );
+    sign_bit = x;
+    // Take the absolute value
+    x = _mm_and_ps( x, _ps_inv_sign_mask );
+    // Extract the sign bit (upper one)
+    sign_bit = _mm_and_ps( sign_bit, _ps_sign_mask );
 
-/* range reduction, init x and y depending on range */
+    // Range reduction, init x and y depending on range
 
-	/* x > 2.414213562373095 */
-	__m128 cmp0 = _mm_cmpgt_ps( x, _ps_atanrange_hi );
-	/* x > 0.4142135623730950 */
-	__m128 cmp1 = _mm_cmpgt_ps( x, _ps_atanrange_lo );
+    // x > 2.414213562373095
+    __m128 cmp0 = _mm_cmpgt_ps( x, _ps_atanrange_hi );
+    // x > 0.4142135623730950
+    __m128 cmp1 = _mm_cmpgt_ps( x, _ps_atanrange_lo );
 
-	/* x > 0.4142135623730950 && !( x > 2.414213562373095 ) */
-	__m128 cmp2 = _mm_andnot_ps( cmp0, cmp1 );
+    // x > 0.4142135623730950 && !( x > 2.414213562373095 )
+    __m128 cmp2 = _mm_andnot_ps( cmp0, cmp1 );
 
-	/* -( 1.0/x ) */
-	__m128 y0 = _mm_and_ps( cmp0, _ps_cephes_PIO2F );
-	__m128 x0 = _mm_div_ps( _ps_1, x );
-	x0 = _mm_xor_ps( x0, _ps_sign_mask );
+    // -( 1.0/x )
+    __m128 y0 = _mm_and_ps( cmp0, _ps_cephes_PIO2F );
+    __m128 x0 = _mm_div_ps( _ps_1, x );
+    x0 = _mm_xor_ps( x0, _ps_sign_mask );
 
-	__m128 y1 = _mm_and_ps( cmp2, _ps_cephes_PIO4F );
-	/* (x-1.0)/(x+1.0) */
-	__m128 x1_o = _mm_sub_ps( x, _ps_1 );
-	__m128 x1_u = _mm_add_ps( x, _ps_1 );
-	__m128 x1 = _mm_div_ps( x1_o, x1_u );
+    __m128 y1 = _mm_and_ps( cmp2, _ps_cephes_PIO4F );
+    // (x-1.0)/(x+1.0)
+    __m128 x1_o = _mm_sub_ps( x, _ps_1 );
+    __m128 x1_u = _mm_add_ps( x, _ps_1 );
+    __m128 x1 = _mm_div_ps( x1_o, x1_u );
 
-	__m128 x2 = _mm_and_ps( cmp2, x1 );
-	x0 = _mm_and_ps( cmp0, x0 );
-	x2 = _mm_or_ps( x2, x0 );
-	cmp1 = _mm_or_ps( cmp0, cmp2 );
-	x2 = _mm_and_ps( cmp1, x2 );
-	x = _mm_andnot_ps( cmp1, x );
-	x = _mm_or_ps( x2, x );
+    __m128 x2 = _mm_and_ps( cmp2, x1 );
+    x0 = _mm_and_ps( cmp0, x0 );
+    x2 = _mm_or_ps( x2, x0 );
+    cmp1 = _mm_or_ps( cmp0, cmp2 );
+    x2 = _mm_and_ps( cmp1, x2 );
+    x = _mm_andnot_ps( cmp1, x );
+    x = _mm_or_ps( x2, x );
 
-	y = _mm_or_ps( y0, y1 );
+    y = _mm_or_ps( y0, y1 );
 
-	__m128 zz = _mm_mul_ps( x, x );
-	__m128 acc = _ps_atancof_p0;
-	acc = _mm_mul_ps( acc, zz );
-	acc = _mm_sub_ps( acc, _ps_atancof_p1 );
-	acc = _mm_mul_ps( acc, zz );
-	acc = _mm_add_ps( acc, _ps_atancof_p2 );
-	acc = _mm_mul_ps( acc, zz );
-	acc = _mm_sub_ps( acc, _ps_atancof_p3 );
-	acc = _mm_mul_ps( acc, zz );
-	acc = _mm_mul_ps( acc, x );
-	acc = _mm_add_ps( acc, x );
-	y = _mm_add_ps( y, acc );
+    __m128 zz = _mm_mul_ps( x, x );
+    __m128 acc = _ps_atancof_p0;
+    acc = _mm_mul_ps( acc, zz );
+    acc = _mm_sub_ps( acc, _ps_atancof_p1 );
+    acc = _mm_mul_ps( acc, zz );
+    acc = _mm_add_ps( acc, _ps_atancof_p2 );
+    acc = _mm_mul_ps( acc, zz );
+    acc = _mm_sub_ps( acc, _ps_atancof_p3 );
+    acc = _mm_mul_ps( acc, zz );
+    acc = _mm_mul_ps( acc, x );
+    acc = _mm_add_ps( acc, x );
+    y = _mm_add_ps( y, acc );
 
-	/* update the sign */
-	y = _mm_xor_ps( y, sign_bit );
+    // Update the sign
+    y = _mm_xor_ps( y, sign_bit );
 
-	return y;
+    return y;
 }
 
 static inline __m128 atan2_ps( __m128 y, __m128 x )
 {
-	__m128 x_eq_0 = _mm_cmpeq_ps( x, _ps_0 );
-	__m128 x_gt_0 = _mm_cmpgt_ps( x, _ps_0 );
-	__m128 x_le_0 = _mm_cmple_ps( x, _ps_0 );
-	__m128 y_eq_0 = _mm_cmpeq_ps( y, _ps_0 );
-	__m128 x_lt_0 = _mm_cmplt_ps( x, _ps_0 );
-	__m128 y_lt_0 = _mm_cmplt_ps( y, _ps_0 );
+    __m128 x_eq_0 = _mm_cmpeq_ps( x, _ps_0 );
+    __m128 x_gt_0 = _mm_cmpgt_ps( x, _ps_0 );
+    __m128 x_le_0 = _mm_cmple_ps( x, _ps_0 );
+    __m128 y_eq_0 = _mm_cmpeq_ps( y, _ps_0 );
+    __m128 x_lt_0 = _mm_cmplt_ps( x, _ps_0 );
+    __m128 y_lt_0 = _mm_cmplt_ps( y, _ps_0 );
 
-	__m128 zero_mask = _mm_and_ps( x_eq_0, y_eq_0 );
-	__m128 zero_mask_other_case = _mm_and_ps( y_eq_0, x_gt_0 );
-	zero_mask = _mm_or_ps( zero_mask, zero_mask_other_case );
+    __m128 zero_mask = _mm_and_ps( x_eq_0, y_eq_0 );
+    __m128 zero_mask_other_case = _mm_and_ps( y_eq_0, x_gt_0 );
+    zero_mask = _mm_or_ps( zero_mask, zero_mask_other_case );
 
-	__m128 pio2_mask = _mm_andnot_ps( y_eq_0, x_eq_0 );
-	__m128 pio2_mask_sign = _mm_and_ps( y_lt_0, _ps_sign_mask );
-	__m128 pio2_result = _ps_cephes_PIO2F;
-	pio2_result = _mm_xor_ps( pio2_result, pio2_mask_sign );
-	pio2_result = _mm_and_ps( pio2_mask, pio2_result );
+    __m128 pio2_mask = _mm_andnot_ps( y_eq_0, x_eq_0 );
+    __m128 pio2_mask_sign = _mm_and_ps( y_lt_0, _ps_sign_mask );
+    __m128 pio2_result = _ps_cephes_PIO2F;
+    pio2_result = _mm_xor_ps( pio2_result, pio2_mask_sign );
+    pio2_result = _mm_and_ps( pio2_mask, pio2_result );
 
-	__m128 pi_mask = _mm_and_ps( y_eq_0, x_le_0 );
-	__m128 pi = _ps_cephes_PIF;
-	__m128 pi_result = _mm_and_ps( pi_mask, pi );
+    __m128 pi_mask = _mm_and_ps( y_eq_0, x_le_0 );
+    __m128 pi = _ps_cephes_PIF;
+    __m128 pi_result = _mm_and_ps( pi_mask, pi );
 
-	__m128 swap_sign_mask_offset = _mm_and_ps( x_lt_0, y_lt_0 );
-	swap_sign_mask_offset = _mm_and_ps( swap_sign_mask_offset, _ps_sign_mask );
+    __m128 swap_sign_mask_offset = _mm_and_ps( x_lt_0, y_lt_0 );
+    swap_sign_mask_offset = _mm_and_ps( swap_sign_mask_offset, _ps_sign_mask );
 
-	__m128 offset0 = _mm_setzero_ps();
-	__m128 offset1 = _ps_cephes_PIF;
-	offset1 = _mm_xor_ps( offset1, swap_sign_mask_offset );
+    __m128 offset0 = _mm_setzero_ps();
+    __m128 offset1 = _ps_cephes_PIF;
+    offset1 = _mm_xor_ps( offset1, swap_sign_mask_offset );
 
-	__m128 offset = _mm_andnot_ps( x_lt_0, offset0 );
-	offset = _mm_and_ps( x_lt_0, offset1 );
+    __m128 offset = _mm_andnot_ps( x_lt_0, offset0 );
+    offset = _mm_and_ps( x_lt_0, offset1 );
 
-	__m128 arg = _mm_div_ps( y, x );
-	__m128 atan_result = atan_ps( arg );
-	atan_result = _mm_add_ps( atan_result, offset );
+    __m128 arg = _mm_div_ps( y, x );
+    __m128 atan_result = atan_ps( arg );
+    atan_result = _mm_add_ps( atan_result, offset );
 
-	/* select between zero_result, pio2_result and atan_result */
+    // Select between zero_result, pio2_result and atan_result
 
-	__m128 result = _mm_andnot_ps( zero_mask, pio2_result );
-	atan_result = _mm_andnot_ps( pio2_mask, atan_result );
-	atan_result = _mm_andnot_ps( pio2_mask, atan_result);
-	result = _mm_or_ps( result, atan_result );
-	result = _mm_or_ps( result, pi_result );
+    __m128 result = _mm_andnot_ps( zero_mask, pio2_result );
+    atan_result = _mm_andnot_ps( pio2_mask, atan_result );
+    atan_result = _mm_andnot_ps( pio2_mask, atan_result);
+    result = _mm_or_ps( result, atan_result );
+    result = _mm_or_ps( result, pi_result );
 
-	return result;
+    return result;
 }
 
-static inline void fast_matmul_sse(float *A, float *B, float *C)
+static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
 {
-    __m128 row1 = _mm_load_ps(&B[0]);
-    __m128 row2 = _mm_load_ps(&B[4]);
-    __m128 row3 = _mm_load_ps(&B[8]);
-    __m128 row4 = _mm_load_ps(&B[12]);
+    __m128 row1 = _mm_load_ps(&B[0]); // Row 0 of B
+    __m128 row2 = _mm_load_ps(&B[4]); // Row 1 of B
+    __m128 row3 = _mm_load_ps(&B[8]); // Row 2 of B
+    __m128 row4 = _mm_load_ps(&B[12]); // Row 3 of B
 
-    for(int i=0; i<4; i++)
+    for(int i = 0; i < 4; i++)
     {
-        __m128 brod1 = _mm_set1_ps(A[4 * i + 0]);
-        __m128 brod2 = _mm_set1_ps(A[4 * i + 1]);
-        __m128 brod3 = _mm_set1_ps(A[4 * i + 2]);
-        __m128 brod4 = _mm_set1_ps(A[4 * i + 3]);
+        __m128 brod1 = _mm_set1_ps(A[4 * i + 0]); // Example for row 0 computation -> A[0][0] is broadcasted
+        __m128 brod2 = _mm_set1_ps(A[4 * i + 1]); // Example for row 0 computation -> A[0][1] is broadcasted
+        __m128 brod3 = _mm_set1_ps(A[4 * i + 2]); // Example for row 0 computation -> A[0][2] is broadcasted
+        __m128 brod4 = _mm_set1_ps(A[4 * i + 3]); // Example for row 0 computation -> A[0][3] is broadcasted
 
-        __m128 row = _mm_add_ps(
-                        _mm_add_ps(
-                            _mm_mul_ps(brod1, row1),
-                            _mm_mul_ps(brod2, row2)),
-                        _mm_add_ps(
-                            _mm_mul_ps(brod3, row3),
-                            _mm_mul_ps(brod4, row4)));
+        __m128 row = _mm_add_ps( // Example for row 0 computation -> P + Q
+                        _mm_add_ps( // Example for row 0 computation -> P = A[0][0] * B[0][0] + A[0][1] * B[1][0]
+                            _mm_mul_ps(brod1, row1), // Example for row 0 computation -> (A[0][0] * B[0][0], A[0][0] * B[0][1], A[0][0] * B[0][2], A[0][0] * B[0][3])
+                            _mm_mul_ps(brod2, row2)), // Example for row 0 computation -> (A[0][1] * B[1][0], A[0][1] * B[1][1], A[0][1] * B[1][2], A[0][1] * B[1][3])
+                        _mm_add_ps( // Example for row 0 computation -> Q = A[0][2] * B[2][0] + A[0][3] * B[3][0]
+                            _mm_mul_ps(brod3, row3), // Example for row 0 computation -> (A[0][2] * B[2][0], A[0][2] * B[2][1], A[0][2] * B[2][2], A[0][2] * B[2][3])
+                            _mm_mul_ps(brod4, row4))); // Example for row 0 computation -> (A[0][3] * B[3][0], A[0][3] * B[3][1], A[0][3] * B[3][2], A[0][3] * B[3][3])
 
-        _mm_store_ps(&C[4*i], row);
+        _mm_store_ps(&C[4*i], row); // Example for row 0 computation -> Storing whole computed row 0
     }
-}
-
-static inline void fast_matmul_sse_2( float * a,  float * b, float * r)
-{
-  __m128 a_line, b_line, r_line;
-
-  for (int i=0; i<16; i+=4) {
-    // unroll the first step of the loop to avoid having to initialize r_line to zero
-    a_line = _mm_load_ps(a);         // a_line = vec4(column(a, 0))
-    b_line = _mm_set1_ps(b[i]);      // b_line = vec4(b[i][0])
-    r_line = _mm_mul_ps(a_line, b_line); // r_line = a_line * b_line
-    for (int j=1; j<4; j++) {
-      a_line = _mm_load_ps(&a[j*4]); // a_line = vec4(column(a, j))
-      b_line = _mm_set1_ps(b[i+j]);  // b_line = vec4(b[i][j])
-                                     // r_line += a_line * b_line
-      r_line = _mm_add_ps(_mm_mul_ps(a_line, b_line), r_line);
-    }
-    _mm_store_ps(&r[i], r_line);     // r[i] = r_line
-  }
 }
 
 #endif

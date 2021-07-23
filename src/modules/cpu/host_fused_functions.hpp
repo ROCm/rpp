@@ -117,7 +117,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
                           0., 0., 1., 0.,
                           0., 0., 0., 1.};
 
-        fast_matmul_sse(hue_saturation_matrix, brightness_contrast_matrix, ctm);
+        fast_matmul4x4_sse(hue_saturation_matrix, brightness_contrast_matrix, ctm);
 
         T *srcPtrTemp, *dstPtrTemp;
         srcPtrTemp = srcPtr;
@@ -129,35 +129,35 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 0 - No SSE (compiler optimized)
+        // Method 0 - No SSE (compiler optimized) - 0.000789s for average of 100 runs on 8 224x224 images
 
-        Rpp32u bufferLength = srcSize.width * channel;
+        // Rpp32u bufferLength = srcSize.width * channel;
 
-        for (int i = 0; i < srcSize.height; i++)
-        {
-            int vectorLoopCount = 0;
-            for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
-            {
-                Rpp32f pixelR = ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3];
-                Rpp32f pixelG = ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7];
-                Rpp32f pixelB = ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11];
+        // for (int i = 0; i < srcSize.height; i++)
+        // {
+        //     int vectorLoopCount = 0;
+        //     for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+        //     {
+        //         Rpp32f pixelR = ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3];
+        //         Rpp32f pixelG = ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7];
+        //         Rpp32f pixelB = ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11];
 
-                *dstPtrTemp = (T) RPPPIXELCHECK(pixelR);
-                *(dstPtrTemp + 1) = (T) RPPPIXELCHECK(pixelG);
-                *(dstPtrTemp + 2) = (T) RPPPIXELCHECK(pixelB);
+        //         *dstPtrTemp = (T) RPPPIXELCHECK(pixelR);
+        //         *(dstPtrTemp + 1) = (T) RPPPIXELCHECK(pixelG);
+        //         *(dstPtrTemp + 2) = (T) RPPPIXELCHECK(pixelB);
 
-                srcPtrTemp += 3;
-                dstPtrTemp += 3;
-            }
-            srcPtrTemp += increment;
-            dstPtrTemp += increment;
-        }
-
-
+        //         srcPtrTemp += 3;
+        //         dstPtrTemp += 3;
+        //     }
+        //     srcPtrTemp += increment;
+        //     dstPtrTemp += increment;
+        // }
 
 
 
-        // Method 1 - 12 elements per loop run with SSE
+
+
+        // Method 1 - 12 elements per loop run with SSE - 0.001457s for average of 100 runs on 8 224x224 images
 
         // Rpp32u bufferLength = srcSize.width * channel;
         // Rpp32u alignedLength = bufferLength & ~11;
@@ -251,7 +251,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 2 - 3 elements per loop run without transpose
+        // Method 2 - 3 elements per loop run without transpose - 0.001713s for average of 100 runs on 8 224x224 images
 
         // __m128 pctm_A = _mm_setr_ps(ctm[0], ctm[4], ctm[8], ctm[0]);
         // __m128 pctm_B = _mm_setr_ps(ctm[1], ctm[5], ctm[9], ctm[1]);
@@ -285,7 +285,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 3 - 3 elements per loop run with transpose
+        // Method 3 - 3 elements per loop run with transpose, vectorize horizontally - 0.003019s for average of 100 runs on 8 224x224 images
 
         // __m128i const zero = _mm_setzero_si128();
         // __m128 pctm0 = _mm_loadu_ps(ctm);
@@ -324,7 +324,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 4 - 3 elements per loop run with fmadd intrinsics
+        // Method 4 - 3 elements per loop run with fmadd intrinsics - 0.001399s for average of 100 runs on 8 224x224 images
 
         // __m128 pctm_A = _mm_setr_ps(ctm[0], ctm[4], ctm[8], 1.0);
         // __m128 pctm_B = _mm_setr_ps(ctm[1], ctm[5], ctm[9], 1.0);
@@ -352,6 +352,153 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
         //         dstPtrTemp += 3;
         //     }
         // }
+
+
+
+
+
+
+
+
+
+
+
+        // Method 5 - 12 elements per loop run with SSE, reduce loads - 0.001587s for average of 100 runs on 8 224x224 images
+
+        Rpp32u bufferLength = srcSize.width * channel;
+        Rpp32u alignedLength = bufferLength & ~11;
+
+        __m128i const zero = _mm_setzero_si128();
+        __m128i px0, px1, px2, px3;
+        // __m128i pShuffleLoad = _mm_setr_epi8(0, 1, 2, 12, 3, 4, 5, 13, 6, 7, 8, 14, 9, 10, 11, 15);
+        __m128i pShuffleStore = _mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 3, 7, 11, 15);
+
+        __m128 pRowArr[4];
+        __m128 pTransposedCtmRow0 = _mm_load_ps(ctm); // Load ctm row 0
+        __m128 pTransposedCtmRow1 = _mm_load_ps(ctm + 4); // Load ctm row 1
+        __m128 pTransposedCtmRow2 = _mm_load_ps(ctm + 8); // Load ctm row 2
+        __m128 pTransposedCtmRow3 = _mm_load_ps(ctm + 12); // Load ctm row 3
+
+        _MM_TRANSPOSE4_PS(pTransposedCtmRow0, pTransposedCtmRow1, pTransposedCtmRow2, pTransposedCtmRow3);  // Transpose ctm to contain cols in pTransposedCtmRow0/pTransposedCtmRow1/pTransposedCtmRow2/pTransposedCtmRow3
+
+        for (int i = 0; i < srcSize.height; i++)
+        {
+            int vectorLoopCount = 0;
+
+            for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+            {
+                // Printing
+
+                // printf("\n\nPrinting source:\n");
+                // for (int p = 0; p < 16; p++)
+                // {
+                //     printf("%d ", srcPtrTemp[p]);
+                // }
+
+                // Load and shuffle - Not required since individual elements are to be loaded
+
+                // px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
+                // px0 = _mm_shuffle_epi8(px0, pShuffleLoad);
+
+                // To compute matmul4x4 of srcPtr (p0/p1/p2/p3) and ctmTransposed (pTransposedCtmRow0/pTransposedCtmRow1/pTransposedCtmRow2/pTransposedCtmRow3)
+                //
+                //                  --                  --                                                                    --                  --
+                //                 | [0],  [1],  [2], [X] |  (R/G/B/X values for pixel n)                                    | [0], [4],  [8], [12] | (stored in pTransposedCtmRow0)
+                // srcPtrIndices = | [3],  [4],  [5], [X] |  (R/G/B/X values for pixel n + 1)      X      ctmMatrixIndices = | [1], [5],  [9], [13] | (stored in pTransposedCtmRow1)
+                //                 | [6],  [7],  [8], [X] |  (R/G/B/X values for pixel n + 2)                                | [2], [6], [10], [14] | (stored in pTransposedCtmRow2)
+                //                 | [9], [10], [11], [X] |  (R/G/B/X values for pixel n + 3)                                | [3], [7], [11], [15] | (stored in pTransposedCtmRow3)
+                //                  --                  --                                                                    --                  --
+                //
+                // This matrix multiplication gives results for 4 pixels in one shot - each row of the result matrix containing one set of R/G/B/X values.
+
+                for(int i = 0; i < 4; i++)
+                {
+                    __m128 brod0 = _mm_set1_ps(srcPtrTemp[3 * i + 0]); // Example for row 0 computation -> srcPtrTemp[0][0] is broadcasted
+                    __m128 brod1 = _mm_set1_ps(srcPtrTemp[3 * i + 1]); // Example for row 0 computation -> srcPtrTemp[0][1] is broadcasted
+                    __m128 brod2 = _mm_set1_ps(srcPtrTemp[3 * i + 2]); // Example for row 0 computation -> srcPtrTemp[0][2] is broadcasted
+                    __m128 brod3 = _mm_set1_ps(srcPtrTemp[3 * i + 3]); // Example for row 0 computation -> srcPtrTemp[0][3] is broadcasted
+
+                    // pRowArr[i] = _mm_add_ps( // Example for row 0 computation -> P + Q
+                    //                 _mm_add_ps( // Example for row 0 computation -> P = srcPtrTemp[0][0] * transposedCtm[0][0] + srcPtrTemp[0][1] * transposedCtm[1][0]
+                    //                     _mm_mul_ps(brod0, pTransposedCtmRow0), // Example for row 0 computation -> (srcPtrTemp[0][0] * transposedCtm[0][0], srcPtrTemp[0][0] * transposedCtm[0][1], srcPtrTemp[0][0] * transposedCtm[0][2], srcPtrTemp[0][0] * transposedCtm[0][3])
+                    //                     _mm_mul_ps(brod1, pTransposedCtmRow1)), // Example for row 0 computation -> (srcPtrTemp[0][1] * transposedCtm[1][0], srcPtrTemp[0][1] * transposedCtm[1][1], srcPtrTemp[0][1] * transposedCtm[1][2], srcPtrTemp[0][1] * transposedCtm[1][3])
+                    //                 _mm_add_ps( // Example for row 0 computation -> Q = srcPtrTemp[0][2] * transposedCtm[2][0] + srcPtrTemp[0][3] * transposedCtm[3][0]
+                    //                     _mm_mul_ps(brod2, pTransposedCtmRow2), // Example for row 0 computation -> (srcPtrTemp[0][2] * transposedCtm[2][0], srcPtrTemp[0][2] * transposedCtm[2][1], srcPtrTemp[0][2] * transposedCtm[2][2], srcPtrTemp[0][2] * transposedCtm[2][3])
+                    //                     _mm_mul_ps(brod3, pTransposedCtmRow3))); // Example for row 0 computation -> (srcPtrTemp[0][3] * transposedCtm[3][0], srcPtrTemp[0][3] * transposedCtm[3][1], srcPtrTemp[0][3] * transposedCtm[3][2], srcPtrTemp[0][3] * transposedCtm[3][3])
+
+                    // A faster matmul4x4 with fmadd_ps
+                    pRowArr[i] = _mm_fmadd_ps(brod0,
+                                              pTransposedCtmRow0,
+                                              _mm_fmadd_ps(brod1,
+                                                           pTransposedCtmRow1,
+                                                           _mm_fmadd_ps(brod2,
+                                                                        pTransposedCtmRow2,
+                                                                        _mm_mul_ps(brod3,
+                                                                                   pTransposedCtmRow3))));
+                }
+
+                // Pack f32 back to u8
+
+                px0 = _mm_cvtps_epi32(pRowArr[0]);
+                px1 = _mm_cvtps_epi32(pRowArr[1]);
+                px2 = _mm_cvtps_epi32(pRowArr[2]);
+                px3 = _mm_cvtps_epi32(pRowArr[3]);
+
+                px0 = _mm_packus_epi32(px0, px1);
+                px1 = _mm_packus_epi32(px2, px3);
+                px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
+
+                // Shuffle and store
+
+                px0 = _mm_shuffle_epi8(px0, pShuffleStore);
+                _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
+
+                // Printing
+
+                // printf("\n\nPrinting destination:\n");
+                // for (int p = 0; p < 16; p++)
+                // {
+                //     printf("%d ", dstPtrTemp[p]);
+                // }
+                // exit(0);
+
+                srcPtrTemp += 12;
+                dstPtrTemp += 12;
+            }
+            for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+            // for (; vectorLoopCount < 12; vectorLoopCount+=3)
+            {
+                Rpp32f pixelR = ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3];
+                Rpp32f pixelG = ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7];
+                Rpp32f pixelB = ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11];
+
+                *dstPtrTemp = (T) RPPPIXELCHECK(pixelR);
+                *(dstPtrTemp + 1) = (T) RPPPIXELCHECK(pixelG);
+                *(dstPtrTemp + 2) = (T) RPPPIXELCHECK(pixelB);
+
+                srcPtrTemp += 3;
+                dstPtrTemp += 3;
+            }
+
+            // Printing
+
+            // srcPtrTemp -= 12;
+            // dstPtrTemp -= 12;
+            // printf("\n\nPrinting source:\n");
+            // for (int p = 0; p < 16; p++)
+            // {
+            //     printf("%d ", srcPtrTemp[p]);
+            // }
+            // printf("\n\nPrinting dstination:\n");
+            // for (int p = 0; p < 16; p++)
+            // {
+            //     printf("%d ", dstPtrTemp[p]);
+            // }
+            // exit(0);
+
+            srcPtrTemp += increment;
+            dstPtrTemp += increment;
+        }
     }
 
     return RPP_SUCCESS;
