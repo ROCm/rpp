@@ -129,7 +129,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 0 - No SSE (compiler optimized) - 0.000789s for average of 100 runs on 8 224x224 images
+        // Method 0 - WORKING - No SSE (compiler optimized) - 0.000789s for average of 100 runs on 8 224x224 images
 
         Rpp32u bufferLength = srcSize.width * channel;
 
@@ -157,7 +157,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 1 - 12 elements per loop run with SSE - 0.001457s for average of 100 runs on 8 224x224 images
+        // Method 1 - WORKING - 12 elements per loop run with SSE - 0.001457s for average of 100 runs on 8 224x224 images
 
         // Rpp32u bufferLength = srcSize.width * channel;
         // Rpp32u alignedLength = bufferLength & ~11;
@@ -251,7 +251,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 2 - 3 elements per loop run without transpose - 0.001713s for average of 100 runs on 8 224x224 images
+        // Method 2 - WORKING - 3 elements per loop run without transpose - 0.001713s for average of 100 runs on 8 224x224 images
 
         // __m128 pctm_A = _mm_setr_ps(ctm[0], ctm[4], ctm[8], ctm[0]);
         // __m128 pctm_B = _mm_setr_ps(ctm[1], ctm[5], ctm[9], ctm[1]);
@@ -285,7 +285,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 3 - 3 elements per loop run with transpose, vectorize horizontally - 0.003019s for average of 100 runs on 8 224x224 images
+        // Method 3 - WORKING - 3 elements per loop run with transpose, vectorize horizontally - 0.003019s for average of 100 runs on 8 224x224 images
 
         // __m128i const zero = _mm_setzero_si128();
         // __m128 pctm0 = _mm_loadu_ps(ctm);
@@ -324,7 +324,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 4 - 3 elements per loop run with fmadd intrinsics - 0.001399s for average of 100 runs on 8 224x224 images
+        // Method 4 - WORKING - 3 elements per loop run with fmadd intrinsics - 0.001399s for average of 100 runs on 8 224x224 images
 
         // __m128 pctm_A = _mm_setr_ps(ctm[0], ctm[4], ctm[8], 1.0);
         // __m128 pctm_B = _mm_setr_ps(ctm[1], ctm[5], ctm[9], 1.0);
@@ -363,7 +363,7 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
 
 
 
-        // Method 5 - 12 elements per loop run with SSE, reduce loads - 0.001587s for average of 100 runs on 8 224x224 images
+        // Method 5 - WORKING - 12 elements per loop run with SSE, reduce loads - 0.001587s for average of 100 runs on 8 224x224 images
 
         // Rpp32u bufferLength = srcSize.width * channel;
         // Rpp32u alignedLength = bufferLength & ~11;
@@ -412,6 +412,135 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
         //                                                    _mm_fmadd_ps(brod2,
         //                                                                 pTransposedCtmRow2,
         //                                                                 _mm_mul_ps(brod3,
+        //                                                                            pTransposedCtmRow3))));
+        //         }
+
+        //         // Pack f32 back to u8
+
+        //         px0 = _mm_cvtps_epi32(pRowArr[0]);
+        //         px1 = _mm_cvtps_epi32(pRowArr[1]);
+        //         px2 = _mm_cvtps_epi32(pRowArr[2]);
+        //         px3 = _mm_cvtps_epi32(pRowArr[3]);
+
+        //         px0 = _mm_packus_epi32(px0, px1);
+        //         px1 = _mm_packus_epi32(px2, px3);
+        //         px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
+
+        //         // Shuffle and store
+
+        //         px0 = _mm_shuffle_epi8(px0, pShuffleStore); // RGBX -> RGB
+        //         _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
+
+        //         srcPtrTemp += 12;
+        //         dstPtrTemp += 12;
+        //     }
+        //     for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+        //     {
+        //         Rpp32f pixelR = ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3];
+        //         Rpp32f pixelG = ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7];
+        //         Rpp32f pixelB = ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11];
+
+        //         *dstPtrTemp = (T) RPPPIXELCHECK(pixelR);
+        //         *(dstPtrTemp + 1) = (T) RPPPIXELCHECK(pixelG);
+        //         *(dstPtrTemp + 2) = (T) RPPPIXELCHECK(pixelB);
+
+        //         srcPtrTemp += 3;
+        //         dstPtrTemp += 3;
+        //     }
+
+        //     srcPtrTemp += increment;
+        //     dstPtrTemp += increment;
+        // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Method 6 - WORKING - 12 elements per loop run with SSE, reduce loads with shuffle to broadcast approach - 0.001182s for average of 100 runs on 8 224x224 images
+
+        // Rpp32u bufferLength = srcSize.width * channel;
+        // Rpp32u alignedLength = bufferLength & ~11;
+
+        // __m128i const zero = _mm_setzero_si128();
+        // __m128i px0, px1, px2, px3;
+        // __m128i pShuffleLoad = _mm_setr_epi8(0, 1, 2, 12, 3, 4, 5, 13, 6, 7, 8, 14, 9, 10, 11, 15);
+        // __m128i pShuffleStore = _mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 3, 7, 11, 15);
+
+        // __m128 pRowArr[4], pSrcF32[12];
+        // __m128 pOne = _mm_set1_ps(1.0);
+        // __m128 pTransposedCtmRow0 = _mm_load_ps(ctm); // Load ctm row 0
+        // __m128 pTransposedCtmRow1 = _mm_load_ps(ctm + 4); // Load ctm row 1
+        // __m128 pTransposedCtmRow2 = _mm_load_ps(ctm + 8); // Load ctm row 2
+        // __m128 pTransposedCtmRow3 = _mm_load_ps(ctm + 12); // Load ctm row 3
+
+        // _MM_TRANSPOSE4_PS(pTransposedCtmRow0, pTransposedCtmRow1, pTransposedCtmRow2, pTransposedCtmRow3);  // Transpose ctm to contain cols in pTransposedCtmRow0/pTransposedCtmRow1/pTransposedCtmRow2/pTransposedCtmRow3
+
+        // for (int i = 0; i < srcSize.height; i++)
+        // {
+        //     int vectorLoopCount = 0;
+
+        //     for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+        //     {
+        //         // To compute matmul4x4 of srcPtr (pixel0/pixel1/pixel2/pixel3) and ctmTransposed (pTransposedCtmRow0/pTransposedCtmRow1/pTransposedCtmRow2/pTransposedCtmRow3)
+        //         //
+        //         //                  --                  --                                                                    --                  --
+        //         //                 | [0],  [1],  [2], [X] |  (R/G/B/X values for pixel n)                                    | [0], [4],  [8], [12] | (stored in pTransposedCtmRow0)
+        //         // srcPtrIndices = | [3],  [4],  [5], [X] |  (R/G/B/X values for pixel n + 1)      X      ctmMatrixIndices = | [1], [5],  [9], [13] | (stored in pTransposedCtmRow1)
+        //         //                 | [6],  [7],  [8], [X] |  (R/G/B/X values for pixel n + 2)                                | [2], [6], [10], [14] | (stored in pTransposedCtmRow2)
+        //         //                 | [9], [10], [11], [X] |  (R/G/B/X values for pixel n + 3)                                | [3], [7], [11], [15] | (stored in pTransposedCtmRow3)
+        //         //                  --                  --                                                                    --                  --
+        //         // This matrix multiplication gives results for 4 pixels in one shot - each row of the result matrix containing one set of R/G/B/X values.
+
+        //         // Load
+
+        //         px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
+
+        //         // Unpack u8 to f32
+
+        //         px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
+        //         px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
+        //         p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
+        //         p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
+        //         p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
+        //         p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
+
+        //         // Shuffle to broadcast
+
+        //         pSrcF32[0] = _mm_shuffle_ps(p0, p0, _MM_SHUFFLE(0,0,0,0)); // pix0R, pix0R, pix0R, pix0R
+        //         pSrcF32[1] = _mm_shuffle_ps(p0, p0, _MM_SHUFFLE(1,1,1,1)); // pix0G, pix0G, pix0G, pix0G
+        //         pSrcF32[2] = _mm_shuffle_ps(p0, p0, _MM_SHUFFLE(2,2,2,2)); // pix0B, pix0B, pix0B, pix0B
+        //         pSrcF32[3] = _mm_shuffle_ps(p0, p0, _MM_SHUFFLE(3,3,3,3)); // pix1R, pix1R, pix1R, pix1R
+
+        //         pSrcF32[4] = _mm_shuffle_ps(p1, p1, _MM_SHUFFLE(0,0,0,0)); // pix1G, pix1G, pix1G, pix1G
+        //         pSrcF32[5] = _mm_shuffle_ps(p1, p1, _MM_SHUFFLE(1,1,1,1)); // pix1B, pix1B, pix1B, pix1B
+        //         pSrcF32[6] = _mm_shuffle_ps(p1, p1, _MM_SHUFFLE(2,2,2,2)); // pix2R, pix2R, pix2R, pix2R
+        //         pSrcF32[7] = _mm_shuffle_ps(p1, p1, _MM_SHUFFLE(3,3,3,3)); // pix2G, pix2G, pix2G, pix2G
+
+        //         pSrcF32[8] = _mm_shuffle_ps(p2, p2, _MM_SHUFFLE(0,0,0,0)); // pix2B, pix2B, pix2B, pix2B
+        //         pSrcF32[9] = _mm_shuffle_ps(p2, p2, _MM_SHUFFLE(1,1,1,1)); // pix3R, pix3R, pix3R, pix3R
+        //         pSrcF32[10] = _mm_shuffle_ps(p2, p2, _MM_SHUFFLE(2,2,2,2)); // pix3G, pix3G, pix3G, pix3G
+        //         pSrcF32[11] = _mm_shuffle_ps(p2, p2, _MM_SHUFFLE(3,3,3,3)); // pix3B, pix3B, pix3B, pix3B
+
+        //         for(int i = 0, j = 0; i < 12; i+=3, j++)
+        //         {
+        //             pRowArr[j] = _mm_fmadd_ps(pSrcF32[i + 0],
+        //                                       pTransposedCtmRow0,
+        //                                       _mm_fmadd_ps(pSrcF32[i + 1],
+        //                                                    pTransposedCtmRow1,
+        //                                                    _mm_fmadd_ps(pSrcF32[i + 2],
+        //                                                                 pTransposedCtmRow2,
+        //                                                                 _mm_mul_ps(pOne,
         //                                                                            pTransposedCtmRow3))));
         //         }
 
