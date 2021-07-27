@@ -2088,6 +2088,16 @@ inline RppStatus compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr 
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault)
+{
+    roiPtr->xywhROI.xy.x = RPPMAX2(roiPtrDefault->xywhROI.xy.x, roiPtrImage->xywhROI.xy.x);
+    roiPtr->xywhROI.xy.y = RPPMAX2(roiPtrDefault->xywhROI.xy.y, roiPtrImage->xywhROI.xy.y);
+    roiPtr->xywhROI.roiWidth = RPPMIN2(roiPtrDefault->xywhROI.roiWidth - roiPtrImage->xywhROI.xy.x, roiPtrImage->xywhROI.roiWidth);
+    roiPtr->xywhROI.roiHeight = RPPMIN2(roiPtrDefault->xywhROI.roiHeight - roiPtrImage->xywhROI.xy.y, roiPtrImage->xywhROI.roiHeight);
+
+    return RPP_SUCCESS;
+}
+
 template<typename T>
 inline RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage,
                                          RppiSize size, RppiSize *sizeSubImage,

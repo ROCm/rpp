@@ -54,28 +54,33 @@ RppStatus brightness_host_tensor(T* srcPtr,
 #pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
-        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-        RpptROI roiImage;
-        RpptROIPtr roiPtrImage;
-
-        if (roiType == RpptRoiType::LTRB)
-        {
-            roiPtrImage = &roiImage;
-            compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-        }
-        else if (roiType == RpptRoiType::XYWH)
-        {
-            roiPtrImage = roiPtrInput;
-        }
-
         RpptROI roi;
         RpptROIPtr roiPtr;
-        roiPtr = &roi;
-        roiPtr->xywhROI.xy.x = RPPMAX2(roiPtrDefault->xywhROI.xy.x, roiPtrImage->xywhROI.xy.x);
-        roiPtr->xywhROI.xy.y = RPPMAX2(roiPtrDefault->xywhROI.xy.y, roiPtrImage->xywhROI.xy.y);
-        roiPtr->xywhROI.roiWidth = RPPMIN2(roiPtrDefault->xywhROI.roiWidth - roiPtrImage->xywhROI.xy.x, roiPtrImage->xywhROI.roiWidth);
-        roiPtr->xywhROI.roiHeight = RPPMIN2(roiPtrDefault->xywhROI.roiHeight - roiPtrImage->xywhROI.xy.y, roiPtrImage->xywhROI.roiHeight);
+
+        if (&roiTensorPtrSrc[batchCount] == NULL)
+        {
+            roiPtr = roiPtrDefault;
+        }
+        else
+        {
+            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+
+            RpptROI roiImage;
+            RpptROIPtr roiPtrImage;
+
+            if (roiType == RpptRoiType::LTRB)
+            {
+                roiPtrImage = &roiImage;
+                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
+            }
+            else if (roiType == RpptRoiType::XYWH)
+            {
+                roiPtrImage = roiPtrInput;
+            }
+
+            roiPtr = &roi;
+            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
+        }
 
         Rpp32f alpha = alphaTensor[batchCount];
         Rpp32f beta = betaTensor[batchCount];
