@@ -33,7 +33,7 @@ RPP is developed for **Linux** operating system.
 
 -   Boost Version `1.72` (install from source: Easy Build and Install - <https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install>)
 
-        wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
+        wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
         tar -xzvf boost_1_72_0.tar.gz
         cd boost_1_72_0
         ./bootstrap.sh
