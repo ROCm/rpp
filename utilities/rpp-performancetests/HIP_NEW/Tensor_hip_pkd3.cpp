@@ -42,7 +42,6 @@ int main(int argc, char **argv)
         printf("\nInputs for this test case are:");
         printf("\nsrc1 = %s", argv[1]);
         printf("\nsrc2 = %s", argv[2]);
-        // printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[3]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[4]);
         printf("\ncase number (1:7) = %s", argv[5]);
@@ -50,7 +49,6 @@ int main(int argc, char **argv)
 
     char *src = argv[1];
     char *src_second = argv[2];
-    // char *dst = argv[3];
     int ip_bitDepth = atoi(argv[3]);
     unsigned int outputFormatToggle = atoi(argv[4]);
     int test_case = atoi(argv[5]);
@@ -154,7 +152,6 @@ int main(int argc, char **argv)
     char func[1000];
     strcpy(func, funcName);
     strcat(func, funcType);
-    printf("\nRunning %s...", func);
 
     char src1[1000];
     strcpy(src1, src);
@@ -163,10 +160,6 @@ int main(int argc, char **argv)
     char src1_second[1000];
     strcpy(src1_second, src_second);
     strcat(src1_second, "/");
-
-    // strcat(funcName, funcType);
-    // strcat(dst, "/");
-    // strcat(dst, funcName);
 
     // Get number of images
 
@@ -488,6 +481,8 @@ int main(int argc, char **argv)
     double max_time_used = 0, min_time_used = 500, avg_time_used = 0;
 
     string test_case_name;
+
+    printf("\nRunning %s 100 times (each time with a batch size of %d images) and computing mean statistics...", func, noOfImages);
 
     for (int perfRunCount = 0; perfRunCount < 100; perfRunCount++)
     {
