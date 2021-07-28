@@ -503,16 +503,16 @@ int main(int argc, char **argv)
             beta[i] = 50;
 
             // xywhROI override sample
-            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
 
             // ltrbROI override sample
             // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-            // roiTensorPtrSrc[i].ltrbROI.lt.y = 50;
-            // roiTensorPtrSrc[i].ltrbROI.rb.x = 199;
-            // roiTensorPtrSrc[i].ltrbROI.rb.y = 149;
+            // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
         }
 
         // Change RpptRoiType for ltrbROI override sample
@@ -728,7 +728,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyHost(handle);
+    rppDestroyGPU(handle);
 
     // OpenCV dump
 
