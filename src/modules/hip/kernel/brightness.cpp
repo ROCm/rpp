@@ -107,8 +107,7 @@ extern "C" __global__ void brightness_pkd_tensor(uchar *srcPtr,
                                                  int hStrideDst,
                                                  float *alpha,
                                                  float *beta,
-                                                 RpptROIPtr roiTensorPtrSrc,
-                                                 RpptRoiType roiType)
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -119,7 +118,7 @@ extern "C" __global__ void brightness_pkd_tensor(uchar *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
 
     uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
@@ -164,56 +163,23 @@ extern "C" __global__ void brightness_pkd_tensor(uchar *srcPtr,
 
 
 extern "C" __global__ void brightness_pln_tensor(uchar *srcPtr,
+                                                 int nStrideSrc,
                                                  int cStrideSrc,
                                                  int hStrideSrc,
                                                  uchar *dstPtr,
+                                                 int nStrideDst,
                                                  int cStrideDst,
                                                  int hStrideDst,
                                                  int channelsDst,
                                                  float *alpha,
                                                  float *beta,
-                                                 RpptROIPtr roiTensorPtrSrc,
-                                                 RpptRoiType roiType)
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-
-
-
-
-    // Method 1
-
-    // int id_z_corrected = id_z / channelsDst;
-
-    // if ((id_y >= roiTensorPtrSrc[id_z_corrected].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z_corrected].xywhROI.roiWidth))
-    // {
-    //     return;
-    // }
-
-    // // printf("\n\nid_x, id_y, id_z | srcIdx, dstIdx - %d, %d, %d | %d, %d", id_x, id_y, id_z, srcIdx, dstIdx);
-
-    // uint srcIdx = (id_z * cStrideSrc) + ((id_y + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.x);
-    // uint dstIdx = (id_z * cStrideDst) + (id_y * hStrideDst) + id_x;
-
-    // uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
-    // uint2 dst;
-
-    // float4 alpha4 = (float4)(alpha[id_z]);
-    // float4 beta4 = (float4)(beta[id_z]);
-
-    // dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
-    // dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
-
-    // *((uint2 *)(&dstPtr[dstIdx])) = dst;
-
-
-
-
-
-
-    // Method 2 - trials with fixed pixel value
+    // Method 1 - Assume 3x of batch size
 
     int id_z_corrected = id_z / channelsDst;
 
@@ -222,32 +188,17 @@ extern "C" __global__ void brightness_pln_tensor(uchar *srcPtr,
         return;
     }
 
-    // printf("\n\nid_x, id_y, id_z | srcIdx, dstIdx - %d, %d, %d | %d, %d", id_x, id_y, id_z, srcIdx, dstIdx);
-
-    // NO SRC - uint srcIdx = (id_z * cStrideSrc) + ((id_y + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.x);
+    uint srcIdx = (id_z * cStrideSrc) + ((id_y + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.x);
     uint dstIdx = (id_z * cStrideDst) + (id_y * hStrideDst) + id_x;
 
-    // NO SRC - uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
+    uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
     uint2 dst;
-    float pix = (float)((id_z+1) * 18); // id_z is 0 to 6
 
-    // type A - with typecast
+    float4 alpha4 = (float4)(alpha[id_z_corrected]);
+    float4 beta4 = (float4)(beta[id_z_corrected]);
 
-    float4 alpha4 = (float4)(alpha[id_z]);
-    float4 beta4 = (float4)(beta[id_z]);
-    float4 pix4 = (float4)(pix);
-
-    dst.x = rpp_hip_pack(pix4 * alpha4 + beta4);
-    dst.y = rpp_hip_pack(pix4 * alpha4 + beta4);
-
-    // type B - with make_float4
-
-    // float4 alpha4 = make_float4(alpha[id_z], alpha[id_z], alpha[id_z], alpha[id_z]);
-    // float4 beta4 = make_float4(beta[id_z], beta[id_z], beta[id_z], beta[id_z]);
-    // float4 pix4 = make_float4((id_z+1) * 18, (id_z+1) * 18, (id_z+1) * 18, (id_z+1) * 18);
-
-    // dst.x = rpp_hip_pack(pix4 * alpha4 + beta4);
-    // dst.y = rpp_hip_pack(pix4 * alpha4 + beta4);
+    dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
+    dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
 
     *((uint2 *)(&dstPtr[dstIdx])) = dst;
 
@@ -256,107 +207,42 @@ extern "C" __global__ void brightness_pln_tensor(uchar *srcPtr,
 
 
 
+    // Method 2 - Work with 1x of batch size
 
-
-    // Method 3 - trials with fmaf
-
-    // int id_z_corrected = id_z / channelsDst;
-
-    // if ((id_y >= roiTensorPtrSrc[id_z_corrected].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z_corrected].xywhROI.roiWidth))
+    // if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     // {
     //     return;
     // }
 
-    // // printf("\n\nid_x, id_y, id_z | srcIdx, dstIdx - %d, %d, %d | %d, %d", id_x, id_y, id_z, srcIdx, dstIdx);
-
-    // uint srcIdx = (id_z * cStrideSrc) + ((id_y + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.x);
-    // uint dstIdx = (id_z * cStrideDst) + (id_y * hStrideDst) + id_x;
-
-    // uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
-    // uint2 dst;
-
-    // float pix = (float)((id_z+1) * 18); // id_z is 0 to 6
-
-    // float4 dstF4x, dstF4y;
-    // dstF4x.x = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4x.y = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4x.z = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4x.w = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4y.x = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4y.y = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4y.z = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4y.w = fmaf(alpha[id_z], pix, beta[id_z]);
-
-    // dst.x = rpp_hip_pack(dstF4x);
-    // dst.y = rpp_hip_pack(dstF4y);
-
-    // *((uint2 *)(&dstPtr[dstIdx])) = dst;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // OTHER TRIALS
-
-    // if ((id_y >= roiTensorPtrSrc[id_z_corrected].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z_corrected].xywhROI.roiWidth))
-    // {
-    //     return;
-    // }
-
-    // uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z_corrected].xywhROI.xy.x);
+    // uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     // uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
 
     // uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
     // uint2 dst;
 
-    // float pix = (float)((id_z+1) * 18);
-
     // float4 alpha4 = (float4)(alpha[id_z]);
     // float4 beta4 = (float4)(beta[id_z]);
-    // float4 pix4 = (float4)(pix);
-
-    // float4 alpha4 = make_float4(alpha[id_z], alpha[id_z], alpha[id_z], alpha[id_z]);
-    // float4 beta4 = make_float4(beta[id_z], beta[id_z], beta[id_z], beta[id_z]);
-    // float4 pix4 = make_float4((id_z+1) * 18, (id_z+1) * 18, (id_z+1) * 18, (id_z+1) * 18);
 
     // dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
     // dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
 
-    // float4 dstF4x, dstF4y;
-    // dstF4x.x = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4x.y = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4x.z = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4x.w = fmaf(alpha[id_z], pix, beta[id_z]);
-
-    // dstF4y.x = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4y.y = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4y.z = fmaf(alpha[id_z], pix, beta[id_z]);
-    // dstF4y.w = fmaf(alpha[id_z], pix, beta[id_z]);
-
-    // dst.x = rpp_hip_pack(pix4 * alpha4 + beta4);
-    // dst.y = rpp_hip_pack(pix4 * alpha4 + beta4);
-
-    // dst.x = rpp_hip_pack(dstF4x);
-    // dst.y = rpp_hip_pack(dstF4y);
-
     // *((uint2 *)(&dstPtr[dstIdx])) = dst;
+
+    // if (channelsDst == 3)
+    // {
+    //     for (int i = 0; i < 2; i++)
+    //     {
+    //         srcIdx += cStrideSrc;
+    //         dstIdx += cStrideDst;
+
+    //         src = *((uint2 *)(&srcPtr[srcIdx]));
+
+    //         dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
+    //         dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
+
+    //         *((uint2 *)(&dstPtr[dstIdx])) = dst;
+    //     }
     // }
-
-
-
 
 
 
@@ -418,7 +304,6 @@ RppStatus hip_exec_brightness_tensor(Rpp8u *srcPtr,
                                      Rpp8u *dstPtr,
                                      RpptDescPtr dstDescPtr,
                                      RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
                                      rpp::Handle& handle)
 {
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -443,8 +328,7 @@ RppStatus hip_exec_brightness_tensor(Rpp8u *srcPtr,
                            dstDescPtr->strides.hStride,
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                            handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                           roiTensorPtrSrc,
-                           roiType);
+                           roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -453,16 +337,12 @@ RppStatus hip_exec_brightness_tensor(Rpp8u *srcPtr,
         int localThreads_z = 1;
         int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
         int globalThreads_y = dstDescPtr->h;
+
+        // Method 1 - Assume 3x of batch size
         int globalThreads_z = handle.GetBatchSize() * dstDescPtr->c;
 
-        std::cerr << "\n\n globalThreads_x - " << dstDescPtr->strides.hStride << " " << globalThreads_x;
-        std::cerr << "\n\n globalThreads_y - " << dstDescPtr->h << " " << globalThreads_y;
-        std::cerr << "\n\n globalThreads_z - " << dstDescPtr->c << " " << globalThreads_z;
-        std::cerr << "\n\n";
-        std::cerr << "\n\n srcDescPtr->strides.cStride - " << srcDescPtr->strides.cStride;
-        std::cerr << "\n\n srcDescPtr->strides.hStride - " << srcDescPtr->strides.hStride;
-        std::cerr << "\n\n dstDescPtr->strides.cStride - " << dstDescPtr->strides.cStride;
-        std::cerr << "\n\n dstDescPtr->strides.hStride - " << dstDescPtr->strides.hStride;
+        // Method 2 - Work with 1x of batch size
+        // int globalThreads_z = handle.GetBatchSize();
 
         hipLaunchKernelGGL(brightness_pln_tensor,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
@@ -470,48 +350,54 @@ RppStatus hip_exec_brightness_tensor(Rpp8u *srcPtr,
                            0,
                            handle.GetStream(),
                            srcPtr,
+                           srcDescPtr->strides.nStride,
                            srcDescPtr->strides.cStride,
                            srcDescPtr->strides.hStride,
                            dstPtr,
+                           dstDescPtr->strides.nStride,
                            dstDescPtr->strides.cStride,
                            dstDescPtr->strides.hStride,
                            dstDescPtr->c,
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                            handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                           roiTensorPtrSrc,
-                           roiType);
+                           roiTensorPtrSrc);
+
+
+
+
+
 
         // Checking outputs
 
-        Rpp8u *output = (Rpp8u *)calloc(dstDescPtr->strides.nStride * handle.GetBatchSize(), sizeof(Rpp8u));
-        RpptROI *roi = (RpptROI *)calloc(handle.GetBatchSize(), sizeof(RpptROI));
-        hipMemcpy(output, dstPtr, dstDescPtr->strides.nStride * handle.GetBatchSize() * sizeof(Rpp8u), hipMemcpyDeviceToHost);
-        hipMemcpy(roi, roiTensorPtrSrc, handle.GetBatchSize() * sizeof(RpptROI), hipMemcpyDeviceToHost);
+        // Rpp8u *output = (Rpp8u *)calloc(dstDescPtr->strides.nStride * handle.GetBatchSize(), sizeof(Rpp8u));
+        // RpptROI *roi = (RpptROI *)calloc(handle.GetBatchSize(), sizeof(RpptROI));
+        // hipMemcpy(output, dstPtr, dstDescPtr->strides.nStride * handle.GetBatchSize() * sizeof(Rpp8u), hipMemcpyDeviceToHost);
+        // hipMemcpy(roi, roiTensorPtrSrc, handle.GetBatchSize() * sizeof(RpptROI), hipMemcpyDeviceToHost);
 
-        Rpp8u *outputTemp;
-        outputTemp = output;
+        // Rpp8u *outputTemp;
+        // outputTemp = output;
 
-        printf("\n\n\nPrinting images:\n");
-        for (int n = 0; n < dstDescPtr->n; n++)
-        {
-            printf("\n\n\nPrinting ROI for image%d:\n", n + 1);
-            printf("%d, %d, %d, %d", roi[n].xywhROI.xy.x, roi[n].xywhROI.xy.y, roi[n].xywhROI.roiWidth, roi[n].xywhROI.roiHeight);
+        // printf("\n\n\nPrinting images:\n");
+        // for (int n = 0; n < dstDescPtr->n; n++)
+        // {
+        //     printf("\n\n\nPrinting ROI for image%d:\n", n + 1);
+        //     printf("%d, %d, %d, %d", roi[n].xywhROI.xy.x, roi[n].xywhROI.xy.y, roi[n].xywhROI.roiWidth, roi[n].xywhROI.roiHeight);
 
-            printf("\n\n\nPrinting image %d:\n", n + 1);
-            for (int c = 0; c < dstDescPtr->c; c++)
-            {
-                for (int h = 0; h < dstDescPtr->h; h++)
-                {
-                    for (int w = 0; w < dstDescPtr->w; w++)
-                    {
-                        printf("%d ", *outputTemp);
-                        outputTemp++;
-                    }
-                    printf("\n");
-                }
-                printf("\n\n");
-            }
-        }
+        //     printf("\n\n\nPrinting image %d:\n", n + 1);
+        //     for (int c = 0; c < dstDescPtr->c; c++)
+        //     {
+        //         for (int h = 0; h < dstDescPtr->h; h++)
+        //         {
+        //             for (int w = 0; w < dstDescPtr->w; w++)
+        //             {
+        //                 printf("%d ", *outputTemp);
+        //                 outputTemp++;
+        //             }
+        //             printf("\n");
+        //         }
+        //         printf("\n\n");
+        //     }
+        // }
     }
 
     return RPP_SUCCESS;

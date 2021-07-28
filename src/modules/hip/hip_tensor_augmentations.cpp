@@ -12,12 +12,17 @@ RppStatus brightness_hip_tensor(Rpp8u *srcPtr,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle)
 {
+    if (roiType == RpptRoiType::LTRB)
+    {
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc,
+                                             handle);
+    }
+
     hip_exec_brightness_tensor(srcPtr,
                                srcDescPtr,
                                dstPtr,
                                dstDescPtr,
                                roiTensorPtrSrc,
-                               roiType,
                                handle);
 
     return RPP_SUCCESS;

@@ -1,0 +1,35 @@
+#include <hip/hip_runtime.h>
+#include "rpp_hip_host_decls.hpp"
+
+extern "C" __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 4;
+
+    int id_x_ltX = id_x;
+    int id_x_ltY = id_x + 1;
+    int id_x_rbX = id_x + 2;
+    int id_x_rbY = id_x + 3;
+
+    roiTensorPtrSrc[id_x + 2] -= (roiTensorPtrSrc[id_x] - 1);
+    roiTensorPtrSrc[id_x + 3] -= (roiTensorPtrSrc[id_x + 1] - 1);
+}
+
+RppStatus hip_exec_roi_converison_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
+                                               rpp::Handle& handle)
+{
+    int localThreads_x = 256;
+    int localThreads_y = 1;
+    int localThreads_z = 1;
+    int globalThreads_x = handle.GetBatchSize();
+    int globalThreads_y = 1;
+    int globalThreads_z = 1;
+
+    hipLaunchKernelGGL(roi_converison_ltrb_to_xywh,
+                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       0,
+                       handle.GetStream(),
+                       (int *) roiTensorPtrSrc);
+
+    return RPP_SUCCESS;
+}
