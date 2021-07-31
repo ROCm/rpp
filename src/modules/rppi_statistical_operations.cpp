@@ -38,11 +38,11 @@ rppi_thresholding_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
-    copy_param_uchar (minThreshold, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uchar (maxThreshold, rpp::deref(rppHandle), paramIndex++);
+    get_srcBatchIndex(rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+    copy_param_uchar(minThreshold, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uchar(maxThreshold, rpp::deref(rppHandle), paramIndex++);
 
 #ifdef OCL_COMPILE
     {
@@ -52,7 +52,7 @@ rppi_thresholding_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,
                               RPPI_CHN_PLANAR,
                               1);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         thresholding_hip_batch(static_cast<Rpp8u*>(srcPtr),
                                static_cast<Rpp8u*>(dstPtr),
@@ -82,11 +82,11 @@ rppi_thresholding_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
-    copy_param_uchar (minThreshold, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uchar (maxThreshold, rpp::deref(rppHandle), paramIndex++);
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+    copy_param_uchar(minThreshold, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uchar(maxThreshold, rpp::deref(rppHandle), paramIndex++);
 
 #ifdef OCL_COMPILE
     {
@@ -96,7 +96,7 @@ rppi_thresholding_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,
                               RPPI_CHN_PLANAR,
                               3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         thresholding_hip_batch(static_cast<Rpp8u*>(srcPtr),
                                static_cast<Rpp8u*>(dstPtr),
@@ -126,11 +126,11 @@ rppi_thresholding_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
-    copy_param_uchar (minThreshold, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uchar (maxThreshold, rpp::deref(rppHandle), paramIndex++);
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+    copy_param_uchar(minThreshold, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uchar(maxThreshold, rpp::deref(rppHandle), paramIndex++);
 
 #ifdef OCL_COMPILE
     {
@@ -140,7 +140,7 @@ rppi_thresholding_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,
                               RPPI_CHN_PACKED,
                               3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         thresholding_hip_batch(static_cast<Rpp8u*>(srcPtr),
                                static_cast<Rpp8u*>(dstPtr),
@@ -270,9 +270,9 @@ rppi_min_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+    get_srcBatchIndex(rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
 
 #ifdef OCL_COMPILE
     {
@@ -283,7 +283,7 @@ rppi_min_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1,
                      RPPI_CHN_PLANAR,
                      1);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         min_hip_batch(static_cast<Rpp8u*>(srcPtr1),
                       static_cast<Rpp8u*>(srcPtr2),
@@ -313,9 +313,9 @@ rppi_min_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
 
 #ifdef OCL_COMPILE
     {
@@ -326,7 +326,7 @@ rppi_min_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1,
                      RPPI_CHN_PLANAR,
                      3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         min_hip_batch(static_cast<Rpp8u*>(srcPtr1),
                       static_cast<Rpp8u*>(srcPtr2),
@@ -356,9 +356,9 @@ rppi_min_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
 
 #ifdef OCL_COMPILE
     {
@@ -369,7 +369,7 @@ rppi_min_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
                      RPPI_CHN_PACKED,
                      3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         min_hip_batch(static_cast<Rpp8u*>(srcPtr1),
                       static_cast<Rpp8u*>(srcPtr2),
@@ -494,9 +494,9 @@ rppi_max_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+    get_srcBatchIndex(rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
 
 #ifdef OCL_COMPILE
     {
@@ -507,7 +507,7 @@ rppi_max_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1,
                      RPPI_CHN_PLANAR,
                      1);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         max_hip_batch(static_cast<Rpp8u*>(srcPtr1),
                       static_cast<Rpp8u*>(srcPtr2),
@@ -537,9 +537,9 @@ rppi_max_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
 
 #ifdef OCL_COMPILE
     {
@@ -550,7 +550,7 @@ rppi_max_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1,
                      RPPI_CHN_PLANAR,
                      3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         max_hip_batch(static_cast<Rpp8u*>(srcPtr1),
                       static_cast<Rpp8u*>(srcPtr2),
@@ -580,9 +580,9 @@ rppi_max_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
     roiPoints.roiWidth = 0;
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
 
 #ifdef OCL_COMPILE
     {
@@ -593,7 +593,7 @@ rppi_max_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
                      RPPI_CHN_PACKED,
                      3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         max_hip_batch(static_cast<Rpp8u*>(srcPtr1),
                       static_cast<Rpp8u*>(srcPtr2),
@@ -723,7 +723,7 @@ rppi_min_max_loc_u8_pln1_gpu(RppPtr_t srcPtr,
                        1,
                        rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
         min_max_loc_hip(static_cast<Rpp8u*>(srcPtr),
                         srcSize,
@@ -762,7 +762,7 @@ rppi_min_max_loc_u8_pln3_gpu(RppPtr_t srcPtr,
                        3,
                        rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
         min_max_loc_hip(static_cast<Rpp8u*>(srcPtr),
                         srcSize,
@@ -800,7 +800,7 @@ rppi_min_max_loc_u8_pkd3_gpu(RppPtr_t srcPtr,
                        3,
                        rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
         min_max_loc_hip(static_cast<Rpp8u*>(srcPtr),
                         srcSize,
@@ -892,8 +892,8 @@ rppi_integral_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,
 {
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+    get_srcBatchIndex(rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
 
 #ifdef OCL_COMPILE
     {
@@ -903,7 +903,7 @@ rppi_integral_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,
                           RPPI_CHN_PLANAR,
                           1);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         integral_hip_batch(static_cast<Rpp8u*>(srcPtr),
                            static_cast<Rpp32u*>(dstPtr),
@@ -926,8 +926,8 @@ rppi_integral_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,
 {
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
 
 #ifdef OCL_COMPILE
     {
@@ -937,7 +937,7 @@ rppi_integral_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,
                           RPPI_CHN_PLANAR,
                           3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         integral_hip_batch(static_cast<Rpp8u*>(srcPtr),
                            static_cast<Rpp32u*>(dstPtr),
@@ -960,8 +960,8 @@ rppi_integral_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,
 {
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
 
 #ifdef OCL_COMPILE
     {
@@ -971,7 +971,7 @@ rppi_integral_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,
                           RPPI_CHN_PACKED,
                           3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         integral_hip_batch(static_cast<Rpp8u*>(srcPtr),
                            static_cast<Rpp32u*>(dstPtr),
@@ -1062,8 +1062,8 @@ rppi_histogram_equalization_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,
 {
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+    get_srcBatchIndex(rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
 
 #ifdef OCL_COMPILE
     {
@@ -1073,7 +1073,7 @@ rppi_histogram_equalization_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,
                                    RPPI_CHN_PLANAR,
                                    1);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         histogram_balance_hip_batch(static_cast<Rpp8u*>(srcPtr),
                                     static_cast<Rpp8u*>(dstPtr),
@@ -1096,8 +1096,8 @@ rppi_histogram_equalization_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,
 {
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PLANAR);
 
 #ifdef OCL_COMPILE
     {
@@ -1107,7 +1107,7 @@ rppi_histogram_equalization_u8_pln3_batchPD_gpu(RppPtr_t srcPtr,
                                    RPPI_CHN_PLANAR,
                                    3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         histogram_balance_hip_batch(static_cast<Rpp8u*>(srcPtr),
                                     static_cast<Rpp8u*>(dstPtr),
@@ -1130,8 +1130,8 @@ rppi_histogram_equalization_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,
 {
     Rpp32u paramIndex = 0;
     copy_srcSize(srcSize, rpp::deref(rppHandle));
-    copy_srcMaxSize (maxSrcSize, rpp::deref(rppHandle));
-    get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
+    copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+    get_srcBatchIndex(rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
 
 #ifdef OCL_COMPILE
     {
@@ -1141,7 +1141,7 @@ rppi_histogram_equalization_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,
                                    RPPI_CHN_PACKED,
                                    3);
     }
-#elif defined (HIP_COMPILE)
+#elif defined(HIP_COMPILE)
     {
         histogram_balance_hip_batch(static_cast<Rpp8u*>(srcPtr),
                                     static_cast<Rpp8u*>(dstPtr),
@@ -1239,7 +1239,7 @@ rppi_mean_stddev_u8_pln1_gpu(RppPtr_t srcPtr,
                        1,
                        rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
         mean_stddev_hip(static_cast<Rpp8u*>(srcPtr),
                         srcSize,
@@ -1271,7 +1271,7 @@ rppi_mean_stddev_u8_pln3_gpu(RppPtr_t srcPtr,
                        3,
                        rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
         mean_stddev_hip(static_cast<Rpp8u*>(srcPtr),
                         srcSize,
@@ -1303,7 +1303,7 @@ rppi_mean_stddev_u8_pkd3_gpu(RppPtr_t srcPtr,
                        3,
                        rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
         mean_stddev_hip(static_cast<Rpp8u*>(srcPtr),
                         srcSize,
@@ -1388,7 +1388,7 @@ rppi_histogram_u8_pln1_gpu(RppPtr_t srcPtr,
                      1,
                      rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
 
     }
@@ -1414,7 +1414,7 @@ rppi_histogram_u8_pln3_gpu(RppPtr_t srcPtr,
                      3,
                      rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
 
     }
@@ -1440,7 +1440,7 @@ rppi_histogram_u8_pkd3_gpu(RppPtr_t srcPtr,
                      3,
                      rpp::deref(rppHandle));
     }
-    #elif defined (HIP_COMPILE)
+    #elif defined(HIP_COMPILE)
     {
 
     }
