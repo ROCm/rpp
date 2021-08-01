@@ -253,22 +253,7 @@ RppStatus rppi_tensor_subtract_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPt
 RppStatus rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
 RppStatus rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
 
-/******************** tensor_matrix_multiply ********************/
 
-// Performs matrix multiplication on two tensors
-
-// *param[in] srcPtr1 Input tensor1
-// *param[in] srcPtr2 Input tensor2
-// *param[out] dstPtr Output tensor
-// *param[in] tensorDimensionValues1 Array containing dimensions of tensor1
-// *param[in] tensorDimensionValues2 Array containing dimensions of tensor2
-// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : No error, Succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, RppPtr_t tensorDimensionValues1, RppPtr_t tensorDimensionValues2, rppHandle_t rppHandle);
-RppStatus rppi_tensor_matrix_multiply_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, RppPtr_t tensorDimensionValues1, RppPtr_t tensorDimensionValues2, rppHandle_t rppHandle);
 
 
 

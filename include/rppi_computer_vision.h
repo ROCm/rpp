@@ -1,1383 +1,315 @@
 #ifndef RPPI_COMPUTER_VISION_H
 #define RPPI_COMPUTER_VISION_H
- 
+
 #include "rppdefs.h"
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/******************** local_binary_pattern ********************/
 
-// ----------------------------------------
-// GPU data_object_copy functions declaration 
-// ----------------------------------------
-/* Does deep data object copy of the image using contrast stretch technique.
-*param[in] srcPtr  input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_data_object_copy_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// Performs the 8 neighbor Local Binary Pattern (LBP) for an image, where the LBP for each pixel is defined by comparing the pixel value against its 8 neighbors
 
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] dstPtr Output image
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
 
-// ----------------------------------------
-// CPU data_object_copy functions declaration 
-// ----------------------------------------
-/* Does deep data object copy of the image using contrast stretch technique.
-param srcPtr [in] input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_data_object_copy_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_data_object_copy_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus rppi_local_binary_pattern_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_local_binary_pattern_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_local_binary_pattern_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_local_binary_pattern_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_local_binary_pattern_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_local_binary_pattern_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
+/******************** data_object_copy ********************/
 
-// ----------------------------------------
-// GPU local_binary_pattern functions declaration 
-// ----------------------------------------
-/* Extracts LBP image from an input image and stores it in the output image.
- srcPtr Local binary pattern is defined as: Each pixel (y x) srcSize generate an 8 bit value describing the local binary pattern around the pixel
- dstPtr by comparing the pixel value with its 8 neighbours (selected neighbours of the 3x3 or 5x5 window).
-*param[in] rppHandle  srcPtr input image
-*param[in]  srcSize dimensions of the images
-*param[out] dstPtr output image
-*param[in]  rppHandle OpenCL handle
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error
-*/
-RppStatus
- rppi_local_binary_pattern_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_ROI_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPS_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPD_ROIS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSS_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPS_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSD_ROID_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPD_ROID_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// Performs a buffer copy of all the images in the batch
 
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] dstPtr Output image
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
 
-// ----------------------------------------
-// CPU local_binary_pattern functions declaration 
-// ----------------------------------------
-/* Extracts LBP image from an input image and stores it in the output image.
- srcPtr Local binary pattern is defined as: Each pixel (y x) srcSize generate an 8 bit value describing the local binary pattern around the pixel
- dstPtr by comparing the pixel value with its 8 neighbours (selected neighbours of the 3x3 or 5x5 window).
-*param[in] rppHandle  srcPtr input image
-*param[in]  srcSize dimensions of the images
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_local_binary_pattern_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln1_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pln3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_ROI_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSS_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPS_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSD_ROIS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPD_ROIS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSS_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPS_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchSD_ROID_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchDD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_local_binary_pattern_u8_pkd3_batchPD_ROID_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,RppiROI *roiPoints ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus rppi_data_object_copy_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_data_object_copy_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_data_object_copy_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_data_object_copy_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_data_object_copy_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_data_object_copy_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
-// ----------------------------------------
-// GPU canny_edge_detector functions declaration 
-// ----------------------------------------
-/* Canny Edge Detector technique.
-*param[in] srcPtr  input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_canny_edge_detector_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+/******************** gaussian_image_pyramid ********************/
 
+// Performs a gaussian image pyramid computation for all the images in the batch
 
-// ----------------------------------------
-// CPU canny_edge_detector functions declaration 
-// ----------------------------------------
-/* Canny Edge Detector technique.
-*param[in] srcPtr  input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_canny_edge_detector_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u minThreshold ,Rpp8u maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_canny_edge_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp8u *minThreshold ,Rpp8u *maxThreshold ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] dstPtr Output image
+// *param[in] stdDev Array containing an Rpp32f stdDev for each image in the batch (stdDev[n] >= 0)
+// *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
 
+RppStatus rppi_gaussian_image_pyramid_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_gaussian_image_pyramid_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_gaussian_image_pyramid_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_gaussian_image_pyramid_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_gaussian_image_pyramid_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_gaussian_image_pyramid_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
-// ----------------------------------------
-// GPU gaussian_image_pyramid functions declaration 
-// ----------------------------------------
-/* Computes a Gaussian Image Pyramid from an input image and stores it in the destination image.
-*param srcPtr [in] srcPtr input image
-*param[in] srcSize  srcSize dimensions of the images
-*param[out] dstPtr dstPtr output image
-*param[in] stdDev kernel 
-*param[in] kernelSize stdDev standard deviation value to populate gaussian kernel
-*param[in] rppHandle kernelSize size of the kernel
-*param[in]  rppHandle OpenCL handle
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+/******************** laplacian_image_pyramid ********************/
 
+// Performs a laplacian image pyramid computation for all the images in the batch
 
-// ----------------------------------------
-// CPU gaussian_image_pyramid functions declaration 
-// ----------------------------------------
-/* Computes a Gaussian Image Pyramid from an input image and stores it in the destination image.
-*param srcPtr [in] srcPtr input image
-*param[in] srcSize  srcSize dimensions of the images
-*param[out] dstPtr dstPtr output image
-*param[in] stdDev kernel 
-*param[in] stdDev standard deviation value to populate gaussian kernel
-*param[in] rppHandle kernelSize size of the kernel
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_gaussian_image_pyramid_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] dstPtr Output image
+// *param[in] stdDev Array containing an Rpp32f stdDev for each image in the batch (stdDev[n] >= 0)
+// *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
 
-// ----------------------------------------
-// GPU laplacian_image_pyramid functions declaration 
-// ----------------------------------------
-/* Computes a laplacian Image Pyramid from an input image and stores it in the destination image.
-*param srcPtr [in] srcPtr input image
-*param[in] srcSize  srcSize dimensions of the images
-*param[out] dstPtr dstPtr output image
-*param[in] stdDev kernel 
-*param[in] kernelSize stdDev standard deviation value to populate gaussian kernel
-*param[in] rppHandle kernelSize size of the kernel
-*param[in]  rppHandle OpenCL handle
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus rppi_laplacian_image_pyramid_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_laplacian_image_pyramid_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_laplacian_image_pyramid_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_laplacian_image_pyramid_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_laplacian_image_pyramid_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
+/******************** canny_edge_detector ********************/
 
-// ----------------------------------------
-// CPU laplacian_image_pyramid functions declaration 
-// ----------------------------------------
-/* Computes a laplacian Image Pyramid from an input image and stores it in the destination image.
-*param srcPtr [in] srcPtr input image
-*param[in] srcSize  srcSize dimensions of the images
-*param[out] dstPtr dstPtr output image
-*param[in] stdDev kernel 
-*param[in] kernelSize stdDev standard deviation value to populate gaussian kernel
-*param[in] rppHandle kernelSize size of the kernel
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_laplacian_image_pyramid_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// Performs a canny edge detection and outputs edge-images for all the images in the batch
 
-// ----------------------------------------
-// GPU harris_corner_detector functions declaration 
-// ----------------------------------------
-/* Computes the Harris Corners of an image.
-*param[in] srcPtr  input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_harris_corner_detector_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] dstPtr Output image
+// *param[in] minThreshold Array containing an Rpp8u minimum threshold for every pixel in each image in the batch (0 <= minThreshold <= 255)
+// *param[in] maxThreshold Array containing an Rpp8u maximum threshold for every pixel in each image in the batch (0 <= maxThreshold <= 255)
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
 
-// ----------------------------------------
-// CPU harris_corner_detector functions declaration 
-// ----------------------------------------
-/* Computes the Harris Corners of an image.
-*param[in] srcPtr input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_harris_corner_detector_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u gaussianKernelSize ,Rpp32f stdDev ,Rpp32u kernelSize ,Rpp32f kValue ,Rpp32f threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_harris_corner_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *gaussianKernelSize ,Rpp32f *stdDev ,Rpp32u *kernelSize ,Rpp32f *kValue ,Rpp32f *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus rppi_canny_edge_detector_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u *minThreshold, Rpp8u *maxThreshold, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_canny_edge_detector_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u *minThreshold, Rpp8u *maxThreshold, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_canny_edge_detector_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u *minThreshold, Rpp8u *maxThreshold, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_canny_edge_detector_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u *minThreshold, Rpp8u *maxThreshold, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_canny_edge_detector_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u *minThreshold, Rpp8u *maxThreshold, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_canny_edge_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u *minThreshold, Rpp8u *maxThreshold, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
-// ----------------------------------------
-// GPU fast_corner_detector functions declaration 
-// ----------------------------------------
-/*Computes the Fast Corners of an image.
-*param[in] srcPtr input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_fast_corner_detector_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+/******************** harris_corner_detector ********************/
 
-// ----------------------------------------
-// CPU fast_corner_detector functions declaration 
-// ----------------------------------------
-/* Computes the Fast Corners of an image.
-*param[in] srcPtr  input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_fast_corner_detector_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u numOfPixels ,Rpp8u threshold ,Rpp32u nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_fast_corner_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u *numOfPixels ,Rpp8u *threshold ,Rpp32u *nonmaxKernelSize ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// Performs a harris corner detection and outputs corner-overlayed-images for all the images in the batch
 
-// ----------------------------------------
-// GPU remap functions declaration 
-// ----------------------------------------
-/* 
-Remap takes a remap table object vx_remap to map a set of output pixels back to source input pixels. A remap is typically defined as:
-output(x,y)=input(mapx(x,y),mapy(x,y));
-for every (x,y) in the destination image
-However, the mapping functions are contained in the vx_remap object.
-param srcPtr [in] input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-param[in] rowRemapTable gamma value used in gamma correction
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error 
-*/
-RppStatus
- rppi_remap_u8_pln1_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchSS_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchSD_gpu(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchDS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchDD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] dstPtr Output image
+// *param[in] gaussianKernelSize Array containing an Rpp32u gaussian kernel size for each image in the batch (gaussianKernelSize[n] = 3/5/7 for optimal use)
+// *param[in] stdDev Array containing an Rpp32f standard deviation for each image in the batch (stdDev >= 0)
+// *param[in] kernelSize Array containing an Rpp32u corner detection kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
+// *param[in] kValue Array containing an appropriate Rpp32f k value for each image in the batch
+// *param[in] threshold Array containing an appropriate Rpp32f threshold for each image in the batch
+// *param[in] nonmaxKernelSize Array containing an Rpp32u nonmax suppression kernel size for each image in the batch (nonmaxKernelSize[n] = 3/5/7 for optimal use)
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
 
-// ----------------------------------------
-// CPU remap functions declaration 
-// ----------------------------------------
-/* Remap takes a remap table object vx_remap to map a set of output pixels back to source input pixels. A remap is typically defined as:
-output(x,y)=input(mapx(x,y),mapy(x,y));
-for every (x,y) in the destination image
-However, the mapping functions are contained in the vx_remap object.
-param srcPtr [in] input image
-*param[in] srcSize dimensions of the image
-*param[out] dstPtr output image
-param[in] rowRemapTable gamma value used in gamma correction
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
- rppi_remap_u8_pln1_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln1_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pln3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchSS_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchSD_host(RppPtr_t srcPtr ,RppiSize srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchDS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchDD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchPS_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
-RppStatus
- rppi_remap_u8_pkd3_batchPD_host(RppPtr_t srcPtr ,RppiSize *srcSize ,RppiSize maxSrcSize ,RppPtr_t dstPtr ,Rpp32u * rowRemapTable ,Rpp32u * colRemapTable ,Rpp32u nbatchSize ,rppHandle_t rppHandle );
+RppStatus rppi_harris_corner_detector_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *gaussianKernelSize, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32f *kValue, Rpp32f *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_harris_corner_detector_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *gaussianKernelSize, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32f *kValue, Rpp32f *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_harris_corner_detector_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *gaussianKernelSize, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32f *kValue, Rpp32f *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_harris_corner_detector_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *gaussianKernelSize, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32f *kValue, Rpp32f *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_harris_corner_detector_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *gaussianKernelSize, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32f *kValue, Rpp32f *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_harris_corner_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *gaussianKernelSize, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32f *kValue, Rpp32f *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
-// ----------------------------------------
-// GPU hog functions declaration 
-// ----------------------------------------
-/* Finds the Histogram of  Oriented Gradients
-*param[in] srcPtr input tensor
-*param[in] srcSize input images size (must be even muliple of windowSize and windowStride)
-*param[out] binsTensor output HOG bins tensor
-param[in] binsTensorLength Length of HOG bins tensor
-param[in] kernelSize Size of kernel
-param[in] windowSize Size of window (must be even muliple of kernelSize)
-param[in] windowStride Stride of window
-param[in] numOfBins Number of bins in HOG
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_hog_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
-RppStatus
-rppi_hog_u8_pln3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
-RppStatus
-rppi_hog_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
+/******************** tensor_convert_bit_depth ********************/
 
-// ----------------------------------------
-// CPU hog functions declaration 
-// ----------------------------------------
-/* Finds the Histogram of  Oriented Gradients
-*param[in] srcPtr input tensor
-*param[in] srcSize input images size (must be even muliple of windowSize and windowStride)
-*param[out] binsTensor output HOG bins tensor
-param[in] binsTensorLength Length of HOG bins tensor
-param[in] kernelSize Size of kernel
-param[in] windowSize Size of window (must be even muliple of kernelSize)
-param[in] windowStride Stride of window
-param[in] numOfBins Number of bins in HOG
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_hog_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
-RppStatus
-rppi_hog_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t binsTensor, Rpp32u *binsTensorLength, RppiSize *kernelSize, RppiSize *windowSize, Rpp32u *windowStride, Rpp32u *numOfBins, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_hog_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
-RppStatus
-rppi_hog_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t binsTensor, Rpp32u *binsTensorLength, RppiSize *kernelSize, RppiSize *windowSize, Rpp32u *windowStride, Rpp32u *numOfBins, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_hog_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t binsTensor, Rpp32u binsTensorLength, RppiSize kernelSize, RppiSize windowSize, Rpp32u windowStride, Rpp32u numOfBins);
-RppStatus
-rppi_hog_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t binsTensor, Rpp32u *binsTensorLength, RppiSize *kernelSize, RppiSize *windowSize, Rpp32u *windowStride, Rpp32u *numOfBins, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_tensor_convert_bit_depth_u8s8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
+RppStatus rppi_tensor_convert_bit_depth_u8u16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
+RppStatus rppi_tensor_convert_bit_depth_u8s16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
 
-// ----------------------------------------
-// GPU hough_lines functions declaration
-// ----------------------------------------
-/* Runs hough lines algorithm to find lines in inputs (the inputs must be outputs from a canny edge detector)
-*param[in] srcPtr input image/images
-*param[in] srcSize input size/sizes
-*param[out] lines output line coordinate in the form [x1_start, y1_start, x1_end, y1_end, x2_start, y2_start, x2_end, y2_end .....]
-*param[in] rho
-*param[in] theta
-*param[in] threshold
-*param[in] minLineLength
-*param[in] maxLineGap
-*param[in] linesMax
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_hough_lines_u8_pln1_gpu(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t lines, Rpp32f rho, Rpp32f theta, Rpp32u threshold, Rpp32u minLineLength, Rpp32u maxLineGap, Rpp32u linesMax);
-RppStatus
-rppi_hough_lines_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t lines, Rpp32f* rho, Rpp32f* theta, Rpp32u *threshold, Rpp32u *minLineLength, Rpp32u *maxLineGap, Rpp32u *linesMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
+/******************** fast_corner_detector ********************/
 
-// ----------------------------------------
-// CPU hough_lines functions declaration
-// ----------------------------------------
-/* Runs hough lines algorithm to find lines in inputs (the inputs must be outputs from a canny edge detector)
-*param[in] srcPtr input image/images
-*param[in] srcSize input size/sizes
-*param[out] lines output line coordinate in the form [x1_start, y1_start, x1_end, y1_end, x2_start, y2_start, x2_end, y2_end .....]
-*param[in] rho
-*param[in] theta
-*param[in] threshold
-*param[in] minLineLength
-*param[in] maxLineGap
-*param[in] linesMax
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_hough_lines_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t lines, Rpp32f rho, Rpp32f theta, Rpp32u threshold, Rpp32u minLineLength, Rpp32u maxLineGap, Rpp32u linesMax);
-RppStatus
-rppi_hough_lines_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t lines, Rpp32f* rho, Rpp32f* theta, Rpp32u *threshold, Rpp32u *minLineLength, Rpp32u *maxLineGap, Rpp32u *linesMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
+// Performs a fast corner detection and outputs corner-overlayed-images for all the images in the batch
 
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] dstPtr Output image
+// *param[in] numOfPixels Array containing an Rpp32u minimum number of contiguous pixel to detect a corner, for each image in the batch (numOfPixels[n] >= 0)
+// *param[in] threshold Array containing an appropriate Rpp8u intensity-difference threshold for corners for each image in the batch (0 <= threshold[n] <= 255)
+// *param[in] nonmaxKernelSize Array containing an Rpp32u nonmax suppression kernel size for each image in the batch (nonmaxKernelSize[n] = 3/5/7/9/11/15 for optimal use)
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
 
-// ----------------------------------------
-// CPU tensor_transpose functions declaration 
-// ----------------------------------------
-/* Tensor transpose takes a srcPtr and transposes its dimensions according to the passed dimension-permutation vector.
-*param[in] srcPtr input tensor
-*param[out] dstPtr output transposed tensor
-param[in] dimension1 The dimension that is to be transposed against dimension2
-param[in] dimension2 The dimension that is to be transposed against dimension1
-param[in] tensorDimension Number of dimensions the input tensor has
-*param[in] tensorDimensionValues Shape of the tensor
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
+RppStatus rppi_fast_corner_detector_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *numOfPixels, Rpp8u *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_fast_corner_detector_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *numOfPixels, Rpp8u *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_fast_corner_detector_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *numOfPixels, Rpp8u *threshold, Rpp32u *nonmaxKernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
-RppStatus
- rppi_tensor_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u dimension1, Rpp32u dimension2, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues);
+/******************** reconstruction_laplacian_image_pyramid ********************/
 
-// ----------------------------------------
-// Scalar control_flow functions declaration 
-// ----------------------------------------
-/* Scalar control flow on two operands
-*param[in] num1 input 1
-*param[in] num2 input 2
-*param[out] output output
-*param[in] operation control flow type of operation to perform
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-    rpp_bool_control_flow(bool num1, bool num2, bool *output, RppOp operation, rppHandle_t rppHandle);
-RppStatus
-    rpp_u8_control_flow(Rpp8u num1, Rpp8u num2, Rpp8u *output, RppOp operation, rppHandle_t rppHandle);
-RppStatus
-    rpp_i8_control_flow(Rpp8s num1, Rpp8s num2, Rpp8s *output, RppOp operation, rppHandle_t rppHandle);
-RppStatus
-    rpp_f32_control_flow(Rpp32f num1, Rpp32f num2, Rpp32f *output, RppOp operation, rppHandle_t rppHandle);
+// Performs a reconstruction of original image from its laplacian image pyramid for all the images in the batch
 
-// ----------------------------------------
-// GPU reconstruction_laplacian_image_pyramid functions declaration 
-// ----------------------------------------
-/* Reconstruction of image using lapalacian image pyramid
-*param[in] srcPtr1 Output of Laplacian Image
-*param[in] srcSize1 Size of Laplacian Image
-*param[in] srcPtr2 Input image
-*param[in] srcSize2 Size of Input image
-*param[out] dstPttr Output reconstructed image
-*param[in] stdDev Standard Deviation for Gaussian Kernel
-*param[in] kernelSize Size of Gaussian Kernel
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln1_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_gpu(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln3_batchPD_gpu(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_gpu(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_gpu(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
+// *param[in] srcPtr1 Input image1
+// *param[in] srcSize1 Array containing an RppiSize for each image in the image1 batch
+// *param[in] maxSrcSize1 A single RppiSize which is the maxWidth and maxHeight for all images in the image1 batch
+// *param[in] srcPtr2 Input image2
+// *param[in] srcSize1 Array containing an RppiSize for each image in the image2 batch
+// *param[in] maxSrcSize1 A single RppiSize which is the maxWidth and maxHeight for all images in the image2 batch
+// *param[out] dstPtr Output image
+// *param[in] stdDev Array containing an Rpp32f standard deviation for each image in the batch (stdDev[n] >= 0)
+// *param[in] kerenelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
 
-// ----------------------------------------
-// CPU reconstruction_laplacian_image_pyramid functions declaration 
-// ----------------------------------------
-/* Reconstruction of image using lapalacian image pyramid
-*param[in] srcPtr1 Output of Laplacian Image
-*param[in] srcSize1 Size of Laplacian Image
-*param[in] srcPtr2 Input image
-*param[in] srcSize2 Size of Input image
-*param[out] dstPttr Output reconstructed image
-*param[in] stdDev Standard Deviation for Gaussian Kernel
-*param[in] kernelSize Size of Gaussian Kernel
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln1_host(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_host(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln3_host(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pln3_batchPD_host(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_host(RppPtr_t srcPtr1, RppiSize srcSize1, RppPtr_t srcPtr2, RppiSize srcSize2, RppPtr_t dstPtr, Rpp32f stdDev, Rpp32u kernelSize);
-RppStatus
-rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_host(
-	RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, 
-	RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, 
-	RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, 
-	Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_reconstruction_laplacian_image_pyramid_u8_pln1_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_reconstruction_laplacian_image_pyramid_u8_pln3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_reconstruction_laplacian_image_pyramid_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize1, RppiSize maxSrcSize1, RppPtr_t srcPtr2, RppiSize *srcSize2, RppiSize maxSrcSize2, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
-// ----------------------------------------
-// CPU convert_bit_depth functions declaration 
-// ----------------------------------------
-/* Convert Bit-Depth takes a srcPtr and converts bit depth to and from u8/s8/u16/s16
-*param[in] srcPtr input image
-*param[out] dstPtr output image
-param[in] srcSize Size of input/output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_convert_bit_depth_u8s8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8u16_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8s16_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8s8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8u16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8u16_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8s16_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8s8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8u16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8u16_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8s16_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, RppPtr_t dstPtr);
-RppStatus
-rppi_convert_bit_depth_u8s8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8u16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+/******************** control_flow ********************/
 
-// ----------------------------------------
-// GPU convert_bit_depth functions declaration 
-// ----------------------------------------
-/* Convert Bit-Depth takes a srcPtr and converts bit depth to and from u8/s8/u16/s16
-*param[in] srcPtr input image
-*param[out] dstPtr output image
-param[in] srcSize Size of input/output image
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_convert_bit_depth_u8s8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8u16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8u16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8u16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus
-rppi_convert_bit_depth_u8s16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rpp_bool_control_flow(bool num1, bool num2, bool *output, RppOp operation, rppHandle_t rppHandle);
+RppStatus rpp_u8_control_flow(Rpp8u num1, Rpp8u num2, Rpp8u *output, RppOp operation, rppHandle_t rppHandle);
 
-// ----------------------------------------
-// CPU tensor_convert_bit_depth functions declaration 
-// ----------------------------------------
-/* Tensor Convert Bit-Depth takes a srcPtr tensor and converts bit depth to and from u8/s8/u16/s16
-*param[in] srcPtr input tensor
-*param[out] dstPtr output tensor
-param[in] tensorDimension Number of dimensions of input/output tensor
-param[in] tensorDimensionValues Shape of input/output tensor
-*returns a  RppStatus enumeration. 
-*retval RPP_SUCCESS : No error succesful completion
-*retval RPP_ERROR : Error  
-*/
-RppStatus
-rppi_tensor_convert_bit_depth_u8s8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
-RppStatus
-rppi_tensor_convert_bit_depth_u8u16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
-RppStatus
-rppi_tensor_convert_bit_depth_u8s16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
+/******************** hough_lines ********************/
+
+// Runs the hough lines algorithm using the progressive probabilistic Hough Transform to find lines in a batch of images (the inputs must be single channel outputs from a canny edge detector)
+
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] lines Output line coordinate in the form [x1_start, y1_start, x1_end, y1_end, x2_start, y2_start, x2_end, y2_end .....]
+// *param[in] rho Array containing an Rpp32f rho for each image in the batch (Distance resolution of the parameter in pixels)
+// *param[in] theta Array containing an Rpp32f theta for each image in the batch (Angle resolution of the parameter in radians)
+// *param[in] threshold Array containing an Rpp32u threshold for each image in the batch (The minimum number of intersections to detect a line)
+// *param[in] minLineLength Array containing an Rpp32u minimum line length for each image in the batch (The minimum number of points that can form a line. Line segments shorter than that are rejected)
+// *param[in] maxLineGap Array containing an Rpp32u maximum line gap for each image in the batch (The maximum allowed gap between points on the same line to link them)
+// *param[in] linesMax Array containing an Rpp32u maximum number of detected lines for each image in the batch
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppi_hough_lines_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t lines, Rpp32f* rho, Rpp32f* theta, Rpp32u *threshold, Rpp32u *minLineLength, Rpp32u *maxLineGap, Rpp32u *linesMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+/******************** hog ********************/
+
+// Finds the histogram of oriented gradients for a batch of images
+
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] binsTensor Output HOG bins tensor
+// *param[in] binsTensorLength Array containing an Rpp32u length value of the HOG bins tensor for each image in the batch
+// *param[in] kernelSize Array containing an RppiSize kernel width/height size pair for each image in the batch
+// *param[in] windowSize Array containing an RppiSize window width/height size pair for each image in the batch (windowSize[n] must be even muliple of kernelSize[n])
+// *param[in] windowStride Array containing an Rpp32u window stride for each image in the batch
+// *param[in] numOfBins Array containing an Rpp32u number of HOG bins for each image in the batch
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppi_hog_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t binsTensor, Rpp32u *binsTensorLength, RppiSize *kernelSize, RppiSize *windowSize, Rpp32u *windowStride, Rpp32u *numOfBins, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+/******************** remap ********************/
+
+// Performs a remap for all the images in the batch using a user specified remap table. For a single image, the output(x,y) = input(mapx(x, y), mapy(x, y)) for every (x,y) in the destination image
+
+// *param[in] srcPtr Input image
+// *param[in] srcSize Array containing an RppiSize for each image in the batch
+// *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
+// *param[out] dstPtr Output image
+// *param[in] rowRemapTable Array of Rpp32u row numbers for every pixel in the input batch of images
+// *param[in] colRemapTable Array of Rpp32u column numbers for every pixel in the input batch of images
+// *param[in] nbatchSize Batch size or the number of images in the batch
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppi_remap_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_remap_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_remap_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_remap_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_remap_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_remap_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *rowRemapTable, Rpp32u *colRemapTable, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+/******************** tensor_matrix_multiply ********************/
+
+// Performs matrix multiplication on two tensors
+
+// *param[in] srcPtr1 Input tensor1
+// *param[in] srcPtr2 Input tensor2
+// *param[out] dstPtr Output tensor
+// *param[in] tensorDimensionValues1 Array containing dimensions of tensor1
+// *param[in] tensorDimensionValues2 Array containing dimensions of tensor2
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, RppPtr_t tensorDimensionValues1, RppPtr_t tensorDimensionValues2, rppHandle_t rppHandle);
+RppStatus rppi_tensor_matrix_multiply_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, RppPtr_t tensorDimensionValues1, RppPtr_t tensorDimensionValues2, rppHandle_t rppHandle);
+
+/******************** tensor_transpose ********************/
+
+RppStatus rppi_tensor_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u dimension1, Rpp32u dimension2, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues);
+
+/******************** convert_bit_depth ********************/
+
+RppStatus rppi_convert_bit_depth_u8s8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8u16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s16_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8u16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s16_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8u16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8u16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s16_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8u16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s16_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8u16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_convert_bit_depth_u8s16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
-
 }
 #endif
+
 #endif

@@ -2143,56 +2143,7 @@ rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1,
 
 }
 
-/******************** tensor_matrix_multiply ********************/
 
-RppStatus
-rppi_tensor_matrix_multiply_u8_gpu(RppPtr_t srcPtr1,
-                                   RppPtr_t srcPtr2,
-                                   RppPtr_t dstPtr,
-                                   RppPtr_t tensorDimensionValues1,
-                                   RppPtr_t tensorDimensionValues2,
-                                   rppHandle_t rppHandle)
-{
-#ifdef OCL_COMPILE
-    {
-        tensor_matrix_multiply_cl(static_cast<cl_mem>(srcPtr1),
-                                  static_cast<cl_mem>(srcPtr2),
-                                  static_cast<Rpp32u*>(tensorDimensionValues1),
-                                  static_cast<Rpp32u*>(tensorDimensionValues2),
-                                  static_cast<cl_mem>(dstPtr),
-                                  rpp::deref(rppHandle));
-    }
-#elif defined(HIP_COMPILE)
-    {
-        tensor_matrix_multiply_hip(static_cast<Rpp8u*>(srcPtr1),
-                                   static_cast<Rpp8u*>(srcPtr2),
-                                   static_cast<Rpp32u*>(tensorDimensionValues1),
-                                   static_cast<Rpp32u*>(tensorDimensionValues2),
-                                   static_cast<Rpp8u*>(dstPtr),
-                                   rpp::deref(rppHandle));
-    }
-#endif //BACKEND
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_tensor_matrix_multiply_u8_host(RppPtr_t srcPtr1,
-                                    RppPtr_t srcPtr2,
-                                    RppPtr_t dstPtr,
-                                    RppPtr_t tensorDimensionValues1,
-                                    RppPtr_t tensorDimensionValues2,
-                                    rppHandle_t rppHandle)
-{
-    tensor_matrix_multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                       static_cast<Rpp8u*>(srcPtr2),
-                                       static_cast<Rpp8u*>(dstPtr),
-                                       static_cast<Rpp32u*>(tensorDimensionValues1),
-                                       static_cast<Rpp32u*>(tensorDimensionValues2));
-
-    return RPP_SUCCESS;
-
-}
 
 
 
