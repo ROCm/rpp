@@ -9,12 +9,12 @@ extern "C" {
 
 /******************** erode ********************/
 
-// Performs erode on an image where the output pixel is computed as the minimum value of the pixels under a [kernelSize X kernelSize] square mask
+// Performs an erode operation, where the output pixel is computed as the minimum value of the pixels under a [kernelSize X kernelSize] square mask, for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -31,12 +31,12 @@ RppStatus rppi_erode_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rp
 
 /******************** dilate ********************/
 
-// Performs dilate on an image where the output pixel is computed as the maximum value of the pixels under a [kernelSize X kernelSize] square mask
+// Performs a dilate operation, where the output pixel is computed as the maximum value of the pixels under a [kernelSize X kernelSize] square mask, for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants

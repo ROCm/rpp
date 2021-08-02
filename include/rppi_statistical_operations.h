@@ -9,12 +9,12 @@ extern "C" {
 
 /******************** thresholding ********************/
 
-// Thresholds an image pixel-wise, and produces a channel-wise output boolean image
+// Thresholds the input element-wise, and produces boolean outputs for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] minThreshold Array containing an Rpp8u minimum threshold for every pixel in each image in the batch (0 <= minThreshold <= 255)
 // *param[in] maxThreshold Array containing an Rpp8u maximum threshold for every pixel in each image in the batch (0 <= maxThreshold <= 255)
 // *param[in] nbatchSize Batch size or the number of images in the batch
@@ -32,13 +32,13 @@ RppStatus rppi_thresholding_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcS
 
 /******************** min ********************/
 
-// Computes element-wise minimum of two images
+// Computes minimum of corresponding pixels of two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -54,13 +54,13 @@ RppStatus rppi_min_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rppi
 
 /******************** max ********************/
 
-// Computes element-wise maximum of two images
+// Computes maximum of corresponding pixels of two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -98,12 +98,12 @@ RppStatus rppi_min_max_loc_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, Rpp8u
 
 /******************** integral ********************/
 
-// Computes integral of an image
+// Performs integral-image for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -119,12 +119,12 @@ RppStatus rppi_integral_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 
 /******************** histogram_equalization ********************/
 
-// Performs histogram equalization for an image
+// Performs histogram equalization of an image for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.

@@ -9,12 +9,12 @@ extern "C" {
 
 /******************** brightness ********************/
 
-// Adjusts brightness of an image
+// Adjusts brightness for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] alpha Array containing an Rpp32f alpha for each image in the batch (0 <= alpha <= 20 for brightness calculation)
 // *param[in] beta Array containing an Rpp32f beta for each image in the batch (0 <= beta <= 255 for brightness calculation)
 // *param[in] nbatchSize Batch size or the number of images in the batch
@@ -32,12 +32,12 @@ RppStatus rppi_brightness_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSiz
 
 /******************** gamma_correction ********************/
 
-// Gamma correction for an image
+// Gamma correction for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] gamma Array containing an Rpp32f gamma for each image in the batch (gamma >= 0 for gamma correction)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -54,13 +54,13 @@ RppStatus rppi_gamma_correction_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *
 
 /******************** blend ********************/
 
-// Alpha blends two images
+// Alpha blends corresponding pixels between two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] alpha Array containing an Rpp32f alpha for each image in the batch (transparency factor 0 <= alpha <= 1 for alpha-blending)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -77,12 +77,12 @@ RppStatus rppi_blend_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rp
 
 /******************** blur ********************/
 
-// Blurs an image
+// Blurs a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -99,12 +99,12 @@ RppStatus rppi_blur_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rpp
 
 /******************** contrast ********************/
 
-// Adjusts contrast of an image
+// Adjusts contrast for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] newMin Array containing an Rpp32u new minimum pixel-value for each image in the batch (0 <= newMin <= 255 for contrast calculation)
 // *param[in] newMax Array containing an Rpp32u new maximum pixel-value for each image in the batch (0 <= newMax <= 255 for contrast calculation)
 // *param[in] nbatchSize Batch size or the number of images in the batch
@@ -122,12 +122,12 @@ RppStatus rppi_contrast_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 
 /******************** pixelate ********************/
 
-// Pixelates an image
+// Pixelates a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -143,12 +143,12 @@ RppStatus rppi_pixelate_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 
 /******************** jitter ********************/
 
-// Jitters an image
+// Jitters a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -165,12 +165,12 @@ RppStatus rppi_jitter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, R
 
 /******************** snow ********************/
 
-// Adds a snowfall overlay on an image
+// Adds a snowfall overlay for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] snowValue Array containing an Rpp32f snow-value for each image in the batch (0 <= snowValue <= 1)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -187,12 +187,12 @@ RppStatus rppi_snow_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rpp
 
 /******************** noise ********************/
 
-// Adds a noise overlay on an image
+// Adds a noise overlay for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] noiseProbability Array containing an Rpp32f noise-probability for each image in the batch (0 <= noiseProbability <= 1)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -209,12 +209,12 @@ RppStatus rppi_noise_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rp
 
 /******************** random_shadow ********************/
 
-// Adds random shadows in an image
+// Adds random shadows for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] x1 Array containing an Rpp32u x1 for each image in the batch (x1 specifies Left-Top X coordinate for the subregion in which shadows will be created)
 // *param[in] y1 Array containing an Rpp32u y1 for each image in the batch (y1 specifies Left-Top Y coordinate for the subregion in which shadows will be created)
 // *param[in] x2 Array containing an Rpp32u x2 for each image in the batch (x1 specifies Right-Bottom X coordinate for the subregion in which shadows will be created)
@@ -237,12 +237,12 @@ RppStatus rppi_random_shadow_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *src
 
 /******************** fog ********************/
 
-// Adds a fog overlay on an image
+// Adds a fog overlay for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] fogValue Array containing an Rpp32f fog-value for each image in the batch (0 <= fogValue[n] <= 1)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -259,12 +259,12 @@ RppStatus rppi_fog_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rppi
 
 /******************** rain ********************/
 
-// Adds a rainfall overlay on an image
+// Adds a rainfall overlay for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] rainPercentage Array containing an Rpp32f rain percentage for each image in the batch (0 <= rainPercentage[n] <= 1)
 // *param[in] rainWidth Array containing an Rpp32u rain width for each image in the batch (rainWidth[n] >= 0)
 // *param[in] rainHeight Array containing an Rpp32u rain height for each image in the batch (rainHeight[n] >= 0)
@@ -284,12 +284,12 @@ RppStatus rppi_rain_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rpp
 
 /******************** random_crop_letterbox ********************/
 
-// Crops the ROI and adds a letterbox border for an image
+// Crops the ROI and adds a letterbox border for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] dstSize Array containing an RppiSize for each image in the batch
 // *param[in] maxDstSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
 // *param[in] xRoiBegin Array containing an x1 (ROI Top-Left) for each image in the batch
@@ -311,12 +311,12 @@ RppStatus rppi_random_crop_letterbox_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiS
 
 /******************** exposure ********************/
 
-// Adjusts exposure of an image
+// Adjusts exposure for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] exposureValue Array containing an Rpp32f exposure factor for each image in the batch (exposureValue[n] >= 0)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -333,12 +333,12 @@ RppStatus rppi_exposure_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 
 /******************** histogram_balance ********************/
 
-// Performs histogram balancee on an image
+// Performs histogram balancee for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.

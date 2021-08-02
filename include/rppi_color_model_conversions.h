@@ -9,12 +9,12 @@ extern "C" {
 
 /******************** hue ********************/
 
-// Adjusts hue of an image
+// Adjusts hue of a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] hueShift Array containing an Rpp32f hue shift angle inn degrees for each image in the batch (hueShift[n] >= 0)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -29,12 +29,12 @@ RppStatus rppi_hueRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, R
 
 /******************** saturation ********************/
 
-// Adjusts saturation of an image
+// Adjusts saturation of a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] saturationFactor Array containing an Rpp32f saturation factor for each image in the batch (saturationFactor[n] >= 0)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -51,10 +51,10 @@ RppStatus rppi_saturationRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *src
 
 // Converts from Rpp8u RGB to Rpp32f HSV or vice versa for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] convert_mode A RppiColorConvertMode convert mode specified for the whole batch (convert_mode = RGB_HSV / HSV_RGB)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -69,12 +69,12 @@ RppStatus rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr, RppiSize *src
 
 /******************** color_temperature ********************/
 
-// Adjusts color temperature of an image
+// Adjusts color temperature of a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] adjustmentValue Array containing an Rpp3s adjustment values for each image in the batch (-100 <= adjustmentValue[n] <= 100)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -91,12 +91,12 @@ RppStatus rppi_color_temperature_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize 
 
 /******************** vignette ********************/
 
-// Adds the vignette effect to an image
+// Applies the vignette effect to a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] stdDev Array containing an Rpp32f standard deviation for each image in the batch (stdDev[n] >= 0)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -113,12 +113,12 @@ RppStatus rppi_vignette_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 
 /******************** channel_extract ********************/
 
-// Extracts a single channel from a 3 channel image
+// Extracts a single channel from 3 channel inputs, for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] extractChannelNumber Array containing an Rpp32u channel number to extract, for each image in the batch (0 <= extractChannelNumber[n] <= 2)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -135,14 +135,14 @@ RppStatus rppi_channel_extract_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *s
 
 /******************** channel_combine ********************/
 
-// Combines 3 independent channnels to form a single 3 channnel image
+// Combines 3 independent channnels to form a single 3 channnel output, for a batch of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
-// *param[in] srcPtr3 Input image3
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
+// *param[in] srcPtr3 Input image3 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -158,12 +158,12 @@ RppStatus rppi_channel_combine_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t s
 
 /******************** look_up_table ********************/
 
-// Performs a table look-up for each pixel in an image
+// Performs a table look-up for each pixel in a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] lutPtr Array containing an Rpp8u* look up table of length 256, for each image in the batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants

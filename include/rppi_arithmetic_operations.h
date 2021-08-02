@@ -9,13 +9,13 @@ extern "C" {
 
 /******************** add ********************/
 
-// Adds two images
+// Adds corresponding pixels of two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -31,13 +31,13 @@ RppStatus rppi_add_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rppi
 
 /******************** subtract ********************/
 
-// Subtracts two images
+// Subtracts corresponding pixels of two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -53,13 +53,13 @@ RppStatus rppi_subtract_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 /******************** multiply ********************/
 
-// Multiplies two images
+// Multiplies corresponding pixels of two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -75,13 +75,13 @@ RppStatus rppi_multiply_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2,
 
 /******************** absolute_difference ********************/
 
-// Computes absolute differnece of two images
+// Computes absolute differnece of corresponding pixels of two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -97,13 +97,13 @@ RppStatus rppi_absolute_difference_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr
 
 /******************** phase ********************/
 
-// Computes phase of two images
+// Computes phase of corresponding pixels of two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -119,13 +119,13 @@ RppStatus rppi_phase_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rp
 
 /******************** magnitude ********************/
 
-// Computes magnitude of two images
+// Computes magnitude of corresponding pixels of two batches of images
 
-// *param[in] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
@@ -141,10 +141,10 @@ RppStatus rppi_magnitude_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2
 
 /******************** accumulate ********************/
 
-// Accumulates two images into the first image
+// Accumulates corresponding pixels of two batches of images, into the first batch
 
-// *param[in/out] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in/out] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
@@ -162,10 +162,10 @@ RppStatus rppi_accumulate_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr
 
 /******************** accumulate_weighted ********************/
 
-// Alpha-blends two images into the first image
+// Alpha-blends corresponding pixels of two batches of images, into the first batch
 
-// *param[in/out] srcPtr1 Input image1
-// *param[in] srcPtr2 Input image2
+// *param[in/out] srcPtr1 Input image1 batch
+// *param[in] srcPtr2 Input image2 batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
 // *param[in] alpha Array of floats containing one alpha value for each image in the batch
@@ -184,7 +184,7 @@ RppStatus rppi_accumulate_weighted_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr
 
 /******************** accumulate_squared ********************/
 
-// Squares pixel values of an image in-place
+// Squares pixel values of a batch of images in-place
 
 // *param[in/out] srcPtr Input image
 // *param[in] srcSize Array containing an RppiSize for each image in the batch

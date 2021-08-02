@@ -9,12 +9,12 @@ extern "C" {
 
 /******************** box_filter ********************/
 
-// Applies the box filter over every pixel in an input image using a [kernelSize X kernelSize] square mask
+// Applies the box filter over every pixel using a [kernelSize X kernelSize] square mask for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -31,12 +31,12 @@ RppStatus rppi_box_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSiz
 
 /******************** sobel_filter ********************/
 
-// Applies the sobel filter over every pixel in an input image using either of the sobel X/Y/both 3x3 square filters
+// Applies the sobel filter over every pixel using either of the sobel X/Y/both 3x3 square filters for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] sobelType Array containing an Rpp32u sobel filter type for each image in the batch (sobelType[n] = 0/1/2)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -53,12 +53,12 @@ RppStatus rppi_sobel_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcS
 
 /******************** median_filter ********************/
 
-// Applies the median filter over every pixel in an input image using a [kernelSize X kernelSize] square mask
+// Applies the median filter over every pixel using a [kernelSize X kernelSize] square mask for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -75,12 +75,12 @@ RppStatus rppi_median_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *src
 
 /******************** custom_convolution ********************/
 
-// Applies the custom convolution filter over every pixel in an input image using a filter kernel provided by the user
+// Applies the custom convolution filter over every pixel using a filter kernel provided by the user for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernel Array containing an [mxn] convolution kernel for each image in the batch
 // *param[in] kernelSize Array containing an RppiSize kernel width/height pair for each image in the batch (widths/heights = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
@@ -98,12 +98,12 @@ RppStatus rppi_custom_convolution_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize
 
 /******************** non_max_suppression ********************/
 
-// Applies the non-max suppression filter over every pixel in an input image using a [kernelSize X kernelSize] square mask
+// Applies the non-max suppression filter over every pixel using a [kernelSize X kernelSize] square mask for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
@@ -120,12 +120,12 @@ RppStatus rppi_non_max_suppression_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSiz
 
 /******************** gaussian_filter ********************/
 
-// Applies the gaussian filter over every pixel in an input image using a [kernelSize X kernelSize] square mask
+// Applies the gaussian filter over every pixel using a [kernelSize X kernelSize] square mask for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] stdDev Array containing an Rpp32f standard deviation to populate the kernel for each image in the batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
@@ -143,12 +143,12 @@ RppStatus rppi_gaussian_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *s
 
 /******************** nonlinear_filter ********************/
 
-// Applies the nonlinear filter over every pixel in an input image using a [kernelSize X kernelSize] square mask
+// Applies the nonlinear filter over every pixel using a [kernelSize X kernelSize] square mask for a batch of images
 
-// *param[in] srcPtr Input image
+// *param[in] srcPtr Input image batch
 // *param[in] srcSize Array containing an RppiSize for each image in the batch
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
-// *param[out] dstPtr Output image
+// *param[out] dstPtr Output image batch
 // *param[in] kernelSize Array containing an Rpp32u kernel size for each image in the batch (kernelSize[n] = 3/5/7 for optimal use)
 // *param[in] nbatchSize Batch size or the number of images in the batch
 // *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
