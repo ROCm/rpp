@@ -292,23 +292,6 @@ RppStatus rppi_glitch_f16_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, 
 RppStatus rppi_glitch_f32_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x_offset_r, Rpp32u *y_offset_r, Rpp32u *x_offset_g, Rpp32u *y_offset_g, Rpp32u *x_offset_b, Rpp32u *y_offset_b, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_glitch_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x_offset_r, Rpp32u *y_offset_r, Rpp32u *x_offset_g, Rpp32u *y_offset_g, Rpp32u *x_offset_b, Rpp32u *y_offset_b, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 
-/******************** transpose ********************/
-
-// Performs a transpose of the input based on the shape and the permutation desired
-
-// *param[in] srcPtr Input tensor
-// *param[out] dstPtr Output tensor
-// *param[in] perm Permutation of dimensions desired
-// *param[in] shape Current shape of tensor
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : No error, Succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppi_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape);
-RppStatus rppi_transpose_f16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape);
-RppStatus rppi_transpose_f32_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape);
-RppStatus rppi_transpose_i8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape);
-
 #ifdef __cplusplus
 }
 #endif

@@ -1833,19 +1833,177 @@ rppi_tensor_matrix_multiply_u8_host(RppPtr_t srcPtr1,
 /******************** tensor_transpose ********************/
 
 RppStatus
+rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr,
+                             RppPtr_t dstPtr,
+                             RppPtr_t shape,
+                             RppPtr_t perm,
+                             rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+    {
+        tensor_transpose_cl(static_cast<cl_mem>(srcPtr),
+                            static_cast<cl_mem>(dstPtr),
+                            static_cast<Rpp32u*>(shape),
+                            static_cast<Rpp32u*>(perm),
+                            RPPTensorDataType::U8,
+                            rpp::deref(rppHandle));
+    }
+#elif defined(HIP_COMPILE)
+    {
+        tensor_transpose_hip_u8(static_cast<Rpp8u*>(srcPtr),
+                                static_cast<Rpp8u*>(dstPtr),
+                                static_cast<Rpp32u*>(shape),
+                                static_cast<Rpp32u*>(perm),
+                                rpp::deref(rppHandle));
+    }
+#endif //BACKEND
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr,
+                              RppPtr_t dstPtr,
+                              RppPtr_t shape,
+                              RppPtr_t perm,
+                              rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+    {
+        tensor_transpose_cl(static_cast<cl_mem>(srcPtr),
+                            static_cast<cl_mem>(dstPtr),
+                            static_cast<Rpp32u*>(shape),
+                            static_cast<Rpp32u*>(perm),
+                            RPPTensorDataType::FP16,
+                            rpp::deref(rppHandle));
+    }
+#elif defined(HIP_COMPILE)
+    {
+        tensor_transpose_hip_fp16(static_cast<Rpp16f*>(srcPtr),
+                                  static_cast<Rpp16f*>(dstPtr),
+                                  static_cast<Rpp32u*>(shape),
+                                  static_cast<Rpp32u*>(perm),
+                                  rpp::deref(rppHandle));
+    }
+#endif //BACKEND
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr,
+                              RppPtr_t dstPtr,
+                              RppPtr_t shape,
+                              RppPtr_t perm,
+                              rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+    {
+        tensor_transpose_cl(static_cast<cl_mem>(srcPtr),
+                            static_cast<cl_mem>(dstPtr),
+                            static_cast<Rpp32u*>(shape),
+                            static_cast<Rpp32u*>(perm),
+                            RPPTensorDataType::FP32,
+                            rpp::deref(rppHandle));
+    }
+#elif defined(HIP_COMPILE)
+    {
+        tensor_transpose_hip_fp32(static_cast<Rpp32f*>(srcPtr),
+                                  static_cast<Rpp32f*>(dstPtr),
+                                  static_cast<Rpp32u*>(shape),
+                                  static_cast<Rpp32u*>(perm),
+                                  rpp::deref(rppHandle));
+    }
+#endif //BACKEND
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr,
+                             RppPtr_t dstPtr,
+                             RppPtr_t shape,
+                             RppPtr_t perm,
+                             rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+    {
+        tensor_transpose_cl(static_cast<cl_mem>(srcPtr),
+                            static_cast<cl_mem>(dstPtr),
+                            static_cast<Rpp32u*>(shape),
+                            static_cast<Rpp32u*>(perm),
+                            RPPTensorDataType::I8,
+                            rpp::deref(rppHandle));
+    }
+#elif defined(HIP_COMPILE)
+    {
+        tensor_transpose_hip_i8(static_cast<Rpp8s*>(srcPtr),
+                                static_cast<Rpp8s*>(dstPtr),
+                                static_cast<Rpp32u*>(shape),
+                                static_cast<Rpp32u*>(perm),
+                                rpp::deref(rppHandle));
+    }
+#endif //BACKEND
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
 rppi_tensor_transpose_u8_host(RppPtr_t srcPtr,
                               RppPtr_t dstPtr,
-                              Rpp32u dimension1,
-                              Rpp32u dimension2,
-                              Rpp32u tensorDimension,
-                              Rpp32u *tensorDimensionValues)
+                              Rpp32u *shape,
+                              Rpp32u *perm,
+                              rppHandle_t rppHandle)
 {
     tensor_transpose_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
                                  static_cast<Rpp8u*>(dstPtr),
-                                 dimension1,
-                                 dimension2,
-                                 tensorDimension,
-                                 tensorDimensionValues);
+                                 shape,
+                                 perm);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f16_host(RppPtr_t srcPtr,
+                               RppPtr_t dstPtr,
+                               Rpp32u *shape,
+                               Rpp32u *perm,
+                               rppHandle_t rppHandle)
+{
+    tensor_transpose_host<Rpp16f>(static_cast<Rpp16f*>(srcPtr),
+                                  static_cast<Rpp16f*>(dstPtr),
+                                  shape,
+                                  perm);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_f32_host(RppPtr_t srcPtr,
+                               RppPtr_t dstPtr,
+                               Rpp32u *shape,
+                               Rpp32u *perm,
+                               rppHandle_t rppHandle)
+{
+    tensor_transpose_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr),
+                                  static_cast<Rpp32f*>(dstPtr),
+                                  shape,
+                                  perm);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_tensor_transpose_i8_host(RppPtr_t srcPtr,
+                              RppPtr_t dstPtr,
+                              Rpp32u *shape,
+                              Rpp32u *perm,
+                              rppHandle_t rppHandle)
+{
+    tensor_transpose_host<Rpp8s>(static_cast<Rpp8s*>(srcPtr),
+                                 static_cast<Rpp8s*>(dstPtr),
+                                 shape,
+                                 perm);
 
     return RPP_SUCCESS;
 }

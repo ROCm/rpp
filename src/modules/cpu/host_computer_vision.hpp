@@ -3307,43 +3307,40 @@ RppStatus tensor_convert_bit_depth_host(T* srcPtr, U* dstPtr,
 /**************** Tensor Transpose ***************/
 
 template <typename T>
-RppStatus tensor_transpose_host(T* srcPtr, T* dstPtr, Rpp32u dimension1, Rpp32u dimension2,
-                          Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
+RppStatus tensor_transpose_host(T* srcPtr, T* dstPtr, Rpp32u *shape, Rpp32u *perm)
 {
-    Rpp32u *tensorDimensionValuesTemp;
-    tensorDimensionValuesTemp = tensorDimensionValues;
+    T *dstPtrTemp;
+    dstPtrTemp = dstPtr;
 
-    Rpp32u *tensorDimensionValuesProduct = (Rpp32u*) calloc(tensorDimension, sizeof(Rpp32u));
-    Rpp32u *tensorDimensionValuesProductTemp;
-    tensorDimensionValuesProductTemp = tensorDimensionValuesProduct;
+    Rpp32u numElements[4] = {
+        shape[1] * shape[2] * shape[3],
+        shape[2] * shape[3],
+        shape[3],
+        1
+    };
 
-    Rpp32u tensorSize = 1;
-    for(int i = 0; i < tensorDimension; i++)
+    for (int i = 0; i < shape[perm[0]]; i++)
     {
-        tensorSize *= *tensorDimensionValuesTemp;
-        *tensorDimensionValuesProductTemp = tensorSize;
-        tensorDimensionValuesTemp++;
-        tensorDimensionValuesProductTemp++;
+        for (int j = 0; j < shape[perm[1]]; j++)
+        {
+            for (int k = 0; k < shape[perm[2]]; k++)
+            {
+                for (int l = 0; l < shape[perm[3]]; l++)
+                {
+                    *dstPtrTemp = *(srcPtr + (
+                        (i * numElements[perm[0]]) +
+                        (j * numElements[perm[1]]) +
+                        (k * numElements[perm[2]]) +
+                        (l * numElements[perm[3]])
+                    ));
+                    dstPtrTemp++;
+                }
+            }
+        }
     }
-
-    memcpy(dstPtr, srcPtr, tensorSize * sizeof(T));
-
-    Rpp32u* loopCount = (Rpp32u *)calloc(tensorDimension, sizeof(Rpp32u));
-    Rpp32u* loopCountTransposed = (Rpp32u *)calloc(tensorDimension, sizeof(Rpp32u));
-
-    tensor_transpose_iterate_kernel_host(srcPtr, dstPtr,
-                                         0, tensorDimension,
-                                         tensorDimensionValues, tensorDimensionValuesProduct,
-                                         loopCount, loopCountTransposed,
-                                         dimension1, dimension2);
-
-    free(tensorDimensionValuesProduct);
-    free(loopCount);
-    free(loopCountTransposed);
-
     return RPP_SUCCESS;
-
 }
+
 /**************** hog ***************/
 
 template <typename T, typename U>

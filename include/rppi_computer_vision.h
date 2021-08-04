@@ -296,19 +296,25 @@ RppStatus rppi_tensor_matrix_multiply_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2
 
 /******************** tensor_transpose ********************/
 
-// Performs transpose betewen two dimensions of a tensor
+// Performs a transpose of the input tensor based on the current shape and the permutation desired
 
 // *param[in] srcPtr Input tensor
 // *param[out] dstPtr Output tensor
-// *param[in] dimension1 Dimension 1 to transpose
-// *param[in] dimension2 Dimension 2 to transpose against "dimension1"
-// *param[in] tensorDimension Number of dimensions in the tensor
-// *param[in] tensorDimensionValues Array of length - "tensorDimension", containing size of each dimension in the tensor
+// *param[in] shape Current shape of tensor
+// *param[in] perm Permutation of dimensions desired
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_tensor_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u dimension1, Rpp32u dimension2, Rpp32u tensorDimension, Rpp32u *tensorDimensionValues);
+RppStatus rppi_tensor_transpose_u8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t shape, RppPtr_t perm, rppHandle_t rppHandle);
+RppStatus rppi_tensor_transpose_f16_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t shape, RppPtr_t perm, rppHandle_t rppHandle);
+RppStatus rppi_tensor_transpose_f32_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t shape, RppPtr_t perm, rppHandle_t rppHandle);
+RppStatus rppi_tensor_transpose_i8_gpu(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t shape, RppPtr_t perm, rppHandle_t rppHandle);
+RppStatus rppi_tensor_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *shape, Rpp32u *perm, rppHandle_t rppHandle);
+RppStatus rppi_tensor_transpose_f16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *shape, Rpp32u *perm, rppHandle_t rppHandle);
+RppStatus rppi_tensor_transpose_f32_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *shape, Rpp32u *perm, rppHandle_t rppHandle);
+RppStatus rppi_tensor_transpose_i8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *shape, Rpp32u *perm, rppHandle_t rppHandle);
 
 /******************** convert_bit_depth ********************/
 

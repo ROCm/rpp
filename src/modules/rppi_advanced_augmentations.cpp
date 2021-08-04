@@ -1955,37 +1955,3 @@ rppi_glitch_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize ma
 {
     return (glitch_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr, srcSize, maxSrcSize, dstPtr, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, nbatchSize, rppHandle));
 }
-
-/******************** transpose ********************/
-
-RppStatus
-rppi_transpose_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape)
-{
-    transpose_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr), static_cast<Rpp8u*>(dstPtr), perm, shape);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_transpose_f16_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape)
-{
-    transpose_host<Rpp16f>(static_cast<Rpp16f*>(srcPtr), static_cast<Rpp16f*>(dstPtr), perm, shape);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_transpose_f32_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape)
-{
-    transpose_host<Rpp32f>(static_cast<Rpp32f*>(srcPtr), static_cast<Rpp32f*>(dstPtr), perm, shape);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_transpose_i8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, Rpp32u *perm, Rpp32u *shape)
-{
-    transpose_host<Rpp8s>(static_cast<Rpp8s*>(srcPtr), static_cast<Rpp8s*>(dstPtr), perm, shape);
-
-    return RPP_SUCCESS;
-}
