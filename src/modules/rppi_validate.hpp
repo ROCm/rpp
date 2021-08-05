@@ -17,12 +17,12 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
     RppLayoutParams layoutParams;
     if(layout == RpptLayout::NCHW)
     {
-        if (channels == 1)
+        if (channels == 1) // PLN1
         {
             layoutParams.channelParam = 1;
             layoutParams.bufferMultiplier = 1;
         }
-        else if (channels == 3)
+        else if (channels == 3) // PLN3
         {
             layoutParams.channelParam = 3;
             layoutParams.bufferMultiplier = 1;
@@ -30,7 +30,7 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
     }
     else if(layout == RpptLayout::NHWC)
     {
-        if (channels == 3)
+        if (channels == 3) // PKD3
         {
             layoutParams.channelParam = 1;
             layoutParams.bufferMultiplier = 3;
