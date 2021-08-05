@@ -72,7 +72,6 @@ int main(int argc, char **argv)
     {
     case 0:
         strcpy(funcName, "brightness");
-        outputFormatToggle = 0;
         break;
     }
 
