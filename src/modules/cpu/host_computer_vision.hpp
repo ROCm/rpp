@@ -3629,7 +3629,7 @@ RppStatus tensor_matrix_multiply_host(T* srcPtr1, T* srcPtr2, T* dstPtr,
         return RPP_ERROR;
     }
 
-    T *srcPtr1Temp, *srcPtr2Temp, *dstPtrRow, *dstPtrCol;
+    T *srcPtr1Temp;
 
     Rpp32u outputCols = *(tensorDimensionValues2 + 1);
     Rpp32u pixel;
@@ -3637,10 +3637,13 @@ RppStatus tensor_matrix_multiply_host(T* srcPtr1, T* srcPtr2, T* dstPtr,
     srcPtr1Temp = srcPtr1;
     for (int i = 0; i < *tensorDimensionValues1; i++)
     {
+        T *dstPtrRow;
         dstPtrRow = dstPtr + (i * outputCols);
+        T *srcPtr2Temp;
         srcPtr2Temp = srcPtr2;
         for (int k = 0; k < *tensorDimensionValues2; k++)
         {
+            T *dstPtrCol;
             dstPtrCol = dstPtrRow;
             for (int j = 0; j < outputCols; j++)
             {

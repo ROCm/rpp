@@ -1667,7 +1667,6 @@ rppi_accumulate_weighted_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
                                               Rpp32u nbatchSize,
                                               rppHandle_t rppHandle)
 {
-    Rpp32u paramIndex = 0;
     RppiROI roiPoints;
     roiPoints.x = 0;
     roiPoints.y = 0;
@@ -1698,7 +1697,6 @@ rppi_accumulate_weighted_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
                                               Rpp32u nbatchSize,
                                               rppHandle_t rppHandle)
 {
-    Rpp32u paramIndex = 0;
     RppiROI roiPoints;
     roiPoints.x = 0;
     roiPoints.y = 0;
@@ -1729,7 +1727,6 @@ rppi_accumulate_weighted_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
                                               Rpp32u nbatchSize,
                                               rppHandle_t rppHandle)
 {
-    Rpp32u paramIndex = 0;
     RppiROI roiPoints;
     roiPoints.x = 0;
     roiPoints.y = 0;

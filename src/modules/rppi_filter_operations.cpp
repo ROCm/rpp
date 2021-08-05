@@ -258,6 +258,7 @@ rppi_sobel_filter_u8_pln1_batchPD_gpu(RppPtr_t srcPtr,
     copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
     copy_roi(roiPoints, rpp::deref(rppHandle));
     get_srcBatchIndex(rpp::deref(rppHandle), 1, RPPI_CHN_PLANAR);
+    copy_param_uint(sobelType, rpp::deref(rppHandle), paramIndex++);
 
 #ifdef OCL_COMPILE
     {
