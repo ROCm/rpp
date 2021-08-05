@@ -116,7 +116,6 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                   Rpp32u nbatchSize,
                                   rppHandle_t rppHandle)
 {
-    Rpp32u paramIndex = 0;
     RppiROI roiPoints;
     roiPoints.x = 0;
     roiPoints.y = 0;
@@ -388,7 +387,6 @@ RppStatus crop_host_helper(RppiChnFormat chn_format,
                            Rpp32u nbatchSize,
                            rppHandle_t rppHandle)
 {
-    Rpp32u paramIndex = 0;
     copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
     copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 
@@ -840,7 +838,6 @@ RppStatus crop_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                             Rpp32u nbatchSize,
                                             rppHandle_t rppHandle)
 {
-    Rpp32u paramIndex = 0;
     copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
     copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 
@@ -1286,7 +1283,6 @@ RppStatus resize_crop_mirror_host_helper(RppiChnFormat chn_format,
                                          Rpp32u nbatchSize,
                                          rppHandle_t rppHandle)
 {
-    Rpp32u paramIndex = 0;
     copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
     copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 
@@ -1505,7 +1501,6 @@ RppStatus resize_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                               Rpp32u nbatchSize,
                                               rppHandle_t rppHandle)
 {
-    Rpp32u paramIndex = 0;
     copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
     copy_host_maxDstSize(maxDstSize, rpp::deref(rppHandle));
 
