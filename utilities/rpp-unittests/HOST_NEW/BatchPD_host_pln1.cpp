@@ -3476,7 +3476,7 @@ int main(int argc, char **argv)
     }
     case 81:
     {
-        test_case_name = "color_jitter";
+        // test_case_name = "color_jitter";
         missingFuncFlag = 1;
     }
     default:
