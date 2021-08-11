@@ -72,6 +72,8 @@ RppStatus color_jitter_host(T* srcPtr, RppiSize srcSize, RppiSize srcSizeMax, T*
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
+        // TODO: Try to write in aligned memory
+
         Rpp32f hue_saturation_matrix[16] = {.299, .299, .299, 0.0,
                                             .587, .587, .587, 0.0,
                                             .114, .114, .114, 0.0,
@@ -250,17 +252,38 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     Rpp32f hueShift, Rpp32f saturationFactor,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
+    // OLD
+
+    // Rpp32f hueShiftAngle = hueShift;
+    // while (hueShiftAngle > 360)
+    // {
+    //     hueShiftAngle = hueShiftAngle - 360;
+    // }
+    // while (hueShiftAngle < 0)
+    // {
+    //     hueShiftAngle = 360 + hueShiftAngle;
+    // }
+
+    // hueShift = hueShiftAngle / 360;
+
+
+    // NEW
+
+    hueShift = (int)hueShift % 360;
+    // hueShift = fmod(hueShift, 360);
     Rpp32f hueShiftAngle = hueShift;
-    while (hueShiftAngle > 360)
+    hueShift *= 0.002778f;
+
+    if (hueShift < 0)
     {
-        hueShiftAngle = hueShiftAngle - 360;
-    }
-    while (hueShiftAngle < 0)
-    {
-        hueShiftAngle = 360 + hueShiftAngle;
+        hueShift += 1;
+        hueShiftAngle += 360;
     }
 
-    hueShift = hueShiftAngle / 360;
+    // PRINT
+
+    // printf("\n\n\n------------------------------------------> HueShift, HueShiftAngle = %f, %f", hueShift, hueShiftAngle);
+    // return RPP_SUCCESS;
 
     Rpp64u totalImageDim = channel * srcSize.height * srcSize.width;
 
@@ -632,25 +655,20 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
-        T *srcPtrTempPx0, *srcPtrTempPx1, *srcPtrTempPx2, *srcPtrTempPx3;
-        T *dstPtrTempPx0, *dstPtrTempPx1, *dstPtrTempPx2, *dstPtrTempPx3;
-
-        srcPtrTempPx0 = srcPtr;
-        srcPtrTempPx1 = srcPtr + 3;
-        srcPtrTempPx2 = srcPtr + 6;
-        srcPtrTempPx3 = srcPtr + 9;
-        dstPtrTempPx0 = dstPtr;
-        dstPtrTempPx1 = dstPtr + 3;
-        dstPtrTempPx2 = dstPtr + 6;
-        dstPtrTempPx3 = dstPtr + 9;
+        T *srcPtrTemp, *dstPtrTemp;
+        srcPtrTemp = srcPtr;
+        dstPtrTemp = dstPtr;
 
         Rpp64u bufferLength = totalImageDim;
         Rpp64u alignedLength = (bufferLength / 12) * 12;
 
         __m128i const zero = _mm_setzero_si128();
+        __m128i mask1 = _mm_setr_epi8(0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11, 12, 13, 14, 15);
+        __m128i mask2 = _mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 3, 7, 11, 15);
         __m128 pZeros = _mm_set1_ps(0.0);
         __m128 pOnes = _mm_set1_ps(1.0);
-        __m128 pFactor = _mm_set1_ps(255.0);
+        __m128 pMultiplier1 = _mm_set1_ps(1 / 255.0);
+        __m128 pMultiplier2 = _mm_set1_ps(255.0);
         __m128 pHueShift = _mm_set1_ps(hueShift);
         __m128 pSaturationFactor = _mm_set1_ps(saturationFactor);
         __m128i px0, px1, px2, px3;
@@ -673,26 +691,19 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         Rpp64u vectorLoopCount = 0;
         for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
         {
-            px0 = _mm_loadu_si128((__m128i *)srcPtrTempPx0);
-            px1 = _mm_loadu_si128((__m128i *)srcPtrTempPx1);
-            px2 = _mm_loadu_si128((__m128i *)srcPtrTempPx2);
-            px3 = _mm_loadu_si128((__m128i *)srcPtrTempPx3);
+            // Load -> Shuffle -> Unpack
+            px0 = _mm_loadu_si128((__m128i *)srcPtrTemp);           // load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04
+            px0 = _mm_shuffle_epi8(px0, mask1);    // shuffle to get [R01|R02|R03|R04|G01|G02|G03|G04 || B01|B02|B03|B04|R05|G05|B05|R06] - Need R01-04, G01-04, B01-04
+            px1 = _mm_unpackhi_epi8(px0, zero);    // unpack 8 hi-pixels of px0
+            px0 = _mm_unpacklo_epi8(px0, zero);    // unpack 8 lo-pixels of px0
+            xR = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // unpack 4 lo-pixels of px0 - Contains R01-04
+            xG = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // unpack 4 hi-pixels of px0 - Contains G01-04
+            xB = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // unpack 4 lo-pixels of px1 - Contains B01-04
 
-            px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
-            px1 = _mm_unpacklo_epi8(px1, zero);    // pixels 0-7
-            px2 = _mm_unpacklo_epi8(px2, zero);    // pixels 0-7
-            px3 = _mm_unpacklo_epi8(px3, zero);    // pixels 0-7
-
-            xR = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
-            xG = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 0-3
-            xB = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px2, zero));    // pixels 0-3
-            xA = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px3, zero));    // pixels 0-3
-
-            _MM_TRANSPOSE4_PS (xR, xG, xB, xA);
-
-            xR = _mm_div_ps(xR, pFactor);
-            xG = _mm_div_ps(xG, pFactor);
-            xB = _mm_div_ps(xB, pFactor);
+            // Normalize 0-255 -> 0-1
+            xR = _mm_mul_ps(xR, pMultiplier1);
+            xG = _mm_mul_ps(xG, pMultiplier1);
+            xB = _mm_mul_ps(xB, pMultiplier1);
 
             // Calculate Saturation, Value, Chroma
             xS = _mm_max_ps(xG, xB);                               // xS <- [max(G, B)]
@@ -839,73 +850,54 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             x2 = _mm_add_ps(x2, h2);                               // x2 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
             x3 = _mm_add_ps(x3, h3);                               // x3 <- [(R-1)*S*V+V |(G-1)*S*V+V |(B-1)*S*V+V |A          ]
 
-            // Store
+            // Store into ps
             x0 = _mm_shuffle_ps(x0,x0, _MM_SHUFFLE(0,3,2,1));
             x1 = _mm_shuffle_ps(x1,x1, _MM_SHUFFLE(0,3,2,1));
             x2 = _mm_shuffle_ps(x2,x2, _MM_SHUFFLE(0,3,2,1));
             x3 = _mm_shuffle_ps(x3,x3, _MM_SHUFFLE(0,3,2,1));
 
-            x0 = _mm_mul_ps(x0, pFactor);
-            x1 = _mm_mul_ps(x1, pFactor);
-            x2 = _mm_mul_ps(x2, pFactor);
-            x3 = _mm_mul_ps(x3, pFactor);
+            // Un-normalize
 
+            x0 = _mm_mul_ps(x0, pMultiplier2);
+            x1 = _mm_mul_ps(x1, pMultiplier2);
+            x2 = _mm_mul_ps(x2, pMultiplier2);
+            x3 = _mm_mul_ps(x3, pMultiplier2);
+
+            // Brightness Change
             x0 = _mm_mul_ps(x0, pMul);
             x1 = _mm_mul_ps(x1, pMul);
             x2 = _mm_mul_ps(x2, pMul);
             x3 = _mm_mul_ps(x3, pMul);
-
             x0 = _mm_add_ps(x0, pAdd);
             x1 = _mm_add_ps(x1, pAdd);
             x2 = _mm_add_ps(x2, pAdd);
             x3 = _mm_add_ps(x3, pAdd);
 
+            // Pack -> Shuffle -> Store 0-1 -> 0-255
             px0 = _mm_cvtps_epi32(x0);
             px1 = _mm_cvtps_epi32(x1);
             px2 = _mm_cvtps_epi32(x2);
             px3 = _mm_cvtps_epi32(x3);
+            px0 = _mm_packus_epi32(px0, px1);    // pack pixels 0-7
+            px1 = _mm_packus_epi32(px2, px3);    // pack pixels 8-15
+            px0 = _mm_packus_epi16(px0, px1);    // pack pixels 0-15 as [R01|G01|B01|A01|R02|G02|B02|A02|R03|G03|B03|A03|R04|G04|B04|A04]
+            px0 = _mm_shuffle_epi8(px0, mask2);    // shuffle to get [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|A01|A02|A03|A04]
+            _mm_storeu_si128((__m128i *)dstPtrTemp, px0);    // store [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|A01|A02|A03|A04]
 
-            px0 = _mm_packs_epi32(px0, px0);
-            px0 = _mm_packus_epi16(px0, px0);
-            *((int*)arrayPx0) = _mm_cvtsi128_si32(px0);
-
-            px1 = _mm_packs_epi32(px1, px1);
-            px1 = _mm_packus_epi16(px1, px1);
-            *((int*)arrayPx1) = _mm_cvtsi128_si32(px1);
-
-            px2 = _mm_packs_epi32(px2, px2);
-            px2 = _mm_packus_epi16(px2, px2);
-            *((int*)arrayPx2) = _mm_cvtsi128_si32(px2);
-
-            px3 = _mm_packs_epi32(px3, px3);
-            px3 = _mm_packus_epi16(px3, px3);
-            *((int*)arrayPx3) = _mm_cvtsi128_si32(px3);
-
-            memcpy(dstPtrTempPx0, arrayPx0, 4 * sizeof(Rpp8u));
-            memcpy(dstPtrTempPx1, arrayPx1, 4 * sizeof(Rpp8u));
-            memcpy(dstPtrTempPx2, arrayPx2, 4 * sizeof(Rpp8u));
-            memcpy(dstPtrTempPx3, arrayPx3, 4 * sizeof(Rpp8u));
-
-            srcPtrTempPx0 += 12;
-            srcPtrTempPx1 += 12;
-            srcPtrTempPx2 += 12;
-            srcPtrTempPx3 += 12;
-            dstPtrTempPx0 += 12;
-            dstPtrTempPx1 += 12;
-            dstPtrTempPx2 += 12;
-            dstPtrTempPx3 += 12;
+            srcPtrTemp += 12;
+            dstPtrTemp += 12;
         }
         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
         {
             T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
             T *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
 
-            srcPtrTempR = srcPtrTempPx0;
-            srcPtrTempG = srcPtrTempPx0 + 1;
-            srcPtrTempB = srcPtrTempPx0 + 2;
-            dstPtrTempR = dstPtrTempPx0;
-            dstPtrTempG = dstPtrTempPx0 + 1;
-            dstPtrTempB = dstPtrTempPx0 + 2;
+            srcPtrTempR = srcPtrTemp;
+            srcPtrTempG = srcPtrTemp + 1;
+            srcPtrTempB = srcPtrTemp + 2;
+            dstPtrTempR = dstPtrTemp;
+            dstPtrTempG = dstPtrTemp + 1;
+            dstPtrTempB = dstPtrTemp + 2;
 
             // RGB to HSV
 
@@ -1019,8 +1011,8 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             *dstPtrTempG = (Rpp8u) round((gf + m) * 255);
             *dstPtrTempB = (Rpp8u) round((bf + m) * 255);
 
-            srcPtrTempPx0 += 3;
-            dstPtrTempPx0 += 3;
+            srcPtrTemp += 3;
+            dstPtrTemp += 3;
         }
     }
 
