@@ -8,7 +8,7 @@
 /**************** min ***************/
 
 template <typename T>
-RppStatus min_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus min_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                          RppiROI *roiPoints, Rpp32u nbatchSize,
                          RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -56,7 +56,7 @@ RppStatus min_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -98,7 +98,7 @@ RppStatus min_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -123,7 +123,7 @@ RppStatus min_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -168,12 +168,12 @@ RppStatus min_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-RppStatus min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr, 
+RppStatus min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                                 RppiChnFormat chnFormat,Rpp32u channel)
 {
     compute_min_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
@@ -185,7 +185,7 @@ RppStatus min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** max ***************/
 
 template <typename T>
-RppStatus max_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus max_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                          RppiROI *roiPoints, Rpp32u nbatchSize,
                          RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -233,7 +233,7 @@ RppStatus max_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -275,7 +275,7 @@ RppStatus max_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -300,7 +300,7 @@ RppStatus max_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -345,12 +345,12 @@ RppStatus max_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-RppStatus max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr, 
+RppStatus max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                                 RppiChnFormat chnFormat,Rpp32u channel)
 {
     compute_max_host(srcPtr1, srcPtr2, srcSize, dstPtr, channel);
@@ -362,8 +362,8 @@ RppStatus max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** thresholding ***************/
 
 template <typename T>
-RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                                  T *batch_min, T *batch_max, 
+RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                                  T *batch_min, T *batch_max,
                                   RppiROI *roiPoints, Rpp32u nbatchSize,
                                   RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -392,7 +392,7 @@ RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
             T min = batch_min[batchCount];
             T max = batch_max[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -411,7 +411,7 @@ RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -437,7 +437,7 @@ RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
                                 {
                                     *dstPtrTemp = (T) 0;
                                 }
-                                
+
                                 srcPtrTemp++;
                                 dstPtrTemp++;
                             }
@@ -461,7 +461,7 @@ RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -479,7 +479,7 @@ RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
             T min = batch_min[batchCount];
             T max = batch_max[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -488,7 +488,7 @@ RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -540,13 +540,13 @@ RppStatus thresholding_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-RppStatus thresholding_host(T* srcPtr, RppiSize srcSize, U* dstPtr, 
-                                 U min, U max, 
+RppStatus thresholding_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+                                 U min, U max,
                                  RppiChnFormat chnFormat, Rpp32u channel)
 {
     compute_threshold_host(srcPtr, srcSize, dstPtr, min, max, 1, chnFormat, channel);
@@ -558,8 +558,8 @@ RppStatus thresholding_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 /**************** histogram ***************/
 
 template <typename T>
-RppStatus histogram_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, Rpp32u *outputHistogram, 
-                               Rpp32u bins, 
+RppStatus histogram_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, Rpp32u *outputHistogram,
+                               Rpp32u bins,
                                Rpp32u nbatchSize,
                                RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -604,7 +604,7 @@ RppStatus histogram_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *bat
                     {
                         T *srcPtrTemp;
                         srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        
+
                         for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                         {
                             // #pragma omp critical
@@ -661,7 +661,7 @@ RppStatus histogram_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *bat
                         for(int c = 0; c < channel; c++)
                         {
                             *(outputHistogramImage + (*srcPtrTemp / rangeInBin)) += 1;
-                            
+
                             srcPtrTemp++;
                         }
                     }
@@ -674,7 +674,7 @@ RppStatus histogram_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *bat
 }
 
 template <typename T>
-RppStatus histogram_host(T* srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, 
+RppStatus histogram_host(T* srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins,
                             Rpp32u channel)
 {
     histogram_kernel_host(srcPtr, srcSize, outputHistogram, bins - 1, channel);
@@ -687,7 +687,7 @@ RppStatus histogram_host(T* srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, R
 
 template <typename T>
 RppStatus histogram_equalization_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
-                                            RppiROI *roiPoints, Rpp32u nbatchSize,
+                                            Rpp32u nbatchSize,
                                             RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (chnFormat == RPPI_CHN_PLANAR)
@@ -730,10 +730,9 @@ RppStatus histogram_equalization_host_batch(T* srcPtr, RppiSize *batch_srcSize, 
                     {
                         T *srcPtrTemp;
                         srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        
+
                         for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                         {
-                            // #pragma omp critical
                             *(outputHistogramImage + (*srcPtrTemp / rangeInBin)) += 1;
 
                             srcPtrTemp++;
@@ -756,21 +755,19 @@ RppStatus histogram_equalization_host_batch(T* srcPtr, RppiSize *batch_srcSize, 
                 lookUpTableTemp++;
             }
 
-            Rpp32f x1 = roiPoints[batchCount].x;
-            Rpp32f y1 = roiPoints[batchCount].y;
-            Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
-            Rpp32f y2 = y1 + roiPoints[batchCount].roiHeight - 1;
-            if (x2 == -1)
+            Rpp32f x1 = 0;
+            Rpp32f y1 = 0;
+            Rpp32f x2 = 0;
+            Rpp32f y2 = 0;
+            if (x2 == 0)
             {
-                x2 = batch_srcSize[batchCount].width - 1;
-                roiPoints[batchCount].roiWidth = batch_srcSize[batchCount].width;
+                x2 = batch_srcSize[batchCount].width;
             }
-            if (y2 == -1)
+            if (y2 == 0)
             {
-                y2 = batch_srcSize[batchCount].height - 1;
-                roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
+                y2 = batch_srcSize[batchCount].height;
             }
-            
+
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrChannel, *dstPtrChannel;
@@ -783,7 +780,7 @@ RppStatus histogram_equalization_host_batch(T* srcPtr, RppiSize *batch_srcSize, 
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -855,7 +852,7 @@ RppStatus histogram_equalization_host_batch(T* srcPtr, RppiSize *batch_srcSize, 
                         for(int c = 0; c < channel; c++)
                         {
                             *(outputHistogramImage + (*srcPtrTemp / rangeInBin)) += 1;
-                            
+
                             srcPtrTemp++;
                         }
                     }
@@ -876,20 +873,19 @@ RppStatus histogram_equalization_host_batch(T* srcPtr, RppiSize *batch_srcSize, 
                 lookUpTableTemp++;
             }
 
-            Rpp32f x1 = roiPoints[batchCount].x;
-            Rpp32f y1 = roiPoints[batchCount].y;
-            Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
-            Rpp32f y2 = y1 + roiPoints[batchCount].roiHeight - 1;
-            if (x2 == -1)
+            Rpp32f x1 = 0;
+            Rpp32f y1 = 0;
+            Rpp32f x2 = 0;
+            Rpp32f y2 = 0;
+            if (x2 == 0)
             {
-                x2 = batch_srcSize[batchCount].width - 1;
-                roiPoints[batchCount].roiWidth = batch_srcSize[batchCount].width;
+                x2 = batch_srcSize[batchCount].width;
             }
-            if (y2 == -1)
+            if (y2 == 0)
             {
-                y2 = batch_srcSize[batchCount].height - 1;
-                roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
+                y2 = batch_srcSize[batchCount].height;
             }
+
 
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
@@ -938,8 +934,8 @@ template <typename T>
 RppStatus histogram_equalization_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     RppiChnFormat chnFormat,Rpp32u channel)
 {
-    Rpp32u *histogram = (Rpp32u *) calloc(256, sizeof(Rpp32u));
-    T *lookUpTable = (T *) calloc (256, sizeof(T));
+    Rpp32u histogram[256];
+    T lookUpTable[256];
     Rpp32u *histogramTemp;
     T *lookUpTableTemp;
     Rpp32f multiplier = 255.0 / ((Rpp32f)(channel * srcSize.height * srcSize.width));
@@ -949,7 +945,7 @@ RppStatus histogram_equalization_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     Rpp32u sum = 0;
     histogramTemp = histogram;
     lookUpTableTemp = lookUpTable;
-    
+
     for (int i = 0; i < 256; i++)
     {
         sum += *histogramTemp;
@@ -969,9 +965,6 @@ RppStatus histogram_equalization_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         dstPtrTemp++;
     }
 
-    free(histogram);
-    free(lookUpTable);
-    
     return RPP_SUCCESS;
 
 }
@@ -979,8 +972,8 @@ RppStatus histogram_equalization_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** min_max_loc ***************/
 
 template <typename T>
-RppStatus min_max_loc_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
-                                 Rpp8u *batch_min, Rpp8u *batch_max, Rpp32u *batch_minLoc, Rpp32u *batch_maxLoc, 
+RppStatus min_max_loc_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax,
+                                 Rpp8u *batch_min, Rpp8u *batch_max, Rpp32u *batch_minLoc, Rpp32u *batch_maxLoc,
                                  Rpp32u nbatchSize,
                                  RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -996,7 +989,7 @@ RppStatus min_max_loc_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             Rpp8u *max = batch_max + batchCount;
             Rpp32u *minLoc = batch_minLoc + batchCount;
             Rpp32u *maxLoc = batch_maxLoc + batchCount;
-            
+
             T *srcPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1014,7 +1007,7 @@ RppStatus min_max_loc_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 {
                     T *srcPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                     {
                         // #pragma omp critical
@@ -1049,7 +1042,7 @@ RppStatus min_max_loc_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             Rpp8u *max = batch_max + batchCount;
             Rpp32u *minLoc = batch_minLoc + batchCount;
             Rpp32u *maxLoc = batch_maxLoc + batchCount;
-            
+
             T *srcPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1058,7 +1051,7 @@ RppStatus min_max_loc_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             T *maxLocPtrTemp, *minLocPtrTemp;
 
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1091,13 +1084,13 @@ RppStatus min_max_loc_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             *maxLoc = maxLocPtrTemp - srcPtrImage;
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus min_max_loc_host(T* srcPtr, RppiSize srcSize, 
-                         Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc, 
+RppStatus min_max_loc_host(T* srcPtr, RppiSize srcSize,
+                         Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc,
                          RppiChnFormat chnFormat, Rpp32u channel)
 {
     *min = 255;
@@ -1130,8 +1123,8 @@ RppStatus min_max_loc_host(T* srcPtr, RppiSize srcSize,
 
 // Without ROI
 template <typename T>
-RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
-                                 Rpp32f *batch_mean, Rpp32f *batch_stddev, 
+RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax,
+                                 Rpp32f *batch_mean, Rpp32f *batch_stddev,
                                  Rpp32u nbatchSize,
                                  RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1147,7 +1140,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             Rpp32f *mean, *stddev;
             mean = batch_mean + batchCount;
             stddev = batch_stddev + batchCount;
-            
+
             T *srcPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1163,7 +1156,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 {
                     T *srcPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                     {
                         // #pragma omp critical
@@ -1185,7 +1178,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 {
                     T *srcPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     for(int j = 0; j < batch_srcSize[batchCount].width; j++)
                     {
                         // #pragma omp critical
@@ -1206,11 +1199,11 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDim = batch_srcSize[batchCount].height * batch_srcSize[batchCount].width;
-            
+
             Rpp32f *mean, *stddev;
             mean = batch_mean + batchCount;
             stddev = batch_stddev + batchCount;
-            
+
             T *srcPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1218,7 +1211,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1260,15 +1253,15 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             *stddev = sqrt((*stddev) / (imageDim * channel));
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 // With ROI
 /*
 template <typename T>
-RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
-                                 Rpp32f *batch_mean, Rpp32f *batch_stddev, 
+RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax,
+                                 Rpp32f *batch_mean, Rpp32f *batch_stddev,
                                  RppiROI *roiPoints, Rpp32u nbatchSize,
                                  RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1299,7 +1292,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             Rpp32f *mean, *stddev;
             mean = batch_mean + batchCount;
             stddev = batch_stddev + batchCount;
-            
+
             T *srcPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1317,7 +1310,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 {
                     T *srcPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         srcPtrTemp += batch_srcSizeMax[batchCount].width;
@@ -1356,7 +1349,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 {
                     T *srcPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         srcPtrTemp += batch_srcSizeMax[batchCount].width;
@@ -1393,7 +1386,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u imageDim = batch_srcSize[batchCount].height * batch_srcSize[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1412,7 +1405,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             Rpp32f *mean, *stddev;
             mean = batch_mean + batchCount;
             stddev = batch_stddev + batchCount;
-            
+
             T *srcPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1420,7 +1413,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
                 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(nbatchSize)
@@ -1495,14 +1488,14 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 */
 
 // template <typename T>
 // RppStatus mean_stddev_host(T* srcPtr, RppiSize srcSize,
-//                             Rpp32f *mean, Rpp32f *stddev, 
+//                             Rpp32f *mean, Rpp32f *stddev,
 //                             RppiChnFormat chnFormat, unsigned int channel)
 // {
 //     int i;
@@ -1531,8 +1524,8 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 /**************** integral ***************/
 
 template <typename T, typename U>
-RppStatus integral_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* batch_dstPtr, 
-                              Rpp32u nbatchSize, 
+RppStatus integral_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* batch_dstPtr,
+                              Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel)
 {
     omp_set_dynamic(0);
@@ -1545,11 +1538,11 @@ RppStatus integral_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize
         T *srcPtr = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
         U *dstPtr = (U*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(U));
 
-        compute_unpadded_from_padded_host(batch_srcPtr + loc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtr, 
+        compute_unpadded_from_padded_host(batch_srcPtr + loc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], srcPtr,
                                           chnFormat, channel);
-        compute_unpadded_from_padded_host(batch_dstPtr + loc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtr, 
+        compute_unpadded_from_padded_host(batch_dstPtr + loc, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtr,
                                           chnFormat, channel);
-        
+
         RppiSize srcSize;
         srcSize.height = batch_srcSize[batchCount].height;
         srcSize.width = batch_srcSize[batchCount].width;
@@ -1587,7 +1580,7 @@ RppStatus integral_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize
             {
                 srcPtrModTemp = srcPtrMod + (c * srcSizeMod.height * srcSizeMod.width) + srcSizeMod.width + 1;
                 srcPtrModTempAbove = srcPtrModTemp - srcSizeMod.width;
-                
+
                 for (int i = 0; i < srcSize.height; i++)
                 {
                     for (int j = 0; j < srcSize.width; j++)
@@ -1607,7 +1600,7 @@ RppStatus integral_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize
         {
             srcPtrModTemp = srcPtrMod + (channel * (srcSizeMod.width + 1));
             srcPtrModTempAbove = srcPtrModTemp - (channel * srcSizeMod.width);
-                
+
             for (int i = 0; i < srcSize.height; i++)
             {
                 for (int j = 0; j < srcSize.width; j++)
@@ -1626,21 +1619,21 @@ RppStatus integral_host_batch(T* batch_srcPtr, RppiSize *batch_srcSize, RppiSize
             }
         }
 
-        compute_padded_from_unpadded_host(dstPtr, srcSize, batch_srcSizeMax[batchCount], batch_dstPtr + loc, 
+        compute_padded_from_unpadded_host(dstPtr, srcSize, batch_srcSizeMax[batchCount], batch_dstPtr + loc,
                                           chnFormat, channel);
-        
+
         free(srcPtr);
         free(dstPtr);
         free(srcPtrCopy);
         free(srcPtrMod);
     }
-    
+
     return RPP_SUCCESS;
 
 }
 
 template <typename T, typename U>
-RppStatus integral_host(T* srcPtr, RppiSize srcSize, U* dstPtr, 
+RppStatus integral_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
     U* srcPtrCopy = (U *)calloc(channel * srcSize.height * srcSize.width, sizeof(U));
@@ -1676,7 +1669,7 @@ RppStatus integral_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         {
             srcPtrModTemp = srcPtrMod + (c * srcSizeMod.height * srcSizeMod.width) + srcSizeMod.width + 1;
             srcPtrModTempAbove = srcPtrModTemp - srcSizeMod.width;
-            
+
             for (int i = 0; i < srcSize.height; i++)
             {
                 for (int j = 0; j < srcSize.width; j++)
@@ -1696,7 +1689,7 @@ RppStatus integral_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
     {
         srcPtrModTemp = srcPtrMod + (channel * (srcSizeMod.width + 1));
         srcPtrModTempAbove = srcPtrModTemp - (channel * srcSizeMod.width);
-            
+
         for (int i = 0; i < srcSize.height; i++)
         {
             for (int j = 0; j < srcSize.width; j++)
@@ -1717,7 +1710,7 @@ RppStatus integral_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
     free(srcPtrCopy);
     free(srcPtrMod);
-    
+
     return RPP_SUCCESS;
 
 }
@@ -1725,7 +1718,7 @@ RppStatus integral_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 // /**************** Histogram ***************/
 
 // template <typename T>
-// RppStatus histogram_host(T* srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, 
+// RppStatus histogram_host(T* srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins,
 //                          Rpp32u channel)
 // {
 //     histogram_kernel_host(srcPtr, srcSize, outputHistogram, bins - 1, channel);
@@ -1739,7 +1732,7 @@ RppStatus integral_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
 
 template <typename T>
 RppStatus mean_stddev_host(T* srcPtr, RppiSize srcSize,
-                            Rpp32f *mean, Rpp32f *stddev, 
+                            Rpp32f *mean, Rpp32f *stddev,
                             RppiChnFormat chnFormat, unsigned int channel)
 {
     int i;

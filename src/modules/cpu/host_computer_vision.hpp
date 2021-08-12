@@ -3307,43 +3307,40 @@ RppStatus tensor_convert_bit_depth_host(T* srcPtr, U* dstPtr,
 /**************** Tensor Transpose ***************/
 
 template <typename T>
-RppStatus tensor_transpose_host(T* srcPtr, T* dstPtr, Rpp32u dimension1, Rpp32u dimension2,
-                          Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
+RppStatus tensor_transpose_host(T* srcPtr, T* dstPtr, Rpp32u *shape, Rpp32u *perm)
 {
-    Rpp32u *tensorDimensionValuesTemp;
-    tensorDimensionValuesTemp = tensorDimensionValues;
+    T *dstPtrTemp;
+    dstPtrTemp = dstPtr;
 
-    Rpp32u *tensorDimensionValuesProduct = (Rpp32u*) calloc(tensorDimension, sizeof(Rpp32u));
-    Rpp32u *tensorDimensionValuesProductTemp;
-    tensorDimensionValuesProductTemp = tensorDimensionValuesProduct;
+    Rpp32u numElements[4] = {
+        shape[1] * shape[2] * shape[3],
+        shape[2] * shape[3],
+        shape[3],
+        1
+    };
 
-    Rpp32u tensorSize = 1;
-    for(int i = 0; i < tensorDimension; i++)
+    for (int i = 0; i < shape[perm[0]]; i++)
     {
-        tensorSize *= *tensorDimensionValuesTemp;
-        *tensorDimensionValuesProductTemp = tensorSize;
-        tensorDimensionValuesTemp++;
-        tensorDimensionValuesProductTemp++;
+        for (int j = 0; j < shape[perm[1]]; j++)
+        {
+            for (int k = 0; k < shape[perm[2]]; k++)
+            {
+                for (int l = 0; l < shape[perm[3]]; l++)
+                {
+                    *dstPtrTemp = *(srcPtr + (
+                        (i * numElements[perm[0]]) +
+                        (j * numElements[perm[1]]) +
+                        (k * numElements[perm[2]]) +
+                        (l * numElements[perm[3]])
+                    ));
+                    dstPtrTemp++;
+                }
+            }
+        }
     }
-
-    memcpy(dstPtr, srcPtr, tensorSize * sizeof(T));
-
-    Rpp32u* loopCount = (Rpp32u *)calloc(tensorDimension, sizeof(Rpp32u));
-    Rpp32u* loopCountTransposed = (Rpp32u *)calloc(tensorDimension, sizeof(Rpp32u));
-
-    tensor_transpose_iterate_kernel_host(srcPtr, dstPtr,
-                                         0, tensorDimension,
-                                         tensorDimensionValues, tensorDimensionValuesProduct,
-                                         loopCount, loopCountTransposed,
-                                         dimension1, dimension2);
-
-    free(tensorDimensionValuesProduct);
-    free(loopCount);
-    free(loopCountTransposed);
-
     return RPP_SUCCESS;
-
 }
+
 /**************** hog ***************/
 
 template <typename T, typename U>
@@ -3619,6 +3616,49 @@ RppStatus hog_host(T* srcPtr, RppiSize srcSize, U* binsTensor, Rpp32u binsTensor
     free(gradientDirection);
 
     return RPP_SUCCESS;
+}
+
+/**************** Tensor Matrix Multiply ***************/
+
+template <typename T>
+RppStatus tensor_matrix_multiply_host(T* srcPtr1, T* srcPtr2, T* dstPtr,
+                          Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2)
+{
+    if (*(tensorDimensionValues1 + 1) != *tensorDimensionValues2)
+    {
+        return RPP_ERROR;
+    }
+
+    T *srcPtr1Temp;
+
+    Rpp32u outputCols = *(tensorDimensionValues2 + 1);
+    Rpp32u pixel;
+
+    srcPtr1Temp = srcPtr1;
+    for (int i = 0; i < *tensorDimensionValues1; i++)
+    {
+        T *dstPtrRow;
+        dstPtrRow = dstPtr + (i * outputCols);
+        T *srcPtr2Temp;
+        srcPtr2Temp = srcPtr2;
+        for (int k = 0; k < *tensorDimensionValues2; k++)
+        {
+            T *dstPtrCol;
+            dstPtrCol = dstPtrRow;
+            for (int j = 0; j < outputCols; j++)
+            {
+                pixel = (Rpp32u) *dstPtrCol + ((Rpp32u) *srcPtr1Temp * (Rpp32u) *srcPtr2Temp);
+                pixel = RPPPIXELCHECK(pixel);
+                *dstPtrCol = (T) pixel;
+                dstPtrCol++;
+                srcPtr2Temp++;
+            }
+            srcPtr1Temp++;
+        }
+    }
+
+    return RPP_SUCCESS;
+
 }
 
 #endif
