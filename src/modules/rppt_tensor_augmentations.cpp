@@ -50,43 +50,13 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
                     RpptRoiType roiType,
                     rppHandle_t rppHandle)
 {
-    // global_id(0) for width, global_id(1) for height and global_id(2) for n
-    // if there are 3 channels process all in the same kernel
-
 #ifdef OCL_COMPILE
-    if (srcDescPtr->layout == RpptLayout::NCHW)
-    {
-        // copy roi from roiTensorSrc to gpu mem
-        // copy alpha and beta tensor to corresponding gpu mem
-        // brightness_tensor_nchw_cl(static_cast<cl_mem>(srcPtr),
-        //                           c,
-        //                           uint4 in_stride,
-        //                           uint4 out_stride,
-        //                           static_cast<cl_mem>(dstPtr),
-        //                           static_cast<cl_mem>(src_roi_mem),
-        //                           static_cast<cl_mem>(alpha_mem),
-        //                           static_cast<cl_mem>(beta_mem),
-        //                           rpp::deref(rppHandle));
-    }
-    else
-    {
-        // brightness_tensor_nhwc_cl(static_cast<cl_mem>(srcPtr),
-        //                           c,
-        //                           uint4 in_stride,
-        //                           uint4 out_stride,
-        //                           static_cast<cl_mem>(dstPtr),
-        //                           static_cast<cl_mem>(alpha_mem),
-        //                           static_cast<cl_mem>(alpha_mem),
-        //                           rpp::deref(rppHandle));
-    }
+
 #elif defined (HIP_COMPILE)
 
     Rpp32u paramIndex = 0;
     copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
     copy_param_float(betaTensor, rpp::deref(rppHandle), paramIndex++);
-
-    // get_srcBatchIndex (rpp::deref(rppHandle), 3, RPPI_CHN_PACKED);
-    // RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     brightness_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
                           srcDescPtr,
@@ -101,7 +71,6 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-// Assumption: source and destination are on the same layout
 RppStatus
 rppt_brightness_host(RppPtr_t srcPtr,
                      RpptDescPtr srcDescPtr,

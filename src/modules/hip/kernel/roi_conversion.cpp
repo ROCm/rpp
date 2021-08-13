@@ -5,11 +5,6 @@ extern "C" __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 4;
 
-    int id_x_ltX = id_x;
-    int id_x_ltY = id_x + 1;
-    int id_x_rbX = id_x + 2;
-    int id_x_rbY = id_x + 3;
-
     roiTensorPtrSrc[id_x + 2] -= (roiTensorPtrSrc[id_x] - 1);
     roiTensorPtrSrc[id_x + 3] -= (roiTensorPtrSrc[id_x + 1] - 1);
 }
