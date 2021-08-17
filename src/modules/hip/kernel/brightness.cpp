@@ -195,18 +195,25 @@ extern "C" __global__ void brightness_pln_tensor(uchar *srcPtr,
 
     if (channelsDst == 3)
     {
-        for (int i = 0; i < 2; i++)
-        {
-            srcIdx += cStrideSrc;
-            dstIdx += cStrideDst;
+        srcIdx += cStrideSrc;
+        dstIdx += cStrideDst;
 
-            src = *((uint2 *)(&srcPtr[srcIdx]));
+        src = *((uint2 *)(&srcPtr[srcIdx]));
 
-            dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
-            dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
+        dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
+        dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
 
-            *((uint2 *)(&dstPtr[dstIdx])) = dst;
-        }
+        *((uint2 *)(&dstPtr[dstIdx])) = dst;
+
+        srcIdx += cStrideSrc;
+        dstIdx += cStrideDst;
+
+        src = *((uint2 *)(&srcPtr[srcIdx]));
+
+        dst.x = rpp_hip_pack(rpp_hip_unpack(src.x) * alpha4 + beta4);
+        dst.y = rpp_hip_pack(rpp_hip_unpack(src.y) * alpha4 + beta4);
+
+        *((uint2 *)(&dstPtr[dstIdx])) = dst;
     }
 }
 
