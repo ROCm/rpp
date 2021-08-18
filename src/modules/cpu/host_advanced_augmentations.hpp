@@ -2403,41 +2403,6 @@ RppStatus lut_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_src
     return RPP_SUCCESS;
 }
 
-template <typename T>
-RppStatus transpose_host(T* srcPtr, T* dstPtr, Rpp32u *perm, Rpp32u *shape)
-{
-    T *dstPtrTemp;
-    dstPtrTemp = dstPtr;
-
-    Rpp32u numElements[4] = {
-        shape[1] * shape[2] * shape[3],
-        shape[2] * shape[3],
-        shape[3],
-        1
-    };
-
-    for (int i = 0; i < shape[perm[0]]; i++)
-    {
-        for (int j = 0; j < shape[perm[1]]; j++)
-        {
-            for (int k = 0; k < shape[perm[2]]; k++)
-            {
-                for (int l = 0; l < shape[perm[3]]; l++)
-                {
-                    *dstPtrTemp = *(srcPtr + (
-                        (i * numElements[perm[0]]) +
-                        (j * numElements[perm[1]]) +
-                        (k * numElements[perm[2]]) +
-                        (l * numElements[perm[3]])
-                    ));
-                    dstPtrTemp++;
-                }
-            }
-        }
-    }
-    return RPP_SUCCESS;
-}
-
 /**************** glitch ***************/
 
 template <typename T>

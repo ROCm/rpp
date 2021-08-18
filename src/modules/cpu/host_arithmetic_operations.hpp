@@ -5,7 +5,7 @@
 /**************** absolute_difference ***************/
 
 template <typename T>
-RppStatus absolute_difference_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus absolute_difference_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                          RppiROI *roiPoints, Rpp32u nbatchSize,
                                          RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -55,7 +55,7 @@ RppStatus absolute_difference_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -100,7 +100,7 @@ RppStatus absolute_difference_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -125,7 +125,7 @@ RppStatus absolute_difference_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -175,7 +175,7 @@ RppStatus absolute_difference_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -209,8 +209,8 @@ RppStatus absolute_difference_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* 
 /**************** accumulate_weighted ***************/
 
 template <typename T>
-RppStatus accumulate_weighted_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
-                                         Rpp32f *batch_alpha, 
+RppStatus accumulate_weighted_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax,
+                                         Rpp32f *batch_alpha,
                                          RppiROI *roiPoints, Rpp32u nbatchSize,
                                          RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -259,7 +259,7 @@ RppStatus accumulate_weighted_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch
                     T *srcPtr1Temp, *srcPtr2Temp;
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         srcPtr1Temp += batch_srcSizeMax[batchCount].width;
@@ -296,7 +296,7 @@ RppStatus accumulate_weighted_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -322,7 +322,7 @@ RppStatus accumulate_weighted_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -363,7 +363,7 @@ RppStatus accumulate_weighted_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -395,7 +395,7 @@ RppStatus accumulate_weighted_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
 /**************** accumulate ***************/
 
 template <typename T>
-RppStatus accumulate_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
+RppStatus accumulate_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax,
                                 RppiROI *roiPoints, Rpp32u nbatchSize,
                                 RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -442,7 +442,7 @@ RppStatus accumulate_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize,
                     T *srcPtr1Temp, *srcPtr2Temp;
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         srcPtr1Temp += batch_srcSizeMax[batchCount].width;
@@ -479,7 +479,7 @@ RppStatus accumulate_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize,
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -543,7 +543,7 @@ RppStatus accumulate_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize,
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -557,7 +557,7 @@ RppStatus accumulate_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
     srcPtr2Temp = srcPtr2;
 
     Rpp32s pixel;
-    
+
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
         pixel = ((Rpp32s) (*srcPtr1Temp)) + ((Rpp32s) (*srcPtr2Temp));
@@ -574,7 +574,7 @@ RppStatus accumulate_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
 /**************** add ***************/
 
 template <typename T>
-RppStatus add_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus add_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                          RppiROI *roiPoints, Rpp32u nbatchSize,
                          RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -624,7 +624,7 @@ RppStatus add_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -668,7 +668,7 @@ RppStatus add_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -693,7 +693,7 @@ RppStatus add_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -742,7 +742,7 @@ RppStatus add_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSi
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -775,7 +775,7 @@ RppStatus add_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** subtract ***************/
 
 template <typename T>
-RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -825,7 +825,7 @@ RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, R
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -869,7 +869,7 @@ RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, R
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -894,7 +894,7 @@ RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, R
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -943,7 +943,7 @@ RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, R
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -960,7 +960,7 @@ RppStatus subtract_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** magnitude ***************/
 
 template <typename T>
-RppStatus magnitude_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus magnitude_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                RppiROI *roiPoints, Rpp32u nbatchSize,
                                RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1012,7 +1012,7 @@ RppStatus magnitude_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, 
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -1058,7 +1058,7 @@ RppStatus magnitude_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, 
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1083,7 +1083,7 @@ RppStatus magnitude_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, 
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1135,7 +1135,7 @@ RppStatus magnitude_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, 
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1152,7 +1152,7 @@ RppStatus magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** multiply ***************/
 
 template <typename T>
-RppStatus multiply_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus multiply_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1202,7 +1202,7 @@ RppStatus multiply_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, R
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -1246,7 +1246,7 @@ RppStatus multiply_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, R
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1271,7 +1271,7 @@ RppStatus multiply_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, R
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1320,7 +1320,7 @@ RppStatus multiply_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, R
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1337,7 +1337,7 @@ RppStatus multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** phase ***************/
 
 template <typename T>
-RppStatus phase_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus phase_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                            RppiROI *roiPoints, Rpp32u nbatchSize,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1388,7 +1388,7 @@ RppStatus phase_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
                     srcPtr1Temp = srcPtr1Channel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtr2Temp = srcPtr2Channel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtr1Temp, batch_srcSize[batchCount].width * sizeof(T));
@@ -1433,7 +1433,7 @@ RppStatus phase_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1458,7 +1458,7 @@ RppStatus phase_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1508,7 +1508,7 @@ RppStatus phase_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, Rppi
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1543,7 +1543,7 @@ RppStatus phase_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 /**************** accumulate_squared ***************/
 
 template <typename T>
-RppStatus accumulate_squared_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, 
+RppStatus accumulate_squared_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax,
                                         RppiROI *roiPoints, Rpp32u nbatchSize,
                                         RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1587,7 +1587,7 @@ RppStatus accumulate_squared_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
 
                     T *srcPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         srcPtrTemp += batch_srcSizeMax[batchCount].width;
@@ -1622,7 +1622,7 @@ RppStatus accumulate_squared_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1645,7 +1645,7 @@ RppStatus accumulate_squared_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
 
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1683,7 +1683,7 @@ RppStatus accumulate_squared_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1695,7 +1695,7 @@ RppStatus accumulate_squared_host(T* srcPtr, RppiSize srcSize,
     srcPtrTemp = srcPtr;
 
     Rpp32s pixel;
-    
+
     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
     {
         pixel = (Rpp32s) *srcPtrTemp;
@@ -1777,7 +1777,7 @@ RppStatus accumulate_squared_host(T* srcPtr, RppiSize srcSize,
 //     srcPtr2Temp = srcPtr2;
 
 //     Rpp32f pixel;
-    
+
 //     for (int i = 0; i < (channel * srcSize.height * srcSize.width); i++)
 //     {
 //         pixel = ((Rpp32f) (*srcPtr1Temp)) + ((Rpp32f) (*srcPtr2Temp));
@@ -1852,7 +1852,7 @@ RppStatus accumulate_squared_host(T* srcPtr, RppiSize srcSize,
 /**************** Tensor Add ***************/
 
 template <typename T, typename U>
-RppStatus tensor_add_host(T* srcPtr1, U* srcPtr2, T* dstPtr, 
+RppStatus tensor_add_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
                           Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
 {
     Rpp32u *tensorDimensionValuesTemp;
@@ -1889,7 +1889,7 @@ RppStatus tensor_add_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
 /**************** Tensor Subtract ***************/
 
 template <typename T, typename U>
-RppStatus tensor_subtract_host(T* srcPtr1, U* srcPtr2, T* dstPtr, 
+RppStatus tensor_subtract_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
                           Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
 {
     Rpp32u *tensorDimensionValuesTemp;
@@ -1926,7 +1926,7 @@ RppStatus tensor_subtract_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
 /**************** Tensor Multiply ***************/
 
 template <typename T, typename U>
-RppStatus tensor_multiply_host(T* srcPtr1, U* srcPtr2, T* dstPtr, 
+RppStatus tensor_multiply_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
                           Rpp32u tensorDimension, Rpp32u *tensorDimensionValues)
 {
     Rpp32u *tensorDimensionValuesTemp;
@@ -1956,45 +1956,6 @@ RppStatus tensor_multiply_host(T* srcPtr1, U* srcPtr2, T* dstPtr,
         dstPtrTemp++;
     }
 
-    return RPP_SUCCESS;
-
-}
-/**************** Tensor Matrix Multiply ***************/
-
-template <typename T>
-RppStatus tensor_matrix_multiply_host(T* srcPtr1, T* srcPtr2, T* dstPtr, 
-                          Rpp32u *tensorDimensionValues1, Rpp32u *tensorDimensionValues2)
-{
-    if (*(tensorDimensionValues1 + 1) != *tensorDimensionValues2)
-    {
-        return RPP_ERROR;
-    }
-    
-    T *srcPtr1Temp, *srcPtr2Temp, *dstPtrRow, *dstPtrCol;
-
-    Rpp32u outputCols = *(tensorDimensionValues2 + 1);
-    Rpp32u pixel;
-
-    srcPtr1Temp = srcPtr1;
-    for (int i = 0; i < *tensorDimensionValues1; i++)
-    {
-        dstPtrRow = dstPtr + (i * outputCols);
-        srcPtr2Temp = srcPtr2;
-        for (int k = 0; k < *tensorDimensionValues2; k++)
-        {
-            dstPtrCol = dstPtrRow;
-            for (int j = 0; j < outputCols; j++)
-            {
-                pixel = (Rpp32u) *dstPtrCol + ((Rpp32u) *srcPtr1Temp * (Rpp32u) *srcPtr2Temp);
-                pixel = RPPPIXELCHECK(pixel);
-                *dstPtrCol = (T) pixel;
-                dstPtrCol++;
-                srcPtr2Temp++;
-            }
-            srcPtr1Temp++;
-        }
-    }
-    
     return RPP_SUCCESS;
 
 }
