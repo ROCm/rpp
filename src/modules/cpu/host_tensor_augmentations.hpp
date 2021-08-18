@@ -31,16 +31,15 @@ THE SOFTWARE.
 
 /************ brightness ************/
 
-template <typename T>
-RppStatus brightness_host_tensor(T* srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 T* dstPtr,
-                                 RpptDescPtr dstDescPtr,
-                                 Rpp32f *alphaTensor,
-                                 Rpp32f *betaTensor,
-                                 RpptROIPtr roiTensorPtrSrc,
-                                 RpptRoiType roiType,
-                                 RppLayoutParams layoutParams)
+RppStatus brightness_u8_u8_host_tensor(Rpp8u* srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8u* dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *alphaTensor,
+                                       Rpp32f *betaTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams)
 {
     RpptROI roiDefault;
     RpptROIPtr roiPtrDefault;
@@ -85,7 +84,7 @@ RppStatus brightness_host_tensor(T* srcPtr,
         Rpp32f alpha = alphaTensor[batchCount];
         Rpp32f beta = betaTensor[batchCount];
 
-        T *srcPtrImage, *dstPtrImage;
+        Rpp8u *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
@@ -97,15 +96,16 @@ RppStatus brightness_host_tensor(T* srcPtr,
         __m128 p0, p1, p2, p3;
         __m128i px0, px1, px2, px3;
 
-        T *srcPtrChannel, *dstPtrChannel;
+        Rpp8u *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW)) // Brightness with fused output-layout toggle (NHWC -> NCHW)
+        // Brightness with fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = bufferLength & ~47;
 
-            T *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
@@ -113,7 +113,7 @@ RppStatus brightness_host_tensor(T* srcPtr,
 
             for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
             {
-                T *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                Rpp8u *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTemp = srcPtrRow;
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
@@ -215,15 +215,15 @@ RppStatus brightness_host_tensor(T* srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTempR = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
                     dstPtrTempR++;
                     srcPtrTemp++;
 
-                    *dstPtrTempG = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
                     dstPtrTempG++;
                     srcPtrTemp++;
 
-                    *dstPtrTempB = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
                     dstPtrTempB++;
                     srcPtrTemp++;
                 }
@@ -234,11 +234,13 @@ RppStatus brightness_host_tensor(T* srcPtr,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC)) // Brightness with fused output-layout toggle (NCHW -> NHWC)
+
+        // Brightness with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = bufferLength & ~47;
 
-            T *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
@@ -246,7 +248,7 @@ RppStatus brightness_host_tensor(T* srcPtr,
 
             for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
             {
-                T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 srcPtrTempR = srcPtrRowR;
                 srcPtrTempG = srcPtrRowG;
                 srcPtrTempB = srcPtrRowB;
@@ -351,15 +353,15 @@ RppStatus brightness_host_tensor(T* srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempR)) * alpha) + beta);
+                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempR)) * alpha) + beta);
                     dstPtrTemp++;
                     srcPtrTempR++;
 
-                    *dstPtrTemp = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempG)) * alpha) + beta);
+                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempG)) * alpha) + beta);
                     dstPtrTemp++;
                     srcPtrTempG++;
 
-                    *dstPtrTemp = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempB)) * alpha) + beta);
+                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempB)) * alpha) + beta);
                     dstPtrTemp++;
                     srcPtrTempB++;
                 }
@@ -370,19 +372,21 @@ RppStatus brightness_host_tensor(T* srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+
+        // Brightness without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
             Rpp32u alignedLength = bufferLength & ~15;
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
-                T *srcPtrRow, *dstPtrRow;
+                Rpp8u *srcPtrRow, *dstPtrRow;
                 srcPtrRow = srcPtrChannel;
                 dstPtrRow = dstPtrChannel;
 
                 for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
                 {
-                    T *srcPtrTemp, *dstPtrTemp;
+                    Rpp8u *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrRow;
                     dstPtrTemp = dstPtrRow;
 
@@ -416,7 +420,7 @@ RppStatus brightness_host_tensor(T* srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = (T) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
 
                         dstPtrTemp++;
                         srcPtrTemp++;
