@@ -129,41 +129,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u* srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
                 {
-
-                    px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);           // load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04
-                    px1 =  _mm_loadu_si128((__m128i *)(srcPtrTemp + 12));    // load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08
-                    px2 =  _mm_loadu_si128((__m128i *)(srcPtrTemp + 24));    // load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12
-                    px3 =  _mm_loadu_si128((__m128i *)(srcPtrTemp + 36));    // load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16
-
-                    px0 = _mm_shuffle_epi8(px0, mask);    // shuffle to get [R01|R02|R03|R04|G01|G02|G03|G04 || B01|B02|B03|B04|R05|G05|B05|R06] - Need R01-04, G01-04, B01-04
-                    px1 = _mm_shuffle_epi8(px1, mask);    // shuffle to get [R05|R06|R07|R08|G05|G06|G07|G08 || B05|B06|B07|B08|R09|G09|B09|R10] - Need R05-08, G05-08, B05-08
-                    px2 = _mm_shuffle_epi8(px2, mask);    // shuffle to get [R09|R10|R11|R12|G09|G10|G11|G12 || B09|B10|B11|B12|R13|G13|B13|R14] - Need R09-12, G09-12, B09-12
-                    px3 = _mm_shuffle_epi8(px3, mask);    // shuffle to get [R13|R14|R15|R16|G13|G14|G15|G16 || B13|B14|B15|B16|R17|G17|B17|R18] - Need R13-16, G13-16, B13-16
-
-                    px4 = _mm_unpackhi_epi8(px0, zero);    // unpack 8 hi-pixels of px0
-                    px5 = _mm_unpackhi_epi8(px1, zero);    // unpack 8 hi-pixels of px1
-                    px6 = _mm_unpackhi_epi8(px2, zero);    // unpack 8 hi-pixels of px2
-                    px7 = _mm_unpackhi_epi8(px3, zero);    // unpack 8 hi-pixels of px3
-
-                    px0 = _mm_unpacklo_epi8(px0, zero);    // unpack 8 lo-pixels of px0
-                    px1 = _mm_unpacklo_epi8(px1, zero);    // unpack 8 lo-pixels of px1
-                    px2 = _mm_unpacklo_epi8(px2, zero);    // unpack 8 lo-pixels of px2
-                    px3 = _mm_unpacklo_epi8(px3, zero);    // unpack 8 lo-pixels of px3
-
-                    p0R = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // unpack 4 lo-pixels of px0 - Contains R01-04
-                    p1R = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // unpack 4 lo-pixels of px1 - Contains R05-08
-                    p2R = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px2, zero));    // unpack 4 lo-pixels of px2 - Contains R09-12
-                    p3R = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px3, zero));    // unpack 4 lo-pixels of px3 - Contains R13-16
-
-                    p0G = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // unpack 4 hi-pixels of px0 - Contains G01-04
-                    p1G = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // unpack 4 hi-pixels of px1 - Contains G05-08
-                    p2G = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px2, zero));    // unpack 4 hi-pixels of px2 - Contains G09-12
-                    p3G = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px3, zero));    // unpack 4 hi-pixels of px3 - Contains G13-16
-
-                    p0B = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px4, zero));    // unpack 4 lo-pixels of px4 - Contains B01-04
-                    p1B = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px5, zero));    // unpack 4 lo-pixels of px5 - Contains B05-08
-                    p2B = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px6, zero));    // unpack 4 lo-pixels of px6 - Contains B09-12
-                    p3B = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px7, zero));    // unpack 4 lo-pixels of px7 - Contains B13-16
+                    RPP_LOAD48_U8PKD3_TO_F32PLN3
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p1R = _mm_fmadd_ps(p1R, pMul, pAdd);    // brightness adjustment
@@ -180,33 +146,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u* srcPtr,
                     p2B = _mm_fmadd_ps(p2B, pMul, pAdd);    // brightness adjustment
                     p3B = _mm_fmadd_ps(p3B, pMul, pAdd);    // brightness adjustment
 
-                    px4 = _mm_cvtps_epi32(p0R);    // convert to int32 for R
-                    px5 = _mm_cvtps_epi32(p1R);    // convert to int32 for R
-                    px6 = _mm_cvtps_epi32(p2R);    // convert to int32 for R
-                    px7 = _mm_cvtps_epi32(p3R);    // convert to int32 for R
-                    px4 = _mm_packus_epi32(px4, px5);    // pack pixels 0-7 for R
-                    px5 = _mm_packus_epi32(px6, px7);    // pack pixels 8-15 for R
-                    px0 = _mm_packus_epi16(px4, px5);    // pack pixels 0-15 for R
-
-                    px4 = _mm_cvtps_epi32(p0G);    // convert to int32 for G
-                    px5 = _mm_cvtps_epi32(p1G);    // convert to int32 for G
-                    px6 = _mm_cvtps_epi32(p2G);    // convert to int32 for G
-                    px7 = _mm_cvtps_epi32(p3G);    // convert to int32 for G
-                    px4 = _mm_packus_epi32(px4, px5);    // pack pixels 0-7 for G
-                    px5 = _mm_packus_epi32(px6, px7);    // pack pixels 8-15 for G
-                    px1 = _mm_packus_epi16(px4, px5);    // pack pixels 0-15 for G
-
-                    px4 = _mm_cvtps_epi32(p0B);    // convert to int32 for B
-                    px5 = _mm_cvtps_epi32(p1B);    // convert to int32 for B
-                    px6 = _mm_cvtps_epi32(p2B);    // convert to int32 for B
-                    px7 = _mm_cvtps_epi32(p3B);    // convert to int32 for B
-                    px4 = _mm_packus_epi32(px4, px5);    // pack pixels 0-7 for B
-                    px5 = _mm_packus_epi32(px6, px7);    // pack pixels 8-15 for B
-                    px2 = _mm_packus_epi16(px4, px5);    // pack pixels 0-15 for B
-
-                    _mm_storeu_si128((__m128i *)dstPtrTempR, px0);    // store [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16]
-                    _mm_storeu_si128((__m128i *)dstPtrTempG, px1);    // store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16]
-                    _mm_storeu_si128((__m128i *)dstPtrTempB, px2);    // store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16]
+                    RPP_STORE48_F32PLN3_TO_U8PLN3
 
                     srcPtrTemp += 48;
                     dstPtrTempR += 16;
@@ -265,33 +205,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u* srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                 {
-
-                    px0 =  _mm_loadu_si128((__m128i *)srcPtrTempR);    // load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16]
-                    px1 =  _mm_loadu_si128((__m128i *)srcPtrTempG);    // load [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16]
-                    px2 =  _mm_loadu_si128((__m128i *)srcPtrTempB);    // load [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16]
-
-                    px3 = _mm_unpackhi_epi8(px0, zero);    // unpack 8 hi-pixels of px0
-                    px4 = _mm_unpackhi_epi8(px1, zero);    // unpack 8 hi-pixels of px1
-                    px5 = _mm_unpackhi_epi8(px2, zero);    // unpack 8 hi-pixels of px2
-
-                    px0 = _mm_unpacklo_epi8(px0, zero);    // unpack 8 lo-pixels of px0
-                    px1 = _mm_unpacklo_epi8(px1, zero);    // unpack 8 lo-pixels of px1
-                    px2 = _mm_unpacklo_epi8(px2, zero);    // unpack 8 lo-pixels of px2
-
-                    p0R = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3 of original px0 containing 16 R values
-                    p1R = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7 of original px0 containing 16 R values
-                    p2R = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px3, zero));    // pixels 8-11 of original px0 containing 16 R values
-                    p3R = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px3, zero));    // pixels 12-15 of original px0 containing 16 R values
-
-                    p0G = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 0-3 of original px1 containing 16 G values
-                    p1G = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 4-7 of original px1 containing 16 G values
-                    p2G = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px4, zero));    // pixels 8-11 of original px1 containing 16 G values
-                    p3G = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px4, zero));    // pixels 12-15 of original px1 containing 16 G values
-
-                    p0B = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px2, zero));    // pixels 0-3 of original px1 containing 16 G values
-                    p1B = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px2, zero));    // pixels 4-7 of original px1 containing 16 G values
-                    p2B = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px5, zero));    // pixels 8-11 of original px1 containing 16 G values
-                    p3B = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px5, zero));    // pixels 12-15 of original px1 containing 16 G values
+                    RPP_LOAD48_U8PLN3_TO_F32PLN3
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p1R = _mm_fmadd_ps(p1R, pMul, pAdd);    // brightness adjustment
@@ -308,43 +222,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u* srcPtr,
                     p2B = _mm_fmadd_ps(p2B, pMul, pAdd);    // brightness adjustment
                     p3B = _mm_fmadd_ps(p3B, pMul, pAdd);    // brightness adjustment
 
-                    px4 = _mm_cvtps_epi32(p0R);    // convert to int32 for R01-04
-                    px5 = _mm_cvtps_epi32(p0G);    // convert to int32 for G01-04
-                    px6 = _mm_cvtps_epi32(p0B);    // convert to int32 for B01-04
-                    px4 = _mm_packus_epi32(px4, px5);    // pack pixels 0-7 as R01-04|G01-04
-                    px5 = _mm_packus_epi32(px6, pZero);    // pack pixels 8-15 as B01-04|X01-04
-                    px0 = _mm_packus_epi16(px4, px5);    // pack pixels 0-15 as [R01|R02|R03|R04|G01|G02|G03|G04|B01|B02|B03|B04|00|00|00|00]
-
-                    px4 = _mm_cvtps_epi32(p1R);    // convert to int32 for R05-08
-                    px5 = _mm_cvtps_epi32(p1G);    // convert to int32 for G05-08
-                    px6 = _mm_cvtps_epi32(p1B);    // convert to int32 for B05-08
-                    px4 = _mm_packus_epi32(px4, px5);    // pack pixels 0-7 as R05-08|G05-08
-                    px5 = _mm_packus_epi32(px6, pZero);    // pack pixels 8-15 as B05-08|X01-04
-                    px1 = _mm_packus_epi16(px4, px5);    // pack pixels 0-15 as [R05|R06|R07|R08|G05|G06|G07|G08|B05|B06|B07|B08|00|00|00|00]
-
-                    px4 = _mm_cvtps_epi32(p2R);    // convert to int32 for R09-12
-                    px5 = _mm_cvtps_epi32(p2G);    // convert to int32 for G09-12
-                    px6 = _mm_cvtps_epi32(p2B);    // convert to int32 for B09-12
-                    px4 = _mm_packus_epi32(px4, px5);    // pack pixels 0-7 as R09-12|G09-12
-                    px5 = _mm_packus_epi32(px6, pZero);    // pack pixels 8-15 as B09-12|X01-04
-                    px2 = _mm_packus_epi16(px4, px5);    // pack pixels 0-15 as [R09|R10|R11|R12|G09|G10|G11|G12|B09|B10|B11|B12|00|00|00|00]
-
-                    px4 = _mm_cvtps_epi32(p3R);    // convert to int32 for R13-16
-                    px5 = _mm_cvtps_epi32(p3G);    // convert to int32 for G13-16
-                    px6 = _mm_cvtps_epi32(p3B);    // convert to int32 for B13-16
-                    px4 = _mm_packus_epi32(px4, px5);    // pack pixels 0-7 as R13-16|G13-16
-                    px5 = _mm_packus_epi32(px6, pZero);    // pack pixels 8-15 as B13-16|X01-04
-                    px3 = _mm_packus_epi16(px4, px5);    // pack pixels 0-15 as [R13|R14|R15|R16|G13|G14|G15|G16|B13|B14|B15|B16|00|00|00|00]
-
-                    px0 = _mm_shuffle_epi8(px0, mask);    // shuffle to get [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|00|00|00|00]
-                    px1 = _mm_shuffle_epi8(px1, mask);    // shuffle to get [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|00|00|00|00]
-                    px2 = _mm_shuffle_epi8(px2, mask);    // shuffle to get [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|00|00|00|00]
-                    px3 = _mm_shuffle_epi8(px3, mask);    // shuffle to get [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|00|00|00|00]
-
-                    _mm_storeu_si128((__m128i *)dstPtrTemp, px0);           // store [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16]
-                    _mm_storeu_si128((__m128i *)(dstPtrTemp + 12), px1);    // store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16]
-                    _mm_storeu_si128((__m128i *)(dstPtrTemp + 24), px2);    // store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16]
-                    _mm_storeu_si128((__m128i *)(dstPtrTemp + 36), px3);    // store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16]
+                    RPP_STORE48_F32PLN3_TO_U8PKD3
 
                     srcPtrTempR += 16;
                     srcPtrTempG += 16;
@@ -393,27 +271,14 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u* srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                     {
-                        px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);
-                        px1 = _mm_unpackhi_epi8(px0, zero);    // pixels 8-15
-                        px0 = _mm_unpacklo_epi8(px0, zero);    // pixels 0-7
-                        p0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px0, zero));    // pixels 0-3
-                        p1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px0, zero));    // pixels 4-7
-                        p2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px1, zero));    // pixels 8-11
-                        p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    // pixels 12-15
-                        p0 = _mm_mul_ps(p0, pMul);
-                        p1 = _mm_mul_ps(p1, pMul);
-                        p2 = _mm_mul_ps(p2, pMul);
-                        p3 = _mm_mul_ps(p3, pMul);
-                        px0 = _mm_cvtps_epi32(_mm_add_ps(p0, pAdd));
-                        px1 = _mm_cvtps_epi32(_mm_add_ps(p1, pAdd));
-                        px2 = _mm_cvtps_epi32(_mm_add_ps(p2, pAdd));
-                        px3 = _mm_cvtps_epi32(_mm_add_ps(p3, pAdd));
+                        RPP_LOAD16_U8_TO_F32
 
-                        px0 = _mm_packus_epi32(px0, px1);
-                        px1 = _mm_packus_epi32(px2, px3);
-                        px0 = _mm_packus_epi16(px0, px1);    // pixels 0-15
+                        p0 = _mm_fmadd_ps(p0, pMul, pAdd);    // brightness adjustment
+                        p1 = _mm_fmadd_ps(p1, pMul, pAdd);    // brightness adjustment
+                        p2 = _mm_fmadd_ps(p2, pMul, pAdd);    // brightness adjustment
+                        p3 = _mm_fmadd_ps(p3, pMul, pAdd);    // brightness adjustment
 
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, px0);
+                        RPP_STORE16_F32_TO_U8
 
                         srcPtrTemp +=16;
                         dstPtrTemp +=16;
