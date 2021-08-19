@@ -48,7 +48,7 @@ typedef union
 
 #define SIMD_GET_PS(name) (*(const __m128  *)_xmm_const_##name)
 
-#define RPP_LOAD48_U8PKD3_TO_F32PLN3 \
+#define RPP_LOAD48_U8PKD3_TO_F32PLN3(srcPtrTemp) \
 { \
     px0 = _mm_loadu_si128((__m128i *)srcPtrTemp);           /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04 */ \
     px1 = _mm_loadu_si128((__m128i *)(srcPtrTemp + 12));    /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08 */ \
@@ -80,7 +80,7 @@ typedef union
     p3B = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px7, zero));    /* unpack 4 lo-pixels of px7 - Contains B13-16 */ \
 }
 
-#define RPP_STORE48_F32PLN3_TO_U8PLN3 \
+#define RPP_STORE48_F32PLN3_TO_U8PLN3(dstPtrTempR, dstPtrTempG, dstPtrTempB) \
 { \
     px4 = _mm_cvtps_epi32(p0R);    /* convert to int32 for R */ \
     px5 = _mm_cvtps_epi32(p1R);    /* convert to int32 for R */ \
@@ -108,7 +108,7 @@ typedef union
     _mm_storeu_si128((__m128i *)dstPtrTempB, px2);    /* store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */ \
 }
 
-#define RPP_LOAD48_U8PLN3_TO_F32PLN3 \
+#define RPP_LOAD48_U8PLN3_TO_F32PLN3(srcPtrTempR, srcPtrTempG, srcPtrTempB) \
 { \
     px0 = _mm_loadu_si128((__m128i *)srcPtrTempR);    /* load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */ \
     px1 = _mm_loadu_si128((__m128i *)srcPtrTempG);    /* load [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */ \
@@ -133,7 +133,7 @@ typedef union
     p3B = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px5, zero));    /* pixels 12-15 of original px1 containing 16 G values */ \
 }
 
-#define RPP_STORE48_F32PLN3_TO_U8PKD3 \
+#define RPP_STORE48_F32PLN3_TO_U8PKD3(dstPtrTemp) \
 { \
     px4 = _mm_cvtps_epi32(p0R);    /* convert to int32 for R01-04 */ \
     px5 = _mm_cvtps_epi32(p0G);    /* convert to int32 for G01-04 */ \
@@ -169,7 +169,7 @@ typedef union
     _mm_storeu_si128((__m128i *)(dstPtrTemp + 36), px3);    /* store [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|00|00|00|00] */ \
 }
 
-#define RPP_LOAD16_U8_TO_F32 \
+#define RPP_LOAD16_U8_TO_F32(srcPtrTemp) \
 { \
     px0 =  _mm_loadu_si128((__m128i *)srcPtrTemp);    /* load pixels 0-15 */ \
     px1 = _mm_unpackhi_epi8(px0, zero);    /* pixels 8-15 */ \
@@ -180,7 +180,7 @@ typedef union
     p3 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px1, zero));    /* pixels 12-15 */ \
 }
 
-#define RPP_STORE16_F32_TO_U8 \
+#define RPP_STORE16_F32_TO_U8(dstPtrTemp) \
 { \
     px0 = _mm_cvtps_epi32(p0);    /* pixels 0-3 */ \
     px1 = _mm_cvtps_epi32(p1);    /* pixels 4-7 */ \
@@ -192,7 +192,7 @@ typedef union
     _mm_storeu_si128((__m128i *)dstPtrTemp, px0);    /* store pixels 0-15 */ \
 }
 
-#define RPP_LOAD12_F32PKD3_TO_F32PLN3 \
+#define RPP_LOAD12_F32PKD3_TO_F32PLN3(srcPtrTemp) \
 { \
     p0R = _mm_loadu_ps(srcPtrTemp); \
     p0G = _mm_loadu_ps(srcPtrTemp + 3); \
@@ -201,21 +201,21 @@ typedef union
     _MM_TRANSPOSE4_PS (p0R, p0G, p0B, p0A); \
 }
 
-#define RPP_STORE12_F32PLN3_TO_F32PLN3 \
+#define RPP_STORE12_F32PLN3_TO_F32PLN3(dstPtrTempR, dstPtrTempG, dstPtrTempB) \
 { \
     _mm_storeu_ps(dstPtrTempR, p0R); \
     _mm_storeu_ps(dstPtrTempG, p0G); \
     _mm_storeu_ps(dstPtrTempB, p0B); \
 }
 
-#define RPP_LOAD12_F32PLN3_TO_F32PLN3 \
+#define RPP_LOAD12_F32PLN3_TO_F32PLN3(srcPtrTempR, srcPtrTempG, srcPtrTempB) \
 { \
     p0R = _mm_loadu_ps(srcPtrTempR); \
     p0G = _mm_loadu_ps(srcPtrTempG); \
     p0B = _mm_loadu_ps(srcPtrTempB); \
 }
 
-#define RPP_STORE12_F32PLN3_TO_F32PKD3 \
+#define RPP_STORE12_F32PLN3_TO_F32PKD3(dstPtrTemp) \
 { \
     _MM_TRANSPOSE4_PS (p0R, p0G, p0B, p0A); \
     _mm_storeu_ps(dstPtrTemp, p0R); \
@@ -224,12 +224,12 @@ typedef union
     _mm_storeu_ps(dstPtrTemp + 9, p0A); \
 }
 
-#define RPP_LOAD4_F32_TO_F32 \
+#define RPP_LOAD4_F32_TO_F32(srcPtrTemp) \
 { \
     p0 = _mm_loadu_ps(srcPtrTemp); \
 }
 
-#define RPP_STORE4_F32_TO_F32 \
+#define RPP_STORE4_F32_TO_F32(dstPtrTemp) \
 { \
     _mm_storeu_ps(dstPtrTemp, p0); \
 }

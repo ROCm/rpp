@@ -451,7 +451,7 @@ int main(int argc, char **argv)
         if (ip_bitDepth == 0)
             rppt_brightness_host(input, srcDescPtr, output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
+            rppt_brightness_host(inputf16, srcDescPtr, outputf16, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
             rppt_brightness_host(inputf32, srcDescPtr, outputf32, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)

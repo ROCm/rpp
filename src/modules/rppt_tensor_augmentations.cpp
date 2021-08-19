@@ -139,15 +139,15 @@ rppt_brightness_host(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::F16)
         {
-            // brightness_f16_f16_host_tensor(static_cast<Rpp16f*>(srcPtr) + srcDescPtr->offset,
-            //                                srcDescPtr,
-            //                                static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offset,
-            //                                dstDescPtr,
-            //                                alphaTensor,
-            //                                betaTensor,
-            //                                roiTensorPtrSrc,
-            //                                roiType,
-            //                                layoutParams);
+            brightness_f16_f16_host_tensor(static_cast<Rpp16f*>(srcPtr) + srcDescPtr->offset,
+                                           srcDescPtr,
+                                           static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offset,
+                                           dstDescPtr,
+                                           alphaTensor,
+                                           betaTensor,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           layoutParams);
         }
     }
     else if (srcDescPtr->dataType == RpptDataType::F32)
