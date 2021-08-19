@@ -192,6 +192,48 @@ typedef union
     _mm_storeu_si128((__m128i *)dstPtrTemp, px0);    /* store pixels 0-15 */ \
 }
 
+#define RPP_LOAD12_F32PKD3_TO_F32PLN3 \
+{ \
+    p0R = _mm_loadu_ps(srcPtrTemp); \
+    p0G = _mm_loadu_ps(srcPtrTemp + 3); \
+    p0B = _mm_loadu_ps(srcPtrTemp + 6); \
+    p0A = _mm_loadu_ps(srcPtrTemp + 9); \
+    _MM_TRANSPOSE4_PS (p0R, p0G, p0B, p0A); \
+}
+
+#define RPP_STORE12_F32PLN3_TO_F32PLN3 \
+{ \
+    _mm_storeu_ps(dstPtrTempR, p0R); \
+    _mm_storeu_ps(dstPtrTempG, p0G); \
+    _mm_storeu_ps(dstPtrTempB, p0B); \
+}
+
+#define RPP_LOAD12_F32PLN3_TO_F32PLN3 \
+{ \
+    p0R = _mm_loadu_ps(srcPtrTempR); \
+    p0G = _mm_loadu_ps(srcPtrTempG); \
+    p0B = _mm_loadu_ps(srcPtrTempB); \
+}
+
+#define RPP_STORE12_F32PLN3_TO_F32PKD3 \
+{ \
+    _MM_TRANSPOSE4_PS (p0R, p0G, p0B, p0A); \
+    _mm_storeu_ps(dstPtrTemp, p0R); \
+    _mm_storeu_ps(dstPtrTemp + 3, p0G); \
+    _mm_storeu_ps(dstPtrTemp + 6, p0B); \
+    _mm_storeu_ps(dstPtrTemp + 9, p0A); \
+}
+
+#define RPP_LOAD4_F32_TO_F32 \
+{ \
+    p0 = _mm_loadu_ps(srcPtrTemp); \
+}
+
+#define RPP_STORE4_F32_TO_F32 \
+{ \
+    _mm_storeu_ps(dstPtrTemp, p0); \
+}
+
 // Shuffle floats in `src` by using SSE2 `pshufd` instead of `shufps`, if possible.
 #define SIMD_SHUFFLE_PS(src, imm) \
     _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128(src), imm))

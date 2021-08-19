@@ -154,15 +154,15 @@ rppt_brightness_host(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::F32)
         {
-            // brightness_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
-            //                                srcDescPtr,
-            //                                static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
-            //                                dstDescPtr,
-            //                                alphaTensor,
-            //                                betaTensor,
-            //                                roiTensorPtrSrc,
-            //                                roiType,
-            //                                layoutParams);
+            brightness_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
+                                           srcDescPtr,
+                                           static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                                           dstDescPtr,
+                                           alphaTensor,
+                                           betaTensor,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           layoutParams);
         }
     }
     else if (srcDescPtr->dataType == RpptDataType::I8)
