@@ -185,4 +185,48 @@ __device__ void rpp_hip_pack_float8_and_store8(signed char *dstPtr, uint dstIdx,
     *((int2 *)(&dstPtr[dstIdx])) = dst;
 }
 
+__device__ void rpp_hip_load24_and_unpack_to_float8(uchar *srcPtr, uint srcIdx, uint increment, float4 *src1X_f4, float4 *src1Y_f4, float4 *src2X_f4, float4 *src2Y_f4, float4 *src3X_f4, float4 *src3Y_f4)
+{
+    uint2 src1 = *((uint2 *)(&srcPtr[srcIdx]));
+    srcIdx += increment;
+    uint2 src2 = *((uint2 *)(&srcPtr[srcIdx]));
+    srcIdx += increment;
+    uint2 src3 = *((uint2 *)(&srcPtr[srcIdx]));
+
+    *src1X_f4 = rpp_hip_unpack(src1.x); // [R0|G0|B0|R1] or [R0|R1|R2|R3]
+    *src1Y_f4 = rpp_hip_unpack(src1.y); // [G1|B1|R2|G2] or [R4|R5|R6|R7]
+    *src2X_f4 = rpp_hip_unpack(src2.x); // [B2|R3|G3|B3] or [G0|G1|G2|G3]
+    *src2Y_f4 = rpp_hip_unpack(src2.y); // [R4|G4|B4|R5] or [G4|G5|G6|G7]
+    *src3X_f4 = rpp_hip_unpack(src3.x); // [G5|B5|R6|G6] or [B0|B1|B2|B3]
+    *src3Y_f4 = rpp_hip_unpack(src3.y); // [B6|R7|G7|B7] or [B4|B5|B6|B7]
+}
+
+__device__ void rpp_hip_load24_and_unpack_to_float8(float *srcPtr, uint srcIdx, uint increment, float4 *src1X_f4, float4 *src1Y_f4, float4 *src2X_f4, float4 *src2Y_f4, float4 *src3X_f4, float4 *src3Y_f4)
+{
+    *src1X_f4 = *((float4 *)(&srcPtr[srcIdx]));      // [R0|G0|B0|R1] or [R0|R1|R2|R3]
+    *src1Y_f4 = *((float4 *)(&srcPtr[srcIdx + 4]));  // [G1|B1|R2|G2] or [R4|R5|R6|R7]
+    srcIdx += increment;
+    *src2X_f4 = *((float4 *)(&srcPtr[srcIdx]));      // [B2|R3|G3|B3] or [G0|G1|G2|G3]
+    *src2Y_f4 = *((float4 *)(&srcPtr[srcIdx + 4]));  // [R4|G4|B4|R5] or [G4|G5|G6|G7]
+    srcIdx += increment;
+    *src3X_f4 = *((float4 *)(&srcPtr[srcIdx]));      // [G5|B5|R6|G6] or [B0|B1|B2|B3]
+    *src3Y_f4 = *((float4 *)(&srcPtr[srcIdx + 4]));  // [B6|R7|G7|B7] or [B4|B5|B6|B7]
+}
+
+__device__ void rpp_hip_load24_and_unpack_to_float8(signed char *srcPtr, uint srcIdx, uint increment, float4 *src1X_f4, float4 *src1Y_f4, float4 *src2X_f4, float4 *src2Y_f4, float4 *src3X_f4, float4 *src3Y_f4)
+{
+    int2 src1 = *((int2 *)(&srcPtr[srcIdx]));
+    srcIdx += increment;
+    int2 src2 = *((int2 *)(&srcPtr[srcIdx]));
+    srcIdx += increment;
+    int2 src3 = *((int2 *)(&srcPtr[srcIdx]));
+
+    *src1X_f4 = rpp_hip_unpack(src1.x); // [R0|G0|B0|R1] or [R0|R1|R2|R3]
+    *src1Y_f4 = rpp_hip_unpack(src1.y); // [G1|B1|R2|G2] or [R4|R5|R6|R7]
+    *src2X_f4 = rpp_hip_unpack(src2.x); // [B2|R3|G3|B3] or [G0|G1|G2|G3]
+    *src2Y_f4 = rpp_hip_unpack(src2.y); // [R4|G4|B4|R5] or [G4|G5|G6|G7]
+    *src3X_f4 = rpp_hip_unpack(src3.x); // [G5|B5|R6|G6] or [B0|B1|B2|B3]
+    *src3Y_f4 = rpp_hip_unpack(src3.y); // [B6|R7|G7|B7] or [B4|B5|B6|B7]
+}
+
 #endif //RPP_HIP_COMMON_H
