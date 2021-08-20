@@ -110,4 +110,79 @@ __device__ __forceinline__ float4 rpp_hip_unpack(uint src)
     return make_float4(rpp_hip_unpack0(src), rpp_hip_unpack1(src), rpp_hip_unpack2(src), rpp_hip_unpack3(src));
 }
 
+__device__ __forceinline__ int rpp_hip_pack_to_i8(float4 src)
+{
+    return __builtin_amdgcn_cvt_pk_u8_f32(src.w, 3,
+           __builtin_amdgcn_cvt_pk_u8_f32(src.z, 2,
+           __builtin_amdgcn_cvt_pk_u8_f32(src.y, 1,
+           __builtin_amdgcn_cvt_pk_u8_f32(src.x, 0, 0))));
+}
+
+__device__ __forceinline__ float rpp_hip_unpack0(int src)
+{
+    return (float)(src & 0xFF);
+}
+
+__device__ __forceinline__ float rpp_hip_unpack1(int src)
+{
+    return (float)((src >> 8) & 0xFF);
+}
+
+__device__ __forceinline__ float rpp_hip_unpack2(int src)
+{
+    return (float)((src >> 16) & 0xFF);
+}
+
+__device__ __forceinline__ float rpp_hip_unpack3(int src)
+{
+    return (float)((src >> 24) & 0xFF);
+}
+
+__device__ __forceinline__ float4 rpp_hip_unpack_from_i8(int src)
+{
+    return make_float4(rpp_hip_unpack0(src), rpp_hip_unpack1(src), rpp_hip_unpack2(src), rpp_hip_unpack3(src));
+}
+
+__device__ void rpp_hip_load8_and_unpack_to_float8(uchar *srcPtr, uint srcIdx, float4 *srcX_f4, float4 *srcY_f4)
+{
+    uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
+    *srcX_f4 = rpp_hip_unpack(src.x);
+    *srcY_f4 = rpp_hip_unpack(src.y);
+}
+
+__device__ void rpp_hip_pack_float8_and_store8(uchar *dstPtr, uint dstIdx, float4 *dstX_f4, float4 *dstY_f4)
+{
+    uint2 dst;
+    dst.x = rpp_hip_pack(*dstX_f4);
+    dst.y = rpp_hip_pack(*dstY_f4);
+    *((uint2 *)(&dstPtr[dstIdx])) = dst;
+}
+
+__device__ void rpp_hip_load8_and_unpack_to_float8(float *srcPtr, uint srcIdx, float4 *srcX_f4, float4 *srcY_f4)
+{
+    *srcX_f4 = *((float4 *)(&srcPtr[srcIdx]));
+    *srcY_f4 = *((float4 *)(&srcPtr[srcIdx + 4]));
+}
+
+__device__ void rpp_hip_pack_float8_and_store8(float *dstPtr, uint dstIdx, float4 *dstX_f4, float4 *dstY_f4)
+{
+    *((float4 *)(&dstPtr[dstIdx])) = *dstX_f4;
+    *((float4 *)(&dstPtr[dstIdx + 4])) = *dstY_f4;
+}
+
+__device__ void rpp_hip_load8_and_unpack_to_float8(signed char *srcPtr, uint srcIdx, float4 *srcX_f4, float4 *srcY_f4)
+{
+    int2 src = *((int2 *)(&srcPtr[srcIdx]));
+    *srcX_f4 = rpp_hip_unpack_from_i8(src.x);
+    *srcY_f4 = rpp_hip_unpack_from_i8(src.y);
+}
+
+__device__ void rpp_hip_pack_float8_and_store8(signed char *dstPtr, uint dstIdx, float4 *dstX_f4, float4 *dstY_f4)
+{
+    int2 dst;
+    dst.x = rpp_hip_pack_to_i8(*dstX_f4);
+    dst.y = rpp_hip_pack_to_i8(*dstY_f4);
+    *((int2 *)(&dstPtr[dstIdx])) = dst;
+}
+
 #endif //RPP_HIP_COMMON_H

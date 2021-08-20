@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "rppi_validate.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip/hip_declarations.hpp"
+    #include "hip/hip_tensor_augmentations.hpp"
 #elif defined(OCL_COMPILE)
     #include <cl/rpp_cl_common.hpp>
     #include "cl/cl_declarations.hpp"
@@ -58,13 +58,72 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
     copy_param_float(betaTensor, rpp::deref(rppHandle), paramIndex++);
 
-    brightness_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
-                          srcDescPtr,
-                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
-                          dstDescPtr,
-                          roiTensorPtrSrc,
-                          roiType,
-                          rpp::deref(rppHandle));
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        if (dstDescPtr->dataType == RpptDataType::U8)
+        {
+            brightness_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
+                                  srcDescPtr,
+                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+        }
+        // else if (dstDescPtr->dataType == RpptDataType::F16)
+        // {
+
+        // }
+        // else if (dstDescPtr->dataType == RpptDataType::F32)
+        // {
+
+        // }
+        // else if (dstDescPtr->dataType == RpptDataType::I8)
+        // {
+
+        // }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        if (dstDescPtr->dataType == RpptDataType::F16)
+        {
+            // To enable on HIP
+
+            // brightness_hip_tensor(static_cast<Rpp16f*>(srcPtr) + srcDescPtr->offset,
+            //                       srcDescPtr,
+            //                       static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offset,
+            //                       dstDescPtr,
+            //                       roiTensorPtrSrc,
+            //                       roiType,
+            //                       rpp::deref(rppHandle));
+        }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        if (dstDescPtr->dataType == RpptDataType::F32)
+        {
+            brightness_hip_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
+                                  srcDescPtr,
+                                  static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+        }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        if (dstDescPtr->dataType == RpptDataType::I8)
+        {
+            brightness_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offset,
+                                  srcDescPtr,
+                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+        }
+    }
 
 #endif //BACKEND
 

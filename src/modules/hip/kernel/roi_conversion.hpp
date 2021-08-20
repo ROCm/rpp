@@ -1,5 +1,4 @@
 #include <hip/hip_runtime.h>
-#include "rpp_hip_host_decls.hpp"
 
 extern "C" __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
 {

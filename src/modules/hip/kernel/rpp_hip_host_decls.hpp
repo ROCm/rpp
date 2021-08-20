@@ -5,10 +5,6 @@
 #include "hip/rpp/handle.hpp"
 #include "hip/rpp_hip_common.hpp"
 
-// tensor_augmentations
-
-RppStatus hip_exec_brightness_tensor(Rpp8u *srcPtr, RpptDescPtr srcDescPtr, Rpp8u *dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, rpp::Handle& handle);
-
 // advanced_augmentations
 
 RppStatus hip_exec_non_linear_blend_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width);

@@ -1,12 +1,13 @@
 #include "hip/hip_runtime_api.h"
-#include "hip_declarations.hpp"
-#include "kernel/rpp_hip_host_decls.hpp"
+#include "kernel/brightness.hpp"
+#include "kernel/roi_conversion.hpp"
 
 /******************** brightness ********************/
 
-RppStatus brightness_hip_tensor(Rpp8u *srcPtr,
+template <typename T>
+RppStatus brightness_hip_tensor(T *srcPtr,
                                 RpptDescPtr srcDescPtr,
-                                Rpp8u *dstPtr,
+                                T *dstPtr,
                                 RpptDescPtr dstDescPtr,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
