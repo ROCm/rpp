@@ -1,21 +1,23 @@
 #include <hip/hip_runtime.h>
 #include "hip/rpp_hip_common.hpp"
 
-__device__ void brightness_hip_compute(uchar *srcPtr, float4 *src_f4, float4 *dst_f4, float4 *alpha_f4, float4 *beta_f4)
+__device__ void brightness_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    *dst_f4 = *src_f4 * *alpha_f4 + *beta_f4;
+    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4;
+    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4;
 }
 
-__device__ void brightness_hip_compute(float *srcPtr, float4 *src_f4, float4 *dst_f4, float4 *alpha_f4, float4 *beta_f4)
+__device__ void brightness_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
     float4 betaNormFactor_f4 = make_float4(0.0039216, 0.0039216, 0.0039216, 0.0039216);
-    *dst_f4 = *src_f4 * *alpha_f4 + *beta_f4 * betaNormFactor_f4;
+    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * betaNormFactor_f4;
+    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * betaNormFactor_f4;
 }
 
-__device__ void brightness_hip_compute(signed char *srcPtr, float4 *src_f4, float4 *dst_f4, float4 *alpha_f4, float4 *beta_f4)
+__device__ void brightness_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    float4 i8Offset_f4 = make_float4(128, 128, 128, 128);
-    *dst_f4 = (*src_f4 + i8Offset_f4) * *alpha_f4 + *beta_f4 - i8Offset_f4;
+    dst_f8->x = rpp_hip_pixel_check((src_f8->x + 128) * *alpha_f4 + *beta_f4) - 128;
+    dst_f8->y = rpp_hip_pixel_check((src_f8->y + 128) * *alpha_f4 + *beta_f4) - 128;
 }
 
 template <typename T>
@@ -44,14 +46,11 @@ __global__ void brightness_pkd_tensor(T *srcPtr,
     float4 alpha_f4 = (float4)alpha[id_z];
     float4 beta_f4 = (float4)beta[id_z];
 
-    float4 srcX_f4, srcY_f4, dstX_f4, dstY_f4;
+    d_float8 src_f8, dst_f8;
 
-    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &srcX_f4, &srcY_f4);
-
-    brightness_hip_compute(srcPtr, &srcX_f4, &dstX_f4, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &srcY_f4, &dstY_f4, &alpha_f4, &beta_f4);
-
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstX_f4, &dstY_f4);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+    brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
 }
 
 template <typename T>
@@ -83,36 +82,27 @@ __global__ void brightness_pln_tensor(T *srcPtr,
     float4 alpha_f4 = (float4)(alpha[id_z]);
     float4 beta_f4 = (float4)(beta[id_z]);
 
-    float4 srcX_f4, srcY_f4, dstX_f4, dstY_f4;
+    d_float8 src_f8, dst_f8;
 
-    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &srcX_f4, &srcY_f4);
-
-    brightness_hip_compute(srcPtr, &srcX_f4, &dstX_f4, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &srcY_f4, &dstY_f4, &alpha_f4, &beta_f4);
-
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstX_f4, &dstY_f4);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+    brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
 
     if (channelsDst == 3)
     {
         srcIdx += cStrideSrc;
         dstIdx += cStrideDst;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &srcX_f4, &srcY_f4);
-
-        brightness_hip_compute(srcPtr, &srcX_f4, &dstX_f4, &alpha_f4, &beta_f4);
-        brightness_hip_compute(srcPtr, &srcY_f4, &dstY_f4, &alpha_f4, &beta_f4);
-
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstX_f4, &dstY_f4);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+        brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
 
         srcIdx += cStrideSrc;
         dstIdx += cStrideDst;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &srcX_f4, &srcY_f4);
-
-        brightness_hip_compute(srcPtr, &srcX_f4, &dstX_f4, &alpha_f4, &beta_f4);
-        brightness_hip_compute(srcPtr, &srcY_f4, &dstY_f4, &alpha_f4, &beta_f4);
-
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstX_f4, &dstY_f4);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+        brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
     }
 }
 
@@ -143,56 +133,21 @@ __global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
     float4 alpha_f4 = (float4)alpha[id_z];
     float4 beta_f4 = (float4)beta[id_z];
 
-    float4 src1X_f4, src1Y_f4, src2X_f4, src2Y_f4, src3X_f4, src3Y_f4;
-    float4 srcPixX_f4, srcPixY_f4, dstPixX_f4, dstPixY_f4;
+    d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_and_unpack_to_float8(srcPtr, srcIdx, 8, &src1X_f4, &src1Y_f4, &src2X_f4, &src2Y_f4, &src3X_f4, &src3Y_f4);
-
-    srcPixX_f4.x = src1X_f4.x;
-    srcPixX_f4.y = src1X_f4.w;
-    srcPixX_f4.z = src1Y_f4.z;
-    srcPixX_f4.w = src2X_f4.y;
-    srcPixY_f4.x = src2Y_f4.x;
-    srcPixY_f4.y = src2Y_f4.w;
-    srcPixY_f4.z = src3X_f4.z;
-    srcPixY_f4.w = src3Y_f4.y;
-
-    brightness_hip_compute(srcPtr, &srcPixX_f4, &dstPixX_f4, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &srcPixY_f4, &dstPixY_f4, &alpha_f4, &beta_f4);
-
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstPixX_f4, &dstPixY_f4);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &src_f24);
+    brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.x);
 
     dstIdx += cStrideDst;
 
-    srcPixX_f4.x = src1X_f4.y;
-    srcPixX_f4.y = src1Y_f4.x;
-    srcPixX_f4.z = src1Y_f4.w;
-    srcPixX_f4.w = src2X_f4.z;
-    srcPixY_f4.x = src2Y_f4.y;
-    srcPixY_f4.y = src3X_f4.x;
-    srcPixY_f4.z = src3X_f4.w;
-    srcPixY_f4.w = src3Y_f4.z;
-
-    brightness_hip_compute(srcPtr, &srcPixX_f4, &dstPixX_f4, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &srcPixY_f4, &dstPixY_f4, &alpha_f4, &beta_f4);
-
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstPixX_f4, &dstPixY_f4);
+    brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.y);
 
     dstIdx += cStrideDst;
 
-    srcPixX_f4.x = src1X_f4.z;
-    srcPixX_f4.y = src1Y_f4.y;
-    srcPixX_f4.z = src2X_f4.x;
-    srcPixX_f4.w = src2X_f4.w;
-    srcPixY_f4.x = src2Y_f4.z;
-    srcPixY_f4.y = src3X_f4.y;
-    srcPixY_f4.z = src3Y_f4.x;
-    srcPixY_f4.w = src3Y_f4.w;
-
-    brightness_hip_compute(srcPtr, &srcPixX_f4, &dstPixX_f4, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &srcPixY_f4, &dstPixY_f4, &alpha_f4, &beta_f4);
-
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstPixX_f4, &dstPixY_f4);
+    brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.z);
 }
 
 template <typename T>
@@ -222,56 +177,13 @@ __global__ void brightness_pln3_pkd3_tensor(T *srcPtr,
     float4 alpha_f4 = (float4)(alpha[id_z]);
     float4 beta_f4 = (float4)(beta[id_z]);
 
-    float4 src1X_f4, src1Y_f4, src2X_f4, src2Y_f4, src3X_f4, src3Y_f4;
-    float4 srcPixX_f4, srcPixY_f4, dstPixX_f4, dstPixY_f4;
+    d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_and_unpack_to_float8(srcPtr, srcIdx, cStrideSrc, &src1X_f4, &src1Y_f4, &src2X_f4, &src2Y_f4, &src3X_f4, &src3Y_f4);
-
-    srcPixX_f4.x = src1X_f4.x;
-    srcPixX_f4.y = src2X_f4.x;
-    srcPixX_f4.z = src3X_f4.x;
-    srcPixX_f4.w = src1X_f4.y;
-    srcPixY_f4.x = src2X_f4.y;
-    srcPixY_f4.y = src3X_f4.y;
-    srcPixY_f4.z = src1X_f4.z;
-    srcPixY_f4.w = src2X_f4.z;
-
-    brightness_hip_compute(srcPtr, &srcPixX_f4, &dstPixX_f4, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &srcPixY_f4, &dstPixY_f4, &alpha_f4, &beta_f4);
-
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstPixX_f4, &dstPixY_f4);
-
-    dstIdx += 8;
-
-    srcPixX_f4.x = src3X_f4.z;
-    srcPixX_f4.y = src1X_f4.w;
-    srcPixX_f4.z = src2X_f4.w;
-    srcPixX_f4.w = src3X_f4.w;
-    srcPixY_f4.x = src1Y_f4.x;
-    srcPixY_f4.y = src2Y_f4.x;
-    srcPixY_f4.z = src3Y_f4.x;
-    srcPixY_f4.w = src1Y_f4.y;
-
-    brightness_hip_compute(srcPtr, &srcPixX_f4, &dstPixX_f4, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &srcPixY_f4, &dstPixY_f4, &alpha_f4, &beta_f4);
-
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstPixX_f4, &dstPixY_f4);
-
-    dstIdx += 8;
-
-    srcPixX_f4.x = src2Y_f4.y;
-    srcPixX_f4.y = src3Y_f4.y;
-    srcPixX_f4.z = src1Y_f4.z;
-    srcPixX_f4.w = src2Y_f4.z;
-    srcPixY_f4.x = src3Y_f4.z;
-    srcPixY_f4.y = src1Y_f4.w;
-    srcPixY_f4.z = src2Y_f4.w;
-    srcPixY_f4.w = src3Y_f4.w;
-
-    brightness_hip_compute(srcPtr, &srcPixX_f4, &dstPixX_f4, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &srcPixY_f4, &dstPixY_f4, &alpha_f4, &beta_f4);
-
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dstPixX_f4, &dstPixY_f4);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr, srcIdx, cStrideSrc, &src_f24);
+    brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
+    brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
+    brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
+    rpp_hip_pack_float24_and_store24(dstPtr, dstIdx, &dst_f24);
 }
 
 template <typename T>
