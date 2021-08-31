@@ -9,9 +9,8 @@ __device__ void brightness_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8
 
 __device__ void brightness_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    float4 betaNormFactor_f4 = make_float4(0.0039216, 0.0039216, 0.0039216, 0.0039216);
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * betaNormFactor_f4;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * betaNormFactor_f4;
+    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4)0.0039216;
+    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4)0.0039216;
 }
 
 __device__ void brightness_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
@@ -22,9 +21,8 @@ __device__ void brightness_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_
 
 __device__ void brightness_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    float4 betaNormFactor_f4 = make_float4(0.0039216, 0.0039216, 0.0039216, 0.0039216);
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * betaNormFactor_f4;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * betaNormFactor_f4;
+    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4)0.0039216;
+    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4)0.0039216;
 }
 
 template <typename T>
