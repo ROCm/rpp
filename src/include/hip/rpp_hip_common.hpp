@@ -208,14 +208,12 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(uchar *dstPtr, ui
 
 __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(float *srcPtr, uint srcIdx, d_float8 *src_f8)
 {
-    src_f8->x = *((float4 *)(&srcPtr[srcIdx]));
-    src_f8->y = *((float4 *)(&srcPtr[srcIdx + 4]));
+    *src_f8 = *((d_float8 *)(&srcPtr[srcIdx]));
 }
 
 __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(float *dstPtr, uint dstIdx, d_float8 *dst_f8)
 {
-    *((float4 *)(&dstPtr[dstIdx])) = dst_f8->x;
-    *((float4 *)(&dstPtr[dstIdx + 4])) = dst_f8->y;
+    *((d_float8 *)(&dstPtr[dstIdx])) = *dst_f8;
 }
 
 // I8 loads and stores without layout toggle (8 I8 pixels)
@@ -229,10 +227,10 @@ __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(signed char *
 
 __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(signed char *dstPtr, uint dstIdx, d_float8 *dst_f8)
 {
-    int2 dst;
-    dst.x = (int) rpp_hip_pack(dst_f8->x);
-    dst.y = (int) rpp_hip_pack(dst_f8->y);
-    *((int2 *)(&dstPtr[dstIdx])) = dst;
+    uint2 dst;
+    dst.x = rpp_hip_pack(dst_f8->x);
+    dst.y = rpp_hip_pack(dst_f8->y);
+    *((uint2 *)(&dstPtr[dstIdx])) = dst;
 }
 
 // F16 loads and stores without layout toggle (8 F16 pixels)
