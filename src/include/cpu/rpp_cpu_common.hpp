@@ -8,8 +8,8 @@
 #include <rppdefs.h>
 #include <omp.h>
 #include <half.hpp>
-using half_float::half;
-typedef half                Rpp16f;
+using halfhpp = half_float::half;
+typedef halfhpp Rpp16f;
 #include "rpp_cpu_simd.hpp"
 
 #define PI                              3.14159265

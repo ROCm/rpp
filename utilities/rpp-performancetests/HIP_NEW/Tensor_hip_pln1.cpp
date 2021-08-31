@@ -11,15 +11,12 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half.hpp>
+#include <hip/hip_fp16.h>
 #include <fstream>
 #include "helpers/testSuite_helper.hpp"
 
 using namespace cv;
 using namespace std;
-using half_float::half;
-
-typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 #define RPPMAX2(a,b) ((a > b) ? a : b)
@@ -326,7 +323,7 @@ int main(int argc, char **argv)
 
     // Convert inputs to test various other bit depths and copy to hip buffers
 
-    Rpp16f *inputf16, *inputf16_second, *outputf16;
+    half *inputf16, *inputf16_second, *outputf16;
     Rpp32f *inputf32, *inputf32_second, *outputf32;
     Rpp8s *inputi8, *inputi8_second, *outputi8;
     int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
@@ -343,12 +340,12 @@ int main(int argc, char **argv)
     }
     else if (ip_bitDepth == 1)
     {
-        inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-        inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+        inputf16 = (half *)calloc(ioBufferSize, sizeof(half));
+        inputf16_second = (half *)calloc(ioBufferSize, sizeof(half));
+        outputf16 = (half *)calloc(oBufferSize, sizeof(half));
 
         Rpp8u *inputTemp, *input_secondTemp;
-        Rpp16f *inputf16Temp, *inputf16_secondTemp;
+        half *inputf16Temp, *inputf16_secondTemp;
 
         inputTemp = input;
         input_secondTemp = input_second;
@@ -358,20 +355,20 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp = ((Rpp16f)*inputTemp) / 255.0;
-            *inputf16_secondTemp = ((Rpp16f)*input_secondTemp) / 255.0;
+            *inputf16Temp = (half)(((float)*inputTemp) / 255.0);
+            *inputf16_secondTemp = (half)(((float)*input_secondTemp) / 255.0);
             inputTemp++;
             inputf16Temp++;
             input_secondTemp++;
             inputf16_secondTemp++;
         }
 
-        hipMalloc(&d_inputf16, ioBufferSize * sizeof(Rpp16f));
-        hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(Rpp16f));
-        hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
-        hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
-        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMalloc(&d_inputf16, ioBufferSize * sizeof(half));
+        hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(half));
+        hipMalloc(&d_outputf16, oBufferSize * sizeof(half));
+        hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(half), hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(half), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(half), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 2)
     {
@@ -407,13 +404,13 @@ int main(int argc, char **argv)
     }
     else if (ip_bitDepth == 3)
     {
-        outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
+        outputf16 = (half *)calloc(oBufferSize, sizeof(half));
         hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
         hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_outputf16, oBufferSize * sizeof(Rpp16f));
+        hipMalloc(&d_outputf16, oBufferSize * sizeof(half));
         hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
         hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(Rpp16f), hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(half), hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 4)
     {
@@ -522,7 +519,7 @@ int main(int argc, char **argv)
             if (ip_bitDepth == 0)
                 rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                missingFuncFlag = 1;
+                rppt_brightness_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
                 rppt_brightness_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
