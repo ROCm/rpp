@@ -405,8 +405,7 @@ int main(int argc, char **argv)
 
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, noOfImages);
-    clock_t start, end;
-    double start_omp, end_omp;
+
     double max_time_used = 0, min_time_used = 500, avg_time_used = 0;
 
     string test_case_name;
@@ -415,6 +414,8 @@ int main(int argc, char **argv)
 
     for (int perfRunCount = 0; perfRunCount < 100; perfRunCount++)
     {
+        clock_t start, end;
+        double start_omp, end_omp;
         double cpu_time_used;
         switch (test_case)
         {
