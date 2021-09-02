@@ -416,7 +416,7 @@ int main(int argc, char **argv)
     {
         clock_t start, end;
         double start_omp, end_omp;
-        double cpu_time_used;
+        double cpu_time_used, omp_time_used;
         switch (test_case)
         {
         case 0:
@@ -482,6 +482,7 @@ int main(int argc, char **argv)
         }
 
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        omp_time_used = end_omp - start_omp;
         if (cpu_time_used > max_time_used)
             max_time_used = cpu_time_used;
         if (cpu_time_used < min_time_used)
