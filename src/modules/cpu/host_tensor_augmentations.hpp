@@ -129,7 +129,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
                 {
-                    RPP_LOAD48_U8PKD3_TO_F32PLN3(srcPtrTemp)
+                    RPP_LOAD48_U8PKD3_TO_F32PLN3(srcPtrTemp, px0, px1, px2, px3, px4, px5, px6, px7, p0R, p1R, p2R, p3R, p0G, p1G, p2G, p3G, p0B, p1B, p2B, p3B, mask, zero)
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p1R = _mm_fmadd_ps(p1R, pMul, pAdd);    // brightness adjustment
@@ -146,7 +146,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                     p2B = _mm_fmadd_ps(p2B, pMul, pAdd);    // brightness adjustment
                     p3B = _mm_fmadd_ps(p3B, pMul, pAdd);    // brightness adjustment
 
-                    RPP_STORE48_F32PLN3_TO_U8PLN3(dstPtrTempR, dstPtrTempG, dstPtrTempB)
+                    RPP_STORE48_F32PLN3_TO_U8PLN3(dstPtrTempR, dstPtrTempG, dstPtrTempB, px0, px1, px2, px4, px5, px6, px7, p0R, p1R, p2R, p3R, p0G, p1G, p2G, p3G, p0B, p1B, p2B, p3B)
 
                     srcPtrTemp += 48;
                     dstPtrTempR += 16;
@@ -205,7 +205,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                 {
-                    RPP_LOAD48_U8PLN3_TO_F32PLN3(srcPtrTempR, srcPtrTempG, srcPtrTempB)
+                    RPP_LOAD48_U8PLN3_TO_F32PLN3(srcPtrTempR, srcPtrTempG, srcPtrTempB, px0, px1, px2, px3, px4, px5, p0R, p1R, p2R, p3R, p0G, p1G, p2G, p3G, p0B, p1B, p2B, p3B, zero)
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p1R = _mm_fmadd_ps(p1R, pMul, pAdd);    // brightness adjustment
@@ -222,7 +222,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                     p2B = _mm_fmadd_ps(p2B, pMul, pAdd);    // brightness adjustment
                     p3B = _mm_fmadd_ps(p3B, pMul, pAdd);    // brightness adjustment
 
-                    RPP_STORE48_F32PLN3_TO_U8PKD3(dstPtrTemp)
+                    RPP_STORE48_F32PLN3_TO_U8PKD3(dstPtrTemp, px0, px1, px2, px3, px4, px5, px6, p0R, p1R, p2R, p3R, p0G, p1G, p2G, p3G, p0B, p1B, p2B, p3B, pZero)
 
                     srcPtrTempR += 16;
                     srcPtrTempG += 16;
@@ -271,14 +271,14 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                     {
-                        RPP_LOAD16_U8_TO_F32(srcPtrTemp)
+                        RPP_LOAD16_U8_TO_F32(srcPtrTemp, px0, px1, p0, p1, p2, p3, zero)
 
                         p0 = _mm_fmadd_ps(p0, pMul, pAdd);    // brightness adjustment
                         p1 = _mm_fmadd_ps(p1, pMul, pAdd);    // brightness adjustment
                         p2 = _mm_fmadd_ps(p2, pMul, pAdd);    // brightness adjustment
                         p3 = _mm_fmadd_ps(p3, pMul, pAdd);    // brightness adjustment
 
-                        RPP_STORE16_F32_TO_U8(dstPtrTemp)
+                        RPP_STORE16_F32_TO_U8(dstPtrTemp, px0, px1, px2, px3, p0, p1, p2, p3)
 
                         srcPtrTemp +=16;
                         dstPtrTemp +=16;
@@ -394,13 +394,13 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
                 {
-                    RPP_LOAD12_F32PKD3_TO_F32PLN3(srcPtrTemp)
+                    RPP_LOAD12_F32PKD3_TO_F32PLN3(srcPtrTemp, p0R, p0G, p0B, p0A)
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p0G = _mm_fmadd_ps(p0G, pMul, pAdd);    // brightness adjustment
                     p0B = _mm_fmadd_ps(p0B, pMul, pAdd);    // brightness adjustment
 
-                    RPP_STORE12_F32PLN3_TO_F32PLN3(dstPtrTempR, dstPtrTempG, dstPtrTempB)
+                    RPP_STORE12_F32PLN3_TO_F32PLN3(dstPtrTempR, dstPtrTempG, dstPtrTempB, p0R, p0G, p0B)
 
                     srcPtrTemp += 12;
                     dstPtrTempR += 4;
@@ -453,13 +453,13 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
                 {
-                    RPP_LOAD12_F32PLN3_TO_F32PLN3(srcPtrTempR, srcPtrTempG, srcPtrTempB)
+                    RPP_LOAD12_F32PLN3_TO_F32PLN3(srcPtrTempR, srcPtrTempG, srcPtrTempB, p0R, p0G, p0B)
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p0G = _mm_fmadd_ps(p0G, pMul, pAdd);    // brightness adjustment
                     p0B = _mm_fmadd_ps(p0B, pMul, pAdd);    // brightness adjustment
 
-                    RPP_STORE12_F32PLN3_TO_F32PKD3(dstPtrTemp)
+                    RPP_STORE12_F32PLN3_TO_F32PKD3(dstPtrTemp, p0R, p0G, p0B, p0A)
 
                     srcPtrTempR += 4;
                     srcPtrTempG += 4;
@@ -510,11 +510,11 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
                     {
-                        RPP_LOAD4_F32_TO_F32(srcPtrTemp)
+                        RPP_LOAD4_F32_TO_F32(srcPtrTemp, p0)
 
                         p0 = _mm_fmadd_ps(p0, pMul, pAdd);    // brightness adjustment
 
-                        RPP_STORE4_F32_TO_F32(dstPtrTemp)
+                        RPP_STORE4_F32_TO_F32(dstPtrTemp, p0)
 
                         srcPtrTemp += 4;
                         dstPtrTemp += 4;
@@ -637,13 +637,13 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                         *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtrTemp + cnt);
                     }
 
-                    RPP_LOAD12_F32PKD3_TO_F32PLN3(srcPtrTemp_ps)
+                    RPP_LOAD12_F32PKD3_TO_F32PLN3(srcPtrTemp_ps, p0R, p0G, p0B, p0A)
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p0G = _mm_fmadd_ps(p0G, pMul, pAdd);    // brightness adjustment
                     p0B = _mm_fmadd_ps(p0B, pMul, pAdd);    // brightness adjustment
 
-                    RPP_STORE12_F32PLN3_TO_F32PLN3(dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8)
+                    RPP_STORE12_F32PLN3_TO_F32PLN3(dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8, p0R, p0G, p0B)
 
                     for(int cnt = 0; cnt < 4; cnt++)
                     {
@@ -712,13 +712,13 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                         *(srcPtrTemp_ps + 8 + cnt) = (Rpp32f) *(srcPtrTempB + cnt);
                     }
 
-                    RPP_LOAD12_F32PLN3_TO_F32PLN3(srcPtrTemp_ps, srcPtrTemp_ps + 4, srcPtrTemp_ps + 8)
+                    RPP_LOAD12_F32PLN3_TO_F32PLN3(srcPtrTemp_ps, srcPtrTemp_ps + 4, srcPtrTemp_ps + 8, p0R, p0G, p0B)
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p0G = _mm_fmadd_ps(p0G, pMul, pAdd);    // brightness adjustment
                     p0B = _mm_fmadd_ps(p0B, pMul, pAdd);    // brightness adjustment
 
-                    RPP_STORE12_F32PLN3_TO_F32PKD3(dstPtrTemp_ps)
+                    RPP_STORE12_F32PLN3_TO_F32PKD3(dstPtrTemp_ps, p0R, p0G, p0B, p0A)
 
                     for(int cnt = 0; cnt < 12; cnt++)
                     {
@@ -781,11 +781,11 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                             *(srcPtrTemp_ps + cnt) = (Rpp16f) *(srcPtrTemp + cnt);
                         }
 
-                        RPP_LOAD4_F32_TO_F32(srcPtrTemp_ps)
+                        RPP_LOAD4_F32_TO_F32(srcPtrTemp_ps, p0)
 
                         p0 = _mm_fmadd_ps(p0, pMul, pAdd);    // brightness adjustment
 
-                        RPP_STORE4_F32_TO_F32(dstPtrTemp_ps)
+                        RPP_STORE4_F32_TO_F32(dstPtrTemp_ps, p0)
 
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
@@ -915,7 +915,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
                 {
-                    RPP_LOAD48_I8PKD3_TO_F32PLN3(srcPtrTemp)
+                    RPP_LOAD48_I8PKD3_TO_F32PLN3(srcPtrTemp, px0, px1, px2, px3, px4, px5, px6, px7, p0R, p1R, p2R, p3R, p0G, p1G, p2G, p3G, p0B, p1B, p2B, p3B, mask, pxConvertI8, zero)
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p1R = _mm_fmadd_ps(p1R, pMul, pAdd);    // brightness adjustment
@@ -932,7 +932,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                     p2B = _mm_fmadd_ps(p2B, pMul, pAdd);    // brightness adjustment
                     p3B = _mm_fmadd_ps(p3B, pMul, pAdd);    // brightness adjustment
 
-                    RPP_STORE48_F32PLN3_TO_I8PLN3(dstPtrTempR, dstPtrTempG, dstPtrTempB)
+                    RPP_STORE48_F32PLN3_TO_I8PLN3(dstPtrTempR, dstPtrTempG, dstPtrTempB, px0, px1, px2, px4, px5, px6, px7, p0R, p1R, p2R, p3R, p0G, p1G, p2G, p3G, p0B, p1B, p2B, p3B, pxConvertI8)
 
                     srcPtrTemp += 48;
                     dstPtrTempR += 16;
@@ -991,7 +991,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                 {
-                    RPP_LOAD48_I8PLN3_TO_F32PLN3(srcPtrTempR, srcPtrTempG, srcPtrTempB)
+                    RPP_LOAD48_I8PLN3_TO_F32PLN3(srcPtrTempR, srcPtrTempG, srcPtrTempB, px0, px1, px2, px3, px4, px5, p0R, p1R, p2R, p3R, p0G, p1G, p2G, p3G, p0B, p1B, p2B, p3B, pxConvertI8, zero)
 
                     p0R = _mm_fmadd_ps(p0R, pMul, pAdd);    // brightness adjustment
                     p1R = _mm_fmadd_ps(p1R, pMul, pAdd);    // brightness adjustment
@@ -1008,7 +1008,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                     p2B = _mm_fmadd_ps(p2B, pMul, pAdd);    // brightness adjustment
                     p3B = _mm_fmadd_ps(p3B, pMul, pAdd);    // brightness adjustment
 
-                    RPP_STORE48_F32PLN3_TO_I8PKD3(dstPtrTemp)
+                    RPP_STORE48_F32PLN3_TO_I8PKD3(dstPtrTemp, px0, px1, px2, px3, px4, px5, px6, p0R, p1R, p2R, p3R, p0G, p1G, p2G, p3G, p0B, p1B, p2B, p3B, pZero, pxConvertI8, mask)
 
                     srcPtrTempR += 16;
                     srcPtrTempG += 16;
@@ -1057,14 +1057,14 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
                     {
-                        RPP_LOAD16_I8_TO_F32(srcPtrTemp)
+                        RPP_LOAD16_I8_TO_F32(srcPtrTemp, px0, px1, p0, p1, p2, p3, pxConvertI8, zero)
 
                         p0 = _mm_fmadd_ps(p0, pMul, pAdd);    // brightness adjustment
                         p1 = _mm_fmadd_ps(p1, pMul, pAdd);    // brightness adjustment
                         p2 = _mm_fmadd_ps(p2, pMul, pAdd);    // brightness adjustment
                         p3 = _mm_fmadd_ps(p3, pMul, pAdd);    // brightness adjustment
 
-                        RPP_STORE16_F32_TO_I8(dstPtrTemp)
+                        RPP_STORE16_F32_TO_I8(dstPtrTemp, px0, px1, px2, px3, p0, p1, p2, p3, pxConvertI8)
 
                         srcPtrTemp +=16;
                         dstPtrTemp +=16;
