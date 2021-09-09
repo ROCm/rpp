@@ -240,20 +240,25 @@ __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(half *srcPtr,
     d_half8 src_h8;
     src_h8 = *((d_half8 *)(&srcPtr[srcIdx]));
 
-    *(float2 *)&(src_f8->x) = __half22float2(src_h8.x.x);
-    *((float2 *)&(src_f8->x) + 1) = __half22float2(src_h8.x.y);
-    *(float2 *)&(src_f8->y) = __half22float2(src_h8.y.x);
-    *((float2 *)&(src_f8->y) + 1) = __half22float2(src_h8.y.y);
+    float2 src1_f2, src2_f2;
+
+    src1_f2 = __half22float2(src_h8.x.x);
+    src2_f2 = __half22float2(src_h8.x.y);
+    src_f8->x = make_float4(src1_f2.x, src1_f2.y, src2_f2.x, src2_f2.y);
+
+    src1_f2 = __half22float2(src_h8.y.x);
+    src2_f2 = __half22float2(src_h8.y.y);
+    src_f8->y = make_float4(src1_f2.x, src1_f2.y, src2_f2.x, src2_f2.y);
 }
 
 __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(half *dstPtr, uint dstIdx, d_float8 *dst_f8)
 {
     d_half8 dst_h8;
 
-    dst_h8.x.x = __float22half2_rn(*(float2 *)&(dst_f8->x));
-    dst_h8.x.y = __float22half2_rn(*((float2 *)&(dst_f8->x) + 1));
-    dst_h8.y.x = __float22half2_rn(*(float2 *)&(dst_f8->y));
-    dst_h8.y.y = __float22half2_rn(*((float2 *)&(dst_f8->y) + 1));
+    dst_h8.x.x = __float22half2_rn(make_float2(dst_f8->x.x, dst_f8->x.y));
+    dst_h8.x.y = __float22half2_rn(make_float2(dst_f8->x.z, dst_f8->x.w));
+    dst_h8.y.x = __float22half2_rn(make_float2(dst_f8->y.x, dst_f8->y.y));
+    dst_h8.y.y = __float22half2_rn(make_float2(dst_f8->y.z, dst_f8->y.w));
 
     *((d_half8 *)(&dstPtr[dstIdx])) = dst_h8;
 }
@@ -278,32 +283,48 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(u
 
 __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(float *srcPtr, uint srcIdx, d_float24 *src_f24)
 {
-    src_f24->x.x.x = srcPtr[srcIdx];
-    src_f24->x.x.y = srcPtr[srcIdx + 3];
-    src_f24->x.x.z = srcPtr[srcIdx + 6];
-    src_f24->x.x.w = srcPtr[srcIdx + 9];
-    src_f24->x.y.x = srcPtr[srcIdx + 12];
-    src_f24->x.y.y = srcPtr[srcIdx + 15];
-    src_f24->x.y.z = srcPtr[srcIdx + 18];
-    src_f24->x.y.w = srcPtr[srcIdx + 21];
+    float4 src_f4;
 
-    src_f24->y.x.x = srcPtr[srcIdx + 1];
-    src_f24->y.x.y = srcPtr[srcIdx + 4];
-    src_f24->y.x.z = srcPtr[srcIdx + 7];
-    src_f24->y.x.w = srcPtr[srcIdx + 10];
-    src_f24->y.y.x = srcPtr[srcIdx + 13];
-    src_f24->y.y.y = srcPtr[srcIdx + 16];
-    src_f24->y.y.z = srcPtr[srcIdx + 19];
-    src_f24->y.y.w = srcPtr[srcIdx + 22];
+    src_f4 = *(float4 *)&srcPtr[srcIdx];
+    src_f24->x.x.x = src_f4.x;
+    src_f24->y.x.x = src_f4.y;
+    src_f24->z.x.x = src_f4.z;
+    src_f24->x.x.y = src_f4.w;
+    srcIdx += 4;
 
-    src_f24->z.x.x = srcPtr[srcIdx + 2];
-    src_f24->z.x.y = srcPtr[srcIdx + 5];
-    src_f24->z.x.z = srcPtr[srcIdx + 8];
-    src_f24->z.x.w = srcPtr[srcIdx + 11];
-    src_f24->z.y.x = srcPtr[srcIdx + 14];
-    src_f24->z.y.y = srcPtr[srcIdx + 17];
-    src_f24->z.y.z = srcPtr[srcIdx + 20];
-    src_f24->z.y.w = srcPtr[srcIdx + 23];
+    src_f4 = *(float4 *)&srcPtr[srcIdx];
+    src_f24->y.x.y = src_f4.x;
+    src_f24->z.x.y = src_f4.y;
+    src_f24->x.x.z = src_f4.z;
+    src_f24->y.x.z = src_f4.w;
+    srcIdx += 4;
+
+    src_f4 = *(float4 *)&srcPtr[srcIdx];
+    src_f24->z.x.z = src_f4.x;
+    src_f24->x.x.w = src_f4.y;
+    src_f24->y.x.w = src_f4.z;
+    src_f24->z.x.w = src_f4.w;
+    srcIdx += 4;
+
+    src_f4 = *(float4 *)&srcPtr[srcIdx];
+    src_f24->x.y.x = src_f4.x;
+    src_f24->y.y.x = src_f4.y;
+    src_f24->z.y.x = src_f4.z;
+    src_f24->x.y.y = src_f4.w;
+    srcIdx += 4;
+
+    src_f4 = *(float4 *)&srcPtr[srcIdx];
+    src_f24->y.y.y = src_f4.x;
+    src_f24->z.y.y = src_f4.y;
+    src_f24->x.y.z = src_f4.z;
+    src_f24->y.y.z = src_f4.w;
+    srcIdx += 4;
+
+    src_f4 = *(float4 *)&srcPtr[srcIdx];
+    src_f24->z.y.z = src_f4.x;
+    src_f24->x.y.w = src_f4.y;
+    src_f24->y.y.w = src_f4.z;
+    src_f24->z.y.w = src_f4.w;
 }
 
 // I8 loads with layout toggle PKD3 to PLN3 (24 I8 pixels)
@@ -326,32 +347,35 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(s
 
 __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(half *srcPtr, uint srcIdx, d_float24 *src_f24)
 {
-    src_f24->x.x.x = __half2float(srcPtr[srcIdx]);
-    src_f24->x.x.y = __half2float(srcPtr[srcIdx + 3]);
-    src_f24->x.x.z = __half2float(srcPtr[srcIdx + 6]);
-    src_f24->x.x.w = __half2float(srcPtr[srcIdx + 9]);
-    src_f24->x.y.x = __half2float(srcPtr[srcIdx + 12]);
-    src_f24->x.y.y = __half2float(srcPtr[srcIdx + 15]);
-    src_f24->x.y.z = __half2float(srcPtr[srcIdx + 18]);
-    src_f24->x.y.w = __half2float(srcPtr[srcIdx + 21]);
+    d_half24 *src_h24;
+    src_h24 = (d_half24 *)&srcPtr[srcIdx];
 
-    src_f24->y.x.x = __half2float(srcPtr[srcIdx + 1]);
-    src_f24->y.x.y = __half2float(srcPtr[srcIdx + 4]);
-    src_f24->y.x.z = __half2float(srcPtr[srcIdx + 7]);
-    src_f24->y.x.w = __half2float(srcPtr[srcIdx + 10]);
-    src_f24->y.y.x = __half2float(srcPtr[srcIdx + 13]);
-    src_f24->y.y.y = __half2float(srcPtr[srcIdx + 16]);
-    src_f24->y.y.z = __half2float(srcPtr[srcIdx + 19]);
-    src_f24->y.y.w = __half2float(srcPtr[srcIdx + 22]);
+    src_f24->x.x.x = __half2float(__low2half(src_h24->x.x.x));
+    src_f24->x.x.y = __half2float(__high2half(src_h24->x.x.y));
+    src_f24->x.x.z = __half2float(__low2half(src_h24->x.y.y));
+    src_f24->x.x.w = __half2float(__high2half(src_h24->y.x.x));
+    src_f24->x.y.x = __half2float(__low2half(src_h24->y.y.x));
+    src_f24->x.y.y = __half2float(__high2half(src_h24->y.y.y));
+    src_f24->x.y.z = __half2float(__low2half(src_h24->z.x.y));
+    src_f24->x.y.w = __half2float(__high2half(src_h24->z.y.x));
 
-    src_f24->z.x.x = __half2float(srcPtr[srcIdx + 2]);
-    src_f24->z.x.y = __half2float(srcPtr[srcIdx + 5]);
-    src_f24->z.x.z = __half2float(srcPtr[srcIdx + 8]);
-    src_f24->z.x.w = __half2float(srcPtr[srcIdx + 11]);
-    src_f24->z.y.x = __half2float(srcPtr[srcIdx + 14]);
-    src_f24->z.y.y = __half2float(srcPtr[srcIdx + 17]);
-    src_f24->z.y.z = __half2float(srcPtr[srcIdx + 20]);
-    src_f24->z.y.w = __half2float(srcPtr[srcIdx + 23]);
+    src_f24->y.x.x = __half2float(__high2half(src_h24->x.x.x));
+    src_f24->y.x.y = __half2float(__low2half(src_h24->x.y.x));
+    src_f24->y.x.z = __half2float(__high2half(src_h24->x.y.y));
+    src_f24->y.x.w = __half2float(__low2half(src_h24->y.x.y));
+    src_f24->y.y.x = __half2float(__high2half(src_h24->y.y.x));
+    src_f24->y.y.y = __half2float(__low2half(src_h24->z.x.x));
+    src_f24->y.y.z = __half2float(__high2half(src_h24->z.x.y));
+    src_f24->y.y.w = __half2float(__low2half(src_h24->z.y.y));
+
+    src_f24->z.x.x = __half2float(__low2half(src_h24->x.x.y));
+    src_f24->z.x.y = __half2float(__high2half(src_h24->x.y.x));
+    src_f24->z.x.z = __half2float(__low2half(src_h24->y.x.x));
+    src_f24->z.x.w = __half2float(__high2half(src_h24->y.x.y));
+    src_f24->z.y.x = __half2float(__low2half(src_h24->y.y.y));
+    src_f24->z.y.y = __half2float(__high2half(src_h24->z.x.x));
+    src_f24->z.y.z = __half2float(__low2half(src_h24->z.y.x));
+    src_f24->z.y.w = __half2float(__high2half(src_h24->z.y.y));
 }
 
 // U8 loads with layout toggle PLN3 to PKD3 (24 U8 pixels)
@@ -383,37 +407,41 @@ __device__ __forceinline__ void rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(f
     srcPtrG = srcPtrR + increment;
     srcPtrB = srcPtrG + increment;
 
-    src_f24->x.x.x = *srcPtrR;
-    src_f24->x.x.y = *srcPtrG;
-    src_f24->x.x.z = *srcPtrB;
+    float4 *srcPtrR_f4, *srcPtrG_f4, *srcPtrB_f4;
 
-    src_f24->x.x.w = *(srcPtrR + 1);
-    src_f24->x.y.x = *(srcPtrG + 1);
-    src_f24->x.y.y = *(srcPtrB + 1);
+    srcPtrR_f4 = (float4 *)srcPtrR;
+    srcPtrG_f4 = (float4 *)srcPtrG;
+    srcPtrB_f4 = (float4 *)srcPtrB;
 
-    src_f24->x.y.z = *(srcPtrR + 2);
-    src_f24->x.y.w = *(srcPtrG + 2);
-    src_f24->y.x.x = *(srcPtrB + 2);
+    src_f24->x.x.x = srcPtrR_f4->x;
+    src_f24->x.x.y = srcPtrG_f4->x;
+    src_f24->x.x.z = srcPtrB_f4->x;
+    src_f24->x.x.w = srcPtrR_f4->y;
+    src_f24->x.y.x = srcPtrG_f4->y;
+    src_f24->x.y.y = srcPtrB_f4->y;
+    src_f24->x.y.z = srcPtrR_f4->z;
+    src_f24->x.y.w = srcPtrG_f4->z;
+    src_f24->y.x.x = srcPtrB_f4->z;
+    src_f24->y.x.y = srcPtrR_f4->w;
+    src_f24->y.x.z = srcPtrG_f4->w;
+    src_f24->y.x.w = srcPtrB_f4->w;
 
-    src_f24->y.x.y = *(srcPtrR + 3);
-    src_f24->y.x.z = *(srcPtrG + 3);
-    src_f24->y.x.w = *(srcPtrB + 3);
+    srcPtrR_f4++;
+    srcPtrG_f4++;
+    srcPtrB_f4++;
 
-    src_f24->y.y.x = *(srcPtrR + 4);
-    src_f24->y.y.y = *(srcPtrG + 4);
-    src_f24->y.y.z = *(srcPtrB + 4);
-
-    src_f24->y.y.w = *(srcPtrR + 5);
-    src_f24->z.x.x = *(srcPtrG + 5);
-    src_f24->z.x.y = *(srcPtrB + 5);
-
-    src_f24->z.x.z = *(srcPtrR + 6);
-    src_f24->z.x.w = *(srcPtrG + 6);
-    src_f24->z.y.x = *(srcPtrB + 6);
-
-    src_f24->z.y.y = *(srcPtrR + 7);
-    src_f24->z.y.z = *(srcPtrG + 7);
-    src_f24->z.y.w = *(srcPtrB + 7);
+    src_f24->y.y.x = srcPtrR_f4->x;
+    src_f24->y.y.y = srcPtrG_f4->x;
+    src_f24->y.y.z = srcPtrB_f4->x;
+    src_f24->y.y.w = srcPtrR_f4->y;
+    src_f24->z.x.x = srcPtrG_f4->y;
+    src_f24->z.x.y = srcPtrB_f4->y;
+    src_f24->z.x.z = srcPtrR_f4->z;
+    src_f24->z.x.w = srcPtrG_f4->z;
+    src_f24->z.y.x = srcPtrB_f4->z;
+    src_f24->z.y.y = srcPtrR_f4->w;
+    src_f24->z.y.z = srcPtrG_f4->w;
+    src_f24->z.y.w = srcPtrB_f4->w;
 }
 
 // I8 loads with layout toggle PLN3 to PKD3 (24 I8 pixels)
@@ -445,37 +473,42 @@ __device__ __forceinline__ void rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(h
     srcPtrG = srcPtrR + increment;
     srcPtrB = srcPtrG + increment;
 
-    src_f24->x.x.x = __half2float(*srcPtrR);
-    src_f24->x.x.y = __half2float(*srcPtrG);
-    src_f24->x.x.z = __half2float(*srcPtrB);
+    d_half8 *srcR_h8, *srcG_h8, *srcB_h8;
+    srcR_h8 = (d_half8 *)srcPtrR;
+    srcG_h8 = (d_half8 *)srcPtrG;
+    srcB_h8 = (d_half8 *)srcPtrB;
 
-    src_f24->x.x.w = __half2float(*(srcPtrR + 1));
-    src_f24->x.y.x = __half2float(*(srcPtrG + 1));
-    src_f24->x.y.y = __half2float(*(srcPtrB + 1));
+    src_f24->x.x.x = __half2float(__low2half(srcR_h8->x.x));
+    src_f24->x.x.y = __half2float(__low2half(srcG_h8->x.x));
+    src_f24->x.x.z = __half2float(__low2half(srcB_h8->x.x));
 
-    src_f24->x.y.z = __half2float(*(srcPtrR + 2));
-    src_f24->x.y.w = __half2float(*(srcPtrG + 2));
-    src_f24->y.x.x = __half2float(*(srcPtrB + 2));
+    src_f24->x.x.w = __half2float(__high2half(srcR_h8->x.x));
+    src_f24->x.y.x = __half2float(__high2half(srcG_h8->x.x));
+    src_f24->x.y.y = __half2float(__high2half(srcB_h8->x.x));
 
-    src_f24->y.x.y = __half2float(*(srcPtrR + 3));
-    src_f24->y.x.z = __half2float(*(srcPtrG + 3));
-    src_f24->y.x.w = __half2float(*(srcPtrB + 3));
+    src_f24->x.y.z = __half2float(__low2half(srcR_h8->x.y));
+    src_f24->x.y.w = __half2float(__low2half(srcG_h8->x.y));
+    src_f24->y.x.x = __half2float(__low2half(srcB_h8->x.y));
 
-    src_f24->y.y.x = __half2float(*(srcPtrR + 4));
-    src_f24->y.y.y = __half2float(*(srcPtrG + 4));
-    src_f24->y.y.z = __half2float(*(srcPtrB + 4));
+    src_f24->y.x.y = __half2float(__high2half(srcR_h8->x.y));
+    src_f24->y.x.z = __half2float(__high2half(srcG_h8->x.y));
+    src_f24->y.x.w = __half2float(__high2half(srcB_h8->x.y));
 
-    src_f24->y.y.w = __half2float(*(srcPtrR + 5));
-    src_f24->z.x.x = __half2float(*(srcPtrG + 5));
-    src_f24->z.x.y = __half2float(*(srcPtrB + 5));
+    src_f24->y.y.x = __half2float(__low2half(srcR_h8->y.x));
+    src_f24->y.y.y = __half2float(__low2half(srcG_h8->y.x));
+    src_f24->y.y.z = __half2float(__low2half(srcB_h8->y.x));
 
-    src_f24->z.x.z = __half2float(*(srcPtrR + 6));
-    src_f24->z.x.w = __half2float(*(srcPtrG + 6));
-    src_f24->z.y.x = __half2float(*(srcPtrB + 6));
+    src_f24->y.y.w = __half2float(__high2half(srcR_h8->y.x));
+    src_f24->z.x.x = __half2float(__high2half(srcG_h8->y.x));
+    src_f24->z.x.y = __half2float(__high2half(srcB_h8->y.x));
 
-    src_f24->z.y.y = __half2float(*(srcPtrR + 7));
-    src_f24->z.y.z = __half2float(*(srcPtrG + 7));
-    src_f24->z.y.w = __half2float(*(srcPtrB + 7));
+    src_f24->z.x.z = __half2float(__low2half(srcR_h8->y.y));
+    src_f24->z.x.w = __half2float(__low2half(srcG_h8->y.y));
+    src_f24->z.y.x = __half2float(__low2half(srcB_h8->y.y));
+
+    src_f24->z.y.y = __half2float(__high2half(srcR_h8->y.y));
+    src_f24->z.y.z = __half2float(__high2half(srcG_h8->y.y));
+    src_f24->z.y.w = __half2float(__high2half(srcB_h8->y.y));
 }
 
 // U8 stores without layout toggle (24 U8 pixels)
@@ -523,20 +556,20 @@ __device__ __forceinline__ void rpp_hip_pack_float24_and_store24(half *dstPtr, u
 {
     d_half24 dst_h24;
 
-    dst_h24.x.x.x = __float22half2_rn(*(float2 *)&(dst_f24->x));
-    dst_h24.x.x.y = __float22half2_rn(*((float2 *)&(dst_f24->x) + 1));
-    dst_h24.x.y.x = __float22half2_rn(*((float2 *)&(dst_f24->x) + 2));
-    dst_h24.x.y.y = __float22half2_rn(*((float2 *)&(dst_f24->x) + 3));
+    dst_h24.x.x.x = __float22half2_rn(make_float2(dst_f24->x.x.x, dst_f24->x.x.y));
+    dst_h24.x.x.y = __float22half2_rn(make_float2(dst_f24->x.x.z, dst_f24->x.x.w));
+    dst_h24.x.y.x = __float22half2_rn(make_float2(dst_f24->x.y.x, dst_f24->x.y.y));
+    dst_h24.x.y.y = __float22half2_rn(make_float2(dst_f24->x.y.z, dst_f24->x.y.w));
 
-    dst_h24.y.x.x = __float22half2_rn(*((float2 *)&(dst_f24->x) + 4));
-    dst_h24.y.x.y = __float22half2_rn(*((float2 *)&(dst_f24->x) + 5));
-    dst_h24.y.y.x = __float22half2_rn(*((float2 *)&(dst_f24->x) + 6));
-    dst_h24.y.y.y = __float22half2_rn(*((float2 *)&(dst_f24->x) + 7));
+    dst_h24.y.x.x = __float22half2_rn(make_float2(dst_f24->y.x.x, dst_f24->y.x.y));
+    dst_h24.y.x.y = __float22half2_rn(make_float2(dst_f24->y.x.z, dst_f24->y.x.w));
+    dst_h24.y.y.x = __float22half2_rn(make_float2(dst_f24->y.y.x, dst_f24->y.y.y));
+    dst_h24.y.y.y = __float22half2_rn(make_float2(dst_f24->y.y.z, dst_f24->y.y.w));
 
-    dst_h24.z.x.x = __float22half2_rn(*((float2 *)&(dst_f24->x) + 8));
-    dst_h24.z.x.y = __float22half2_rn(*((float2 *)&(dst_f24->x) + 9));
-    dst_h24.z.y.x = __float22half2_rn(*((float2 *)&(dst_f24->x) + 10));
-    dst_h24.z.y.y = __float22half2_rn(*((float2 *)&(dst_f24->x) + 11));
+    dst_h24.z.x.x = __float22half2_rn(make_float2(dst_f24->z.x.x, dst_f24->z.x.y));
+    dst_h24.z.x.y = __float22half2_rn(make_float2(dst_f24->z.x.z, dst_f24->z.x.w));
+    dst_h24.z.y.x = __float22half2_rn(make_float2(dst_f24->z.y.x, dst_f24->z.y.y));
+    dst_h24.z.y.y = __float22half2_rn(make_float2(dst_f24->z.y.z, dst_f24->z.y.w));
 
     *((d_half24 *)(&dstPtr[dstIdx])) = dst_h24;
 }
