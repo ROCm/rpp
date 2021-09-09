@@ -35,20 +35,20 @@ typedef size_t              RppSize_t;
 typedef enum
 {
     RPP_SUCCESS             = 0,
-    RPP_ERROR               = 1,
+    RPP_ERROR               = -1,
 } RppStatus;
 
 typedef enum
 {
     rppStatusSuccess        = 0,
-    rppStatusBadParm        = 1,
-    rppStatusUnknownError   = 2,
-    rppStatusNotInitialized = 3,
-    rppStatusInvalidValue   = 4,
-    rppStatusAllocFailed    = 5,
-    rppStatusInternalError  = 6,
-    rppStatusNotImplemented = 7,
-    rppStatusUnsupportedOp  = 8,
+    rppStatusBadParm        = -1,
+    rppStatusUnknownError   = -2,
+    rppStatusNotInitialized = -3,
+    rppStatusInvalidValue   = -4,
+    rppStatusAllocFailed    = -5,
+    rppStatusInternalError  = -6,
+    rppStatusNotImplemented = -7,
+    rppStatusUnsupportedOp  = -8,
 } rppStatus_t;
 
 typedef enum
