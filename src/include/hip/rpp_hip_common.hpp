@@ -32,6 +32,13 @@ typedef struct d_uint6
     uint2 z;
 } d_uint6;
 
+typedef struct d_int6
+{
+    int2 x;
+    int2 y;
+    int2 z;
+} d_int6;
+
 typedef struct d_half4
 {
     half2 x;
@@ -117,7 +124,7 @@ inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp
 
 // Device functions
 
-// Packing
+// Packing to U8s
 
 __device__ __forceinline__ uint rpp_hip_pack(float4 src)
 {
@@ -127,7 +134,9 @@ __device__ __forceinline__ uint rpp_hip_pack(float4 src)
            __builtin_amdgcn_cvt_pk_u8_f32(src.x, 0, 0))));
 }
 
-__device__ __forceinline__ int rpp_hip_pack_to_i8(float4 src)
+// Packing to I8s
+
+__device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
 {
     return __builtin_amdgcn_cvt_pk_u8_f32(src.w, 3,
            __builtin_amdgcn_cvt_pk_u8_f32(src.z, 2,
@@ -135,7 +144,7 @@ __device__ __forceinline__ int rpp_hip_pack_to_i8(float4 src)
            __builtin_amdgcn_cvt_pk_u8_f32(src.x, 0, 0))));
 }
 
-// Un-Packing
+// Un-Packing from U8s
 
 __device__ __forceinline__ float rpp_hip_unpack0(uint src)
 {
@@ -162,24 +171,26 @@ __device__ __forceinline__ float4 rpp_hip_unpack(uint src)
     return make_float4(rpp_hip_unpack0(src), rpp_hip_unpack1(src), rpp_hip_unpack2(src), rpp_hip_unpack3(src));
 }
 
+// Un-Packing from I8s
+
 __device__ __forceinline__ float rpp_hip_unpack0(int src)
 {
-    return (float)(src & 0xFF);
+    return (float)(signed char)(src & 0xFF);
 }
 
 __device__ __forceinline__ float rpp_hip_unpack1(int src)
 {
-    return (float)((src >> 8) & 0xFF);
+    return (float)(signed char)((src >> 8) & 0xFF);
 }
 
 __device__ __forceinline__ float rpp_hip_unpack2(int src)
 {
-    return (float)((src >> 16) & 0xFF);
+    return (float)(signed char)((src >> 16) & 0xFF);
 }
 
 __device__ __forceinline__ float rpp_hip_unpack3(int src)
 {
-    return (float)((src >> 24) & 0xFF);
+    return (float)(signed char)((src >> 24) & 0xFF);
 }
 
 __device__ __forceinline__ float4 rpp_hip_unpack_from_i8(int src)
@@ -220,16 +231,16 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(float *dstPtr, ui
 
 __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(signed char *srcPtr, uint srcIdx, d_float8 *src_f8)
 {
-    uint2 src = *((uint2 *)(&srcPtr[srcIdx]));
-    src_f8->x = rpp_hip_unpack(src.x);
-    src_f8->y = rpp_hip_unpack(src.y);
+    int2 src = *((int2 *)(&srcPtr[srcIdx]));
+    src_f8->x = rpp_hip_unpack_from_i8(src.x);
+    src_f8->y = rpp_hip_unpack_from_i8(src.y);
 }
 
 __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(signed char *dstPtr, uint dstIdx, d_float8 *dst_f8)
 {
     uint2 dst;
-    dst.x = rpp_hip_pack(dst_f8->x);
-    dst.y = rpp_hip_pack(dst_f8->y);
+    dst.x = rpp_hip_pack_i8(dst_f8->x);
+    dst.y = rpp_hip_pack_i8(dst_f8->y);
     *((uint2 *)(&dstPtr[dstIdx])) = dst;
 }
 
@@ -331,7 +342,7 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(f
 
 __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(signed char *srcPtr, uint srcIdx, d_float24 *src_f24)
 {
-    d_uint6 src = *((d_uint6 *)(&srcPtr[srcIdx]));
+    d_int6 src = *((d_int6 *)(&srcPtr[srcIdx]));
 
     src_f24->x.x = make_float4(rpp_hip_unpack0(src.x.x), rpp_hip_unpack3(src.x.x), rpp_hip_unpack2(src.x.y), rpp_hip_unpack1(src.y.x));
     src_f24->x.y = make_float4(rpp_hip_unpack0(src.y.y), rpp_hip_unpack3(src.y.y), rpp_hip_unpack2(src.z.x), rpp_hip_unpack1(src.z.y));
@@ -448,13 +459,13 @@ __device__ __forceinline__ void rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(f
 
 __device__ __forceinline__ void rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(signed char *srcPtr, uint srcIdx, uint increment, d_float24 *src_f24)
 {
-    d_uint6 src;
+    d_int6 src;
 
-    src.x = *((uint2 *)(&srcPtr[srcIdx]));
+    src.x = *((int2 *)(&srcPtr[srcIdx]));
     srcIdx += increment;
-    src.y = *((uint2 *)(&srcPtr[srcIdx]));
+    src.y = *((int2 *)(&srcPtr[srcIdx]));
     srcIdx += increment;
-    src.z = *((uint2 *)(&srcPtr[srcIdx]));
+    src.z = *((int2 *)(&srcPtr[srcIdx]));
 
     src_f24->x.x = make_float4(rpp_hip_unpack0(src.x.x), rpp_hip_unpack0(src.y.x), rpp_hip_unpack0(src.z.x), rpp_hip_unpack1(src.x.x));
     src_f24->x.y = make_float4(rpp_hip_unpack1(src.y.x), rpp_hip_unpack1(src.z.x), rpp_hip_unpack2(src.x.x), rpp_hip_unpack2(src.y.x));
@@ -540,12 +551,12 @@ __device__ __forceinline__ void rpp_hip_pack_float24_and_store24(signed char *ds
 {
     d_uint6 dst;
 
-    dst.x.x = (int) rpp_hip_pack(dst_f24->x.x);
-    dst.x.y = (int) rpp_hip_pack(dst_f24->x.y);
-    dst.y.x = (int) rpp_hip_pack(dst_f24->y.x);
-    dst.y.y = (int) rpp_hip_pack(dst_f24->y.y);
-    dst.z.x = (int) rpp_hip_pack(dst_f24->z.x);
-    dst.z.y = (int) rpp_hip_pack(dst_f24->z.y);
+    dst.x.x = rpp_hip_pack_i8(dst_f24->x.x);
+    dst.x.y = rpp_hip_pack_i8(dst_f24->x.y);
+    dst.y.x = rpp_hip_pack_i8(dst_f24->y.x);
+    dst.y.y = rpp_hip_pack_i8(dst_f24->y.y);
+    dst.z.x = rpp_hip_pack_i8(dst_f24->z.x);
+    dst.z.y = rpp_hip_pack_i8(dst_f24->z.y);
 
     *((d_uint6 *)(&dstPtr[dstIdx])) = dst;
 }
