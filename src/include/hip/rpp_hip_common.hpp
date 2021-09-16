@@ -91,6 +91,17 @@ struct RPPTensorFunctionMetaData
     }
 };
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0')
+
 /******************** HOST FUNCTIONS ********************/
 
 inline int getplnpkdind(RppiChnFormat &format)
@@ -140,10 +151,13 @@ __device__ __forceinline__ uint rpp_hip_pack(float4 src)
 
 __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
 {
-    return __builtin_amdgcn_cvt_pk_u8_f32(src.w, 3,
-           __builtin_amdgcn_cvt_pk_u8_f32(src.z, 2,
-           __builtin_amdgcn_cvt_pk_u8_f32(src.y, 1,
-           __builtin_amdgcn_cvt_pk_u8_f32(src.x, 0, 0))));
+    char4 dst_c4;
+    dst_c4.w = (signed char)(src.w);
+    dst_c4.z = (signed char)(src.z);
+    dst_c4.y = (signed char)(src.y);
+    dst_c4.x = (signed char)(src.x);
+
+    return *(uint *)&dst_c4;
 }
 
 // -------------------- Set 2 - Un-Packing --------------------
