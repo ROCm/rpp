@@ -91,6 +91,17 @@ struct RPPTensorFunctionMetaData
     }
 };
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0')
+
 /******************** HOST FUNCTIONS ********************/
 
 inline int getplnpkdind(RppiChnFormat &format)
@@ -138,13 +149,113 @@ __device__ __forceinline__ uint rpp_hip_pack(float4 src)
 
 // Packing to I8s
 
+// Original packing
 __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
 {
-    return __builtin_amdgcn_cvt_pk_u8_f32(src.w, 3,
-           __builtin_amdgcn_cvt_pk_u8_f32(src.z, 2,
-           __builtin_amdgcn_cvt_pk_u8_f32(src.y, 1,
-           __builtin_amdgcn_cvt_pk_u8_f32(src.x, 0, 0))));
+    // return __builtin_amdgcn_cvt_pk_u8_f32(src.w, 3,
+    //        __builtin_amdgcn_cvt_pk_u8_f32(src.z, 2,
+    //        __builtin_amdgcn_cvt_pk_u8_f32(src.y, 1,
+    //        __builtin_amdgcn_cvt_pk_u8_f32(src.x, 0, 0))));
+
+    // uchar signw = (256 - (uchar)(src.w < 0));
+    // uchar signz = (256 - (uchar)(src.z < 0));
+    // uchar signy = (256 - (uchar)(src.y < 0));
+    // uchar signx = (256 - (uchar)(src.x < 0));
+
+    // uint signs = __builtin_amdgcn_cvt_pk_u8_f32((256 - (uchar)(src.w < 0)), 3,
+    //              __builtin_amdgcn_cvt_pk_u8_f32((256 - (uchar)(src.z < 0)), 2,
+    //              __builtin_amdgcn_cvt_pk_u8_f32((256 - (uchar)(src.y < 0)), 1,
+    //              __builtin_amdgcn_cvt_pk_u8_f32((256 - (uchar)(src.x < 0)), 0, 0))));
+
+    // printf("\nsigns: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(signw), BYTE_TO_BINARY(signz), BYTE_TO_BINARY(signy), BYTE_TO_BINARY(signx));
+    // printf("\nsigns: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(signs >> 24), BYTE_TO_BINARY(signs >> 16), BYTE_TO_BINARY(signs >> 8), BYTE_TO_BINARY(signs));
+
+    char4 dst_c4;
+    dst_c4.w = (signed char)(src.w);
+    dst_c4.z = (signed char)(src.z);
+    dst_c4.y = (signed char)(src.y);
+    dst_c4.x = (signed char)(src.x);
+
+    // printf("\nvals: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(vals.w), BYTE_TO_BINARY(vals.z), BYTE_TO_BINARY(vals.y), BYTE_TO_BINARY(vals.x));
+
+
+    // uint *dst;
+    // dst = (uint *)&vals;
+
+    // dst_uchar4 = &dst;
+    // dst_uchar4.x = &(signed char)(src.x)
+    // dst_uchar4.y = &(signed char)(src.y)
+    // dst_uchar4.z =
+    // dst_uchar4.w =
+
+
+
+    // uint dst = (((((((uint)valx) << 8) | (int)valy) << 8) | (int)valz) << 8) | (int)valw;
+    // printf("\ndst: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(*dst >> 24), BYTE_TO_BINARY(*dst >> 16), BYTE_TO_BINARY(*dst >> 8), BYTE_TO_BINARY(*dst));
+
+
+
+
+    // return __builtin_amdgcn_cvt_pk_u8_f32(3.75, 3,
+    //        __builtin_amdgcn_cvt_pk_u8_f32(4.25, 2,
+    //        __builtin_amdgcn_cvt_pk_u8_f32(13.0, 1,
+    //        __builtin_amdgcn_cvt_pk_u8_f32(-3.75, 0, 0))));
+
+    return *(uint *)&dst_c4;
 }
+
+// Original with print
+// __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
+// {
+//     uint dst = 0;
+//     // printf("\n\ndst: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dst >> 24), BYTE_TO_BINARY(dst >> 16), BYTE_TO_BINARY(dst >> 8), BYTE_TO_BINARY(dst));
+//     dst = __builtin_amdgcn_cvt_pk_u8_f32(src.w, 3,
+//           __builtin_amdgcn_cvt_pk_u8_f32(src.z, 2,
+//           __builtin_amdgcn_cvt_pk_u8_f32(src.y, 1,
+//           __builtin_amdgcn_cvt_pk_u8_f32(src.x, 0, 0))));
+//     printf("\ndst: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dst >> 24), BYTE_TO_BINARY(dst >> 16), BYTE_TO_BINARY(dst >> 8), BYTE_TO_BINARY(dst));
+
+//     return dst;
+// }
+
+// New with print
+// __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
+// {
+//     uchar signw = (uchar)(src.w < 0) << 7;
+//     uchar signz = (uchar)(src.z < 0) << 7;
+//     uchar signy = (uchar)(src.y < 0) << 7;
+//     uchar signx = (uchar)(src.x < 0) << 7;
+
+//     uint dst = 0;
+//     printf("\ndst: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dst >> 24), BYTE_TO_BINARY(dst >> 16), BYTE_TO_BINARY(dst >> 8), BYTE_TO_BINARY(dst));
+
+//     dst = ((uchar)fabsf(src.w) | signw);
+//     printf("dst: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dst >> 24), BYTE_TO_BINARY(dst >> 16), BYTE_TO_BINARY(dst >> 8), BYTE_TO_BINARY(dst));
+
+//     dst <<= 8;
+//     dst |= ((uchar)fabsf(src.z) | signz);
+//     printf("dst: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dst >> 24), BYTE_TO_BINARY(dst >> 16), BYTE_TO_BINARY(dst >> 8), BYTE_TO_BINARY(dst));
+
+//     dst <<= 8;
+//     dst |= ((uchar)fabsf(src.y) | signy);
+//     printf("dst: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dst >> 24), BYTE_TO_BINARY(dst >> 16), BYTE_TO_BINARY(dst >> 8), BYTE_TO_BINARY(dst));
+
+//     dst <<= 8;
+//     dst |= ((uchar)fabsf(src.x) | signx);
+//     printf("dst: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dst >> 24), BYTE_TO_BINARY(dst >> 16), BYTE_TO_BINARY(dst >> 8), BYTE_TO_BINARY(dst));
+
+//     // printf("\n\n%0.3f", (float) dst_f8->x.x);
+//     // printf("\n%0.3f", (float) dst_f8->x.y);
+//     // printf("\n%0.3f", (float) dst_f8->x.z);
+//     // printf("\n%0.3f", (float) dst_f8->x.w);
+//     // printf("\n%0.3f", (float) dst_f8->y.x);
+//     // printf("\n%0.3f", (float) dst_f8->y.y);
+//     // printf("\n%0.3f", (float) dst_f8->y.z);
+//     // printf("\n%0.3f", (float) dst_f8->y.w);
+
+//     return dst;
+// }
+
 
 // -------------------- Set 2 - Un-Packing --------------------
 
@@ -227,6 +338,25 @@ __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(signed char *
     int2 src = *((int2 *)(&srcPtr[srcIdx]));
     src_f8->x = rpp_hip_unpack_from_i8(src.x);
     src_f8->y = rpp_hip_unpack_from_i8(src.y);
+
+    printf("\n\n%0.3f", (float) src_f8->x.x);
+    printf("\n%0.3f", (float) src_f8->x.y);
+    printf("\n%0.3f", (float) src_f8->x.z);
+    printf("\n%0.3f", (float) src_f8->x.w);
+    printf("\n%0.3f", (float) src_f8->y.x);
+    printf("\n%0.3f", (float) src_f8->y.y);
+    printf("\n%0.3f", (float) src_f8->y.z);
+    printf("\n%0.3f", (float) src_f8->y.w);
+
+    // src_f8->x.x = (float) srcPtr[srcIdx];
+    // src_f8->x.y = (float) srcPtr[srcIdx + 1];
+    // src_f8->x.z = (float) srcPtr[srcIdx + 2];
+    // src_f8->x.w = (float) srcPtr[srcIdx + 3];
+
+    // src_f8->y.x = (float) srcPtr[srcIdx + 4];
+    // src_f8->y.y = (float) srcPtr[srcIdx + 5];
+    // src_f8->y.z = (float) srcPtr[srcIdx + 6];
+    // src_f8->y.w = (float) srcPtr[srcIdx + 7];
 }
 
 // F16 loads without layout toggle (8 F16 pixels)
@@ -507,10 +637,50 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(float *dstPtr, ui
 
 __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(signed char *dstPtr, uint dstIdx, d_float8 *dst_f8)
 {
+    printf("\n\n%0.3f", (float) dst_f8->x.x);
+    printf("\n%0.3f", (float) dst_f8->x.y);
+    printf("\n%0.3f", (float) dst_f8->x.z);
+    printf("\n%0.3f", (float) dst_f8->x.w);
+    printf("\n%0.3f", (float) dst_f8->y.x);
+    printf("\n%0.3f", (float) dst_f8->y.y);
+    printf("\n%0.3f", (float) dst_f8->y.z);
+    printf("\n%0.3f", (float) dst_f8->y.w);
+
     uint2 dst;
     dst.x = rpp_hip_pack_i8(dst_f8->x);
     dst.y = rpp_hip_pack_i8(dst_f8->y);
     *((uint2 *)(&dstPtr[dstIdx])) = dst;
+
+    // dstPtr[dstIdx] = (signed char) -2.75;//dst_f8->x.x;
+    // dstPtr[dstIdx + 1] = (signed char) -3.75;//dst_f8->x.y;
+    // dstPtr[dstIdx + 2] = (signed char) -4.75;//dst_f8->x.z;
+    // dstPtr[dstIdx + 3] = (signed char) 2.75;//dst_f8->x.w;
+    // dstPtr[dstIdx + 4] = (signed char) 3.75;//dst_f8->y.x;
+    // dstPtr[dstIdx + 5] = (signed char) 4.75;//dst_f8->y.y;
+    // dstPtr[dstIdx + 6] = (signed char) 0;//dst_f8->y.z;
+    // dstPtr[dstIdx + 7] = (signed char) 0;//dst_f8->y.w;
+
+
+
+
+    // uint dstPtr_uint;
+    // dstPtr_uint = *(uint *)(dstPtr + dstIdx);
+
+    // printf("\n\ndstPtr_uint: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dstPtr_uint >> 24), BYTE_TO_BINARY(dstPtr_uint >> 16), BYTE_TO_BINARY(dstPtr_uint >> 8), BYTE_TO_BINARY(dstPtr_uint));
+    // dstPtr_uint = *(((uint *)(dstPtr + dstIdx)) + 1);
+    // printf("dstPtr_uint: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dstPtr_uint >> 24), BYTE_TO_BINARY(dstPtr_uint >> 16), BYTE_TO_BINARY(dstPtr_uint >> 8), BYTE_TO_BINARY(dstPtr_uint));
+
+
+
+
+
+    // printf("\n\ndst_f8->x: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY((signed char) dst_f8->x.w), BYTE_TO_BINARY((signed char) dst_f8->x.z), BYTE_TO_BINARY((signed char) dst_f8->x.y), BYTE_TO_BINARY((signed char) dst_f8->x.x));
+    // printf("dst_f8->y: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY((signed char) dst_f8->y.w), BYTE_TO_BINARY((signed char) dst_f8->y.z), BYTE_TO_BINARY((signed char) dst_f8->y.y), BYTE_TO_BINARY((signed char) dst_f8->y.x));
+
+
+
+    printf("\n\ndst_f8->x: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dstPtr[dstIdx]), BYTE_TO_BINARY(dstPtr[dstIdx + 1]), BYTE_TO_BINARY(dstPtr[dstIdx + 2]), BYTE_TO_BINARY(dstPtr[dstIdx + 3]));
+    printf("dst_f8->y: " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(dstPtr[dstIdx + 4]), BYTE_TO_BINARY(dstPtr[dstIdx + 5]), BYTE_TO_BINARY(dstPtr[dstIdx + 6]), BYTE_TO_BINARY(dstPtr[dstIdx + 7]));
 }
 
 // F16 stores without layout toggle (8 F16 pixels)

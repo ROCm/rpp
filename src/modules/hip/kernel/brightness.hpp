@@ -45,6 +45,8 @@ __global__ void brightness_pkd_tensor(T *srcPtr,
         return;
     }
 
+    if ((id_x == 16) && (id_y == 0) && (id_z == 0))
+    {
     uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
 
@@ -56,6 +58,7 @@ __global__ void brightness_pkd_tensor(T *srcPtr,
     rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
     brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
     rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+    }
 }
 
 template <typename T>
