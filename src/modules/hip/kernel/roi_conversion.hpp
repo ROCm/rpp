@@ -4,8 +4,11 @@ extern "C" __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 4;
 
-    roiTensorPtrSrc[id_x + 2] -= (roiTensorPtrSrc[id_x] - 1);
-    roiTensorPtrSrc[id_x + 3] -= (roiTensorPtrSrc[id_x + 1] - 1);
+    int4 *roiTensorPtrSrc_i4;
+    roiTensorPtrSrc_i4 = (int4 *)&roiTensorPtrSrc[id_x];
+
+    roiTensorPtrSrc_i4->z -= (roiTensorPtrSrc_i4->x - 1);
+    roiTensorPtrSrc_i4->w -= (roiTensorPtrSrc_i4->y - 1);
 }
 
 RppStatus hip_exec_roi_converison_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
