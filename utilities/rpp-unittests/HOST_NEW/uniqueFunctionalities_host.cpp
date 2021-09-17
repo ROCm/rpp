@@ -109,6 +109,9 @@ int main(int argc, char **argv)
 
     printf("\nip_bitDepth = %d\ntest_case = %d", ip_bitDepth, test_case);
 
+    rppHandle_t handle;
+    rppCreate(&handle);
+
     clock_t start, end;
     double start_omp, end_omp;
     double cpu_time_used, omp_time_used;
@@ -121,54 +124,6 @@ int main(int argc, char **argv)
     case 0:
     {
         test_case_name = "tensor_transpose";
-
-        // Test Case 1
-        Rpp32u totalNumberOfElements = 36;
-        Rpp32u tensorDimension = 3;
-        Rpp32u tensorDimensionValues[3] = {3, 3, 4};
-        Rpp32u dimension1 = 0, dimension2 = 1;
-        Rpp8u srcPtr[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
-        Rpp8u dstPtr[36] = {0};
-
-        // Test Case 2
-        // Rpp32u totalNumberOfElements = 48;
-        // Rpp32u tensorDimension = 3;
-        // Rpp32u tensorDimensionValues[3] = {4, 4, 3};
-        // Rpp32u dimension1 = 0, dimension2 = 1;
-        // Rpp8u srcPtr[48] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 91, 95, 92, 98, 65, 66, 67, 68, 69, 70, 71, 72, 49, 47, 55, 51, 41, 39, 38, 34, 13, 24, 15, 16};
-        // Rpp8u dstPtr[48] = {0};
-
-        start = clock();
-        start_omp = omp_get_wtime();
-        if (ip_bitDepth == 0)
-            rppi_tensor_transpose_u8_host(srcPtr, dstPtr, dimension1, dimension2, tensorDimension, tensorDimensionValues);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-        end_omp = omp_get_wtime();
-        end = clock();
-
-        printf("\n\nInput:\n");
-        displayTensor(srcPtr, totalNumberOfElements);
-        printf("\n\nOutput of tensor_transpose:\n");
-        displayTensor(dstPtr, totalNumberOfElements);
-
-        break;
-    }
-    case 1:
-    {
-        test_case_name = "transpose";
 
         // Test Case 1
         // Rpp32u totalNumberOfElements = 24;
@@ -185,9 +140,9 @@ int main(int argc, char **argv)
         Rpp32u perm[4] = {0, 3, 1, 2};
         Rpp32u shape[4] = {2, 4, 5, 3};
         Rpp8u srcPtr[120] = {
-            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0, 
-            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110, 
-            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135, 
+            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0,
+            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110,
+            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135,
             70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 15, 14, 13, 12, 11, 10
         };
         Rpp8u dstPtr[120] = {0};
@@ -206,17 +161,17 @@ int main(int argc, char **argv)
         start = clock();
         start_omp = omp_get_wtime();
         if (ip_bitDepth == 0)
-            rppi_transpose_u8_host(srcPtr, dstPtr, perm, shape);
+            rppi_tensor_transpose_u8_host(srcPtr, dstPtr, shape, perm, handle);
         else if (ip_bitDepth == 1)
-            rppi_transpose_f16_host(srcPtr16f, dstPtr16f, perm, shape);
+            rppi_tensor_transpose_f16_host(srcPtr16f, dstPtr16f, shape, perm, handle);
         else if (ip_bitDepth == 2)
-            rppi_transpose_f32_host(srcPtr32f, dstPtr32f, perm, shape);
+            rppi_tensor_transpose_f32_host(srcPtr32f, dstPtr32f, shape, perm, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppi_transpose_i8_host(srcPtr8s, dstPtr8s, perm, shape);
+            rppi_tensor_transpose_i8_host(srcPtr8s, dstPtr8s, shape, perm, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -260,15 +215,15 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        
+
         break;
     }
-    case 2:
+    case 1:
     {
         test_case_name = "tensor_add";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr1[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
         Rpp8u srcPtr2[36] = {16, 15, 24, 13, 72, 71, 70, 69, 68, 67, 66, 65, 108, 100, 111, 127, 121, 113, 117, 126, 127, 128, 129, 130, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
 
@@ -318,12 +273,12 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 3:
+    case 2:
     {
         test_case_name = "tensor_subtract";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr1[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
         Rpp8u srcPtr2[36] = {16, 15, 24, 13, 72, 71, 70, 69, 68, 67, 66, 65, 108, 100, 111, 127, 121, 113, 117, 126, 127, 128, 129, 130, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
 
@@ -373,12 +328,12 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 4:
+    case 3:
     {
         test_case_name = "tensor_multiply";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr1[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
         Rpp8u srcPtr2[36] = {16, 15, 24, 13, 72, 71, 70, 69, 68, 67, 66, 65, 108, 100, 111, 127, 121, 113, 117, 126, 127, 128, 129, 130, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
 
@@ -428,12 +383,12 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 5:
+    case 4:
     {
         test_case_name = "tensor_matrix_multiply";
 
         rppHandle_t handle;
-        
+
         Rpp32u tensorDimensionValues1[2] = {3, 2};
         Rpp32u tensorDimensionValues2[2] = {2, 4};
 
@@ -484,12 +439,12 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 6:
+    case 5:
     {
         test_case_name = "min_max_loc";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
 
         RppiSize srcSize1Channel, srcSize3Channel;
@@ -544,12 +499,12 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 7:
+    case 6:
     {
         test_case_name = "mean_stddev";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
 
         RppiSize srcSize1Channel, srcSize3Channel;
@@ -603,17 +558,17 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 8:
+    case 7:
     {
         test_case_name = "control_flow";
 
         rppHandle_t handle;
-        
+
         bool b1 = true, b2 = false;
         bool b3 =  true;
         Rpp8u u1 = 120, u2 = 100;
         Rpp8u u3 = 20;
-        
+
         start = clock();
         start_omp = omp_get_wtime();
         rpp_bool_control_flow(b1, b2, &b3, RPP_SCALAR_OP_AND, handle );
@@ -638,10 +593,10 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 9:
+    case 8:
     {
         test_case_name = "histogram";
-        
+
         rppHandle_t handle;
         int count = 0;
 
@@ -650,7 +605,7 @@ int main(int argc, char **argv)
         RppiSize srcSize;
         Rpp32u *outputHistogram = (Rpp32u *) calloc (bins, sizeof(Rpp32u));
         Rpp32u *outputHistogramTemp;
-        
+
         memset(outputHistogram, 0, bins * sizeof(Rpp32u));
         srcSize.height = 6;
         srcSize.width = 6;
@@ -734,12 +689,12 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 10:
+    case 9:
     {
         test_case_name = "convert_bit_depth";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
         Rpp8s dstPtr8s[36];
         Rpp16u dstPtr16u[36];
@@ -842,12 +797,12 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 11:
+    case 10:
     {
         test_case_name = "tensor_convert_bit_depth";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
         Rpp8s dstPtr8s[36];
         Rpp16u dstPtr16u[36];
@@ -898,7 +853,7 @@ int main(int argc, char **argv)
 
         break;
     }
-    case 12:
+    case 11:
     {
         test_case_name = "tensor_look_up_table";
 

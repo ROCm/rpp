@@ -340,7 +340,7 @@ then
 
     printf "\n\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>"
 
-    for ((case=0;case<13;case++))
+    for ((case=0;case<12;case++))
     do
         printf "\n\n\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_host_log.txt"
         echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_host_log.txt"

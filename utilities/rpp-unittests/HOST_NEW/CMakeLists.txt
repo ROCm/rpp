@@ -7,7 +7,7 @@ find_package(OpenCV REQUIRED)
 find_package(AMDRPP QUIET)
 
 if(NOT OpenCL_FOUND)
-	message("-- ${Yellow}Rpp_test requires OpenCL, Found ${OpenCL_INCLUDE_DIRS} ${OpenCL_LIBRARIES} ${ColourReset}")
+    message("-- ${Yellow}Rpp_test requires OpenCL, Found ${OpenCL_INCLUDE_DIRS} ${OpenCL_LIBRARIES} ${ColourReset}")
 endif()
 
 if (OpenCL_FOUND)
