@@ -31,7 +31,10 @@ if profilingOption == "NO":
     log_file_list = [
         "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pkd3_hip_raw_performance_log.txt",
         "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln3_hip_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln1_hip_raw_performance_log.txt"
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/BatchPD_hip_pln1_hip_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_hip_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln3_hip_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln1_hip_raw_performance_log.txt"
         ]
 
     functionality_group_list = [
@@ -137,15 +140,20 @@ elif profilingOption == "YES":
 
     RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW"
     print("RESULTS_DIR = " + RESULTS_DIR)
-    CONSOLIDATED_FILE_PKD3 = RESULTS_DIR + "/consolidated_results_pkd3.stats.csv"
-    CONSOLIDATED_FILE_PLN1 = RESULTS_DIR + "/consolidated_results_pln1.stats.csv"
-    CONSOLIDATED_FILE_PLN3 = RESULTS_DIR + "/consolidated_results_pln3.stats.csv"
+    CONSOLIDATED_FILE_BATCHPD_PKD3 = RESULTS_DIR + "/consolidated_results_BatchPD_PKD3.stats.csv"
+    CONSOLIDATED_FILE_BATCHPD_PLN1 = RESULTS_DIR + "/consolidated_results_BatchPD_PLN1.stats.csv"
+    CONSOLIDATED_FILE_BATCHPD_PLN3 = RESULTS_DIR + "/consolidated_results_BatchPD_PLN3.stats.csv"
+    CONSOLIDATED_FILE_TENSOR_PKD3 = RESULTS_DIR + "/consolidated_results_Tensor_PKD3.stats.csv"
+    CONSOLIDATED_FILE_TENSOR_PLN1 = RESULTS_DIR + "/consolidated_results_Tensor_PLN1.stats.csv"
+    CONSOLIDATED_FILE_TENSOR_PLN3 = RESULTS_DIR + "/consolidated_results_Tensor_PLN3.stats.csv"
 
-    TYPE_LIST = ["PKD3", "PLN1", "PLN3"]
+    TYPE_LIST = ["BatchPD_PKD3", "BatchPD_PLN1", "BatchPD_PLN3", "Tensor_PKD3", "Tensor_PLN1", "Tensor_PLN3"]
+    BATCHPD_TYPE_LIST = ["BatchPD_PKD3", "BatchPD_PLN1", "BatchPD_PLN3"]
+    TENSOR_TYPE_LIST = ["Tensor_PKD3", "Tensor_PLN1", "Tensor_PLN3"]
     CASE_NUM_LIST = range(int(caseStart), int(caseEnd) + 1, 1)
     BIT_DEPTH_LIST = range(0, 7, 1)
     OFT_LIST = range(0, 2, 1)
-    d_counter = {"PKD3":0, "PLN1":0, "PLN3":0}
+    d_counter = {"BatchPD_PKD3":0, "BatchPD_PLN1":0, "BatchPD_PLN3":0, "Tensor_PKD3":0, "Tensor_PLN1":0, "Tensor_PLN3":0}
 
     for TYPE in TYPE_LIST:
 
@@ -161,9 +169,9 @@ elif profilingOption == "YES":
             # Add functionality group header
             if CASE_NUM in NEW_FUNC_GROUP_LIST:
                 FUNC_GROUP = func_group_finder(CASE_NUM)
-                new_file.write(" ,0,0,0,0\n")
+                new_file.write("0,0,0,0,0\n")
                 new_file.write(FUNC_GROUP + ",0,0,0,0\n")
-                new_file.write(" ,0,0,0,0\n")
+                new_file.write("0,0,0,0,0\n")
 
             # Set results directory
             CASE_RESULTS_DIR = RESULTS_DIR + "/" + TYPE + "/case_" + str(CASE_NUM)
@@ -183,10 +191,14 @@ elif profilingOption == "YES":
                         for line in case_file:
                             print(line)
                             if not(line.startswith('"Name"')):
-                                if prev != line.split(",")[0]:
+                                if TYPE in TENSOR_TYPE_LIST:
                                     new_file.write(line)
-                                    prev = line.split(",")[0]
                                     d_counter[TYPE] = d_counter[TYPE] + 1
+                                elif TYPE in BATCHPD_TYPE_LIST:
+                                    if prev != line.split(",")[0]:
+                                        new_file.write(line)
+                                        prev = line.split(",")[0]
+                                        d_counter[TYPE] = d_counter[TYPE] + 1
                         case_file.close()
                     except IOError:
                         print("Unable to open case results")
@@ -212,7 +224,13 @@ elif profilingOption == "YES":
             print(dfPrint_noIndices)
 
     except ImportError:
-        print("\nPandas not available! Results of GPU profiling experiment are available in the following files:\n" + CONSOLIDATED_FILE_PKD3 + "\n" + CONSOLIDATED_FILE_PLN1 + "\n" + CONSOLIDATED_FILE_PLN3 + "\n")
+        print("\nPandas not available! Results of GPU profiling experiment are available in the following files:\n" + \
+            CONSOLIDATED_FILE_BATCHPD_PKD3 + "\n" + \
+                CONSOLIDATED_FILE_BATCHPD_PLN1 + "\n" + \
+                    CONSOLIDATED_FILE_BATCHPD_PLN3 + "\n" + \
+                        CONSOLIDATED_FILE_TENSOR_PKD3 + "\n" + \
+                            CONSOLIDATED_FILE_TENSOR_PLN1 + "\n" + \
+                                CONSOLIDATED_FILE_TENSOR_PLN3 + "\n")
 
     except IOError:
         print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
