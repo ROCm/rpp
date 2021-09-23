@@ -89,13 +89,9 @@ $ cd rpp
 $ mkdir build
 $ cd build
 $ cmake -DBACKEND=OCL .. #for OCL and HOST
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=STATIC #for HIPSTATIC
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO #for HIPHSACOO
-        or
-$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC #for HIPRTC        
-$ make -j4
+or
+$ cmake -DBACKEND=HIP .. #for HIP
+$ make -j16
 $ sudo make install
 ```
 
