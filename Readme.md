@@ -5,6 +5,10 @@
 
 Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends.
 
+#### Latest Release
+
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases)
+
 ## Top level design
 
 <p align="center"><img width="50%" src="docs/images/rpp_structure_4.png" /></p>
@@ -79,15 +83,21 @@ RPP is developed for **Linux** operating system.
 
 ## [Instructions to build the library](#rpp-installation)
 
-    $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
-    $ cd rpp
-    $ mkdir build
-    $ cd build
-    $ cmake -DBACKEND=OCL .. #for OCL and HOST
-            or
-    $ cmake -DBACKEND=HIP .. #for HIP
-    $ make -j16
-    $ sudo make install
+```
+$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
+$ cd rpp
+$ mkdir build
+$ cd build
+$ cmake -DBACKEND=OCL .. #for OCL and HOST
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=STATIC #for HIPSTATIC
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=HSACOO #for HIPHSACOO
+        or
+$ cmake -DBACKEND=HIP -DCOMPILE=HIPRTC #for HIPRTC        
+$ make -j4
+$ sudo make install
+```
 
 ## Instructions to test functionalities after HOST installation
 
