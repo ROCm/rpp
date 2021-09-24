@@ -128,6 +128,8 @@ elseif("${BACKEND}" STREQUAL "OCL")
     message("-- ${Green}${PROJECT_NAME} set to build with OpenCL backend${ColourReset}")
 endif()
 
+configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
+
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 
 if(NOT DEFINED SIMD_ENABLE)
@@ -168,7 +170,9 @@ add_subdirectory(addkernels)
 # Installation
 
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*.h.in" EXCLUDE)
+install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+
 
 # Set package information
 
