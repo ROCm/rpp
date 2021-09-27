@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (1:7) = %s", argv[6]);
+        printf("\ncase number (0:81) = %s", argv[6]);
     }
 
     char *src = argv[1];
@@ -69,6 +69,10 @@ int main(int argc, char **argv)
     {
     case 0:
         strcpy(funcName, "brightness");
+        outputFormatToggle = 0;
+        break;
+    case 1:
+        strcpy(funcName, "gamma_correction");
         outputFormatToggle = 0;
         break;
     }
@@ -530,6 +534,58 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
             rppt_brightness_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        end = clock();
+
+        break;
+    }
+    case 1:
+    {
+        test_case_name = "gamma_correction";
+
+        Rpp32f gammaVal[images];
+        for (i = 0; i < images; i++)
+        {
+            gammaVal[i] = 1.9;
+
+            // xywhROI override sample
+            // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+
+            // ltrbROI override sample
+            // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+        }
+
+        // Change RpptRoiType for ltrbROI override sample
+        // roiTypeSrc = RpptRoiType::LTRB;
+        // roiTypeDst = RpptRoiType::LTRB;
+
+
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+        start = clock();
+
+        if (ip_bitDepth == 0)
+            rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_gamma_correction_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_gamma_correction_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_gamma_correction_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
