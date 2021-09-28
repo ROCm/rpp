@@ -5,6 +5,10 @@
 
 Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends.
 
+#### Latest Release
+
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases)
+
 ## Top level design
 
 <p align="center"><img width="50%" src="docs/images/rpp_structure_4.png" /></p>
@@ -33,7 +37,7 @@ RPP is developed for **Linux** operating system.
 
 -   Boost Version `1.72` (install from source: Easy Build and Install - <https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install>)
 
-        wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
+        wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
         tar -xzvf boost_1_72_0.tar.gz
         cd boost_1_72_0
         ./bootstrap.sh
@@ -79,15 +83,17 @@ RPP is developed for **Linux** operating system.
 
 ## [Instructions to build the library](#rpp-installation)
 
-    $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
-    $ cd rpp
-    $ mkdir build
-    $ cd build
-    $ cmake -DBACKEND=OCL .. #for OCL and HOST
-            or
-    $ cmake -DBACKEND=HIP .. #for HIP
-    $ make -j16
-    $ sudo make install
+```
+$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
+$ cd rpp
+$ mkdir build
+$ cd build
+$ cmake -DBACKEND=OCL .. #for OCL and HOST
+or
+$ cmake -DBACKEND=HIP .. #for HIP
+$ make -j16
+$ sudo make install
+```
 
 ## Instructions to test functionalities after HOST installation
 

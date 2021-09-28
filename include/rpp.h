@@ -49,6 +49,7 @@ extern "C" {
 #include "rppcore.h"
 #include "rppdefs.h"
 #include "rppi.h"
+#include "rppt.h"
 #include "rppversion.h"
 
 

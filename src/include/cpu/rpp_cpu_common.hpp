@@ -8,8 +8,8 @@
 #include <rppdefs.h>
 #include <omp.h>
 #include <half.hpp>
-using half_float::half;
-typedef half                Rpp16f;
+using halfhpp = half_float::half;
+typedef halfhpp Rpp16f;
 #include "rpp_cpu_simd.hpp"
 
 #define PI                              3.14159265
@@ -26,6 +26,7 @@ typedef half                Rpp16f;
 #define RPPCEIL(a)                      ((int) (a + 1.0))
 #define RPPISEVEN(a)                    ((a % 2 == 0) ? 1 : 0)
 #define RPPPIXELCHECK(pixel)            (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
+#define RPPPIXELCHECKF32(pixel)         (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1))
 #define RPPPIXELCHECKI8(pixel)          (pixel < (Rpp32f) -128) ? ((Rpp32f) -128) : ((pixel < (Rpp32f) 127) ? pixel : ((Rpp32f) 127))
 #define RPPISGREATER(pixel, value)      ((pixel > value) ? 1 : 0)
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
@@ -2078,6 +2079,26 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 
 // Compute Functions
+
+inline RppStatus compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
+{
+    roiPtrImage->xywhROI.xy.x = roiPtrInput->ltrbROI.lt.x;
+    roiPtrImage->xywhROI.xy.y = roiPtrInput->ltrbROI.lt.y;
+    roiPtrImage->xywhROI.roiWidth = roiPtrInput->ltrbROI.rb.x - roiPtrInput->ltrbROI.lt.x + 1;
+    roiPtrImage->xywhROI.roiHeight = roiPtrInput->ltrbROI.rb.y - roiPtrInput->ltrbROI.lt.y + 1;
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault)
+{
+    roiPtr->xywhROI.xy.x = std::max(roiPtrDefault->xywhROI.xy.x, roiPtrImage->xywhROI.xy.x);
+    roiPtr->xywhROI.xy.y = std::max(roiPtrDefault->xywhROI.xy.y, roiPtrImage->xywhROI.xy.y);
+    roiPtr->xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiPtrImage->xywhROI.xy.x, roiPtrImage->xywhROI.roiWidth);
+    roiPtr->xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiPtrImage->xywhROI.xy.y, roiPtrImage->xywhROI.roiHeight);
+
+    return RPP_SUCCESS;
+}
 
 template<typename T>
 inline RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage,
