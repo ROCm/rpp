@@ -65,6 +65,9 @@ int main(int argc, char **argv)
     case 1:
         strcpy(funcName, "gamma_correction");
         break;
+    case 2:
+        strcpy(funcName, "blend");
+        break;
     }
 
     // Initialize tensor descriptors
@@ -660,6 +663,58 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_gamma_correction_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+
+            end = clock();
+
+            break;
+        }
+        case 2:
+        {
+            test_case_name = "blend";
+
+            Rpp32f alpha[images];
+            for (i = 0; i < images; i++)
+            {
+                alpha[i] = 0.4;
+
+                // xywhROI override sample
+                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+
+                // ltrbROI override sample
+                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+
+            // Change RpptRoiType for ltrbROI override sample
+            // roiTypeSrc = RpptRoiType::LTRB;
+            // roiTypeDst = RpptRoiType::LTRB;
+
+
+            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+            start = clock();
+
+            if (ip_bitDepth == 0)
+                rppt_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, alpha, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_blend_gpu(d_inputf16, d_inputf16_second, srcDescPtr, d_outputf16, dstDescPtr, alpha, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_blend_gpu(d_inputf32, d_inputf32_second, srcDescPtr, d_outputf32, dstDescPtr, alpha, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_blend_gpu(d_inputi8, d_inputi8_second, srcDescPtr, d_outputi8, dstDescPtr, alpha, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
