@@ -364,6 +364,9 @@ int main(int argc, char **argv)
     case 80:
         strcpy(funcName, "resize_mirror_normalize");
         break;
+    default:
+        strcpy(funcName, "test_case");
+        break;
     }
 
 
