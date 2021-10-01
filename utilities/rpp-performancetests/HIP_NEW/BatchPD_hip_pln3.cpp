@@ -373,6 +373,9 @@ int main(int argc, char **argv)
         strcpy(funcName, "remap");
         outputFormatToggle = 0;
         break;
+    default:
+        strcpy(funcName, "test_case");
+        break;
     }
 
     if (outputFormatToggle == 0)
