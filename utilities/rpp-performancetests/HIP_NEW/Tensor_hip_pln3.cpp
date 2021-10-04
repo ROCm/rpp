@@ -63,6 +63,9 @@ int main(int argc, char **argv)
         strcpy(funcName, "brightness");
         // outputFormatToggle = 0;
         break;
+    default:
+        strcpy(funcName, "test_case");
+        break;
     }
 
     // Initialize tensor descriptors
