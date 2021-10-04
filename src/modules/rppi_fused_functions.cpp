@@ -19,6 +19,50 @@ using namespace std::chrono;
 
 #include "cpu/host_fused_functions.hpp"
 
+/******************** color_jitter ********************/
+
+RppStatus color_jitter_host_helper(RppiChnFormat chn_format,
+                                  Rpp32u num_of_channels,
+                                  RPPTensorDataType tensor_type,
+                                  RppPtr_t srcPtr,
+                                  RppiSize *srcSize,
+                                  RppiSize maxSrcSize,
+                                  RppPtr_t dstPtr,
+                                  Rpp32f *brightness,
+                                  Rpp32f *contrast,
+                                  Rpp32f *hue,
+                                  Rpp32f *saturation,
+                                  Rpp32u outputFormatToggle,
+                                  Rpp32u nbatchSize,
+                                  rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    if (tensor_type == RPPTensorDataType::U8)
+    {
+        color_jitter_host_batch<Rpp8u>(static_cast<Rpp8u *>(srcPtr),
+                                      srcSize,
+                                      rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                      static_cast<Rpp8u *>(dstPtr),
+                                      brightness,
+                                      contrast,
+                                      hue,
+                                      saturation,
+                                      outputFormatToggle,
+                                      rpp::deref(rppHandle).GetBatchSize(),
+                                      chn_format,
+                                      num_of_channels);
+    }
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_color_jitter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *brightness, Rpp32f *contrast, Rpp32f *hue, Rpp32f *saturation, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (color_jitter_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, srcPtr, srcSize, maxSrcSize, dstPtr, brightness, contrast, hue, saturation, outputFormatToggle, nbatchSize, rppHandle));
+}
+
 /******************** color_twist ********************/
 
 RppStatus color_twist_helper(RppiChnFormat chn_format,

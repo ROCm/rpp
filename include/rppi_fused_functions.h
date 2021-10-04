@@ -8,6 +8,10 @@ extern "C"
 {
 #endif // cpusplus
 
+/******************** color_jitter ********************/
+
+RppStatus rppi_color_jitter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *brightness, Rpp32f *contrast, Rpp32f *hue, Rpp32f *saturation, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
 /******************** color_twist ********************/
 
 // Performs a fused color twist augmentation for a batch of images
