@@ -59,6 +59,13 @@ typedef halfhpp Rpp16f;
     brightness_contrast_matrix[12] = brightnessParam; brightness_contrast_matrix[13] = brightnessParam; brightness_contrast_matrix[14] = brightnessParam; brightness_contrast_matrix[15] = 1.0f; \
 }
 
+#define FILL_COLOR_JITTER_CTM(ctm) { \
+    ctm[0] = 1.0f; ctm[1] = 0.0f; ctm[2] = 0.0f; ctm[3] = 0.0f; \
+    ctm[4] = 0.0f; ctm[5] = 1.0f; ctm[6] = 0.0f; ctm[7] = 0.0f; \
+    ctm[8] = 0.0f; ctm[9] = 0.0f; ctm[10] = 1.0f; ctm[11] = 0.0f; \
+    ctm[12] = 0.0f; ctm[13] = 0.0f; ctm[14] = 0.0f; ctm[15] = 1.0f; \
+}
+
 static uint16_t wyhash16_x;
 
 inline uint32_t hash16(uint32_t input, uint32_t key) {

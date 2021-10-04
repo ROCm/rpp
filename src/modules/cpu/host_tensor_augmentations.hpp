@@ -1130,11 +1130,8 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
-        Rpp32f ctm[16] = {1., 0., 0., 0.,
-                          0., 1., 0., 0.,
-                          0., 0., 1., 0.,
-                          0., 0., 0., 1.};
-
+        Rpp32f *ctm = static_cast<Rpp32f*>(aligned_alloc(64, 64));
+        FILL_COLOR_JITTER_CTM(ctm);
         compute_color_jitter_ctm_host(brightnessParam, contrastParam, hueParam, saturationParam, ctm);
 
         __m128 pCtm[12];
