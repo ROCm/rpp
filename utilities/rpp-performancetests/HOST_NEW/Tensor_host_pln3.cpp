@@ -71,6 +71,9 @@ int main(int argc, char **argv)
     case 2:
         strcpy(funcName, "blend");
         break;
+    default:
+        strcpy(funcName, "test_case");
+        break;
     }
 
     // Initialize tensor descriptors
