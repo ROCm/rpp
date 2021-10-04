@@ -73,6 +73,9 @@ int main(int argc, char **argv)
     case 0:
         strcpy(funcName, "brightness");
         break;
+    case 81:
+        strcpy(funcName, "color_jitter");
+        break;
     default:
         strcpy(funcName, "test_case");
         break;
