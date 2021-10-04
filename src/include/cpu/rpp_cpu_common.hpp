@@ -2100,6 +2100,82 @@ inline RppStatus compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROI
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_color_jitter_ctm_host(Rpp32f brightnessParam, Rpp32f contrastParam, Rpp32f hueParam, Rpp32f saturationParam, Rpp32f *ctm)
+{
+    // Use aligned memory
+
+    Rpp32f hue_saturation_matrix[16] = {.299, .299, .299, 0.0,
+                                        .587, .587, .587, 0.0,
+                                        .114, .114, .114, 0.0,
+                                        0.0, 0.0, 0.0, 1.0};
+
+    Rpp32f sch_mat[16] = {.701, -.299, -.300, 0.0,
+                            -.587, .413, -.588, 0.0,
+                            -.114, -.114, .886, 0.0,
+                            0.0, 0.0, 0.0, 0.0};
+
+    Rpp32f ssh_mat[16] = {.168, -.328, 1.25, 0.0,
+                            .330, .035, -1.05, 0.0,
+                            -.497, .292, -.203, 0.0,
+                            0.0, 0.0, 0.0, 0.0};
+
+    Rpp32f sch = saturationParam * cos(hueParam * PI_OVER_180);
+    Rpp32f ssh = saturationParam * sin(hueParam * PI_OVER_180);
+
+    __m128 psch = _mm_set1_ps(sch);
+    __m128 pssh = _mm_set1_ps(ssh);
+    __m128 p0, p1, p2, p3;
+
+    for (int i = 0; i < 16; i+=4)
+    {
+        p0 = _mm_loadu_ps(hue_saturation_matrix + i);
+        p1 = _mm_loadu_ps(sch_mat + i);
+        p2 = _mm_loadu_ps(ssh_mat + i);
+        p3 = _mm_fmadd_ps(psch, p1, _mm_fmadd_ps(pssh, p2, p0));
+        _mm_storeu_ps(hue_saturation_matrix + i, p3);
+    }
+
+    Rpp32f scaleParam = contrastParam + 1.0;
+    Rpp32f brightness_contrast_matrix[16] = {scaleParam, 0., 0., 0.,
+                                             0., scaleParam, 0., 0.,
+                                             0., 0., scaleParam, 0.,
+                                             brightnessParam, brightnessParam, brightnessParam, 1.};
+
+    fast_matmul4x4_sse(hue_saturation_matrix, brightness_contrast_matrix, ctm);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_color_jitter_host(__m128 *p, __m128 *pResult, __m128 *pCtm)
+{
+    pResult[0] = _mm_fmadd_ps(p[0], pCtm[0], _mm_fmadd_ps(p[4], pCtm[1], _mm_fmadd_ps(p[8], pCtm[2], pCtm[3])));    // color_jitter adjustment R0-R3
+    pResult[1] = _mm_fmadd_ps(p[0], pCtm[4], _mm_fmadd_ps(p[4], pCtm[5], _mm_fmadd_ps(p[8], pCtm[6], pCtm[7])));    // color_jitter adjustment G0-G3
+    pResult[2] = _mm_fmadd_ps(p[0], pCtm[8], _mm_fmadd_ps(p[4], pCtm[9], _mm_fmadd_ps(p[8], pCtm[10], pCtm[11])));    // color_jitter adjustment B0-B3
+    p[0] = pResult[0];    // color_jitter adjustment R0-R3
+    p[4] = pResult[1];    // color_jitter adjustment G0-G3
+    p[8] = pResult[2];    // color_jitter adjustment B0-B3
+    pResult[0] = _mm_fmadd_ps(p[1], pCtm[0], _mm_fmadd_ps(p[5], pCtm[1], _mm_fmadd_ps(p[9], pCtm[2], pCtm[3])));    // color_jitter adjustment R4-R7
+    pResult[1] = _mm_fmadd_ps(p[1], pCtm[4], _mm_fmadd_ps(p[5], pCtm[5], _mm_fmadd_ps(p[9], pCtm[6], pCtm[7])));    // color_jitter adjustment G4-G7
+    pResult[2] = _mm_fmadd_ps(p[1], pCtm[8], _mm_fmadd_ps(p[5], pCtm[9], _mm_fmadd_ps(p[9], pCtm[10], pCtm[11])));    // color_jitter adjustment B4-B7
+    p[1] = pResult[0];    // color_jitter adjustment R4-R7
+    p[5] = pResult[1];    // color_jitter adjustment G4-G7
+    p[9] = pResult[2];    // color_jitter adjustment B4-B7
+    pResult[0] = _mm_fmadd_ps(p[2], pCtm[0], _mm_fmadd_ps(p[6], pCtm[1], _mm_fmadd_ps(p[10], pCtm[2], pCtm[3])));    // color_jitter adjustment R8-R11
+    pResult[1] = _mm_fmadd_ps(p[2], pCtm[4], _mm_fmadd_ps(p[6], pCtm[5], _mm_fmadd_ps(p[10], pCtm[6], pCtm[7])));    // color_jitter adjustment G8-G11
+    pResult[2] = _mm_fmadd_ps(p[2], pCtm[8], _mm_fmadd_ps(p[6], pCtm[9], _mm_fmadd_ps(p[10], pCtm[10], pCtm[11])));    // color_jitter adjustment B8-B11
+    p[2] = pResult[0];    // color_jitter adjustment R8-R11
+    p[6] = pResult[1];    // color_jitter adjustment G8-G11
+    p[10] = pResult[2];    // color_jitter adjustment B8-B11
+    pResult[0] = _mm_fmadd_ps(p[3], pCtm[0], _mm_fmadd_ps(p[7], pCtm[1], _mm_fmadd_ps(p[11], pCtm[2], pCtm[3])));    // color_jitter adjustment R12-R15
+    pResult[1] = _mm_fmadd_ps(p[3], pCtm[4], _mm_fmadd_ps(p[7], pCtm[5], _mm_fmadd_ps(p[11], pCtm[6], pCtm[7])));    // color_jitter adjustment G12-G15
+    pResult[2] = _mm_fmadd_ps(p[3], pCtm[8], _mm_fmadd_ps(p[7], pCtm[9], _mm_fmadd_ps(p[11], pCtm[10], pCtm[11])));    // color_jitter adjustment B12-B15
+    p[3] = pResult[0];    // color_jitter adjustment R12-R15
+    p[7] = pResult[1];    // color_jitter adjustment G12-G15
+    p[11] = pResult[2];    // color_jitter adjustment B12-B15
+
+    return RPP_SUCCESS;
+}
+
 template<typename T>
 inline RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage,
                                          RppiSize size, RppiSize *sizeSubImage,

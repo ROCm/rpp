@@ -1065,4 +1065,298 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
     return RPP_SUCCESS;
 }
 
+/************ color_jitter ************/
+
+RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp8u *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32f *brightnessTensor,
+                                         Rpp32f *contrastTensor,
+                                         Rpp32f *hueTensor,
+                                         Rpp32f *saturationTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams)
+{
+    RpptROI roiDefault;
+    RpptROIPtr roiPtrDefault;
+    roiPtrDefault = &roiDefault;
+    roiPtrDefault->xywhROI.xy.x = 0;
+    roiPtrDefault->xywhROI.xy.y = 0;
+    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
+    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(srcDescPtr->n)
+    for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtr;
+
+        if (&roiTensorPtrSrc[batchCount] == NULL)
+        {
+            roiPtr = roiPtrDefault;
+        }
+        else
+        {
+            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+
+            RpptROI roiImage;
+            RpptROIPtr roiPtrImage;
+
+            if (roiType == RpptRoiType::LTRB)
+            {
+                roiPtrImage = &roiImage;
+                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
+            }
+            else if (roiType == RpptRoiType::XYWH)
+            {
+                roiPtrImage = roiPtrInput;
+            }
+
+            roiPtr = &roi;
+            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
+        }
+
+        Rpp32f brightnessParam = brightnessTensor[batchCount];
+        Rpp32f contrastParam = contrastTensor[batchCount];
+        Rpp32f hueParam = hueTensor[batchCount];
+        Rpp32f saturationParam = saturationTensor[batchCount];
+
+        Rpp8u *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
+        Rpp32f ctm[16] = {1., 0., 0., 0.,
+                          0., 1., 0., 0.,
+                          0., 0., 1., 0.,
+                          0., 0., 0., 1.};
+
+        compute_color_jitter_ctm_host(brightnessParam, contrastParam, hueParam, saturationParam, ctm);
+
+        __m128 pCtm[12];
+        for(int i = 0; i < 12; i++)
+        {
+            pCtm[i] = _mm_set1_ps(ctm[i]);
+        }
+
+        Rpp8u *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        // Color Jitter with fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32u alignedLength = bufferLength & ~47;
+
+            Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                {
+                    __m128 p[12], pResult[3];
+
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);
+                    compute_color_jitter_host(p, pResult, pCtm);
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);
+
+                    srcPtrTemp += 48;
+                    dstPtrTempR += 16;
+                    dstPtrTempG += 16;
+                    dstPtrTempB += 16;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                {
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]);
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]);
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11]);
+
+                    srcPtrTemp+=3;
+                    dstPtrTempR++;
+                    dstPtrTempG++;
+                    dstPtrTempB++;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Color Jitter with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32u alignedLength = bufferLength & ~47;
+
+            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                {
+                    __m128 p[12], pResult[3];
+
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
+                    compute_color_jitter_host(p, pResult, pCtm);
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);
+
+                    srcPtrTempR += 16;
+                    srcPtrTempG += 16;
+                    srcPtrTempB += 16;
+                    dstPtrTemp += 48;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(ctm[0] * *srcPtrTempR + ctm[1] * *srcPtrTempG + ctm[2] * *srcPtrTempB + ctm[3]);
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(ctm[4] * *srcPtrTempR + ctm[5] * *srcPtrTempG + ctm[6] * *srcPtrTempB + ctm[7]);
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(ctm[8] * *srcPtrTempR + ctm[9] * *srcPtrTempG + ctm[10] * *srcPtrTempB + ctm[11]);
+
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
+                    dstPtrTemp += 3;
+                }
+
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Color Jitter with fused output-layout toggle (NHWC -> NHWC)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32u alignedLength = bufferLength & ~47;
+
+            Rpp8u *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                {
+                    __m128 p[12], pResult[3];
+
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);
+                    compute_color_jitter_host(p, pResult, pCtm);
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);
+
+                    srcPtrTemp += 48;
+                    dstPtrTemp += 48;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                {
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]);
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]);
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11]);
+
+                    srcPtrTemp += 3;
+                    dstPtrTemp += 3;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Color Jitter with fused output-layout toggle (NCHW -> NCHW)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32u alignedLength = bufferLength & ~47;
+
+            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                {
+                    __m128 p[12], pResult[3];
+
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
+                    compute_color_jitter_host(p, pResult, pCtm);
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);
+
+                    srcPtrTempR += 16;
+                    srcPtrTempG += 16;
+                    srcPtrTempB += 16;
+                    dstPtrTempR += 16;
+                    dstPtrTempG += 16;
+                    dstPtrTempB += 16;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(ctm[0] * *srcPtrTempR + ctm[1] * *srcPtrTempG + ctm[2] * *srcPtrTempB + ctm[3]);
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(ctm[4] * *srcPtrTempR + ctm[5] * *srcPtrTempG + ctm[6] * *srcPtrTempB + ctm[7]);
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(ctm[8] * *srcPtrTempR + ctm[9] * *srcPtrTempG + ctm[10] * *srcPtrTempB + ctm[11]);
+
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
+                    dstPtrTempR++;
+                    dstPtrTempG++;
+                    dstPtrTempB++;
+                }
+
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
 #endif // HOST_TENSOR_AUGMENTATIONS_HPP
