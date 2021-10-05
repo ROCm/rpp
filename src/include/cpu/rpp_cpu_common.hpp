@@ -2172,8 +2172,10 @@ inline RppStatus compute_color_jitter_ctm_host(Rpp32f brightnessParam, Rpp32f co
     return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_jitter_host(__m128 *p, __m128 *pResult, __m128 *pCtm)
+inline RppStatus compute_color_jitter_48_host(__m128 *p, __m128 *pCtm)
 {
+    __m128 pResult[3];
+
     pResult[0] = _mm_fmadd_ps(p[0], pCtm[0], _mm_fmadd_ps(p[4], pCtm[1], _mm_fmadd_ps(p[8], pCtm[2], pCtm[3])));    // color_jitter adjustment R0-R3
     pResult[1] = _mm_fmadd_ps(p[0], pCtm[4], _mm_fmadd_ps(p[4], pCtm[5], _mm_fmadd_ps(p[8], pCtm[6], pCtm[7])));    // color_jitter adjustment G0-G3
     pResult[2] = _mm_fmadd_ps(p[0], pCtm[8], _mm_fmadd_ps(p[4], pCtm[9], _mm_fmadd_ps(p[8], pCtm[10], pCtm[11])));    // color_jitter adjustment B0-B3
@@ -2198,6 +2200,20 @@ inline RppStatus compute_color_jitter_host(__m128 *p, __m128 *pResult, __m128 *p
     p[3] = pResult[0];    // color_jitter adjustment R12-R15
     p[7] = pResult[1];    // color_jitter adjustment G12-G15
     p[11] = pResult[2];    // color_jitter adjustment B12-B15
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_color_jitter_12_host(__m128 *p, __m128 *pCtm)
+{
+    __m128 pResult[3];
+
+    pResult[0] = _mm_fmadd_ps(p[0], pCtm[0], _mm_fmadd_ps(p[1], pCtm[1], _mm_fmadd_ps(p[2], pCtm[2], pCtm[3])));    // color_jitter adjustment R0-R3
+    pResult[1] = _mm_fmadd_ps(p[0], pCtm[4], _mm_fmadd_ps(p[1], pCtm[5], _mm_fmadd_ps(p[2], pCtm[6], pCtm[7])));    // color_jitter adjustment G0-G3
+    pResult[2] = _mm_fmadd_ps(p[0], pCtm[8], _mm_fmadd_ps(p[1], pCtm[9], _mm_fmadd_ps(p[2], pCtm[10], pCtm[11])));    // color_jitter adjustment B0-B3
+    p[0] = pResult[0];    // color_jitter adjustment R0-R3
+    p[1] = pResult[1];    // color_jitter adjustment G0-G3
+    p[2] = pResult[2];    // color_jitter adjustment B0-B3
 
     return RPP_SUCCESS;
 }

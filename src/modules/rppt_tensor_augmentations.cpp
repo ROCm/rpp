@@ -291,48 +291,48 @@ rppt_color_jitter_host(RppPtr_t srcPtr,
                                        roiType,
                                        layoutParams);
     }
-    // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    // {
-    //     color_jitter_f16_f16_host_tensor(static_cast<Rpp16f*>(srcPtr) + srcDescPtr->offset,
-    //                                      srcDescPtr,
-    //                                      static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offset,
-    //                                      dstDescPtr,
-    //                                      brightnessTensor,
-    //                                      contrastTensor,
-    //                                      hueTensor,
-    //                                      saturationTensor,
-    //                                      roiTensorPtrSrc,
-    //                                      roiType,
-    //                                      layoutParams);
-    // }
-    // else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    // {
-    //     color_jitter_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
-    //                                      srcDescPtr,
-    //                                      static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
-    //                                      dstDescPtr,
-    //                                      brightnessTensor,
-    //                                      contrastTensor,
-    //                                      hueTensor,
-    //                                      saturationTensor,
-    //                                      roiTensorPtrSrc,
-    //                                      roiType,
-    //                                      layoutParams);
-    // }
-    // else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-    // {
-    //     color_jitter_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offset,
-    //                                    srcDescPtr,
-    //                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
-    //                                    dstDescPtr,
-    //                                    brightnessTensor,
-    //                                    contrastTensor,
-    //                                    hueTensor,
-    //                                    saturationTensor,
-    //                                    roiTensorPtrSrc,
-    //                                    roiType,
-    //                                    layoutParams);
-    // }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        color_jitter_f16_f16_host_tensor(static_cast<Rpp16f*>(srcPtr) + srcDescPtr->offset,
+                                         srcDescPtr,
+                                         static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offset,
+                                         dstDescPtr,
+                                         brightnessTensor,
+                                         contrastTensor,
+                                         hueTensor,
+                                         saturationTensor,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        color_jitter_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
+                                         srcDescPtr,
+                                         static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                                         dstDescPtr,
+                                         brightnessTensor,
+                                         contrastTensor,
+                                         hueTensor,
+                                         saturationTensor,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        color_jitter_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offset,
+                                       srcDescPtr,
+                                       static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
+                                       dstDescPtr,
+                                       brightnessTensor,
+                                       contrastTensor,
+                                       hueTensor,
+                                       saturationTensor,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams);
+    }
 
     return RPP_SUCCESS;
 }
