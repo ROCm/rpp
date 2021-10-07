@@ -64,9 +64,9 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::U8)
         {
-            brightness_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
+            brightness_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                   srcDescPtr,
-                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                   dstDescPtr,
                                   roiTensorPtrSrc,
                                   roiType,
@@ -77,9 +77,9 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::F16)
         {
-            brightness_hip_tensor(static_cast<half*>(srcPtr) + srcDescPtr->offset,
+            brightness_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                   srcDescPtr,
-                                  static_cast<half*>(dstPtr) + dstDescPtr->offset,
+                                  (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
                                   roiTensorPtrSrc,
                                   roiType,
@@ -90,9 +90,9 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::F32)
         {
-            brightness_hip_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
+            brightness_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                   srcDescPtr,
-                                  static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
                                   roiTensorPtrSrc,
                                   roiType,
@@ -103,9 +103,9 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::I8)
         {
-            brightness_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offset,
+            brightness_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                   srcDescPtr,
-                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
+                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                   dstDescPtr,
                                   roiTensorPtrSrc,
                                   roiType,
@@ -133,9 +133,9 @@ rppt_brightness_host(RppPtr_t srcPtr,
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        brightness_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
+        brightness_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                      srcDescPtr,
-                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
                                      alphaTensor,
                                      betaTensor,
@@ -145,9 +145,9 @@ rppt_brightness_host(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        brightness_f16_f16_host_tensor(static_cast<Rpp16f*>(srcPtr) + srcDescPtr->offset,
+        brightness_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
-                                       static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offset,
+                                       (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                        dstDescPtr,
                                        alphaTensor,
                                        betaTensor,
@@ -157,9 +157,9 @@ rppt_brightness_host(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        brightness_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
+        brightness_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
-                                       static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                                       (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                        dstDescPtr,
                                        alphaTensor,
                                        betaTensor,
@@ -169,9 +169,9 @@ rppt_brightness_host(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        brightness_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offset,
+        brightness_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                      srcDescPtr,
-                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
+                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
                                      alphaTensor,
                                      betaTensor,
@@ -206,9 +206,9 @@ rppt_gamma_correction_gpu(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::U8)
         {
-            gamma_correction_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
+            gamma_correction_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                         srcDescPtr,
-                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
                                         roiTensorPtrSrc,
                                         roiType,
@@ -219,9 +219,9 @@ rppt_gamma_correction_gpu(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::F16)
         {
-            gamma_correction_hip_tensor(static_cast<half*>(srcPtr) + srcDescPtr->offset,
+            gamma_correction_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                         srcDescPtr,
-                                        static_cast<half*>(dstPtr) + dstDescPtr->offset,
+                                        (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                         dstDescPtr,
                                         roiTensorPtrSrc,
                                         roiType,
@@ -232,9 +232,9 @@ rppt_gamma_correction_gpu(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::F32)
         {
-            gamma_correction_hip_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
+            gamma_correction_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                         srcDescPtr,
-                                        static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                                        (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                         dstDescPtr,
                                         roiTensorPtrSrc,
                                         roiType,
@@ -245,9 +245,9 @@ rppt_gamma_correction_gpu(RppPtr_t srcPtr,
     {
         if (dstDescPtr->dataType == RpptDataType::I8)
         {
-            gamma_correction_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offset,
+            gamma_correction_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                         srcDescPtr,
-                                        static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
+                                        static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
                                         roiTensorPtrSrc,
                                         roiType,
@@ -274,9 +274,9 @@ rppt_gamma_correction_host(RppPtr_t srcPtr,
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        gamma_correction_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offset,
+        gamma_correction_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                            srcDescPtr,
-                                           static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+                                           static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                            dstDescPtr,
                                            gammaTensor,
                                            roiTensorPtrSrc,
@@ -285,9 +285,9 @@ rppt_gamma_correction_host(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        gamma_correction_f16_f16_host_tensor(static_cast<Rpp16f*>(srcPtr) + srcDescPtr->offset,
+        gamma_correction_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                              srcDescPtr,
-                                             static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offset,
+                                             (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                              dstDescPtr,
                                              gammaTensor,
                                              roiTensorPtrSrc,
@@ -296,9 +296,9 @@ rppt_gamma_correction_host(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        gamma_correction_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offset,
+        gamma_correction_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                              srcDescPtr,
-                                             static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                                             (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                              dstDescPtr,
                                              gammaTensor,
                                              roiTensorPtrSrc,
@@ -307,9 +307,9 @@ rppt_gamma_correction_host(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        gamma_correction_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offset,
+        gamma_correction_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                            srcDescPtr,
-                                           static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
+                                           static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                            dstDescPtr,
                                            gammaTensor,
                                            roiTensorPtrSrc,
@@ -344,10 +344,10 @@ rppt_blend_gpu(RppPtr_t srcPtr1,
     {
         if (dstDescPtr->dataType == RpptDataType::U8)
         {
-            blend_hip_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offset,
-                             static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offset,
+            blend_hip_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                             static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
                              srcDescPtr,
-                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                              dstDescPtr,
                              roiTensorPtrSrc,
                              roiType,
@@ -358,10 +358,10 @@ rppt_blend_gpu(RppPtr_t srcPtr1,
     {
         if (dstDescPtr->dataType == RpptDataType::F16)
         {
-            blend_hip_tensor(static_cast<half*>(srcPtr1) + srcDescPtr->offset,
-                             static_cast<half*>(srcPtr2) + srcDescPtr->offset,
+            blend_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
+                             (half*) (static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
                              srcDescPtr,
-                             static_cast<half*>(dstPtr) + dstDescPtr->offset,
+                             (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                              dstDescPtr,
                              roiTensorPtrSrc,
                              roiType,
@@ -372,10 +372,10 @@ rppt_blend_gpu(RppPtr_t srcPtr1,
     {
         if (dstDescPtr->dataType == RpptDataType::F32)
         {
-            blend_hip_tensor(static_cast<Rpp32f*>(srcPtr1) + srcDescPtr->offset,
-                             static_cast<Rpp32f*>(srcPtr2) + srcDescPtr->offset,
+            blend_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
+                             (Rpp32f*) (static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
                              srcDescPtr,
-                             static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                             (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                              dstDescPtr,
                              roiTensorPtrSrc,
                              roiType,
@@ -386,10 +386,10 @@ rppt_blend_gpu(RppPtr_t srcPtr1,
     {
         if (dstDescPtr->dataType == RpptDataType::I8)
         {
-            blend_hip_tensor(static_cast<Rpp8s*>(srcPtr1) + srcDescPtr->offset,
-                             static_cast<Rpp8s*>(srcPtr2) + srcDescPtr->offset,
+            blend_hip_tensor(static_cast<Rpp8s*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                             static_cast<Rpp8s*>(srcPtr2) + srcDescPtr->offsetInBytes,
                              srcDescPtr,
-                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
+                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                              dstDescPtr,
                              roiTensorPtrSrc,
                              roiType,
@@ -417,10 +417,10 @@ rppt_blend_host(RppPtr_t srcPtr1,
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        blend_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offset,
-                                static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offset,
+        blend_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
                                 srcDescPtr,
-                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offset,
+                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
                                 alphaTensor,
                                 roiTensorPtrSrc,
@@ -429,10 +429,10 @@ rppt_blend_host(RppPtr_t srcPtr1,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        blend_f16_f16_host_tensor(static_cast<Rpp16f*>(srcPtr1) + srcDescPtr->offset,
-                                  static_cast<Rpp16f*>(srcPtr2) + srcDescPtr->offset,
+        blend_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
+                                  (Rpp16f*) (static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
                                   srcDescPtr,
-                                  static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offset,
+                                  (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
                                   alphaTensor,
                                   roiTensorPtrSrc,
@@ -441,10 +441,10 @@ rppt_blend_host(RppPtr_t srcPtr1,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        blend_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr1) + srcDescPtr->offset,
-                                  static_cast<Rpp32f*>(srcPtr2) + srcDescPtr->offset,
+        blend_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
+                                  (Rpp32f*) (static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
                                   srcDescPtr,
-                                  static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offset,
+                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
                                   alphaTensor,
                                   roiTensorPtrSrc,
@@ -453,10 +453,10 @@ rppt_blend_host(RppPtr_t srcPtr1,
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        blend_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr1) + srcDescPtr->offset,
-                                static_cast<Rpp8s*>(srcPtr2) + srcDescPtr->offset,
+        blend_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                static_cast<Rpp8s*>(srcPtr2) + srcDescPtr->offsetInBytes,
                                 srcDescPtr,
-                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offset,
+                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
                                 alphaTensor,
                                 roiTensorPtrSrc,

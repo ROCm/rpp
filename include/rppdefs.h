@@ -234,7 +234,7 @@ typedef struct
 typedef struct
 {
     RppSize_t numDims;
-    Rpp32u offset;
+    Rpp32u offsetInBytes;
     RpptDataType dataType;
     RpptLayout layout;
     Rpp32u n, c, h, w;

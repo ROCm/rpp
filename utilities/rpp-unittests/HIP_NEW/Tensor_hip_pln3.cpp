@@ -241,8 +241,8 @@ int main(int argc, char **argv)
     srcDescPtr->numDims = 4;
     dstDescPtr->numDims = 4;
 
-    srcDescPtr->offset = 0;
-    dstDescPtr->offset = 0;
+    srcDescPtr->offsetInBytes = 0;
+    dstDescPtr->offsetInBytes = 0;
 
     srcDescPtr->n = noOfImages;
     srcDescPtr->c = ip_channel;
