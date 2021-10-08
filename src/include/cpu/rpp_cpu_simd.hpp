@@ -662,14 +662,6 @@ static const __m128 _ps_cephes_FOPI = _mm_set1_ps(1.27323954473516f); // 4 / M_P
 
 static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c)
 {
-
-#if 0
-#ifdef MATH_SSE41 // _mm_round_ps is SSE4.1
-     // XXX Added in MathGeoLib: Take a modulo of the input in 2pi to try to enhance the precision with large input values.
-    x = modf_ps(x, _mm_set1_ps(2.f*3.141592654f));
-#endif
-#endif
-
     // Extract the sign bit (upper one)
     __m128 sign_bit_sin = _mm_and_ps(x, _ps_sign_mask);
     // take the absolute value
