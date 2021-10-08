@@ -31,41 +31,6 @@ typedef halfhpp Rpp16f;
 #define RPPISGREATER(pixel, value)      ((pixel > value) ? 1 : 0)
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 
-#define FILL_COLOR_JITTER_HSM(hue_saturation_matrix) { \
-    hue_saturation_matrix[0] = 0.299f; hue_saturation_matrix[1] = 0.299f; hue_saturation_matrix[2] = 0.299f; hue_saturation_matrix[3] = 0.0f; \
-    hue_saturation_matrix[4] = 0.587f; hue_saturation_matrix[5] = 0.587f; hue_saturation_matrix[6] = 0.587f; hue_saturation_matrix[7] = 0.0f; \
-    hue_saturation_matrix[8] = 0.114f; hue_saturation_matrix[9] = 0.114f; hue_saturation_matrix[10] = 0.114f; hue_saturation_matrix[11] = 0.0f; \
-    hue_saturation_matrix[12] = 0.0f; hue_saturation_matrix[13] = 0.0f; hue_saturation_matrix[14] = 0.0f; hue_saturation_matrix[15] = 1.0f; \
-}
-
-#define FILL_COLOR_JITTER_SCH(sch_mat) { \
-    sch_mat[0] = 0.701f; sch_mat[1] = -0.299f; sch_mat[2] = -0.300f; sch_mat[3] = 0.0f; \
-    sch_mat[4] = -0.587f; sch_mat[5] = 0.413f; sch_mat[6] = -0.588f; sch_mat[7] = 0.0f; \
-    sch_mat[8] = -0.114f; sch_mat[9] = -0.114f; sch_mat[10] = 0.886f; sch_mat[11] = 0.0f; \
-    sch_mat[12] = 0.0f; sch_mat[13] = 0.0f; sch_mat[14] = 0.0f; sch_mat[15] = 0.0f; \
-}
-
-#define FILL_COLOR_JITTER_SSH(ssh_mat) { \
-    ssh_mat[0] = 0.168f; ssh_mat[1] = -0.328f; ssh_mat[2] = 1.250f; ssh_mat[3] = 0.0f; \
-    ssh_mat[4] = 0.330f; ssh_mat[5] = 0.035f; ssh_mat[6] = -1.050f; ssh_mat[7] = 0.0f; \
-    ssh_mat[8] = -0.497f; ssh_mat[9] = 0.292f; ssh_mat[10] = -0.203f; ssh_mat[11] = 0.0f; \
-    ssh_mat[12] = 0.0f; ssh_mat[13] = 0.0f; ssh_mat[14] = 0.0f; ssh_mat[15] = 0.0f; \
-}
-
-#define FILL_COLOR_JITTER_BCM(brightness_contrast_matrix, brightnessParam, contrastParam) { \
-    brightness_contrast_matrix[0] = contrastParam; brightness_contrast_matrix[1] = 0.0f; brightness_contrast_matrix[2] = 0.0f; brightness_contrast_matrix[3] = 0.0f; \
-    brightness_contrast_matrix[4] = 0.0f; brightness_contrast_matrix[5] = contrastParam; brightness_contrast_matrix[6] = 0.0f; brightness_contrast_matrix[7] = 0.0f; \
-    brightness_contrast_matrix[8] = 0.0f; brightness_contrast_matrix[9] = 0.0f; brightness_contrast_matrix[10] = contrastParam; brightness_contrast_matrix[11] = 0.0f; \
-    brightness_contrast_matrix[12] = brightnessParam; brightness_contrast_matrix[13] = brightnessParam; brightness_contrast_matrix[14] = brightnessParam; brightness_contrast_matrix[15] = 1.0f; \
-}
-
-#define FILL_COLOR_JITTER_CTM(ctm) { \
-    ctm[0] = 1.0f; ctm[1] = 0.0f; ctm[2] = 0.0f; ctm[3] = 0.0f; \
-    ctm[4] = 0.0f; ctm[5] = 1.0f; ctm[6] = 0.0f; ctm[7] = 0.0f; \
-    ctm[8] = 0.0f; ctm[9] = 0.0f; ctm[10] = 1.0f; ctm[11] = 0.0f; \
-    ctm[12] = 0.0f; ctm[13] = 0.0f; ctm[14] = 0.0f; ctm[15] = 1.0f; \
-}
-
 static uint16_t wyhash16_x;
 
 inline uint32_t hash16(uint32_t input, uint32_t key) {
@@ -2139,17 +2104,10 @@ inline RppStatus compute_color_jitter_ctm_host(Rpp32f brightnessParam, Rpp32f co
 {
     contrastParam += 1.0f;
 
-    Rpp32f *compute_matrices = static_cast<Rpp32f*>(aligned_alloc(64, 256));
-    Rpp32f *hue_saturation_matrix, *sch_mat, *ssh_mat, *brightness_contrast_matrix;
-    hue_saturation_matrix = compute_matrices;
-    sch_mat = compute_matrices + 16;
-    ssh_mat = compute_matrices + 32;
-    brightness_contrast_matrix = compute_matrices + 48;
-
-    FILL_COLOR_JITTER_HSM(hue_saturation_matrix);
-    FILL_COLOR_JITTER_SCH(sch_mat);
-    FILL_COLOR_JITTER_SSH(ssh_mat);
-    FILL_COLOR_JITTER_BCM(brightness_contrast_matrix, brightnessParam, contrastParam);
+    alignas(64) Rpp32f hue_saturation_matrix[16] = {0.299f, 0.299f, 0.299f, 0.0f, 0.587f, 0.587f, 0.587f, 0.0f, 0.114f, 0.114f, 0.114f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+    alignas(64) Rpp32f sch_mat[16] = {0.701f, -0.299f, -0.300f, 0.0f, -0.587f, 0.413f, -0.588f, 0.0f, -0.114f, -0.114f, 0.886f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    alignas(64) Rpp32f ssh_mat[16] = {0.168f, -0.328f, 1.250f, 0.0f, 0.330f, 0.035f, -1.050f, 0.0f, -0.497f, 0.292f, -0.203f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    alignas(64) Rpp32f brightness_contrast_matrix[16] = {contrastParam, 0.0f, 0.0f, 0.0f, 0.0f, contrastParam, 0.0f, 0.0f, 0.0f, 0.0f, contrastParam, 0.0f, brightnessParam, brightnessParam, brightnessParam, 1.0f};
 
     Rpp32f sch = saturationParam * cos(hueParam * PI_OVER_180);
     Rpp32f ssh = saturationParam * sin(hueParam * PI_OVER_180);
