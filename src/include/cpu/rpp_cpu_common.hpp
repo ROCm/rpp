@@ -2134,27 +2134,27 @@ inline RppStatus compute_color_jitter_48_host(__m128 *p, __m128 *pCtm)
 {
     __m128 pResult[3];
 
-    pResult[0] = _mm_fmadd_ps(p[0], pCtm[0], _mm_fmadd_ps(p[4], pCtm[1], _mm_fmadd_ps(p[8], pCtm[2], pCtm[3])));    // color_jitter adjustment R0-R3
-    pResult[1] = _mm_fmadd_ps(p[0], pCtm[4], _mm_fmadd_ps(p[4], pCtm[5], _mm_fmadd_ps(p[8], pCtm[6], pCtm[7])));    // color_jitter adjustment G0-G3
-    pResult[2] = _mm_fmadd_ps(p[0], pCtm[8], _mm_fmadd_ps(p[4], pCtm[9], _mm_fmadd_ps(p[8], pCtm[10], pCtm[11])));    // color_jitter adjustment B0-B3
+    pResult[0] = _mm_round_ps(_mm_fmadd_ps(p[0], pCtm[0], _mm_fmadd_ps(p[4], pCtm[1], _mm_fmadd_ps(p[8], pCtm[2], pCtm[3]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment R0-R3
+    pResult[1] = _mm_round_ps(_mm_fmadd_ps(p[0], pCtm[4], _mm_fmadd_ps(p[4], pCtm[5], _mm_fmadd_ps(p[8], pCtm[6], pCtm[7]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment G0-G3
+    pResult[2] = _mm_round_ps(_mm_fmadd_ps(p[0], pCtm[8], _mm_fmadd_ps(p[4], pCtm[9], _mm_fmadd_ps(p[8], pCtm[10], pCtm[11]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment B0-B3
     p[0] = pResult[0];    // color_jitter adjustment R0-R3
     p[4] = pResult[1];    // color_jitter adjustment G0-G3
     p[8] = pResult[2];    // color_jitter adjustment B0-B3
-    pResult[0] = _mm_fmadd_ps(p[1], pCtm[0], _mm_fmadd_ps(p[5], pCtm[1], _mm_fmadd_ps(p[9], pCtm[2], pCtm[3])));    // color_jitter adjustment R4-R7
-    pResult[1] = _mm_fmadd_ps(p[1], pCtm[4], _mm_fmadd_ps(p[5], pCtm[5], _mm_fmadd_ps(p[9], pCtm[6], pCtm[7])));    // color_jitter adjustment G4-G7
-    pResult[2] = _mm_fmadd_ps(p[1], pCtm[8], _mm_fmadd_ps(p[5], pCtm[9], _mm_fmadd_ps(p[9], pCtm[10], pCtm[11])));    // color_jitter adjustment B4-B7
+    pResult[0] = _mm_round_ps(_mm_fmadd_ps(p[1], pCtm[0], _mm_fmadd_ps(p[5], pCtm[1], _mm_fmadd_ps(p[9], pCtm[2], pCtm[3]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment R4-R7
+    pResult[1] = _mm_round_ps(_mm_fmadd_ps(p[1], pCtm[4], _mm_fmadd_ps(p[5], pCtm[5], _mm_fmadd_ps(p[9], pCtm[6], pCtm[7]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment G4-G7
+    pResult[2] = _mm_round_ps(_mm_fmadd_ps(p[1], pCtm[8], _mm_fmadd_ps(p[5], pCtm[9], _mm_fmadd_ps(p[9], pCtm[10], pCtm[11]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment B4-B7
     p[1] = pResult[0];    // color_jitter adjustment R4-R7
     p[5] = pResult[1];    // color_jitter adjustment G4-G7
     p[9] = pResult[2];    // color_jitter adjustment B4-B7
-    pResult[0] = _mm_fmadd_ps(p[2], pCtm[0], _mm_fmadd_ps(p[6], pCtm[1], _mm_fmadd_ps(p[10], pCtm[2], pCtm[3])));    // color_jitter adjustment R8-R11
-    pResult[1] = _mm_fmadd_ps(p[2], pCtm[4], _mm_fmadd_ps(p[6], pCtm[5], _mm_fmadd_ps(p[10], pCtm[6], pCtm[7])));    // color_jitter adjustment G8-G11
-    pResult[2] = _mm_fmadd_ps(p[2], pCtm[8], _mm_fmadd_ps(p[6], pCtm[9], _mm_fmadd_ps(p[10], pCtm[10], pCtm[11])));    // color_jitter adjustment B8-B11
+    pResult[0] = _mm_round_ps(_mm_fmadd_ps(p[2], pCtm[0], _mm_fmadd_ps(p[6], pCtm[1], _mm_fmadd_ps(p[10], pCtm[2], pCtm[3]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment R8-R11
+    pResult[1] = _mm_round_ps(_mm_fmadd_ps(p[2], pCtm[4], _mm_fmadd_ps(p[6], pCtm[5], _mm_fmadd_ps(p[10], pCtm[6], pCtm[7]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment G8-G11
+    pResult[2] = _mm_round_ps(_mm_fmadd_ps(p[2], pCtm[8], _mm_fmadd_ps(p[6], pCtm[9], _mm_fmadd_ps(p[10], pCtm[10], pCtm[11]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment B8-B11
     p[2] = pResult[0];    // color_jitter adjustment R8-R11
     p[6] = pResult[1];    // color_jitter adjustment G8-G11
     p[10] = pResult[2];    // color_jitter adjustment B8-B11
-    pResult[0] = _mm_fmadd_ps(p[3], pCtm[0], _mm_fmadd_ps(p[7], pCtm[1], _mm_fmadd_ps(p[11], pCtm[2], pCtm[3])));    // color_jitter adjustment R12-R15
-    pResult[1] = _mm_fmadd_ps(p[3], pCtm[4], _mm_fmadd_ps(p[7], pCtm[5], _mm_fmadd_ps(p[11], pCtm[6], pCtm[7])));    // color_jitter adjustment G12-G15
-    pResult[2] = _mm_fmadd_ps(p[3], pCtm[8], _mm_fmadd_ps(p[7], pCtm[9], _mm_fmadd_ps(p[11], pCtm[10], pCtm[11])));    // color_jitter adjustment B12-B15
+    pResult[0] = _mm_round_ps(_mm_fmadd_ps(p[3], pCtm[0], _mm_fmadd_ps(p[7], pCtm[1], _mm_fmadd_ps(p[11], pCtm[2], pCtm[3]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment R12-R15
+    pResult[1] = _mm_round_ps(_mm_fmadd_ps(p[3], pCtm[4], _mm_fmadd_ps(p[7], pCtm[5], _mm_fmadd_ps(p[11], pCtm[6], pCtm[7]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment G12-G15
+    pResult[2] = _mm_round_ps(_mm_fmadd_ps(p[3], pCtm[8], _mm_fmadd_ps(p[7], pCtm[9], _mm_fmadd_ps(p[11], pCtm[10], pCtm[11]))), (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));    // color_jitter adjustment B12-B15
     p[3] = pResult[0];    // color_jitter adjustment R12-R15
     p[7] = pResult[1];    // color_jitter adjustment G12-G15
     p[11] = pResult[2];    // color_jitter adjustment B12-B15

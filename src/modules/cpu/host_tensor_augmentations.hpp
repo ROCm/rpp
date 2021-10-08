@@ -1178,9 +1178,9 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11]);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::round(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::round(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::round(ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11]));
 
                     srcPtrTemp+=3;
                     dstPtrTempR++;
@@ -1230,9 +1230,9 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(ctm[0] * *srcPtrTempR + ctm[1] * *srcPtrTempG + ctm[2] * *srcPtrTempB + ctm[3]);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(ctm[4] * *srcPtrTempR + ctm[5] * *srcPtrTempG + ctm[6] * *srcPtrTempB + ctm[7]);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(ctm[8] * *srcPtrTempR + ctm[9] * *srcPtrTempG + ctm[10] * *srcPtrTempB + ctm[11]);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::round(ctm[0] * *srcPtrTempR + ctm[1] * *srcPtrTempG + ctm[2] * *srcPtrTempB + ctm[3]));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::round(ctm[4] * *srcPtrTempR + ctm[5] * *srcPtrTempG + ctm[6] * *srcPtrTempB + ctm[7]));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::round(ctm[8] * *srcPtrTempR + ctm[9] * *srcPtrTempG + ctm[10] * *srcPtrTempB + ctm[11]));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -1276,9 +1276,9 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11]);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::round(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::round(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::round(ctm[8] * srcPtrTemp[0] + ctm[9] * srcPtrTemp[1] + ctm[10] * srcPtrTemp[2] + ctm[11]));
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -1330,9 +1330,9 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(ctm[0] * *srcPtrTempR + ctm[1] * *srcPtrTempG + ctm[2] * *srcPtrTempB + ctm[3]);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(ctm[4] * *srcPtrTempR + ctm[5] * *srcPtrTempG + ctm[6] * *srcPtrTempB + ctm[7]);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(ctm[8] * *srcPtrTempR + ctm[9] * *srcPtrTempG + ctm[10] * *srcPtrTempB + ctm[11]);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::round(ctm[0] * *srcPtrTempR + ctm[1] * *srcPtrTempG + ctm[2] * *srcPtrTempB + ctm[3]));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::round(ctm[4] * *srcPtrTempR + ctm[5] * *srcPtrTempG + ctm[6] * *srcPtrTempB + ctm[7]));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::round(ctm[8] * *srcPtrTempR + ctm[9] * *srcPtrTempG + ctm[10] * *srcPtrTempB + ctm[11]));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -2103,9 +2103,9 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempI8[1] = (Rpp32f)srcPtrTemp[1] + 128;
                     srcPtrTempI8[2] = (Rpp32f)srcPtrTemp[2] + 128;
 
-                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(ctm[0] * srcPtrTempI8[0] + ctm[1] * srcPtrTempI8[1] + ctm[2] * srcPtrTempI8[2] + ctm[3] - 128);
-                    *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8(ctm[4] * srcPtrTempI8[0] + ctm[5] * srcPtrTempI8[1] + ctm[6] * srcPtrTempI8[2] + ctm[7] - 128);
-                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8(ctm[8] * srcPtrTempI8[0] + ctm[9] * srcPtrTempI8[1] + ctm[10] * srcPtrTempI8[2] + ctm[11] - 128);
+                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[0] * srcPtrTempI8[0] + ctm[1] * srcPtrTempI8[1] + ctm[2] * srcPtrTempI8[2] + ctm[3]) - 128);
+                    *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[4] * srcPtrTempI8[0] + ctm[5] * srcPtrTempI8[1] + ctm[6] * srcPtrTempI8[2] + ctm[7]) - 128);
+                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[8] * srcPtrTempI8[0] + ctm[9] * srcPtrTempI8[1] + ctm[10] * srcPtrTempI8[2] + ctm[11]) - 128);
 
                     srcPtrTemp+=3;
                     dstPtrTempR++;
@@ -2160,9 +2160,9 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempI8[1] = (Rpp32f)*srcPtrTempG + 128;
                     srcPtrTempI8[2] = (Rpp32f)*srcPtrTempB + 128;
 
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(ctm[0] * srcPtrTempI8[0] + ctm[1] * srcPtrTempI8[1] + ctm[2] * srcPtrTempI8[2] + ctm[3] - 128);
-                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(ctm[4] * srcPtrTempI8[0] + ctm[5] * srcPtrTempI8[1] + ctm[6] * srcPtrTempI8[2] + ctm[7] - 128);
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(ctm[8] * srcPtrTempI8[0] + ctm[9] * srcPtrTempI8[1] + ctm[10] * srcPtrTempI8[2] + ctm[11] - 128);
+                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[0] * srcPtrTempI8[0] + ctm[1] * srcPtrTempI8[1] + ctm[2] * srcPtrTempI8[2] + ctm[3]) - 128);
+                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[4] * srcPtrTempI8[0] + ctm[5] * srcPtrTempI8[1] + ctm[6] * srcPtrTempI8[2] + ctm[7]) - 128);
+                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[8] * srcPtrTempI8[0] + ctm[9] * srcPtrTempI8[1] + ctm[10] * srcPtrTempI8[2] + ctm[11]) - 128);
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -2211,9 +2211,9 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempI8[1] = (Rpp32f)srcPtrTemp[1] + 128;
                     srcPtrTempI8[2] = (Rpp32f)srcPtrTemp[2] + 128;
 
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(ctm[0] * srcPtrTempI8[0] + ctm[1] * srcPtrTempI8[1] + ctm[2] * srcPtrTempI8[2] + ctm[3] - 128);
-                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(ctm[4] * srcPtrTempI8[0] + ctm[5] * srcPtrTempI8[1] + ctm[6] * srcPtrTempI8[2] + ctm[7] - 128);
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(ctm[8] * srcPtrTempI8[0] + ctm[9] * srcPtrTempI8[1] + ctm[10] * srcPtrTempI8[2] + ctm[11] - 128);
+                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[0] * srcPtrTempI8[0] + ctm[1] * srcPtrTempI8[1] + ctm[2] * srcPtrTempI8[2] + ctm[3]) - 128);
+                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[4] * srcPtrTempI8[0] + ctm[5] * srcPtrTempI8[1] + ctm[6] * srcPtrTempI8[2] + ctm[7]) - 128);
+                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[8] * srcPtrTempI8[0] + ctm[9] * srcPtrTempI8[1] + ctm[10] * srcPtrTempI8[2] + ctm[11]) - 128);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -2270,9 +2270,9 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempI8[1] = (Rpp32f)*srcPtrTempG + 128;
                     srcPtrTempI8[2] = (Rpp32f)*srcPtrTempB + 128;
 
-                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(ctm[0] * srcPtrTempI8[0] + ctm[1] * srcPtrTempI8[1] + ctm[2] * srcPtrTempI8[2] + ctm[3] - 128);
-                    *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8(ctm[4] * srcPtrTempI8[0] + ctm[5] * srcPtrTempI8[1] + ctm[6] * srcPtrTempI8[2] + ctm[7] - 128);
-                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8(ctm[8] * srcPtrTempI8[0] + ctm[9] * srcPtrTempI8[1] + ctm[10] * srcPtrTempI8[2] + ctm[11] - 128);
+                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[0] * srcPtrTempI8[0] + ctm[1] * srcPtrTempI8[1] + ctm[2] * srcPtrTempI8[2] + ctm[3]) - 128);
+                    *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[4] * srcPtrTempI8[0] + ctm[5] * srcPtrTempI8[1] + ctm[6] * srcPtrTempI8[2] + ctm[7]) - 128);
+                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8(std::round(ctm[8] * srcPtrTempI8[0] + ctm[9] * srcPtrTempI8[1] + ctm[10] * srcPtrTempI8[2] + ctm[11]) - 128);
 
                     srcPtrTempR++;
                     srcPtrTempG++;
