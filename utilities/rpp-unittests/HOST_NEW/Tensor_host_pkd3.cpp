@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (1:7) = %s", argv[6]);
+        printf("\ncase number (0:81) = %s", argv[6]);
     }
 
     char *src = argv[1];
@@ -66,6 +66,12 @@ int main(int argc, char **argv)
     {
     case 0:
         strcpy(funcName, "brightness");
+        break;
+    case 1:
+        strcpy(funcName, "gamma_correction");
+        break;
+    case 2:
+        strcpy(funcName, "blend");
         break;
     case 81:
         strcpy(funcName, "color_jitter");
@@ -237,8 +243,8 @@ int main(int argc, char **argv)
     srcDescPtr->numDims = 4;
     dstDescPtr->numDims = 4;
 
-    srcDescPtr->offset = 0;
-    dstDescPtr->offset = 0;
+    srcDescPtr->offsetInBytes = 0;
+    dstDescPtr->offsetInBytes = 0;
 
     srcDescPtr->n = noOfImages;
     srcDescPtr->h = maxHeight;
@@ -466,6 +472,104 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
             rppt_brightness_host(inputi8, srcDescPtr, outputi8, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end = clock();
+        end_omp = omp_get_wtime();
+
+        break;
+    }
+    case 1:
+    {
+        test_case_name = "gamma_correction";
+
+        Rpp32f gammaVal[images];
+        for (i = 0; i < images; i++)
+        {
+            gammaVal[i] = 1.9;
+
+            // xywhROI override sample
+            // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+
+            // ltrbROI override sample
+            // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            // roiTensorPtrSrc[i].ltrbROI.lt.y = 50;
+            // roiTensorPtrSrc[i].ltrbROI.rb.x = 199;
+            // roiTensorPtrSrc[i].ltrbROI.rb.y = 149;
+        }
+
+        // Change RpptRoiType for ltrbROI override sample
+        // roiTypeSrc = RpptRoiType::LTRB;
+        // roiTypeDst = RpptRoiType::LTRB;
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_gamma_correction_host(input, srcDescPtr, output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_gamma_correction_host(inputf16, srcDescPtr, outputf16, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_gamma_correction_host(inputf32, srcDescPtr, outputf32, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_gamma_correction_host(inputi8, srcDescPtr, outputi8, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end = clock();
+        end_omp = omp_get_wtime();
+
+        break;
+    }
+    case 2:
+    {
+        test_case_name = "blend";
+
+        Rpp32f alpha[images];
+        for (i = 0; i < images; i++)
+        {
+            alpha[i] = 0.4;
+
+            // xywhROI override sample
+            // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+
+            // ltrbROI override sample
+            // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            // roiTensorPtrSrc[i].ltrbROI.lt.y = 50;
+            // roiTensorPtrSrc[i].ltrbROI.rb.x = 199;
+            // roiTensorPtrSrc[i].ltrbROI.rb.y = 149;
+        }
+
+        // Change RpptRoiType for ltrbROI override sample
+        // roiTypeSrc = RpptRoiType::LTRB;
+        // roiTypeDst = RpptRoiType::LTRB;
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_blend_host(inputf16, inputf16_second, srcDescPtr, outputf16, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_blend_host(inputf32, inputf32_second, srcDescPtr, outputf32, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_blend_host(inputi8, inputi8_second, srcDescPtr, outputi8, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
