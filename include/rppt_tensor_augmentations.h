@@ -81,6 +81,27 @@ RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rp
 RppStatus rppt_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 RppStatus rppt_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
+/******************** color_cast ********************/
+
+// Color cast augmentation for a NCHW/NHWC layout tensor
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDesc source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDesc destination tensor descriptor
+// *param[in] rTensor r values for color casting calculation (1D tensor of size batchSize with 0 <= rTensor[n] <= 255 for each image in batch)
+// *param[in] gTensor g values for color casting calculation (1D tensor of size batchSize with 0 <= gTensor[n] <= 255 for each image in batch)
+// *param[in] bTensor b values for color casting calculation (1D tensor of size batchSize with 0 <= bTensor[n] <= 255 for each image in batch)
+// *param[in] alphaTensor alpha values for blending srcPtr's r/g/b pixel with the user's r/g/b pixel (1D tensor of size batchSize with 0 <= alphaTensor[n] for each image in batch)
+// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
+
+// RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp8u *rTensor, Rpp8u *gTensor, Rpp8u *bTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp8u *rTensor, Rpp8u *gTensor, Rpp8u *bTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
