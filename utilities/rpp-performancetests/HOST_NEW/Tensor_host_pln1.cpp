@@ -77,6 +77,9 @@ int main(int argc, char **argv)
     case 2:
         strcpy(funcName, "blend");
         break;
+    case 31:
+        strcpy(funcName, "color_cast");
+        break;
     default:
         strcpy(funcName, "test_case");
         break;
