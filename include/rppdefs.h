@@ -40,6 +40,7 @@ typedef enum
 {
     RPP_SUCCESS             = 0,
     RPP_ERROR               = -1,
+    RPP_INVALID_ARGUMENTS   = -2,
 } RppStatus;
 
 typedef enum

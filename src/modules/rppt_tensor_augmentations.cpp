@@ -469,84 +469,91 @@ rppt_blend_host(RppPtr_t srcPtr1,
 
 /******************** color_cast ********************/
 
-// RppStatus
-// rppt_color_cast_gpu(RppPtr_t srcPtr,
-//                     RpptDescPtr srcDescPtr,
-//                     RppPtr_t dstPtr,
-//                     RpptDescPtr dstDescPtr,
-//                     Rpp8u *rTensor,
-//                     Rpp8u *gTensor,
-//                     Rpp8u *bTensor,
-//                     Rpp32f *alphaTensor,
-//                     RpptROIPtr roiTensorPtrSrc,
-//                     RpptRoiType roiType,
-//                     rppHandle_t rppHandle)
-// {
-// #ifdef OCL_COMPILE
+RppStatus
+rppt_color_cast_gpu(RppPtr_t srcPtr,
+                    RpptDescPtr srcDescPtr,
+                    RppPtr_t dstPtr,
+                    RpptDescPtr dstDescPtr,
+                    Rpp8u *rTensor,
+                    Rpp8u *gTensor,
+                    Rpp8u *bTensor,
+                    Rpp32f *alphaTensor,
+                    RpptROIPtr roiTensorPtrSrc,
+                    RpptRoiType roiType,
+                    rppHandle_t rppHandle)
+{
+    if (srcDescPtr->c != 3)
+    {
+        return RPP_INVALID_ARGUMENTS;
+    }
 
-// #elif defined (HIP_COMPILE)
+#ifdef OCL_COMPILE
 
-//     Rpp32u paramIndex = 0;
-//     copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
-//     copy_param_float(betaTensor, rpp::deref(rppHandle), paramIndex++);
+#elif defined (HIP_COMPILE)
 
-//     if (srcDescPtr->dataType == RpptDataType::U8)
-//     {
-//         if (dstDescPtr->dataType == RpptDataType::U8)
-//         {
-//             color_cast_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-//                                   srcDescPtr,
-//                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-//                                   dstDescPtr,
-//                                   roiTensorPtrSrc,
-//                                   roiType,
-//                                   rpp::deref(rppHandle));
-//         }
-//     }
-//     else if (srcDescPtr->dataType == RpptDataType::F16)
-//     {
-//         if (dstDescPtr->dataType == RpptDataType::F16)
-//         {
-//             color_cast_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-//                                   srcDescPtr,
-//                                   (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-//                                   dstDescPtr,
-//                                   roiTensorPtrSrc,
-//                                   roiType,
-//                                   rpp::deref(rppHandle));
-//         }
-//     }
-//     else if (srcDescPtr->dataType == RpptDataType::F32)
-//     {
-//         if (dstDescPtr->dataType == RpptDataType::F32)
-//         {
-//             color_cast_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-//                                   srcDescPtr,
-//                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-//                                   dstDescPtr,
-//                                   roiTensorPtrSrc,
-//                                   roiType,
-//                                   rpp::deref(rppHandle));
-//         }
-//     }
-//     else if (srcDescPtr->dataType == RpptDataType::I8)
-//     {
-//         if (dstDescPtr->dataType == RpptDataType::I8)
-//         {
-//             color_cast_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-//                                   srcDescPtr,
-//                                   static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-//                                   dstDescPtr,
-//                                   roiTensorPtrSrc,
-//                                   roiType,
-//                                   rpp::deref(rppHandle));
-//         }
-//     }
+    Rpp32u paramIndex = 0;
+    copy_param_uchar(rTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uchar(gTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uchar(bTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
 
-// #endif //BACKEND
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        if (dstDescPtr->dataType == RpptDataType::U8)
+        {
+            color_cast_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+        }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        if (dstDescPtr->dataType == RpptDataType::F16)
+        {
+            color_cast_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                  srcDescPtr,
+                                  (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+        }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        if (dstDescPtr->dataType == RpptDataType::F32)
+        {
+            color_cast_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                  srcDescPtr,
+                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+        }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        if (dstDescPtr->dataType == RpptDataType::I8)
+        {
+            color_cast_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+        }
+    }
 
-//     return RPP_SUCCESS;
-// }
+#endif //BACKEND
+
+    return RPP_SUCCESS;
+}
 
 RppStatus
 rppt_color_cast_host(RppPtr_t srcPtr,
@@ -561,6 +568,11 @@ rppt_color_cast_host(RppPtr_t srcPtr,
                      RpptRoiType roiType,
                      rppHandle_t rppHandle)
 {
+    if (srcDescPtr->c != 3)
+    {
+        return RPP_INVALID_ARGUMENTS;
+    }
+
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
