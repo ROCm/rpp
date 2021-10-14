@@ -543,7 +543,7 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(half *dstPtr, uin
 
 // U8 stores without layout toggle (24 U8 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float24_and_store24(uchar *dstPtr, uint dstIdx, d_float24 *dst_f24)
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(uchar *dstPtr, uint dstIdx, d_float24 *dst_f24)
 {
     d_uint6 dst;
 
@@ -559,14 +559,14 @@ __device__ __forceinline__ void rpp_hip_pack_float24_and_store24(uchar *dstPtr, 
 
 // F32 stores without layout toggle (24 F32 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float24_and_store24(float *dstPtr, uint dstIdx, d_float24 *dst_f24)
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(float *dstPtr, uint dstIdx, d_float24 *dst_f24)
 {
     *((d_float24 *)(&dstPtr[dstIdx])) = *dst_f24;
 }
 
 // I8 stores without layout toggle (24 I8 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float24_and_store24(signed char *dstPtr, uint dstIdx, d_float24 *dst_f24)
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(signed char *dstPtr, uint dstIdx, d_float24 *dst_f24)
 {
     d_uint6 dst;
 
@@ -582,7 +582,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_and_store24(signed char *ds
 
 // F16 stores without layout toggle (24 F16 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float24_and_store24(half *dstPtr, uint dstIdx, d_float24 *dst_f24)
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(half *dstPtr, uint dstIdx, d_float24 *dst_f24)
 {
     d_half24 dst_h24;
 
