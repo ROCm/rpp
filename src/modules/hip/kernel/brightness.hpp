@@ -188,7 +188,7 @@ __global__ void brightness_pln3_pkd3_tensor(T *srcPtr,
     brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
     brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
     brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
-    rpp_hip_pack_float24_and_store24(dstPtr, dstIdx, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
 }
 
 template <typename T>

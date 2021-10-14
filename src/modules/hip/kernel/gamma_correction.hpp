@@ -188,7 +188,7 @@ __global__ void gamma_correction_pln3_pkd3_tensor(T *srcPtr,
     gamma_correction_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &gammaLUT[gammaLutIdx]);
     gamma_correction_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &gammaLUT[gammaLutIdx]);
     gamma_correction_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &gammaLUT[gammaLutIdx]);
-    rpp_hip_pack_float24_and_store24(dstPtr, dstIdx, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
 }
 
 __global__ void gamma_correction_lut_compute(float *gammaLUT,

@@ -172,7 +172,7 @@ __global__ void blend_pln3_pkd3_tensor(T *srcPtr1,
     blend_hip_compute(&src1_f24.x, &src2_f24.x, &dst_f24.x, &alpha_f4);
     blend_hip_compute(&src1_f24.y, &src2_f24.y, &dst_f24.y, &alpha_f4);
     blend_hip_compute(&src1_f24.z, &src2_f24.z, &dst_f24.z, &alpha_f4);
-    rpp_hip_pack_float24_and_store24(dstPtr, dstIdx, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
 }
 
 template <typename T>
