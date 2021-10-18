@@ -103,25 +103,7 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     Rpp32f hueShift, Rpp32f saturationFactor,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
-    // OLD
-
-    // Rpp32f hueShiftAngle = hueShift;
-    // while (hueShiftAngle > 360)
-    // {
-    //     hueShiftAngle = hueShiftAngle - 360;
-    // }
-    // while (hueShiftAngle < 0)
-    // {
-    //     hueShiftAngle = 360 + hueShiftAngle;
-    // }
-
-    // hueShift = hueShiftAngle / 360;
-
-
-    // NEW
-
     hueShift = (int)hueShift % 360;
-    // hueShift = fmod(hueShift, 360);
     Rpp32f hueShiftAngle = hueShift;
     hueShift *= 0.002778f;
 
@@ -130,11 +112,6 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         hueShift += 1;
         hueShiftAngle += 360;
     }
-
-    // PRINT
-
-    // printf("\n\n\n------------------------------------------> HueShift, HueShiftAngle = %f, %f", hueShift, hueShiftAngle);
-    // return RPP_SUCCESS;
 
     Rpp64u totalImageDim = channel * srcSize.height * srcSize.width;
 
@@ -966,17 +943,15 @@ RppStatus color_twist_f32_host(Rpp32f* srcPtr, RppiSize srcSize, Rpp32f* dstPtr,
                     Rpp32f hueShift, Rpp32f saturationFactor,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
+    hueShift = (int)hueShift % 360;
     Rpp32f hueShiftAngle = hueShift;
-    while (hueShiftAngle > 360)
-    {
-        hueShiftAngle = hueShiftAngle - 360;
-    }
-    while (hueShiftAngle < 0)
-    {
-        hueShiftAngle = 360 + hueShiftAngle;
-    }
+    hueShift *= 0.002778f;
 
-    hueShift = hueShiftAngle / 360;
+    if (hueShift < 0)
+    {
+        hueShift += 1;
+        hueShiftAngle += 360;
+    }
 
     Rpp64u totalImageDim = channel * srcSize.height * srcSize.width;
 
@@ -1771,17 +1746,15 @@ RppStatus color_twist_f16_host(Rpp16f* srcPtr, RppiSize srcSize, Rpp16f* dstPtr,
                     Rpp32f hueShift, Rpp32f saturationFactor,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
+    hueShift = (int)hueShift % 360;
     Rpp32f hueShiftAngle = hueShift;
-    while (hueShiftAngle > 360)
-    {
-        hueShiftAngle = hueShiftAngle - 360;
-    }
-    while (hueShiftAngle < 0)
-    {
-        hueShiftAngle = 360 + hueShiftAngle;
-    }
+    hueShift *= 0.002778f;
 
-    hueShift = hueShiftAngle / 360;
+    if (hueShift < 0)
+    {
+        hueShift += 1;
+        hueShiftAngle += 360;
+    }
 
     Rpp64u totalImageDim = channel * srcSize.height * srcSize.width;
 
