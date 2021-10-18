@@ -95,10 +95,13 @@ for log_file in log_file_list:
 
     # Print summary of log
     print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(s)\t\tmin(s)\t\tavg(s)\n")
-    maxCharLength = len(max(functions, key=len))
-    functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
-    for i, func in enumerate(functions):
-        print(func, "\t", frames[i], "\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
+    if len(functions) != 0:
+        maxCharLength = len(max(functions, key=len))
+        functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
+        for i, func in enumerate(functions):
+            print(func, "\t", frames[i], "\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
+    else:
+        print("No variants under this category")
 
     # Closing log file
     f.close()
