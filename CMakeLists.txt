@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(amd_rpp)
-set(VERSION "0.9")
+set(VERSION "0.92")
 
 find_program(MAKE_NSIS_EXE makensis)
 find_program(RPMBUILD_EXE rpmbuild)
@@ -101,7 +101,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(RPP_BACKEND_HIP 1)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
     set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
     link_libraries(stdc++)
 
     message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
@@ -120,13 +120,15 @@ elseif("${BACKEND}" STREQUAL "OCL")
     # Set compiler and flags
     set(RPP_BACKEND_OPENCL 1)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
     set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
     set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
 
     message("-- ${Green}${PROJECT_NAME} set to build with OpenCL backend${ColourReset}")
 endif()
+
+configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 
@@ -168,7 +170,9 @@ add_subdirectory(addkernels)
 # Installation
 
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*.h.in" EXCLUDE)
+install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+
 
 # Set package information
 

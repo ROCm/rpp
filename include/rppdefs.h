@@ -13,6 +13,10 @@ extern "C" {
 #include <CL/cl.h>
 #endif
 
+#define RPP_MIN_8U      ( 0 )
+#define RPP_MAX_8U      ( 255 )
+#define RPP_MIN_16U     ( 0 )
+#define RPP_MAX_16U     ( 65535 )
 
 
 
@@ -230,7 +234,7 @@ typedef struct
 typedef struct
 {
     RppSize_t numDims;
-    Rpp32u offset;
+    Rpp32u offsetInBytes;
     RpptDataType dataType;
     RpptLayout layout;
     Rpp32u n, c, h, w;
@@ -382,6 +386,19 @@ typedef struct
     cl_mem dstInc;
 } memGPU;
 
+typedef struct
+{
+    memCPU mcpu;
+    memGPU mgpu;
+} memMgmt;
+
+typedef struct
+{
+    RppPtr_t cpuHandle;
+    Rpp32u nbatchSize;
+    memMgmt mem;
+} InitHandle;
+
 
 
 
@@ -458,14 +475,6 @@ typedef struct
     Rpp32u* dstInc;
 } memGPU;
 
-#endif //BACKEND
-
-
-
-
-
-/******************** Memory management and handle typedefs ********************/
-
 typedef struct
 {
     memCPU mcpu;
@@ -479,10 +488,7 @@ typedef struct
     memMgmt mem;
 } InitHandle;
 
-#define RPP_MIN_8U      ( 0 )
-#define RPP_MAX_8U      ( 255 )
-#define RPP_MIN_16U     ( 0 )
-#define RPP_MAX_16U     ( 65535 )
+#endif //BACKEND
 
 #ifdef __cplusplus
 }
