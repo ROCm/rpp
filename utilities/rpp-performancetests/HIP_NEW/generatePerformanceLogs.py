@@ -4,8 +4,8 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profiling', type=str, default='NO', help='Run with profiler? - (YES/NO)')
-parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-79)')
-parser.add_argument('--case_end', type=str, default='79', help='Testing range ending case # - (0-79)')
+parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-81)')
+parser.add_argument('--case_end', type=str, default='81', help='Testing range ending case # - (0-81)')
 args = parser.parse_args()
 
 profilingOption = args.profiling
@@ -16,12 +16,12 @@ if caseEnd < caseStart:
     print("Ending case# must be greater than starting case#. Aborting!")
     exit(0)
 
-if caseStart < "0" or caseStart > "79":
-    print("Starting case# must be in the 0-79 range. Aborting!")
+if caseStart < "0" or caseStart > "81":
+    print("Starting case# must be in the 0-81 range. Aborting!")
     exit(0)
 
-if caseEnd < "0" or caseEnd > "79":
-    print("Ending case# must be in the 0-79 range. Aborting!")
+if caseEnd < "0" or caseEnd > "81":
+    print("Ending case# must be in the 0-81 range. Aborting!")
     exit(0)
 
 if profilingOption == "NO":
@@ -99,10 +99,13 @@ if profilingOption == "NO":
 
         # Print summary of log
         print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(s)\t\tmin(s)\t\tavg(s)\n")
-        maxCharLength = len(max(functions, key=len))
-        functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
-        for i, func in enumerate(functions):
-            print(func, "\t", frames[i], "\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
+        if len(functions) != 0:
+            maxCharLength = len(max(functions, key=len))
+            functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
+            for i, func in enumerate(functions):
+                print(func, "\t", frames[i], "\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
+        else:
+            print("No variants under this category")
 
         # Close log file
         f.close()

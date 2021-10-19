@@ -364,6 +364,9 @@ int main(int argc, char **argv)
     case 80:
         strcpy(funcName, "resize_mirror_normalize");
         break;
+    case 81:
+        strcpy(funcName, "color_jitter");
+        break;
     default:
         strcpy(funcName, "test_case");
         break;
@@ -3559,6 +3562,13 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             end = clock();
             end_omp = omp_get_wtime();
+
+            break;
+        }
+        case 81:
+        {
+            // test_case_name = "color_jitter";
+            missingFuncFlag = 1;
 
             break;
         }
