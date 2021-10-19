@@ -662,14 +662,6 @@ static const __m128 _ps_cephes_FOPI = _mm_set1_ps(1.27323954473516f); // 4 / M_P
 
 static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c)
 {
-
-#if 0
-#ifdef MATH_SSE41 // _mm_round_ps is SSE4.1
-     // XXX Added in MathGeoLib: Take a modulo of the input in 2pi to try to enhance the precision with large input values.
-    x = modf_ps(x, _mm_set1_ps(2.f*3.141592654f));
-#endif
-#endif
-
     // Extract the sign bit (upper one)
     __m128 sign_bit_sin = _mm_and_ps(x, _ps_sign_mask);
     // take the absolute value
@@ -865,6 +857,32 @@ static inline __m128 atan2_ps( __m128 y, __m128 x )
     result = _mm_or_ps( result, pi_result );
 
     return result;
+}
+
+static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
+{
+    __m128 row1 = _mm_load_ps(&B[0]);                   // Row 0 of B
+    __m128 row2 = _mm_load_ps(&B[4]);                   // Row 1 of B
+    __m128 row3 = _mm_load_ps(&B[8]);                   // Row 2 of B
+    __m128 row4 = _mm_load_ps(&B[12]);                  // Row 3 of B
+
+    for(int i = 0; i < 4; i++)
+    {
+        __m128 brod1 = _mm_set1_ps(A[4 * i + 0]);       // Example for row 0 computation -> A[0][0] is broadcasted
+        __m128 brod2 = _mm_set1_ps(A[4 * i + 1]);       // Example for row 0 computation -> A[0][1] is broadcasted
+        __m128 brod3 = _mm_set1_ps(A[4 * i + 2]);       // Example for row 0 computation -> A[0][2] is broadcasted
+        __m128 brod4 = _mm_set1_ps(A[4 * i + 3]);       // Example for row 0 computation -> A[0][3] is broadcasted
+
+        __m128 row = _mm_add_ps(                        // Example for row 0 computation -> P + Q
+                        _mm_add_ps(                     // Example for row 0 computation -> P = A[0][0] * B[0][0] + A[0][1] * B[1][0]
+                            _mm_mul_ps(brod1, row1),    // Example for row 0 computation -> (A[0][0] * B[0][0], A[0][0] * B[0][1], A[0][0] * B[0][2], A[0][0] * B[0][3])
+                            _mm_mul_ps(brod2, row2)),   // Example for row 0 computation -> (A[0][1] * B[1][0], A[0][1] * B[1][1], A[0][1] * B[1][2], A[0][1] * B[1][3])
+                        _mm_add_ps(                     // Example for row 0 computation -> Q = A[0][2] * B[2][0] + A[0][3] * B[3][0]
+                            _mm_mul_ps(brod3, row3),    // Example for row 0 computation -> (A[0][2] * B[2][0], A[0][2] * B[2][1], A[0][2] * B[2][2], A[0][2] * B[2][3])
+                            _mm_mul_ps(brod4, row4)));  // Example for row 0 computation -> (A[0][3] * B[3][0], A[0][3] * B[3][1], A[0][3] * B[3][2], A[0][3] * B[3][3])
+
+        _mm_store_ps(&C[4*i], row);                     // Example for row 0 computation -> Storing whole computed row 0
+    }
 }
 
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
