@@ -808,7 +808,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(uchar
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(float *dstPtr, uint dstIdx, d_float24 *dst_f24)
 {
     d_float24 *dstPtr_f24;
-    dstPtr_f24 = (d_float24 *)dstPtr;
+    dstPtr_f24 = (d_float24 *)&dstPtr[dstIdx];
 
     dstPtr_f24->x.x.x = dst_f24->x.x.x;
     dstPtr_f24->x.x.y = dst_f24->y.x.x;
