@@ -29,11 +29,9 @@ __device__ void color_cast_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 
 
 template <typename T>
 __global__ void color_cast_pkd_tensor(T *srcPtr,
-                                      int nStrideSrc,
-                                      int hStrideSrc,
+                                      uint2 srcStridesNH,
                                       T *dstPtr,
-                                      int nStrideDst,
-                                      int hStrideDst,
+                                      uint2 dstStridesNH,
                                       RpptRGBA *rgbaTensor,
                                       RpptROIPtr roiTensorPtrSrc)
 {
@@ -46,8 +44,8 @@ __global__ void color_cast_pkd_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x * 3;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float4 r_f4 = (float4)((float)rgbaTensor[id_z].R);
     float4 g_f4 = (float4)((float)rgbaTensor[id_z].G);
@@ -65,13 +63,9 @@ __global__ void color_cast_pkd_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void color_cast_pln_tensor(T *srcPtr,
-                                      int nStrideSrc,
-                                      int cStrideSrc,
-                                      int hStrideSrc,
+                                      uint3 srcStridesNCH,
                                       T *dstPtr,
-                                      int nStrideDst,
-                                      int cStrideDst,
-                                      int hStrideDst,
+                                      uint3 dstStridesNCH,
                                       RpptRGBA *rgbaTensor,
                                       RpptROIPtr roiTensorPtrSrc)
 {
@@ -84,8 +78,8 @@ __global__ void color_cast_pln_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float4 r_f4 = (float4)((float)rgbaTensor[id_z].R);
     float4 g_f4 = (float4)((float)rgbaTensor[id_z].G);
@@ -94,21 +88,18 @@ __global__ void color_cast_pln_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr, srcIdx, cStrideSrc, &src_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr, srcIdx, srcStridesNCH.y, &src_f24);
     color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, cStrideDst, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>
 __global__ void color_cast_pkd3_pln3_tensor(T *srcPtr,
-                                            int nStrideSrc,
-                                            int hStrideSrc,
+                                            uint2 srcStridesNH,
                                             T *dstPtr,
-                                            int nStrideDst,
-                                            int cStrideDst,
-                                            int hStrideDst,
+                                            uint3 dstStridesNCH,
                                             RpptRGBA *rgbaTensor,
                                             RpptROIPtr roiTensorPtrSrc)
 {
@@ -121,8 +112,8 @@ __global__ void color_cast_pkd3_pln3_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float4 r_f4 = (float4)((float)rgbaTensor[id_z].R);
     float4 g_f4 = (float4)((float)rgbaTensor[id_z].G);
@@ -135,17 +126,14 @@ __global__ void color_cast_pkd3_pln3_tensor(T *srcPtr,
     color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, cStrideDst, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>
 __global__ void color_cast_pln3_pkd3_tensor(T *srcPtr,
-                                            int nStrideSrc,
-                                            int cStrideSrc,
-                                            int hStrideSrc,
+                                            uint3 srcStridesNCH,
                                             T *dstPtr,
-                                            int nStrideDst,
-                                            int hStrideDst,
+                                            uint2 dstStridesNH,
                                             RpptRGBA *rgbaTensor,
                                             RpptROIPtr roiTensorPtrSrc)
 {
@@ -158,8 +146,8 @@ __global__ void color_cast_pln3_pkd3_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x * 3;
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float4 r_f4 = (float4)((float)rgbaTensor[id_z].R);
     float4 g_f4 = (float4)((float)rgbaTensor[id_z].G);
@@ -168,7 +156,7 @@ __global__ void color_cast_pln3_pkd3_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr, srcIdx, cStrideSrc, &src_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr, srcIdx, srcStridesNCH.y, &src_f24);
     color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
@@ -201,11 +189,9 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem,
                                roiTensorPtrSrc);
         }
@@ -217,13 +203,9 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.cStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.cStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem,
                                roiTensorPtrSrc);
         }
@@ -235,12 +217,9 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.cStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem,
                                roiTensorPtrSrc);
         }
@@ -253,12 +232,9 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.cStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem,
                                roiTensorPtrSrc);
         }
