@@ -242,6 +242,14 @@ typedef struct
     RpptStrides strides;
 } RpptDesc, *RpptDescPtr;
 
+typedef struct
+{
+    Rpp8u R;
+    Rpp8u G;
+    Rpp8u B;
+    Rpp32f A;
+} RpptRGBA;
+
 
 
 
@@ -280,6 +288,11 @@ typedef struct
 
 typedef struct
 {
+    RpptRGBA* rgbamem;
+} memRpptRGBA;
+
+typedef struct
+{
     Rpp32u *height;
     Rpp32u *width;
 } memSize;
@@ -304,6 +317,7 @@ typedef struct {
     memRpp32s intArr[10];
     memRpp8u ucharArr[10];
     memRpp8s charArr[10];
+    memRpptRGBA rgbaArr;
     Rpp64u *srcBatchIndex;
     Rpp64u *dstBatchIndex;
     Rpp32u *inc;
@@ -440,6 +454,11 @@ typedef struct
 
 typedef struct
 {
+    RpptRGBA* rgbamem;
+} hipMemRpptRGBA;
+
+typedef struct
+{
     Rpp32u* height;
     Rpp32u* width;
 } hipMemSize;
@@ -470,6 +489,7 @@ typedef struct
     hipMemRpp32s intArr[10];
     hipMemRpp8u ucharArr[10];
     hipMemRpp8s charArr[10];
+    hipMemRpptRGBA rgbaArr;
     Rpp64u* srcBatchIndex;
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;

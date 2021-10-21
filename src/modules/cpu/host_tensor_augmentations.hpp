@@ -4061,10 +4061,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        Rpp8u *dstPtr,
                                        RpptDescPtr dstDescPtr,
-                                       Rpp8u *rTensor,
-                                       Rpp8u *gTensor,
-                                       Rpp8u *bTensor,
-                                       Rpp32f *alphaTensor,
+                                       RpptRGBA *rgbaTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        RppLayoutParams layoutParams)
@@ -4109,10 +4106,10 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
             compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
         }
 
-        Rpp32f rParam = rTensor[batchCount];
-        Rpp32f gParam = gTensor[batchCount];
-        Rpp32f bParam = bTensor[batchCount];
-        Rpp32f alphaParam = alphaTensor[batchCount];
+        Rpp32f rParam = rgbaTensor[batchCount].R;
+        Rpp32f gParam = rgbaTensor[batchCount].G;
+        Rpp32f bParam = rgbaTensor[batchCount].B;
+        Rpp32f alphaParam = rgbaTensor[batchCount].A;
 
         Rpp8u *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -4346,10 +4343,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          RpptDescPtr srcDescPtr,
                                          Rpp32f *dstPtr,
                                          RpptDescPtr dstDescPtr,
-                                         Rpp8u *rTensor,
-                                         Rpp8u *gTensor,
-                                         Rpp8u *bTensor,
-                                         Rpp32f *alphaTensor,
+                                         RpptRGBA *rgbaTensor,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
                                          RppLayoutParams layoutParams)
@@ -4394,10 +4388,10 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
             compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
         }
 
-        Rpp32f rParam = rTensor[batchCount] * 0.00392157;
-        Rpp32f gParam = gTensor[batchCount] * 0.00392157;
-        Rpp32f bParam = bTensor[batchCount] * 0.00392157;
-        Rpp32f alphaParam = alphaTensor[batchCount];
+        Rpp32f rParam = rgbaTensor[batchCount].R * 0.00392157;
+        Rpp32f gParam = rgbaTensor[batchCount].G * 0.00392157;
+        Rpp32f bParam = rgbaTensor[batchCount].B * 0.00392157;
+        Rpp32f alphaParam = rgbaTensor[batchCount].A;
 
         Rpp32f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -4631,10 +4625,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                                          RpptDescPtr srcDescPtr,
                                          Rpp16f *dstPtr,
                                          RpptDescPtr dstDescPtr,
-                                         Rpp8u *rTensor,
-                                         Rpp8u *gTensor,
-                                         Rpp8u *bTensor,
-                                         Rpp32f *alphaTensor,
+                                         RpptRGBA *rgbaTensor,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
                                          RppLayoutParams layoutParams)
@@ -4679,10 +4670,10 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
             compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
         }
 
-        Rpp32f rParam = rTensor[batchCount] * 0.00392157;
-        Rpp32f gParam = gTensor[batchCount] * 0.00392157;
-        Rpp32f bParam = bTensor[batchCount] * 0.00392157;
-        Rpp32f alphaParam = alphaTensor[batchCount];
+        Rpp32f rParam = rgbaTensor[batchCount].R * 0.00392157;
+        Rpp32f gParam = rgbaTensor[batchCount].G * 0.00392157;
+        Rpp32f bParam = rgbaTensor[batchCount].B * 0.00392157;
+        Rpp32f alphaParam = rgbaTensor[batchCount].A;
 
         Rpp16f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -4972,10 +4963,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        Rpp8s *dstPtr,
                                        RpptDescPtr dstDescPtr,
-                                       Rpp8u *rTensor,
-                                       Rpp8u *gTensor,
-                                       Rpp8u *bTensor,
-                                       Rpp32f *alphaTensor,
+                                       RpptRGBA *rgbaTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        RppLayoutParams layoutParams)
@@ -5020,10 +5008,10 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
             compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
         }
 
-        Rpp32f rParam = rTensor[batchCount];
-        Rpp32f gParam = gTensor[batchCount];
-        Rpp32f bParam = bTensor[batchCount];
-        Rpp32f alphaParam = alphaTensor[batchCount];
+        Rpp32f rParam = rgbaTensor[batchCount].R;
+        Rpp32f gParam = rgbaTensor[batchCount].G;
+        Rpp32f bParam = rgbaTensor[batchCount].B;
+        Rpp32f alphaParam = rgbaTensor[batchCount].A;
 
         Rpp8s *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;

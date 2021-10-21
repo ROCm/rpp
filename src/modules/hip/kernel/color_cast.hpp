@@ -34,10 +34,7 @@ __global__ void color_cast_pkd_tensor(T *srcPtr,
                                       T *dstPtr,
                                       int nStrideDst,
                                       int hStrideDst,
-                                      uchar *r,
-                                      uchar *g,
-                                      uchar *b,
-                                      float *alpha,
+                                      RpptRGBA *rgbaTensor,
                                       RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -52,10 +49,10 @@ __global__ void color_cast_pkd_tensor(T *srcPtr,
     uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x * 3;
 
-    float4 r_f4 = (float4)((float)r[id_z]);
-    float4 g_f4 = (float4)((float)g[id_z]);
-    float4 b_f4 = (float4)((float)b[id_z]);
-    float4 alpha_f4 = (float4)alpha[id_z];
+    float4 r_f4 = (float4)((float)rgbaTensor[id_z].R);
+    float4 g_f4 = (float4)((float)rgbaTensor[id_z].G);
+    float4 b_f4 = (float4)((float)rgbaTensor[id_z].B);
+    float4 alpha_f4 = (float4)((float)rgbaTensor[id_z].A);
 
     d_float24 src_f24, dst_f24;
 
@@ -75,10 +72,7 @@ __global__ void color_cast_pln_tensor(T *srcPtr,
                                       int nStrideDst,
                                       int cStrideDst,
                                       int hStrideDst,
-                                      uchar *r,
-                                      uchar *g,
-                                      uchar *b,
-                                      float *alpha,
+                                      RpptRGBA *rgbaTensor,
                                       RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -93,10 +87,10 @@ __global__ void color_cast_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
 
-    float4 r_f4 = (float4)((float)r[id_z]);
-    float4 g_f4 = (float4)((float)g[id_z]);
-    float4 b_f4 = (float4)((float)b[id_z]);
-    float4 alpha_f4 = (float4)(alpha[id_z]);
+    float4 r_f4 = (float4)((float)rgbaTensor[id_z].R);
+    float4 g_f4 = (float4)((float)rgbaTensor[id_z].G);
+    float4 b_f4 = (float4)((float)rgbaTensor[id_z].B);
+    float4 alpha_f4 = (float4)((float)rgbaTensor[id_z].A);
 
     d_float24 src_f24, dst_f24;
 
@@ -115,10 +109,7 @@ __global__ void color_cast_pkd3_pln3_tensor(T *srcPtr,
                                             int nStrideDst,
                                             int cStrideDst,
                                             int hStrideDst,
-                                            uchar *r,
-                                            uchar *g,
-                                            uchar *b,
-                                            float *alpha,
+                                            RpptRGBA *rgbaTensor,
                                             RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -133,10 +124,10 @@ __global__ void color_cast_pkd3_pln3_tensor(T *srcPtr,
     uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
 
-    float4 r_f4 = (float4)((float)r[id_z]);
-    float4 g_f4 = (float4)((float)g[id_z]);
-    float4 b_f4 = (float4)((float)b[id_z]);
-    float4 alpha_f4 = (float4)alpha[id_z];
+    float4 r_f4 = (float4)((float)rgbaTensor[id_z].R);
+    float4 g_f4 = (float4)((float)rgbaTensor[id_z].G);
+    float4 b_f4 = (float4)((float)rgbaTensor[id_z].B);
+    float4 alpha_f4 = (float4)((float)rgbaTensor[id_z].A);
 
     d_float24 src_f24, dst_f24;
 
@@ -155,10 +146,7 @@ __global__ void color_cast_pln3_pkd3_tensor(T *srcPtr,
                                             T *dstPtr,
                                             int nStrideDst,
                                             int hStrideDst,
-                                            uchar *r,
-                                            uchar *g,
-                                            uchar *b,
-                                            float *alpha,
+                                            RpptRGBA *rgbaTensor,
                                             RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -173,10 +161,10 @@ __global__ void color_cast_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x * 3;
 
-    float4 r_f4 = (float4)((float)r[id_z]);
-    float4 g_f4 = (float4)((float)g[id_z]);
-    float4 b_f4 = (float4)((float)b[id_z]);
-    float4 alpha_f4 = (float4)(alpha[id_z]);
+    float4 r_f4 = (float4)((float)rgbaTensor[id_z].R);
+    float4 g_f4 = (float4)((float)rgbaTensor[id_z].G);
+    float4 b_f4 = (float4)((float)rgbaTensor[id_z].B);
+    float4 alpha_f4 = (float4)((float)rgbaTensor[id_z].A);
 
     d_float24 src_f24, dst_f24;
 
@@ -218,10 +206,7 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                dstPtr,
                                dstDescPtr->strides.nStride,
                                dstDescPtr->strides.hStride,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[2].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -239,10 +224,7 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                dstDescPtr->strides.nStride,
                                dstDescPtr->strides.cStride,
                                dstDescPtr->strides.hStride,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[2].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -259,10 +241,7 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                dstDescPtr->strides.nStride,
                                dstDescPtr->strides.cStride,
                                dstDescPtr->strides.hStride,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[2].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -280,10 +259,7 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                dstPtr,
                                dstDescPtr->strides.nStride,
                                dstDescPtr->strides.hStride,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[0].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[1].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.ucharArr[2].ucharmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem,
                                roiTensorPtrSrc);
         }
     }

@@ -436,6 +436,21 @@ inline void copy_param_char(char *param, rpp::Handle& handle, Rpp32u paramIndex)
 #endif
 }
 
+inline void copy_param_RpptRGBA(RpptRGBA *param, rpp::Handle& handle)
+{
+    for(int i = 0; i < handle.GetBatchSize() ; i++)
+    {
+        handle.GetInitHandle()->mem.mcpu.rgbaArr.rgbamem[i] = param[i];
+    }
+#ifdef OCL_COMPILE
+
+#elif defined(HIP_COMPILE)
+    {
+        hipMemcpy(handle.GetInitHandle()->mem.mgpu.rgbaArr.rgbamem, handle.GetInitHandle()->mem.mcpu.rgbaArr.rgbamem, sizeof(RpptRGBA) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    }
+#endif
+}
+
 inline void copy_srcMaxSize(rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)

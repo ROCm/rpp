@@ -659,16 +659,14 @@ int main(int argc, char **argv)
         {
             test_case_name = "color_cast";
 
-            Rpp8u rTensor[images];
-            Rpp8u gTensor[images];
-            Rpp8u bTensor[images];
-            Rpp32f alphaTensor[images];
+            RpptRGBA rgbaTensor[images];
+
             for (i = 0; i < images; i++)
             {
-                rTensor[i] = 0;
-                gTensor[i] = 0;
-                bTensor[i] = 100;
-                alphaTensor[i] = 0.5;
+                rgbaTensor[i].R = 0;
+                rgbaTensor[i].G = 0;
+                rgbaTensor[i].B = 100;
+                rgbaTensor[i].A = 0.5;
 
                 // xywhROI override sample
                 // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
@@ -693,17 +691,17 @@ int main(int argc, char **argv)
             start = clock();
 
             if (ip_bitDepth == 0)
-                rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rTensor, gTensor, bTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                rppt_color_cast_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, rTensor, gTensor, bTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_color_cast_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, rgbaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                rppt_color_cast_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, rTensor, gTensor, bTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_color_cast_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, rgbaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 4)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
-                rppt_color_cast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, rTensor, gTensor, bTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_color_cast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, rgbaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else

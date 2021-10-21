@@ -628,10 +628,7 @@ rppt_color_cast_gpu(RppPtr_t srcPtr,
                     RpptDescPtr srcDescPtr,
                     RppPtr_t dstPtr,
                     RpptDescPtr dstDescPtr,
-                    Rpp8u *rTensor,
-                    Rpp8u *gTensor,
-                    Rpp8u *bTensor,
-                    Rpp32f *alphaTensor,
+                    RpptRGBA *rgbaTensor,
                     RpptROIPtr roiTensorPtrSrc,
                     RpptRoiType roiType,
                     rppHandle_t rppHandle)
@@ -645,11 +642,7 @@ rppt_color_cast_gpu(RppPtr_t srcPtr,
 
 #elif defined (HIP_COMPILE)
 
-    Rpp32u paramIndex = 0;
-    copy_param_uchar(rTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uchar(gTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uchar(bTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_RpptRGBA(rgbaTensor, rpp::deref(rppHandle));
 
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
@@ -714,10 +707,7 @@ rppt_color_cast_host(RppPtr_t srcPtr,
                      RpptDescPtr srcDescPtr,
                      RppPtr_t dstPtr,
                      RpptDescPtr dstDescPtr,
-                     Rpp8u *rTensor,
-                     Rpp8u *gTensor,
-                     Rpp8u *bTensor,
-                     Rpp32f *alphaTensor,
+                     RpptRGBA *rgbaTensor,
                      RpptROIPtr roiTensorPtrSrc,
                      RpptRoiType roiType,
                      rppHandle_t rppHandle)
@@ -735,10 +725,7 @@ rppt_color_cast_host(RppPtr_t srcPtr,
                                      srcDescPtr,
                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
-                                     rTensor,
-                                     gTensor,
-                                     bTensor,
-                                     alphaTensor,
+                                     rgbaTensor,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams);
@@ -749,10 +736,7 @@ rppt_color_cast_host(RppPtr_t srcPtr,
                                        srcDescPtr,
                                        (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                        dstDescPtr,
-                                       rTensor,
-                                       gTensor,
-                                       bTensor,
-                                       alphaTensor,
+                                       rgbaTensor,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams);
@@ -763,10 +747,7 @@ rppt_color_cast_host(RppPtr_t srcPtr,
                                        srcDescPtr,
                                        (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                        dstDescPtr,
-                                       rTensor,
-                                       gTensor,
-                                       bTensor,
-                                       alphaTensor,
+                                       rgbaTensor,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams);
@@ -777,10 +758,7 @@ rppt_color_cast_host(RppPtr_t srcPtr,
                                      srcDescPtr,
                                      static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
-                                     rTensor,
-                                     gTensor,
-                                     bTensor,
-                                     alphaTensor,
+                                     rgbaTensor,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams);
