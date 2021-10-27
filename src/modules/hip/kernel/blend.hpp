@@ -10,11 +10,9 @@ __device__ void blend_hip_compute(d_float8 *src1_f8, d_float8 *src2_f8, d_float8
 template <typename T>
 __global__ void blend_pkd_tensor(T *srcPtr1,
                                  T *srcPtr2,
-                                 int nStrideSrc,
-                                 int hStrideSrc,
+                                 uint2 srcStridesNH,
                                  T *dstPtr,
-                                 int nStrideDst,
-                                 int hStrideDst,
+                                 uint2 dstStridesNH,
                                  float *alpha,
                                  RpptROIPtr roiTensorPtrSrc)
 {
@@ -27,8 +25,8 @@ __global__ void blend_pkd_tensor(T *srcPtr1,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
     float4 alpha_f4 = (float4)alpha[id_z];
 
@@ -43,13 +41,9 @@ __global__ void blend_pkd_tensor(T *srcPtr1,
 template <typename T>
 __global__ void blend_pln_tensor(T *srcPtr1,
                                  T *srcPtr2,
-                                 int nStrideSrc,
-                                 int cStrideSrc,
-                                 int hStrideSrc,
+                                 uint3 srcStridesNCH,
                                  T *dstPtr,
-                                 int nStrideDst,
-                                 int cStrideDst,
-                                 int hStrideDst,
+                                 uint3 dstStridesNCH,
                                  int channelsDst,
                                  float *alpha,
                                  RpptROIPtr roiTensorPtrSrc)
@@ -63,8 +57,8 @@ __global__ void blend_pln_tensor(T *srcPtr1,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float4 alpha_f4 = (float4)(alpha[id_z]);
 
@@ -77,16 +71,16 @@ __global__ void blend_pln_tensor(T *srcPtr1,
 
     if (channelsDst == 3)
     {
-        srcIdx += cStrideSrc;
-        dstIdx += cStrideDst;
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr1, srcIdx, &src1_f8);
         rpp_hip_load8_and_unpack_to_float8(srcPtr2, srcIdx, &src2_f8);
         blend_hip_compute(&src1_f8, &src2_f8, &dst_f8, &alpha_f4);
         rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
 
-        srcIdx += cStrideSrc;
-        dstIdx += cStrideDst;
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr1, srcIdx, &src1_f8);
         rpp_hip_load8_and_unpack_to_float8(srcPtr2, srcIdx, &src2_f8);
@@ -98,12 +92,9 @@ __global__ void blend_pln_tensor(T *srcPtr1,
 template <typename T>
 __global__ void blend_pkd3_pln3_tensor(T *srcPtr1,
                                        T *srcPtr2,
-                                       int nStrideSrc,
-                                       int hStrideSrc,
+                                       uint2 srcStridesNH,
                                        T *dstPtr,
-                                       int nStrideDst,
-                                       int cStrideDst,
-                                       int hStrideDst,
+                                       uint3 dstStridesNCH,
                                        float *alpha,
                                        RpptROIPtr roiTensorPtrSrc)
 {
@@ -116,8 +107,8 @@ __global__ void blend_pkd3_pln3_tensor(T *srcPtr1,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float4 alpha_f4 = (float4)alpha[id_z];
 
@@ -126,28 +117,17 @@ __global__ void blend_pkd3_pln3_tensor(T *srcPtr1,
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1, srcIdx, &src1_f24);
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr2, srcIdx, &src2_f24);
     blend_hip_compute(&src1_f24.x, &src2_f24.x, &dst_f24.x, &alpha_f4);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.x);
-
-    dstIdx += cStrideDst;
-
     blend_hip_compute(&src1_f24.y, &src2_f24.y, &dst_f24.y, &alpha_f4);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.y);
-
-    dstIdx += cStrideDst;
-
     blend_hip_compute(&src1_f24.z, &src2_f24.z, &dst_f24.z, &alpha_f4);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.z);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>
 __global__ void blend_pln3_pkd3_tensor(T *srcPtr1,
                                        T *srcPtr2,
-                                       int nStrideSrc,
-                                       int cStrideSrc,
-                                       int hStrideSrc,
+                                       uint3 srcStridesNCH,
                                        T *dstPtr,
-                                       int nStrideDst,
-                                       int hStrideDst,
+                                       uint2 dstStridesNH,
                                        float *alpha,
                                        RpptROIPtr roiTensorPtrSrc)
 {
@@ -160,15 +140,15 @@ __global__ void blend_pln3_pkd3_tensor(T *srcPtr1,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x * 3;
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float4 alpha_f4 = (float4)(alpha[id_z]);
 
     d_float24 src1_f24, src2_f24, dst_f24;
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr1, srcIdx, cStrideSrc, &src1_f24);
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr2, srcIdx, cStrideSrc, &src2_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr1, srcIdx, srcStridesNCH.y, &src1_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr2, srcIdx, srcStridesNCH.y, &src2_f24);
     blend_hip_compute(&src1_f24.x, &src2_f24.x, &dst_f24.x, &alpha_f4);
     blend_hip_compute(&src1_f24.y, &src2_f24.y, &dst_f24.y, &alpha_f4);
     blend_hip_compute(&src1_f24.z, &src2_f24.z, &dst_f24.z, &alpha_f4);
@@ -200,11 +180,9 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                            handle.GetStream(),
                            srcPtr1,
                            srcPtr2,
-                           srcDescPtr->strides.nStride,
-                           srcDescPtr->strides.hStride,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           dstDescPtr->strides.nStride,
-                           dstDescPtr->strides.hStride,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                            roiTensorPtrSrc);
     }
@@ -217,13 +195,9 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                            handle.GetStream(),
                            srcPtr1,
                            srcPtr2,
-                           srcDescPtr->strides.nStride,
-                           srcDescPtr->strides.cStride,
-                           srcDescPtr->strides.hStride,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           dstDescPtr->strides.nStride,
-                           dstDescPtr->strides.cStride,
-                           dstDescPtr->strides.hStride,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                            roiTensorPtrSrc);
@@ -239,12 +213,9 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                handle.GetStream(),
                                srcPtr1,
                                srcPtr2,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.cStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                roiTensorPtrSrc);
         }
@@ -258,12 +229,9 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                handle.GetStream(),
                                srcPtr1,
                                srcPtr2,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.cStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                roiTensorPtrSrc);
         }
