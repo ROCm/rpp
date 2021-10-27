@@ -2,6 +2,7 @@
 #include "kernel/brightness.hpp"
 #include "kernel/gamma_correction.hpp"
 #include "kernel/blend.hpp"
+#include "kernel/color_cast.hpp"
 #include "kernel/roi_conversion.hpp"
 
 /******************** brightness ********************/
@@ -83,6 +84,33 @@ RppStatus blend_hip_tensor(T *srcPtr1,
                           dstDescPtr,
                           roiTensorPtrSrc,
                           handle);
+
+    return RPP_SUCCESS;
+}
+
+/******************** color_cast ********************/
+
+template <typename T>
+RppStatus color_cast_hip_tensor(T *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+    {
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc,
+                                             handle);
+    }
+
+    hip_exec_color_cast_tensor(srcPtr,
+                               srcDescPtr,
+                               dstPtr,
+                               dstDescPtr,
+                               roiTensorPtrSrc,
+                               handle);
 
     return RPP_SUCCESS;
 }

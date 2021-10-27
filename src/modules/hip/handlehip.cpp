@@ -180,6 +180,8 @@ struct HandleImpl
 		this->initHandle->mem.mcpu.ucharArr[i].ucharmem = (Rpp8u *)malloc(sizeof(Rpp8u) * this->nBatchSize);
 		this->initHandle->mem.mcpu.charArr[i].charmem = (Rpp8s *)malloc(sizeof(Rpp8s) * this->nBatchSize);
 	    }
+
+        this->initHandle->mem.mcpu.rgbArr.rgbmem = (RpptRGB *)malloc(sizeof(RpptRGB) * this->nBatchSize);
     }
 
     void PreInitializeBuffer() {
@@ -244,6 +246,7 @@ struct HandleImpl
             hipMalloc(&(this->initHandle->mem.mgpu.ucharArr[i].ucharmem) , sizeof(Rpp8u) * this->nBatchSize);
             hipMalloc(&(this->initHandle->mem.mgpu.charArr[i].charmem) , sizeof(Rpp8s) * this->nBatchSize);
 	    }
+        hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem) , sizeof(RpptRGB) * this->nBatchSize);
     }
 
     bool enable_profiling  = false;
