@@ -27,11 +27,9 @@ __device__ void brightness_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 
 
 template <typename T>
 __global__ void brightness_pkd_tensor(T *srcPtr,
-                                      int nStrideSrc,
-                                      int hStrideSrc,
+                                      uint2 srcStridesNH,
                                       T *dstPtr,
-                                      int nStrideDst,
-                                      int hStrideDst,
+                                      uint2 dstStridesNH,
                                       float *alpha,
                                       float *beta,
                                       RpptROIPtr roiTensorPtrSrc)
@@ -45,8 +43,8 @@ __global__ void brightness_pkd_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
     float4 alpha_f4 = (float4)alpha[id_z];
     float4 beta_f4 = (float4)beta[id_z];
@@ -60,13 +58,9 @@ __global__ void brightness_pkd_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void brightness_pln_tensor(T *srcPtr,
-                                      int nStrideSrc,
-                                      int cStrideSrc,
-                                      int hStrideSrc,
+                                      uint3 srcStridesNCH,
                                       T *dstPtr,
-                                      int nStrideDst,
-                                      int cStrideDst,
-                                      int hStrideDst,
+                                      uint3 dstStridesNCH,
                                       int channelsDst,
                                       float *alpha,
                                       float *beta,
@@ -81,8 +75,8 @@ __global__ void brightness_pln_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float4 alpha_f4 = (float4)(alpha[id_z]);
     float4 beta_f4 = (float4)(beta[id_z]);
@@ -95,15 +89,15 @@ __global__ void brightness_pln_tensor(T *srcPtr,
 
     if (channelsDst == 3)
     {
-        srcIdx += cStrideSrc;
-        dstIdx += cStrideDst;
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
         brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
         rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
 
-        srcIdx += cStrideSrc;
-        dstIdx += cStrideDst;
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
         brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
@@ -113,12 +107,9 @@ __global__ void brightness_pln_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
-                                            int nStrideSrc,
-                                            int hStrideSrc,
+                                            uint2 srcStridesNH,
                                             T *dstPtr,
-                                            int nStrideDst,
-                                            int cStrideDst,
-                                            int hStrideDst,
+                                            uint3 dstStridesNCH,
                                             float *alpha,
                                             float *beta,
                                             RpptROIPtr roiTensorPtrSrc)
@@ -132,8 +123,8 @@ __global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float4 alpha_f4 = (float4)alpha[id_z];
     float4 beta_f4 = (float4)beta[id_z];
@@ -142,27 +133,16 @@ __global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &src_f24);
     brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.x);
-
-    dstIdx += cStrideDst;
-
     brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.y);
-
-    dstIdx += cStrideDst;
-
     brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f24.z);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>
 __global__ void brightness_pln3_pkd3_tensor(T *srcPtr,
-                                            int nStrideSrc,
-                                            int cStrideSrc,
-                                            int hStrideSrc,
+                                            uint3 srcStridesNCH,
                                             T *dstPtr,
-                                            int nStrideDst,
-                                            int hStrideDst,
+                                            uint2 dstStridesNH,
                                             float *alpha,
                                             float *beta,
                                             RpptROIPtr roiTensorPtrSrc)
@@ -176,15 +156,15 @@ __global__ void brightness_pln3_pkd3_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * nStrideDst) + (id_y * hStrideDst) + id_x * 3;
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float4 alpha_f4 = (float4)(alpha[id_z]);
     float4 beta_f4 = (float4)(beta[id_z]);
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr, srcIdx, cStrideSrc, &src_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr, srcIdx, srcStridesNCH.y, &src_f24);
     brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
     brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
     brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
@@ -214,11 +194,9 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           srcDescPtr->strides.nStride,
-                           srcDescPtr->strides.hStride,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           dstDescPtr->strides.nStride,
-                           dstDescPtr->strides.hStride,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                            handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
                            roiTensorPtrSrc);
@@ -231,13 +209,9 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           srcDescPtr->strides.nStride,
-                           srcDescPtr->strides.cStride,
-                           srcDescPtr->strides.hStride,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           dstDescPtr->strides.nStride,
-                           dstDescPtr->strides.cStride,
-                           dstDescPtr->strides.hStride,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                            handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
@@ -253,12 +227,9 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.cStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
                                roiTensorPtrSrc);
@@ -272,12 +243,9 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.cStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
                                roiTensorPtrSrc);
