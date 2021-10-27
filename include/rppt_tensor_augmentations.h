@@ -109,15 +109,16 @@ rppt_color_jitter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr,
 // *param[in] srcDesc source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDesc destination tensor descriptor
-// *param[in] rgbaTensor R/G/B/A values for color casting calculation (2D tensor of size sizeof(RpptRGBA) * batchSize with 0 <= rgbaTensor[n].<R/G/B> <= 255 and rgbaTensor[n].A >= 0 for each image in batch)
+// *param[in] rgbTensor R/G/B values for color casting calculation (2D tensor of size sizeof(RpptRGB) * batchSize with 0 <= rgbTensor[n].<R/G/B> <= 255 for each image in batch)
+// *param[in] alphaTensor alpha values for color casting calculation (1D tensor of size sizeof(Rpp32f) * batchSize with alphaTensor[i] >= 0 for each image in batch)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGBA *rgbaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGBA *rgbaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB *rgbTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB *rgbTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }

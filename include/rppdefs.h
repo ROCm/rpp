@@ -247,8 +247,7 @@ typedef struct
     Rpp8u R;
     Rpp8u G;
     Rpp8u B;
-    Rpp32f A;
-} RpptRGBA;
+} RpptRGB;
 
 
 
@@ -288,8 +287,8 @@ typedef struct
 
 typedef struct
 {
-    RpptRGBA* rgbamem;
-} memRpptRGBA;
+    RpptRGB* rgbmem;
+} memRpptRGB;
 
 typedef struct
 {
@@ -317,7 +316,7 @@ typedef struct {
     memRpp32s intArr[10];
     memRpp8u ucharArr[10];
     memRpp8s charArr[10];
-    memRpptRGBA rgbaArr;
+    memRpptRGB rgbArr;
     Rpp64u *srcBatchIndex;
     Rpp64u *dstBatchIndex;
     Rpp32u *inc;
@@ -454,8 +453,8 @@ typedef struct
 
 typedef struct
 {
-    RpptRGBA* rgbamem;
-} hipMemRpptRGBA;
+    RpptRGB* rgbmem;
+} hipMemRpptRGB;
 
 typedef struct
 {
@@ -489,7 +488,7 @@ typedef struct
     hipMemRpp32s intArr[10];
     hipMemRpp8u ucharArr[10];
     hipMemRpp8s charArr[10];
-    hipMemRpptRGBA rgbaArr;
+    hipMemRpptRGB rgbArr;
     Rpp64u* srcBatchIndex;
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;
