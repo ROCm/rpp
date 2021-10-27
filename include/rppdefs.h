@@ -40,6 +40,7 @@ typedef enum
 {
     RPP_SUCCESS             = 0,
     RPP_ERROR               = -1,
+    RPP_INVALID_ARGUMENTS   = -2,
 } RppStatus;
 
 typedef enum
@@ -241,6 +242,13 @@ typedef struct
     RpptStrides strides;
 } RpptDesc, *RpptDescPtr;
 
+typedef struct
+{
+    Rpp8u R;
+    Rpp8u G;
+    Rpp8u B;
+} RpptRGB;
+
 
 
 
@@ -279,6 +287,11 @@ typedef struct
 
 typedef struct
 {
+    RpptRGB* rgbmem;
+} memRpptRGB;
+
+typedef struct
+{
     Rpp32u *height;
     Rpp32u *width;
 } memSize;
@@ -303,6 +316,7 @@ typedef struct {
     memRpp32s intArr[10];
     memRpp8u ucharArr[10];
     memRpp8s charArr[10];
+    memRpptRGB rgbArr;
     Rpp64u *srcBatchIndex;
     Rpp64u *dstBatchIndex;
     Rpp32u *inc;
@@ -439,6 +453,11 @@ typedef struct
 
 typedef struct
 {
+    RpptRGB* rgbmem;
+} hipMemRpptRGB;
+
+typedef struct
+{
     Rpp32u* height;
     Rpp32u* width;
 } hipMemSize;
@@ -469,6 +488,7 @@ typedef struct
     hipMemRpp32s intArr[10];
     hipMemRpp8u ucharArr[10];
     hipMemRpp8s charArr[10];
+    hipMemRpptRGB rgbArr;
     Rpp64u* srcBatchIndex;
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;
