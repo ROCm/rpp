@@ -125,10 +125,10 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 // Box Filter augmentation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor
+// *param[in] srcDesc source tensor descriptor (srcDescPtr->offsetInBytes must be at least 12 * (kernelSize / 2))
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDesc destination tensor descriptor
-// *param[in] kernelSize kernel size for box_filter (a single Rpp32u odd number with kernelSize >= 1 that applies to all images in the batch)
+// *param[in] kernelSize kernel size for box_filter (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.
