@@ -290,11 +290,9 @@ __device__ void box_filter_9x9_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
 // Handles PKD3->PKD3 for any combination of kernelSize = 3/5/7/9 and T = U8/F32/F16/I8
 template <typename T>
 __global__ void box_filter_pkd_tensor(T *srcPtr,
-                                      int nStrideSrc,
-                                      int hStrideSrc,
+                                      uint2 srcStridesNH,
                                       T *dstPtr,
-                                      int nStrideDst,
-                                      int hStrideDst,
+                                      uint2 dstStridesNH,
                                       uint kernelSize,
                                       uint padLength,
                                       uint2 tileSize,
@@ -310,8 +308,8 @@ __global__ void box_filter_pkd_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    int srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    int dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o * 3;
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
     sum_f24.x.x = (float4) 0;
     sum_f24.x.y = (float4) 0;
     sum_f24.y.x = (float4) 0;
@@ -384,13 +382,9 @@ __global__ void box_filter_pkd_tensor(T *srcPtr,
 // Handles PLN1->PLN1, PLN3->PLN3 for any combination of kernelSize = 3/5/7/9 and T = U8/F32/F16/I8
 template <typename T>
 __global__ void box_filter_pln_tensor(T *srcPtr,
-                                      int nStrideSrc,
-                                      int cStrideSrc,
-                                      int hStrideSrc,
+                                      uint3 srcStridesNCH,
                                       T *dstPtr,
-                                      int nStrideDst,
-                                      int cStrideDst,
-                                      int hStrideDst,
+                                      uint3 dstStridesNCH,
                                       int channelsDst,
                                       uint kernelSize,
                                       uint padLength,
@@ -407,8 +401,8 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
     d_float8 sum_f8;
     __shared__ uchar src_lds[16][128];
 
-    int srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    int dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o;
+    int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.x = (float4) 0;
     sum_f8.y = (float4) 0;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -441,8 +435,8 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
     if (channelsDst == 3)
     {
         __syncthreads();
-        srcIdx += cStrideSrc;
-        dstIdx += cStrideDst;
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
         sum_f8.x = (float4) 0;
         sum_f8.y = (float4) 0;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -473,8 +467,8 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
         }
 
         __syncthreads();
-        srcIdx += cStrideSrc;
-        dstIdx += cStrideDst;
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
         sum_f8.x = (float4) 0;
         sum_f8.y = (float4) 0;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -509,12 +503,9 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
 // Handles PKD3->PLN3 for any combination of kernelSize = 3/5/7/9 and T = U8/F32/F16/I8
 template <typename T>
 __global__ void box_filter_pkd3_pln3_tensor(T *srcPtr,
-                                            int nStrideSrc,
-                                            int hStrideSrc,
+                                            uint2 srcStridesNH,
                                             T *dstPtr,
-                                            int nStrideDst,
-                                            int cStrideDst,
-                                            int hStrideDst,
+                                            uint3 dstStridesNCH,
                                             uint kernelSize,
                                             uint padLength,
                                             uint2 tileSize,
@@ -530,8 +521,8 @@ __global__ void box_filter_pkd3_pln3_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    int srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    int dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o;
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f24.x.x = (float4) 0;
     sum_f24.x.y = (float4) 0;
     sum_f24.y.x = (float4) 0;
@@ -597,19 +588,16 @@ __global__ void box_filter_pkd3_pln3_tensor(T *srcPtr,
         rpp_hip_adjust_range(dstPtr, &sum_f24.x);
         rpp_hip_adjust_range(dstPtr, &sum_f24.y);
         rpp_hip_adjust_range(dstPtr, &sum_f24.z);
-        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, cStrideDst, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
 
 // Handles PLN3->PKD3 for any combination of kernelSize = 3/5/7/9 and T = U8/F32/F16/I8
 template <typename T>
 __global__ void box_filter_pln3_pkd3_tensor(T *srcPtr,
-                                            int nStrideSrc,
-                                            int cStrideSrc,
-                                            int hStrideSrc,
+                                            uint3 srcStridesNCH,
                                             T *dstPtr,
-                                            int nStrideDst,
-                                            int hStrideDst,
+                                            uint2 dstStridesNH,
                                             uint kernelSize,
                                             uint padLength,
                                             uint2 tileSize,
@@ -626,10 +614,10 @@ __global__ void box_filter_pln3_pkd3_tensor(T *srcPtr,
     __shared__ uchar src_lds[48][128];
 
     int3 srcIdx;
-    srcIdx.x = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    srcIdx.y = srcIdx.x + cStrideSrc;
-    srcIdx.z = srcIdx.y + cStrideSrc;
-    int dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o * 3;
+    srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    srcIdx.y = srcIdx.x + srcStridesNCH.y;
+    srcIdx.z = srcIdx.y + srcStridesNCH.y;
+    int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
     sum_f24.x.x = (float4) 0;
     sum_f24.x.y = (float4) 0;
     sum_f24.y.x = (float4) 0;
@@ -727,11 +715,9 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           srcDescPtr->strides.nStride,
-                           srcDescPtr->strides.hStride,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           dstDescPtr->strides.nStride,
-                           dstDescPtr->strides.hStride,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            kernelSize,
                            padLength,
                            tileSize,
@@ -745,13 +731,9 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           srcDescPtr->strides.nStride,
-                           srcDescPtr->strides.cStride,
-                           srcDescPtr->strides.hStride,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           dstDescPtr->strides.nStride,
-                           dstDescPtr->strides.cStride,
-                           dstDescPtr->strides.hStride,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
                            kernelSize,
                            padLength,
@@ -768,12 +750,9 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.cStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                kernelSize,
                                padLength,
                                tileSize,
@@ -788,12 +767,9 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.nStride,
-                               srcDescPtr->strides.cStride,
-                               srcDescPtr->strides.hStride,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.nStride,
-                               dstDescPtr->strides.hStride,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                kernelSize,
                                padLength,
                                tileSize,
