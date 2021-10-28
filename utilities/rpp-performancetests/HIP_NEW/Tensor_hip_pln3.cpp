@@ -71,6 +71,9 @@ int main(int argc, char **argv)
     case 31:
         strcpy(funcName, "color_cast");
         break;
+    case 49:
+        strcpy(funcName, "box_filter");
+        break;
     default:
         strcpy(funcName, "test_case");
         break;
@@ -778,6 +781,55 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_color_cast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, rgbTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+
+            end = clock();
+
+            break;
+        }
+        case 49:
+        {
+            test_case_name = "box_filter";
+
+            Rpp32u kernelSize = 3;
+            for (i = 0; i < images; i++)
+            {
+                // xywhROI override sample
+                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+
+                // ltrbROI override sample
+                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+
+            // Change RpptRoiType for ltrbROI override sample
+            // roiTypeSrc = RpptRoiType::LTRB;
+            // roiTypeDst = RpptRoiType::LTRB;
+
+            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+            start = clock();
+
+            if (ip_bitDepth == 0)
+                rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_box_filter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_box_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_box_filter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
