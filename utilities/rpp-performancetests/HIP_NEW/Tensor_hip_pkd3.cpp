@@ -240,7 +240,7 @@ int main(int argc, char **argv)
     srcDescPtr->numDims = 4;
     dstDescPtr->numDims = 4;
 
-    srcDescPtr->offsetInBytes = 0;
+    srcDescPtr->offsetInBytes = 64;
     dstDescPtr->offsetInBytes = 0;
 
     srcDescPtr->n = noOfImages;
@@ -280,16 +280,27 @@ int main(int argc, char **argv)
         dstDescPtr->strides.wStride = 1;
     }
 
-    // Set buffer sizes for src/dst
+    // Set buffer sizes in pixels for src/dst
 
     ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
     oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
 
+    // Set buffer sizes in bytes for src/dst (including offsets)
+
+    unsigned long long ioBufferSizeInBytes_u8 = ioBufferSize + srcDescPtr->offsetInBytes;
+    unsigned long long oBufferSizeInBytes_u8 = oBufferSize + dstDescPtr->offsetInBytes;
+    unsigned long long ioBufferSizeInBytes_f16 = (ioBufferSize * 2) + srcDescPtr->offsetInBytes;
+    unsigned long long oBufferSizeInBytes_f16 = (oBufferSize * 2) + dstDescPtr->offsetInBytes;
+    unsigned long long ioBufferSizeInBytes_f32 = (ioBufferSize * 4) + srcDescPtr->offsetInBytes;
+    unsigned long long oBufferSizeInBytes_f32 = (oBufferSize * 4) + dstDescPtr->offsetInBytes;
+    unsigned long long ioBufferSizeInBytes_i8 = ioBufferSize + srcDescPtr->offsetInBytes;
+    unsigned long long oBufferSizeInBytes_i8 = oBufferSize + dstDescPtr->offsetInBytes;
+
     // Initialize 8u host buffers for src/dst
 
-    Rpp8u *input = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-    Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-    Rpp8u *output = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
+    Rpp8u *input = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
+    Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
+    Rpp8u *output = (Rpp8u *)calloc(oBufferSizeInBytes_u8, 1);
 
     // Set 8u host buffers for src/dst
 
@@ -298,11 +309,15 @@ int main(int argc, char **argv)
     count = 0;
     i = 0;
 
+    Rpp8u *offsetted_input, *offsetted_input_second;
+    offsetted_input = input + srcDescPtr->offsetInBytes;
+    offsetted_input_second = input_second + srcDescPtr->offsetInBytes;
+
     while ((de = readdir(dr2)) != NULL)
     {
         Rpp8u *input_temp, *input_second_temp;
-        input_temp = input + (i * srcDescPtr->strides.nStride);
-        input_second_temp = input_second + (i * srcDescPtr->strides.nStride);
+        input_temp = offsetted_input + (i * srcDescPtr->strides.nStride);
+        input_second_temp = offsetted_input_second + (i * srcDescPtr->strides.nStride);
 
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
@@ -347,27 +362,27 @@ int main(int argc, char **argv)
 
     if (ip_bitDepth == 0)
     {
-        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_output, oBufferSize * sizeof(Rpp8u));
-        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_output, output, oBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMalloc(&d_input, ioBufferSizeInBytes_u8);
+        hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
+        hipMalloc(&d_output, oBufferSizeInBytes_u8);
+        hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        hipMemcpy(d_output, output, oBufferSizeInBytes_u8, hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 1)
     {
-        inputf16 = (half *)calloc(ioBufferSize, sizeof(half));
-        inputf16_second = (half *)calloc(ioBufferSize, sizeof(half));
-        outputf16 = (half *)calloc(oBufferSize, sizeof(half));
+        inputf16 = (half *)calloc(ioBufferSizeInBytes_f16, 1);
+        inputf16_second = (half *)calloc(ioBufferSizeInBytes_f16, 1);
+        outputf16 = (half *)calloc(oBufferSizeInBytes_f16, 1);
 
         Rpp8u *inputTemp, *input_secondTemp;
         half *inputf16Temp, *inputf16_secondTemp;
 
-        inputTemp = input;
-        input_secondTemp = input_second;
+        inputTemp = input + srcDescPtr->offsetInBytes;
+        input_secondTemp = input_second + srcDescPtr->offsetInBytes;
 
-        inputf16Temp = inputf16;
-        inputf16_secondTemp = inputf16_second;
+        inputf16Temp = (half *)((Rpp8u *)inputf16 + srcDescPtr->offsetInBytes);
+        inputf16_secondTemp = (half *)((Rpp8u *)inputf16_second + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
@@ -379,27 +394,27 @@ int main(int argc, char **argv)
             inputf16_secondTemp++;
         }
 
-        hipMalloc(&d_inputf16, ioBufferSize * sizeof(half));
-        hipMalloc(&d_inputf16_second, ioBufferSize * sizeof(half));
-        hipMalloc(&d_outputf16, oBufferSize * sizeof(half));
-        hipMemcpy(d_inputf16, inputf16, ioBufferSize * sizeof(half), hipMemcpyHostToDevice);
-        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSize * sizeof(half), hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(half), hipMemcpyHostToDevice);
+        hipMalloc(&d_inputf16, ioBufferSizeInBytes_f16);
+        hipMalloc(&d_inputf16_second, ioBufferSizeInBytes_f16);
+        hipMalloc(&d_outputf16, oBufferSizeInBytes_f16);
+        hipMemcpy(d_inputf16, inputf16, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 2)
     {
-        inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-        inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+        inputf32 = (Rpp32f *)calloc(ioBufferSizeInBytes_f32, 1);
+        inputf32_second = (Rpp32f *)calloc(ioBufferSizeInBytes_f32, 1);
+        outputf32 = (Rpp32f *)calloc(oBufferSizeInBytes_f32, 1);
 
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
 
-        inputTemp = input;
-        input_secondTemp = input_second;
+        inputTemp = input + srcDescPtr->offsetInBytes;
+        input_secondTemp = input_second + srcDescPtr->offsetInBytes;
 
-        inputf32Temp = inputf32;
-        inputf32_secondTemp = inputf32_second;
+        inputf32Temp = (Rpp32f *)((Rpp8u *)inputf32 + srcDescPtr->offsetInBytes);
+        inputf32_secondTemp = (Rpp32f *)((Rpp8u *)inputf32_second + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
@@ -411,47 +426,47 @@ int main(int argc, char **argv)
             inputf32_secondTemp++;
         }
 
-        hipMalloc(&d_inputf32, ioBufferSize * sizeof(Rpp32f));
-        hipMalloc(&d_inputf32_second, ioBufferSize * sizeof(Rpp32f));
-        hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
-        hipMemcpy(d_inputf32, inputf32, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
-        hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMalloc(&d_inputf32, ioBufferSizeInBytes_f32);
+        hipMalloc(&d_inputf32_second, ioBufferSizeInBytes_f32);
+        hipMalloc(&d_outputf32, oBufferSizeInBytes_f32);
+        hipMemcpy(d_inputf32, inputf32, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
+        hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf32, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 3)
     {
-        outputf16 = (half *)calloc(oBufferSize, sizeof(half));
-        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_outputf16, oBufferSize * sizeof(half));
-        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf16, outputf16, oBufferSize * sizeof(half), hipMemcpyHostToDevice);
+        outputf16 = (half *)calloc(oBufferSizeInBytes_f16, 1);
+        hipMalloc(&d_input, ioBufferSizeInBytes_u8);
+        hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
+        hipMalloc(&d_outputf16, oBufferSizeInBytes_f16);
+        hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf16, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 4)
     {
-        outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
-        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f));
-        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf32, outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        outputf32 = (Rpp32f *)calloc(oBufferSizeInBytes_f32, 1);
+        hipMalloc(&d_input, ioBufferSizeInBytes_u8);
+        hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
+        hipMalloc(&d_outputf32, oBufferSizeInBytes_f32);
+        hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        hipMemcpy(d_outputf32, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 5)
     {
-        inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-        inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
+        inputi8 = (Rpp8s *)calloc(ioBufferSizeInBytes_i8, 1);
+        inputi8_second = (Rpp8s *)calloc(ioBufferSizeInBytes_i8, 1);
+        outputi8 = (Rpp8s *)calloc(oBufferSizeInBytes_i8, 1);
 
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
 
-        inputTemp = input;
-        input_secondTemp = input_second;
+        inputTemp = input + srcDescPtr->offsetInBytes;
+        input_secondTemp = input_second + srcDescPtr->offsetInBytes;
 
-        inputi8Temp = inputi8;
-        inputi8_secondTemp = inputi8_second;
+        inputi8Temp = inputi8 + srcDescPtr->offsetInBytes;
+        inputi8_secondTemp = inputi8_second + srcDescPtr->offsetInBytes;
 
         for (int i = 0; i < ioBufferSize; i++)
         {
@@ -463,22 +478,22 @@ int main(int argc, char **argv)
             inputi8_secondTemp++;
         }
 
-        hipMalloc(&d_inputi8, ioBufferSize * sizeof(Rpp8s));
-        hipMalloc(&d_inputi8_second, ioBufferSize * sizeof(Rpp8s));
-        hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
-        hipMemcpy(d_inputi8, inputi8, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
-        hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
-        hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMalloc(&d_inputi8, ioBufferSizeInBytes_i8);
+        hipMalloc(&d_inputi8_second, ioBufferSizeInBytes_i8);
+        hipMalloc(&d_outputi8, oBufferSizeInBytes_i8);
+        hipMemcpy(d_inputi8, inputi8, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
+        hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
+        hipMemcpy(d_outputi8, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
     }
     else if (ip_bitDepth == 6)
     {
-        outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
-        hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_input_second, ioBufferSize * sizeof(Rpp8u));
-        hipMalloc(&d_outputi8, oBufferSize * sizeof(Rpp8s));
-        hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, input_second, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_outputi8, outputi8, oBufferSize * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        outputi8 = (Rpp8s *)calloc(oBufferSizeInBytes_i8, 1);
+        hipMalloc(&d_input, ioBufferSizeInBytes_u8);
+        hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
+        hipMalloc(&d_outputi8, oBufferSizeInBytes_i8);
+        hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        hipMemcpy(d_outputi8, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
     }
 
     // Run case-wise RPP API and measure time
@@ -550,6 +565,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -602,6 +619,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -653,6 +672,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -711,6 +732,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -759,6 +782,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
