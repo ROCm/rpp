@@ -2547,7 +2547,7 @@ int main(int argc, char **argv)
             Rpp32u kernelSize[images];
             for (i = 0; i < images; i++)
             {
-                kernelSize[i] = 5;
+                kernelSize[i] = 3;
             }
 
             start_omp = omp_get_wtime();
