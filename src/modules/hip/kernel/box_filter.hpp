@@ -310,8 +310,8 @@ __global__ void box_filter_pkd_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    uint dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o * 3;
+    int srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    int dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o * 3;
     sum_f24.x.x = (float4) 0;
     sum_f24.x.y = (float4) 0;
     sum_f24.y.x = (float4) 0;
@@ -329,7 +329,7 @@ __global__ void box_filter_pkd_tensor(T *srcPtr,
     src_lds_channel[1] = &src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_lds_channel[2] = &src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= 0) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         rpp_hip_lds_load24_pkd3_to_pln3(srcPtr, srcIdx, src_lds_channel);
@@ -407,11 +407,11 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
     d_float8 sum_f8;
     __shared__ uchar src_lds[16][128];
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o;
+    int srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    int dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o;
     sum_f8.x = (float4) 0;
     sum_f8.y = (float4) 0;
-    if ((id_x_i >= 0) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
@@ -445,7 +445,7 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
         dstIdx += cStrideDst;
         sum_f8.x = (float4) 0;
         sum_f8.y = (float4) 0;
-        if ((id_x_i >= 0) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
@@ -477,7 +477,7 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
         dstIdx += cStrideDst;
         sum_f8.x = (float4) 0;
         sum_f8.y = (float4) 0;
-        if ((id_x_i >= 0) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
@@ -530,8 +530,8 @@ __global__ void box_filter_pkd3_pln3_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    uint srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    uint dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o;
+    int srcIdx = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    int dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o;
     sum_f24.x.x = (float4) 0;
     sum_f24.x.y = (float4) 0;
     sum_f24.y.x = (float4) 0;
@@ -549,7 +549,7 @@ __global__ void box_filter_pkd3_pln3_tensor(T *srcPtr,
     src_lds_channel[1] = &src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_lds_channel[2] = &src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= 0) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         rpp_hip_lds_load24_pkd3_to_pln3(srcPtr, srcIdx, src_lds_channel);
@@ -625,11 +625,11 @@ __global__ void box_filter_pln3_pkd3_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    uint3 srcIdx;
+    int3 srcIdx;
     srcIdx.x = (id_z * nStrideSrc) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * hStrideSrc) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     srcIdx.y = srcIdx.x + cStrideSrc;
     srcIdx.z = srcIdx.y + cStrideSrc;
-    uint dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o * 3;
+    int dstIdx = (id_z * nStrideDst) + (id_y_o * hStrideDst) + id_x_o * 3;
     sum_f24.x.x = (float4) 0;
     sum_f24.x.y = (float4) 0;
     sum_f24.y.x = (float4) 0;
@@ -642,7 +642,7 @@ __global__ void box_filter_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i >= 0) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         rpp_hip_lds_load8(srcPtr, srcIdx.x, &src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);

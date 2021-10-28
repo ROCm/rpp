@@ -636,7 +636,7 @@ rppt_color_cast_gpu(RppPtr_t srcPtr,
 {
     if (srcDescPtr->c != 3)
     {
-        return RPP_INVALID_ARGUMENTS;
+        return RPP_ERROR_INVALID_ARGUMENTS;
     }
 
 #ifdef OCL_COMPILE
@@ -718,7 +718,7 @@ rppt_color_cast_host(RppPtr_t srcPtr,
 {
     if (srcDescPtr->c != 3)
     {
-        return RPP_INVALID_ARGUMENTS;
+        return RPP_ERROR_INVALID_ARGUMENTS;
     }
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
@@ -792,7 +792,9 @@ rppt_box_filter_gpu(RppPtr_t srcPtr,
 #elif defined (HIP_COMPILE)
 
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
-        return RPP_INVALID_ARGUMENTS;
+        return RPP_ERROR_INVALID_ARGUMENTS;
+    if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
+        return RPP_ERROR_LOW_OFFSET;
 
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
