@@ -184,6 +184,42 @@ __device__ __forceinline__ void rpp_hip_adjust_range(half *dstPtr, d_float8 *sum
     sum_f8->y = sum_f8->y * (float4) 0.00392157;
 }
 
+// d_float24 adjust pixel range for different bit depths
+
+__device__ __forceinline__ void rpp_hip_adjust_range(uchar *dstPtr, d_float24 *sum_f24)
+{
+}
+
+__device__ __forceinline__ void rpp_hip_adjust_range(float *dstPtr, d_float24 *sum_f24)
+{
+    sum_f24->x.x = sum_f24->x.x * (float4) 0.00392157;
+    sum_f24->x.y = sum_f24->x.y * (float4) 0.00392157;
+    sum_f24->y.x = sum_f24->y.x * (float4) 0.00392157;
+    sum_f24->y.y = sum_f24->y.y * (float4) 0.00392157;
+    sum_f24->z.x = sum_f24->z.x * (float4) 0.00392157;
+    sum_f24->z.y = sum_f24->z.y * (float4) 0.00392157;
+}
+
+__device__ __forceinline__ void rpp_hip_adjust_range(signed char *dstPtr, d_float24 *sum_f24)
+{
+    sum_f24->x.x = sum_f24->x.x - (float4) 128;
+    sum_f24->x.y = sum_f24->x.y - (float4) 128;
+    sum_f24->y.x = sum_f24->y.x - (float4) 128;
+    sum_f24->y.y = sum_f24->y.y - (float4) 128;
+    sum_f24->z.x = sum_f24->z.x - (float4) 128;
+    sum_f24->z.y = sum_f24->z.y - (float4) 128;
+}
+
+__device__ __forceinline__ void rpp_hip_adjust_range(half *dstPtr, d_float24 *sum_f24)
+{
+    sum_f24->x.x = sum_f24->x.x * (float4) 0.00392157;
+    sum_f24->x.y = sum_f24->x.y * (float4) 0.00392157;
+    sum_f24->y.x = sum_f24->y.x * (float4) 0.00392157;
+    sum_f24->y.y = sum_f24->y.y * (float4) 0.00392157;
+    sum_f24->z.x = sum_f24->z.x * (float4) 0.00392157;
+    sum_f24->z.y = sum_f24->z.y * (float4) 0.00392157;
+}
+
 // -------------------- Set 1 - Packing --------------------
 
 // Packing to U8s

@@ -372,9 +372,7 @@ __global__ void box_filter_pkd_tensor(T *srcPtr,
                 box_filter_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + row][hipThreadIdx_x8], &sum_f24.y);
                 box_filter_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + row][hipThreadIdx_x8], &sum_f24.z);
             }
-        rpp_hip_adjust_range(dstPtr, &sum_f24.x);
-        rpp_hip_adjust_range(dstPtr, &sum_f24.y);
-        rpp_hip_adjust_range(dstPtr, &sum_f24.z);
+        rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &sum_f24);
     }
 }
@@ -585,9 +583,7 @@ __global__ void box_filter_pkd3_pln3_tensor(T *srcPtr,
                 box_filter_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + row][hipThreadIdx_x8], &sum_f24.y);
                 box_filter_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + row][hipThreadIdx_x8], &sum_f24.z);
             }
-        rpp_hip_adjust_range(dstPtr, &sum_f24.x);
-        rpp_hip_adjust_range(dstPtr, &sum_f24.y);
-        rpp_hip_adjust_range(dstPtr, &sum_f24.z);
+        rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
@@ -677,9 +673,7 @@ __global__ void box_filter_pln3_pkd3_tensor(T *srcPtr,
                 box_filter_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + row][hipThreadIdx_x8], &sum_f24.y);
                 box_filter_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + row][hipThreadIdx_x8], &sum_f24.z);
             }
-        rpp_hip_adjust_range(dstPtr, &sum_f24.x);
-        rpp_hip_adjust_range(dstPtr, &sum_f24.y);
-        rpp_hip_adjust_range(dstPtr, &sum_f24.z);
+        rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &sum_f24);
     }
 }
