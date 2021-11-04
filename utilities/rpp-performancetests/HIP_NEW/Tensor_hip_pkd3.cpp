@@ -34,7 +34,17 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    if (atoi(argv[6]) == 1)
+    char *src = argv[1];
+    char *src_second = argv[2];
+    int ip_bitDepth = atoi(argv[3]);
+    unsigned int outputFormatToggle = atoi(argv[4]);
+    int test_case = atoi(argv[5]);
+    unsigned int verbosity = (test_case == 49) ? atoi(argv[7]) : atoi(argv[6]);
+    unsigned int additionalParam = (test_case == 49) ? atoi(argv[6]) : 1;
+    char additionalParam_char[2];
+    std::sprintf(additionalParam_char, "%d", additionalParam);
+
+    if (verbosity == 1)
     {
         printf("\nInputs for this test case are:");
         printf("\nsrc1 = %s", argv[1]);
@@ -43,12 +53,6 @@ int main(int argc, char **argv)
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[4]);
         printf("\ncase number (0:81) = %s", argv[5]);
     }
-
-    char *src = argv[1];
-    char *src_second = argv[2];
-    int ip_bitDepth = atoi(argv[3]);
-    unsigned int outputFormatToggle = atoi(argv[4]);
-    int test_case = atoi(argv[5]);
 
     int ip_channel = 3;
 
@@ -160,17 +164,21 @@ int main(int argc, char **argv)
 
     // String ops on function name
 
-    char func[1000];
-    strcpy(func, funcName);
-    strcat(func, funcType);
-
     char src1[1000];
     strcpy(src1, src);
     strcat(src1, "/");
-
     char src1_second[1000];
     strcpy(src1_second, src_second);
     strcat(src1_second, "/");
+
+    char func[1000];
+    strcpy(func, funcName);
+    strcat(func, funcType);
+    if (test_case == 49)
+    {
+        strcat(func, "_kSize");
+        strcat(func, additionalParam_char);
+    }
 
     // Get number of images
 
@@ -742,7 +750,7 @@ int main(int argc, char **argv)
         {
             test_case_name = "box_filter";
 
-            Rpp32u kernelSize = 3;
+            Rpp32u kernelSize = additionalParam;
             for (i = 0; i < images; i++)
             {
                 // xywhROI override sample

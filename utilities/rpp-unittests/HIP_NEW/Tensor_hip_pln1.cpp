@@ -40,7 +40,18 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    if (atoi(argv[7]) == 1)
+    char *src = argv[1];
+    char *src_second = argv[2];
+    char *dst = argv[3];
+    int ip_bitDepth = atoi(argv[4]);
+    unsigned int outputFormatToggle = atoi(argv[5]);
+    int test_case = atoi(argv[6]);
+    unsigned int verbosity = (test_case == 49) ? atoi(argv[8]) : atoi(argv[7]);
+    unsigned int additionalParam = (test_case == 49) ? atoi(argv[7]) : 1;
+    char additionalParam_char[2];
+    std::sprintf(additionalParam_char, "%d", additionalParam);
+
+    if (verbosity == 1)
     {
         printf("\nInputs for this test case are:");
         printf("\nsrc1 = %s", argv[1]);
@@ -50,13 +61,6 @@ int main(int argc, char **argv)
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
         printf("\ncase number (0:81) = %s", argv[6]);
     }
-
-    char *src = argv[1];
-    char *src_second = argv[2];
-    char *dst = argv[3];
-    int ip_bitDepth = atoi(argv[4]);
-    unsigned int outputFormatToggle = atoi(argv[5]);
-    int test_case = atoi(argv[6]);
 
     int ip_channel = 1;
 
@@ -161,22 +165,28 @@ int main(int argc, char **argv)
 
     // String ops on function name
 
-    char func[1000];
-    strcpy(func, funcName);
-    strcat(func, funcType);
-    printf("\nRunning %s...", func);
-
     char src1[1000];
     strcpy(src1, src);
     strcat(src1, "/");
-
     char src1_second[1000];
     strcpy(src1_second, src_second);
     strcat(src1_second, "/");
 
+    char func[1000];
+    strcpy(func, funcName);
+    strcat(func, funcType);
     strcat(funcName, funcType);
     strcat(dst, "/");
     strcat(dst, funcName);
+    if (test_case == 49)
+    {
+        strcat(func, "_kSize");
+        strcat(func, additionalParam_char);
+        strcat(dst, "_kSize");
+        strcat(dst, additionalParam_char);
+    }
+
+    printf("\nRunning %s...", func);
 
     // Get number of images
 
@@ -685,7 +695,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "box_filter";
 
-        Rpp32u kernelSize = 7;
+        Rpp32u kernelSize = additionalParam;
         for (i = 0; i < images; i++)
         {
             // xywhROI override sample
