@@ -318,9 +318,9 @@ __global__ void box_filter_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = make_uint2(0, 0);
-        *(uint2 *)src_lds_channel[1] = make_uint2(0, 0);
-        *(uint2 *)src_lds_channel[2] = make_uint2(0, 0);
+        *(uint2 *)src_lds_channel[0] = (uint2)0;
+        *(uint2 *)src_lds_channel[1] = (uint2)0;
+        *(uint2 *)src_lds_channel[2] = (uint2)0;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -391,7 +391,7 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = make_uint2(0, 0);
+        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -425,7 +425,7 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = make_uint2(0, 0);
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -457,7 +457,7 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = make_uint2(0, 0);
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -529,9 +529,9 @@ __global__ void box_filter_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = make_uint2(0, 0);
-        *(uint2 *)src_lds_channel[1] = make_uint2(0, 0);
-        *(uint2 *)src_lds_channel[2] = make_uint2(0, 0);
+        *(uint2 *)src_lds_channel[0] = (uint2)0;
+        *(uint2 *)src_lds_channel[1] = (uint2)0;
+        *(uint2 *)src_lds_channel[2] = (uint2)0;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -619,9 +619,9 @@ __global__ void box_filter_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = make_uint2(0, 0);
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = make_uint2(0, 0);
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = make_uint2(0, 0);
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
