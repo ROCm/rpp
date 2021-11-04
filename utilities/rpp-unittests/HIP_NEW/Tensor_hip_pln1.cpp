@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     unsigned int verbosity = (test_case == 49) ? atoi(argv[8]) : atoi(argv[7]);
     unsigned int additionalParam = (test_case == 49) ? atoi(argv[7]) : 1;
     char additionalParam_char[2];
-    std::sprintf(additionalParam_char, "%d", additionalParam);
+    std::sprintf(additionalParam_char, "%u", additionalParam);
 
     if (verbosity == 1)
     {
