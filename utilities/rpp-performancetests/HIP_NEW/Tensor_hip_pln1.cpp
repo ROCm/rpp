@@ -83,9 +83,11 @@ int main(int argc, char **argv)
         break;
     case 31:
         strcpy(funcName, "color_cast");
+        outputFormatToggle = 0;
         break;
     case 49:
         strcpy(funcName, "box_filter");
+        outputFormatToggle = 0;
         break;
     default:
         strcpy(funcName, "test_case");
