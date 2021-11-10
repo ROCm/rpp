@@ -314,7 +314,7 @@ __global__ void box_filter_pkd_tensor(T *srcPtr,
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
-        rpp_hip_lds_load24_pkd3_to_pln3(srcPtr, srcIdx, src_lds_channel);
+        rpp_hip_load24_pkd3_to_uchar8_pln3(srcPtr, srcIdx, src_lds_channel);
     }
     else
     {
@@ -389,7 +389,7 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
     sum_f8.y = (float4) 0;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
-        rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
+        rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
         *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
     __syncthreads();
@@ -423,7 +423,7 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
         sum_f8.y = (float4) 0;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
-            rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
+            rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
             *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
         __syncthreads();
@@ -455,7 +455,7 @@ __global__ void box_filter_pln_tensor(T *srcPtr,
         sum_f8.y = (float4) 0;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
-            rpp_hip_lds_load8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
+            rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
             *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
         __syncthreads();
@@ -525,7 +525,7 @@ __global__ void box_filter_pkd3_pln3_tensor(T *srcPtr,
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
-        rpp_hip_lds_load24_pkd3_to_pln3(srcPtr, srcIdx, src_lds_channel);
+        rpp_hip_load24_pkd3_to_uchar8_pln3(srcPtr, srcIdx, src_lds_channel);
     }
     else
     {
@@ -613,9 +613,9 @@ __global__ void box_filter_pln3_pkd3_tensor(T *srcPtr,
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
-        rpp_hip_lds_load8(srcPtr, srcIdx.x, &src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-        rpp_hip_lds_load8(srcPtr, srcIdx.y, &src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-        rpp_hip_lds_load8(srcPtr, srcIdx.z, &src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
+        rpp_hip_load8_to_uchar8(srcPtr, srcIdx.x, &src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
+        rpp_hip_load8_to_uchar8(srcPtr, srcIdx.y, &src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
+        rpp_hip_load8_to_uchar8(srcPtr, srcIdx.z, &src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
     }
     else
     {
