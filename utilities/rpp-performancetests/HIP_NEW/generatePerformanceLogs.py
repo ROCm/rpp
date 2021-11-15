@@ -186,26 +186,51 @@ elif profilingOption == "YES":
                 # Loop through output format toggle cases
                 for OFT in OFT_LIST:
 
-                    # Write into csv file
-                    CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + ".stats.csv"
-                    print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                    try:
-                        case_file = open(CASE_FILE_PATH,'r')
-                        for line in case_file:
-                            print(line)
-                            if not(line.startswith('"Name"')):
-                                if TYPE in TENSOR_TYPE_LIST:
-                                    new_file.write(line)
-                                    d_counter[TYPE] = d_counter[TYPE] + 1
-                                elif TYPE in BATCHPD_TYPE_LIST:
-                                    if prev != line.split(",")[0]:
+                    if CASE_NUM == 49 and TYPE.startswith("Tensor"):
+                        KSIZE_LIST = [3, 5, 7, 9]
+                        # Loop through extra param kSize for box_filter
+                        for KSIZE in KSIZE_LIST:
+                            # Write into csv file
+                            CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kSize" + str(KSIZE) + ".stats.csv"
+                            print("CASE_FILE_PATH = " + CASE_FILE_PATH)
+                            try:
+                                case_file = open(CASE_FILE_PATH,'r')
+                                for line in case_file:
+                                    print(line)
+                                    if not(line.startswith('"Name"')):
+                                        if TYPE in TENSOR_TYPE_LIST:
+                                            new_file.write(line)
+                                            d_counter[TYPE] = d_counter[TYPE] + 1
+                                        elif TYPE in BATCHPD_TYPE_LIST:
+                                            if prev != line.split(",")[0]:
+                                                new_file.write(line)
+                                                prev = line.split(",")[0]
+                                                d_counter[TYPE] = d_counter[TYPE] + 1
+                                case_file.close()
+                            except IOError:
+                                print("Unable to open case results")
+                                continue
+                    else:
+                        # Write into csv file
+                        CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + ".stats.csv"
+                        print("CASE_FILE_PATH = " + CASE_FILE_PATH)
+                        try:
+                            case_file = open(CASE_FILE_PATH,'r')
+                            for line in case_file:
+                                print(line)
+                                if not(line.startswith('"Name"')):
+                                    if TYPE in TENSOR_TYPE_LIST:
                                         new_file.write(line)
-                                        prev = line.split(",")[0]
                                         d_counter[TYPE] = d_counter[TYPE] + 1
-                        case_file.close()
-                    except IOError:
-                        print("Unable to open case results")
-                        continue
+                                    elif TYPE in BATCHPD_TYPE_LIST:
+                                        if prev != line.split(",")[0]:
+                                            new_file.write(line)
+                                            prev = line.split(",")[0]
+                                            d_counter[TYPE] = d_counter[TYPE] + 1
+                            case_file.close()
+                        except IOError:
+                            print("Unable to open case results")
+                            continue
 
         new_file.close()
         os.system('chown $USER:$USER ' + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")

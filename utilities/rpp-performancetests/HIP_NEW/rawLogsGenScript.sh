@@ -8,9 +8,33 @@
 
 cwd=$(pwd)
 
+# SINGLE IMAGE IN BATCH
+
 # Input Images - Single image (224 x 224)
 # DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/single_image_224x224_src1"
 # DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/single_image_224x224_src2"
+
+# Input Images - Single image (256 x 256)
+# DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/single_image_256x256_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/single_image_256x256_src1"
+
+# Input Images - Single image (300 x 300)
+# DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/single_image_300x300_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/single_image_300x300_src1"
+
+# Input Images - Single image (1024 x 768)
+# DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/single_image_1024x768_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/single_image_1024x768_src1"
+
+# Input Images - Single image (1920 x 1080)
+# DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/single_image_1920x1080_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/single_image_1920x1080_src1"
+
+# Input Images - Single image (3840 x 2160)
+# DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/single_image_3840x2160_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/single_image_3840x2160_src1"
+
+# MULTIPLE IMAGES IN BATCH
 
 # Input Images - Two images (224 x 224)
 # DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/two_images_224x224_src1"
@@ -183,13 +207,32 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                printf "\n./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-                ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                if [ "$case" -eq 49 ]
+                then
+                    for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
+                    do
+                        printf "\n./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
+                        ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                    done
+                else
+                    printf "\n./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                    ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                mkdir "$DST_FOLDER/Tensor_PKD3/case_$case"
-                printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                if [ "$case" -eq 49 ]
+                then
+                    for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
+                    do
+                        mkdir "$DST_FOLDER/Tensor_PKD3/case_$case"
+                        printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kSize$kernelSize.csv" "./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
+                        rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kSize""$kernelSize"".csv" ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                    done
+                else
+                    mkdir "$DST_FOLDER/Tensor_PKD3/case_$case"
+                    printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                fi
             fi
 
             echo "------------------------------------------------------------------------------------------"
@@ -239,13 +282,32 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                printf "\n./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-                ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                if [ "$case" -eq 49 ]
+                then
+                    for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
+                    do
+                        printf "\n./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
+                        ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                    done
+                else
+                    printf "\n./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                    ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                mkdir "$DST_FOLDER/Tensor_PLN1/case_$case"
-                printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                if [ "$case" -eq 49 ]
+                then
+                    for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
+                    do
+                        mkdir "$DST_FOLDER/Tensor_PLN1/case_$case"
+                        printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kSize$kernelSize.csv" "./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
+                        rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kSize""$kernelSize"".csv" ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                    done
+                else
+                    mkdir "$DST_FOLDER/Tensor_PLN1/case_$case"
+                    printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                fi
             fi
 
             echo "------------------------------------------------------------------------------------------"
@@ -295,13 +357,32 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                printf "\n./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-                ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                if [ "$case" -eq 49 ]
+                then
+                    for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
+                    do
+                        printf "\n./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
+                        ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                    done
+                else
+                    printf "\n./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                    ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                mkdir "$DST_FOLDER/Tensor_PLN3/case_$case"
-                printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
-                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                if [ "$case" -eq 49 ]
+                then
+                    for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
+                    do
+                        mkdir "$DST_FOLDER/Tensor_PLN3/case_$case"
+                        printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kSize$kernelSize.csv" "./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
+                        rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kSize""$kernelSize"".csv" ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                    done
+                else
+                    mkdir "$DST_FOLDER/Tensor_PLN3/case_$case"
+                    printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle.csv" "./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
+                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                fi
             fi
 
             echo "------------------------------------------------------------------------------------------"
