@@ -249,6 +249,13 @@ typedef struct
     Rpp8u B;
 } RpptRGB;
 
+typedef struct
+{
+    Rpp32f R;
+    Rpp32f G;
+    Rpp32f B;
+} RpptFloatRGB;
+
 
 
 
