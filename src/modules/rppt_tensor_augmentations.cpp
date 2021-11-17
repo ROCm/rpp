@@ -857,3 +857,86 @@ rppt_box_filter_gpu(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+/******************** erode ********************/
+
+RppStatus
+rppt_erode_gpu(RppPtr_t srcPtr,
+               RpptDescPtr srcDescPtr,
+               RppPtr_t dstPtr,
+               RpptDescPtr dstDescPtr,
+               Rpp32u kernelSize,
+               RpptROIPtr roiTensorPtrSrc,
+               RpptRoiType roiType,
+               rppHandle_t rppHandle)
+{
+#ifdef OCL_COMPILE
+
+#elif defined (HIP_COMPILE)
+
+    if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
+        return RPP_ERROR_INVALID_ARGUMENTS;
+    if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
+        return RPP_ERROR_LOW_OFFSET;
+
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        if (dstDescPtr->dataType == RpptDataType::U8)
+        {
+            erode_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                             srcDescPtr,
+                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                             dstDescPtr,
+                             kernelSize,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
+        }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        if (dstDescPtr->dataType == RpptDataType::F16)
+        {
+            erode_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                             srcDescPtr,
+                             (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                             dstDescPtr,
+                             kernelSize,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
+        }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        if (dstDescPtr->dataType == RpptDataType::F32)
+        {
+            erode_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                             srcDescPtr,
+                             (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                             dstDescPtr,
+                             kernelSize,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
+        }
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        if (dstDescPtr->dataType == RpptDataType::I8)
+        {
+            erode_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                             srcDescPtr,
+                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                             dstDescPtr,
+                             kernelSize,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
+        }
+    }
+
+#endif //BACKEND
+
+    return RPP_SUCCESS;
+}
