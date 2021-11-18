@@ -186,7 +186,7 @@ elif profilingOption == "YES":
                 # Loop through output format toggle cases
                 for OFT in OFT_LIST:
 
-                    if CASE_NUM == 49 and TYPE.startswith("Tensor"):
+                    if (CASE_NUM == 40 or CASE_NUM == 41 or CASE_NUM == 49) and TYPE.startswith("Tensor"):
                         KSIZE_LIST = [3, 5, 7, 9]
                         # Loop through extra param kSize for box_filter
                         for KSIZE in KSIZE_LIST:
