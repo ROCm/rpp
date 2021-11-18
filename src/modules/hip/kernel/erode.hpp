@@ -321,9 +321,12 @@ __global__ void erode_3x3_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)src_lds_channel[0] = borderVal;
+        *(uint2 *)src_lds_channel[1] = borderVal;
+        *(uint2 *)src_lds_channel[2] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -391,9 +394,12 @@ __global__ void erode_5x5_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)src_lds_channel[0] = borderVal;
+        *(uint2 *)src_lds_channel[1] = borderVal;
+        *(uint2 *)src_lds_channel[2] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -467,9 +473,12 @@ __global__ void erode_7x7_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)src_lds_channel[0] = borderVal;
+        *(uint2 *)src_lds_channel[1] = borderVal;
+        *(uint2 *)src_lds_channel[2] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -549,9 +558,12 @@ __global__ void erode_9x9_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)src_lds_channel[0] = borderVal;
+        *(uint2 *)src_lds_channel[1] = borderVal;
+        *(uint2 *)src_lds_channel[2] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -618,11 +630,14 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.x = (float4) 255;
     sum_f8.y = (float4) 255;
+    uint2 borderVal;
+    borderVal.x = 0xFFFFFFFF;
+    borderVal.y = 0xFFFFFFFF;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -647,7 +662,7 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -670,7 +685,7 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -711,11 +726,14 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.x = (float4) 255;
     sum_f8.y = (float4) 255;
+    uint2 borderVal;
+    borderVal.x = 0xFFFFFFFF;
+    borderVal.y = 0xFFFFFFFF;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -742,7 +760,7 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -767,7 +785,7 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -810,11 +828,14 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.x = (float4) 255;
     sum_f8.y = (float4) 255;
+    uint2 borderVal;
+    borderVal.x = 0xFFFFFFFF;
+    borderVal.y = 0xFFFFFFFF;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -843,7 +864,7 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -870,7 +891,7 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -915,11 +936,14 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.x = (float4) 255;
     sum_f8.y = (float4) 255;
+    uint2 borderVal;
+    borderVal.x = 0xFFFFFFFF;
+    borderVal.y = 0xFFFFFFFF;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -950,7 +974,7 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -979,7 +1003,7 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr, srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = borderVal;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -1049,9 +1073,12 @@ __global__ void erode_3x3_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)src_lds_channel[0] = borderVal;
+        *(uint2 *)src_lds_channel[1] = borderVal;
+        *(uint2 *)src_lds_channel[2] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1119,9 +1146,12 @@ __global__ void erode_5x5_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)src_lds_channel[0] = borderVal;
+        *(uint2 *)src_lds_channel[1] = borderVal;
+        *(uint2 *)src_lds_channel[2] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1195,9 +1225,12 @@ __global__ void erode_7x7_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)src_lds_channel[0] = borderVal;
+        *(uint2 *)src_lds_channel[1] = borderVal;
+        *(uint2 *)src_lds_channel[2] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1277,9 +1310,12 @@ __global__ void erode_9x9_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)src_lds_channel[0] = borderVal;
+        *(uint2 *)src_lds_channel[1] = borderVal;
+        *(uint2 *)src_lds_channel[2] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1367,9 +1403,12 @@ __global__ void erode_3x3_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = borderVal;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = borderVal;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1437,9 +1476,12 @@ __global__ void erode_5x5_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = borderVal;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = borderVal;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1513,9 +1555,12 @@ __global__ void erode_7x7_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = borderVal;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = borderVal;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1595,9 +1640,12 @@ __global__ void erode_9x9_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
+        uint2 borderVal;
+        borderVal.x = 0xFFFFFFFF;
+        borderVal.y = 0xFFFFFFFF;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = borderVal;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = borderVal;
+        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = borderVal;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&

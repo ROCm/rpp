@@ -323,6 +323,7 @@ int main(int argc, char **argv)
     Rpp8u *input = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
     Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
     Rpp8u *output = (Rpp8u *)calloc(oBufferSizeInBytes_u8, 1);
+    if (test_case == 40) memset(input, 0xFF, ioBufferSizeInBytes_u8);
 
     // Set 8u host buffers for src/dst
 
