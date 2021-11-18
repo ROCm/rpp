@@ -471,6 +471,20 @@ const __m128i xmm_px3 = _mm_set1_epi32(3);
 const __m128i xmm_px4 = _mm_set1_epi32(4);
 const __m128i xmm_px5 = _mm_set1_epi32(5);
 
+const __m128 xmm_full = _mm_set1_ps((float)0xFFFFFFFF);
+const __m128 xmm_sn = _mm_castsi128_ps(_mm_set1_epi32(0x80000000));
+const __m128 xmm_m6 = _mm_set1_ps((float)-6.0);
+const __m128 xmm_eps = _mm_set1_ps((float)1e-9f);
+const __m128 xmm_1o3 = _mm_set1_ps((float)1.0/3.0);
+const __m128 xmm_m4o6 = _mm_set1_ps((float) -4.0/6.0);
+const __m128 xmm_abs = _mm_set1_ps((float)0x80000000);
+
+const __m128 xmm_4o6_2o6_3o6_0  = _mm_set_ps(4.0f / 6.0f, 2.0f / 6.0f, 3.0f / 6.0f, 0.0f);
+const __m128 m6_m6_p6_p0        = _mm_set_ps(-6.0f ,-6.0f , 6.0f , 0.0f);
+const __m128 p1_p1_m2_p0        = _mm_set_ps(1.0f , 1.0f ,-2.0f , 0.0f);
+const __m128 m1_m1_m1_p1        = _mm_set_ps(-1.0f ,-1.0f ,-1.0f , 1.0f);
+
+
 SIMD_CONST_PI(full       , 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 SIMD_CONST_PI(sn         , 0x80000000, 0x80000000, 0x80000000, 0x80000000);
 SIMD_CONST_PS(m6_m6_m6_m6,-6.0f ,-6.0f ,-6.0f ,-6.0f);
