@@ -2098,7 +2098,7 @@ inline RppStatus compute_color_twist_host(RpptRGB *pixel, Rpp32f brightnessParam
     hue = 0.0f;
     sat = 0.0f;
     add = 0.0f;
-    if (delta)
+    if ((delta != 0) && (cmax != 0))
     {
         sat = delta / cmax;
         if (cmax == rf)
@@ -2109,40 +2109,35 @@ inline RppStatus compute_color_twist_host(RpptRGB *pixel, Rpp32f brightnessParam
         else if (cmax == gf)
         {
             hue = bf - rf;
-            add = 0.3333333f;
+            add = 2.0f;
         }
         else
         {
             hue = rf - gf;
-            add = 0.6666667f;
+            add = 4.0f;
         }
-        hue /= (6.0f * delta);
+        hue /= delta;
     }
     v = cmax;
 
     // Modify Hue and Saturation
 
     hue += hueParam + add;
-    if (hue >= 1.f) hue -= 1.0f;
-    if (hue < 0) hue += 1.0;
-
+    if (hue >= 6.0f) hue -= 6.0f;
+    if (hue < 0) hue += 6.0f;
     sat *= saturationParam;
     sat = std::max(0.0f, std::min(1.0f, sat));
 
     // HSV to RGB with brightness/contrast adjustment
 
-    hue *= 6.0f;
     Rpp32s hueIntegerPart = (Rpp32s) hue;
     Rpp32f hueFractionPart = hue - hueIntegerPart;
     v *= 255;
-
     Rpp32f vsat = v * sat;
     Rpp32f vsatf = vsat * hueFractionPart;
-
     Rpp32f p = v - vsat;
     Rpp32f q = v - vsatf;
     Rpp32f t = v - vsat + vsatf;
-
     switch (hueIntegerPart)
     {
         case 0: rf = v; gf = t; bf = p; break;
@@ -2152,7 +2147,6 @@ inline RppStatus compute_color_twist_host(RpptRGB *pixel, Rpp32f brightnessParam
         case 4: rf = t; gf = p; bf = v; break;
         case 5: rf = v; gf = p; bf = q; break;
     }
-
     pixel->R = (Rpp8u) RPPPIXELCHECK(std::fma(rf, brightnessParam, contrastParam));
     pixel->G = (Rpp8u) RPPPIXELCHECK(std::fma(gf, brightnessParam, contrastParam));
     pixel->B = (Rpp8u) RPPPIXELCHECK(std::fma(bf, brightnessParam, contrastParam));
@@ -2176,7 +2170,7 @@ inline RppStatus compute_color_twist_12_host(__m128 &pVecR, __m128 &pVecG, __m12
     pH = xmm_p0;                                                                                                    // hue = 0.0f;
     pS = xmm_p0;                                                                                                    // sat = 0.0f;
     pAdd = xmm_p0;                                                                                                  // add = 0.0f;
-    pMask[0] = _mm_cmpneq_ps(pDelta, xmm_p0);                                                                       // if (delta) {
+    pMask[0] = _mm_and_ps(_mm_cmpneq_ps(pDelta, xmm_p0), _mm_cmpneq_ps(pV, xmm_p0));                                // if ((delta != 0) && (cmax != 0)) {
     pS = _mm_div_ps(_mm_and_ps(pMask[0], pDelta), pV);                                                              //     sat = delta / cmax;
     pMask[1] = _mm_cmpeq_ps(pV, pVecR);                                                                             //     Temporarily store cmax == rf comparison
     pMask[2] = _mm_and_ps(pMask[0], pMask[1]);                                                                      //     if (cmax == rf)
@@ -2185,21 +2179,20 @@ inline RppStatus compute_color_twist_12_host(__m128 &pVecR, __m128 &pVecG, __m12
     pMask[3] = _mm_cmpeq_ps(pV, pVecG);                                                                             //     Temporarily store cmax == gf comparison
     pMask[2] = _mm_andnot_ps(pMask[1], pMask[3]);                                                                   //     else if (cmax == gf)
     pH = _mm_or_ps(_mm_andnot_ps(pMask[2], pH), _mm_and_ps(pMask[2], _mm_sub_ps(pVecB, pVecR)));                    //         hue = bf - rf;
-    pAdd = _mm_or_ps(_mm_andnot_ps(pMask[2], pAdd), _mm_and_ps(pMask[2], xmm_p1op3));                               //         add = 0.3333333f;
+    pAdd = _mm_or_ps(_mm_andnot_ps(pMask[2], pAdd), _mm_and_ps(pMask[2], xmm_p2));                                  //         add = 2.0f;
     pMask[3] = _mm_andnot_ps(pMask[3], _mm_andnot_ps(pMask[1], pMask[0]));                                          //     else
     pH = _mm_or_ps(_mm_andnot_ps(pMask[3], pH), _mm_and_ps(pMask[3], _mm_sub_ps(pVecR, pVecG)));                    //         hue = rf - gf;
-    pAdd = _mm_or_ps(_mm_andnot_ps(pMask[3], pAdd), _mm_and_ps(pMask[3], xmm_p2op3));                               //         add = 0.6666667f;
-    pH = _mm_or_ps(_mm_andnot_ps(pMask[0], pH), _mm_and_ps(pMask[0], _mm_div_ps(pH, _mm_mul_ps(xmm_p6, pDelta))));  //     hue /= (6.0f * delta); }
+    pAdd = _mm_or_ps(_mm_andnot_ps(pMask[3], pAdd), _mm_and_ps(pMask[3], xmm_p4));                                  //         add = 4.0f;
+    pH = _mm_or_ps(_mm_andnot_ps(pMask[0], pH), _mm_and_ps(pMask[0], _mm_div_ps(pH, pDelta)));                      //     hue /= delta; }
 
     // Modify Hue and Saturation
     pH = _mm_add_ps(pH, _mm_add_ps(pColorTwistParams[2], pAdd));                                                    // hue += hueParam + add;
-    pH = _mm_sub_ps(pH, _mm_and_ps(_mm_cmpge_ps(pH, xmm_p1), xmm_p1));                                              // if (hue >= 1.f) hue -= 1.0f;
-    pH = _mm_add_ps(pH, _mm_and_ps(_mm_cmplt_ps(pH, xmm_p0), xmm_p1));                                              // if (hue < 0) hue += 1.0;
+    pH = _mm_sub_ps(pH, _mm_and_ps(_mm_cmpge_ps(pH, xmm_p6), xmm_p6));                                              // if (hue >= 6.f) hue -= 6.0f;
+    pH = _mm_add_ps(pH, _mm_and_ps(_mm_cmplt_ps(pH, xmm_p0), xmm_p6));                                              // if (hue < 0) hue += 6.0;
     pS = _mm_mul_ps(pS, pColorTwistParams[3]);                                                                      // sat *= saturationParam;
     pS = _mm_max_ps(xmm_p0, _mm_min_ps(xmm_p1, pS));                                                                // sat = std::max(0.0f, std::min(1.0f, sat));
 
     // HSV to RGB with brightness/contrast adjustment
-    pH = _mm_mul_ps(pH, xmm_p6);                                                                                    // hue *= 6.0f;
     pIntH = _mm_floor_ps(pH);                                                                                       // Rpp32s hueIntegerPart = (Rpp32s) hue;
     pxIntH = _mm_cvtps_epi32(pIntH);                                                                                // Convert to epi32
     pH = _mm_sub_ps(pH, pIntH);                                                                                     // Rpp32f hueFractionPart = hue - hueIntegerPart;

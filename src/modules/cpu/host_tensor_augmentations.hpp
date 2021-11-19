@@ -2881,10 +2881,8 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
         Rpp32f contrastParam = contrastTensor[batchCount];
-        Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.002778f;
+        Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.01666667; // 6 * 1/360
         Rpp32f saturationParam = saturationTensor[batchCount];
-
-        if (hueParam < 0) hueParam += 1;
 
         Rpp8u *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;

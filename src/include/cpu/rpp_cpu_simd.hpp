@@ -459,6 +459,8 @@ inline RppStatus rpp_simd_store(FuncType &&rpp_simd_store_routine, ArgTypes&&...
 
 const __m128 xmm_p0 = _mm_set1_ps(0.0f);
 const __m128 xmm_p1 = _mm_set1_ps(1.0f);
+const __m128 xmm_p2 = _mm_set1_ps(2.0f);
+const __m128 xmm_p4 = _mm_set1_ps(4.0f);
 const __m128 xmm_p6 = _mm_set1_ps(6.0f);
 const __m128 xmm_p255 = _mm_set1_ps(255.0f);
 const __m128 xmm_p1op255 = _mm_set1_ps(1.0f / 255.0f);
