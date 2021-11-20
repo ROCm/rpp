@@ -2894,11 +2894,19 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+#if __AVX2__
+        __m256 pColorTwistParams[4];
+        pColorTwistParams[0] = _mm256_set1_ps(brightnessParam);
+        pColorTwistParams[1] = _mm256_set1_ps(contrastParam);
+        pColorTwistParams[2] = _mm256_set1_ps(hueParam);
+        pColorTwistParams[3] = _mm256_set1_ps(saturationParam);
+#else
         __m128 pColorTwistParams[4];
         pColorTwistParams[0] = _mm_set1_ps(brightnessParam);
         pColorTwistParams[1] = _mm_set1_ps(contrastParam);
         pColorTwistParams[2] = _mm_set1_ps(hueParam);
         pColorTwistParams[3] = _mm_set1_ps(saturationParam);
+#endif
 
         // Color Twist with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -2922,15 +2930,16 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
                 {
+#if __AVX2__
+#else
                     __m128 p[12];
-
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
                     compute_color_twist_12_host(p[0], p[4], p[8], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[1], p[5], p[9], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[2], p[6], p[10], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[3], p[7], p[11], pColorTwistParams);    // color_twist adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-
+#endif
                     srcPtrTemp += 48;
                     dstPtrTempR += 16;
                     dstPtrTempG += 16;
@@ -2980,17 +2989,18 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
+#if __AVX2__
+#else
                     __m128 p[12];
-
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_twist_12_host(p[0], p[4], p[8], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[1], p[5], p[9], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[2], p[6], p[10], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[3], p[7], p[11], pColorTwistParams);    // color_twist adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-
+#endif
                     srcPtrTempR += 16;
                     srcPtrTempG += 16;
                     srcPtrTempB += 16;
@@ -3036,17 +3046,23 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    compute_color_twist_24_host(p[0], p[2], p[4], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_24_host(p[1], p[3], p[5], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
                     __m128 p[12];
-
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
                     compute_color_twist_12_host(p[0], p[4], p[8], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[1], p[5], p[9], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[2], p[6], p[10], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[3], p[7], p[11], pColorTwistParams);    // color_twist adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-
+#endif
                     srcPtrTemp += 48;
                     dstPtrTemp += 48;
                 }
@@ -3094,17 +3110,18 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
+#if __AVX2__
+#else
                     __m128 p[12];
-
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_twist_12_host(p[0], p[4], p[8], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[1], p[5], p[9], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[2], p[6], p[10], pColorTwistParams);    // color_twist adjustment
                     compute_color_twist_12_host(p[3], p[7], p[11], pColorTwistParams);    // color_twist adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-
+#endif
                     srcPtrTempR += 16;
                     srcPtrTempG += 16;
                     srcPtrTempB += 16;
