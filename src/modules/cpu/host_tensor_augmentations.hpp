@@ -117,7 +117,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -141,7 +141,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0])) * alpha) + beta);
                     *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[1])) * alpha) + beta);
@@ -180,7 +180,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -241,7 +241,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m128 p[4];
 
@@ -362,7 +362,7 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128 p[4];
 
@@ -377,7 +377,7 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempG += 4;
                     dstPtrTempB += 4;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = RPPPIXELCHECKF32(srcPtrTemp[0] * alpha + beta);
                     *dstPtrTempG = RPPPIXELCHECKF32(srcPtrTemp[1] * alpha + beta);
@@ -416,7 +416,7 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     __m128 p[4];
 
@@ -468,7 +468,7 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                     {
                         __m128 p[1];
 
@@ -586,7 +586,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
 
@@ -615,7 +615,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                     dstPtrTempG += 4;
                     dstPtrTempB += 4;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[0] * alpha + beta);
                     *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[1] * alpha + beta);
@@ -654,7 +654,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
@@ -720,7 +720,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                     {
                         Rpp32f srcPtrTemp_ps[4], dstPtrTemp_ps[4];
 
@@ -850,7 +850,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -874,7 +874,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtrTemp[0]) + 128) * alpha) + beta - 128);
                     *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtrTemp[1]) + 128) * alpha) + beta - 128);
@@ -913,7 +913,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -974,7 +974,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m128 p[4];
 
@@ -1096,7 +1096,7 @@ RppStatus gamma_correction_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = gammaLUT[srcPtrTemp[0]];
                     *dstPtrTempG = gammaLUT[srcPtrTemp[1]];
@@ -1274,7 +1274,7 @@ RppStatus gamma_correction_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = gammaLUT[(int) (RPPPIXELCHECK(srcPtrTemp[0] * 255))];
                     *dstPtrTempG = gammaLUT[(int) (RPPPIXELCHECK(srcPtrTemp[1] * 255))];
@@ -1452,7 +1452,7 @@ RppStatus gamma_correction_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp16f) gammaLUT[(int) (RPPPIXELCHECK(srcPtrTemp[0] * 255))];
                     *dstPtrTempG = (Rpp16f) gammaLUT[(int) (RPPPIXELCHECK(srcPtrTemp[1] * 255))];
@@ -1630,7 +1630,7 @@ RppStatus gamma_correction_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = gammaLUT[(Rpp32s)(srcPtrTemp[0]) + 128];
                     *dstPtrTempG = gammaLUT[(Rpp32s)(srcPtrTemp[1]) + 128];
@@ -1813,7 +1813,7 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p1[12], p2[12];
 
@@ -1839,7 +1839,7 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtr1Temp[0]) - (Rpp32f) (srcPtr2Temp[0])) * alpha) + (Rpp32f) (srcPtr2Temp[0]));
                     *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtr1Temp[1]) - (Rpp32f) (srcPtr2Temp[1])) * alpha) + (Rpp32f) (srcPtr2Temp[1]));
@@ -1886,7 +1886,7 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p1[12], p2[12];
 
@@ -1959,7 +1959,7 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m128 p1[4], p2[4];
 
@@ -2087,7 +2087,7 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128 p1[4], p2[4];
 
@@ -2104,7 +2104,7 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     dstPtrTempG += 4;
                     dstPtrTempB += 4;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = RPPPIXELCHECKF32((srcPtr1Temp[0] - srcPtr2Temp[0]) * alpha + srcPtr2Temp[0]);
                     *dstPtrTempG = RPPPIXELCHECKF32((srcPtr1Temp[1] - srcPtr2Temp[1]) * alpha + srcPtr2Temp[1]);
@@ -2151,7 +2151,7 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     __m128 p1[4], p2[4];
 
@@ -2215,7 +2215,7 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                     {
                         __m128 p1[1], p2[1];
 
@@ -2340,7 +2340,7 @@ RppStatus blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     Rpp32f srcPtr1Temp_ps[12], srcPtr2Temp_ps[12], dstPtrTemp_ps[12];
 
@@ -2372,7 +2372,7 @@ RppStatus blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     dstPtrTempG += 4;
                     dstPtrTempB += 4;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((srcPtr1Temp[0] - srcPtr2Temp[0]) * alpha + srcPtr2Temp[0]);
                     *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32((srcPtr1Temp[1] - srcPtr2Temp[1]) * alpha + srcPtr2Temp[1]);
@@ -2419,7 +2419,7 @@ RppStatus blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     Rpp32f srcPtr1Temp_ps[12], srcPtr2Temp_ps[12], dstPtrTemp_ps[13];
 
@@ -2501,7 +2501,7 @@ RppStatus blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                     {
                         Rpp32f srcPtr1Temp_ps[4], srcPtr2Temp_ps[4], dstPtrTemp_ps[4];
 
@@ -2639,7 +2639,7 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p1[12], p2[12];
 
@@ -2665,7 +2665,7 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtr1Temp[0]) - (Rpp32f) (srcPtr2Temp[0])) * alpha) + (Rpp32f) (srcPtr2Temp[0]));
                     *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtr1Temp[1]) - (Rpp32f) (srcPtr2Temp[1])) * alpha) + (Rpp32f) (srcPtr2Temp[1]));
@@ -2712,7 +2712,7 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p1[12], p2[12];
 
@@ -2785,7 +2785,7 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m128 p1[4], p2[4];
 
@@ -2928,7 +2928,7 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
 #if __AVX2__
                     __m256 p[6];
@@ -2950,7 +2950,7 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     RpptRGB pixel;
                     pixel.R = srcPtrTemp[0];
@@ -3076,7 +3076,7 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrTemp += 48;
                     dstPtrTemp += 48;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     RpptRGB pixel;
                     pixel.R = srcPtrTemp[0];
@@ -3274,7 +3274,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -3287,7 +3287,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::round(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]));
                     *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::round(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]));
@@ -3326,7 +3326,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -3374,7 +3374,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -3385,7 +3385,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrTemp += 48;
                     dstPtrTemp += 48;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::round(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]));
                     dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::round(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]));
@@ -3424,7 +3424,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -3562,7 +3562,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128 p[4];
 
@@ -3575,7 +3575,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempG += 4;
                     dstPtrTempB += 4;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = RPPPIXELCHECKF32(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]);
                     *dstPtrTempG = RPPPIXELCHECKF32(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]);
@@ -3614,7 +3614,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     __m128 p[4];
 
@@ -3662,7 +3662,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128 p[4];
 
@@ -3673,7 +3673,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrTemp += 12;
                     dstPtrTemp += 12;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     dstPtrTemp[0] = RPPPIXELCHECKF32(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]);
                     dstPtrTemp[1] = RPPPIXELCHECKF32(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]);
@@ -3712,7 +3712,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     __m128 p[4];
 
@@ -3850,7 +3850,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
 
@@ -3877,7 +3877,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                     dstPtrTempG += 4;
                     dstPtrTempB += 4;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]);
                     *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]);
@@ -3916,7 +3916,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
@@ -3978,7 +3978,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
@@ -4001,7 +4001,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                     srcPtrTemp += 12;
                     dstPtrTemp += 12;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(ctm[0] * srcPtrTemp[0] + ctm[1] * srcPtrTemp[1] + ctm[2] * srcPtrTemp[2] + ctm[3]);
                     dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32(ctm[4] * srcPtrTemp[0] + ctm[5] * srcPtrTemp[1] + ctm[6] * srcPtrTemp[2] + ctm[7]);
@@ -4040,7 +4040,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
@@ -4194,7 +4194,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -4207,7 +4207,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     Rpp32f srcPtrTempI8[3];
                     srcPtrTempI8[0] = (Rpp32f)srcPtrTemp[0] + 128;
@@ -4251,7 +4251,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -4304,7 +4304,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -4315,7 +4315,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTemp += 48;
                     dstPtrTemp += 48;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     Rpp32f srcPtrTempI8[3];
                     srcPtrTempI8[0] = (Rpp32f)srcPtrTemp[0] + 128;
@@ -4359,7 +4359,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -4499,7 +4499,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -4512,7 +4512,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
                     *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
@@ -4551,7 +4551,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -4599,7 +4599,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -4610,7 +4610,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrTemp += 48;
                     dstPtrTemp += 48;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
                     dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
@@ -4649,7 +4649,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -4782,7 +4782,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128 p[4];
 
@@ -4795,7 +4795,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempG += 4;
                     dstPtrTempB += 4;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
                     *dstPtrTempG = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
@@ -4834,7 +4834,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     __m128 p[4];
 
@@ -4882,7 +4882,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128 p[4];
 
@@ -4893,7 +4893,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrTemp += 12;
                     dstPtrTemp += 12;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     dstPtrTemp[0] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
                     dstPtrTemp[1] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
@@ -4932,7 +4932,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     __m128 p[4];
 
@@ -5065,7 +5065,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
 
@@ -5092,7 +5092,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     dstPtrTempG += 4;
                     dstPtrTempB += 4;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
                     *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
@@ -5131,7 +5131,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
@@ -5193,7 +5193,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
@@ -5216,7 +5216,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     srcPtrTemp += 12;
                     dstPtrTemp += 12;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
                     dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
@@ -5255,7 +5255,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
@@ -5404,7 +5404,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -5417,7 +5417,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     Rpp32f srcPtrTempI8[3];
                     srcPtrTempI8[0] = (Rpp32f)srcPtrTemp[0] + 128;
@@ -5461,7 +5461,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
@@ -5514,7 +5514,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m128 p[12];
 
@@ -5525,7 +5525,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTemp += 48;
                     dstPtrTemp += 48;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     Rpp32f srcPtrTempI8[3];
                     srcPtrTempI8[0] = (Rpp32f)srcPtrTemp[0] + 128;
@@ -5569,7 +5569,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m128 p[12];
 
