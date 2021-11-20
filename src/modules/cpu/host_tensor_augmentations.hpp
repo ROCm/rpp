@@ -2931,6 +2931,11 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=48)
                 {
 #if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    compute_color_twist_24_host(p[0], p[2], p[4], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_24_host(p[1], p[3], p[5], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
@@ -2992,6 +2997,11 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
 #if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    compute_color_twist_24_host(p[0], p[2], p[4], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_24_host(p[1], p[3], p[5], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
@@ -3113,6 +3123,11 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
 #if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    compute_color_twist_24_host(p[0], p[2], p[4], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_24_host(p[1], p[3], p[5], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
