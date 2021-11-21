@@ -2083,15 +2083,15 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions
 
-inline RppStatus compute_color_twist_host(RpptRGB *pixel, Rpp32f brightnessParam, Rpp32f contrastParam, Rpp32f hueParam, Rpp32f saturationParam)
+inline RppStatus compute_color_twist_host(RpptFloatRGB *pixel, Rpp32f brightnessParam, Rpp32f contrastParam, Rpp32f hueParam, Rpp32f saturationParam)
 {
     // RGB to HSV
 
     Rpp32f hue, sat, v, add;
     Rpp32f rf, gf, bf, cmax, cmin, delta;
-    rf = ((Rpp32f) pixel->R) * 0.00392157f;
-    gf = ((Rpp32f) pixel->G) * 0.00392157f;
-    bf = ((Rpp32f) pixel->B) * 0.00392157f;
+    rf = pixel->R;
+    gf = pixel->G;
+    bf = pixel->B;
     cmax = RPPMAX3(rf, gf, bf);
     cmin = RPPMIN3(rf, gf, bf);
     delta = cmax - cmin;
@@ -2132,7 +2132,6 @@ inline RppStatus compute_color_twist_host(RpptRGB *pixel, Rpp32f brightnessParam
 
     Rpp32s hueIntegerPart = (Rpp32s) hue;
     Rpp32f hueFractionPart = hue - hueIntegerPart;
-    v *= 255;
     Rpp32f vsat = v * sat;
     Rpp32f vsatf = vsat * hueFractionPart;
     Rpp32f p = v - vsat;
@@ -2147,9 +2146,9 @@ inline RppStatus compute_color_twist_host(RpptRGB *pixel, Rpp32f brightnessParam
         case 4: rf = t; gf = p; bf = v; break;
         case 5: rf = v; gf = p; bf = q; break;
     }
-    pixel->R = (Rpp8u) RPPPIXELCHECK(std::fma(rf, brightnessParam, contrastParam));
-    pixel->G = (Rpp8u) RPPPIXELCHECK(std::fma(gf, brightnessParam, contrastParam));
-    pixel->B = (Rpp8u) RPPPIXELCHECK(std::fma(bf, brightnessParam, contrastParam));
+    pixel->R = std::fma(rf, brightnessParam, contrastParam);
+    pixel->G = std::fma(gf, brightnessParam, contrastParam);
+    pixel->B = std::fma(bf, brightnessParam, contrastParam);
 
     return RPP_SUCCESS;
 }
@@ -2161,9 +2160,6 @@ inline RppStatus compute_color_twist_12_host(__m128 &pVecR, __m128 &pVecG, __m12
     __m128i pxIntH;
 
     // RGB to HSV
-    pVecR = _mm_mul_ps(pVecR, xmm_p1op255);                                                                         // rf = ((Rpp32f) srcPtrR) * 0.00392157f;
-    pVecG = _mm_mul_ps(pVecG, xmm_p1op255);                                                                         // gf = ((Rpp32f) srcPtrG) * 0.00392157f;
-    pVecB = _mm_mul_ps(pVecB, xmm_p1op255);                                                                         // bf = ((Rpp32f) srcPtrB) * 0.00392157f;
     pV = _mm_max_ps(pVecR, _mm_max_ps(pVecG, pVecB));                                                               // cmax = RPPMAX3(rf, gf, bf);
     pS = _mm_min_ps(pVecR, _mm_min_ps(pVecG, pVecB));                                                               // cmin = RPPMIN3(rf, gf, bf);
     pDelta = _mm_sub_ps(pV, pS);                                                                                    // delta = cmax - cmin;
@@ -2196,7 +2192,6 @@ inline RppStatus compute_color_twist_12_host(__m128 &pVecR, __m128 &pVecG, __m12
     pIntH = _mm_floor_ps(pH);                                                                                       // Rpp32s hueIntegerPart = (Rpp32s) hue;
     pxIntH = _mm_cvtps_epi32(pIntH);                                                                                // Convert to epi32
     pH = _mm_sub_ps(pH, pIntH);                                                                                     // Rpp32f hueFractionPart = hue - hueIntegerPart;
-    pV = _mm_mul_ps(pV, xmm_p255);                                                                                  // v *= 255;
     pS = _mm_mul_ps(pV, pS);                                                                                        // Rpp32f vsat = v * sat;
     pAdd = _mm_mul_ps(pS, pH);                                                                                      // Rpp32f vsatf = vsat * hueFractionPart;
     pA = _mm_sub_ps(pV, pS);                                                                                        // Rpp32f p = v - vsat;
@@ -2243,9 +2238,6 @@ inline RppStatus compute_color_twist_24_host(__m256 &pVecR, __m256 &pVecG, __m25
     __m256i pxIntH;
 
     // RGB to HSV
-    pVecR = _mm256_mul_ps(pVecR, avx_p1op255);                                                                         // rf = ((Rpp32f) srcPtrR) * 0.00392157f;
-    pVecG = _mm256_mul_ps(pVecG, avx_p1op255);                                                                         // gf = ((Rpp32f) srcPtrG) * 0.00392157f;
-    pVecB = _mm256_mul_ps(pVecB, avx_p1op255);                                                                         // bf = ((Rpp32f) srcPtrB) * 0.00392157f;
     pV = _mm256_max_ps(pVecR, _mm256_max_ps(pVecG, pVecB));                                                            // cmax = RPPMAX3(rf, gf, bf);
     pS = _mm256_min_ps(pVecR, _mm256_min_ps(pVecG, pVecB));                                                            // cmin = RPPMIN3(rf, gf, bf);
     pDelta = _mm256_sub_ps(pV, pS);                                                                                    // delta = cmax - cmin;
@@ -2278,7 +2270,6 @@ inline RppStatus compute_color_twist_24_host(__m256 &pVecR, __m256 &pVecG, __m25
     pIntH = _mm256_floor_ps(pH);                                                                                       // Rpp32s hueIntegerPart = (Rpp32s) hue;
     pxIntH = _mm256_cvtps_epi32(pIntH);                                                                                // Convert to epi32
     pH = _mm256_sub_ps(pH, pIntH);                                                                                     // Rpp32f hueFractionPart = hue - hueIntegerPart;
-    pV = _mm256_mul_ps(pV, avx_p255);                                                                                  // v *= 255;
     pS = _mm256_mul_ps(pV, pS);                                                                                        // Rpp32f vsat = v * sat;
     pAdd = _mm256_mul_ps(pS, pH);                                                                                      // Rpp32f vsatf = vsat * hueFractionPart;
     pA = _mm256_sub_ps(pV, pS);                                                                                        // Rpp32f p = v - vsat;

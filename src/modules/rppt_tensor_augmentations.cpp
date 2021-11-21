@@ -512,20 +512,20 @@ rppt_color_twist_host(RppPtr_t srcPtr,
     //                                     roiType,
     //                                     layoutParams);
     // }
-    // else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    // {
-    //     color_twist_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-    //                                     srcDescPtr,
-    //                                     (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-    //                                     dstDescPtr,
-    //                                     brightnessTensor,
-    //                                     contrastTensor,
-    //                                     hueTensor,
-    //                                     saturationTensor,
-    //                                     roiTensorPtrSrc,
-    //                                     roiType,
-    //                                     layoutParams);
-    // }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        color_twist_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                        srcDescPtr,
+                                        (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                        dstDescPtr,
+                                        brightnessTensor,
+                                        contrastTensor,
+                                        hueTensor,
+                                        saturationTensor,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        layoutParams);
+    }
     // else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     // {
     //     color_twist_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
