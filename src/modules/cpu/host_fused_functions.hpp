@@ -4,8 +4,6 @@
 #include "cpu/rpp_cpu_simd.hpp"
 #include <cpu/rpp_cpu_common.hpp>
 
-const __m128 xmm_p6 = _mm_set1_ps((float)6.0f);
-
 /**************** color_twist ***************/
 
 template <typename T>
@@ -663,13 +661,13 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             x2 = _mm_shuffle_ps(x2,x2, _MM_SHUFFLE(0,3,2,1));
             x3 = _mm_shuffle_ps(x3,x3, _MM_SHUFFLE(0,3,2,1));
 
-#if 0            
+#if 0
             xH = _mm_cmpge_ps(xR, xV);                             // xH ; (V==R) mask_g_b
             xZ = _mm_cmpge_ps(xG, xV);                             // xZ <- [V==G] ; mask(b-r)
             xX = _mm_cmpneq_ps(xV, xR);                            // xX <- [V!=R] ; nmask (g-b)
 
             xY = _mm_andnot_ps(xH, xZ);                            // xY <- [V!=R && V==G] ; mask_b-r
-            xZ = _mm_andnot_ps(xZ, xX);                            // xZ <- [V!=R && V!=G] ; mask_r-g 
+            xZ = _mm_andnot_ps(xZ, xX);                            // xZ <- [V!=R && V!=G] ; mask_r-g
 
             //xY = _mm_xor_ps(xY, xmm_full);                        // xY <- [V==R || V!=G]
             //xZ = _mm_xor_ps(xZ, xmm_full);                        // xZ <- [V==R || V==G]
