@@ -3886,6 +3886,359 @@ RppStatus color_twist_f16_f16_host_tensor(Rpp16f *srcPtr,
     return RPP_SUCCESS;
 }
 
+RppStatus color_twist_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8s *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f *brightnessTensor,
+                                        Rpp32f *contrastTensor,
+                                        Rpp32f *hueTensor,
+                                        Rpp32f *saturationTensor,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams)
+{
+    RpptROI roiDefault;
+    RpptROIPtr roiPtrDefault;
+    roiPtrDefault = &roiDefault;
+    roiPtrDefault->xywhROI.xy.x = 0;
+    roiPtrDefault->xywhROI.xy.y = 0;
+    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
+    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtr;
+
+        if (&roiTensorPtrSrc[batchCount] == NULL)
+        {
+            roiPtr = roiPtrDefault;
+        }
+        else
+        {
+            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+
+            RpptROI roiImage;
+            RpptROIPtr roiPtrImage;
+
+            if (roiType == RpptRoiType::LTRB)
+            {
+                roiPtrImage = &roiImage;
+                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
+            }
+            else if (roiType == RpptRoiType::XYWH)
+            {
+                roiPtrImage = roiPtrInput;
+            }
+
+            roiPtr = &roi;
+            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
+        }
+
+        Rpp32f brightnessParam = brightnessTensor[batchCount] * 255.0f;
+        Rpp32f contrastParam = contrastTensor[batchCount];
+        Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.01666667f; // 6 * 1/360
+        Rpp32f saturationParam = saturationTensor[batchCount];
+
+        Rpp8s *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
+        Rpp8s *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        Rpp32u alignedLength = bufferLength & ~47;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
+
+#if __AVX2__
+        __m256 pColorTwistParams[4];
+        pColorTwistParams[0] = _mm256_set1_ps(brightnessParam);
+        pColorTwistParams[1] = _mm256_set1_ps(contrastParam);
+        pColorTwistParams[2] = _mm256_set1_ps(hueParam);
+        pColorTwistParams[3] = _mm256_set1_ps(saturationParam);
+#else
+        __m128 pColorTwistParams[4];
+        pColorTwistParams[0] = _mm_set1_ps(brightnessParam);
+        pColorTwistParams[1] = _mm_set1_ps(contrastParam);
+        pColorTwistParams[2] = _mm_set1_ps(hueParam);
+        pColorTwistParams[3] = _mm_set1_ps(saturationParam);
+#endif
+
+        // Color Twist with fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8s *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
+                    compute_color_twist_24_host(p[0], p[2], p[4], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_24_host(p[1], p[3], p[5], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#else
+                    __m128 p[12];
+                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    rpp_simd_load(rpp_normalize48, p);    // simd normalize
+                    compute_color_twist_12_host(p[0], p[4], p[8], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[1], p[5], p[9], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[2], p[6], p[10], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[3], p[7], p[11], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                {
+                    RpptFloatRGB pixel;
+                    pixel.R = ((Rpp32f)srcPtrTemp[0] + 128.0f) * 0.00392157f;
+                    pixel.G = ((Rpp32f)srcPtrTemp[1] + 128.0f) * 0.00392157f;
+                    pixel.B = ((Rpp32f)srcPtrTemp[2] + 128.0f) * 0.00392157f;
+                    compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
+                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(pixel.R - 128.0f);
+                    *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8(pixel.G - 128.0f);
+                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8(pixel.B - 128.0f);
+
+                    srcPtrTemp+=3;
+                    dstPtrTempR++;
+                    dstPtrTempG++;
+                    dstPtrTempB++;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Color Twist with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8s *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
+                    compute_color_twist_24_host(p[0], p[2], p[4], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_24_host(p[1], p[3], p[5], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                    __m128 p[12];
+                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_load(rpp_normalize48, p);    // simd normalize
+                    compute_color_twist_12_host(p[0], p[4], p[8], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[1], p[5], p[9], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[2], p[6], p[10], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[3], p[7], p[11], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
+#endif
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    RpptFloatRGB pixel;
+                    pixel.R = ((Rpp32f)*srcPtrTempR + 128.0f) * 0.00392157f;
+                    pixel.G = ((Rpp32f)*srcPtrTempG + 128.0f) * 0.00392157f;
+                    pixel.B = ((Rpp32f)*srcPtrTempB + 128.0f) * 0.00392157f;
+                    compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
+                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(pixel.R - 128.0f);
+                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(pixel.G - 128.0f);
+                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(pixel.B - 128.0f);
+
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
+                    dstPtrTemp += 3;
+                }
+
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Color Twist without fused output-layout toggle (NHWC -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp8s *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8s *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
+                    compute_color_twist_24_host(p[0], p[2], p[4], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_24_host(p[1], p[3], p[5], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                    __m128 p[12];
+                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    rpp_simd_load(rpp_normalize48, p);    // simd normalize
+                    compute_color_twist_12_host(p[0], p[4], p[8], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[1], p[5], p[9], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[2], p[6], p[10], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[3], p[7], p[11], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
+#endif
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTemp += vectorIncrement;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                {
+                    RpptFloatRGB pixel;
+                    pixel.R = ((Rpp32f)srcPtrTemp[0] + 128.0f) * 0.00392157f;
+                    pixel.G = ((Rpp32f)srcPtrTemp[1] + 128.0f) * 0.00392157f;
+                    pixel.B = ((Rpp32f)srcPtrTemp[2] + 128.0f) * 0.00392157f;
+                    compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
+                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(pixel.R - 128.0f);
+                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(pixel.G - 128.0f);
+                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(pixel.B - 128.0f);
+
+                    srcPtrTemp += 3;
+                    dstPtrTemp += 3;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Color Twist without fused output-layout toggle (NCHW -> NCHW)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8s *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
+                    compute_color_twist_24_host(p[0], p[2], p[4], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_24_host(p[1], p[3], p[5], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#else
+                    __m128 p[12];
+                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_load(rpp_normalize48, p);    // simd normalize
+                    compute_color_twist_12_host(p[0], p[4], p[8], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[1], p[5], p[9], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[2], p[6], p[10], pColorTwistParams);    // color_twist adjustment
+                    compute_color_twist_12_host(p[3], p[7], p[11], pColorTwistParams);    // color_twist adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    RpptFloatRGB pixel;
+                    pixel.R = ((Rpp32f)*srcPtrTempR + 128.0f) * 0.00392157f;
+                    pixel.G = ((Rpp32f)*srcPtrTempG + 128.0f) * 0.00392157f;
+                    pixel.B = ((Rpp32f)*srcPtrTempB + 128.0f) * 0.00392157f;
+                    compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
+                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(pixel.R - 128.0f);
+                    *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8(pixel.G - 128.0f);
+                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8(pixel.B - 128.0f);
+
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
+                    dstPtrTempR++;
+                    dstPtrTempG++;
+                    dstPtrTempB++;
+                }
+
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
 /************ color_jitter ************/
 
 RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
