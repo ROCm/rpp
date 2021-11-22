@@ -82,6 +82,9 @@ int main(int argc, char **argv)
     case 31:
         strcpy(funcName, "color_cast");
         break;
+    case 36:
+        strcpy(funcName, "color_twist");
+        break;
     case 81:
         strcpy(funcName, "color_jitter");
         break;
