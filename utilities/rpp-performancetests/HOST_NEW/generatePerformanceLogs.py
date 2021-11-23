@@ -53,7 +53,7 @@ for log_file in log_file_list:
     try:
         f = open(log_file,"r")
         print("\n\n\nOpened log file -> ", log_file)
-    except:
+    except Exception:
         continue
 
     stats = []
