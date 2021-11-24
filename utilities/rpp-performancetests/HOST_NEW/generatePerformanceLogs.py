@@ -53,7 +53,8 @@ for log_file in log_file_list:
     try:
         f = open(log_file,"r")
         print("\n\n\nOpened log file -> ", log_file)
-    except Exception:
+    except IOError:
+        print("Skipping file -> ", log_file)
         continue
 
     stats = []
