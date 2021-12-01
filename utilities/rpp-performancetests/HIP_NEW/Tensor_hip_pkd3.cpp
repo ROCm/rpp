@@ -540,20 +540,20 @@ int main(int argc, char **argv)
                 alpha[i] = 1.75;
                 beta[i] = 50;
 
-                // xywhROI override sample
+                // Uncomment to run test case with an xywhROI override
                 // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                 // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
                 // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
                 // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
 
-                // ltrbROI override sample
+                // Uncomment to run test case with an ltrbROI override
                 // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                 // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
+            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
             // roiTypeSrc = RpptRoiType::LTRB;
             // roiTypeDst = RpptRoiType::LTRB;
 
@@ -594,20 +594,20 @@ int main(int argc, char **argv)
             {
                 gammaVal[i] = 1.9;
 
-                // xywhROI override sample
+                // Uncomment to run test case with an xywhROI override
                 // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                 // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
                 // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
                 // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
 
-                // ltrbROI override sample
+                // Uncomment to run test case with an ltrbROI override
                 // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                 // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
+            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
             // roiTypeSrc = RpptRoiType::LTRB;
             // roiTypeDst = RpptRoiType::LTRB;
 
@@ -648,20 +648,20 @@ int main(int argc, char **argv)
             {
                 alpha[i] = 0.4;
 
-                // xywhROI override sample
+                // Uncomment to run test case with an xywhROI override
                 // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                 // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
                 // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
                 // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
 
-                // ltrbROI override sample
+                // Uncomment to run test case with an ltrbROI override
                 // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                 // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
+            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
             // roiTypeSrc = RpptRoiType::LTRB;
             // roiTypeDst = RpptRoiType::LTRB;
 
@@ -707,20 +707,20 @@ int main(int argc, char **argv)
                 rgbTensor[i].B = 100;
                 alphaTensor[i] = 0.5;
 
-                // xywhROI override sample
+                // Uncomment to run test case with an xywhROI override
                 // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                 // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
                 // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
                 // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
 
-                // ltrbROI override sample
+                // Uncomment to run test case with an ltrbROI override
                 // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                 // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
+            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
             // roiTypeSrc = RpptRoiType::LTRB;
             // roiTypeDst = RpptRoiType::LTRB;
 
@@ -759,20 +759,20 @@ int main(int argc, char **argv)
             Rpp32u kernelSize = additionalParam;
             for (i = 0; i < images; i++)
             {
-                // xywhROI override sample
+                // Uncomment to run test case with an xywhROI override
                 // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                 // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
                 // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
                 // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
 
-                // ltrbROI override sample
+                // Uncomment to run test case with an ltrbROI override
                 // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                 // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
+            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
             // roiTypeSrc = RpptRoiType::LTRB;
             // roiTypeDst = RpptRoiType::LTRB;
 
@@ -810,20 +810,20 @@ int main(int argc, char **argv)
             Rpp32u kernelSize = additionalParam;
             for (i = 0; i < images; i++)
             {
-                // xywhROI override sample
+                // Uncomment to run test case with an xywhROI override
                 // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                 // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
                 // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
                 // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
 
-                // ltrbROI override sample
+                // Uncomment to run test case with an ltrbROI override
                 // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                 // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
+            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
             // roiTypeSrc = RpptRoiType::LTRB;
             // roiTypeDst = RpptRoiType::LTRB;
 
@@ -861,20 +861,20 @@ int main(int argc, char **argv)
             Rpp32u kernelSize = additionalParam;
             for (i = 0; i < images; i++)
             {
-                // xywhROI override sample
+                // Uncomment to run test case with an xywhROI override
                 // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                 // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
                 // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
                 // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
 
-                // ltrbROI override sample
+                // Uncomment to run test case with an ltrbROI override
                 // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                 // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
+            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
             // roiTypeSrc = RpptRoiType::LTRB;
             // roiTypeDst = RpptRoiType::LTRB;
 
