@@ -100,7 +100,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Brightness with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -163,7 +163,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Brightness with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -345,7 +345,7 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Brightness with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -399,7 +399,7 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Brightness with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -569,7 +569,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Brightness with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -637,7 +637,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Brightness with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -833,7 +833,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Brightness with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -896,7 +896,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Brightness with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -1794,7 +1794,7 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Blend with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtr1Channel;
@@ -1863,7 +1863,7 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Blend with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtr1Channel;
@@ -2068,7 +2068,7 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
         // Blend with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtr1Channel;
@@ -2128,7 +2128,7 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
         // Blend with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtr1Channel;
@@ -2321,7 +2321,7 @@ RppStatus blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
         // Blend with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtr1Channel;
@@ -2396,7 +2396,7 @@ RppStatus blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
         // Blend with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtr1Channel;
@@ -2620,7 +2620,7 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
         // Blend with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtr1Channel;
@@ -2689,7 +2689,7 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
         // Blend with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtr1Channel;
@@ -2894,7 +2894,7 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u alignedLength = bufferLength & ~47;
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
 
@@ -3248,7 +3248,7 @@ RppStatus color_twist_f32_f32_host_tensor(Rpp32f *srcPtr,
         dstPtrChannel = dstPtrImage;
 
 #if __AVX2__
-        Rpp32u alignedLength = bufferLength & ~23;
+        Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
@@ -3258,7 +3258,7 @@ RppStatus color_twist_f32_f32_host_tensor(Rpp32f *srcPtr,
         pColorTwistParams[2] = _mm256_set1_ps(hueParam);
         pColorTwistParams[3] = _mm256_set1_ps(saturationParam);
 #else
-        Rpp32u alignedLength = bufferLength & ~11;
+        Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
@@ -3581,7 +3581,7 @@ RppStatus color_twist_f16_f16_host_tensor(Rpp16f *srcPtr,
         dstPtrChannel = dstPtrImage;
 
 #if __AVX2__
-        Rpp32u alignedLength = bufferLength & ~23;
+        Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
@@ -3591,7 +3591,7 @@ RppStatus color_twist_f16_f16_host_tensor(Rpp16f *srcPtr,
         pColorTwistParams[2] = _mm256_set1_ps(hueParam);
         pColorTwistParams[3] = _mm256_set1_ps(saturationParam);
 #else
-        Rpp32u alignedLength = bufferLength & ~11;
+        Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
@@ -3953,7 +3953,7 @@ RppStatus color_twist_i8_i8_host_tensor(Rpp8s *srcPtr,
         srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u alignedLength = bufferLength & ~47;
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
 
@@ -4320,7 +4320,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Color Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -4372,7 +4372,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Color Jitter with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -4424,7 +4424,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Color Jitter without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -4466,7 +4466,7 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Color Jitter without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -4608,7 +4608,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Color Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -4660,7 +4660,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Color Jitter with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -4712,7 +4712,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Color Jitter without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -4754,7 +4754,7 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Color Jitter without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -4896,7 +4896,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Color Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -4962,7 +4962,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Color Jitter with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -5028,7 +5028,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Color Jitter without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -5082,7 +5082,7 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Color Jitter without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -5240,7 +5240,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Color Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -5297,7 +5297,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Color Jitter with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -5354,7 +5354,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Color Jitter without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -5401,7 +5401,7 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Color Jitter without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -5545,7 +5545,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Color Cast with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -5597,7 +5597,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Color Cast with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -5649,7 +5649,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Color Cast without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -5691,7 +5691,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Color Cast without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -5828,7 +5828,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Color Cast with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -5880,7 +5880,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Color Cast with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -5932,7 +5932,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Color Cast without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -5974,7 +5974,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Color Cast without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -6111,7 +6111,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Color Cast with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -6177,7 +6177,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Color Cast with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -6243,7 +6243,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Color Cast without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -6297,7 +6297,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Color Cast without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~11;
+            Rpp32u alignedLength = (bufferLength / 12) * 12;
 
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -6450,7 +6450,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Color Cast with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -6507,7 +6507,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Color Cast with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -6564,7 +6564,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Color Cast without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -6611,7 +6611,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Color Cast without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;

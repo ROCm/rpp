@@ -661,36 +661,6 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             x2 = _mm_shuffle_ps(x2,x2, _MM_SHUFFLE(0,3,2,1));
             x3 = _mm_shuffle_ps(x3,x3, _MM_SHUFFLE(0,3,2,1));
 
-#if 0
-            xH = _mm_cmpge_ps(xR, xV);                             // xH ; (V==R) mask_g_b
-            xZ = _mm_cmpge_ps(xG, xV);                             // xZ <- [V==G] ; mask(b-r)
-            xX = _mm_cmpneq_ps(xV, xR);                            // xX <- [V!=R] ; nmask (g-b)
-
-            xY = _mm_andnot_ps(xH, xZ);                            // xY <- [V!=R && V==G] ; mask_b-r
-            xZ = _mm_andnot_ps(xZ, xX);                            // xZ <- [V!=R && V!=G] ; mask_r-g
-
-            //xY = _mm_xor_ps(xY, xmm_full);                        // xY <- [V==R || V!=G]
-            //xZ = _mm_xor_ps(xZ, xmm_full);                        // xZ <- [V==R || V==G]
-
-            xA = _mm_sub_ps(xG, xB);                               // xA (G-B)
-            xB = _mm_sub_ps(xB, xR);                               // xB (B-R)
-            xR = _mm_sub_ps(xR, xG);                               // xB (R-G)
-
-            // and with masks for hue
-            xA = _mm_and_ps(xA, xH);
-            xB = _mm_and_ps(xB, xY);
-            xR = _mm_and_ps(xR, xZ);
-            xA = _mm_or_ps(xA, xB);
-            xA = _mm_or_ps(xA, xR);
-
-            xC = _mm_mul_ps(xC, xmm_m6);                            // xC <- [C*6     ]
-            xG = _mm_div_ps(xA, xC);                               // xG <- [(Rx+Gx+Bx)/6C]
-
-            // calculate offset
-            xH = _mm_and_ps(xH, xmm_1o3);                       // xH <- [V==R ?0 :1/3]
-            xC = _mm_cmple_ps(SIMD_GET_PS(eps), xC);
-            xH = _mm_add_ps(xH, _mm_and_ps(xZ, xmm_1o3))        // xH <- [V==R ?0 :V==G?1/3 : 2/3]
-#endif
             // Un-normalize + Brightness Change
             x0 = _mm_mul_ps(x0, pMul);
             x1 = _mm_mul_ps(x1, pMul);
