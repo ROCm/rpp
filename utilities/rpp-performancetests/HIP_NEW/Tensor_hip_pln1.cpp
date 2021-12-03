@@ -544,23 +544,26 @@ int main(int argc, char **argv)
             {
                 alpha[i] = 1.75;
                 beta[i] = 50;
-
-                // Uncomment to run test case with an xywhROI override
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-
-                // Uncomment to run test case with an ltrbROI override
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
@@ -597,24 +600,26 @@ int main(int argc, char **argv)
             for (i = 0; i < images; i++)
             {
                 gammaVal[i] = 1.9;
-
-                // Uncomment to run test case with an xywhROI override
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-
-                // Uncomment to run test case with an ltrbROI override
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
 
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
@@ -651,24 +656,26 @@ int main(int argc, char **argv)
             for (i = 0; i < images; i++)
             {
                 alpha[i] = 0.4;
-
-                // Uncomment to run test case with an xywhROI override
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-
-                // Uncomment to run test case with an ltrbROI override
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
 
-            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
 
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
@@ -702,24 +709,25 @@ int main(int argc, char **argv)
             test_case_name = "erode";
 
             Rpp32u kernelSize = additionalParam;
-            for (i = 0; i < images; i++)
+
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
             {
-                // Uncomment to run test case with an xywhROI override
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
 
-                // Uncomment to run test case with an ltrbROI override
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
-
-            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
@@ -753,24 +761,25 @@ int main(int argc, char **argv)
             test_case_name = "dilate";
 
             Rpp32u kernelSize = additionalParam;
-            for (i = 0; i < images; i++)
+
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
             {
-                // Uncomment to run test case with an xywhROI override
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
 
-                // Uncomment to run test case with an ltrbROI override
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
-
-            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
@@ -804,24 +813,25 @@ int main(int argc, char **argv)
             test_case_name = "box_filter";
 
             Rpp32u kernelSize = additionalParam;
-            for (i = 0; i < images; i++)
+
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
             {
-                // Uncomment to run test case with an xywhROI override
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
 
-                // Uncomment to run test case with an ltrbROI override
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
             }
-
-            // Uncomment to run test case with an ltrbROI override (Override RpptRoiType to LTRB)
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
