@@ -193,15 +193,15 @@ RppStatus color_twist_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             xY = _mm_and_ps(xZ, xX);                               // xY <- [V!=R && V==G]
             xZ = _mm_andnot_ps(xZ, xX);                            // xZ <- [V!=R && V!=G]
 
-            xY = _mm_xor_ps(xY, xmm_full);                // xY <- [V==R || V!=G]
-            xZ = _mm_xor_ps(xZ, xmm_full);                // xZ <- [V==R || V==G]
+            xY = _mm_xor_ps(xY, SIMD_GET_PS(full));                // xY <- [V==R || V!=G]
+            xZ = _mm_xor_ps(xZ, SIMD_GET_PS(full));                // xZ <- [V==R || V==G]
 
             xR = _mm_and_ps(xR, xX);                               // xR <- [X!=0 ? R : 0]
             xB = _mm_and_ps(xB, xZ);                               // xB <- [Z!=0 ? B : 0]
             xG = _mm_and_ps(xG, xY);                               // xG <- [Y!=0 ? G : 0]
 
-            xZ = _mm_andnot_ps(xZ, xmm_sn);               // xZ <- [sign(!Z)]
-            xY = _mm_andnot_ps(xY, xmm_sn);               // xY <- [sign(!Y)]
+            xZ = _mm_andnot_ps(xZ, SIMD_GET_PS(sn));               // xZ <- [sign(!Z)]
+            xY = _mm_andnot_ps(xY, SIMD_GET_PS(sn));               // xY <- [sign(!Y)]
 
             xG = _mm_xor_ps(xG, xZ);                               // xG <- [Y!=0 ? (Z==0 ? G : -G) : 0]
             xR = _mm_xor_ps(xR, xY);                               // xR <- [X!=0 ? (Y==0 ? R : -R) : 0]
