@@ -1,6 +1,9 @@
 #ifndef AMD_RPP_RPP_CPU_SIMD_HPP
 #define AMD_RPP_RPP_CPU_SIMD_HPP
 
+#include "stdio.h"
+#include "rppdefs.h"
+
 #if _WIN32
 #include <intrin.h>
 #else
@@ -238,31 +241,31 @@ inline RppStatus rpp_store48_f32pln3_to_u8pkd3(Rpp8u *dstPtr, __m128 *p)
 {
     __m128i px[7];
     __m128i pxMask = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 12, 13, 14, 15);
-    __m128 pZero = _mm_setzero_ps();
+    __m128i pxZero = _mm_setzero_si128();
 
     px[4] = _mm_cvtps_epi32(p[0]);    /* convert to int32 for R01-04 */
     px[5] = _mm_cvtps_epi32(p[4]);    /* convert to int32 for G01-04 */
     px[6] = _mm_cvtps_epi32(p[8]);    /* convert to int32 for B01-04 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R01-04|G01-04 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B01-04|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B01-04|X01-04 */
     px[0] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R01|R02|R03|R04|G01|G02|G03|G04|B01|B02|B03|B04|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[1]);    /* convert to int32 for R05-08 */
     px[5] = _mm_cvtps_epi32(p[5]);    /* convert to int32 for G05-08 */
     px[6] = _mm_cvtps_epi32(p[9]);    /* convert to int32 for B05-08 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R05-08|G05-08 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B05-08|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B05-08|X01-04 */
     px[1] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R05|R06|R07|R08|G05|G06|G07|G08|B05|B06|B07|B08|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[2]);    /* convert to int32 for R09-12 */
     px[5] = _mm_cvtps_epi32(p[6]);    /* convert to int32 for G09-12 */
     px[6] = _mm_cvtps_epi32(p[10]);    /* convert to int32 for B09-12 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R09-12|G09-12 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B09-12|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B09-12|X01-04 */
     px[2] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R09|R10|R11|R12|G09|G10|G11|G12|B09|B10|B11|B12|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[3]);    /* convert to int32 for R13-16 */
     px[5] = _mm_cvtps_epi32(p[7]);    /* convert to int32 for G13-16 */
     px[6] = _mm_cvtps_epi32(p[11]);    /* convert to int32 for B13-16 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R13-16|G13-16 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B13-16|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B13-16|X01-04 */
     px[3] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R13|R14|R15|R16|G13|G14|G15|G16|B13|B14|B15|B16|00|00|00|00] */
     px[0] = _mm_shuffle_epi8(px[0], pxMask);    /* shuffle to get [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|00|00|00|00] */
     px[1] = _mm_shuffle_epi8(px[1], pxMask);    /* shuffle to get [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|00|00|00|00] */
@@ -457,31 +460,31 @@ inline RppStatus rpp_store48_f32pln3_to_i8pkd3(Rpp8s *dstPtr, __m128 *p)
     __m128i px[7];
     __m128i pxMask = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 12, 13, 14, 15);
     __m128i pxConvertI8 = _mm_set1_epi8((char)128);
-    __m128 pZero = _mm_setzero_ps();
+    __m128i pxZero = _mm_setzero_si128();
 
     px[4] = _mm_cvtps_epi32(p[0]);    /* convert to int32 for R01-04 */
     px[5] = _mm_cvtps_epi32(p[4]);    /* convert to int32 for G01-04 */
     px[6] = _mm_cvtps_epi32(p[8]);    /* convert to int32 for B01-04 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R01-04|G01-04 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B01-04|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B01-04|X01-04 */
     px[0] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R01|R02|R03|R04|G01|G02|G03|G04|B01|B02|B03|B04|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[1]);    /* convert to int32 for R05-08 */
     px[5] = _mm_cvtps_epi32(p[5]);    /* convert to int32 for G05-08 */
     px[6] = _mm_cvtps_epi32(p[9]);    /* convert to int32 for B05-08 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R05-08|G05-08 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B05-08|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B05-08|X01-04 */
     px[1] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R05|R06|R07|R08|G05|G06|G07|G08|B05|B06|B07|B08|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[2]);    /* convert to int32 for R09-12 */
     px[5] = _mm_cvtps_epi32(p[6]);    /* convert to int32 for G09-12 */
     px[6] = _mm_cvtps_epi32(p[10]);    /* convert to int32 for B09-12 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R09-12|G09-12 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B09-12|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B09-12|X01-04 */
     px[2] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R09|R10|R11|R12|G09|G10|G11|G12|B09|B10|B11|B12|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[3]);    /* convert to int32 for R13-16 */
     px[5] = _mm_cvtps_epi32(p[7]);    /* convert to int32 for G13-16 */
     px[6] = _mm_cvtps_epi32(p[11]);    /* convert to int32 for B13-16 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R13-16|G13-16 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B13-16|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B13-16|X01-04 */
     px[3] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R13|R14|R15|R16|G13|G14|G15|G16|B13|B14|B15|B16|00|00|00|00] */
     px[0] = _mm_sub_epi8(px[0], pxConvertI8);    /* convert back to i8 for px0 store */
     px[1] = _mm_sub_epi8(px[1], pxConvertI8);    /* convert back to i8 for px1 store */
