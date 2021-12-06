@@ -207,7 +207,7 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -220,7 +220,7 @@ do
                 fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -282,7 +282,7 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -295,7 +295,7 @@ do
                 fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -357,7 +357,7 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -370,7 +370,7 @@ do
                 fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do

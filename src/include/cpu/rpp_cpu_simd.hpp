@@ -1,6 +1,9 @@
 #ifndef AMD_RPP_RPP_CPU_SIMD_HPP
 #define AMD_RPP_RPP_CPU_SIMD_HPP
 
+#include "stdio.h"
+#include "rppdefs.h"
+
 #if _WIN32
 #include <intrin.h>
 #else
@@ -48,40 +51,130 @@ typedef union
 
 #define SIMD_GET_PS(name) (*(const __m128  *)_xmm_const_##name)
 
+const __m128 xmm_p0 = _mm_set1_ps(0.0f);
+const __m128 xmm_p1 = _mm_set1_ps(1.0f);
+const __m128 xmm_p2 = _mm_set1_ps(2.0f);
+const __m128 xmm_p4 = _mm_set1_ps(4.0f);
+const __m128 xmm_p6 = _mm_set1_ps(6.0f);
+const __m128 xmm_p255 = _mm_set1_ps(255.0f);
+const __m128 xmm_p1op255 = _mm_set1_ps(1.0f / 255.0f);
+const __m128 xmm_p1op3 = _mm_set1_ps(1.0f / 3.0f);
+const __m128 xmm_p2op3 = _mm_set1_ps(2.0f / 3.0f);
+const __m128i xmm_px0 = _mm_set1_epi32(0);
+const __m128i xmm_px1 = _mm_set1_epi32(1);
+const __m128i xmm_px2 = _mm_set1_epi32(2);
+const __m128i xmm_px3 = _mm_set1_epi32(3);
+const __m128i xmm_px4 = _mm_set1_epi32(4);
+const __m128i xmm_px5 = _mm_set1_epi32(5);
+
+const __m256 avx_p0 = _mm256_set1_ps(0.0f);
+const __m256 avx_p1 = _mm256_set1_ps(1.0f);
+const __m256 avx_p2 = _mm256_set1_ps(2.0f);
+const __m256 avx_p4 = _mm256_set1_ps(4.0f);
+const __m256 avx_p6 = _mm256_set1_ps(6.0f);
+const __m256 avx_p255 = _mm256_set1_ps(255.0f);
+const __m256 avx_p1op255 = _mm256_set1_ps(1.0f / 255.0f);
+const __m256 avx_p1op3 = _mm256_set1_ps(1.0f / 3.0f);
+const __m256 avx_p2op3 = _mm256_set1_ps(2.0f / 3.0f);
+const __m256i avx_px0 = _mm256_set1_epi32(0);
+const __m256i avx_px1 = _mm256_set1_epi32(1);
+const __m256i avx_px2 = _mm256_set1_epi32(2);
+const __m256i avx_px3 = _mm256_set1_epi32(3);
+const __m256i avx_px4 = _mm256_set1_epi32(4);
+const __m256i avx_px5 = _mm256_set1_epi32(5);
+
+// Print helpers
+
+inline void rpp_mm_print_epi8(__m128i vPrintArray)
+{
+    char printArray[16];
+    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 16; ct++)
+    {
+        printf("%d ", printArray[ct]);
+    }
+}
+
+inline void rpp_mm_print_epi32(__m128i vPrintArray)
+{
+    int printArray[4];
+    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 4; ct++)
+    {
+        printf("%d ", printArray[ct]);
+    }
+}
+
+inline void rpp_mm_print_ps(__m128 vPrintArray)
+{
+    float printArray[4];
+    _mm_storeu_ps(printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 4; ct++)
+    {
+        printf("%0.6f ", printArray[ct]);
+    }
+}
+
+inline void rpp_mm256_print_epi8(__m256i vPrintArray)
+{
+    unsigned char printArray[32];
+    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 32; ct++)
+    {
+        printf("%d ", printArray[ct]);
+    }
+}
+
+inline void rpp_mm256_print_epi32(__m256i vPrintArray)
+{
+    int printArray[8];
+    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 8; ct++)
+    {
+        printf("%d ", printArray[ct]);
+    }
+}
+
+inline void rpp_mm256_print_ps(__m256 vPrintArray)
+{
+    float printArray[8];
+    _mm256_storeu_ps(printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 8; ct++)
+    {
+        printf("%0.6f ", printArray[ct]);
+    }
+}
+
+// SSE loads and stores
+
 inline RppStatus rpp_load48_u8pkd3_to_f32pln3(Rpp8u *srcPtr, __m128 *p)
 {
-    __m128i px[8];
-    __m128i pxMask = _mm_setr_epi8(0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11, 12, 13, 14, 15);
-    __m128i pxZero = _mm_setzero_si128();
-
+    __m128i px[4];
+    __m128i maskR = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80);
+    __m128i maskG = _mm_setr_epi8(1, 0x80, 0x80, 0x80, 4, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80);
+    __m128i maskB = _mm_setr_epi8(2, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 8, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
     px[0] = _mm_loadu_si128((__m128i *)srcPtr);           /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04 */
     px[1] = _mm_loadu_si128((__m128i *)(srcPtr + 12));    /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08 */
-    px[2] = _mm_loadu_si128((__m128i *)(srcPtr + 24));    /* load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12 \ */
-    px[3] = _mm_loadu_si128((__m128i *)(srcPtr + 36));    /* load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16 \ */
-    px[0] = _mm_shuffle_epi8(px[0], pxMask);    /* shuffle to get [R01|R02|R03|R04|G01|G02|G03|G04 || B01|B02|B03|B04|R05|G05|B05|R06] - Need R01-04, G01-04, B01-04 */
-    px[1] = _mm_shuffle_epi8(px[1], pxMask);    /* shuffle to get [R05|R06|R07|R08|G05|G06|G07|G08 || B05|B06|B07|B08|R09|G09|B09|R10] - Need R05-08, G05-08, B05-08 */
-    px[2] = _mm_shuffle_epi8(px[2], pxMask);    /* shuffle to get [R09|R10|R11|R12|G09|G10|G11|G12 || B09|B10|B11|B12|R13|G13|B13|R14] - Need R09-12, G09-12, B09-12 */
-    px[3] = _mm_shuffle_epi8(px[3], pxMask);    /* shuffle to get [R13|R14|R15|R16|G13|G14|G15|G16 || B13|B14|B15|B16|R17|G17|B17|R18] - Need R13-16, G13-16, B13-16 */
-    px[4] = _mm_unpackhi_epi8(px[0], pxZero);    /* unpack 8 hi-pixels of px[0] */
-    px[5] = _mm_unpackhi_epi8(px[1], pxZero);    /* unpack 8 hi-pixels of px[1] */
-    px[6] = _mm_unpackhi_epi8(px[2], pxZero);    /* unpack 8 hi-pixels of px[2] */
-    px[7] = _mm_unpackhi_epi8(px[3], pxZero);    /* unpack 8 hi-pixels of px[3] */
-    px[0] = _mm_unpacklo_epi8(px[0], pxZero);    /* unpack 8 lo-pixels of px[0] */
-    px[1] = _mm_unpacklo_epi8(px[1], pxZero);    /* unpack 8 lo-pixels of px[1] */
-    px[2] = _mm_unpacklo_epi8(px[2], pxZero);    /* unpack 8 lo-pixels of px[2] */
-    px[3] = _mm_unpacklo_epi8(px[3], pxZero);    /* unpack 8 lo-pixels of px[3] */
-    p[0] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[0], pxZero));    /* unpack 4 lo-pixels of px[0] - Contains R01-04 */
-    p[1] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[1], pxZero));    /* unpack 4 lo-pixels of px[1] - Contains R05-08 */
-    p[2] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[2], pxZero));    /* unpack 4 lo-pixels of px[2] - Contains R09-12 */
-    p[3] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[3], pxZero));    /* unpack 4 lo-pixels of px[3] - Contains R13-16 */
-    p[4] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[0], pxZero));    /* unpack 4 hi-pixels of px[0] - Contains G01-04 */
-    p[5] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[1], pxZero));    /* unpack 4 hi-pixels of px[1] - Contains G05-08 */
-    p[6] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[2], pxZero));    /* unpack 4 hi-pixels of px[2] - Contains G09-12 */
-    p[7] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[3], pxZero));    /* unpack 4 hi-pixels of px[3] - Contains G13-16 */
-    p[8] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[4], pxZero));    /* unpack 4 lo-pixels of px[4] - Contains B01-04 */
-    p[9] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[5], pxZero));    /* unpack 4 lo-pixels of px[5] - Contains B05-08 */
-    p[10] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[6], pxZero));    /* unpack 4 lo-pixels of px[6] - Contains B09-12 */
-    p[11] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[7], pxZero));    /* unpack 4 lo-pixels of px[7] - Contains B13-16 */
+    px[2] = _mm_loadu_si128((__m128i *)(srcPtr + 24));    /* load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12 */
+    px[3] = _mm_loadu_si128((__m128i *)(srcPtr + 36));    /* load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16 */
+    p[0] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], maskR));    /* Contains R01-04 */
+    p[1] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], maskR));    /* Contains R05-08 */
+    p[2] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], maskR));    /* Contains R09-12 */
+    p[3] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[3], maskR));    /* Contains R13-16 */
+    p[4] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], maskG));    /* Contains G01-04 */
+    p[5] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], maskG));    /* Contains G05-08 */
+    p[6] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], maskG));    /* Contains G09-12 */
+    p[7] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[3], maskG));    /* Contains G13-16 */
+    p[8] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], maskB));    /* Contains B01-04 */
+    p[9] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], maskB));    /* Contains B05-08 */
+    p[10] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], maskB));    /* Contains B09-12 */
+    p[11] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[3], maskB));    /* Contains B13-16 */
 
     return RPP_SUCCESS;
 }
@@ -120,30 +213,26 @@ inline RppStatus rpp_store48_f32pln3_to_u8pln3(Rpp8u *dstPtrR, Rpp8u *dstPtrG, R
 
 inline RppStatus rpp_load48_u8pln3_to_f32pln3(Rpp8u *srcPtrR, Rpp8u *srcPtrG, Rpp8u *srcPtrB, __m128 *p)
 {
-    __m128i px[6];
-    __m128i pxZero = _mm_setzero_si128();
-
+    __m128i px[3];
+    __m128i mask0 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80);
+    __m128i mask1 = _mm_setr_epi8(4, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80);
+    __m128i mask2 = _mm_setr_epi8(8, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
+    __m128i mask3 = _mm_setr_epi8(12, 0x80, 0x80, 0x80, 13, 0x80, 0x80, 0x80, 14, 0x80, 0x80, 0x80, 15, 0x80, 0x80, 0x80);
     px[0] = _mm_loadu_si128((__m128i *)srcPtrR);    /* load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
     px[1] = _mm_loadu_si128((__m128i *)srcPtrG);    /* load [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
     px[2] = _mm_loadu_si128((__m128i *)srcPtrB);    /* load [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
-    px[3] = _mm_unpackhi_epi8(px[0], pxZero);    /* unpack 8 hi-pixels of px[0] */
-    px[4] = _mm_unpackhi_epi8(px[1], pxZero);    /* unpack 8 hi-pixels of px[1] */
-    px[5] = _mm_unpackhi_epi8(px[2], pxZero);    /* unpack 8 hi-pixels of px[2] */
-    px[0] = _mm_unpacklo_epi8(px[0], pxZero);    /* unpack 8 lo-pixels of px[0] */
-    px[1] = _mm_unpacklo_epi8(px[1], pxZero);    /* unpack 8 lo-pixels of px[1] */
-    px[2] = _mm_unpacklo_epi8(px[2], pxZero);    /* unpack 8 lo-pixels of px[2] */
-    p[0] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[0], pxZero));    /* pixels 0-3 of original px[0] containing 16 R values */
-    p[1] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[0], pxZero));    /* pixels 4-7 of original px[0] containing 16 R values */
-    p[2] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[3], pxZero));    /* pixels 8-11 of original px[0] containing 16 R values */
-    p[3] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[3], pxZero));    /* pixels 12-15 of original px[0] containing 16 R values */
-    p[4] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[1], pxZero));    /* pixels 0-3 of original px[1] containing 16 G values */
-    p[5] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[1], pxZero));    /* pixels 4-7 of original px[1] containing 16 G values */
-    p[6] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[4], pxZero));    /* pixels 8-11 of original px[1] containing 16 G values */
-    p[7] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[4], pxZero));    /* pixels 12-15 of original px[1] containing 16 G values */
-    p[8] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[2], pxZero));    /* pixels 0-3 of original px[1] containing 16 B values */
-    p[9] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[2], pxZero));    /* pixels 4-7 of original px[1] containing 16 B values */
-    p[10] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[5], pxZero));    /* pixels 8-11 of original px[1] containing 16 B values */
-    p[11] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[5], pxZero));    /* pixels 12-15 of original px[1] containing 16 B values */
+    p[0] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], mask0));    /* Contains R01-04 */
+    p[1] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], mask1));    /* Contains R05-08 */
+    p[2] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], mask2));    /* Contains R09-12 */
+    p[3] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], mask3));    /* Contains R13-16 */
+    p[4] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], mask0));    /* Contains G01-04 */
+    p[5] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], mask1));    /* Contains G05-08 */
+    p[6] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], mask2));    /* Contains G09-12 */
+    p[7] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], mask3));    /* Contains G13-16 */
+    p[8] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], mask0));    /* Contains B01-04 */
+    p[9] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], mask1));    /* Contains B05-08 */
+    p[10] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], mask2));    /* Contains B09-12 */
+    p[11] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], mask3));    /* Contains B13-16 */
 
     return RPP_SUCCESS;
 }
@@ -152,31 +241,31 @@ inline RppStatus rpp_store48_f32pln3_to_u8pkd3(Rpp8u *dstPtr, __m128 *p)
 {
     __m128i px[7];
     __m128i pxMask = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 12, 13, 14, 15);
-    __m128 pZero = _mm_setzero_ps();
+    __m128i pxZero = _mm_setzero_si128();
 
     px[4] = _mm_cvtps_epi32(p[0]);    /* convert to int32 for R01-04 */
     px[5] = _mm_cvtps_epi32(p[4]);    /* convert to int32 for G01-04 */
     px[6] = _mm_cvtps_epi32(p[8]);    /* convert to int32 for B01-04 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R01-04|G01-04 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B01-04|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B01-04|X01-04 */
     px[0] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R01|R02|R03|R04|G01|G02|G03|G04|B01|B02|B03|B04|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[1]);    /* convert to int32 for R05-08 */
     px[5] = _mm_cvtps_epi32(p[5]);    /* convert to int32 for G05-08 */
     px[6] = _mm_cvtps_epi32(p[9]);    /* convert to int32 for B05-08 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R05-08|G05-08 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B05-08|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B05-08|X01-04 */
     px[1] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R05|R06|R07|R08|G05|G06|G07|G08|B05|B06|B07|B08|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[2]);    /* convert to int32 for R09-12 */
     px[5] = _mm_cvtps_epi32(p[6]);    /* convert to int32 for G09-12 */
     px[6] = _mm_cvtps_epi32(p[10]);    /* convert to int32 for B09-12 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R09-12|G09-12 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B09-12|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B09-12|X01-04 */
     px[2] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R09|R10|R11|R12|G09|G10|G11|G12|B09|B10|B11|B12|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[3]);    /* convert to int32 for R13-16 */
     px[5] = _mm_cvtps_epi32(p[7]);    /* convert to int32 for G13-16 */
     px[6] = _mm_cvtps_epi32(p[11]);    /* convert to int32 for B13-16 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R13-16|G13-16 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B13-16|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B13-16|X01-04 */
     px[3] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R13|R14|R15|R16|G13|G14|G15|G16|B13|B14|B15|B16|00|00|00|00] */
     px[0] = _mm_shuffle_epi8(px[0], pxMask);    /* shuffle to get [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|00|00|00|00] */
     px[1] = _mm_shuffle_epi8(px[1], pxMask);    /* shuffle to get [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|00|00|00|00] */
@@ -225,9 +314,9 @@ inline RppStatus rpp_store16_f32_to_u8(Rpp8u *dstPtr, __m128 *p)
 inline RppStatus rpp_load12_f32pkd3_to_f32pln3(Rpp32f *srcPtr, __m128 *p)
 {
     p[0] = _mm_loadu_ps(srcPtr);
-    p[1] = _mm_loadu_ps(srcPtr + 3);
-    p[2] = _mm_loadu_ps(srcPtr + 6);
-    p[3] = _mm_loadu_ps(srcPtr + 9);
+    p[1] = _mm_loadu_ps(&srcPtr[3]);
+    p[2] = _mm_loadu_ps(&srcPtr[6]);
+    p[3] = _mm_loadu_ps(&srcPtr[9]);
     _MM_TRANSPOSE4_PS(p[0], p[1], p[2], p[3]);
 
     return RPP_SUCCESS;
@@ -255,9 +344,9 @@ inline RppStatus rpp_store12_f32pln3_to_f32pkd3(Rpp32f *dstPtr, __m128 *p)
 {
     _MM_TRANSPOSE4_PS(p[0], p[1], p[2], p[3]);
     _mm_storeu_ps(dstPtr, p[0]);
-    _mm_storeu_ps(dstPtr + 3, p[1]);
-    _mm_storeu_ps(dstPtr + 6, p[2]);
-    _mm_storeu_ps(dstPtr + 9, p[3]);
+    _mm_storeu_ps(&dstPtr[3], p[1]);
+    _mm_storeu_ps(&dstPtr[6], p[2]);
+    _mm_storeu_ps(&dstPtr[9], p[3]);
 
     return RPP_SUCCESS;
 }
@@ -278,43 +367,27 @@ inline RppStatus rpp_store4_f32_to_f32(Rpp32f *dstPtr, __m128 *p)
 
 inline RppStatus rpp_load48_i8pkd3_to_f32pln3(Rpp8s *srcPtr, __m128 *p)
 {
-    __m128i px[8];
-    __m128i pxMask = _mm_setr_epi8(0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11, 12, 13, 14, 15);
-    __m128i pxZero = _mm_setzero_si128();
+    __m128i px[4];
     __m128i pxConvertI8 = _mm_set1_epi8((char)128);
-
-    px[0] = _mm_loadu_si128((__m128i *)srcPtr);           /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04 */
-    px[1] = _mm_loadu_si128((__m128i *)(srcPtr + 12));    /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08 */
-    px[2] = _mm_loadu_si128((__m128i *)(srcPtr + 24));    /* load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12 \ */
-    px[3] = _mm_loadu_si128((__m128i *)(srcPtr + 36));    /* load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16 \ */
-    px[0] = _mm_shuffle_epi8(px[0], pxMask);    /* shuffle to get [R01|R02|R03|R04|G01|G02|G03|G04 || B01|B02|B03|B04|R05|G05|B05|R06] - Need R01-04, G01-04, B01-04 */
-    px[1] = _mm_shuffle_epi8(px[1], pxMask);    /* shuffle to get [R05|R06|R07|R08|G05|G06|G07|G08 || B05|B06|B07|B08|R09|G09|B09|R10] - Need R05-08, G05-08, B05-08 */
-    px[2] = _mm_shuffle_epi8(px[2], pxMask);    /* shuffle to get [R09|R10|R11|R12|G09|G10|G11|G12 || B09|B10|B11|B12|R13|G13|B13|R14] - Need R09-12, G09-12, B09-12 */
-    px[3] = _mm_shuffle_epi8(px[3], pxMask);    /* shuffle to get [R13|R14|R15|R16|G13|G14|G15|G16 || B13|B14|B15|B16|R17|G17|B17|R18] - Need R13-16, G13-16, B13-16 */
-    px[0] = _mm_add_epi8(px[0], pxConvertI8);    /* convert to u8 for px0 compute */
-    px[1] = _mm_add_epi8(px[1], pxConvertI8);    /* convert to u8 for px1 compute */
-    px[2] = _mm_add_epi8(px[2], pxConvertI8);    /* convert to u8 for px2 compute */
-    px[3] = _mm_add_epi8(px[3], pxConvertI8);    /* convert to u8 for px3 compute */
-    px[4] = _mm_unpackhi_epi8(px[0], pxZero);    /* unpack 8 hi-pixels of px[0] */
-    px[5] = _mm_unpackhi_epi8(px[1], pxZero);    /* unpack 8 hi-pixels of px[1] */
-    px[6] = _mm_unpackhi_epi8(px[2], pxZero);    /* unpack 8 hi-pixels of px[2] */
-    px[7] = _mm_unpackhi_epi8(px[3], pxZero);    /* unpack 8 hi-pixels of px[3] */
-    px[0] = _mm_unpacklo_epi8(px[0], pxZero);    /* unpack 8 lo-pixels of px[0] */
-    px[1] = _mm_unpacklo_epi8(px[1], pxZero);    /* unpack 8 lo-pixels of px[1] */
-    px[2] = _mm_unpacklo_epi8(px[2], pxZero);    /* unpack 8 lo-pixels of px[2] */
-    px[3] = _mm_unpacklo_epi8(px[3], pxZero);    /* unpack 8 lo-pixels of px[3] */
-    p[0] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[0], pxZero));    /* unpack 4 lo-pixels of px[0] - Contains R01-04 */
-    p[1] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[1], pxZero));    /* unpack 4 lo-pixels of px[1] - Contains R05-08 */
-    p[2] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[2], pxZero));    /* unpack 4 lo-pixels of px[2] - Contains R09-12 */
-    p[3] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[3], pxZero));    /* unpack 4 lo-pixels of px[3] - Contains R13-16 */
-    p[4] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[0], pxZero));    /* unpack 4 hi-pixels of px[0] - Contains G01-04 */
-    p[5] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[1], pxZero));    /* unpack 4 hi-pixels of px[1] - Contains G05-08 */
-    p[6] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[2], pxZero));    /* unpack 4 hi-pixels of px[2] - Contains G09-12 */
-    p[7] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[3], pxZero));    /* unpack 4 hi-pixels of px[3] - Contains G13-16 */
-    p[8] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[4], pxZero));    /* unpack 4 lo-pixels of px[4] - Contains B01-04 */
-    p[9] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[5], pxZero));    /* unpack 4 lo-pixels of px[5] - Contains B05-08 */
-    p[10] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[6], pxZero));    /* unpack 4 lo-pixels of px[6] - Contains B09-12 */
-    p[11] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[7], pxZero));    /* unpack 4 lo-pixels of px[7] - Contains B13-16 */
+    __m128i maskR = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80);
+    __m128i maskG = _mm_setr_epi8(1, 0x80, 0x80, 0x80, 4, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80);
+    __m128i maskB = _mm_setr_epi8(2, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 8, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
+    px[0] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtr));           /* add I8 conversion param to load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04 */
+    px[1] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + 12)));    /* add I8 conversion param to load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08 */
+    px[2] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + 24)));    /* add I8 conversion param to load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12 */
+    px[3] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + 36)));    /* add I8 conversion param to load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16 */
+    p[0] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], maskR));    /* Contains R01-04 */
+    p[1] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], maskR));    /* Contains R05-08 */
+    p[2] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], maskR));    /* Contains R09-12 */
+    p[3] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[3], maskR));    /* Contains R13-16 */
+    p[4] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], maskG));    /* Contains G01-04 */
+    p[5] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], maskG));    /* Contains G05-08 */
+    p[6] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], maskG));    /* Contains G09-12 */
+    p[7] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[3], maskG));    /* Contains G13-16 */
+    p[8] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], maskB));    /* Contains B01-04 */
+    p[9] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], maskB));    /* Contains B05-08 */
+    p[10] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], maskB));    /* Contains B09-12 */
+    p[11] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[3], maskB));    /* Contains B13-16 */
 
     return RPP_SUCCESS;
 }
@@ -357,34 +430,27 @@ inline RppStatus rpp_store48_f32pln3_to_i8pln3(Rpp8s *dstPtrR, Rpp8s *dstPtrG, R
 
 inline RppStatus rpp_load48_i8pln3_to_f32pln3(Rpp8s *srcPtrR, Rpp8s *srcPtrG, Rpp8s *srcPtrB, __m128 *p)
 {
-    __m128i px[6];
-    __m128i pxZero = _mm_setzero_si128();
+    __m128i px[3];
     __m128i pxConvertI8 = _mm_set1_epi8((char)128);
-
-    px[0] = _mm_loadu_si128((__m128i *)srcPtrR);    /* load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
-    px[1] = _mm_loadu_si128((__m128i *)srcPtrG);    /* load [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
-    px[2] = _mm_loadu_si128((__m128i *)srcPtrB);    /* load [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
-    px[0] = _mm_add_epi8(px[0], pxConvertI8);    /* convert to u8 for px0 compute */
-    px[1] = _mm_add_epi8(px[1], pxConvertI8);    /* convert to u8 for px1 compute */
-    px[2] = _mm_add_epi8(px[2], pxConvertI8);    /* convert to u8 for px2 compute */
-    px[3] = _mm_unpackhi_epi8(px[0], pxZero);    /* unpack 8 hi-pixels of px[0] */
-    px[4] = _mm_unpackhi_epi8(px[1], pxZero);    /* unpack 8 hi-pixels of px[1] */
-    px[5] = _mm_unpackhi_epi8(px[2], pxZero);    /* unpack 8 hi-pixels of px[2] */
-    px[0] = _mm_unpacklo_epi8(px[0], pxZero);    /* unpack 8 lo-pixels of px[0] */
-    px[1] = _mm_unpacklo_epi8(px[1], pxZero);    /* unpack 8 lo-pixels of px[1] */
-    px[2] = _mm_unpacklo_epi8(px[2], pxZero);    /* unpack 8 lo-pixels of px[2] */
-    p[0] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[0], pxZero));    /* pixels 0-3 of original px[0] containing 16 R values */
-    p[1] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[0], pxZero));    /* pixels 4-7 of original px[0] containing 16 R values */
-    p[2] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[3], pxZero));    /* pixels 8-11 of original px[0] containing 16 R values */
-    p[3] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[3], pxZero));    /* pixels 12-15 of original px[0] containing 16 R values */
-    p[4] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[1], pxZero));    /* pixels 0-3 of original px[1] containing 16 G values */
-    p[5] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[1], pxZero));    /* pixels 4-7 of original px[1] containing 16 G values */
-    p[6] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[4], pxZero));    /* pixels 8-11 of original px[1] containing 16 G values */
-    p[7] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[4], pxZero));    /* pixels 12-15 of original px[1] containing 16 G values */
-    p[8] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[2], pxZero));    /* pixels 0-3 of original px[1] containing 16 B values */
-    p[9] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[2], pxZero));    /* pixels 4-7 of original px[1] containing 16 B values */
-    p[10] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(px[5], pxZero));    /* pixels 8-11 of original px[1] containing 16 B values */
-    p[11] = _mm_cvtepi32_ps(_mm_unpackhi_epi16(px[5], pxZero));    /* pixels 12-15 of original px[1] containing 16 B values */
+    __m128i mask0 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80);
+    __m128i mask1 = _mm_setr_epi8(4, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80);
+    __m128i mask2 = _mm_setr_epi8(8, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
+    __m128i mask3 = _mm_setr_epi8(12, 0x80, 0x80, 0x80, 13, 0x80, 0x80, 0x80, 14, 0x80, 0x80, 0x80, 15, 0x80, 0x80, 0x80);
+    px[0] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrR));    /* add I8 conversion param to load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
+    px[1] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrG));    /* add I8 conversion param to load [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
+    px[2] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrB));    /* add I8 conversion param to load [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
+    p[0] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], mask0));    /* Contains R01-04 */
+    p[1] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], mask1));    /* Contains R05-08 */
+    p[2] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], mask2));    /* Contains R09-12 */
+    p[3] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[0], mask3));    /* Contains R13-16 */
+    p[4] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], mask0));    /* Contains G01-04 */
+    p[5] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], mask1));    /* Contains G05-08 */
+    p[6] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], mask2));    /* Contains G09-12 */
+    p[7] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[1], mask3));    /* Contains G13-16 */
+    p[8] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], mask0));    /* Contains B01-04 */
+    p[9] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], mask1));    /* Contains B05-08 */
+    p[10] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], mask2));    /* Contains B09-12 */
+    p[11] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px[2], mask3));    /* Contains B13-16 */
 
     return RPP_SUCCESS;
 }
@@ -394,31 +460,31 @@ inline RppStatus rpp_store48_f32pln3_to_i8pkd3(Rpp8s *dstPtr, __m128 *p)
     __m128i px[7];
     __m128i pxMask = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 12, 13, 14, 15);
     __m128i pxConvertI8 = _mm_set1_epi8((char)128);
-    __m128 pZero = _mm_setzero_ps();
+    __m128i pxZero = _mm_setzero_si128();
 
     px[4] = _mm_cvtps_epi32(p[0]);    /* convert to int32 for R01-04 */
     px[5] = _mm_cvtps_epi32(p[4]);    /* convert to int32 for G01-04 */
     px[6] = _mm_cvtps_epi32(p[8]);    /* convert to int32 for B01-04 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R01-04|G01-04 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B01-04|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B01-04|X01-04 */
     px[0] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R01|R02|R03|R04|G01|G02|G03|G04|B01|B02|B03|B04|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[1]);    /* convert to int32 for R05-08 */
     px[5] = _mm_cvtps_epi32(p[5]);    /* convert to int32 for G05-08 */
     px[6] = _mm_cvtps_epi32(p[9]);    /* convert to int32 for B05-08 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R05-08|G05-08 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B05-08|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B05-08|X01-04 */
     px[1] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R05|R06|R07|R08|G05|G06|G07|G08|B05|B06|B07|B08|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[2]);    /* convert to int32 for R09-12 */
     px[5] = _mm_cvtps_epi32(p[6]);    /* convert to int32 for G09-12 */
     px[6] = _mm_cvtps_epi32(p[10]);    /* convert to int32 for B09-12 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R09-12|G09-12 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B09-12|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B09-12|X01-04 */
     px[2] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R09|R10|R11|R12|G09|G10|G11|G12|B09|B10|B11|B12|00|00|00|00] */
     px[4] = _mm_cvtps_epi32(p[3]);    /* convert to int32 for R13-16 */
     px[5] = _mm_cvtps_epi32(p[7]);    /* convert to int32 for G13-16 */
     px[6] = _mm_cvtps_epi32(p[11]);    /* convert to int32 for B13-16 */
     px[4] = _mm_packus_epi32(px[4], px[5]);    /* pack pixels 0-7 as R13-16|G13-16 */
-    px[5] = _mm_packus_epi32(px[6], pZero);    /* pack pixels 8-15 as B13-16|X01-04 */
+    px[5] = _mm_packus_epi32(px[6], pxZero);    /* pack pixels 8-15 as B13-16|X01-04 */
     px[3] = _mm_packus_epi16(px[4], px[5]);    /* pack pixels 0-15 as [R13|R14|R15|R16|G13|G14|G15|G16|B13|B14|B15|B16|00|00|00|00] */
     px[0] = _mm_sub_epi8(px[0], pxConvertI8);    /* convert back to i8 for px0 store */
     px[1] = _mm_sub_epi8(px[1], pxConvertI8);    /* convert back to i8 for px1 store */
@@ -472,6 +538,316 @@ inline RppStatus rpp_store16_f32_to_i8(Rpp8s *dstPtr, __m128 *p)
     return RPP_SUCCESS;
 }
 
+inline RppStatus rpp_normalize48(__m128 *p)
+{
+    p[0] = _mm_mul_ps(p[0], xmm_p1op255);
+    p[1] = _mm_mul_ps(p[1], xmm_p1op255);
+    p[2] = _mm_mul_ps(p[2], xmm_p1op255);
+    p[3] = _mm_mul_ps(p[3], xmm_p1op255);
+    p[4] = _mm_mul_ps(p[4], xmm_p1op255);
+    p[5] = _mm_mul_ps(p[5], xmm_p1op255);
+    p[6] = _mm_mul_ps(p[6], xmm_p1op255);
+    p[7] = _mm_mul_ps(p[7], xmm_p1op255);
+    p[8] = _mm_mul_ps(p[8], xmm_p1op255);
+    p[9] = _mm_mul_ps(p[9], xmm_p1op255);
+    p[10] = _mm_mul_ps(p[10], xmm_p1op255);
+    p[11] = _mm_mul_ps(p[11], xmm_p1op255);
+
+    return RPP_SUCCESS;
+}
+
+// AVX loads and stores
+
+inline RppStatus rpp_load48_u8pkd3_to_f32pln3_avx(Rpp8u *srcPtr, __m256 *p)
+{
+    __m128i px[4];
+    __m128i maskR = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80);
+    __m128i maskG = _mm_setr_epi8(1, 0x80, 0x80, 0x80, 4, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80);
+    __m128i maskB = _mm_setr_epi8(2, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 8, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
+    px[0] = _mm_loadu_si128((__m128i *)srcPtr);           /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04 */
+    px[1] = _mm_loadu_si128((__m128i *)(srcPtr + 12));    /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08 */
+    px[2] = _mm_loadu_si128((__m128i *)(srcPtr + 24));    /* load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12 */
+    px[3] = _mm_loadu_si128((__m128i *)(srcPtr + 36));    /* load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16 */
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], maskR), _mm_shuffle_epi8(px[1], maskR)));    /* Contains R01-08 */
+    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], maskR), _mm_shuffle_epi8(px[3], maskR)));    /* Contains R09-16 */
+    p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], maskG), _mm_shuffle_epi8(px[1], maskG)));    /* Contains G01-08 */
+    p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], maskG), _mm_shuffle_epi8(px[3], maskG)));    /* Contains G09-16 */
+    p[4] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], maskB), _mm_shuffle_epi8(px[1], maskB)));    /* Contains B01-08 */
+    p[5] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], maskB), _mm_shuffle_epi8(px[3], maskB)));    /* Contains B09-16 */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store48_f32pln3_to_u8pln3_avx(Rpp8u *dstPtrR, Rpp8u *dstPtrG, Rpp8u *dstPtrB, __m256 *p)
+{
+    __m256i pxCvt;
+    __m128i px[4];
+
+    pxCvt = _mm256_cvtps_epi32(p[0]);
+    px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 0-7 for R */
+    pxCvt = _mm256_cvtps_epi32(p[1]);
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 8-15 for R */
+    px[0] = _mm_packus_epi16(px[2], px[3]);    /* pack pixels 0-15 for R */
+    pxCvt = _mm256_cvtps_epi32(p[2]);
+    px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 0-7 for G */
+    pxCvt = _mm256_cvtps_epi32(p[3]);
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 8-15 for G */
+    px[1] = _mm_packus_epi16(px[2], px[3]);    /* pack pixels 0-15 for G */
+    pxCvt = _mm256_cvtps_epi32(p[4]);
+    px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 0-7 for B */
+    pxCvt = _mm256_cvtps_epi32(p[5]);
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 8-15 for B */
+    px[2] = _mm_packus_epi16(px[2], px[3]);    /* pack pixels 0-15 for B */
+    _mm_storeu_si128((__m128i *)dstPtrR, px[0]);    /* store [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
+    _mm_storeu_si128((__m128i *)dstPtrG, px[1]);    /* store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
+    _mm_storeu_si128((__m128i *)dstPtrB, px[2]);    /* store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_load48_u8pln3_to_f32pln3_avx(Rpp8u *srcPtrR, Rpp8u *srcPtrG, Rpp8u *srcPtrB, __m256 *p)
+{
+    __m128i px[3];
+    __m128i mask0 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80);
+    __m128i mask1 = _mm_setr_epi8(4, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80);
+    __m128i mask2 = _mm_setr_epi8(8, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
+    __m128i mask3 = _mm_setr_epi8(12, 0x80, 0x80, 0x80, 13, 0x80, 0x80, 0x80, 14, 0x80, 0x80, 0x80, 15, 0x80, 0x80, 0x80);
+    px[0] = _mm_loadu_si128((__m128i *)srcPtrR);    /* load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
+    px[1] = _mm_loadu_si128((__m128i *)srcPtrG);    /* load [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
+    px[2] = _mm_loadu_si128((__m128i *)srcPtrB);    /* load [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], mask0), _mm_shuffle_epi8(px[0], mask1)));    /* Contains R01-08 */
+    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], mask2), _mm_shuffle_epi8(px[0], mask3)));    /* Contains R09-16 */
+    p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[1], mask0), _mm_shuffle_epi8(px[1], mask1)));    /* Contains G01-08 */
+    p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[1], mask2), _mm_shuffle_epi8(px[1], mask3)));    /* Contains G09-16 */
+    p[4] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], mask0), _mm_shuffle_epi8(px[2], mask1)));    /* Contains B01-08 */
+    p[5] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], mask2), _mm_shuffle_epi8(px[2], mask3)));    /* Contains B09-16 */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store48_f32pln3_to_u8pkd3_avx(Rpp8u *dstPtr, __m256 *p)
+{
+    __m256i pxCvt[3];
+    __m128i px[5];
+    __m128i pxMask = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 12, 13, 14, 15);
+
+    pxCvt[0] = _mm256_cvtps_epi32(p[0]);    /* convert to int32 for R01-08 */
+    pxCvt[1] = _mm256_cvtps_epi32(p[2]);    /* convert to int32 for G01-08 */
+    pxCvt[2] = _mm256_cvtps_epi32(p[4]);    /* convert to int32 for B01-08 */
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 0), _mm256_extracti128_si256(pxCvt[1], 0));    /* pack pixels 0-7 as R01-04|G01-04 */
+    px[4] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 0), xmm_px0);    /* pack pixels 8-15 as B01-04|X01-04 */
+    px[0] = _mm_packus_epi16(px[3], px[4]);    /* pack pixels 0-15 as [R01|R02|R03|R04|G01|G02|G03|G04|B01|B02|B03|B04|00|00|00|00] */
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 1), _mm256_extracti128_si256(pxCvt[1], 1));    /* pack pixels 0-7 as R05-08|G05-08 */
+    px[4] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 1), xmm_px0);    /* pack pixels 8-15 as B05-08|X05-08 */
+    px[1] = _mm_packus_epi16(px[3], px[4]);    /* pack pixels 0-15 as [R05|R06|R07|R08|G05|G06|G07|G08|B05|B06|B07|B08|00|00|00|00] */
+    pxCvt[0] = _mm256_cvtps_epi32(p[1]);    /* convert to int32 for R09-16 */
+    pxCvt[1] = _mm256_cvtps_epi32(p[3]);    /* convert to int32 for G09-16 */
+    pxCvt[2] = _mm256_cvtps_epi32(p[5]);    /* convert to int32 for B09-16 */
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 0), _mm256_extracti128_si256(pxCvt[1], 0));    /* pack pixels 0-7 as R09-12|G09-12 */
+    px[4] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 0), xmm_px0);    /* pack pixels 8-15 as B09-12|X09-12 */
+    px[2] = _mm_packus_epi16(px[3], px[4]);    /* pack pixels 0-15 as [R09|R10|R11|R12|G09|G10|G11|G12|B09|B10|B11|B12|00|00|00|00] */
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 1), _mm256_extracti128_si256(pxCvt[1], 1));    /* pack pixels 0-7 as R13-16|G13-16 */
+    px[4] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 1), xmm_px0);    /* pack pixels 8-15 as B13-16|X13-16 */
+    px[3] = _mm_packus_epi16(px[3], px[4]);    /* pack pixels 0-15 as [R13|R14|R15|R16|G13|G14|G15|G16|B13|B14|B15|B16|00|00|00|00] */
+    px[0] = _mm_shuffle_epi8(px[0], pxMask);    /* shuffle to get [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|00|00|00|00] */
+    px[1] = _mm_shuffle_epi8(px[1], pxMask);    /* shuffle to get [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|00|00|00|00] */
+    px[2] = _mm_shuffle_epi8(px[2], pxMask);    /* shuffle to get [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|00|00|00|00] */
+    px[3] = _mm_shuffle_epi8(px[3], pxMask);    /* shuffle to get [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|00|00|00|00] */
+    _mm_storeu_si128((__m128i *)dstPtr, px[0]);           /* store [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|00|00|00|00] */
+    _mm_storeu_si128((__m128i *)(dstPtr + 12), px[1]);    /* store [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|00|00|00|00] */
+    _mm_storeu_si128((__m128i *)(dstPtr + 24), px[2]);    /* store [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|00|00|00|00] */
+    _mm_storeu_si128((__m128i *)(dstPtr + 36), px[3]);    /* store [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|00|00|00|00] */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
+{
+    __m128 p128[8];
+    p128[0] = _mm_loadu_ps(srcPtr);
+    p128[1] = _mm_loadu_ps(&srcPtr[3]);
+    p128[2] = _mm_loadu_ps(&srcPtr[6]);
+    p128[3] = _mm_loadu_ps(&srcPtr[9]);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    p128[4] = _mm_loadu_ps(&srcPtr[12]);
+    p128[5] = _mm_loadu_ps(&srcPtr[15]);
+    p128[6] = _mm_loadu_ps(&srcPtr[18]);
+    p128[7] = _mm_loadu_ps(&srcPtr[21]);
+    _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
+    p[0] = _mm256_setr_m128(p128[0], p128[4]);
+    p[1] = _mm256_setr_m128(p128[1], p128[5]);
+    p[2] = _mm256_setr_m128(p128[2], p128[6]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store24_f32pln3_to_f32pln3_avx(Rpp32f *dstPtrR, Rpp32f *dstPtrG, Rpp32f *dstPtrB, __m256 *p)
+{
+    _mm256_storeu_ps(dstPtrR, p[0]);
+    _mm256_storeu_ps(dstPtrG, p[1]);
+    _mm256_storeu_ps(dstPtrB, p[2]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_load24_f32pln3_to_f32pln3_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, Rpp32f *srcPtrB, __m256 *p)
+{
+    p[0] = _mm256_loadu_ps(srcPtrR);
+    p[1] = _mm256_loadu_ps(srcPtrG);
+    p[2] = _mm256_loadu_ps(srcPtrB);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store24_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
+{
+    __m128 p128[8];
+    p128[0] = _mm256_extractf128_ps(p[0], 0);
+    p128[1] = _mm256_extractf128_ps(p[1], 0);
+    p128[2] = _mm256_extractf128_ps(p[2], 0);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    _mm_storeu_ps(dstPtr, p128[0]);
+    _mm_storeu_ps(&dstPtr[3], p128[1]);
+    _mm_storeu_ps(&dstPtr[6], p128[2]);
+    _mm_storeu_ps(&dstPtr[9], p128[3]);
+    p128[0] = _mm256_extractf128_ps(p[0], 1);
+    p128[1] = _mm256_extractf128_ps(p[1], 1);
+    p128[2] = _mm256_extractf128_ps(p[2], 1);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    _mm_storeu_ps(&dstPtr[12], p128[0]);
+    _mm_storeu_ps(&dstPtr[15], p128[1]);
+    _mm_storeu_ps(&dstPtr[18], p128[2]);
+    _mm_storeu_ps(&dstPtr[21], p128[3]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_load48_i8pkd3_to_f32pln3_avx(Rpp8s *srcPtr, __m256 *p)
+{
+    __m128i px[4];
+    __m128i pxConvertI8 = _mm_set1_epi8((char)128);
+    __m128i maskR = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80);
+    __m128i maskG = _mm_setr_epi8(1, 0x80, 0x80, 0x80, 4, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80);
+    __m128i maskB = _mm_setr_epi8(2, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 8, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
+    px[0] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtr));           /* add I8 conversion param to load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04 */
+    px[1] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + 12)));    /* add I8 conversion param to load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08 */
+    px[2] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + 24)));    /* add I8 conversion param to load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12 */
+    px[3] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + 36)));    /* add I8 conversion param to load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16 */
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], maskR), _mm_shuffle_epi8(px[1], maskR)));    /* Contains R01-08 */
+    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], maskR), _mm_shuffle_epi8(px[3], maskR)));    /* Contains R09-16 */
+    p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], maskG), _mm_shuffle_epi8(px[1], maskG)));    /* Contains G01-08 */
+    p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], maskG), _mm_shuffle_epi8(px[3], maskG)));    /* Contains G09-16 */
+    p[4] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], maskB), _mm_shuffle_epi8(px[1], maskB)));    /* Contains B01-08 */
+    p[5] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], maskB), _mm_shuffle_epi8(px[3], maskB)));    /* Contains B09-16 */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store48_f32pln3_to_i8pln3_avx(Rpp8s *dstPtrR, Rpp8s *dstPtrG, Rpp8s *dstPtrB, __m256 *p)
+{
+    __m256i pxCvt;
+    __m128i px[4];
+    __m128i pxConvertI8 = _mm_set1_epi8((char)128);
+
+    pxCvt = _mm256_cvtps_epi32(p[0]);
+    px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 0-7 for R */
+    pxCvt = _mm256_cvtps_epi32(p[1]);
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 8-15 for R */
+    px[0] = _mm_packus_epi16(px[2], px[3]);    /* pack pixels 0-15 for R */
+    pxCvt = _mm256_cvtps_epi32(p[2]);
+    px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 0-7 for G */
+    pxCvt = _mm256_cvtps_epi32(p[3]);
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 8-15 for G */
+    px[1] = _mm_packus_epi16(px[2], px[3]);    /* pack pixels 0-15 for G */
+    pxCvt = _mm256_cvtps_epi32(p[4]);
+    px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 0-7 for B */
+    pxCvt = _mm256_cvtps_epi32(p[5]);
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 8-15 for B */
+    px[2] = _mm_packus_epi16(px[2], px[3]);    /* pack pixels 0-15 for B */
+    px[0] = _mm_sub_epi8(px[0], pxConvertI8);    /* convert back to i8 for px0 store */
+    px[1] = _mm_sub_epi8(px[1], pxConvertI8);    /* convert back to i8 for px1 store */
+    px[2] = _mm_sub_epi8(px[2], pxConvertI8);    /* convert back to i8 for px2 store */
+    _mm_storeu_si128((__m128i *)dstPtrR, px[0]);    /* store [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
+    _mm_storeu_si128((__m128i *)dstPtrG, px[1]);    /* store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
+    _mm_storeu_si128((__m128i *)dstPtrB, px[2]);    /* store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_load48_i8pln3_to_f32pln3_avx(Rpp8s *srcPtrR, Rpp8s *srcPtrG, Rpp8s *srcPtrB, __m256 *p)
+{
+    __m128i px[3];
+    __m128i pxConvertI8 = _mm_set1_epi8((char)128);
+    __m128i mask0 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80);
+    __m128i mask1 = _mm_setr_epi8(4, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80);
+    __m128i mask2 = _mm_setr_epi8(8, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
+    __m128i mask3 = _mm_setr_epi8(12, 0x80, 0x80, 0x80, 13, 0x80, 0x80, 0x80, 14, 0x80, 0x80, 0x80, 15, 0x80, 0x80, 0x80);
+    px[0] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrR));    /* add I8 conversion param to load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
+    px[1] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrG));    /* add I8 conversion param to load [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
+    px[2] = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrB));    /* add I8 conversion param to load [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], mask0), _mm_shuffle_epi8(px[0], mask1)));    /* Contains R01-08 */
+    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], mask2), _mm_shuffle_epi8(px[0], mask3)));    /* Contains R09-16 */
+    p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[1], mask0), _mm_shuffle_epi8(px[1], mask1)));    /* Contains G01-08 */
+    p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[1], mask2), _mm_shuffle_epi8(px[1], mask3)));    /* Contains G09-16 */
+    p[4] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], mask0), _mm_shuffle_epi8(px[2], mask1)));    /* Contains B01-08 */
+    p[5] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], mask2), _mm_shuffle_epi8(px[2], mask3)));    /* Contains B09-16 */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store48_f32pln3_to_i8pkd3_avx(Rpp8s *dstPtr, __m256 *p)
+{
+    __m256i pxCvt[3];
+    __m128i px[5];
+    __m128i pxMask = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 12, 13, 14, 15);
+    __m128i pxConvertI8 = _mm_set1_epi8((char)128);
+
+    pxCvt[0] = _mm256_cvtps_epi32(p[0]);    /* convert to int32 for R01-08 */
+    pxCvt[1] = _mm256_cvtps_epi32(p[2]);    /* convert to int32 for G01-08 */
+    pxCvt[2] = _mm256_cvtps_epi32(p[4]);    /* convert to int32 for B01-08 */
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 0), _mm256_extracti128_si256(pxCvt[1], 0));    /* pack pixels 0-7 as R01-04|G01-04 */
+    px[4] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 0), xmm_px0);    /* pack pixels 8-15 as B01-04|X01-04 */
+    px[0] = _mm_packus_epi16(px[3], px[4]);    /* pack pixels 0-15 as [R01|R02|R03|R04|G01|G02|G03|G04|B01|B02|B03|B04|00|00|00|00] */
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 1), _mm256_extracti128_si256(pxCvt[1], 1));    /* pack pixels 0-7 as R05-08|G05-08 */
+    px[4] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 1), xmm_px0);    /* pack pixels 8-15 as B05-08|X05-08 */
+    px[1] = _mm_packus_epi16(px[3], px[4]);    /* pack pixels 0-15 as [R05|R06|R07|R08|G05|G06|G07|G08|B05|B06|B07|B08|00|00|00|00] */
+    pxCvt[0] = _mm256_cvtps_epi32(p[1]);    /* convert to int32 for R09-16 */
+    pxCvt[1] = _mm256_cvtps_epi32(p[3]);    /* convert to int32 for G09-16 */
+    pxCvt[2] = _mm256_cvtps_epi32(p[5]);    /* convert to int32 for B09-16 */
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 0), _mm256_extracti128_si256(pxCvt[1], 0));    /* pack pixels 0-7 as R09-12|G09-12 */
+    px[4] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 0), xmm_px0);    /* pack pixels 8-15 as B09-12|X09-12 */
+    px[2] = _mm_packus_epi16(px[3], px[4]);    /* pack pixels 0-15 as [R09|R10|R11|R12|G09|G10|G11|G12|B09|B10|B11|B12|00|00|00|00] */
+    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 1), _mm256_extracti128_si256(pxCvt[1], 1));    /* pack pixels 0-7 as R13-16|G13-16 */
+    px[4] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 1), xmm_px0);    /* pack pixels 8-15 as B13-16|X13-16 */
+    px[3] = _mm_packus_epi16(px[3], px[4]);    /* pack pixels 0-15 as [R13|R14|R15|R16|G13|G14|G15|G16|B13|B14|B15|B16|00|00|00|00] */
+    px[0] = _mm_sub_epi8(px[0], pxConvertI8);    /* convert back to i8 for px0 store */
+    px[1] = _mm_sub_epi8(px[1], pxConvertI8);    /* convert back to i8 for px1 store */
+    px[2] = _mm_sub_epi8(px[2], pxConvertI8);    /* convert back to i8 for px2 store */
+    px[3] = _mm_sub_epi8(px[3], pxConvertI8);    /* convert back to i8 for px3 store */
+    px[0] = _mm_shuffle_epi8(px[0], pxMask);    /* shuffle to get [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|00|00|00|00] */
+    px[1] = _mm_shuffle_epi8(px[1], pxMask);    /* shuffle to get [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|00|00|00|00] */
+    px[2] = _mm_shuffle_epi8(px[2], pxMask);    /* shuffle to get [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|00|00|00|00] */
+    px[3] = _mm_shuffle_epi8(px[3], pxMask);    /* shuffle to get [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|00|00|00|00] */
+    _mm_storeu_si128((__m128i *)dstPtr, px[0]);           /* store [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|00|00|00|00] */
+    _mm_storeu_si128((__m128i *)(dstPtr + 12), px[1]);    /* store [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|00|00|00|00] */
+    _mm_storeu_si128((__m128i *)(dstPtr + 24), px[2]);    /* store [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|00|00|00|00] */
+    _mm_storeu_si128((__m128i *)(dstPtr + 36), px[3]);    /* store [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|00|00|00|00] */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_normalize48_avx(__m256 *p)
+{
+    p[0] = _mm256_mul_ps(p[0], avx_p1op255);
+    p[1] = _mm256_mul_ps(p[1], avx_p1op255);
+    p[2] = _mm256_mul_ps(p[2], avx_p1op255);
+    p[3] = _mm256_mul_ps(p[3], avx_p1op255);
+    p[4] = _mm256_mul_ps(p[4], avx_p1op255);
+    p[5] = _mm256_mul_ps(p[5], avx_p1op255);
+
+    return RPP_SUCCESS;
+}
+
 template <typename FuncType, typename... ArgTypes>
 inline RppStatus rpp_simd_load(FuncType &&rpp_simd_load_routine, ArgTypes&&... args)
 {
@@ -495,6 +871,20 @@ inline RppStatus rpp_simd_store(FuncType &&rpp_simd_store_routine, ArgTypes&&...
 #define CHECK_SIMD  0
 #define FP_BITS     16
 #define FP_MUL      (1<<FP_BITS)
+
+const __m128 xmm_full = _mm_set1_ps((float)0xFFFFFFFF);
+const __m128 xmm_sn = _mm_castsi128_ps(_mm_set1_epi32(0x80000000));
+const __m128 xmm_m6 = _mm_set1_ps((float)-6.0);
+const __m128 xmm_eps = _mm_set1_ps((float)1e-9f);
+const __m128 xmm_1o3 = _mm_set1_ps((float)1.0/3.0);
+const __m128 xmm_m4o6 = _mm_set1_ps((float) -4.0/6.0);
+const __m128 xmm_abs = _mm_set1_ps((float)0x80000000);
+
+const __m128 xmm_4o6_2o6_3o6_0  = _mm_set_ps(4.0f / 6.0f, 2.0f / 6.0f, 3.0f / 6.0f, 0.0f);
+const __m128 m6_m6_p6_p0        = _mm_set_ps(-6.0f ,-6.0f , 6.0f , 0.0f);
+const __m128 p1_p1_m2_p0        = _mm_set_ps(1.0f , 1.0f ,-2.0f , 0.0f);
+const __m128 m1_m1_m1_p1        = _mm_set_ps(-1.0f ,-1.0f ,-1.0f , 1.0f);
+
 
 SIMD_CONST_PI(full       , 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 SIMD_CONST_PI(sn         , 0x80000000, 0x80000000, 0x80000000, 0x80000000);
@@ -524,39 +914,6 @@ inline __m128i _mm_mullo_epi8(__m128i a, __m128i b)
     __m128i C = _mm_or_si128(_mm_shuffle_epi8(Clo, maskLo), _mm_shuffle_epi8(Chi, maskHi));
 
      return C;
-}
-
-inline void _mm_print_epi8(__m128i vPrintArray)
-{
-    char printArray[16];
-    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
-    printf("\n");
-    for (int ct = 0; ct < 16; ct++)
-    {
-        printf("%d ", printArray[ct]);
-    }
-}
-
-inline void _mm_print_epi32(__m128i vPrintArray)
-{
-    int printArray[4];
-    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
-    printf("\n");
-    for (int ct = 0; ct < 4; ct++)
-    {
-        printf("%d ", printArray[ct]);
-    }
-}
-
-inline void _mm_print_ps(__m128 vPrintArray)
-{
-    float printArray[4];
-    _mm_storeu_ps(printArray, vPrintArray);
-    printf("\n");
-    for (int ct = 0; ct < 4; ct++)
-    {
-        printf("%0.6f ", printArray[ct]);
-    }
 }
 
 static inline Rpp32u HorMin(__m128i pmin)
