@@ -5,8 +5,8 @@
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_runtime.h>
 #include <hip/hip_ext.h>
-#include <hip/hcc_detail/hip_vector_types.h>
-#include <hip/hcc_detail/hip_fp16.h>
+#include <hip/hip_vector_types.h>
+#include <hip/hip_fp16.h>
 #include <rppdefs.h>
 #include <vector>
 #include <half.hpp>
