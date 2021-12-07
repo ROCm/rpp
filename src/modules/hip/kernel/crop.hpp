@@ -97,11 +97,6 @@ __global__ void crop_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    // d_float24 pix_f24;
-
-    // rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr, srcIdx, srcStridesNCH.y, &pix_f24);
-    // rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, &pix_f24);
-
     rpp_hip_buffer_copy24_pln3_to_pkd3(srcPtr, srcIdx, srcStridesNCH.y, dstPtr, dstIdx);
 }
 
