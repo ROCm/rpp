@@ -23,10 +23,10 @@ THE SOFTWARE.
 #include <rppt_tensor_augmentations.h>
 #include <rppdefs.h>
 #include "rppi_validate.hpp"
-#include <hip/hcc_detail/hip_vector_types.h>
-#include <hip/hcc_detail/hip_fp16.h>
 
 #ifdef HIP_COMPILE
+    #include <hip/hcc_detail/hip_vector_types.h>
+    #include <hip/hcc_detail/hip_fp16.h>
     #include "hip/hip_tensor_augmentations.hpp"
 #elif defined(OCL_COMPILE)
     #include <cl/rpp_cl_common.hpp>
@@ -1037,6 +1037,7 @@ rppt_crop_gpu(RppPtr_t srcPtr,
               RpptRoiType roiType,
               rppHandle_t rppHandle)
 {
+#ifdef HIP_COMPILE
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         crop_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -1077,6 +1078,7 @@ rppt_crop_gpu(RppPtr_t srcPtr,
                         roiType,
                         rpp::deref(rppHandle));
     }
+#endif //backend
 
     return RPP_SUCCESS;
 }
