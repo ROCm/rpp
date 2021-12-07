@@ -583,12 +583,12 @@ rppt_color_cast_gpu(RppPtr_t srcPtr,
                     RpptRoiType roiType,
                     rppHandle_t rppHandle)
 {
+#ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
     {
         return RPP_ERROR_INVALID_ARGUMENTS;
     }
 
-#ifdef HIP_COMPILE
     Rpp32u paramIndex = 0;
     copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
     copy_param_RpptRGB(rgbTensor, rpp::deref(rppHandle));
