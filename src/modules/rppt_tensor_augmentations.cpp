@@ -25,8 +25,7 @@ THE SOFTWARE.
 #include "rppi_validate.hpp"
 
 #ifdef HIP_COMPILE
-    #include <hip/hcc_detail/hip_vector_types.h>
-    #include <hip/hcc_detail/hip_fp16.h>
+    #include <hip/hip_fp16.h>
     #include "hip/hip_tensor_augmentations.hpp"
 #elif defined(OCL_COMPILE)
     #include <cl/rpp_cl_common.hpp>

@@ -2,10 +2,7 @@
 #define RPP_HIP_COMMON_H
 
 #include "hip/rpp/handle.hpp"
-#include <hip/hip_runtime_api.h>
 #include <hip/hip_runtime.h>
-#include <hip/hip_ext.h>
-#include <hip/hip_vector_types.h>
 #include <hip/hip_fp16.h>
 #include <rppdefs.h>
 #include <vector>
