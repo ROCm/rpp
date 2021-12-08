@@ -20,6 +20,12 @@ __global__ void crop_pkd_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
+    // Little Slower - 0.789742ms
+    // d_float8 pix_f8;
+    // rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
+    // rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+
+    // Little Faster - 0.775729ms
     rpp_hip_buffer_copy8(srcPtr, srcIdx, dstPtr, dstIdx);
 }
 
@@ -43,8 +49,24 @@ __global__ void crop_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    rpp_hip_buffer_copy8(srcPtr, srcIdx, dstPtr, dstIdx);
+    // Little Slower - 0.426569ms
+    // d_float8 pix_f8;
+    // rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
+    // rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+    // if (channelsDst == 3)
+    // {
+    //     srcIdx += srcStridesNCH.y;
+    //     dstIdx += dstStridesNCH.y;
+    //     rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
+    //     rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+    //     srcIdx += srcStridesNCH.y;
+    //     dstIdx += dstStridesNCH.y;
+    //     rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
+    //     rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+    // }
 
+    // Little Faster - 0.421242ms
+    rpp_hip_buffer_copy8(srcPtr, srcIdx, dstPtr, dstIdx);
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
@@ -75,7 +97,13 @@ __global__ void crop_pkd3_pln3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    rpp_hip_buffer_copy24_pkd3_to_pln3(srcPtr, srcIdx, dstPtr, dstIdx, dstStridesNCH.y);
+    // Lot Faster - 0.42008ms
+    d_float24 pix_f24;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &pix_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &pix_f24);
+
+    // Lot Slower - 2.478058ms
+    // rpp_hip_buffer_copy24_pkd3_to_pln3(srcPtr, srcIdx, dstPtr, dstIdx, dstStridesNCH.y);
 }
 
 template <typename T>
@@ -97,7 +125,13 @@ __global__ void crop_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    rpp_hip_buffer_copy24_pln3_to_pkd3(srcPtr, srcIdx, srcStridesNCH.y, dstPtr, dstIdx);
+    // Lot Faster - 0.428492
+    d_float24 pix_f24;
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr, srcIdx, srcStridesNCH.y, &pix_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, &pix_f24);
+
+    // Lot Slower - 4.399015
+    // rpp_hip_buffer_copy24_pln3_to_pkd3(srcPtr, srcIdx, srcStridesNCH.y, dstPtr, dstIdx);
 }
 
 template <typename T>
