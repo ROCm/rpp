@@ -1160,20 +1160,20 @@ rppt_gridmask_host(RppPtr_t srcPtr,
     //                                  roiType,
     //                                  layoutParams);
     // }
-    // else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-    // {
-    //     gridmask_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-    //                                srcDescPtr,
-    //                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-    //                                dstDescPtr,
-    //                                tileWidth,
-    //                                gridRatio,
-    //                                gridAngle,
-    //                                translateVector,
-    //                                roiTensorPtrSrc,
-    //                                roiType,
-    //                                layoutParams);
-    // }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        gridmask_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                   srcDescPtr,
+                                   static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                   dstDescPtr,
+                                   tileWidth,
+                                   gridRatio,
+                                   gridAngle,
+                                   translateVector,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams);
+    }
 
     return RPP_SUCCESS;
 }
