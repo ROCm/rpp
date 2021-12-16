@@ -2119,6 +2119,20 @@ inline RppStatus compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRa
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_gridmask_masks_4_host(__m128 &pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 &pMask)
+{
+    __m128 pCalc[2];
+
+    pCalc[0] = _mm_fmadd_ps(pCol, pCosRatio, pGridRowRatio[0]);
+    pCalc[1] = _mm_fmadd_ps(pCol, pSinRatio, pGridRowRatio[1]);
+    pCalc[0] = _mm_cmpge_ps(_mm_sub_ps(pCalc[0], _mm_floor_ps(pCalc[0])), pGridRatio);
+    pCalc[1] = _mm_cmpge_ps(_mm_sub_ps(pCalc[1], _mm_floor_ps(pCalc[1])), pGridRatio);
+    pMask = _mm_or_ps(pCalc[0], pCalc[1]);
+    pCol = _mm_add_ps(pCol, xmm_p4);
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus compute_gridmask_result_48_host(__m128 *p, __m128 *pMask)
 {
     p[0] = _mm_and_ps(p[0], pMask[0]);
@@ -2143,6 +2157,22 @@ inline RppStatus compute_gridmask_result_16_host(__m128 *p, __m128 *pMask)
     p[1] = _mm_and_ps(p[1], pMask[1]);
     p[2] = _mm_and_ps(p[2], pMask[2]);
     p[3] = _mm_and_ps(p[3], pMask[3]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_gridmask_result_12_host(__m128 *p, __m128 pMask)
+{
+    p[0] = _mm_and_ps(p[0], pMask);
+    p[1] = _mm_and_ps(p[1], pMask);
+    p[2] = _mm_and_ps(p[2], pMask);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_gridmask_result_4_host(__m128 *p, __m128 pMask)
+{
+    p[0] = _mm_and_ps(p[0], pMask);
 
     return RPP_SUCCESS;
 }

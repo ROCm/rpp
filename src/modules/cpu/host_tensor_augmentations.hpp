@@ -7942,19 +7942,16 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
         translateVectorRatio.x = translateVector.x * tileWidthInv;
         translateVectorRatio.y = translateVector.y * tileWidthInv;
 
-        __m128 pCosRatio, pSinRatio, pGridRatio, pColInit[4];
+        __m128 pCosRatio, pSinRatio, pGridRatio, pColInit;
         pCosRatio = _mm_set1_ps(cosRatio);
         pSinRatio = _mm_set1_ps(sinRatio);
         pGridRatio = _mm_set1_ps(gridRatio);
-        pColInit[0] = _mm_setr_ps(0, 1, 2, 3);
-        pColInit[1] = _mm_setr_ps(4, 5, 6, 7);
-        pColInit[2] = _mm_setr_ps(8, 9, 10, 11);
-        pColInit[3] = _mm_setr_ps(12, 13, 14, 15);
+        pColInit = _mm_setr_ps(0, 1, 2, 3);
 
         // Gridmask with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~15;
+            Rpp32u alignedLength = bufferLength & ~3;
 
             Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
@@ -7974,28 +7971,25 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
                 gridRowRatio.x = -translateVectorRatio.x + i * -sinRatio;
                 gridRowRatio.y = -translateVectorRatio.y + i * cosRatio;
 
-                __m128 pGridRowRatio[2], pCol[4];
+                __m128 pGridRowRatio[2], pCol;
                 pGridRowRatio[0] = _mm_set1_ps(gridRowRatio.x);
                 pGridRowRatio[1] = _mm_set1_ps(gridRowRatio.y);
-                pCol[0] = pColInit[0];
-                pCol[1] = pColInit[1];
-                pCol[2] = pColInit[2];
-                pCol[3] = pColInit[3];
+                pCol = pColInit;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
-                    __m128 pMask[4], p[12];
-                    compute_gridmask_masks_16_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
+                    __m128 pMask, p[4];
+                    compute_gridmask_masks_4_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
 
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_gridmask_result_48_host(p, pMask);
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+                    rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    compute_gridmask_result_12_host(p, pMask);
+                    rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
-                    srcPtrTemp += 48;
-                    dstPtrTempR += 16;
-                    dstPtrTempG += 16;
-                    dstPtrTempB += 16;
+                    srcPtrTemp += 12;
+                    dstPtrTempR += 4;
+                    dstPtrTempG += 4;
+                    dstPtrTempB += 4;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -8028,7 +8022,7 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Gridmask with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~15;
+            Rpp32u alignedLength = bufferLength & ~3;
 
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB,  *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -8048,28 +8042,25 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
                 gridRowRatio.x = -translateVectorRatio.x + i * -sinRatio;
                 gridRowRatio.y = -translateVectorRatio.y + i * cosRatio;
 
-                __m128 pGridRowRatio[2], pCol[4];
+                __m128 pGridRowRatio[2], pCol;
                 pGridRowRatio[0] = _mm_set1_ps(gridRowRatio.x);
                 pGridRowRatio[1] = _mm_set1_ps(gridRowRatio.y);
-                pCol[0] = pColInit[0];
-                pCol[1] = pColInit[1];
-                pCol[2] = pColInit[2];
-                pCol[3] = pColInit[3];
+                pCol = pColInit;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
-                    __m128 pMask[4], p[12];
-                    compute_gridmask_masks_16_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
+                    __m128 pMask, p[4];
+                    compute_gridmask_masks_4_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
 
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_gridmask_result_48_host(p, pMask);
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    compute_gridmask_result_12_host(p, pMask);
+                    rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
 
-                    srcPtrTempR += 16;
-                    srcPtrTempG += 16;
-                    srcPtrTempB += 16;
-                    dstPtrTemp += 48;
+                    srcPtrTempR += 4;
+                    srcPtrTempG += 4;
+                    srcPtrTempB += 4;
+                    dstPtrTemp += 12;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -8102,7 +8093,7 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Gridmask without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~15;
+            Rpp32u alignedLength = bufferLength & ~3;
 
             Rpp32f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -8118,26 +8109,23 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
                 gridRowRatio.x = -translateVectorRatio.x + i * -sinRatio;
                 gridRowRatio.y = -translateVectorRatio.y + i * cosRatio;
 
-                __m128 pGridRowRatio[2], pCol[4];
+                __m128 pGridRowRatio[2], pCol;
                 pGridRowRatio[0] = _mm_set1_ps(gridRowRatio.x);
                 pGridRowRatio[1] = _mm_set1_ps(gridRowRatio.y);
-                pCol[0] = pColInit[0];
-                pCol[1] = pColInit[1];
-                pCol[2] = pColInit[2];
-                pCol[3] = pColInit[3];
+                pCol = pColInit;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
-                    __m128 pMask[4], p[12];
-                    compute_gridmask_masks_16_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
+                    __m128 pMask, p[4];
+                    compute_gridmask_masks_4_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
 
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_gridmask_result_48_host(p, pMask);
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    compute_gridmask_result_12_host(p, pMask);
+                    rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
 
-                    srcPtrTemp += 48;
-                    dstPtrTemp += 48;
+                    srcPtrTemp += 12;
+                    dstPtrTemp += 12;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -8163,7 +8151,7 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Gridmask without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~15;
+            Rpp32u alignedLength = bufferLength & ~3;
 
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -8187,30 +8175,27 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
                 gridRowRatio.x = -translateVectorRatio.x + i * -sinRatio;
                 gridRowRatio.y = -translateVectorRatio.y + i * cosRatio;
 
-                __m128 pGridRowRatio[2], pCol[4];
+                __m128 pGridRowRatio[2], pCol;
                 pGridRowRatio[0] = _mm_set1_ps(gridRowRatio.x);
                 pGridRowRatio[1] = _mm_set1_ps(gridRowRatio.y);
-                pCol[0] = pColInit[0];
-                pCol[1] = pColInit[1];
-                pCol[2] = pColInit[2];
-                pCol[3] = pColInit[3];
+                pCol = pColInit;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
-                    __m128 pMask[4], p[12];
-                    compute_gridmask_masks_16_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
+                    __m128 pMask, p[4];
+                    compute_gridmask_masks_4_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
 
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_gridmask_result_48_host(p, pMask);
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    compute_gridmask_result_12_host(p, pMask);
+                    rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
-                    srcPtrTempR += 16;
-                    srcPtrTempG += 16;
-                    srcPtrTempB += 16;
-                    dstPtrTempR += 16;
-                    dstPtrTempG += 16;
-                    dstPtrTempB += 16;
+                    srcPtrTempR += 4;
+                    srcPtrTempG += 4;
+                    srcPtrTempB += 4;
+                    dstPtrTempR += 4;
+                    dstPtrTempG += 4;
+                    dstPtrTempB += 4;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -8247,7 +8232,7 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Gridmask for single channel images (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~15;
+            Rpp32u alignedLength = bufferLength & ~3;
 
             Rpp32f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -8263,26 +8248,23 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
                 gridRowRatio.x = -translateVectorRatio.x + i * -sinRatio;
                 gridRowRatio.y = -translateVectorRatio.y + i * cosRatio;
 
-                __m128 pGridRowRatio[2], pCol[4];
+                __m128 pGridRowRatio[2], pCol;
                 pGridRowRatio[0] = _mm_set1_ps(gridRowRatio.x);
                 pGridRowRatio[1] = _mm_set1_ps(gridRowRatio.y);
-                pCol[0] = pColInit[0];
-                pCol[1] = pColInit[1];
-                pCol[2] = pColInit[2];
-                pCol[3] = pColInit[3];
+                pCol = pColInit;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
                 {
-                    __m128 pMask[4], p[4];
-                    compute_gridmask_masks_16_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
+                    __m128 pMask, p;
+                    compute_gridmask_masks_4_host(pCol, pGridRowRatio, pCosRatio, pSinRatio, pGridRatio, pMask);
 
-                    rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                    compute_gridmask_result_16_host(p, pMask);
-                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load4_f32_to_f32, srcPtrTemp, &p);    // simd loads
+                    compute_gridmask_result_4_host(&p, pMask);
+                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, &p);    // simd stores
 
-                    srcPtrTemp += 16;
-                    dstPtrTemp += 16;
+                    srcPtrTemp += 4;
+                    dstPtrTemp += 4;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
