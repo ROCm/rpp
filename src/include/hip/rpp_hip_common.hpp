@@ -40,6 +40,12 @@ typedef struct d_int6
 } d_int6;
 
 // half
+typedef struct d_half3
+{
+    half x;
+    half y;
+    half z;
+} d_half3;
 typedef struct d_half4
 {
     half2 x;
@@ -81,6 +87,12 @@ enum class RPPTensorDataType
 
 // schar
 typedef signed char schar;
+typedef struct d_schar3
+{
+    schar x;
+    schar y;
+    schar z;
+} d_schar3;
 typedef struct d_schar4
 {
     schar x;

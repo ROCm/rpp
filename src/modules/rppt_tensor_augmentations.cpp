@@ -1027,81 +1027,80 @@ rppt_crop_host(RppPtr_t srcPtr,
 
 /******************** gridmask ********************/
 
-// RppStatus
-// rppt_gridmask_gpu(RppPtr_t srcPtr,
-//                   RpptDescPtr srcDescPtr,
-//                   RppPtr_t dstPtr,
-//                   RpptDescPtr dstDescPtr,
-//                   Rpp32u tileWidth,
-//                   Rpp32f gridRatio,
-//                   Rpp32f gridAngle,
-//                   RpptUintVector2D translateVector,
-//                   RpptROIPtr roiTensorPtrSrc,
-//                   RpptRoiType roiType,
-//                   rppHandle_t rppHandle)
-// {
-// #ifdef HIP_COMPILE
+RppStatus
+rppt_gridmask_gpu(RppPtr_t srcPtr,
+                  RpptDescPtr srcDescPtr,
+                  RppPtr_t dstPtr,
+                  RpptDescPtr dstDescPtr,
+                  Rpp32u tileWidth,
+                  Rpp32f gridRatio,
+                  Rpp32f gridAngle,
+                  RpptUintVector2D translateVector,
+                  RpptROIPtr roiTensorPtrSrc,
+                  RpptRoiType roiType,
+                  rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        gridmask_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                            dstDescPtr,
+                            tileWidth,
+                            gridRatio,
+                            gridAngle,
+                            translateVector,
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        gridmask_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                            srcDescPtr,
+                            (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                            dstDescPtr,
+                            tileWidth,
+                            gridRatio,
+                            gridAngle,
+                            translateVector,
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        gridmask_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                            srcDescPtr,
+                            (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                            dstDescPtr,
+                            tileWidth,
+                            gridRatio,
+                            gridAngle,
+                            translateVector,
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        gridmask_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                            dstDescPtr,
+                            tileWidth,
+                            gridRatio,
+                            gridAngle,
+                            translateVector,
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+#endif //backend
 
-//     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-//     {
-//         gridmask_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-//                             srcDescPtr,
-//                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-//                             dstDescPtr,
-//                             tileWidth,
-//                             gridRatio,
-//                             gridAngle,
-//                             translateVector,
-//                             roiTensorPtrSrc,
-//                             roiType,
-//                             rpp::deref(rppHandle));
-//     }
-//     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-//     {
-//         gridmask_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-//                             srcDescPtr,
-//                             (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-//                             dstDescPtr,
-//                             tileWidth,
-//                             gridRatio,
-//                             gridAngle,
-//                             translateVector,
-//                             roiTensorPtrSrc,
-//                             roiType,
-//                             rpp::deref(rppHandle));
-//     }
-//     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-//     {
-//         gridmask_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-//                             srcDescPtr,
-//                             (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-//                             dstDescPtr,
-//                             tileWidth,
-//                             gridRatio,
-//                             gridAngle,
-//                             translateVector,
-//                             roiTensorPtrSrc,
-//                             roiType,
-//                             rpp::deref(rppHandle));
-//     }
-//     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-//     {
-//         gridmask_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-//                             srcDescPtr,
-//                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-//                             dstDescPtr,
-//                             tileWidth,
-//                             gridRatio,
-//                             gridAngle,
-//                             translateVector,
-//                             roiTensorPtrSrc,
-//                             roiType,
-//                             rpp::deref(rppHandle));
-//     }
-// #endif //backend
-
-//     return RPP_SUCCESS;
-// }
+    return RPP_SUCCESS;
+}
 
 RppStatus
 rppt_gridmask_host(RppPtr_t srcPtr,
