@@ -54,8 +54,12 @@ if profilingOption == "NO":
     for log_file in log_file_list:
 
         # Open log file
-        f = open(log_file,"r")
-        print("\n\n\nOpened log file -> ", log_file)
+        try:
+            f = open(log_file,"r")
+            print("\n\n\nOpened log file -> ", log_file)
+        except IOError:
+            print("Skipping file -> ", log_file)
+            continue
 
         stats = []
         maxVals = []
