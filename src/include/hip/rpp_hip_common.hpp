@@ -16,12 +16,31 @@ typedef struct d_float8
     float4 x;
     float4 y;
 } d_float8;
+typedef struct d_float16
+{
+    d_float8 x;
+    d_float8 y;
+} d_float16;
 typedef struct d_float24
 {
     d_float8 x;
     d_float8 y;
     d_float8 z;
 } d_float24;
+typedef struct d_float12_as_float3s
+{
+    float3 x;
+    float3 y;
+    float3 z;
+    float3 w;
+
+} d_float12_as_float3s;
+typedef struct d_float24_as_float3s
+{
+    d_float12_as_float3s x;
+    d_float12_as_float3s y;
+
+} d_float24_as_float3s;
 
 // uint
 typedef struct d_uint6
@@ -62,6 +81,38 @@ typedef struct d_half24
     d_half8 y;
     d_half8 z;
 } d_half24;
+typedef struct d_half4_as_halfs
+{
+    half x;
+    half y;
+    half z;
+    half w;
+} d_half4_as_halfs;
+typedef struct d_half8_as_halfs
+{
+    d_half4_as_halfs x;
+    d_half4_as_halfs y;
+} d_half8_as_halfs;
+typedef struct d_half24_as_halfs
+{
+    d_half8_as_halfs x;
+    d_half8_as_halfs y;
+    d_half8_as_halfs z;
+} d_half24_as_halfs;
+typedef struct d_half12_as_half3s
+{
+    d_half3 x;
+    d_half3 y;
+    d_half3 z;
+    d_half3 w;
+
+} d_half12_as_half3s;
+typedef struct d_half24_as_half3s
+{
+    d_half12_as_half3s x;
+    d_half12_as_half3s y;
+
+} d_half24_as_half3s;
 
 // uchar
 typedef unsigned char uchar;
@@ -76,14 +127,20 @@ typedef struct d_uchar24
     d_uchar8 y;
     d_uchar8 z;
 } d_uchar24;
-
-enum class RPPTensorDataType
+typedef struct d_uchar12_as_uchar3s
 {
-    U8 = 0,
-    FP32,
-    FP16,
-    I8,
-};
+    uchar3 x;
+    uchar3 y;
+    uchar3 z;
+    uchar3 w;
+
+} d_uchar12_as_uchar3s;
+typedef struct d_uchar24_as_uchar3s
+{
+    d_uchar12_as_uchar3s x;
+    d_uchar12_as_uchar3s y;
+
+} d_uchar24_as_uchar3s;
 
 // schar
 typedef signed char schar;
@@ -111,6 +168,28 @@ typedef struct d_schar24
     d_schar8 y;
     d_schar8 z;
 } d_schar24;
+typedef struct d_schar12_as_schar3s
+{
+    d_schar3 x;
+    d_schar3 y;
+    d_schar3 z;
+    d_schar3 w;
+
+} d_schar12_as_schar3s;
+typedef struct d_schar24_as_schar3s
+{
+    d_schar12_as_schar3s x;
+    d_schar12_as_schar3s y;
+
+} d_schar24_as_schar3s;
+
+enum class RPPTensorDataType
+{
+    U8 = 0,
+    FP32,
+    FP16,
+    I8,
+};
 
 struct RPPTensorFunctionMetaData
 {
@@ -1209,6 +1288,122 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(schar *srcPtr
     d_uchar24 src_uchar24;
     rpp_hip_convert24_i8_to_u8(&srcPtr[srcIdx], (uchar *)&src_uchar24);
     rpp_hip_load24_pkd3_to_uchar8_pln3((uchar *)&src_uchar24, 0, srcPtrs_uchar8);
+}
+
+// -------------------- Set 7 - Templated layout toggles --------------------
+
+// PKD3 to PLN3
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_layouttoggle24_pkd3_to_pln3(T *src)
+{
+    T pixpln3;
+
+    pixpln3.x.x.x = src->x.x.x;
+    pixpln3.x.x.y = src->x.x.w;
+    pixpln3.x.x.z = src->x.y.z;
+    pixpln3.x.x.w = src->y.x.y;
+    pixpln3.x.y.x = src->y.y.x;
+    pixpln3.x.y.y = src->y.y.w;
+    pixpln3.x.y.z = src->z.x.z;
+    pixpln3.x.y.w = src->z.y.y;
+
+    pixpln3.y.x.x = src->x.x.y;
+    pixpln3.y.x.y = src->x.y.x;
+    pixpln3.y.x.z = src->x.y.w;
+    pixpln3.y.x.w = src->y.x.z;
+    pixpln3.y.y.x = src->y.y.y;
+    pixpln3.y.y.y = src->z.x.x;
+    pixpln3.y.y.z = src->z.x.w;
+    pixpln3.y.y.w = src->z.y.z;
+
+    pixpln3.z.x.x = src->x.x.z;
+    pixpln3.z.x.y = src->x.y.y;
+    pixpln3.z.x.z = src->y.x.x;
+    pixpln3.z.x.w = src->y.x.w;
+    pixpln3.z.y.x = src->y.y.z;
+    pixpln3.z.y.y = src->z.x.y;
+    pixpln3.z.y.z = src->z.y.x;
+    pixpln3.z.y.w = src->z.y.w;
+
+    *src = pixpln3;
+}
+
+// PLN3 to PKD3
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_layouttoggle24_pln3_to_pkd3(T *src)
+{
+    T pixpkd3;
+
+    pixpkd3.x.x.x = src->x.x.x;
+    pixpkd3.x.x.y = src->y.x.x;
+    pixpkd3.x.x.z = src->z.x.x;
+
+    pixpkd3.x.x.w = src->x.x.y;
+    pixpkd3.x.y.x = src->y.x.y;
+    pixpkd3.x.y.y = src->z.x.y;
+
+    pixpkd3.x.y.z = src->x.x.z;
+    pixpkd3.x.y.w = src->y.x.z;
+    pixpkd3.y.x.x = src->z.x.z;
+
+    pixpkd3.y.x.y = src->x.x.w;
+    pixpkd3.y.x.z = src->y.x.w;
+    pixpkd3.y.x.w = src->z.x.w;
+
+    pixpkd3.y.y.x = src->x.y.x;
+    pixpkd3.y.y.y = src->y.y.x;
+    pixpkd3.y.y.z = src->z.y.x;
+
+    pixpkd3.y.y.w = src->x.y.y;
+    pixpkd3.z.x.x = src->y.y.y;
+    pixpkd3.z.x.y = src->z.y.y;
+
+    pixpkd3.z.x.z = src->x.y.z;
+    pixpkd3.z.x.w = src->y.y.z;
+    pixpkd3.z.y.x = src->z.y.z;
+
+    pixpkd3.z.y.y = src->x.y.w;
+    pixpkd3.z.y.z = src->y.y.w;
+    pixpkd3.z.y.w = src->z.y.w;
+
+    *src = pixpkd3;
+}
+
+/******************** DEVICE MATH HELPER FUNCTIONS ********************/
+
+// d_float16 floor
+
+__device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *src_f16, d_float16 *dst_f16)
+{
+    dst_f16->x.x.x = floorf(src_f16->x.x.x);
+    dst_f16->x.x.y = floorf(src_f16->x.x.y);
+    dst_f16->x.x.z = floorf(src_f16->x.x.z);
+    dst_f16->x.x.w = floorf(src_f16->x.x.w);
+    dst_f16->x.y.x = floorf(src_f16->x.y.x);
+    dst_f16->x.y.y = floorf(src_f16->x.y.y);
+    dst_f16->x.y.z = floorf(src_f16->x.y.z);
+    dst_f16->x.y.w = floorf(src_f16->x.y.w);
+
+    dst_f16->y.x.x = floorf(src_f16->y.x.x);
+    dst_f16->y.x.y = floorf(src_f16->y.x.y);
+    dst_f16->y.x.z = floorf(src_f16->y.x.z);
+    dst_f16->y.x.w = floorf(src_f16->y.x.w);
+    dst_f16->y.y.x = floorf(src_f16->y.y.x);
+    dst_f16->y.y.y = floorf(src_f16->y.y.y);
+    dst_f16->y.y.z = floorf(src_f16->y.y.z);
+    dst_f16->y.y.w = floorf(src_f16->y.y.w);
+}
+
+// d_float16 subtract
+
+__device__ __forceinline__ void rpp_hip_math_subtract16(d_float16 *src1_f16, d_float16 *src2_f16, d_float16 *dst_f16)
+{
+    dst_f16->x.x = src1_f16->x.x - src2_f16->x.x;
+    dst_f16->x.y = src1_f16->x.y - src2_f16->x.y;
+    dst_f16->y.x = src1_f16->y.x - src2_f16->y.x;
+    dst_f16->y.y = src1_f16->y.y - src2_f16->y.y;
 }
 
 #endif //RPP_HIP_COMMON_H
