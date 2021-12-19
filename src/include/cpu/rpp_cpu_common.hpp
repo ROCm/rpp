@@ -2066,21 +2066,6 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
     return RPP_SUCCESS;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Compute Functions for RPP Tensor API
 
 inline RppStatus compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 *pMask)
@@ -2523,18 +2508,6 @@ inline RppStatus compute_color_jitter_12_host(__m128 *p, __m128 *pCtm)
 
     return RPP_SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Compute Functions for RPP Image API
 
