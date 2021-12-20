@@ -4,8 +4,8 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profiling', type=str, default='NO', help='Run with profiler? - (YES/NO)')
-parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-81)')
-parser.add_argument('--case_end', type=str, default='81', help='Testing range ending case # - (0-81)')
+parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-83)')
+parser.add_argument('--case_end', type=str, default='83', help='Testing range ending case # - (0-83)')
 args = parser.parse_args()
 
 profilingOption = args.profiling
@@ -16,12 +16,12 @@ if caseEnd < caseStart:
     print("Ending case# must be greater than starting case#. Aborting!")
     exit(0)
 
-if caseStart < "0" or caseStart > "81":
-    print("Starting case# must be in the 0-81 range. Aborting!")
+if caseStart < "0" or caseStart > "83":
+    print("Starting case# must be in the 0-83 range. Aborting!")
     exit(0)
 
-if caseEnd < "0" or caseEnd > "81":
-    print("Ending case# must be in the 0-81 range. Aborting!")
+if caseEnd < "0" or caseEnd > "83":
+    print("Ending case# must be in the 0-83 range. Aborting!")
     exit(0)
 
 if profilingOption == "NO":
@@ -54,8 +54,12 @@ if profilingOption == "NO":
     for log_file in log_file_list:
 
         # Open log file
-        f = open(log_file,"r")
-        print("\n\n\nOpened log file -> ", log_file)
+        try:
+            f = open(log_file,"r")
+            print("\n\n\nOpened log file -> ", log_file)
+        except IOError:
+            print("Skipping file -> ", log_file)
+            continue
 
         stats = []
         maxVals = []

@@ -257,6 +257,18 @@ typedef struct
     Rpp32f B;
 } RpptFloatRGB;
 
+typedef struct
+{
+    Rpp32u x;
+    Rpp32u y;
+} RpptUintVector2D;
+
+typedef struct
+{
+    Rpp32f x;
+    Rpp32f y;
+} RpptFloatVector2D;
+
 
 
 
