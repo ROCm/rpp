@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'AMD-RPP'
-copyright = '2020, Lokeswara Rao Bonta(MCW-AMD)'
+copyright = '2020 - 2022, Lokeswara Rao Bonta(MCW-AMD)'
 author = 'Lokeswara Rao Bonta(MCW-AMD)'
 
 # The full version, including alpha/beta/rc tags
