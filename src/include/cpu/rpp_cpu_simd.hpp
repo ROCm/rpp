@@ -820,6 +820,37 @@ inline RppStatus rpp_store16_f32_to_u8_avx(Rpp8u *dstPtr, __m256 *p)
     return RPP_SUCCESS;
 }
 
+inline RppStatus rpp_load16_i8_to_f32_avx(Rpp8s *srcPtr, __m256 *p)
+{
+    __m128i px;
+    __m128i pxConvertI8 = _mm_set1_epi8((char)128);
+    __m128i pxMask0 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80);
+    __m128i pxMask1 = _mm_setr_epi8(4, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80);
+    __m128i pxMask2 = _mm_setr_epi8(8, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
+    __m128i pxMask3 = _mm_setr_epi8(12, 0x80, 0x80, 0x80, 13, 0x80, 0x80, 0x80, 14, 0x80, 0x80, 0x80, 15, 0x80, 0x80, 0x80);
+    px = _mm_add_epi8(pxConvertI8, _mm_loadu_si128((__m128i *)srcPtr));    /* add I8 conversion param to load */
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px, pxMask0), _mm_shuffle_epi8(px, pxMask1)));    /* Contains pixels 01-08 */
+    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px, pxMask2), _mm_shuffle_epi8(px, pxMask3)));    /* Contains pixels 09-16 */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store16_f32_to_i8_avx(Rpp8s *dstPtr, __m256 *p)
+{
+    __m256i pxCvt;
+    __m128i px[3];
+    __m128i pxConvertI8 = _mm_set1_epi8((char)128);
+    pxCvt = _mm256_cvtps_epi32(p[0]);
+    px[1] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 0-7 for R */
+    pxCvt = _mm256_cvtps_epi32(p[1]);
+    px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt, 0), _mm256_extracti128_si256(pxCvt, 1));    /* pack pixels 8-15 for R */
+    px[0] = _mm_packus_epi16(px[1], px[2]);    /* pack pixels 0-15 */
+    px[0] = _mm_sub_epi8(px[0], pxConvertI8);    /* convert back to i8 for px0 store */
+    _mm_storeu_si128((__m128i *)dstPtr, px[0]);
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
