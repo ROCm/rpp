@@ -1180,3 +1180,44 @@ rppt_gridmask_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+/******************** spatter ********************/
+
+RppStatus
+rppt_spatter_host(RppPtr_t srcPtr,
+                  RpptDescPtr srcDescPtr,
+                  RppPtr_t dstPtr,
+                  RpptDescPtr dstDescPtr,
+                  RpptRGB spatterColor,
+                  RpptROIPtr roiTensorPtrSrc,
+                  RpptRoiType roiType,
+                  rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > 1920) || (roiTensorPtrSrc[i].xywhROI.roiHeight > 1080))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > 1919) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > 1079))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        spatter_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                  dstDescPtr,
+                                  spatterColor,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  layoutParams);
+    }
+
+    return RPP_SUCCESS;
+}

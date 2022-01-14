@@ -26,9 +26,11 @@ THE SOFTWARE.
 #include "rppdefs.h"
 #include "cpu/rpp_cpu_simd.hpp"
 #include "cpu/rpp_cpu_common.hpp"
+#include "func_specific/spatter_mask.hpp"
 #include <stdlib.h>
 #include <time.h>
 #include <algorithm>
+#include <random>
 
 /************ brightness ************/
 
@@ -9184,6 +9186,426 @@ RppStatus gridmask_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+/************ spatter ************/
+
+RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp8u *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    RpptRGB spatterColor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams)
+{
+    RpptROI roiDefault;
+    RpptROIPtr roiPtrDefault;
+    roiPtrDefault = &roiDefault;
+    roiPtrDefault->xywhROI.xy.x = 0;
+    roiPtrDefault->xywhROI.xy.y = 0;
+    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
+    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtr;
+
+        if (&roiTensorPtrSrc[batchCount] == NULL)
+        {
+            roiPtr = roiPtrDefault;
+        }
+        else
+        {
+            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+
+            RpptROI roiImage;
+            RpptROIPtr roiPtrImage;
+
+            if (roiType == RpptRoiType::LTRB)
+            {
+                roiPtrImage = &roiImage;
+                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
+            }
+            else if (roiType == RpptRoiType::XYWH)
+            {
+                roiPtrImage = roiPtrInput;
+            }
+
+            roiPtr = &roi;
+            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
+        }
+
+        Rpp32f spatterValue[3];
+        spatterValue[0] = (Rpp32f) spatterColor.B;
+        spatterValue[1] = (Rpp32f) spatterColor.G;
+        spatterValue[2] = (Rpp32f) spatterColor.R;
+
+        Rpp8u *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
+        Rpp8u *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        std::random_device rd;  // Random number engine seed
+        std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
+        std::uniform_int_distribution<> distribX(0, 1920 - roiPtr->xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, 1080 - roiPtr->xywhROI.roiHeight);
+
+        RppiPoint maskLoc;
+        maskLoc.x = distribX(gen);
+        maskLoc.y = distribY(gen);
+
+        Rpp32f *spatterMaskPtr, *spatterMaskInvPtr;
+        spatterMaskPtr = &spatterMask[(1920 * maskLoc.y) + maskLoc.x];
+        spatterMaskInvPtr = &spatterMaskInv[(1920 * maskLoc.y) + maskLoc.x];
+
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
+
+        if (srcDescPtr->c == 1)
+            spatterValue[0] = spatterValue[1] = spatterValue[2] = (spatterValue[0] + spatterValue[1] + spatterValue[2]) * 0.3333;
+
+#if __AVX2__
+        __m256 pSpatterValue[3];
+        pSpatterValue[0] = _mm256_set1_ps(spatterValue[0]);
+        pSpatterValue[1] = _mm256_set1_ps(spatterValue[1]);
+        pSpatterValue[2] = _mm256_set1_ps(spatterValue[2]);
+#else
+        __m128 pSpatterValue[3];
+        pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
+        pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
+        pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
+#endif
+
+        // Spatter without fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            // Rpp32u alignedLength = (bufferLength / 48) * 48;
+
+            // __m128 pSpatterValue[3];
+            // pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
+            // pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
+            // pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
+
+            Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            Rpp32f *spatterMaskPtrRow, *spatterMaskInvPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+            spatterMaskPtrRow = spatterMaskPtr;
+            spatterMaskInvPtrRow = spatterMaskInvPtr;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+                spatterMaskPtrTemp = spatterMaskPtrRow;
+                spatterMaskInvPtrTemp = spatterMaskInvPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+#if __AVX2__
+                    __m256 pSpatterMask[2], pSpatterMaskInv[2], p[6];
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    compute_spatter_48_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue);    // spatter adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#else
+                    __m128 pSpatterMask[4], pSpatterMaskInv[4], p[12];
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    compute_spatter_48_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue);    // spatter adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    spatterMaskPtrTemp += vectorIncrementPerChannel;
+                    spatterMaskInvPtrTemp += vectorIncrementPerChannel;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                {
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(((Rpp32f) srcPtrTemp[0]) * *spatterMaskInvPtrTemp + spatterValue[0] * *spatterMaskPtrTemp);
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(((Rpp32f) srcPtrTemp[1]) * *spatterMaskInvPtrTemp + spatterValue[1] * *spatterMaskPtrTemp);
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(((Rpp32f) srcPtrTemp[2]) * *spatterMaskInvPtrTemp + spatterValue[2] * *spatterMaskPtrTemp);
+
+                    srcPtrTemp += 3;
+                    dstPtrTempR++;
+                    dstPtrTempG++;
+                    dstPtrTempB++;
+                    spatterMaskPtrTemp++;
+                    spatterMaskInvPtrTemp++;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+                spatterMaskPtrRow += 1920;
+                spatterMaskInvPtrRow += 1920;
+            }
+        }
+
+        // Spatter without fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            // Rpp32u alignedLength = (bufferLength / 48) * 48;
+
+            // __m128 pSpatterValue[3];
+            // pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
+            // pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
+            // pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
+
+            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            Rpp32f *spatterMaskPtrRow, *spatterMaskInvPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
+            spatterMaskPtrRow = spatterMaskPtr;
+            spatterMaskInvPtrRow = spatterMaskInvPtr;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
+                spatterMaskPtrTemp = spatterMaskPtrRow;
+                spatterMaskInvPtrTemp = spatterMaskInvPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pSpatterMask[2], pSpatterMaskInv[2], p[6];
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    compute_spatter_48_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue);    // spatter adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                    __m128 pSpatterMask[4], pSpatterMaskInv[4], p[12];
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    compute_spatter_48_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue);    // spatter adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
+#endif
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
+                    spatterMaskPtrTemp += vectorIncrementPerChannel;
+                    spatterMaskInvPtrTemp += vectorIncrementPerChannel;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrTempR) * *spatterMaskInvPtrTemp + spatterValue[0] * *spatterMaskPtrTemp);
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrTempG) * *spatterMaskInvPtrTemp + spatterValue[1] * *spatterMaskPtrTemp);
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrTempB) * *spatterMaskInvPtrTemp + spatterValue[2] * *spatterMaskPtrTemp);
+
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
+                    dstPtrTemp += 3;
+                    spatterMaskPtrTemp++;
+                    spatterMaskInvPtrTemp++;
+                }
+
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+                spatterMaskPtrRow += 1920;
+                spatterMaskInvPtrRow += 1920;
+            }
+        }
+
+        // Spatter without fused output-layout toggle (NHWC -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            // Rpp32u alignedLength = (bufferLength / 48) * 48;
+
+            // __m128 pSpatterValue[3];
+            // pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
+            // pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
+            // pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
+
+            Rpp8u *srcPtrRow, *dstPtrRow;
+            Rpp32f *spatterMaskPtrRow, *spatterMaskInvPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+            spatterMaskPtrRow = spatterMaskPtr;
+            spatterMaskInvPtrRow = spatterMaskInvPtr;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTemp, *dstPtrTemp;
+                Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+                spatterMaskPtrTemp = spatterMaskPtrRow;
+                spatterMaskInvPtrTemp = spatterMaskInvPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+#if __AVX2__
+                    __m256 pSpatterMask[2], pSpatterMaskInv[2], p[6];
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    compute_spatter_48_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue);    // spatter adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                    __m128 pSpatterMask[4], pSpatterMaskInv[4], p[12];
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    compute_spatter_48_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue);    // spatter adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
+#endif
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTemp += vectorIncrement;
+                    spatterMaskPtrTemp += vectorIncrementPerChannel;
+                    spatterMaskInvPtrTemp += vectorIncrementPerChannel;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                {
+                    for(int c = 0; c < srcDescPtr->c; c++)
+                    {
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrTemp) * *spatterMaskInvPtrTemp + spatterValue[c] * *spatterMaskPtrTemp);
+                        srcPtrTemp++;
+                        dstPtrTemp++;
+                    }
+                    spatterMaskPtrTemp++;
+                    spatterMaskInvPtrTemp++;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+                spatterMaskPtrRow += 1920;
+                spatterMaskInvPtrRow += 1920;
+            }
+        }
+
+        // Spatter without fused output-layout toggle (NCHW -> NCHW)
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            alignedLength = (bufferLength & ~15) - 16;
+
+            // __m128 pSpatterValue[3];
+            // if (srcDescPtr->c == 1)
+            // {
+            //     spatterValue[0] = (spatterValue[0] + spatterValue[1] + spatterValue[2]) * 0.33333;
+            //     pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
+            //     pSpatterValue[1] = pSpatterValue[0];
+            //     pSpatterValue[2] = pSpatterValue[0];
+            // }
+            // else if (srcDescPtr->c == 3)
+            // {
+            //     pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
+            //     pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
+            //     pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
+            // }
+
+            Rpp8u *srcPtrRow, *dstPtrRow;
+            Rpp32f *spatterMaskPtrRow, *spatterMaskInvPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+            spatterMaskPtrRow = spatterMaskPtr;
+            spatterMaskInvPtrRow = spatterMaskInvPtr;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTemp, *dstPtrTemp;
+                Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+                spatterMaskPtrTemp = spatterMaskPtrRow;
+                spatterMaskInvPtrTemp = spatterMaskInvPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pSpatterMask[2], pSpatterMaskInv[2];
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+#else
+                    __m128 pSpatterMask[4], pSpatterMaskInv[4];
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+#endif
+                    srcPtrChannel = srcPtrTemp;
+                    dstPtrChannel = dstPtrTemp;
+                    for(int c = 0; c < srcDescPtr->c; c++)
+                    {
+#if __AVX2__
+                        __m256 p[2];
+                        rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrChannel, p);    // simd loads
+                        compute_spatter_16_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue[c]);    // spatter adjustment
+                        rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrChannel, p);    // simd stores
+#else
+                        __m128 p[4];
+                        rpp_simd_load(rpp_load16_u8_to_f32, srcPtrChannel, p);    // simd loads
+                        compute_spatter_16_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue[c]);    // spatter adjustment
+                        rpp_simd_store(rpp_store16_f32_to_u8, dstPtrChannel, p);    // simd stores
+#endif
+                        srcPtrChannel += srcDescPtr->strides.cStride;
+                        dstPtrChannel += dstDescPtr->strides.cStride;
+                    }
+                    srcPtrTemp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrementPerChannel;
+                    spatterMaskPtrTemp += vectorIncrementPerChannel;
+                    spatterMaskInvPtrTemp += vectorIncrementPerChannel;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    srcPtrChannel = srcPtrTemp;
+                    dstPtrChannel = dstPtrTemp;
+                    for(int c = 0; c < srcDescPtr->c; c++)
+                    {
+                        *dstPtrChannel = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrChannel) * *spatterMaskInvPtrTemp + spatterValue[c] * *spatterMaskPtrTemp);
+                        srcPtrChannel += srcDescPtr->strides.cStride;
+                        dstPtrChannel += dstDescPtr->strides.cStride;
+                    }
+                    srcPtrTemp++;
+                    dstPtrTemp++;
+                    spatterMaskPtrTemp++;
+                    spatterMaskInvPtrTemp++;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+                spatterMaskPtrRow += 1920;
+                spatterMaskInvPtrRow += 1920;
             }
         }
     }

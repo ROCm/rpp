@@ -38,10 +38,11 @@ typedef size_t              RppSize_t;
 
 typedef enum
 {
-    RPP_SUCCESS                 = 0,
-    RPP_ERROR                   = -1,
-    RPP_ERROR_INVALID_ARGUMENTS = -2,
-    RPP_ERROR_LOW_OFFSET        = -3,
+    RPP_SUCCESS                  = 0,
+    RPP_ERROR                    = -1,
+    RPP_ERROR_INVALID_ARGUMENTS  = -2,
+    RPP_ERROR_LOW_OFFSET         = -3,
+    RPP_ERROR_HIGH_SRC_DIMENSION = -5,
 } RppStatus;
 
 typedef enum
