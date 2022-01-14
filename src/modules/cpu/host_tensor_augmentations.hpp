@@ -9294,13 +9294,6 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Spatter without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            // Rpp32u alignedLength = (bufferLength / 48) * 48;
-
-            // __m128 pSpatterValue[3];
-            // pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
-            // pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
-            // pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
-
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             Rpp32f *spatterMaskPtrRow, *spatterMaskInvPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -9372,13 +9365,6 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Spatter without fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            // Rpp32u alignedLength = (bufferLength / 48) * 48;
-
-            // __m128 pSpatterValue[3];
-            // pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
-            // pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
-            // pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
-
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             Rpp32f *spatterMaskPtrRow, *spatterMaskInvPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -9450,13 +9436,6 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Spatter without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            // Rpp32u alignedLength = (bufferLength / 48) * 48;
-
-            // __m128 pSpatterValue[3];
-            // pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
-            // pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
-            // pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
-
             Rpp8u *srcPtrRow, *dstPtrRow;
             Rpp32f *spatterMaskPtrRow, *spatterMaskInvPtrRow;
             srcPtrRow = srcPtrChannel;
@@ -9519,21 +9498,6 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = (bufferLength & ~15) - 16;
-
-            // __m128 pSpatterValue[3];
-            // if (srcDescPtr->c == 1)
-            // {
-            //     spatterValue[0] = (spatterValue[0] + spatterValue[1] + spatterValue[2]) * 0.33333;
-            //     pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
-            //     pSpatterValue[1] = pSpatterValue[0];
-            //     pSpatterValue[2] = pSpatterValue[0];
-            // }
-            // else if (srcDescPtr->c == 3)
-            // {
-            //     pSpatterValue[0] = _mm_set1_ps(spatterValue[0]);
-            //     pSpatterValue[1] = _mm_set1_ps(spatterValue[1]);
-            //     pSpatterValue[2] = _mm_set1_ps(spatterValue[2]);
-            // }
 
             Rpp8u *srcPtrRow, *dstPtrRow;
             Rpp32f *spatterMaskPtrRow, *spatterMaskInvPtrRow;
