@@ -69,56 +69,61 @@ __global__ void spatter_pkd_tensor(T *srcPtr,
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
 }
 
-// template <typename T>
-// __global__ void spatter_pln_tensor(T *srcPtr1,
-//                                  T *srcPtr2,
-//                                  uint3 srcStridesNCH,
-//                                  T *dstPtr,
-//                                  uint3 dstStridesNCH,
-//                                  int channelsDst,
-//                                  float *alpha,
-//                                  RpptROIPtr roiTensorPtrSrc)
-// {
-//     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+template <typename T>
+__global__ void spatter_pln_tensor(T *srcPtr,
+                                   uint3 srcStridesNCH,
+                                   T *dstPtr,
+                                   uint3 dstStridesNCH,
+                                   int channelsDst,
+                                   float *spatterMaskPtr,
+                                   float *spatterMaskInvPtr,
+                                   uint2 *maskLocArr,
+                                   float3 spatterColor,
+                                   RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-//     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-//     {
-//         return;
-//     }
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
 
-//     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-//     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    uint maskIdx = (1920 * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
 
-//     float4 alpha_f4 = (float4)(alpha[id_z]);
+    d_float8 mask_f8, maskInv_f8;
+    mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
+    maskInv_f8 = *(d_float8 *)&spatterMaskInvPtr[maskIdx];
+    float4 r_f4 = (float4)(spatterColor.x);
+    float4 g_f4 = (float4)(spatterColor.y);
+    float4 b_f4 = (float4)(spatterColor.z);
 
-//     d_float8 src1_f8, src2_f8, dst_f8;
+    d_float8 src_f8, dst_f8;
 
-//     rpp_hip_load8_and_unpack_to_float8(srcPtr1, srcIdx, &src1_f8);
-//     rpp_hip_load8_and_unpack_to_float8(srcPtr2, srcIdx, &src2_f8);
-//     spatter_hip_compute(&src1_f8, &src2_f8, &dst_f8, &alpha_f4);
-//     rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+    spatter_hip_compute(srcPtr, &src_f8, &dst_f8, &mask_f8, &maskInv_f8, &r_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
 
-//     if (channelsDst == 3)
-//     {
-//         srcIdx += srcStridesNCH.y;
-//         dstIdx += dstStridesNCH.y;
+    if (channelsDst == 3)
+    {
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
 
-//         rpp_hip_load8_and_unpack_to_float8(srcPtr1, srcIdx, &src1_f8);
-//         rpp_hip_load8_and_unpack_to_float8(srcPtr2, srcIdx, &src2_f8);
-//         spatter_hip_compute(&src1_f8, &src2_f8, &dst_f8, &alpha_f4);
-//         rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+        spatter_hip_compute(srcPtr, &src_f8, &dst_f8, &mask_f8, &maskInv_f8, &g_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
 
-//         srcIdx += srcStridesNCH.y;
-//         dstIdx += dstStridesNCH.y;
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
 
-//         rpp_hip_load8_and_unpack_to_float8(srcPtr1, srcIdx, &src1_f8);
-//         rpp_hip_load8_and_unpack_to_float8(srcPtr2, srcIdx, &src2_f8);
-//         spatter_hip_compute(&src1_f8, &src2_f8, &dst_f8, &alpha_f4);
-//         rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
-//     }
-// }
+        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+        spatter_hip_compute(srcPtr, &src_f8, &dst_f8, &mask_f8, &maskInv_f8, &b_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+    }
+}
 
 // template <typename T>
 // __global__ void spatter_pkd3_pln3_tensor(T *srcPtr1,
@@ -203,6 +208,17 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
+    float3 spatterColor_f3;
+    if (dstDescPtr->c == 3)
+    {
+        spatterColor_f3 = make_float3((float)spatterColor.B, (float)spatterColor.G, (float)spatterColor.R);
+    }
+    else if (dstDescPtr->c == 1)
+    {
+        float meanGreyVal = ((float)spatterColor.B + (float)spatterColor.G + (float)spatterColor.R) * 0.3333;
+        spatterColor_f3 = make_float3(meanGreyVal, meanGreyVal, meanGreyVal);
+    }
+
     float *spatterMaskPtr, *spatterMaskInvPtr;
     Rpp32u maskSize = 2073600 * sizeof(float);
     hipMalloc(&spatterMaskPtr, maskSize);
@@ -225,27 +241,27 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                            spatterMaskPtr,
                            spatterMaskInvPtr,
                            maskLocArr,
-                           make_float3((float)spatterColor.B, (float)spatterColor.G, (float)spatterColor.R),
+                           spatterColor_f3,
                            roiTensorPtrSrc);
     }
-    // else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
-    // {
-    //     hipLaunchKernelGGL(spatter_pln_tensor,
-    //                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-    //                        dim3(localThreads_x, localThreads_y, localThreads_z),
-    //                        0,
-    //                        handle.GetStream(),
-    //                        srcPtr,
-    //                        make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-    //                        dstPtr,
-    //                        make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-    //                        dstDescPtr->c,
-    //                        spatterMaskPtr,
-    //                        spatterMaskInvPtr,
-    //                        maskLocArr,
-    //                        make_float3((float)spatterColor.B, (float)spatterColor.G, (float)spatterColor.R),
-    //                        roiTensorPtrSrc);
-    // }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        hipLaunchKernelGGL(spatter_pln_tensor,
+                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           dstDescPtr->c,
+                           spatterMaskPtr,
+                           spatterMaskInvPtr,
+                           maskLocArr,
+                           spatterColor_f3,
+                           roiTensorPtrSrc);
+    }
     // else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     // {
     //     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -262,7 +278,7 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
     //                            spatterMaskPtr,
     //                            spatterMaskInvPtr,
     //                            maskLocArr,
-    //                            make_float3((float)spatterColor.B, (float)spatterColor.G, (float)spatterColor.R),
+    //                            spatterColor_f3,
     //                            roiTensorPtrSrc);
     //     }
     //     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -280,7 +296,7 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
     //                            spatterMaskPtr,
     //                            spatterMaskInvPtr,
     //                            maskLocArr,
-    //                            make_float3((float)spatterColor.B, (float)spatterColor.G, (float)spatterColor.R),
+    //                            spatterColor_f3,
     //                            roiTensorPtrSrc);
     //     }
     // }
