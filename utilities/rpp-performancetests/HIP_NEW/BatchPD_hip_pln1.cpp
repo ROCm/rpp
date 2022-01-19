@@ -765,6 +765,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -797,6 +799,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -831,6 +835,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -863,6 +869,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -899,6 +907,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -925,6 +935,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -959,6 +971,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -992,6 +1006,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1024,6 +1040,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1070,6 +1088,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1102,6 +1122,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1141,6 +1163,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1193,6 +1217,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1225,6 +1251,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1268,6 +1296,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1295,6 +1325,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1321,6 +1353,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1369,6 +1403,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1411,6 +1447,8 @@ int main(int argc, char **argv)
                 rppi_resize_u8_i8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1463,6 +1501,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1495,6 +1535,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1534,6 +1576,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1560,6 +1604,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1596,6 +1642,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1628,6 +1676,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1670,6 +1720,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1715,6 +1767,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1747,6 +1801,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -1843,6 +1899,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             hipFree(d_anchor_box_info);
@@ -1898,6 +1956,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -1942,6 +2002,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2005,6 +2067,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2055,6 +2119,8 @@ int main(int argc, char **argv)
                 rppi_crop_mirror_normalize_u8_i8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2109,6 +2175,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2142,6 +2210,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2174,6 +2244,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2229,6 +2301,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2261,6 +2335,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2315,6 +2391,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2347,6 +2425,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2381,6 +2461,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2413,6 +2495,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2454,6 +2538,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2489,6 +2575,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2522,6 +2610,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2548,6 +2638,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2582,6 +2674,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             hipMemcpy(d_output, d_input, oBufferSize * sizeof(Rpp8u),hipMemcpyDeviceToDevice);
@@ -2610,6 +2704,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2640,6 +2736,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2666,6 +2764,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2694,6 +2794,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2720,6 +2822,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2748,6 +2852,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2774,6 +2880,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2804,6 +2912,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2830,6 +2940,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2858,6 +2970,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2884,6 +2998,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2912,6 +3028,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -2938,6 +3056,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -2974,6 +3094,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -3009,6 +3131,8 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
+            hipDeviceSynchronize();
+
             end = clock();
 
             break;
@@ -3043,6 +3167,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
@@ -3086,6 +3212,8 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
 
             end = clock();
 
