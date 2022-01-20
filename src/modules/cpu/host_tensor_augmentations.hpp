@@ -132,12 +132,12 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);
-                    compute_brightness_24_host(p[0], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[1], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[2], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[3], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[4], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[5], pBrightnessParams);    // brightness adjustment
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[3] = _mm256_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[4] = _mm256_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[5] = _mm256_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
@@ -204,12 +204,12 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_brightness_24_host(p[0], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[1], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[2], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[3], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[4], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[5], pBrightnessParams);    // brightness adjustment
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[3] = _mm256_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[4] = _mm256_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[5] = _mm256_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
@@ -271,12 +271,12 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);
-                    compute_brightness_24_host(p[0], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[1], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[2], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[3], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[4], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[5], pBrightnessParams);    // brightness adjustment
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[3] = _mm256_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[4] = _mm256_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[5] = _mm256_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
@@ -300,10 +300,12 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0])) * alpha) + beta);
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[1])) * alpha) + beta);
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[2])) * alpha) + beta);
 
-                    srcPtrTemp++;
-                    dstPtrTemp++;
+                    srcPtrTemp += 3;
+                    dstPtrTemp += 3;
                 }
                     srcPtrRow += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -336,12 +338,12 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_brightness_24_host(p[0], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[1], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[2], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[3], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[4], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[5], pBrightnessParams);    // brightness adjustment
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[3] = _mm256_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[4] = _mm256_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[5] = _mm256_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
@@ -493,18 +495,18 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_brightness_24_host(p[0], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[1], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[2], pBrightnessParams);    // brightness adjustment
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[4];
-                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
                     p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Gs
                     p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Bs
@@ -552,14 +554,14 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_brightness_24_host(p[0], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[1], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[2], pBrightnessParams);    // brightness adjustment
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
@@ -605,14 +607,14 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_brightness_24_host(p[0], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[1], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[2], pBrightnessParams);    // brightness adjustment
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     rpp_simd_load(rpp_load4_f32_to_f32, srcPtrTemp, p);    // simd loads
@@ -624,10 +626,12 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = RPPPIXELCHECKF32(*srcPtrTemp * alpha + beta);
+                    dstPtrTemp[0] = RPPPIXELCHECKF32(srcPtrTemp[0] * alpha + beta);
+                    dstPtrTemp[1] = RPPPIXELCHECKF32(srcPtrTemp[1] * alpha + beta);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32(srcPtrTemp[2] * alpha + beta);
 
-                    srcPtrTemp++;
-                    dstPtrTemp++;
+                    srcPtrTemp += 3;
+                    dstPtrTemp += 3;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -665,9 +669,9 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_brightness_24_host(p[0], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[1], pBrightnessParams);    // brightness adjustment
-                    compute_brightness_24_host(p[2], pBrightnessParams);    // brightness adjustment
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p;
@@ -685,9 +689,9 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECKF32((((Rpp32f) (*srcPtrTempR)) * alpha) + beta);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECKF32((((Rpp32f) (*srcPtrTempG)) * alpha) + beta);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECKF32((((Rpp32f) (*srcPtrTempB)) * alpha) + beta);
+                    *dstPtrTempR = RPPPIXELCHECKF32(*srcPtrTempR * alpha + beta);
+                    *dstPtrTempG = RPPPIXELCHECKF32(*srcPtrTempG * alpha + beta);
+                    *dstPtrTempB = RPPPIXELCHECKF32(*srcPtrTempB * alpha + beta);
 
                     srcPtrTempR++;
                     srcPtrTempG++;
