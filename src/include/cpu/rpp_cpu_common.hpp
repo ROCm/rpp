@@ -4039,4 +4039,10 @@ inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* d
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_brightness_24_host(__m256 &pVec , __m256 *pColorTwistParams)
+{
+    pVec = _mm256_fmadd_ps(pVec, pColorTwistParams[0], pColorTwistParams[1]);    // brightness adjustment Rs
+    return RPP_SUCCESS;
+}
+
 #endif //RPP_CPU_COMMON_H
