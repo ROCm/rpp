@@ -663,10 +663,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            hipDeviceSynchronize();
-
-            end = clock();
-
             break;
         }
         case 1:
@@ -719,10 +715,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            hipDeviceSynchronize();
-
-            end = clock();
-
             break;
         }
         case 2:
@@ -774,10 +766,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            hipDeviceSynchronize();
-
-            end = clock();
 
             break;
         }
@@ -835,10 +823,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            hipDeviceSynchronize();
-
-            end = clock();
-
             break;
         }
         case 37:
@@ -884,10 +868,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            hipDeviceSynchronize();
-
-            end = clock();
 
             break;
         }
@@ -937,10 +917,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            hipDeviceSynchronize();
-
-            end = clock();
-
             break;
         }
         case 41:
@@ -989,10 +965,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            hipDeviceSynchronize();
-
-            end = clock();
-
             break;
         }
         case 49:
@@ -1040,10 +1012,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            hipDeviceSynchronize();
-
-            end = clock();
 
             break;
         }
@@ -1099,16 +1067,15 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            hipDeviceSynchronize();
-
-            end = clock();
-
             break;
         }
         default:
             missingFuncFlag = 1;
             break;
         }
+
+        hipDeviceSynchronize();
+        end = clock();
 
         if (missingFuncFlag == 1)
         {

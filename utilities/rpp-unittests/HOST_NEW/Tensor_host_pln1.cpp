@@ -489,8 +489,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -541,8 +539,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -593,8 +589,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -639,8 +633,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -692,8 +684,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -701,6 +691,9 @@ int main(int argc, char **argv)
         missingFuncFlag = 1;
         break;
     }
+
+    end = clock();
+    end_omp = omp_get_wtime();
 
     if (missingFuncFlag == 1)
     {
