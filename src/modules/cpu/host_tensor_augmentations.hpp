@@ -251,7 +251,6 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
-
         // Brightness without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -391,8 +390,57 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-    }
+        else
+        {
+            Rpp32u alignedLength = bufferLength & ~15;
 
+            Rpp8u *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                {
+#if __AVX2__
+                    __m256 p[2];
+
+                    rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrTemp, p);    // simd loads
+                    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+                    rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
+#else
+                    __m128 p[4];
+
+                    rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
+                    p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
+                    p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
+                    p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
+                    p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
+                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
+#endif
+                    srcPtrTemp +=16;
+                    dstPtrTemp +=16;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
+
+                    srcPtrTemp++;
+                    dstPtrTemp++;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+    }
+    
     return RPP_SUCCESS;
 }
 
