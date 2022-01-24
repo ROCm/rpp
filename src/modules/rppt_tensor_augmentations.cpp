@@ -1199,13 +1199,13 @@ rppt_spatter_gpu(RppPtr_t srcPtr,
     if (roiType == RpptRoiType::XYWH)
     {
         for(int i = 0; i < dstDescPtr->n; i++)
-            if ((roiTensorPtrSrcHost[i].xywhROI.roiWidth > 1920) || (roiTensorPtrSrcHost[i].xywhROI.roiHeight > 1080))
+            if ((roiTensorPtrSrcHost[i].xywhROI.roiWidth > SPATTER_MAX_WIDTH) || (roiTensorPtrSrcHost[i].xywhROI.roiHeight > SPATTER_MAX_HEIGHT))
                 return RPP_ERROR_HIGH_SRC_DIMENSION;
     }
     else if (roiType == RpptRoiType::LTRB)
     {
         for(int i = 0; i < dstDescPtr->n; i++)
-            if ((roiTensorPtrSrcHost[i].ltrbROI.rb.x - roiTensorPtrSrcHost[i].ltrbROI.lt.x > 1919) || (roiTensorPtrSrcHost[i].ltrbROI.rb.y - roiTensorPtrSrcHost[i].ltrbROI.lt.y > 1079))
+            if ((roiTensorPtrSrcHost[i].ltrbROI.rb.x - roiTensorPtrSrcHost[i].ltrbROI.lt.x > SPATTER_MAX_XDIM) || (roiTensorPtrSrcHost[i].ltrbROI.rb.y - roiTensorPtrSrcHost[i].ltrbROI.lt.y > SPATTER_MAX_YDIM))
                 return RPP_ERROR_HIGH_SRC_DIMENSION;
     }
 
@@ -1214,8 +1214,8 @@ rppt_spatter_gpu(RppPtr_t srcPtr,
     uint2 maskLocArrHost[dstDescPtr->n];
     for(int i = 0; i < dstDescPtr->n; i++)
     {
-        std::uniform_int_distribution<> distribX(0, 1920 - roiTensorPtrSrcHost[i].xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, 1080 - roiTensorPtrSrcHost[i].xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiTensorPtrSrcHost[i].xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiTensorPtrSrcHost[i].xywhROI.roiHeight);
         maskLocArrHost[i].x = distribX(gen);
         maskLocArrHost[i].y = distribY(gen);
     }
@@ -1291,13 +1291,13 @@ rppt_spatter_host(RppPtr_t srcPtr,
     if (roiType == RpptRoiType::XYWH)
     {
         for(int i = 0; i < srcDescPtr->n; i++)
-            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > 1920) || (roiTensorPtrSrc[i].xywhROI.roiHeight > 1080))
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > SPATTER_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > SPATTER_MAX_HEIGHT))
                 return RPP_ERROR_HIGH_SRC_DIMENSION;
     }
     else if (roiType == RpptRoiType::LTRB)
     {
         for(int i = 0; i < srcDescPtr->n; i++)
-            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > 1919) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > 1079))
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > SPATTER_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > SPATTER_MAX_YDIM))
                 return RPP_ERROR_HIGH_SRC_DIMENSION;
     }
 

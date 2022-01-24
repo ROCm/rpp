@@ -9261,16 +9261,16 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-        std::uniform_int_distribution<> distribX(0, 1920 - roiPtr->xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, 1080 - roiPtr->xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiPtr->xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiPtr->xywhROI.roiHeight);
 
         RppiPoint maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
         Rpp32f *spatterMaskPtr, *spatterMaskInvPtr;
-        spatterMaskPtr = &spatterMask[(1920 * maskLoc.y) + maskLoc.x];
-        spatterMaskInvPtr = &spatterMaskInv[(1920 * maskLoc.y) + maskLoc.x];
+        spatterMaskPtr = &spatterMask[(SPATTER_MAX_WIDTH * maskLoc.y) + maskLoc.x];
+        spatterMaskInvPtr = &spatterMaskInv[(SPATTER_MAX_WIDTH * maskLoc.y) + maskLoc.x];
 
         Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
@@ -9357,8 +9357,8 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -9428,8 +9428,8 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtrRowG += srcDescPtr->strides.hStride;
                 srcPtrRowB += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -9489,8 +9489,8 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -9568,8 +9568,8 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
     }
@@ -9643,16 +9643,16 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-        std::uniform_int_distribution<> distribX(0, 1920 - roiPtr->xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, 1080 - roiPtr->xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiPtr->xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiPtr->xywhROI.roiHeight);
 
         RppiPoint maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
         Rpp32f *spatterMaskPtr, *spatterMaskInvPtr;
-        spatterMaskPtr = &spatterMask[(1920 * maskLoc.y) + maskLoc.x];
-        spatterMaskInvPtr = &spatterMaskInv[(1920 * maskLoc.y) + maskLoc.x];
+        spatterMaskPtr = &spatterMask[(SPATTER_MAX_WIDTH * maskLoc.y) + maskLoc.x];
+        spatterMaskInvPtr = &spatterMaskInv[(SPATTER_MAX_WIDTH * maskLoc.y) + maskLoc.x];
 
         if (srcDescPtr->c == 1)
             spatterValue[0] = spatterValue[1] = spatterValue[2] = (spatterValue[0] + spatterValue[1] + spatterValue[2]) * 0.3333;
@@ -9743,8 +9743,8 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -9814,8 +9814,8 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 srcPtrRowG += srcDescPtr->strides.hStride;
                 srcPtrRowB += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -9875,8 +9875,8 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -9958,8 +9958,8 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
     }
@@ -10033,16 +10033,16 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-        std::uniform_int_distribution<> distribX(0, 1920 - roiPtr->xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, 1080 - roiPtr->xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiPtr->xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiPtr->xywhROI.roiHeight);
 
         RppiPoint maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
         Rpp32f *spatterMaskPtr, *spatterMaskInvPtr;
-        spatterMaskPtr = &spatterMask[(1920 * maskLoc.y) + maskLoc.x];
-        spatterMaskInvPtr = &spatterMaskInv[(1920 * maskLoc.y) + maskLoc.x];
+        spatterMaskPtr = &spatterMask[(SPATTER_MAX_WIDTH * maskLoc.y) + maskLoc.x];
+        spatterMaskInvPtr = &spatterMaskInv[(SPATTER_MAX_WIDTH * maskLoc.y) + maskLoc.x];
 
         if (srcDescPtr->c == 1)
             spatterValue[0] = spatterValue[1] = spatterValue[2] = (spatterValue[0] + spatterValue[1] + spatterValue[2]) * 0.3333;
@@ -10143,8 +10143,8 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -10224,8 +10224,8 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
                 srcPtrRowG += srcDescPtr->strides.hStride;
                 srcPtrRowB += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -10291,8 +10291,8 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -10379,8 +10379,8 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
     }
@@ -10454,16 +10454,16 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
 
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-        std::uniform_int_distribution<> distribX(0, 1920 - roiPtr->xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, 1080 - roiPtr->xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiPtr->xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiPtr->xywhROI.roiHeight);
 
         RppiPoint maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
         Rpp32f *spatterMaskPtr, *spatterMaskInvPtr;
-        spatterMaskPtr = &spatterMask[(1920 * maskLoc.y) + maskLoc.x];
-        spatterMaskInvPtr = &spatterMaskInv[(1920 * maskLoc.y) + maskLoc.x];
+        spatterMaskPtr = &spatterMask[(SPATTER_MAX_WIDTH * maskLoc.y) + maskLoc.x];
+        spatterMaskInvPtr = &spatterMaskInv[(SPATTER_MAX_WIDTH * maskLoc.y) + maskLoc.x];
 
         Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
@@ -10550,8 +10550,8 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -10621,8 +10621,8 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 srcPtrRowG += srcDescPtr->strides.hStride;
                 srcPtrRowB += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -10682,8 +10682,8 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
 
@@ -10761,8 +10761,8 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
-                spatterMaskPtrRow += 1920;
-                spatterMaskInvPtrRow += 1920;
+                spatterMaskPtrRow += SPATTER_MAX_WIDTH;
+                spatterMaskInvPtrRow += SPATTER_MAX_WIDTH;
             }
         }
     }

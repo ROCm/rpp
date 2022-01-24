@@ -51,7 +51,7 @@ __global__ void spatter_pkd_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    uint maskIdx = (1920 * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
+    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
 
     d_float8 mask_f8, maskInv_f8;
     mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
@@ -92,7 +92,7 @@ __global__ void spatter_pln_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint maskIdx = (1920 * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
+    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
 
     d_float8 mask_f8, maskInv_f8;
     mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
@@ -147,7 +147,7 @@ __global__ void spatter_pkd3_pln3_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint maskIdx = (1920 * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
+    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
 
     d_float8 mask_f8, maskInv_f8;
     mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
@@ -187,7 +187,7 @@ __global__ void spatter_pln3_pkd3_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    uint maskIdx = (1920 * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
+    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
 
     d_float8 mask_f8, maskInv_f8;
     mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
