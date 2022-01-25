@@ -330,7 +330,7 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
 
         Rpp32f alpha = alphaTensor[batchCount];
-        Rpp32f beta = betaTensor[batchCount] * 0.0039216; // 1/255
+        Rpp32f beta = betaTensor[batchCount] * ONE_OVER_255;
 
         Rpp32f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -554,7 +554,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
         }
 
         Rpp32f alpha = alphaTensor[batchCount];
-        Rpp32f beta = betaTensor[batchCount] * 0.0039216; // 1/255
+        Rpp32f beta = betaTensor[batchCount] * ONE_OVER_255;
 
         Rpp16f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -1068,7 +1068,7 @@ RppStatus gamma_correction_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp8u gammaLUT[256];
         for (int i = 0; i < 256; i++)
         {
-            gammaLUT[i] = (Rpp8u) RPPPIXELCHECK(pow((((Rpp32f) i) * 0.003922f), gamma) * 255.0);
+            gammaLUT[i] = (Rpp8u) RPPPIXELCHECK(pow((((Rpp32f) i) * ONE_OVER_255), gamma) * 255.0);
         }
 
         Rpp8u *srcPtrImage, *dstPtrImage;
@@ -1246,7 +1246,7 @@ RppStatus gamma_correction_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32f gammaLUT[256];
         for (int i = 0; i < 256; i++)
         {
-            gammaLUT[i] = (Rpp32f) pow((((Rpp32f) i) * 0.003922f), gamma);
+            gammaLUT[i] = (Rpp32f) pow((((Rpp32f) i) * ONE_OVER_255), gamma);
         }
 
         Rpp32f *srcPtrImage, *dstPtrImage;
@@ -1424,7 +1424,7 @@ RppStatus gamma_correction_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32f gammaLUT[256];
         for (int i = 0; i < 256; i++)
         {
-            gammaLUT[i] = (Rpp32f) pow((((Rpp32f) i) * 0.003922f), gamma);
+            gammaLUT[i] = (Rpp32f) pow((((Rpp32f) i) * ONE_OVER_255), gamma);
         }
 
         Rpp16f *srcPtrImage, *dstPtrImage;
@@ -1602,7 +1602,7 @@ RppStatus gamma_correction_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp8s gammaLUT[256];
         for (int i = 0; i < 256; i++)
         {
-            gammaLUT[i] = (Rpp8s) (RPPPIXELCHECK(pow((((Rpp32f) i) * 0.003922f), gamma) * 255.0) - 128);
+            gammaLUT[i] = (Rpp8s) (RPPPIXELCHECK(pow((((Rpp32f) i) * ONE_OVER_255), gamma) * 255.0) - 128);
         }
 
         Rpp8s *srcPtrImage, *dstPtrImage;
@@ -2960,9 +2960,9 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = (Rpp32f)srcPtrTemp[0] * 0.00392157f;
-                    pixel.G = (Rpp32f)srcPtrTemp[1] * 0.00392157f;
-                    pixel.B = (Rpp32f)srcPtrTemp[2] * 0.00392157f;
+                    pixel.R = (Rpp32f)srcPtrTemp[0] * ONE_OVER_255;
+                    pixel.G = (Rpp32f)srcPtrTemp[1] * ONE_OVER_255;
+                    pixel.B = (Rpp32f)srcPtrTemp[2] * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
                     *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(pixel.R);
                     *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(pixel.G);
@@ -3026,9 +3026,9 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = (Rpp32f)*srcPtrTempR * 0.00392157f;
-                    pixel.G = (Rpp32f)*srcPtrTempG * 0.00392157f;
-                    pixel.B = (Rpp32f)*srcPtrTempB * 0.00392157f;
+                    pixel.R = (Rpp32f)*srcPtrTempR * ONE_OVER_255;
+                    pixel.G = (Rpp32f)*srcPtrTempG * ONE_OVER_255;
+                    pixel.B = (Rpp32f)*srcPtrTempB * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
                     dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(pixel.R);
                     dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(pixel.G);
@@ -3086,9 +3086,9 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = (Rpp32f)srcPtrTemp[0] * 0.00392157f;
-                    pixel.G = (Rpp32f)srcPtrTemp[1] * 0.00392157f;
-                    pixel.B = (Rpp32f)srcPtrTemp[2] * 0.00392157f;
+                    pixel.R = (Rpp32f)srcPtrTemp[0] * ONE_OVER_255;
+                    pixel.G = (Rpp32f)srcPtrTemp[1] * ONE_OVER_255;
+                    pixel.B = (Rpp32f)srcPtrTemp[2] * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
                     dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(pixel.R);
                     dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(pixel.G);
@@ -3154,9 +3154,9 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = (Rpp32f)*srcPtrTempR * 0.00392157f;
-                    pixel.G = (Rpp32f)*srcPtrTempG * 0.00392157f;
-                    pixel.B = (Rpp32f)*srcPtrTempB * 0.00392157f;
+                    pixel.R = (Rpp32f)*srcPtrTempR * ONE_OVER_255;
+                    pixel.G = (Rpp32f)*srcPtrTempG * ONE_OVER_255;
+                    pixel.B = (Rpp32f)*srcPtrTempB * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
                     *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(pixel.R);
                     *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(pixel.G);
@@ -3236,7 +3236,7 @@ RppStatus color_twist_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
-        Rpp32f contrastParam = contrastTensor[batchCount] * 0.00392157f; // 1/255
+        Rpp32f contrastParam = contrastTensor[batchCount] * ONE_OVER_255;
         Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.01666667f; // 6 * 1/360
         Rpp32f saturationParam = saturationTensor[batchCount];
 
@@ -3569,7 +3569,7 @@ RppStatus color_twist_f16_f16_host_tensor(Rpp16f *srcPtr,
         }
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
-        Rpp32f contrastParam = contrastTensor[batchCount] * 0.00392157f; // 1/255
+        Rpp32f contrastParam = contrastTensor[batchCount] * ONE_OVER_255;
         Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.01666667f; // 6 * 1/360
         Rpp32f saturationParam = saturationTensor[batchCount];
 
@@ -4019,9 +4019,9 @@ RppStatus color_twist_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = ((Rpp32f)srcPtrTemp[0] + 128.0f) * 0.00392157f;
-                    pixel.G = ((Rpp32f)srcPtrTemp[1] + 128.0f) * 0.00392157f;
-                    pixel.B = ((Rpp32f)srcPtrTemp[2] + 128.0f) * 0.00392157f;
+                    pixel.R = ((Rpp32f)srcPtrTemp[0] + 128.0f) * ONE_OVER_255;
+                    pixel.G = ((Rpp32f)srcPtrTemp[1] + 128.0f) * ONE_OVER_255;
+                    pixel.B = ((Rpp32f)srcPtrTemp[2] + 128.0f) * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
                     *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(pixel.R - 128.0f);
                     *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8(pixel.G - 128.0f);
@@ -4085,9 +4085,9 @@ RppStatus color_twist_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = ((Rpp32f)*srcPtrTempR + 128.0f) * 0.00392157f;
-                    pixel.G = ((Rpp32f)*srcPtrTempG + 128.0f) * 0.00392157f;
-                    pixel.B = ((Rpp32f)*srcPtrTempB + 128.0f) * 0.00392157f;
+                    pixel.R = ((Rpp32f)*srcPtrTempR + 128.0f) * ONE_OVER_255;
+                    pixel.G = ((Rpp32f)*srcPtrTempG + 128.0f) * ONE_OVER_255;
+                    pixel.B = ((Rpp32f)*srcPtrTempB + 128.0f) * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
                     dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(pixel.R - 128.0f);
                     dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(pixel.G - 128.0f);
@@ -4145,9 +4145,9 @@ RppStatus color_twist_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = ((Rpp32f)srcPtrTemp[0] + 128.0f) * 0.00392157f;
-                    pixel.G = ((Rpp32f)srcPtrTemp[1] + 128.0f) * 0.00392157f;
-                    pixel.B = ((Rpp32f)srcPtrTemp[2] + 128.0f) * 0.00392157f;
+                    pixel.R = ((Rpp32f)srcPtrTemp[0] + 128.0f) * ONE_OVER_255;
+                    pixel.G = ((Rpp32f)srcPtrTemp[1] + 128.0f) * ONE_OVER_255;
+                    pixel.B = ((Rpp32f)srcPtrTemp[2] + 128.0f) * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
                     dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(pixel.R - 128.0f);
                     dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(pixel.G - 128.0f);
@@ -4213,9 +4213,9 @@ RppStatus color_twist_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = ((Rpp32f)*srcPtrTempR + 128.0f) * 0.00392157f;
-                    pixel.G = ((Rpp32f)*srcPtrTempG + 128.0f) * 0.00392157f;
-                    pixel.B = ((Rpp32f)*srcPtrTempB + 128.0f) * 0.00392157f;
+                    pixel.R = ((Rpp32f)*srcPtrTempR + 128.0f) * ONE_OVER_255;
+                    pixel.G = ((Rpp32f)*srcPtrTempG + 128.0f) * ONE_OVER_255;
+                    pixel.B = ((Rpp32f)*srcPtrTempB + 128.0f) * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
                     *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(pixel.R - 128.0f);
                     *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8(pixel.G - 128.0f);
@@ -5807,9 +5807,9 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
             compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
         }
 
-        Rpp32f rParam = rgbTensor[batchCount].R * 0.00392157;
-        Rpp32f gParam = rgbTensor[batchCount].G * 0.00392157;
-        Rpp32f bParam = rgbTensor[batchCount].B * 0.00392157;
+        Rpp32f rParam = rgbTensor[batchCount].R * ONE_OVER_255;
+        Rpp32f gParam = rgbTensor[batchCount].G * ONE_OVER_255;
+        Rpp32f bParam = rgbTensor[batchCount].B * ONE_OVER_255;
         Rpp32f alphaParam = alphaTensor[batchCount];
 
         Rpp32f *srcPtrImage, *dstPtrImage;
@@ -6090,9 +6090,9 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
             compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
         }
 
-        Rpp32f rParam = rgbTensor[batchCount].R * 0.00392157;
-        Rpp32f gParam = rgbTensor[batchCount].G * 0.00392157;
-        Rpp32f bParam = rgbTensor[batchCount].B * 0.00392157;
+        Rpp32f rParam = rgbTensor[batchCount].R * ONE_OVER_255;
+        Rpp32f gParam = rgbTensor[batchCount].G * ONE_OVER_255;
+        Rpp32f bParam = rgbTensor[batchCount].B * ONE_OVER_255;
         Rpp32f alphaParam = alphaTensor[batchCount];
 
         Rpp16f *srcPtrImage, *dstPtrImage;
@@ -9627,9 +9627,9 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
 
         Rpp32f spatterValue[3];
-        spatterValue[0] = (Rpp32f) spatterColor.B * 0.00392157f;
-        spatterValue[1] = (Rpp32f) spatterColor.G * 0.00392157f;
-        spatterValue[2] = (Rpp32f) spatterColor.R * 0.00392157f;
+        spatterValue[0] = (Rpp32f) spatterColor.B * ONE_OVER_255;
+        spatterValue[1] = (Rpp32f) spatterColor.G * ONE_OVER_255;
+        spatterValue[2] = (Rpp32f) spatterColor.R * ONE_OVER_255;
 
         Rpp32f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -10017,9 +10017,9 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
         }
 
         Rpp32f spatterValue[3];
-        spatterValue[0] = (Rpp32f) spatterColor.B * 0.00392157f;
-        spatterValue[1] = (Rpp32f) spatterColor.G * 0.00392157f;
-        spatterValue[2] = (Rpp32f) spatterColor.R * 0.00392157f;
+        spatterValue[0] = (Rpp32f) spatterColor.B * ONE_OVER_255;
+        spatterValue[1] = (Rpp32f) spatterColor.G * ONE_OVER_255;
+        spatterValue[2] = (Rpp32f) spatterColor.R * ONE_OVER_255;
 
         Rpp16f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
