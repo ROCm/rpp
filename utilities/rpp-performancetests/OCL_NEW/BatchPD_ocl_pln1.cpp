@@ -766,8 +766,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 1:
@@ -798,8 +796,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -832,8 +828,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 3:
@@ -864,8 +858,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -900,8 +892,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 5:
@@ -926,8 +916,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -960,8 +948,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 7:
@@ -993,8 +979,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 8:
@@ -1025,8 +1009,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1071,8 +1053,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 10:
@@ -1103,8 +1083,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1142,8 +1120,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1194,8 +1170,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 13:
@@ -1226,8 +1200,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1269,8 +1241,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 16:
@@ -1296,8 +1266,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 17:
@@ -1322,8 +1290,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1370,8 +1336,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 21:
@@ -1412,8 +1376,6 @@ int main(int argc, char **argv)
                 rppi_resize_u8_i8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1464,8 +1426,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 23:
@@ -1496,8 +1456,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1535,8 +1493,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 25:
@@ -1561,8 +1517,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1597,8 +1551,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 27:
@@ -1629,8 +1581,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1671,8 +1621,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1716,8 +1664,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 30:
@@ -1748,8 +1694,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -1899,8 +1843,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 34:
@@ -1943,8 +1885,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             clReleaseMemObject(d_lut8u);
             clReleaseMemObject(d_lut8s);
@@ -2006,8 +1946,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 38:
@@ -2056,8 +1994,6 @@ int main(int argc, char **argv)
                 rppi_crop_mirror_normalize_u8_i8_pln1_batchPD_gpu(d_input, srcSize, maxSize, d_outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2110,8 +2046,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 40:
@@ -2143,8 +2077,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 41:
@@ -2175,8 +2107,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2230,8 +2160,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 46:
@@ -2262,8 +2190,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2316,8 +2242,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 49:
@@ -2348,8 +2272,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2382,8 +2304,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 51:
@@ -2414,8 +2334,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2455,8 +2373,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 54:
@@ -2490,8 +2406,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 55:
@@ -2523,8 +2437,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 56:
@@ -2549,8 +2461,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2583,8 +2493,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
 
             break;
@@ -2611,8 +2519,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
 
@@ -2641,8 +2547,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 60:
@@ -2667,8 +2571,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2695,8 +2597,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 62:
@@ -2721,8 +2621,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2749,8 +2647,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 64:
@@ -2775,8 +2671,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             err |= clEnqueueCopyBuffer(theQueue, d_input, d_output, 0, 0, oBufferSize * sizeof(Rpp8u), 0, NULL, NULL);
 
@@ -2805,8 +2699,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 66:
@@ -2831,8 +2723,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2859,8 +2749,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 68:
@@ -2885,8 +2773,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2913,8 +2799,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 70:
@@ -2939,8 +2823,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -2975,8 +2857,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 72:
@@ -3010,8 +2890,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 73:
@@ -3044,8 +2922,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
-
-            end = clock();
 
             break;
         }
@@ -3088,8 +2964,6 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            end = clock();
-
             break;
         }
         case 75:
@@ -3131,6 +3005,8 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
             break;
         }
+
+        end = clock();
 
         if (missingFuncFlag == 1)
         {
