@@ -236,12 +236,13 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
         spatterColor_f3 = make_float3(meanGreyVal, meanGreyVal, meanGreyVal);
     }
 
+    Rpp32u maskSize = SPATTER_MAX_WIDTH * SPATTER_MAX_HEIGHT;
+    Rpp32u maskSizeFloat = maskSize * sizeof(float);
     float *spatterMaskPtr, *spatterMaskInvPtr;
-    Rpp32u maskSize = 2073600 * sizeof(float);
-    hipMalloc(&spatterMaskPtr, maskSize);
-    hipMalloc(&spatterMaskInvPtr, maskSize);
-    hipMemcpy(spatterMaskPtr, spatterMask, maskSize, hipMemcpyHostToDevice);
-    hipMemcpy(spatterMaskInvPtr, spatterMaskInv, maskSize, hipMemcpyHostToDevice);
+    spatterMaskPtr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    spatterMaskInvPtr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem + maskSize;
+    hipMemcpy(spatterMaskPtr, spatterMask, maskSizeFloat, hipMemcpyHostToDevice);
+    hipMemcpy(spatterMaskInvPtr, spatterMaskInv, maskSizeFloat, hipMemcpyHostToDevice);
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -321,9 +322,6 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                roiTensorPtrSrc);
         }
     }
-
-    hipFree(&spatterMaskPtr);
-    hipFree(&spatterMaskInvPtr);
 
     return RPP_SUCCESS;
 }
