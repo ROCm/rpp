@@ -1211,17 +1211,18 @@ rppt_spatter_gpu(RppPtr_t srcPtr,
 
     std::random_device rd;  // Random number engine seed
     std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-    uint2 maskLocArrHost[dstDescPtr->n];
+    Rpp32u maskLocArrHostX[dstDescPtr->n], maskLocArrHostY[dstDescPtr->n];
     for(int i = 0; i < dstDescPtr->n; i++)
     {
         std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiTensorPtrSrcHost[i].xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiTensorPtrSrcHost[i].xywhROI.roiHeight);
-        maskLocArrHost[i].x = distribX(gen);
-        maskLocArrHost[i].y = distribY(gen);
+        maskLocArrHostX[i] = distribX(gen);
+        maskLocArrHostY[i] = distribY(gen);
     }
-    uint2 *maskLocArr;
-    hipMalloc(&maskLocArr, dstDescPtr->n * sizeof(uint2));
-    hipMemcpy(maskLocArr, maskLocArrHost, dstDescPtr->n * sizeof(uint2), hipMemcpyHostToDevice);
+
+    Rpp32u paramIndex = 0;
+    copy_param_uint(maskLocArrHostX, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uint(maskLocArrHostY, rpp::deref(rppHandle), paramIndex++);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1229,7 +1230,6 @@ rppt_spatter_gpu(RppPtr_t srcPtr,
                            srcDescPtr,
                            static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                            dstDescPtr,
-                           maskLocArr,
                            spatterColor,
                            roiTensorPtrSrc,
                            roiType,
@@ -1241,7 +1241,6 @@ rppt_spatter_gpu(RppPtr_t srcPtr,
                            srcDescPtr,
                            (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                            dstDescPtr,
-                           maskLocArr,
                            spatterColor,
                            roiTensorPtrSrc,
                            roiType,
@@ -1253,7 +1252,6 @@ rppt_spatter_gpu(RppPtr_t srcPtr,
                            srcDescPtr,
                            (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                            dstDescPtr,
-                           maskLocArr,
                            spatterColor,
                            roiTensorPtrSrc,
                            roiType,
@@ -1265,13 +1263,11 @@ rppt_spatter_gpu(RppPtr_t srcPtr,
                            srcDescPtr,
                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                            dstDescPtr,
-                           maskLocArr,
                            spatterColor,
                            roiTensorPtrSrc,
                            roiType,
                            rpp::deref(rppHandle));
     }
-    hipFree(&maskLocArr);
 #endif //backend
 
     return RPP_SUCCESS;

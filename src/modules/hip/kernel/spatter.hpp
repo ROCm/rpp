@@ -36,7 +36,8 @@ __global__ void spatter_pkd_tensor(T *srcPtr,
                                    uint2 dstStridesNH,
                                    float *spatterMaskPtr,
                                    float *spatterMaskInvPtr,
-                                   uint2 *maskLocArr,
+                                   uint *maskLocArrX,
+                                   uint *maskLocArrY,
                                    float3 spatterColor,
                                    RpptROIPtr roiTensorPtrSrc)
 {
@@ -51,7 +52,7 @@ __global__ void spatter_pkd_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
+    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArrY[id_z] + id_y)) + maskLocArrX[id_z] + id_x;
 
     d_float8 mask_f8, maskInv_f8;
     mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
@@ -77,7 +78,8 @@ __global__ void spatter_pln_tensor(T *srcPtr,
                                    int channelsDst,
                                    float *spatterMaskPtr,
                                    float *spatterMaskInvPtr,
-                                   uint2 *maskLocArr,
+                                   uint *maskLocArrX,
+                                   uint *maskLocArrY,
                                    float3 spatterColor,
                                    RpptROIPtr roiTensorPtrSrc)
 {
@@ -92,7 +94,7 @@ __global__ void spatter_pln_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
+    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArrY[id_z] + id_y)) + maskLocArrX[id_z] + id_x;
 
     d_float8 mask_f8, maskInv_f8;
     mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
@@ -132,7 +134,8 @@ __global__ void spatter_pkd3_pln3_tensor(T *srcPtr,
                                          uint3 dstStridesNCH,
                                          float *spatterMaskPtr,
                                          float *spatterMaskInvPtr,
-                                         uint2 *maskLocArr,
+                                         uint *maskLocArrX,
+                                         uint *maskLocArrY,
                                          float3 spatterColor,
                                          RpptROIPtr roiTensorPtrSrc)
 {
@@ -147,7 +150,7 @@ __global__ void spatter_pkd3_pln3_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
+    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArrY[id_z] + id_y)) + maskLocArrX[id_z] + id_x;
 
     d_float8 mask_f8, maskInv_f8;
     mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
@@ -172,7 +175,8 @@ __global__ void spatter_pln3_pkd3_tensor(T *srcPtr,
                                          uint2 dstStridesNH,
                                          float *spatterMaskPtr,
                                          float *spatterMaskInvPtr,
-                                         uint2 *maskLocArr,
+                                         uint *maskLocArrX,
+                                         uint *maskLocArrY,
                                          float3 spatterColor,
                                          RpptROIPtr roiTensorPtrSrc)
 {
@@ -187,7 +191,7 @@ __global__ void spatter_pln3_pkd3_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArr[id_z].y + id_y)) + maskLocArr[id_z].x + id_x;
+    uint maskIdx = (SPATTER_MAX_WIDTH * (maskLocArrY[id_z] + id_y)) + maskLocArrX[id_z] + id_x;
 
     d_float8 mask_f8, maskInv_f8;
     mask_f8 = *(d_float8 *)&spatterMaskPtr[maskIdx];
@@ -210,7 +214,6 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   T *dstPtr,
                                   RpptDescPtr dstDescPtr,
-                                  uint2 *maskLocArr,
                                   RpptRGB spatterColor,
                                   RpptROIPtr roiTensorPtrSrc,
                                   rpp::Handle& handle)
@@ -254,7 +257,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            spatterMaskPtr,
                            spatterMaskInvPtr,
-                           maskLocArr,
+                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                            spatterColor_f3,
                            roiTensorPtrSrc);
     }
@@ -272,7 +276,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                            dstDescPtr->c,
                            spatterMaskPtr,
                            spatterMaskInvPtr,
-                           maskLocArr,
+                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                            spatterColor_f3,
                            roiTensorPtrSrc);
     }
@@ -291,7 +296,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                spatterMaskPtr,
                                spatterMaskInvPtr,
-                               maskLocArr,
+                               handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                               handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                                spatterColor_f3,
                                roiTensorPtrSrc);
         }
@@ -309,7 +315,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                spatterMaskPtr,
                                spatterMaskInvPtr,
-                               maskLocArr,
+                               handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                               handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                                spatterColor_f3,
                                roiTensorPtrSrc);
         }
