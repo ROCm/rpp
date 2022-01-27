@@ -4039,4 +4039,17 @@ inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* d
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_cmn_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pCMNParams)
+{
+    pVecR = _mm256_sub_ps(pVecR, pCMNParams[0]);
+    pVecG = _mm256_sub_ps(pVecG, pCMNParams[0]);
+    pVecB = _mm256_sub_ps(pVecB, pCMNParams[0]);
+    
+    pVecR = _mm256_mul_ps(pVecR, pCMNParams[1]);
+    pVecG = _mm256_mul_ps(pVecG, pCMNParams[1]);
+    pVecB = _mm256_mul_ps(pVecB, pCMNParams[1]);
+                            
+    return RPP_SUCCESS;
+}
+
 #endif //RPP_CPU_COMMON_H
