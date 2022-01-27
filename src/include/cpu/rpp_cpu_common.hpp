@@ -4052,4 +4052,12 @@ inline RppStatus compute_cmn_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_cmn_8_host(__m256 &pVec, __m256 *pCMNParams)
+{
+    pVec = _mm256_sub_ps(pVec, pCMNParams[0]);
+    pVec = _mm256_mul_ps(pVec, pCMNParams[1]);   
+
+    return RPP_SUCCESS;
+}
+
 #endif //RPP_CPU_COMMON_H
