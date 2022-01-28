@@ -1218,16 +1218,19 @@ rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
     //                              roiType,
     //                              layoutParams);
     // }
-    // else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    // {
-    //     crop_mirror_normalize_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-    //                              srcDescPtr,
-    //                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-    //                              dstDescPtr,
-    //                              roiTensorPtrSrc,
-    //                              roiType,
-    //                              layoutParams);
-    // }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        crop_mirror_normalize_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                 dstDescPtr,
+                                 meanTensor,
+                                 stdDevTensor,
+                                 mirrorTensor,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams);
+    }
     // else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     // {
     //     crop_mirror_normalize_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,

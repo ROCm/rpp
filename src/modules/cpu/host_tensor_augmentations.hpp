@@ -9368,7 +9368,7 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_mirror_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                         __m128 p[12];
                         rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
@@ -9506,7 +9506,7 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_mirror_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_mirror_avx, dstPtrTemp, p);    // simd stores
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                         __m128 p[12];
                         rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
@@ -9552,10 +9552,10 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             if(mirrorFlag == 0)
             {
                 Rpp32u alignedLength = bufferLength & ~15;
+                srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
                 for(int c = 0; c < layoutParams.channelParam; c++)
                 {
                     Rpp8u *srcPtrRow, *dstPtrRow;
-                    srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
                     srcPtrRow = srcPtrChannel;
                     dstPtrRow = dstPtrChannel;
 
@@ -9602,10 +9602,641 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrChannel += dstDescPtr->strides.cStride;
                 }
             }
+            else if (mirrorFlag == 1)
+            {
+                if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+                {
+                    Rpp8u *srcPtrRow, *dstPtrRow;
+                    srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
+                    srcPtrRow = srcPtrChannel;
+                    dstPtrRow = dstPtrChannel;
+
+                    for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                    {
+                        Rpp8u *srcPtrTemp, *dstPtrTemp;
+                        srcPtrTemp = srcPtrRow;
+                        dstPtrTemp = dstPtrRow;
+
+                        int vectorLoopCount = 0;
+                        for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                        {
+                            srcPtrTemp -= vectorIncrement;
+#if __AVX2__
+                            __m256 p[6];
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);
+                            compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
+                            compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
+                            rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                            __m128 p[12];
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
+                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
+                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
+                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
+                            p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
+                            p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
+                            p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
+                            p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
+                            p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
+                            p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
+                            p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
+                            p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
+                            rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+                            dstPtrTemp += vectorIncrement;
+                        }
+                        for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                        {
+                            srcPtrTemp -= 3;
+                            dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0] - mean) * stdDev)));
+                            dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[1] - mean) * stdDev)));
+                            dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[2] - mean) * stdDev)));
+                            dstPtrTemp += 3;
+                        }
+                        srcPtrRow += srcDescPtr->strides.hStride;
+                        dstPtrRow += dstDescPtr->strides.hStride;
+                    }
+                }
+                else
+                {
+                    Rpp32u alignedLength = bufferLength & ~15;
+                    srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
+                    for(int c = 0; c < layoutParams.channelParam; c++)
+                    {
+                        Rpp8u *srcPtrRow, *dstPtrRow;
+                        srcPtrRow = srcPtrChannel;
+                        dstPtrRow = dstPtrChannel;
+
+                        for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                        {
+                            Rpp8u *srcPtrTemp, *dstPtrTemp;
+                            srcPtrTemp = srcPtrRow;
+                            dstPtrTemp = dstPtrRow;
+
+                            int vectorLoopCount = 0;
+                            for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                            {
+                                srcPtrTemp -= vectorIncrementPerChannel;
+#if __AVX2__
+                                __m256 p[2];
+
+                                rpp_simd_load(rpp_load16_u8_to_f32_mirror_avx, srcPtrTemp, p);    // simd loads
+                                compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
+                                compute_cmn_8_host(p[1], pCMNParams);  // cmn adjustment
+                                rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
+#else
+                                __m128 p[4];
+
+                                rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
+                                p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
+                                p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
+                                p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
+                                p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
+                                rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
+#endif
+                                dstPtrTemp += vectorIncrementPerChannel;
+                            }
+                            for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                            {
+                                srcPtrTemp--;
+
+                                *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) - mean) * stdDev);
+                                dstPtrTemp++;
+                            }
+                            srcPtrRow += srcDescPtr->strides.hStride;
+                            dstPtrRow += dstDescPtr->strides.hStride;
+                        }
+                        srcPtrChannel += srcDescPtr->strides.cStride;
+                        dstPtrChannel += dstDescPtr->strides.cStride;
+                    }
+                }
+            }
         }
     }
     return RPP_SUCCESS;
 }
-    
+
+RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp32f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *meanTensor,
+                                       Rpp32f *stdDevTensor,
+                                       Rpp32u *mirrorTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams)
+{
+    RpptROI roiDefault;
+    RpptROIPtr roiPtrDefault;
+    roiPtrDefault = &roiDefault;
+    roiPtrDefault->xywhROI.xy.x = 0;
+    roiPtrDefault->xywhROI.xy.y = 0;
+    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
+    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtr;
+
+        if (&roiTensorPtrSrc[batchCount] == NULL)
+        {
+            roiPtr = roiPtrDefault;
+        }
+        else
+        {
+            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+
+            RpptROI roiImage;
+            RpptROIPtr roiPtrImage;
+
+            if (roiType == RpptRoiType::LTRB)
+            {
+                roiPtrImage = &roiImage;
+                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
+            }
+            else if (roiType == RpptRoiType::XYWH)
+            {
+                roiPtrImage = roiPtrInput;
+            }
+
+            roiPtr = &roi;
+            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
+        }
+
+        Rpp32f mean = meanTensor[batchCount];
+        Rpp32f stdDev = stdDevTensor[batchCount];
+        Rpp32f invStdDev = 1.0 / stdDev;
+        Rpp32u mirrorFlag = mirrorTensor[batchCount];
+
+        Rpp32f *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
+        Rpp32f *srcPtrChannel, *dstPtrChannel;
+        dstPtrChannel = dstPtrImage;
+
+#if __AVX2__
+        Rpp32u alignedLength = (bufferLength / 24) * 24;
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
+
+        __m256 pCMNParams[2];
+        pCMNParams[0] = _mm256_set1_ps(mean);
+        pCMNParams[1] = _mm256_set1_ps(invStdDev);
+#else
+        Rpp32u alignedLength = (bufferLength / 12) * 12;
+        Rpp32u vectorIncrement = 12;
+        Rpp32u vectorIncrementPerChannel = 4;
+
+        __m128 pCMNParams[2];
+        pCMNParams[0] = _mm_set1_ps(mean);
+        pCMNParams[1] = _mm_set1_ps(stdDev);
+#endif
+        // Crop Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            if(mirrorFlag == 0)
+            {
+                Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+                srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+                srcPtrRow = srcPtrChannel;
+                dstPtrRowR = dstPtrChannel;
+                dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+                dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+                for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                {
+                    Rpp32f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                    srcPtrTemp = srcPtrRow;
+                    dstPtrTempR = dstPtrRowR;
+                    dstPtrTempG = dstPtrRowG;
+                    dstPtrTempB = dstPtrRowB;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                    {
+#if __AVX2__
+                        __m256 p[3];
+                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);
+                        compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
+                        rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#else
+                        // __m128 p[12];
+                        // rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                        // p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
+                        // p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
+                        // p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
+                        // p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
+                        // p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
+                        // p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
+                        // p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
+                        // p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
+                        // p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
+                        // p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
+                        // p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
+                        // p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
+                        // rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+
+                        srcPtrTemp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
+                    }
+
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                    {
+                        *dstPtrTempR = RPPPIXELCHECKF32((srcPtrTemp[0] - mean) * stdDev);
+                        *dstPtrTempG = RPPPIXELCHECKF32((srcPtrTemp[1] - mean) * stdDev);
+                        *dstPtrTempB = RPPPIXELCHECKF32((srcPtrTemp[2] - mean) * stdDev);
+
+                        srcPtrTemp += 3;
+                        dstPtrTempR++;
+                        dstPtrTempG++;
+                        dstPtrTempB++;
+                    }
+
+                    srcPtrRow += srcDescPtr->strides.hStride;
+                    dstPtrRowR += dstDescPtr->strides.hStride;
+                    dstPtrRowG += dstDescPtr->strides.hStride;
+                    dstPtrRowB += dstDescPtr->strides.hStride;
+                }
+            }
+            else
+            {
+                Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+                srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
+                srcPtrRow = srcPtrChannel;
+                dstPtrRowR = dstPtrChannel;
+                dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+                dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+                for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                {
+                    Rpp32f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                    srcPtrTemp = srcPtrRow;
+                    dstPtrTempR = dstPtrRowR;
+                    dstPtrTempG = dstPtrRowG;
+                    dstPtrTempB = dstPtrRowB;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                    {
+                        srcPtrTemp -= vectorIncrement;
+#if __AVX2__
+                        __m256 p[3];
+                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);
+                        compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
+                        rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#else
+                        __m128 p[12];
+                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
+                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
+                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
+                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
+                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
+                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
+                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
+                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
+                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
+                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
+                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
+                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                    {
+                        srcPtrTemp -= 3;
+                        *dstPtrTempR = RPPPIXELCHECKF32((srcPtrTemp[0] - mean) * stdDev);
+                        *dstPtrTempG = RPPPIXELCHECKF32((srcPtrTemp[1] - mean) * stdDev);
+                        *dstPtrTempB = RPPPIXELCHECKF32((srcPtrTemp[2] - mean) * stdDev);
+
+                        dstPtrTempR++;
+                        dstPtrTempG++;
+                        dstPtrTempB++;
+                    }
+
+                    srcPtrRow += srcDescPtr->strides.hStride;
+                    dstPtrRowR += dstDescPtr->strides.hStride;
+                    dstPtrRowG += dstDescPtr->strides.hStride;
+                    dstPtrRowB += dstDescPtr->strides.hStride;
+                }
+            }
+        }
+        // Brightness with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            if(mirrorFlag == 0)
+            {
+                Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+                srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+                srcPtrRowR = srcPtrChannel;
+                srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+                srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+                dstPtrRow = dstPtrChannel;
+
+                for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                {
+                    Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                    srcPtrTempR = srcPtrRowR;
+                    srcPtrTempG = srcPtrRowG;
+                    srcPtrTempB = srcPtrRowB;
+                    dstPtrTemp = dstPtrRow;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                    {
+#if __AVX2__
+                        __m256 p[3];
+                        rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                        compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
+                        rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                        __m128 p[12];
+                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
+                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
+                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
+                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
+                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
+                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
+                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
+                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
+                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
+                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
+                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
+                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
+#endif
+                        srcPtrTempR += vectorIncrementPerChannel;
+                        srcPtrTempG += vectorIncrementPerChannel;
+                        srcPtrTempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        dstPtrTemp[0] = RPPPIXELCHECKF32((*srcPtrTempR - mean) * stdDev);
+                        dstPtrTemp[1] = RPPPIXELCHECKF32((*srcPtrTempG - mean) * stdDev);
+                        dstPtrTemp[2] = RPPPIXELCHECKF32((*srcPtrTempB - mean) * stdDev);
+
+                        srcPtrTempR++;
+                        srcPtrTempG++;
+                        srcPtrTempB++;
+                        dstPtrTemp += 3;
+                    }
+
+                    srcPtrRowR += srcDescPtr->strides.hStride;
+                    srcPtrRowG += srcDescPtr->strides.hStride;
+                    srcPtrRowB += srcDescPtr->strides.hStride;
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+            else
+            {
+                Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+                srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
+                srcPtrRowR = srcPtrChannel;
+                srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+                srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+                dstPtrRow = dstPtrChannel;
+
+                for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                {
+                    Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                    srcPtrTempR = srcPtrRowR;
+                    srcPtrTempG = srcPtrRowG;
+                    srcPtrTempB = srcPtrRowB;
+                    dstPtrTemp = dstPtrRow;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                    {
+                        srcPtrTempR -= vectorIncrementPerChannel;
+                        srcPtrTempG -= vectorIncrementPerChannel;
+                        srcPtrTempB -= vectorIncrementPerChannel;
+#if __AVX2__
+                        __m256 p[3];
+                        rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_mirror_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                        compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
+                        rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                        __m128 p[12];
+                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
+                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
+                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
+                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
+                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
+                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
+                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
+                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
+                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
+                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
+                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
+                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
+#endif
+
+                        dstPtrTemp += vectorIncrement;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        srcPtrTempR--;
+                        srcPtrTempG--;
+                        srcPtrTempB--;
+
+                        dstPtrTemp[0] = RPPPIXELCHECKF32((*srcPtrTempR - mean) * stdDev);
+                        dstPtrTemp[1] = RPPPIXELCHECKF32((*srcPtrTempG - mean) * stdDev);
+                        dstPtrTemp[2] = RPPPIXELCHECKF32((*srcPtrTempB - mean) * stdDev);
+
+                        dstPtrTemp += 3;
+                    }
+
+                    srcPtrRowR += srcDescPtr->strides.hStride;
+                    srcPtrRowG += srcDescPtr->strides.hStride;
+                    srcPtrRowB += srcDescPtr->strides.hStride;
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+        }
+        else
+        {
+            if(mirrorFlag == 0)
+            {
+                Rpp32u alignedLength = bufferLength & ~15;
+                srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+                for(int c = 0; c < layoutParams.channelParam; c++)
+                {
+                    Rpp32f *srcPtrRow, *dstPtrRow;
+                    srcPtrRow = srcPtrChannel;
+                    dstPtrRow = dstPtrChannel;
+
+                    for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                    {
+                        Rpp32f *srcPtrTemp, *dstPtrTemp;
+                        srcPtrTemp = srcPtrRow;
+                        dstPtrTemp = dstPtrRow;
+
+                        int vectorLoopCount = 0;
+                        for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                        {
+#if __AVX2__
+                            __m256 p[1];
+
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
+                            compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
+                            rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
+#else
+                            __m128 p[4];
+
+                            rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
+                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
+                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
+                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
+                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
+                            rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
+#endif
+                            srcPtrTemp += vectorIncrementPerChannel;
+                            dstPtrTemp += vectorIncrementPerChannel;
+                        }
+                        for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                        {
+                            *dstPtrTemp = RPPPIXELCHECKF32((*srcPtrTemp - mean) * stdDev);
+
+                            srcPtrTemp++;
+                            dstPtrTemp++;
+                        }
+                        srcPtrRow += srcDescPtr->strides.hStride;
+                        dstPtrRow += dstDescPtr->strides.hStride;
+                    }
+                    srcPtrChannel += srcDescPtr->strides.cStride;
+                    dstPtrChannel += dstDescPtr->strides.cStride;
+                }
+            }
+            else if (mirrorFlag == 1)
+            {
+                if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+                {
+                    Rpp32f *srcPtrRow, *dstPtrRow;
+                    srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
+                    srcPtrRow = srcPtrChannel;
+                    dstPtrRow = dstPtrChannel;
+
+                    for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                    {
+                        Rpp32f *srcPtrTemp, *dstPtrTemp;
+                        srcPtrTemp = srcPtrRow;
+                        dstPtrTemp = dstPtrRow;
+
+                        int vectorLoopCount = 0;
+                        for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                        {
+                            srcPtrTemp -= vectorIncrement;
+#if __AVX2__
+                            __m256 p[3];
+
+                            rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);    // simd loads
+                            compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
+                            rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                            __m128 p[12];
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
+                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
+                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
+                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
+                            p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
+                            p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
+                            p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
+                            p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
+                            p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
+                            p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
+                            p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
+                            p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
+                            rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+                            dstPtrTemp += vectorIncrement;
+                        }
+                        for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                        {
+                            srcPtrTemp -= 3;
+                            dstPtrTemp[0] = RPPPIXELCHECKF32((srcPtrTemp[0] - mean) * stdDev);
+                            dstPtrTemp[1] = RPPPIXELCHECKF32((srcPtrTemp[1] - mean) * stdDev);
+                            dstPtrTemp[2] = RPPPIXELCHECKF32((srcPtrTemp[2] - mean) * stdDev);
+                            dstPtrTemp += 3;
+                        }
+                        srcPtrRow += srcDescPtr->strides.hStride;
+                        dstPtrRow += dstDescPtr->strides.hStride;
+                    }
+                }
+                else
+                {
+                    Rpp32u alignedLength = bufferLength & ~15;
+                    srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
+                    for(int c = 0; c < layoutParams.channelParam; c++)
+                    {
+                        Rpp32f *srcPtrRow, *dstPtrRow;
+                        srcPtrRow = srcPtrChannel;
+                        dstPtrRow = dstPtrChannel;
+
+                        for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+                        {
+                            Rpp32f *srcPtrTemp, *dstPtrTemp;
+                            srcPtrTemp = srcPtrRow;
+                            dstPtrTemp = dstPtrRow;
+
+                            int vectorLoopCount = 0;
+                            for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                            {
+                                srcPtrTemp -= vectorIncrementPerChannel;
+#if __AVX2__
+                                __m256 p[1];
+
+                                rpp_simd_load(rpp_load8_f32_to_f32_mirror_avx, srcPtrTemp, p);    // simd loads
+                                compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
+                                rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
+#else
+                                __m128 p[4];
+
+                                rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
+                                p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
+                                p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
+                                p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
+                                p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
+                                rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
+#endif
+                                dstPtrTemp += vectorIncrementPerChannel;
+                            }
+                            for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                            {
+                                srcPtrTemp--;
+
+                                *dstPtrTemp = RPPPIXELCHECKF32((*srcPtrTemp - mean) * stdDev);
+                                dstPtrTemp++;
+                            }
+                            srcPtrRow += srcDescPtr->strides.hStride;
+                            dstPtrRow += dstDescPtr->strides.hStride;
+                        }
+                        srcPtrChannel += srcDescPtr->strides.cStride;
+                        dstPtrChannel += dstDescPtr->strides.cStride;
+                    }
+                }
+            }
+        }
+    }
+    return RPP_SUCCESS;
+}    
 
 #endif // HOST_TENSOR_AUGMENTATIONS_HPP
