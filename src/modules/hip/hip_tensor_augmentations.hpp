@@ -4,6 +4,7 @@
 #include "kernel/gamma_correction.hpp"
 #include "kernel/blend.hpp"
 #include "kernel/color_cast.hpp"
+#include "kernel/color_twist.hpp"
 #include "kernel/box_filter.hpp"
 #include "kernel/erode.hpp"
 #include "kernel/dilate.hpp"
@@ -118,6 +119,33 @@ RppStatus color_cast_hip_tensor(T *srcPtr,
                                dstDescPtr,
                                roiTensorPtrSrc,
                                handle);
+
+    return RPP_SUCCESS;
+}
+
+/******************** color_twist ********************/
+
+template <typename T>
+RppStatus color_twist_hip_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+    {
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc,
+                                             handle);
+    }
+
+    hip_exec_color_twist_tensor(srcPtr,
+                                srcDescPtr,
+                                dstPtr,
+                                dstDescPtr,
+                                roiTensorPtrSrc,
+                                handle);
 
     return RPP_SUCCESS;
 }

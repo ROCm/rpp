@@ -15,8 +15,8 @@ __device__ void brightness_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8
 
 __device__ void brightness_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    dst_f8->x = rpp_hip_pixel_check((src_f8->x + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
-    dst_f8->y = rpp_hip_pixel_check((src_f8->y + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
+    dst_f8->x = rpp_hip_pixel_check_0to255((src_f8->x + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
+    dst_f8->y = rpp_hip_pixel_check_0to255((src_f8->y + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
 }
 
 __device__ void brightness_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
