@@ -85,8 +85,13 @@ int main(int argc, char **argv)
         strcpy(funcName, "color_cast");
         outputFormatToggle = 0;
         break;
+    case 36:
+        strcpy(funcName, "color_twist");
+        outputFormatToggle = 0;
+        break;
     case 37:
         strcpy(funcName, "crop");
+        outputFormatToggle = 0;
         break;
     case 40:
         strcpy(funcName, "erode");
@@ -102,9 +107,11 @@ int main(int argc, char **argv)
         break;
     case 83:
         strcpy(funcName, "gridmask");
+        outputFormatToggle = 0;
         break;
     case 84:
         strcpy(funcName, "spatter");
+        outputFormatToggle = 0;
         break;
     default:
         strcpy(funcName, "test_case");
