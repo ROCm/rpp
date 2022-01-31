@@ -86,6 +86,9 @@ int main(int argc, char **argv)
     case 37:
         strcpy(funcName, "crop");
         break;
+    case 38:
+        strcpy(funcName, "crop_mirror_normalize");
+        break;
     case 81:
         strcpy(funcName, "color_jitter");
         break;
@@ -636,6 +639,61 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_crop_host(inputi8, srcDescPtr, outputi8, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+            end = clock();
+            end_omp = omp_get_wtime();
+
+            break;
+        }
+        case 38:
+        {
+            test_case_name = "crop_mirror_normalize";
+            Rpp32f mean[images];
+            Rpp32f stdDev[images];
+            Rpp32u mirror[images];
+            for (i = 0; i < images; i++)
+            {
+                mean[i] = 0.0;
+                stdDev[i] = 1.0;
+                mirror[i] = 1;
+            }
+
+            // Uncomment to run test case with an xywhROI override
+            for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 50;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 50;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
+            }
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_crop_mirror_normalize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_crop_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
