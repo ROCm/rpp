@@ -4039,4 +4039,20 @@ inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* d
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_exposure_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &pExposureParam)
+{
+    pVecR = _mm256_mul_ps(pVecR, pExposureParam);    // exposure adjustment
+    pVecG = _mm256_mul_ps(pVecG, pExposureParam);    // exposure adjustment
+    pVecB = _mm256_mul_ps(pVecB, pExposureParam);    // exposure adjustmentt
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_exposure_8_host(__m256 &pVec, __m256 &pExposureParam)
+{
+    pVec = _mm256_mul_ps(pVec, pExposureParam);    // exposure adjustment
+    
+    return RPP_SUCCESS;
+}
+
 #endif //RPP_CPU_COMMON_H
