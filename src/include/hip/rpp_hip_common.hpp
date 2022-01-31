@@ -264,16 +264,6 @@ inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp
 
 // -------------------- Set 0 - Range checks and Range adjustment --------------------
 
-// // float4 pixel check for 0-255 range
-
-// __device__ __forceinline__ float4 rpp_hip_pixel_check(float4 src_f4)
-// {
-//     return make_float4(fminf(fmaxf(src_f4.x, 0), 255),
-//                        fminf(fmaxf(src_f4.y, 0), 255),
-//                        fminf(fmaxf(src_f4.z, 0), 255),
-//                        fminf(fmaxf(src_f4.w, 0), 255));
-// }
-
 // float4 pixel check for 0-255 range
 
 __device__ __forceinline__ float4 rpp_hip_pixel_check_0to255(float4 src_f4)
