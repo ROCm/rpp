@@ -9259,13 +9259,9 @@ RppStatus exposure_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
 
-#if __AVX2__
+
         __m256 pExposureParam;
         pExposureParam = _mm256_set1_ps(multiplyingFactor);
-#else
-        __m128 pBrightnessParams[2];
-        pExposureParam = _mm_set1_ps(multiplyingFactor);
-#endif
 
         // Exposure with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
