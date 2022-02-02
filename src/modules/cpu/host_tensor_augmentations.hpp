@@ -9262,15 +9262,10 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
 
-#if __AVX2__
         __m256 pCMNParams[2];
         pCMNParams[0] = _mm256_set1_ps(mean);
         pCMNParams[1] = _mm256_set1_ps(invStdDev);
-#else
-        __m128 pCMNParams[2];
-        pCMNParams[0] = _mm_set1_ps(mean);
-        pCMNParams[1] = _mm_set1_ps(stdDev);
-#endif
+
         // Crop Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -9294,29 +9289,11 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-#if __AVX2__
                         __m256 p[6];
-                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);
+                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);     //simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#else
-                        // __m128 p[12];
-                        // rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                        // p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                        // p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                        // p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                        // p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                        // p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                        // p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                        // p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        // p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        // p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        // p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        // p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        // p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        // rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
 
                         srcPtrTemp += vectorIncrement;
                         dstPtrTempR += vectorIncrementPerChannel;
@@ -9363,29 +9340,13 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         srcPtrTemp -= vectorIncrement;
-#if __AVX2__
+
                         __m256 p[6];
-                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);
+                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);      //simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+
                         dstPtrTempR += vectorIncrementPerChannel;
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
@@ -9409,7 +9370,8 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
             }
         }
-        // Brightness with fused output-layout toggle (NCHW -> NHWC)
+
+        // Crop Mirror Normalize with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             if(mirrorFlag == 0)
@@ -9432,29 +9394,12 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-#if __AVX2__
                         __m256 p[6];
                         rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-#endif
+                       
                         srcPtrTempR += vectorIncrementPerChannel;
                         srcPtrTempG += vectorIncrementPerChannel;
                         srcPtrTempB += vectorIncrementPerChannel;
@@ -9501,30 +9446,13 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTempR -= vectorIncrementPerChannel;
                         srcPtrTempG -= vectorIncrementPerChannel;
                         srcPtrTempB -= vectorIncrementPerChannel;
-#if __AVX2__
+
                         __m256 p[6];
                         rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_mirror_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-#endif
-
+   
                         dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -9547,11 +9475,13 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
             }
         }
+
+        // Crop Mirror Normalize without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
             if(mirrorFlag == 0)
             {
-                Rpp32u alignedLength = bufferLength & ~15;
+                Rpp32u alignedLength = (bufferLength / 16) * 16;
                 srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
                 for(int c = 0; c < layoutParams.channelParam; c++)
                 {
@@ -9568,23 +9498,13 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         int vectorLoopCount = 0;
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                         {
-#if __AVX2__
                             __m256 p[2];
 
                             rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrTemp, p);    // simd loads
                             compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
                             compute_cmn_8_host(p[1], pCMNParams);  // cmn adjustment
                             rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
-#else
-                            __m128 p[4];
 
-                            rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
-                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
-                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
-                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
-                            rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-#endif
                             srcPtrTemp += vectorIncrementPerChannel;
                             dstPtrTemp += vectorIncrementPerChannel;
                         }
@@ -9621,29 +9541,13 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             srcPtrTemp -= vectorIncrement;
-#if __AVX2__
+
                             __m256 p[6];
-                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);      // simd loads
                             compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                             compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                             rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                            __m128 p[12];
-                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                            p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                            p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                            p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                            p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                            p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                            p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                            p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                            p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                            rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+
                             dstPtrTemp += vectorIncrement;
                         }
                         for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
@@ -9660,7 +9564,7 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 else
                 {
-                    Rpp32u alignedLength = bufferLength & ~15;
+                    Rpp32u alignedLength = (bufferLength / 16) * 16;
                     srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
                     for(int c = 0; c < layoutParams.channelParam; c++)
                     {
@@ -9678,23 +9582,14 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                             for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                             {
                                 srcPtrTemp -= vectorIncrementPerChannel;
-#if __AVX2__
+
                                 __m256 p[2];
 
                                 rpp_simd_load(rpp_load16_u8_to_f32_mirror_avx, srcPtrTemp, p);    // simd loads
                                 compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
                                 compute_cmn_8_host(p[1], pCMNParams);  // cmn adjustment
                                 rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
-#else
-                                __m128 p[4];
 
-                                rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                                p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
-                                p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
-                                p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
-                                p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
-                                rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-#endif
                                 dstPtrTemp += vectorIncrementPerChannel;
                             }
                             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -9782,7 +9677,6 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
 
-#if __AVX2__
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -9790,15 +9684,7 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
         __m256 pCMNParams[2];
         pCMNParams[0] = _mm256_set1_ps(mean);
         pCMNParams[1] = _mm256_set1_ps(invStdDev);
-#else
-        Rpp32u alignedLength = (bufferLength / 12) * 12;
-        Rpp32u vectorIncrement = 12;
-        Rpp32u vectorIncrementPerChannel = 4;
-
-        __m128 pCMNParams[2];
-        pCMNParams[0] = _mm_set1_ps(mean);
-        pCMNParams[1] = _mm_set1_ps(stdDev);
-#endif
+        
         // Crop Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -9822,28 +9708,10 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-#if __AVX2__
                         __m256 p[3];
-                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);
+                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    //simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#else
-                        // __m128 p[12];
-                        // rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                        // p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                        // p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                        // p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                        // p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                        // p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                        // p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                        // p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        // p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        // p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        // p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        // p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        // p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        // rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
 
                         srcPtrTemp += vectorIncrement;
                         dstPtrTempR += vectorIncrementPerChannel;
@@ -9890,28 +9758,12 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         srcPtrTemp -= vectorIncrement;
-#if __AVX2__
+
                         __m256 p[3];
-                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);
+                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);     // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+    
                         dstPtrTempR += vectorIncrementPerChannel;
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
@@ -9935,7 +9787,8 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
             }
         }
-        // Brightness with fused output-layout toggle (NCHW -> NHWC)
+
+        // Crop Mirror Normalize with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             if(mirrorFlag == 0)
@@ -9958,28 +9811,11 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-#if __AVX2__
                         __m256 p[3];
                         rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-#endif
+                        
                         srcPtrTempR += vectorIncrementPerChannel;
                         srcPtrTempG += vectorIncrementPerChannel;
                         srcPtrTempB += vectorIncrementPerChannel;
@@ -10026,28 +9862,11 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         srcPtrTempR -= vectorIncrementPerChannel;
                         srcPtrTempG -= vectorIncrementPerChannel;
                         srcPtrTempB -= vectorIncrementPerChannel;
-#if __AVX2__
+
                         __m256 p[3];
                         rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_mirror_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-#endif
 
                         dstPtrTemp += vectorIncrement;
                     }
@@ -10071,11 +9890,13 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
             }
         }
+
+        // Crop Mirror Normalize without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
             if(mirrorFlag == 0)
             {
-                Rpp32u alignedLength = bufferLength & ~15;
+                Rpp32u alignedLength = (bufferLength / 8) * 8;
                 srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
                 for(int c = 0; c < layoutParams.channelParam; c++)
                 {
@@ -10092,22 +9913,12 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         int vectorLoopCount = 0;
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                         {
-#if __AVX2__
                             __m256 p[1];
 
                             rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
                             compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
                             rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
-#else
-                            __m128 p[4];
 
-                            rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
-                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
-                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
-                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
-                            rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-#endif
                             srcPtrTemp += vectorIncrementPerChannel;
                             dstPtrTemp += vectorIncrementPerChannel;
                         }
@@ -10144,29 +9955,13 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             srcPtrTemp -= vectorIncrement;
-#if __AVX2__
+                            
                             __m256 p[3];
 
                             rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);    // simd loads
                             compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                             rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                            __m128 p[12];
-                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                            p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                            p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                            p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                            p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                            p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                            p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                            p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                            p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                            rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+
                             dstPtrTemp += vectorIncrement;
                         }
                         for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
@@ -10183,7 +9978,7 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 else
                 {
-                    Rpp32u alignedLength = bufferLength & ~15;
+                    Rpp32u alignedLength = (bufferLength / 8) * 8;
                     srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
                     for(int c = 0; c < layoutParams.channelParam; c++)
                     {
@@ -10201,22 +9996,13 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                             for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                             {
                                 srcPtrTemp -= vectorIncrementPerChannel;
-#if __AVX2__
+
                                 __m256 p[1];
 
                                 rpp_simd_load(rpp_load8_f32_to_f32_mirror_avx, srcPtrTemp, p);    // simd loads
                                 compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
                                 rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
-#else
-                                __m128 p[4];
 
-                                rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                                p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
-                                p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
-                                p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
-                                p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
-                                rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-#endif
                                 dstPtrTemp += vectorIncrementPerChannel;
                             }
                             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -10304,7 +10090,6 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp16f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
 
-#if __AVX2__
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -10312,15 +10097,7 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
         __m256 pCMNParams[2];
         pCMNParams[0] = _mm256_set1_ps(mean);
         pCMNParams[1] = _mm256_set1_ps(invStdDev);
-#else
-        Rpp32u alignedLength = (bufferLength / 12) * 12;
-        Rpp32u vectorIncrement = 12;
-        Rpp32u vectorIncrementPerChannel = 4;
 
-        __m128 pCMNParams[2];
-        pCMNParams[0] = _mm_set1_ps(mean);
-        pCMNParams[1] = _mm_set1_ps(stdDev);
-#endif
         // Crop Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -10349,28 +10126,12 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                         for(int cnt = 0; cnt < vectorIncrement; cnt++)
                             srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-#if __AVX2__
+
                         __m256 p[3];
-                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);
+                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);     //simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
-#else
-                        // __m128 p[12];
-                        // rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                        // p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                        // p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                        // p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                        // p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                        // p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                        // p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                        // p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        // p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        // p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        // p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        // p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        // p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        // rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+   
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         {
                             dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
@@ -10428,28 +10189,12 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                         for(int cnt = 0; cnt < vectorIncrement; cnt++)
                             srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-#if __AVX2__
+
                         __m256 p[3];
-                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp_ps, p);
+                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp_ps, p);      // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+            
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         {
                             dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
@@ -10480,7 +10225,8 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
             }
         }
-        // Brightness with fused output-layout toggle (NCHW -> NHWC)
+
+        // Crop Mirror Normalize with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             if(mirrorFlag == 0)
@@ -10511,28 +10257,12 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                             srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
                             srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
                         }
-#if __AVX2__
+
                         __m256 p[3];
                         rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-#endif
+     
                         for(int cnt = 0; cnt < vectorIncrement; cnt++)
                             dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
 
@@ -10591,28 +10321,12 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                             srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
                             srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
                         }
-#if __AVX2__
+
                         __m256 p[3];
                         rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_mirror_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-#endif
+          
                         for(int cnt = 0; cnt < vectorIncrement; cnt++)
                             dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
 
@@ -10638,11 +10352,13 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
             }
         }
+
+        // Crop Mirror Normalize without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
             if(mirrorFlag == 0)
             {
-                Rpp32u alignedLength = bufferLength & ~15;
+                Rpp32u alignedLength = (bufferLength / 8) * 8;
                 srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
                 for(int c = 0; c < layoutParams.channelParam; c++)
                 {
@@ -10664,22 +10380,11 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                             for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                                 srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
 
-#if __AVX2__
                             __m256 p[1];
 
                             rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, p);    // simd loads
                             compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
                             rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);    // simd stores
-#else
-                            __m128 p[4];
-
-                            rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
-                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
-                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
-                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
-                            rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-#endif
 
                             for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                                 dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
@@ -10725,29 +10430,12 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                             for(int cnt = 0; cnt < vectorIncrement; cnt++)
                                 srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
 
-#if __AVX2__
                             __m256 p[3];
 
                             rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp_ps, p);    // simd loads
                             compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                             rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
-#else
-                            __m128 p[12];
-                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                            p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                            p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                            p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                            p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                            p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                            p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                            p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                            p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                            rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+
                             for(int cnt = 0; cnt < vectorIncrement; cnt++)
                                 dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
 
@@ -10767,7 +10455,7 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 else
                 {
-                    Rpp32u alignedLength = bufferLength & ~15;
+                    Rpp32u alignedLength = (bufferLength / 8) * 8;
                     srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
                     for(int c = 0; c < layoutParams.channelParam; c++)
                     {
@@ -10789,22 +10477,12 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                 srcPtrTemp -= vectorIncrementPerChannel;
                                 for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                                     srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-#if __AVX2__
+
                                 __m256 p[1];
 
                                 rpp_simd_load(rpp_load8_f32_to_f32_mirror_avx, srcPtrTemp_ps, p);    // simd loads
                                 compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
                                 rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);    // simd stores
-#else
-                                __m128 p[4];
-
-                                rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                                p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
-                                p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
-                                p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
-                                p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
-                                rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-#endif
 
                                 for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                                     dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
@@ -10900,15 +10578,10 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
 
-#if __AVX2__
         __m256 pCMNParams[2];
         pCMNParams[0] = _mm256_set1_ps(mean);
         pCMNParams[1] = _mm256_set1_ps(invStdDev);
-#else
-        __m128 pCMNParams[2];
-        pCMNParams[0] = _mm_set1_ps(mean);
-        pCMNParams[1] = _mm_set1_ps(stdDev);
-#endif
+
         // Crop Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -10932,29 +10605,11 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-#if __AVX2__
                         __m256 p[6];
-                        rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);
+                        rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);     // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#else
-                        // __m128 p[12];
-                        // rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                        // p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                        // p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                        // p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                        // p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                        // p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                        // p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                        // p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        // p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        // p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        // p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        // p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        // p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        // rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
 
                         srcPtrTemp += vectorIncrement;
                         dstPtrTempR += vectorIncrementPerChannel;
@@ -11001,29 +10656,13 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         srcPtrTemp -= vectorIncrement;
-#if __AVX2__
+
                         __m256 p[6];
-                        rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);
+                        rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);      // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+
                         dstPtrTempR += vectorIncrementPerChannel;
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
@@ -11047,7 +10686,8 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
             }
         }
-        // Brightness with fused output-layout toggle (NCHW -> NHWC)
+
+        // Crop Mirror Normalize with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             if(mirrorFlag == 0)
@@ -11070,29 +10710,12 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-#if __AVX2__
                         __m256 p[6];
                         rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                         rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-#endif
+
                         srcPtrTempR += vectorIncrementPerChannel;
                         srcPtrTempG += vectorIncrementPerChannel;
                         srcPtrTempB += vectorIncrementPerChannel;
@@ -11139,29 +10762,12 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                         srcPtrTempR -= vectorIncrementPerChannel;
                         srcPtrTempG -= vectorIncrementPerChannel;
                         srcPtrTempB -= vectorIncrementPerChannel;
-#if __AVX2__
+
                         __m256 p[6];
                         rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_mirror_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                         compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
-                        rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                        __m128 p[12];
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                        p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment Rs
-                        p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment Rs
-                        p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment Rs
-                        p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment Rs
-                        p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // brightness adjustment Gs
-                        p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // brightness adjustment Gs
-                        p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                        p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                        p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                        p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                        p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                        p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-#endif
+                        rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd store
 
                         dstPtrTemp += vectorIncrement;
                     }
@@ -11185,11 +10791,13 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
             }
         }
+
+        // Crop Mirror Normalize without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
             if(mirrorFlag == 0)
             {
-                Rpp32u alignedLength = bufferLength & ~15;
+                Rpp32u alignedLength = (bufferLength / 16) * 16;
                 srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
                 for(int c = 0; c < layoutParams.channelParam; c++)
                 {
@@ -11206,23 +10814,13 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                         int vectorLoopCount = 0;
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                         {
-#if __AVX2__
                             __m256 p[2];
 
                             rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtrTemp, p);    // simd loads
                             compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
                             compute_cmn_8_host(p[1], pCMNParams);  // cmn adjustment
                             rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);    // simd stores
-#else
-                            __m128 p[4];
 
-                            rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
-                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
-                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
-                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
-                            rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-#endif
                             srcPtrTemp += vectorIncrementPerChannel;
                             dstPtrTemp += vectorIncrementPerChannel;
                         }
@@ -11242,6 +10840,7 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
             else if (mirrorFlag == 1)
             {
+                // Crop Mirror Normalize without fused output-layout toggle (NCHW -> NCHW)
                 if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
                 {
                     Rpp8s *srcPtrRow, *dstPtrRow;
@@ -11259,29 +10858,13 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             srcPtrTemp -= vectorIncrement;
-#if __AVX2__
+
                             __m256 p[6];
-                            rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);
+                            rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);      // simd loads
                             compute_cmn_24_host(p[0], p[1], p[2], pCMNParams);  // cmn adjustment
                             compute_cmn_24_host(p[3], p[4], p[5], pCMNParams);  // cmn adjustment
                             rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
-#else
-                            __m128 p[12];
-                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                            p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // cmn adjustment
-                            p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // cmn adjustment
-                            p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // cmn adjustment
-                            p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // cmn adjustment
-                            p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // cmn adjustment
-                            p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // cmn adjustment
-                            p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // brightness adjustment Gs
-                            p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // brightness adjustment Gs
-                            p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // brightness adjustment Bs
-                            p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // brightness adjustment Bs
-                            p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // brightness adjustment Bs
-                            p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // brightness adjustment Bs
-                            rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
+      
                             dstPtrTemp += vectorIncrement;
                         }
                         for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
@@ -11298,7 +10881,7 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 else
                 {
-                    Rpp32u alignedLength = bufferLength & ~15;
+                    Rpp32u alignedLength = (bufferLength / 16) * 16;
                     srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + ((roiPtr->xywhROI.xy.x+roiPtr->xywhROI.roiWidth) * layoutParams.bufferMultiplier);
                     for(int c = 0; c < layoutParams.channelParam; c++)
                     {
@@ -11316,23 +10899,13 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                             for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                             {
                                 srcPtrTemp -= vectorIncrementPerChannel;
-#if __AVX2__
                                 __m256 p[2];
 
                                 rpp_simd_load(rpp_load16_i8_to_f32_mirror_avx, srcPtrTemp, p);    // simd loads
                                 compute_cmn_8_host(p[0], pCMNParams);  // cmn adjustment
                                 compute_cmn_8_host(p[1], pCMNParams);  // cmn adjustment
                                 rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);    // simd stores
-#else
-                                __m128 p[4];
-
-                                rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                                p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // brightness adjustment
-                                p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // brightness adjustment
-                                p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // brightness adjustment
-                                p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // brightness adjustment
-                                rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-#endif
+                                
                                 dstPtrTemp += vectorIncrementPerChannel;
                             }
                             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
