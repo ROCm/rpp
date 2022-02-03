@@ -247,6 +247,7 @@ struct HandleImpl
             hipMalloc(&(this->initHandle->mem.mgpu.charArr[i].charmem) , sizeof(Rpp8s) * this->nBatchSize);
 	    }
         hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem) , sizeof(RpptRGB) * this->nBatchSize);
+        hipMalloc(&(this->initHandle->mem.mgpu.maskArr.floatmem) , sizeof(Rpp32f) * 8294400);    // 3840 x 2160
     }
 
     bool enable_profiling  = false;

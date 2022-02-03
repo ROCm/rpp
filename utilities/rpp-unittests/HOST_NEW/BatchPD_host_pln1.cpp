@@ -665,8 +665,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -698,8 +696,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -731,8 +727,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -764,8 +758,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -799,8 +791,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -826,8 +816,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -859,8 +847,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -892,8 +878,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -925,8 +909,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -970,8 +952,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1003,8 +983,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1042,8 +1020,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1093,8 +1069,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1126,8 +1100,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1153,8 +1125,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1188,8 +1158,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1215,8 +1183,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1242,8 +1208,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1272,8 +1236,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         Rpp8u *outputTemp;
         outputTemp = output;
@@ -1326,8 +1288,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1359,8 +1319,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1402,8 +1360,6 @@ int main(int argc, char **argv)
             rppi_resize_u8_i8_pln1_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, outputFormatToggle, noOfImages, handle);
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1453,8 +1409,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1486,8 +1440,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1524,8 +1476,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1551,8 +1501,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1586,8 +1534,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1619,8 +1565,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1661,8 +1605,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1705,8 +1647,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1738,8 +1678,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1820,8 +1758,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1868,8 +1804,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1908,8 +1842,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -1969,8 +1901,6 @@ int main(int argc, char **argv)
             rppi_crop_u8_i8_pln1_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, outputFormatToggle, noOfImages, handle);
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2020,8 +1950,6 @@ int main(int argc, char **argv)
             rppi_crop_mirror_normalize_u8_i8_pln1_batchPD_host(input, srcSize, maxSize, outputi8, dstSize, maxDstSize, crop_pos_x, crop_pos_y, mean, stdDev, mirrorFlag, outputFormatToggle, noOfImages, handle);
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2073,8 +2001,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2106,8 +2032,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2139,8 +2063,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2194,8 +2116,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2227,8 +2147,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2266,8 +2184,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         free(combinedImages);
 
@@ -2306,8 +2222,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2339,8 +2253,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2372,8 +2284,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2405,8 +2315,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2445,8 +2353,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2478,8 +2384,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2513,8 +2417,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2546,8 +2448,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2573,8 +2473,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2606,8 +2504,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         memcpy(output, input, noOfImages * maxSize.height * maxSize.width * ip_channel * sizeof(Rpp8u));
 
@@ -2635,8 +2531,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         memcpy(output, input, noOfImages * maxSize.height * maxSize.width * ip_channel * sizeof(Rpp8u));
 
@@ -2664,8 +2558,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2691,8 +2583,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2718,8 +2608,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2745,8 +2633,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2772,8 +2658,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2799,8 +2683,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         memcpy(output, input, noOfImages * maxSize.height * maxSize.width * ip_channel * sizeof(Rpp8u));
 
@@ -2828,8 +2710,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2855,8 +2735,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2882,8 +2760,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2909,8 +2785,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2936,8 +2810,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2963,8 +2835,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -2998,8 +2868,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3033,8 +2901,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3068,8 +2934,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3111,8 +2975,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3148,8 +3010,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3203,8 +3063,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         free(srcPtr1);
         free(srcPtr2);
@@ -3251,8 +3109,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         Rpp32u *linesTemp;
         linesTemp = lines;
@@ -3340,8 +3196,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         if (missingFuncFlag != 1)
         {
@@ -3422,8 +3276,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3472,8 +3324,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        end = clock();
-        end_omp = omp_get_wtime();
 
         break;
     }
@@ -3486,6 +3336,9 @@ int main(int argc, char **argv)
         missingFuncFlag = 1;
         break;
     }
+
+    end = clock();
+    end_omp = omp_get_wtime();
 
     if (missingFuncFlag == 1)
     {

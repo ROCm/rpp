@@ -14,6 +14,7 @@ typedef halfhpp Rpp16f;
 
 #define PI                              3.14159265
 #define PI_OVER_180                     0.0174532925
+#define ONE_OVER_255                    0.00392157f
 #define RAD(deg)                        (deg * PI / 180)
 #define RPPABS(a)                       ((a < 0) ? (-a) : (a))
 #define RPPMIN2(a,b)                    ((a < b) ? a : b)
@@ -2068,6 +2069,122 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline RppStatus compute_exposure_48_host(__m256 *p, __m256 &pExposureParam)
+{
+    p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
+    p[1] = _mm256_mul_ps(p[1], pExposureParam);    // exposure adjustment
+    p[2] = _mm256_mul_ps(p[2], pExposureParam);    // exposure adjustment
+    p[3] = _mm256_mul_ps(p[3], pExposureParam);    // exposure adjustment
+    p[4] = _mm256_mul_ps(p[4], pExposureParam);    // exposure adjustment
+    p[5] = _mm256_mul_ps(p[5], pExposureParam);    // exposure adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_exposure_24_host(__m256 *p, __m256 &pExposureParam)
+{
+    p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
+    p[1] = _mm256_mul_ps(p[1], pExposureParam);    // exposure adjustment
+    p[2] = _mm256_mul_ps(p[2], pExposureParam);    // exposure adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_exposure_16_host(__m256 *p, __m256 &pExposureParam)
+{
+    p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
+    p[1] = _mm256_mul_ps(p[1], pExposureParam);    // exposure adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_exposure_8_host(__m256 *p, __m256 &pExposureParam)
+{
+    p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_spatter_48_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
+    p[1] = _mm256_fmadd_ps(p[1], pSpatterMaskInv[1], _mm256_mul_ps(pSpatterValue[0], pSpatterMask[1]));    // spatter adjustment
+    p[2] = _mm256_fmadd_ps(p[2], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[1], pSpatterMask[0]));    // spatter adjustment
+    p[3] = _mm256_fmadd_ps(p[3], pSpatterMaskInv[1], _mm256_mul_ps(pSpatterValue[1], pSpatterMask[1]));    // spatter adjustment
+    p[4] = _mm256_fmadd_ps(p[4], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[2], pSpatterMask[0]));    // spatter adjustment
+    p[5] = _mm256_fmadd_ps(p[5], pSpatterMaskInv[1], _mm256_mul_ps(pSpatterValue[2], pSpatterMask[1]));    // spatter adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_spatter_24_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
+    p[1] = _mm256_fmadd_ps(p[1], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[1], pSpatterMask[0]));    // spatter adjustment
+    p[2] = _mm256_fmadd_ps(p[2], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[2], pSpatterMask[0]));    // spatter adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_spatter_16_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 pSpatterValue)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue, pSpatterMask[0]));    // spatter adjustment
+    p[1] = _mm256_fmadd_ps(p[1], pSpatterMaskInv[1], _mm256_mul_ps(pSpatterValue, pSpatterMask[1]));    // spatter adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_spatter_8_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_spatter_48_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
+{
+    p[0] = _mm_fmadd_ps(p[0], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
+    p[1] = _mm_fmadd_ps(p[1], pSpatterMaskInv[1], _mm_mul_ps(pSpatterValue[0], pSpatterMask[1]));    // spatter adjustment
+    p[2] = _mm_fmadd_ps(p[2], pSpatterMaskInv[2], _mm_mul_ps(pSpatterValue[0], pSpatterMask[2]));    // spatter adjustment
+    p[3] = _mm_fmadd_ps(p[3], pSpatterMaskInv[3], _mm_mul_ps(pSpatterValue[0], pSpatterMask[3]));    // spatter adjustment
+    p[4] = _mm_fmadd_ps(p[4], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[1], pSpatterMask[0]));    // spatter adjustment
+    p[5] = _mm_fmadd_ps(p[5], pSpatterMaskInv[1], _mm_mul_ps(pSpatterValue[1], pSpatterMask[1]));    // spatter adjustment
+    p[6] = _mm_fmadd_ps(p[6], pSpatterMaskInv[2], _mm_mul_ps(pSpatterValue[1], pSpatterMask[2]));    // spatter adjustment
+    p[7] = _mm_fmadd_ps(p[7], pSpatterMaskInv[3], _mm_mul_ps(pSpatterValue[1], pSpatterMask[3]));    // spatter adjustment
+    p[8] = _mm_fmadd_ps(p[8], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[2], pSpatterMask[0]));    // spatter adjustment
+    p[9] = _mm_fmadd_ps(p[9], pSpatterMaskInv[1], _mm_mul_ps(pSpatterValue[2], pSpatterMask[1]));    // spatter adjustment
+    p[10] = _mm_fmadd_ps(p[10], pSpatterMaskInv[2], _mm_mul_ps(pSpatterValue[2], pSpatterMask[2]));    // spatter adjustment
+    p[11] = _mm_fmadd_ps(p[11], pSpatterMaskInv[3], _mm_mul_ps(pSpatterValue[2], pSpatterMask[3]));    // spatter adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_spatter_16_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 pSpatterValue)
+{
+    p[0] = _mm_fmadd_ps(p[0], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue, pSpatterMask[0]));    // spatter adjustment
+    p[1] = _mm_fmadd_ps(p[1], pSpatterMaskInv[1], _mm_mul_ps(pSpatterValue, pSpatterMask[1]));    // spatter adjustment
+    p[2] = _mm_fmadd_ps(p[2], pSpatterMaskInv[2], _mm_mul_ps(pSpatterValue, pSpatterMask[2]));    // spatter adjustment
+    p[3] = _mm_fmadd_ps(p[3], pSpatterMaskInv[3], _mm_mul_ps(pSpatterValue, pSpatterMask[3]));    // spatter adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_spatter_12_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
+{
+    p[0] = _mm_fmadd_ps(p[0], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
+    p[1] = _mm_fmadd_ps(p[1], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[1], pSpatterMask[0]));    // spatter adjustment
+    p[2] = _mm_fmadd_ps(p[2], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[2], pSpatterMask[0]));    // spatter adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_spatter_4_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
+{
+    p[0] = _mm_fmadd_ps(p[0], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 *pMask)
 {
     __m128 pCalc[2];
@@ -4036,22 +4153,6 @@ inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* d
         srcPtrTemp = srcPtr;
     }
 
-    return RPP_SUCCESS;
-}
-
-inline RppStatus compute_exposure_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &pExposureParam)
-{
-    pVecR = _mm256_mul_ps(pVecR, pExposureParam);    // exposure adjustment
-    pVecG = _mm256_mul_ps(pVecG, pExposureParam);    // exposure adjustment
-    pVecB = _mm256_mul_ps(pVecB, pExposureParam);    // exposure adjustmentt
-
-    return RPP_SUCCESS;
-}
-
-inline RppStatus compute_exposure_8_host(__m256 &pVec, __m256 &pExposureParam)
-{
-    pVec = _mm256_mul_ps(pVec, pExposureParam);    // exposure adjustment
-    
     return RPP_SUCCESS;
 }
 

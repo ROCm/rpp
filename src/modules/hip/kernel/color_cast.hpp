@@ -9,7 +9,7 @@ __device__ void color_cast_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8
 
 __device__ void color_cast_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
-    float4 pixNorm_f4 = *pix_f4 * (float4)0.0039216;
+    float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
     dst_f8->x = (src_f8->x - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
     dst_f8->y = (src_f8->y - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
 }
@@ -22,7 +22,7 @@ __device__ void color_cast_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_
 
 __device__ void color_cast_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
-    float4 pixNorm_f4 = *pix_f4 * (float4)0.0039216;
+    float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
     dst_f8->x = (src_f8->x - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
     dst_f8->y = (src_f8->y - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
 }
