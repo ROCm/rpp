@@ -2068,6 +2068,106 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline RppStatus compute_brightness_48_host(__m256 *p, __m256 *pBrightnessParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[3] = _mm256_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[4] = _mm256_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[5] = _mm256_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_48_host(__m128 *p, __m128 *pBrightnessParams)
+{
+    p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[2] = _mm_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[3] = _mm_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[4] = _mm_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[5] = _mm_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[6] = _mm_fmadd_ps(p[6], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[7] = _mm_fmadd_ps(p[7], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[8] = _mm_fmadd_ps(p[8], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[9] = _mm_fmadd_ps(p[9], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[10] = _mm_fmadd_ps(p[10], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[11] = _mm_fmadd_ps(p[11], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_24_host(__m256 *p, __m256 *pBrightnessParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_24_host(__m128 *p, __m128 *pBrightnessParams)
+{
+    p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[2] = _mm_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[3] = _mm_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[4] = _mm_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[5] = _mm_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_16_host(__m256 *p, __m256 *pBrightnessParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_16_host(__m128 *p, __m128 *pBrightnessParams)
+{
+    p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[2] = _mm_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[3] = _mm_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_12_host(__m128 *p, __m128 *pBrightnessParams)
+{
+    p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[2] = _mm_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_8_host(__m256 *p, __m256 *pBrightnessParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_8_host(__m128 *p, __m128 *pBrightnessParams)
+{
+    p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_brightness_4_host(__m128 *p, __m128 *pBrightnessParams)
+{
+    p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 *pMask)
 {
     __m128 pCalc[2];
@@ -4036,22 +4136,6 @@ inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* d
         srcPtrTemp = srcPtr;
     }
 
-    return RPP_SUCCESS;
-}
-
-inline RppStatus compute_brightness_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pBrightnessParams)
-{
-    pVecR = _mm256_fmadd_ps(pVecR, pBrightnessParams[0], pBrightnessParams[1]);    // alpha-blending adjustment
-    pVecG = _mm256_fmadd_ps(pVecG, pBrightnessParams[0], pBrightnessParams[1]);    // alpha-blending adjustment
-    pVecB = _mm256_fmadd_ps(pVecB, pBrightnessParams[0], pBrightnessParams[1]);    // alpha-blending adjustmentt
-
-    return RPP_SUCCESS;
-}
-
-inline RppStatus compute_brightness_8_host(__m256 &pVec, __m256 *pBrightnessParams)
-{
-    pVec = _mm256_fmadd_ps(pVec, pBrightnessParams[0], pBrightnessParams[1]);    // alpha-blending adjustment
-    
     return RPP_SUCCESS;
 }
 
