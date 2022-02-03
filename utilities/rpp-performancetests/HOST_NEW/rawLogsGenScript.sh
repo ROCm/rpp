@@ -28,10 +28,6 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/eight_images_224x224_src2"
 # DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/two_images_mixed_src1"
 # DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/two_images_mixed_src2"
 
-# Input Images - Two images (mixed size)
-# DEFAULT_SRC_FOLDER_1="/media/rppTestImages/3840x2160_0008_images_src1"
-# DEFAULT_SRC_FOLDER_2="/media/rppTestImages/3840x2160_0008_images_src1"
-
 # Output Images
 mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
