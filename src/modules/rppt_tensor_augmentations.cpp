@@ -1180,3 +1180,238 @@ rppt_gridmask_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+/******************** spatter ********************/
+
+RppStatus
+rppt_spatter_gpu(RppPtr_t srcPtr,
+                 RpptDescPtr srcDescPtr,
+                 RppPtr_t dstPtr,
+                 RpptDescPtr dstDescPtr,
+                 RpptRGB spatterColor,
+                 RpptROIPtr roiTensorPtrSrc,
+                 RpptRoiType roiType,
+                 rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    RpptROI roiTensorPtrSrcHost[dstDescPtr->n];
+    hipMemcpy(roiTensorPtrSrcHost, roiTensorPtrSrc, dstDescPtr->n * sizeof(RpptROI), hipMemcpyDeviceToHost);
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < dstDescPtr->n; i++)
+            if ((roiTensorPtrSrcHost[i].xywhROI.roiWidth > SPATTER_MAX_WIDTH) || (roiTensorPtrSrcHost[i].xywhROI.roiHeight > SPATTER_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < dstDescPtr->n; i++)
+            if ((roiTensorPtrSrcHost[i].ltrbROI.rb.x - roiTensorPtrSrcHost[i].ltrbROI.lt.x > SPATTER_MAX_XDIM) || (roiTensorPtrSrcHost[i].ltrbROI.rb.y - roiTensorPtrSrcHost[i].ltrbROI.lt.y > SPATTER_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+
+    std::random_device rd;  // Random number engine seed
+    std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
+    Rpp32u maskLocArrHostX[dstDescPtr->n], maskLocArrHostY[dstDescPtr->n];
+    for(int i = 0; i < dstDescPtr->n; i++)
+    {
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiTensorPtrSrcHost[i].xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiTensorPtrSrcHost[i].xywhROI.roiHeight);
+        maskLocArrHostX[i] = distribX(gen);
+        maskLocArrHostY[i] = distribY(gen);
+    }
+
+    Rpp32u paramIndex = 0;
+    copy_param_uint(maskLocArrHostX, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uint(maskLocArrHostY, rpp::deref(rppHandle), paramIndex++);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        spatter_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                           srcDescPtr,
+                           static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                           dstDescPtr,
+                           spatterColor,
+                           roiTensorPtrSrc,
+                           roiType,
+                           rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        spatter_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                           srcDescPtr,
+                           (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                           dstDescPtr,
+                           spatterColor,
+                           roiTensorPtrSrc,
+                           roiType,
+                           rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        spatter_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                           srcDescPtr,
+                           (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                           dstDescPtr,
+                           spatterColor,
+                           roiTensorPtrSrc,
+                           roiType,
+                           rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        spatter_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                           srcDescPtr,
+                           static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                           dstDescPtr,
+                           spatterColor,
+                           roiTensorPtrSrc,
+                           roiType,
+                           rpp::deref(rppHandle));
+    }
+#endif //backend
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppt_spatter_host(RppPtr_t srcPtr,
+                  RpptDescPtr srcDescPtr,
+                  RppPtr_t dstPtr,
+                  RpptDescPtr dstDescPtr,
+                  RpptRGB spatterColor,
+                  RpptROIPtr roiTensorPtrSrc,
+                  RpptRoiType roiType,
+                  rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > SPATTER_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > SPATTER_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > SPATTER_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > SPATTER_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        spatter_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                  dstDescPtr,
+                                  spatterColor,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        spatter_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                    srcDescPtr,
+                                    (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                    dstDescPtr,
+                                    spatterColor,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        spatter_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                    srcDescPtr,
+                                    (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                    dstDescPtr,
+                                    spatterColor,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        spatter_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                  dstDescPtr,
+                                  spatterColor,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  layoutParams);
+    }
+
+    return RPP_SUCCESS;
+}
+
+/******************** crop mirror normalize ********************/
+
+RppStatus
+rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32f *meanTensor,
+                                Rpp32f *stdDevTensor,
+                                Rpp32u *mirrorTensor,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        crop_mirror_normalize_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                dstDescPtr,
+                                                meanTensor,
+                                                stdDevTensor,
+                                                mirrorTensor,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        crop_mirror_normalize_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                  srcDescPtr,
+                                                  (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                  dstDescPtr,
+                                                  meanTensor,
+                                                  stdDevTensor,
+                                                  mirrorTensor,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        crop_mirror_normalize_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                  srcDescPtr,
+                                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                  dstDescPtr,
+                                                  meanTensor,
+                                                  stdDevTensor,
+                                                  mirrorTensor,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        crop_mirror_normalize_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                dstDescPtr,
+                                                meanTensor,
+                                                stdDevTensor,
+                                                mirrorTensor,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                layoutParams);
+    }
+    return RPP_SUCCESS;
+}
