@@ -237,9 +237,9 @@ RppStatus rppt_gridmask_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
 // *param[in] srcDesc source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDesc destination tensor descriptor
-// *param[in] meanTensor mean value for each image in the batch (mean[n] >= 0)
-// *param[in] stdDev standard deviation value for each image in the batch (stdDev[n] >= 0)
-// *param[in] mirrorFlag mirror flag value to set mirroring on/off for each image in the batch (mirrorFlag[n] = 0/1)
+// *param[in] meanTensor mean value for each image in the batch (meanTensor[n] >= 0)
+// *param[in] stdDevTensor standard deviation value for each image in the batch (stdDevTensor[n] >= 0)
+// *param[in] mirrorTensor mirror flag value to set mirroring on/off for each image in the batch (mirrorTensor[n] = 0/1)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.

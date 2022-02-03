@@ -2068,6 +2068,42 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline RppStatus compute_cmn_48_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
+    p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pCMNParams[0]), pCMNParams[1]);
+    p[2] = _mm256_mul_ps(_mm256_sub_ps(p[2], pCMNParams[0]), pCMNParams[1]);
+    p[3] = _mm256_mul_ps(_mm256_sub_ps(p[3], pCMNParams[0]), pCMNParams[1]);
+    p[4] = _mm256_mul_ps(_mm256_sub_ps(p[4], pCMNParams[0]), pCMNParams[1]);
+    p[5] = _mm256_mul_ps(_mm256_sub_ps(p[5], pCMNParams[0]), pCMNParams[1]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_cmn_24_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
+    p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pCMNParams[0]), pCMNParams[1]);
+    p[2] = _mm256_mul_ps(_mm256_sub_ps(p[2], pCMNParams[0]), pCMNParams[1]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_cmn_16_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
+    p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pCMNParams[0]), pCMNParams[1]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_cmn_8_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 *pMask)
 {
     __m128 pCalc[2];
@@ -4035,27 +4071,6 @@ inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* d
         }
         srcPtrTemp = srcPtr;
     }
-
-    return RPP_SUCCESS;
-}
-
-inline RppStatus compute_cmn_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pCMNParams)
-{
-    pVecR = _mm256_sub_ps(pVecR, pCMNParams[0]);
-    pVecG = _mm256_sub_ps(pVecG, pCMNParams[0]);
-    pVecB = _mm256_sub_ps(pVecB, pCMNParams[0]);
-    
-    pVecR = _mm256_mul_ps(pVecR, pCMNParams[1]);
-    pVecG = _mm256_mul_ps(pVecG, pCMNParams[1]);
-    pVecB = _mm256_mul_ps(pVecB, pCMNParams[1]);
-                            
-    return RPP_SUCCESS;
-}
-
-inline RppStatus compute_cmn_8_host(__m256 &pVec, __m256 *pCMNParams)
-{
-    pVec = _mm256_sub_ps(pVec, pCMNParams[0]);
-    pVec = _mm256_mul_ps(pVec, pCMNParams[1]);   
 
     return RPP_SUCCESS;
 }
