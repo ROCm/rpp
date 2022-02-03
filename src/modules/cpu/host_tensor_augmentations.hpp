@@ -10773,13 +10773,13 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
 /************ exposure ************/
 
 RppStatus exposure_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp8u *dstPtr,
-                                       RpptDescPtr dstDescPtr,
-                                       Rpp32f *exposureFactorTensor,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams layoutParams)
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *exposureFactorTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault;
     RpptROIPtr roiPtrDefault;
@@ -11450,13 +11450,13 @@ RppStatus exposure_f16_f16_host_tensor(Rpp16f *srcPtr,
 }
 
 RppStatus exposure_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp8s *dstPtr,
-                                       RpptDescPtr dstDescPtr,
-                                       Rpp32f *exposureFactorTensor,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams layoutParams)
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8s *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *exposureFactorTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault;
     RpptROIPtr roiPtrDefault;
