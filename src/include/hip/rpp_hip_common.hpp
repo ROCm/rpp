@@ -217,6 +217,7 @@ struct RPPTensorFunctionMetaData
 };
 
 #define ONE_OVER_255 0.00392157f
+#define SIX_OVER_360 0.01666667f
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
   (byte & 0x80 ? '1' : '0'), \
@@ -265,12 +266,46 @@ inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp
 
 // float4 pixel check for 0-255 range
 
-__device__ __forceinline__ float4 rpp_hip_pixel_check(float4 src_f4)
+__device__ __forceinline__ float4 rpp_hip_pixel_check_0to255(float4 src_f4)
 {
     return make_float4(fminf(fmaxf(src_f4.x, 0), 255),
                        fminf(fmaxf(src_f4.y, 0), 255),
                        fminf(fmaxf(src_f4.z, 0), 255),
                        fminf(fmaxf(src_f4.w, 0), 255));
+}
+
+// float4 pixel check for 0-1 range
+
+__device__ __forceinline__ float4 rpp_hip_pixel_check_0to1(float4 src_f4)
+{
+    return make_float4(fminf(fmaxf(src_f4.x, 0), 1),
+                       fminf(fmaxf(src_f4.y, 0), 1),
+                       fminf(fmaxf(src_f4.z, 0), 1),
+                       fminf(fmaxf(src_f4.w, 0), 1));
+}
+
+// d_float24 pixel check for 0-255 range
+
+__device__ __forceinline__ void rpp_hip_pixel_check_0to255(d_float24 *pix_f24)
+{
+    pix_f24->x.x = rpp_hip_pixel_check_0to255(pix_f24->x.x);
+    pix_f24->x.y = rpp_hip_pixel_check_0to255(pix_f24->x.y);
+    pix_f24->y.x = rpp_hip_pixel_check_0to255(pix_f24->y.x);
+    pix_f24->y.y = rpp_hip_pixel_check_0to255(pix_f24->y.y);
+    pix_f24->z.x = rpp_hip_pixel_check_0to255(pix_f24->z.x);
+    pix_f24->z.y = rpp_hip_pixel_check_0to255(pix_f24->z.y);
+}
+
+// d_float24 pixel check for 0-1 range
+
+__device__ __forceinline__ void rpp_hip_pixel_check_0to1(d_float24 *pix_f24)
+{
+    pix_f24->x.x = rpp_hip_pixel_check_0to1(pix_f24->x.x);
+    pix_f24->x.y = rpp_hip_pixel_check_0to1(pix_f24->x.y);
+    pix_f24->y.x = rpp_hip_pixel_check_0to1(pix_f24->y.x);
+    pix_f24->y.y = rpp_hip_pixel_check_0to1(pix_f24->y.y);
+    pix_f24->z.x = rpp_hip_pixel_check_0to1(pix_f24->z.x);
+    pix_f24->z.y = rpp_hip_pixel_check_0to1(pix_f24->z.y);
 }
 
 // d_float8 adjust pixel range for different bit depths
@@ -1132,8 +1167,8 @@ __device__ __forceinline__ void rpp_hip_load8_to_uchar8(float *srcPtr, int srcId
     srcPtr_f8 = (d_float8 *)&srcPtr[srcIdx];
 
     d_float8 src_f8;
-    src_f8.x = rpp_hip_pixel_check(srcPtr_f8->x * (float4) 255.0);
-    src_f8.y = rpp_hip_pixel_check(srcPtr_f8->y * (float4) 255.0);
+    src_f8.x = rpp_hip_pixel_check_0to255(srcPtr_f8->x * (float4) 255.0);
+    src_f8.y = rpp_hip_pixel_check_0to255(srcPtr_f8->y * (float4) 255.0);
 
     uint2 *srcPtr_lds;
     srcPtr_lds = (uint2 *)src_uchar8;
@@ -1207,12 +1242,12 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(float *srcPtr
     srcPtr_f24 = (d_float24 *)&srcPtr[srcIdx];
 
     d_uint6 src_uchar24;
-    src_uchar24.x.x = rpp_hip_pack(rpp_hip_pixel_check(srcPtr_f24->x.x * (float4) 255.0));
-    src_uchar24.x.y = rpp_hip_pack(rpp_hip_pixel_check(srcPtr_f24->x.y * (float4) 255.0));
-    src_uchar24.y.x = rpp_hip_pack(rpp_hip_pixel_check(srcPtr_f24->y.x * (float4) 255.0));
-    src_uchar24.y.y = rpp_hip_pack(rpp_hip_pixel_check(srcPtr_f24->y.y * (float4) 255.0));
-    src_uchar24.z.x = rpp_hip_pack(rpp_hip_pixel_check(srcPtr_f24->z.x * (float4) 255.0));
-    src_uchar24.z.y = rpp_hip_pack(rpp_hip_pixel_check(srcPtr_f24->z.y * (float4) 255.0));
+    src_uchar24.x.x = rpp_hip_pack(rpp_hip_pixel_check_0to255(srcPtr_f24->x.x * (float4) 255.0));
+    src_uchar24.x.y = rpp_hip_pack(rpp_hip_pixel_check_0to255(srcPtr_f24->x.y * (float4) 255.0));
+    src_uchar24.y.x = rpp_hip_pack(rpp_hip_pixel_check_0to255(srcPtr_f24->y.x * (float4) 255.0));
+    src_uchar24.y.y = rpp_hip_pack(rpp_hip_pixel_check_0to255(srcPtr_f24->y.y * (float4) 255.0));
+    src_uchar24.z.x = rpp_hip_pack(rpp_hip_pixel_check_0to255(srcPtr_f24->z.x * (float4) 255.0));
+    src_uchar24.z.y = rpp_hip_pack(rpp_hip_pixel_check_0to255(srcPtr_f24->z.y * (float4) 255.0));
 
     d_uchar8 *src_c1_uchar8, *src_c2_uchar8, *src_c3_uchar8;
     src_c1_uchar8 = (d_uchar8 *)srcPtrs_uchar8[0];
@@ -1405,6 +1440,42 @@ __device__ __forceinline__ void rpp_hip_math_subtract16(d_float16 *src1_f16, d_f
     dst_f16->x.y = src1_f16->x.y - src2_f16->x.y;
     dst_f16->y.x = src1_f16->y.x - src2_f16->y.x;
     dst_f16->y.y = src1_f16->y.y - src2_f16->y.y;
+}
+
+// d_float24 multiply with constant
+
+__device__ __forceinline__ void rpp_hip_math_multiply24_const(d_float24 *src_f24, d_float24 *dst_f24, float4 multiplier_f4)
+{
+    dst_f24->x.x = src_f24->x.x * multiplier_f4;
+    dst_f24->x.y = src_f24->x.y * multiplier_f4;
+    dst_f24->y.x = src_f24->y.x * multiplier_f4;
+    dst_f24->y.y = src_f24->y.y * multiplier_f4;
+    dst_f24->z.x = src_f24->z.x * multiplier_f4;
+    dst_f24->z.y = src_f24->z.y * multiplier_f4;
+}
+
+// d_float24 add with constant
+
+__device__ __forceinline__ void rpp_hip_math_add24_const(d_float24 *src_f24, d_float24 *dst_f24, float4 addend_f4)
+{
+    dst_f24->x.x = src_f24->x.x + addend_f4;
+    dst_f24->x.y = src_f24->x.y + addend_f4;
+    dst_f24->y.x = src_f24->y.x + addend_f4;
+    dst_f24->y.y = src_f24->y.y + addend_f4;
+    dst_f24->z.x = src_f24->z.x + addend_f4;
+    dst_f24->z.y = src_f24->z.y + addend_f4;
+}
+
+// d_float24 subtract with constant
+
+__device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24, d_float24 *dst_f24, float4 subtrahend_f4)
+{
+    dst_f24->x.x = src_f24->x.x - subtrahend_f4;
+    dst_f24->x.y = src_f24->x.y - subtrahend_f4;
+    dst_f24->y.x = src_f24->y.x - subtrahend_f4;
+    dst_f24->y.y = src_f24->y.y - subtrahend_f4;
+    dst_f24->z.x = src_f24->z.x - subtrahend_f4;
+    dst_f24->z.y = src_f24->z.y - subtrahend_f4;
 }
 
 #endif //RPP_HIP_COMMON_H
