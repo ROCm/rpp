@@ -20,21 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef RPPT_H
-#define RPPT_H
+#ifndef HOST_TENSOR_MORPHOLOGICAL_OPERATIONS_HPP
+#define HOST_TENSOR_MORPHOLOGICAL_OPERATIONS_HPP
 
-#include "rpp.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "rppt_tensor_color_augmentations.h"
-#include "rppt_tensor_effects_augmentations.h"
-#include "rppt_tensor_geometric_augmentations.h"
-#include "rppt_tensor_filter_augmentations.h"
-#include "rppt_tensor_morphological_operations.h"
-
-#ifdef __cplusplus
-}
-#endif
-#endif // RPPT_H
+#endif // HOST_TENSOR_MORPHOLOGICAL_OPERATIONS_HPP
