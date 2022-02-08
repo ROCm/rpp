@@ -23,7 +23,6 @@ THE SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_morphological_operations.h"
-#include "cpu/host_tensor_morphological_operations.hpp"
 
 #ifdef HIP_COMPILE
     #include <hip/hip_fp16.h>
