@@ -14,13 +14,8 @@ RppStatus gridmask_u8_u8_host_tensor(Rpp8u *srcPtr,
                                      RpptRoiType roiType,
                                      RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -448,13 +443,8 @@ RppStatus gridmask_f32_f32_host_tensor(Rpp32f *srcPtr,
                                        RpptRoiType roiType,
                                        RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -864,13 +854,8 @@ RppStatus gridmask_f16_f16_host_tensor(Rpp16f *srcPtr,
                                        RpptRoiType roiType,
                                        RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -1333,13 +1318,8 @@ RppStatus gridmask_i8_i8_host_tensor(Rpp8s *srcPtr,
                                      RpptRoiType roiType,
                                      RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
