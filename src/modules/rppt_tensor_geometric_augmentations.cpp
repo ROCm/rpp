@@ -32,14 +32,13 @@ THE SOFTWARE.
 
 /******************** crop ********************/
 
-RppStatus
-rppt_crop_gpu(RppPtr_t srcPtr,
-              RpptDescPtr srcDescPtr,
-              RppPtr_t dstPtr,
-              RpptDescPtr dstDescPtr,
-              RpptROIPtr roiTensorPtrSrc,
-              RpptRoiType roiType,
-              rppHandle_t rppHandle)
+RppStatus rppt_crop_gpu(RppPtr_t srcPtr,
+                        RpptDescPtr srcDescPtr,
+                        RppPtr_t dstPtr,
+                        RpptDescPtr dstDescPtr,
+                        RpptROIPtr roiTensorPtrSrc,
+                        RpptRoiType roiType,
+                        rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
@@ -87,14 +86,13 @@ rppt_crop_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppt_crop_host(RppPtr_t srcPtr,
-               RpptDescPtr srcDescPtr,
-               RppPtr_t dstPtr,
-               RpptDescPtr dstDescPtr,
-               RpptROIPtr roiTensorPtrSrc,
-               RpptRoiType roiType,
-               rppHandle_t rppHandle)
+RppStatus rppt_crop_host(RppPtr_t srcPtr,
+                         RpptDescPtr srcDescPtr,
+                         RppPtr_t dstPtr,
+                         RpptDescPtr dstDescPtr,
+                         RpptROIPtr roiTensorPtrSrc,
+                         RpptRoiType roiType,
+                         rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 

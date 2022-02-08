@@ -31,15 +31,14 @@ THE SOFTWARE.
 
 /******************** box_filter ********************/
 
-RppStatus
-rppt_box_filter_gpu(RppPtr_t srcPtr,
-                    RpptDescPtr srcDescPtr,
-                    RppPtr_t dstPtr,
-                    RpptDescPtr dstDescPtr,
-                    Rpp32u kernelSize,
-                    RpptROIPtr roiTensorPtrSrc,
-                    RpptRoiType roiType,
-                    rppHandle_t rppHandle)
+RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              RppPtr_t dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              Rpp32u kernelSize,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))

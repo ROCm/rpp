@@ -33,18 +33,17 @@ THE SOFTWARE.
 
 /******************** gridmask ********************/
 
-RppStatus
-rppt_gridmask_gpu(RppPtr_t srcPtr,
-                  RpptDescPtr srcDescPtr,
-                  RppPtr_t dstPtr,
-                  RpptDescPtr dstDescPtr,
-                  Rpp32u tileWidth,
-                  Rpp32f gridRatio,
-                  Rpp32f gridAngle,
-                  RpptUintVector2D translateVector,
-                  RpptROIPtr roiTensorPtrSrc,
-                  RpptRoiType roiType,
-                  rppHandle_t rppHandle)
+RppStatus rppt_gridmask_gpu(RppPtr_t srcPtr,
+                            RpptDescPtr srcDescPtr,
+                            RppPtr_t dstPtr,
+                            RpptDescPtr dstDescPtr,
+                            Rpp32u tileWidth,
+                            Rpp32f gridRatio,
+                            Rpp32f gridAngle,
+                            RpptUintVector2D translateVector,
+                            RpptROIPtr roiTensorPtrSrc,
+                            RpptRoiType roiType,
+                            rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
@@ -112,18 +111,17 @@ rppt_gridmask_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppt_gridmask_host(RppPtr_t srcPtr,
-                   RpptDescPtr srcDescPtr,
-                   RppPtr_t dstPtr,
-                   RpptDescPtr dstDescPtr,
-                   Rpp32u tileWidth,
-                   Rpp32f gridRatio,
-                   Rpp32f gridAngle,
-                   RpptUintVector2D translateVector,
-                   RpptROIPtr roiTensorPtrSrc,
-                   RpptRoiType roiType,
-                   rppHandle_t rppHandle)
+RppStatus rppt_gridmask_host(RppPtr_t srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             RppPtr_t dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             Rpp32u tileWidth,
+                             Rpp32f gridRatio,
+                             Rpp32f gridAngle,
+                             RpptUintVector2D translateVector,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -189,15 +187,14 @@ rppt_gridmask_host(RppPtr_t srcPtr,
 
 /******************** spatter ********************/
 
-RppStatus
-rppt_spatter_gpu(RppPtr_t srcPtr,
-                 RpptDescPtr srcDescPtr,
-                 RppPtr_t dstPtr,
-                 RpptDescPtr dstDescPtr,
-                 RpptRGB spatterColor,
-                 RpptROIPtr roiTensorPtrSrc,
-                 RpptRoiType roiType,
-                 rppHandle_t rppHandle)
+RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
+                           RpptDescPtr srcDescPtr,
+                           RppPtr_t dstPtr,
+                           RpptDescPtr dstDescPtr,
+                           RpptRGB spatterColor,
+                           RpptROIPtr roiTensorPtrSrc,
+                           RpptRoiType roiType,
+                           rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     RpptROI roiTensorPtrSrcHost[dstDescPtr->n];
@@ -279,15 +276,14 @@ rppt_spatter_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppt_spatter_host(RppPtr_t srcPtr,
-                  RpptDescPtr srcDescPtr,
-                  RppPtr_t dstPtr,
-                  RpptDescPtr dstDescPtr,
-                  RpptRGB spatterColor,
-                  RpptROIPtr roiTensorPtrSrc,
-                  RpptRoiType roiType,
-                  rppHandle_t rppHandle)
+RppStatus rppt_spatter_host(RppPtr_t srcPtr,
+                            RpptDescPtr srcDescPtr,
+                            RppPtr_t dstPtr,
+                            RpptDescPtr dstDescPtr,
+                            RpptRGB spatterColor,
+                            RpptROIPtr roiTensorPtrSrc,
+                            RpptRoiType roiType,
+                            rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if (roiType == RpptRoiType::XYWH)

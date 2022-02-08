@@ -32,16 +32,15 @@ THE SOFTWARE.
 
 /******************** brightness ********************/
 
-RppStatus
-rppt_brightness_gpu(RppPtr_t srcPtr,
-                    RpptDescPtr srcDescPtr,
-                    RppPtr_t dstPtr,
-                    RpptDescPtr dstDescPtr,
-                    Rpp32f *alphaTensor,
-                    Rpp32f *betaTensor,
-                    RpptROIPtr roiTensorPtrSrc,
-                    RpptRoiType roiType,
-                    rppHandle_t rppHandle)
+RppStatus rppt_brightness_gpu(RppPtr_t srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              RppPtr_t dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              Rpp32f *alphaTensor,
+                              Rpp32f *betaTensor,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     Rpp32u paramIndex = 0;
@@ -93,16 +92,15 @@ rppt_brightness_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppt_brightness_host(RppPtr_t srcPtr,
-                     RpptDescPtr srcDescPtr,
-                     RppPtr_t dstPtr,
-                     RpptDescPtr dstDescPtr,
-                     Rpp32f *alphaTensor,
-                     Rpp32f *betaTensor,
-                     RpptROIPtr roiTensorPtrSrc,
-                     RpptRoiType roiType,
-                     rppHandle_t rppHandle)
+RppStatus rppt_brightness_host(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32f *alphaTensor,
+                               Rpp32f *betaTensor,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -160,15 +158,14 @@ rppt_brightness_host(RppPtr_t srcPtr,
 
 /******************** gamma_correction ********************/
 
-RppStatus
-rppt_gamma_correction_gpu(RppPtr_t srcPtr,
-                          RpptDescPtr srcDescPtr,
-                          RppPtr_t dstPtr,
-                          RpptDescPtr dstDescPtr,
-                          Rpp32f *gammaTensor,
-                          RpptROIPtr roiTensorPtrSrc,
-                          RpptRoiType roiType,
-                          rppHandle_t rppHandle)
+RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32f *gammaTensor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     Rpp32u paramIndex = 0;
@@ -219,15 +216,14 @@ rppt_gamma_correction_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppt_gamma_correction_host(RppPtr_t srcPtr,
-                           RpptDescPtr srcDescPtr,
-                           RppPtr_t dstPtr,
-                           RpptDescPtr dstDescPtr,
-                           Rpp32f *gammaTensor,
-                           RpptROIPtr roiTensorPtrSrc,
-                           RpptRoiType roiType,
-                           rppHandle_t rppHandle)
+RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     RppPtr_t dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *gammaTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -281,16 +277,15 @@ rppt_gamma_correction_host(RppPtr_t srcPtr,
 
 /******************** blend ********************/
 
-RppStatus
-rppt_blend_gpu(RppPtr_t srcPtr1,
-               RppPtr_t srcPtr2,
-               RpptDescPtr srcDescPtr,
-               RppPtr_t dstPtr,
-               RpptDescPtr dstDescPtr,
-               Rpp32f *alphaTensor,
-               RpptROIPtr roiTensorPtrSrc,
-               RpptRoiType roiType,
-               rppHandle_t rppHandle)
+RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
+                         RppPtr_t srcPtr2,
+                         RpptDescPtr srcDescPtr,
+                         RppPtr_t dstPtr,
+                         RpptDescPtr dstDescPtr,
+                         Rpp32f *alphaTensor,
+                         RpptROIPtr roiTensorPtrSrc,
+                         RpptRoiType roiType,
+                         rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     Rpp32u paramIndex = 0;
@@ -345,16 +340,15 @@ rppt_blend_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppt_blend_host(RppPtr_t srcPtr1,
-                RppPtr_t srcPtr2,
-                RpptDescPtr srcDescPtr,
-                RppPtr_t dstPtr,
-                RpptDescPtr dstDescPtr,
-                Rpp32f *alphaTensor,
-                RpptROIPtr roiTensorPtrSrc,
-                RpptRoiType roiType,
-                rppHandle_t rppHandle)
+RppStatus rppt_blend_host(RppPtr_t srcPtr1,
+                          RppPtr_t srcPtr2,
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          Rpp32f *alphaTensor,
+                          RpptROIPtr roiTensorPtrSrc,
+                          RpptRoiType roiType,
+                          rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -412,18 +406,17 @@ rppt_blend_host(RppPtr_t srcPtr1,
 
 /******************** color_twist ********************/
 
-RppStatus
-rppt_color_twist_gpu(RppPtr_t srcPtr,
-                     RpptDescPtr srcDescPtr,
-                     RppPtr_t dstPtr,
-                     RpptDescPtr dstDescPtr,
-                     Rpp32f *brightnessTensor,
-                     Rpp32f *contrastTensor,
-                     Rpp32f *hueTensor,
-                     Rpp32f *saturationTensor,
-                     RpptROIPtr roiTensorPtrSrc,
-                     RpptRoiType roiType,
-                     rppHandle_t rppHandle)
+RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32f *brightnessTensor,
+                               Rpp32f *contrastTensor,
+                               Rpp32f *hueTensor,
+                               Rpp32f *saturationTensor,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
@@ -482,18 +475,17 @@ rppt_color_twist_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppt_color_twist_host(RppPtr_t srcPtr,
-                      RpptDescPtr srcDescPtr,
-                      RppPtr_t dstPtr,
-                      RpptDescPtr dstDescPtr,
-                      Rpp32f *brightnessTensor,
-                      Rpp32f *contrastTensor,
-                      Rpp32f *hueTensor,
-                      Rpp32f *saturationTensor,
-                      RpptROIPtr roiTensorPtrSrc,
-                      RpptRoiType roiType,
-                      rppHandle_t rppHandle)
+RppStatus rppt_color_twist_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32f *brightnessTensor,
+                                Rpp32f *contrastTensor,
+                                Rpp32f *hueTensor,
+                                Rpp32f *saturationTensor,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -559,18 +551,17 @@ rppt_color_twist_host(RppPtr_t srcPtr,
 
 /******************** color_jitter ********************/
 
-RppStatus
-rppt_color_jitter_host(RppPtr_t srcPtr,
-                       RpptDescPtr srcDescPtr,
-                       RppPtr_t dstPtr,
-                       RpptDescPtr dstDescPtr,
-                       Rpp32f *brightnessTensor,
-                       Rpp32f *contrastTensor,
-                       Rpp32f *hueTensor,
-                       Rpp32f *saturationTensor,
-                       RpptROIPtr roiTensorPtrSrc,
-                       RpptRoiType roiType,
-                       rppHandle_t rppHandle)
+RppStatus rppt_color_jitter_host(RppPtr_t srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 RppPtr_t dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32f *brightnessTensor,
+                                 Rpp32f *contrastTensor,
+                                 Rpp32f *hueTensor,
+                                 Rpp32f *saturationTensor,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -636,16 +627,15 @@ rppt_color_jitter_host(RppPtr_t srcPtr,
 
 /******************** color_cast ********************/
 
-RppStatus
-rppt_color_cast_gpu(RppPtr_t srcPtr,
-                    RpptDescPtr srcDescPtr,
-                    RppPtr_t dstPtr,
-                    RpptDescPtr dstDescPtr,
-                    RpptRGB *rgbTensor,
-                    Rpp32f *alphaTensor,
-                    RpptROIPtr roiTensorPtrSrc,
-                    RpptRoiType roiType,
-                    rppHandle_t rppHandle)
+RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              RppPtr_t dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              RpptRGB *rgbTensor,
+                              Rpp32f *alphaTensor,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
@@ -702,16 +692,15 @@ rppt_color_cast_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppt_color_cast_host(RppPtr_t srcPtr,
-                     RpptDescPtr srcDescPtr,
-                     RppPtr_t dstPtr,
-                     RpptDescPtr dstDescPtr,
-                     RpptRGB *rgbTensor,
-                     Rpp32f *alphaTensor,
-                     RpptROIPtr roiTensorPtrSrc,
-                     RpptRoiType roiType,
-                     rppHandle_t rppHandle)
+RppStatus rppt_color_cast_host(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               RpptRGB *rgbTensor,
+                               Rpp32f *alphaTensor,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
 {
     if (srcDescPtr->c != 3)
     {

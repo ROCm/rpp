@@ -32,15 +32,14 @@ THE SOFTWARE.
 
 /******************** erode ********************/
 
-RppStatus
-rppt_erode_gpu(RppPtr_t srcPtr,
-               RpptDescPtr srcDescPtr,
-               RppPtr_t dstPtr,
-               RpptDescPtr dstDescPtr,
-               Rpp32u kernelSize,
-               RpptROIPtr roiTensorPtrSrc,
-               RpptRoiType roiType,
-               rppHandle_t rppHandle)
+RppStatus rppt_erode_gpu(RppPtr_t srcPtr,
+                         RpptDescPtr srcDescPtr,
+                         RppPtr_t dstPtr,
+                         RpptDescPtr dstDescPtr,
+                         Rpp32u kernelSize,
+                         RpptROIPtr roiTensorPtrSrc,
+                         RpptRoiType roiType,
+                         rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
@@ -99,15 +98,14 @@ rppt_erode_gpu(RppPtr_t srcPtr,
 
 /******************** dilate ********************/
 
-RppStatus
-rppt_dilate_gpu(RppPtr_t srcPtr,
-                RpptDescPtr srcDescPtr,
-                RppPtr_t dstPtr,
-                RpptDescPtr dstDescPtr,
-                Rpp32u kernelSize,
-                RpptROIPtr roiTensorPtrSrc,
-                RpptRoiType roiType,
-                rppHandle_t rppHandle)
+RppStatus rppt_dilate_gpu(RppPtr_t srcPtr,
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          Rpp32u kernelSize,
+                          RpptROIPtr roiTensorPtrSrc,
+                          RpptRoiType roiType,
+                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
