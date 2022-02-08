@@ -213,8 +213,12 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                            T *dstPtr,
                                            RpptDescPtr dstDescPtr,
                                            RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
                                            rpp::Handle& handle)
 {
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
     int localThreads_x = 256;
     int localThreads_y = 1;
     int localThreads_z = 1;

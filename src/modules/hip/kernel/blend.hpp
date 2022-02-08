@@ -162,8 +162,12 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                 T *dstPtr,
                                 RpptDescPtr dstDescPtr,
                                 RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
                                 rpp::Handle& handle)
 {
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
     int localThreads_x = 16;
     int localThreads_y = 16;
     int localThreads_z = 1;
