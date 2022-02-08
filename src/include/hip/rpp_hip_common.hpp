@@ -1,12 +1,12 @@
 #ifndef RPP_HIP_COMMON_H
 #define RPP_HIP_COMMON_H
 
-#include "hip/rpp/handle.hpp"
 #include <hip/hip_runtime.h>
 #include <hip/hip_fp16.h>
-#include <rppdefs.h>
-#include <vector>
 #include <half.hpp>
+#include "rppdefs.h"
+#include "hip/rpp/handle.hpp"
+#include "hip/rpp_hip_roi_conversion.hpp"
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 
@@ -1478,4 +1478,4 @@ __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24
     dst_f24->z.y = src_f24->z.y - subtrahend_f4;
 }
 
-#endif //RPP_HIP_COMMON_H
+#endif // RPP_HIP_COMMON_H
