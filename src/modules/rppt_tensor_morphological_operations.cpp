@@ -90,9 +90,11 @@ RppStatus rppt_erode_gpu(RppPtr_t srcPtr,
                               roiType,
                               rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
 
 /******************** dilate ********************/
@@ -156,7 +158,9 @@ RppStatus rppt_dilate_gpu(RppPtr_t srcPtr,
                                roiType,
                                rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }

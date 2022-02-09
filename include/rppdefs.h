@@ -43,6 +43,7 @@ typedef enum
     RPP_ERROR_INVALID_ARGUMENTS  = -2,
     RPP_ERROR_LOW_OFFSET         = -3,
     RPP_ERROR_HIGH_SRC_DIMENSION = -5,
+    RPP_ERROR_NOT_IMPLEMENTED    = -6
 } RppStatus;
 
 typedef enum

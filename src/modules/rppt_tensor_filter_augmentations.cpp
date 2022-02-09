@@ -90,7 +90,9 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr,
                                    roiType,
                                    rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }

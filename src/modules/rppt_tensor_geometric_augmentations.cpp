@@ -81,9 +81,11 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr,
                              roiType,
                              rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
 
 RppStatus rppt_crop_host(RppPtr_t srcPtr,

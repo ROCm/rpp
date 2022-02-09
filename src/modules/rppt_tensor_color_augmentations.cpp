@@ -87,9 +87,11 @@ RppStatus rppt_brightness_gpu(RppPtr_t srcPtr,
                                    roiType,
                                    rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
 
 RppStatus rppt_brightness_host(RppPtr_t srcPtr,
@@ -211,9 +213,11 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
                                          roiType,
                                          rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
 
 RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr,
@@ -335,9 +339,11 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
                               roiType,
                               rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
 
 RppStatus rppt_blend_host(RppPtr_t srcPtr1,
@@ -470,9 +476,11 @@ RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr,
                                     roiType,
                                     rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
 
 RppStatus rppt_color_twist_host(RppPtr_t srcPtr,
@@ -687,9 +695,11 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
                                    roiType,
                                    rpp::deref(rppHandle));
     }
-#endif // HIP_COMPILE
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
 
 RppStatus rppt_color_cast_host(RppPtr_t srcPtr,
