@@ -13,16 +13,14 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr = &roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f rParam = rgbTensor[batchCount].R;
         Rpp32f gParam = rgbTensor[batchCount].G;
@@ -33,7 +31,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         __m128 pMul = _mm_set1_ps(alphaParam);
         __m128 pAdd[3];
@@ -42,7 +40,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
         pAdd[2] = _mm_set1_ps(rParam);
 
         Rpp8u *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         // Color Cast with fused output-layout toggle (NHWC -> NCHW)
@@ -56,7 +54,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTemp = srcPtrRow;
@@ -108,7 +106,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 srcPtrTempR = srcPtrRowR;
@@ -158,7 +156,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrRow;
@@ -204,7 +202,7 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTempR = srcPtrRowR;
@@ -268,16 +266,14 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr = &roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f rParam = rgbTensor[batchCount].R * ONE_OVER_255;
         Rpp32f gParam = rgbTensor[batchCount].G * ONE_OVER_255;
@@ -288,7 +284,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         __m128 pMul = _mm_set1_ps(alphaParam);
         __m128 pAdd[3];
@@ -297,7 +293,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
         pAdd[2] = _mm_set1_ps(rParam);
 
         Rpp32f *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         // Color Cast with fused output-layout toggle (NHWC -> NCHW)
@@ -311,7 +307,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTemp = srcPtrRow;
@@ -363,7 +359,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 srcPtrTempR = srcPtrRowR;
@@ -413,7 +409,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrRow;
@@ -459,7 +455,7 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTempR = srcPtrRowR;
@@ -523,16 +519,14 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                                          RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr = &roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f rParam = rgbTensor[batchCount].R * ONE_OVER_255;
         Rpp32f gParam = rgbTensor[batchCount].G * ONE_OVER_255;
@@ -543,7 +537,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         __m128 pMul = _mm_set1_ps(alphaParam);
         __m128 pAdd[3];
@@ -552,7 +546,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
         pAdd[2] = _mm_set1_ps(rParam);
 
         Rpp16f *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         // Color Cast with fused output-layout toggle (NHWC -> NCHW)
@@ -566,7 +560,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTemp = srcPtrRow;
@@ -632,7 +626,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 srcPtrTempR = srcPtrRowR;
@@ -696,7 +690,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrRow;
@@ -754,7 +748,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTempR = srcPtrRowR;
@@ -834,16 +828,14 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                                        RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr = &roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f rParam = rgbTensor[batchCount].R;
         Rpp32f gParam = rgbTensor[batchCount].G;
@@ -854,7 +846,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         __m128 pMul = _mm_set1_ps(alphaParam);
         __m128 pAdd[3];
@@ -863,7 +855,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
         pAdd[2] = _mm_set1_ps(rParam);
 
         Rpp8s *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         // Color Cast with fused output-layout toggle (NHWC -> NCHW)
@@ -877,7 +869,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTemp = srcPtrRow;
@@ -934,7 +926,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 srcPtrTempR = srcPtrRowR;
@@ -989,7 +981,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrRow;
@@ -1040,7 +1032,7 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTempR = srcPtrRowR;

@@ -14,16 +14,14 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr = &roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f spatterValue[3];
         spatterValue[0] = (Rpp32f) spatterColor.B;
@@ -34,16 +32,16 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         Rpp8u *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiPtr->xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiPtr->xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roi.xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roi.xywhROI.roiHeight);
 
         RppiPoint maskLoc;
         maskLoc.x = distribX(gen);
@@ -84,7 +82,7 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -155,7 +153,7 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -224,7 +222,7 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -287,7 +285,7 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -368,16 +366,14 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
                                       RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr = &roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f spatterValue[3];
         spatterValue[0] = (Rpp32f) spatterColor.B * ONE_OVER_255;
@@ -388,16 +384,16 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         Rpp32f *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiPtr->xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiPtr->xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roi.xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roi.xywhROI.roiHeight);
 
         RppiPoint maskLoc;
         maskLoc.x = distribX(gen);
@@ -442,7 +438,7 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -513,7 +509,7 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -582,7 +578,7 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtrTemp, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -649,7 +645,7 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtrTemp, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -730,16 +726,14 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
                                       RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr = &roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f spatterValue[3];
         spatterValue[0] = (Rpp32f) spatterColor.B * ONE_OVER_255;
@@ -750,16 +744,16 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         Rpp16f *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiPtr->xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiPtr->xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roi.xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roi.xywhROI.roiHeight);
 
         RppiPoint maskLoc;
         maskLoc.x = distribX(gen);
@@ -804,7 +798,7 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -885,7 +879,7 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -964,7 +958,7 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtrTemp, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -1037,7 +1031,7 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtrTemp, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -1123,16 +1117,14 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    RpptROIPtr roiPtrDefault = &roiDefault;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr = &roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f spatterValue[3];
         spatterValue[0] = (Rpp32f) spatterColor.B;
@@ -1143,16 +1135,16 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roiPtr->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         Rpp8s *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiPtr->xywhROI.roiWidth);
-        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roiPtr->xywhROI.roiHeight);
+        std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roi.xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roi.xywhROI.roiHeight);
 
         RppiPoint maskLoc;
         maskLoc.x = distribX(gen);
@@ -1193,7 +1185,7 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -1264,7 +1256,7 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -1333,7 +1325,7 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtrTemp, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
@@ -1396,7 +1388,7 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
             spatterMaskPtrRow = spatterMaskPtr;
             spatterMaskInvPtrRow = spatterMaskInvPtr;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtrTemp, *dstPtrTemp;
                 Rpp32f *spatterMaskPtrTemp, *spatterMaskInvPtrTemp;
