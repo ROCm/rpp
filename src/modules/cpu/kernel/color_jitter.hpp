@@ -22,32 +22,9 @@ RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr;
-
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr = roiPtrDefault;
-        }
-        else
-        {
-            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-            RpptROI roiImage;
-            RpptROIPtr roiPtrImage;
-
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage = &roiImage;
-                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage = roiPtrInput;
-            }
-
-            roiPtr = &roi;
-            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
-        }
+        RpptROIPtr roiPtr = &roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
         Rpp32f contrastParam = contrastTensor[batchCount];
@@ -305,32 +282,9 @@ RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr;
-
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr = roiPtrDefault;
-        }
-        else
-        {
-            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-            RpptROI roiImage;
-            RpptROIPtr roiPtrImage;
-
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage = &roiImage;
-                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage = roiPtrInput;
-            }
-
-            roiPtr = &roi;
-            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
-        }
+        RpptROIPtr roiPtr = &roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
         Rpp32f contrastParam = contrastTensor[batchCount];
@@ -588,32 +542,9 @@ RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr;
-
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr = roiPtrDefault;
-        }
-        else
-        {
-            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-            RpptROI roiImage;
-            RpptROIPtr roiPtrImage;
-
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage = &roiImage;
-                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage = roiPtrInput;
-            }
-
-            roiPtr = &roi;
-            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
-        }
+        RpptROIPtr roiPtr = &roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
         Rpp32f contrastParam = contrastTensor[batchCount];
@@ -927,32 +858,9 @@ RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr;
-
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr = roiPtrDefault;
-        }
-        else
-        {
-            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-            RpptROI roiImage;
-            RpptROIPtr roiPtrImage;
-
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage = &roiImage;
-                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage = roiPtrInput;
-            }
-
-            roiPtr = &roi;
-            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
-        }
+        RpptROIPtr roiPtr = &roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, roiPtr, roiPtrDefault, roiType);
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
         Rpp32f contrastParam = contrastTensor[batchCount];
