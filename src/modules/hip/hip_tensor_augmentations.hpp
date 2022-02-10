@@ -12,6 +12,7 @@
 #include "kernel/gridmask.hpp"
 #include "kernel/spatter.hpp"
 #include "kernel/roi_conversion.hpp"
+#include "kernel/exposure.hpp"
 
 /******************** brightness ********************/
 
@@ -322,6 +323,33 @@ RppStatus spatter_hip_tensor(T *srcPtr,
                             dstPtr,
                             dstDescPtr,
                             spatterColor,
+                            roiTensorPtrSrc,
+                            handle);
+
+    return RPP_SUCCESS;
+}
+
+/******************** exposure ********************/
+
+template <typename T>
+RppStatus exposure_hip_tensor(T *srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              T *dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+    {
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc,
+                                             handle);
+    }
+
+    hip_exec_exposure_tensor(srcPtr,
+                            srcDescPtr,
+                            dstPtr,
+                            dstDescPtr,
                             roiTensorPtrSrc,
                             handle);
 
