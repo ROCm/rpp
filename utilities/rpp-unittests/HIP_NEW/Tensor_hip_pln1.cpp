@@ -727,6 +727,7 @@ int main(int argc, char **argv)
             exposureFactor[i] = 1.4;
         }
 
+
         // Uncomment to run test case with an xywhROI override
         /*for (i = 0; i < images; i++)
         {

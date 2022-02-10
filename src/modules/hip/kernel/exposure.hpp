@@ -83,7 +83,7 @@ __global__ void exposure_pln_tensor(T *srcPtr,
                                     T *dstPtr,
                                     uint3 dstStridesNCH,
                                     int channelsDst,
-                                    float * exposureFactorTensor,
+                                    float *exposureFactorTensor,
                                     RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -111,7 +111,7 @@ __global__ void exposure_pkd3_pln3_tensor(T *srcPtr,
                                           uint2 srcStridesNH,
                                           T *dstPtr,
                                           uint3 dstStridesNCH,
-                                          float * exposureFactorTensor,
+                                          float *exposureFactorTensor,
                                           RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -123,12 +123,13 @@ __global__ void exposure_pkd3_pln3_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float1 ExposureParam_f1 = make_float1(exposureFactorTensor[id_z]);
 
     d_float24 pix_f24;
+
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &pix_f24);
     exposure_hip_compute(srcPtr, &pix_f24, &ExposureParam_f1);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &pix_f24);
@@ -139,7 +140,7 @@ __global__ void exposure_pln3_pkd3_tensor(T *srcPtr,
                                           uint3 srcStridesNCH,
                                           T *dstPtr,
                                           uint2 dstStridesNH,
-                                          float * exposureFactorTensor,
+                                          float *exposureFactorTensor,
                                           RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
