@@ -86,7 +86,7 @@ __global__ void exposure_pln_tensor(T *srcPtr,
                                     float *exposureFactorTensor,
                                     RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
@@ -95,7 +95,7 @@ __global__ void exposure_pln_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float1 ExposureParam_f1 = make_float1(exposureFactorTensor[id_z]);
@@ -152,7 +152,7 @@ __global__ void exposure_pln3_pkd3_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float1 ExposureParam_f1 = make_float1(exposureFactorTensor[id_z]);

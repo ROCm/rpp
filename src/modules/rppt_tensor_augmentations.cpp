@@ -1428,11 +1428,6 @@ rppt_exposure_gpu(RppPtr_t srcPtr,
                   rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if (srcDescPtr->c != 3)
-    {
-        return RPP_ERROR_INVALID_ARGUMENTS;
-    }
-
     Rpp32u paramIndex = 0;
     copy_param_float(exposureFactorTensor, rpp::deref(rppHandle), paramIndex++);
 
