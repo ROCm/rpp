@@ -209,14 +209,16 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(uchar *srcPtr, int srcIdx,
 {
     d_uchar24 src, dst;
     src = *(d_uchar24 *)&srcPtr[srcIdx];
-    dst = *(d_uchar24 *)&dstPtr[dstIdx];
     rpp_hip_layouttoggle24_pkd3_to_pln3(&src);
+    dst.x = *(d_uchar8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
     *(d_uchar8 *)&dstPtr[dstIdx] = dst.x;
     dstIdx += dstStrideC;
+    dst.y = *(d_uchar8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
     *(d_uchar8 *)&dstPtr[dstIdx] = dst.y;
     dstIdx += dstStrideC;
+    dst.z = *(d_uchar8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
     *(d_uchar8 *)&dstPtr[dstIdx] = dst.z;
 }
@@ -224,14 +226,16 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(float *srcPtr, int srcIdx,
 {
     d_float24 src, dst;
     src = *(d_float24 *)&srcPtr[srcIdx];
-    dst = *(d_float24 *)&dstPtr[dstIdx];
     rpp_hip_layouttoggle24_pkd3_to_pln3(&src);
+    dst.x = *(d_float8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
     *(d_float8 *)&dstPtr[dstIdx] = dst.x;
     dstIdx += dstStrideC;
+    dst.y = *(d_float8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
     *(d_float8 *)&dstPtr[dstIdx] = dst.y;
     dstIdx += dstStrideC;
+    dst.z = *(d_float8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
     *(d_float8 *)&dstPtr[dstIdx] = dst.z;
 }
@@ -239,14 +243,16 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(schar *srcPtr, int srcIdx,
 {
     d_schar24 src, dst;
     src = *(d_schar24 *)&srcPtr[srcIdx];
-    dst = *(d_schar24 *)&dstPtr[dstIdx];
     rpp_hip_layouttoggle24_pkd3_to_pln3(&src);
+    dst.x = *(d_schar8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
     *(d_schar8 *)&dstPtr[dstIdx] = dst.x;
     dstIdx += dstStrideC;
+    dst.y = *(d_schar8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
     *(d_schar8 *)&dstPtr[dstIdx] = dst.y;
     dstIdx += dstStrideC;
+    dst.z = *(d_schar8 *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
     *(d_schar8 *)&dstPtr[dstIdx] = dst.z;
 }
@@ -254,14 +260,16 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(half *srcPtr, int srcIdx, 
 {
     d_half24_as_halfs src, dst;
     src = *(d_half24_as_halfs *)&srcPtr[srcIdx];
-    dst = *(d_half24_as_halfs *)&dstPtr[dstIdx];
     rpp_hip_layouttoggle24_pkd3_to_pln3(&src);
+    dst.x = *(d_half8_as_halfs *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.x;
     dstIdx += dstStrideC;
+    dst.y = *(d_half8_as_halfs *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.y;
     dstIdx += dstStrideC;
+    dst.z = *(d_half8_as_halfs *)&dstPtr[dstIdx];
     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.z;
 }
@@ -270,36 +278,60 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(half *srcPtr, int srcIdx, 
 __device__ void gridmask_result_pln3_pkd3_hip_compute(uchar *srcPtr, int srcIdx, uint srcStrideC, uchar *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
 {
     d_uchar24 src, dst;
-    src = *(d_uchar24 *)&srcPtr[srcIdx];
     dst = *(d_uchar24 *)&dstPtr[dstIdx];
+    src.x = *(d_uchar8 *)&srcPtr[srcIdx];
     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
+    srcIdx += srcStrideC;
+    src.y = *(d_uchar8 *)&srcPtr[srcIdx];
+    gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
+    srcIdx += srcStrideC;
+    src.z = *(d_uchar8 *)&srcPtr[srcIdx];
+    gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
     rpp_hip_layouttoggle24_pln3_to_pkd3(&dst);
     *(d_uchar24 *)&dstPtr[dstIdx] = dst;
 }
 __device__ void gridmask_result_pln3_pkd3_hip_compute(float *srcPtr, int srcIdx, uint srcStrideC, float *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
 {
     d_float24 src, dst;
-    src = *(d_float24 *)&srcPtr[srcIdx];
     dst = *(d_float24 *)&dstPtr[dstIdx];
+    src.x = *(d_float8 *)&srcPtr[srcIdx];
     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
+    srcIdx += srcStrideC;
+    src.y = *(d_float8 *)&srcPtr[srcIdx];
+    gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
+    srcIdx += srcStrideC;
+    src.z = *(d_float8 *)&srcPtr[srcIdx];
+    gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
     rpp_hip_layouttoggle24_pln3_to_pkd3(&dst);
     *(d_float24 *)&dstPtr[dstIdx] = dst;
 }
 __device__ void gridmask_result_pln3_pkd3_hip_compute(schar *srcPtr, int srcIdx, uint srcStrideC, schar *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
 {
     d_schar24 src, dst;
-    src = *(d_schar24 *)&srcPtr[srcIdx];
     dst = *(d_schar24 *)&dstPtr[dstIdx];
+    src.x = *(d_schar8 *)&srcPtr[srcIdx];
     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
+    srcIdx += srcStrideC;
+    src.y = *(d_schar8 *)&srcPtr[srcIdx];
+    gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
+    srcIdx += srcStrideC;
+    src.z = *(d_schar8 *)&srcPtr[srcIdx];
+    gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
     rpp_hip_layouttoggle24_pln3_to_pkd3(&dst);
     *(d_schar24 *)&dstPtr[dstIdx] = dst;
 }
 __device__ void gridmask_result_pln3_pkd3_hip_compute(half *srcPtr, int srcIdx, uint srcStrideC, half *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
 {
     d_half24_as_halfs src, dst;
-    src = *(d_half24_as_halfs *)&srcPtr[srcIdx];
     dst = *(d_half24_as_halfs *)&dstPtr[dstIdx];
+    src.x = *(d_half8_as_halfs *)&srcPtr[srcIdx];
     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
+    srcIdx += srcStrideC;
+    src.y = *(d_half8_as_halfs *)&srcPtr[srcIdx];
+    gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
+    srcIdx += srcStrideC;
+    src.z = *(d_half8_as_halfs *)&srcPtr[srcIdx];
+    gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
     rpp_hip_layouttoggle24_pln3_to_pkd3(&dst);
     *(d_half24_as_halfs *)&dstPtr[dstIdx] = dst;
 }
