@@ -20,21 +20,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef RPPT_H
-#define RPPT_H
-
+#ifndef RPPT_TENSOR_GEOMETRIC_AUGMENTATIONS_H
+#define RPPT_TENSOR_GEOMETRIC_AUGMENTATIONS_H
 #include "rpp.h"
+#include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "rppt_tensor_color_augmentations.h"
-#include "rppt_tensor_effects_augmentations.h"
-#include "rppt_tensor_geometric_augmentations.h"
-#include "rppt_tensor_filter_augmentations.h"
-#include "rppt_tensor_morphological_operations.h"
+/******************** crop ********************/
+
+// Crop augmentation for a NCHW/NHWC layout tensor
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDesc source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDesc destination tensor descriptor
+// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_crop_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_crop_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }
 #endif
-#endif // RPPT_H
+#endif // RPPT_TENSOR_GEOMETRIC_AUGMENTATIONS_H

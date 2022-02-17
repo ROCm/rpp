@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef RPPT_TENSOR_AUGMENTATIONS_H
-#define RPPT_TENSOR_AUGMENTATIONS_H
+#ifndef RPPT_TENSOR_COLOR_AUGMENTATIONS_H
+#define RPPT_TENSOR_COLOR_AUGMENTATIONS_H
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
@@ -139,114 +139,7 @@ RppStatus rppt_color_jitter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
 RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB *rgbTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB *rgbTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
-/******************** box_filter ********************/
-
-// Box Filter augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor (srcDescPtr->offsetInBytes must be at least 12 * (kernelSize / 2))
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
-// *param[in] kernelSize kernel size for box_filter (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-
-/******************** erode ********************/
-
-// Erode augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor (srcDescPtr->offsetInBytes must be at least 12 * (kernelSize / 2), and any offset/row-padding/col-padding other than the image region should be set to 0xFF)
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
-// *param[in] kernelSize kernel size for erode (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppt_erode_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-
-/******************** dilate ********************/
-
-// Dilate augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor (srcDescPtr->offsetInBytes must be at least 12 * (kernelSize / 2))
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
-// *param[in] kernelSize kernel size for dilate (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppt_dilate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-
-/******************** crop ********************/
-
-// Crop augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppt_crop_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-RppStatus rppt_crop_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-
-/******************** gridmask ********************/
-
-// Gridmask augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
-// *param[in] tileWidth tileWidth value for gridmask calculation = width of black square + width of spacing until next black square on grid (a single Rpp32u number with tileWidth <= min(srcDescPtr->w, srcDescPtr->h) that applies to all images in the batch)
-// *param[in] gridRatio gridRatio value for gridmask calculation = black square width / tileWidth (a single Rpp32f number with 0 <= gridRatio <= 1 that applies to all images in the batch)
-// *param[in] gridAngle gridAngle value for gridmask calculation = grid rotation angle in radians (a single Rpp32f number that applies to all images in the batch)
-// *param[in] translateVector translateVector for gridmask calculation = grid X and Y translation lengths in pixels (a single RpptUintVector2D x,y value pair that applies to all images in the batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppt_gridmask_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u tileWidth, Rpp32f gridRatio, Rpp32f gridAngle, RpptUintVector2D translateVector, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-RppStatus rppt_gridmask_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u tileWidth, Rpp32f gridRatio, Rpp32f gridAngle, RpptUintVector2D translateVector, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-
-/******************** spatter ********************/
-
-// Spatter augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor (srcDescPtr->w must be a maximum of 1920, srcDescPtr->h must be a maximum of 1080)
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
-// *param[in] spatterColor RGB values to use for the spatter augmentation (A single set of 3 Rpp8u values as RpptRGB that applies to all images in the batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppt_spatter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB spatterColor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-RppStatus rppt_spatter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB spatterColor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif // RPPT_TENSOR_COLOR_AUGMENTATIONS_H

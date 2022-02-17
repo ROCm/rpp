@@ -2516,6 +2516,26 @@ inline RppStatus compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROI
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_roi_validation_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault, RpptRoiType roiType)
+{
+    if (roiPtrInput == NULL)
+    {
+        roiPtr = roiPtrDefault;
+    }
+    else
+    {
+        RpptROI roiImage;
+        RpptROIPtr roiPtrImage = &roiImage;
+        if (roiType == RpptRoiType::LTRB)
+            compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
+        else if (roiType == RpptRoiType::XYWH)
+            roiPtrImage = roiPtrInput;
+        compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
+    }
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus compute_color_jitter_ctm_host(Rpp32f brightnessParam, Rpp32f contrastParam, Rpp32f hueParam, Rpp32f saturationParam, Rpp32f *ctm)
 {
     contrastParam += 1.0f;
