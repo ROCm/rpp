@@ -1,6 +1,9 @@
+#ifndef RPP_HIP_ROI_CONVERSION_H
+#define RPP_HIP_ROI_CONVERSION_H
+
 #include <hip/hip_runtime.h>
 
-extern "C" __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
+static __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 4;
 
@@ -11,7 +14,7 @@ extern "C" __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
     roiTensorPtrSrc_i4->w -= (roiTensorPtrSrc_i4->y - 1);
 }
 
-RppStatus hip_exec_roi_converison_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
+static RppStatus hip_exec_roi_converison_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
                                                rpp::Handle& handle)
 {
     int localThreads_x = 256;
@@ -30,3 +33,5 @@ RppStatus hip_exec_roi_converison_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
 
     return RPP_SUCCESS;
 }
+
+#endif //RPP_HIP_ROI_CONVERSION_H
