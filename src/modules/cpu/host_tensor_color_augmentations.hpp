@@ -20,21 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef RPPT_H
-#define RPPT_H
+#ifndef HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
+#define HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
 
-#include "rpp.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "kernel/brightness.hpp"
+#include "kernel/gamma_correction.hpp"
+#include "kernel/blend.hpp"
+#include "kernel/color_twist.hpp"
+#include "kernel/color_jitter.hpp"
+#include "kernel/color_cast.hpp"
 
-#include "rppt_tensor_color_augmentations.h"
-#include "rppt_tensor_effects_augmentations.h"
-#include "rppt_tensor_geometric_augmentations.h"
-#include "rppt_tensor_filter_augmentations.h"
-#include "rppt_tensor_morphological_operations.h"
-
-#ifdef __cplusplus
-}
-#endif
-#endif // RPPT_H
+#endif // HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
