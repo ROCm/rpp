@@ -213,8 +213,12 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                            T *dstPtr,
                                            RpptDescPtr dstDescPtr,
                                            RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
                                            rpp::Handle& handle)
 {
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
     int localThreads_x = 256;
     int localThreads_y = 1;
     int localThreads_z = 1;
@@ -233,9 +237,9 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                        gammaLUT,
                        handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
 
-    localThreads_x = 16;
-    localThreads_y = 16;
-    localThreads_z = 1;
+    localThreads_x = LOCAL_THREADS_X;
+    localThreads_y = LOCAL_THREADS_Y;
+    localThreads_z = LOCAL_THREADS_Z;
     globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     globalThreads_y = dstDescPtr->h;
     globalThreads_z = handle.GetBatchSize();
