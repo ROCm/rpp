@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
+        printf("\nUsage: ./Tensor_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <verbosity = 0/1>\n");
         return -1;
     }
 
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
         printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (0:81) = %s", argv[6]);
+        printf("\ncase number (0:84) = %s", argv[6]);
     }
 
     int ip_channel = 3;
@@ -77,6 +77,9 @@ int main(int argc, char **argv)
     case 31:
         strcpy(funcName, "color_cast");
         break;
+    case 36:
+        strcpy(funcName, "color_twist");
+        break;
     case 37:
         strcpy(funcName, "crop");
         break;
@@ -91,6 +94,9 @@ int main(int argc, char **argv)
         break;
     case 83:
         strcpy(funcName, "gridmask");
+        break;
+    case 84:
+        strcpy(funcName, "spatter");
         break;
     default:
         strcpy(funcName, "test_case");
@@ -668,10 +674,6 @@ int main(int argc, char **argv)
         else
             missingFuncFlag = 1;
 
-        hipDeviceSynchronize();
-
-        end = clock();
-
         break;
     }
     case 1:
@@ -724,10 +726,6 @@ int main(int argc, char **argv)
         else
             missingFuncFlag = 1;
 
-        hipDeviceSynchronize();
-
-        end = clock();
-
         break;
     }
     case 2:
@@ -779,10 +777,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-
-        hipDeviceSynchronize();
-
-        end = clock();
 
         break;
     }
@@ -840,9 +834,63 @@ int main(int argc, char **argv)
         else
             missingFuncFlag = 1;
 
-        hipDeviceSynchronize();
+        break;
+    }
+    case 36:
+    {
+        test_case_name = "color_twist";
 
-        end = clock();
+        Rpp32f brightness[images];
+        Rpp32f contrast[images];
+        Rpp32f hue[images];
+        Rpp32f saturation[images];
+        for (i = 0; i < images; i++)
+        {
+            brightness[i] = 1.4;
+            contrast[i] = 0.0;
+            hue[i] = 60.0;
+            saturation[i] = 1.9;
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }*/
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+        start = clock();
+
+        if (ip_bitDepth == 0)
+            rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_color_twist_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, brightness, contrast, hue, saturation, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_color_twist_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, brightness, contrast, hue, saturation, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_color_twist_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, brightness, contrast, hue, saturation, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
 
         break;
     }
@@ -889,10 +937,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-
-        hipDeviceSynchronize();
-
-        end = clock();
 
         break;
     }
@@ -942,10 +986,6 @@ int main(int argc, char **argv)
         else
             missingFuncFlag = 1;
 
-        hipDeviceSynchronize();
-
-        end = clock();
-
         break;
     }
     case 41:
@@ -994,10 +1034,6 @@ int main(int argc, char **argv)
         else
             missingFuncFlag = 1;
 
-        hipDeviceSynchronize();
-
-        end = clock();
-
         break;
     }
     case 49:
@@ -1045,10 +1081,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-
-        hipDeviceSynchronize();
-
-        end = clock();
 
         break;
     }
@@ -1104,9 +1136,69 @@ int main(int argc, char **argv)
         else
             missingFuncFlag = 1;
 
-        hipDeviceSynchronize();
+        break;
+    }
+    case 84:
+    {
+        test_case_name = "spatter";
 
-        end = clock();
+        RpptRGB spatterColor;
+
+        // Mud Spatter
+        spatterColor.R = 65;
+        spatterColor.G = 50;
+        spatterColor.B = 23;
+
+        // Blood Spatter
+        // spatterColor.R = 98;
+        // spatterColor.G = 3;
+        // spatterColor.B = 3;
+
+        // Ink Spatter
+        // spatterColor.R = 5;
+        // spatterColor.G = 20;
+        // spatterColor.B = 64;
+
+        // Uncomment to run test case with an xywhROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }*/
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+        start = clock();
+
+        if (ip_bitDepth == 0)
+            rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_spatter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, spatterColor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_spatter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, spatterColor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_spatter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, spatterColor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
 
         break;
     }
@@ -1114,6 +1206,9 @@ int main(int argc, char **argv)
         missingFuncFlag = 1;
         break;
     }
+
+    hipDeviceSynchronize();
+    end = clock();
 
     if (missingFuncFlag == 1)
     {

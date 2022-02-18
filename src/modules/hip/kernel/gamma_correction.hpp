@@ -188,7 +188,7 @@ __global__ void gamma_correction_lut_compute(float *gammaLUT,
     d_float8 *gammaLUT_f8;
     gammaLUT_f8 = (d_float8 *)&gammaLUT[gammaLutIdx];
 
-    float4 inv255_f4 = (float4) 0.0039216f;
+    float4 inv255_f4 = (float4) ONE_OVER_255;
     d_float8 pixVal_f8;
 
     pixVal_f8.x = make_float4(id_x, id_x + 1, id_x + 2, id_x + 3);
@@ -213,8 +213,12 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                            T *dstPtr,
                                            RpptDescPtr dstDescPtr,
                                            RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
                                            rpp::Handle& handle)
 {
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
     int localThreads_x = 256;
     int localThreads_y = 1;
     int localThreads_z = 1;
@@ -233,9 +237,9 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                        gammaLUT,
                        handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
 
-    localThreads_x = 16;
-    localThreads_y = 16;
-    localThreads_z = 1;
+    localThreads_x = LOCAL_THREADS_X;
+    localThreads_y = LOCAL_THREADS_Y;
+    localThreads_z = LOCAL_THREADS_Z;
     globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     globalThreads_y = dstDescPtr->h;
     globalThreads_z = handle.GetBatchSize();
