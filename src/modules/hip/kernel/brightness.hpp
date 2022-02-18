@@ -9,20 +9,20 @@ __device__ void brightness_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8
 
 __device__ void brightness_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4)0.0039216;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4)0.0039216;
+    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
+    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
 }
 
 __device__ void brightness_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    dst_f8->x = rpp_hip_pixel_check((src_f8->x + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
-    dst_f8->y = rpp_hip_pixel_check((src_f8->y + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
+    dst_f8->x = rpp_hip_pixel_check_0to255((src_f8->x + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
+    dst_f8->y = rpp_hip_pixel_check_0to255((src_f8->y + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
 }
 
 __device__ void brightness_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4)0.0039216;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4)0.0039216;
+    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
+    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
 }
 
 template <typename T>
@@ -177,11 +177,15 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                      T *dstPtr,
                                      RpptDescPtr dstDescPtr,
                                      RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
                                      rpp::Handle& handle)
 {
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
+    int localThreads_x = LOCAL_THREADS_X;
+    int localThreads_y = LOCAL_THREADS_Y;
+    int localThreads_z = LOCAL_THREADS_Z;
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
