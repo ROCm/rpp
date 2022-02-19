@@ -144,17 +144,16 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
 
 /******************** crop mirror normalize ********************/
 
-RppStatus
-rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               Rpp32f *meanTensor,
-                               Rpp32f *stdDevTensor,
-                               Rpp32u *mirrorTensor,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
+RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         RppPtr_t dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32f *meanTensor,
+                                         Rpp32f *stdDevTensor,
+                                         Rpp32u *mirrorTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     Rpp32u paramIndex = 0;
@@ -202,7 +201,9 @@ rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
                                               roiType,
                                               rpp::deref(rppHandle));
     }
-#endif //backend
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
