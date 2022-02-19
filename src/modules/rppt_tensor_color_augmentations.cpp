@@ -773,15 +773,14 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr,
 
 /******************** exposure ********************/
 
-RppStatus
-rppt_exposure_host(RppPtr_t srcPtr,
-                   RpptDescPtr srcDescPtr,
-                   RppPtr_t dstPtr,
-                   RpptDescPtr dstDescPtr,
-                   Rpp32f *exposureFactorTensor,
-                   RpptROIPtr roiTensorPtrSrc,
-                   RpptRoiType roiType,
-                   rppHandle_t rppHandle)
+RppStatus rppt_exposure_host(RppPtr_t srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             RppPtr_t dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             Rpp32f *exposureFactorTensor,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 

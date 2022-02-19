@@ -38,7 +38,6 @@ RppStatus exposure_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
 
-
         __m256 pExposureParam;
         pExposureParam = _mm256_set1_ps(multiplyingFactor);
 
@@ -370,7 +369,6 @@ RppStatus exposure_f32_f32_host_tensor(Rpp32f *srcPtr,
 
     return RPP_SUCCESS;
 }
-
 
 RppStatus exposure_f16_f16_host_tensor(Rpp16f *srcPtr,
                                        RpptDescPtr srcDescPtr,
