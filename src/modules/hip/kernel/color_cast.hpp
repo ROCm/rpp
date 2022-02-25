@@ -181,9 +181,9 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
 
     if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
-        int localThreads_x = 16;
-        int localThreads_y = 16;
-        int localThreads_z = 1;
+        int localThreads_x = LOCAL_THREADS_X;
+        int localThreads_y = LOCAL_THREADS_Y;
+        int localThreads_z = LOCAL_THREADS_Z;
         int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
         int globalThreads_y = dstDescPtr->h;
         int globalThreads_z = handle.GetBatchSize();
