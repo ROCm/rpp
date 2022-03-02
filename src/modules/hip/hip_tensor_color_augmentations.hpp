@@ -28,5 +28,6 @@ THE SOFTWARE.
 #include "kernel/blend.hpp"
 #include "kernel/color_twist.hpp"
 #include "kernel/color_cast.hpp"
+#include "kernel/exposure.hpp"
 
 #endif // HIP_TENSOR_COLOR_AUGMENTATIONS_HPP
