@@ -141,3 +141,66 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+/******************** warp_affine ********************/
+
+RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32f *affineTensor,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_warp_affine_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                    srcDescPtr,
+                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                    dstDescPtr,
+                                    affineTensor,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    rpp::deref(rppHandle));
+    }
+    // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    // {
+    //     warp_affine_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+    //                            srcDescPtr,
+    //                            (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+    //                            dstDescPtr,
+    //                            affineTensor,
+    //                            roiTensorPtrSrc,
+    //                            roiType,
+    //                            rpp::deref(rppHandle));
+    // }
+    // else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    // {
+    //     warp_affine_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+    //                            srcDescPtr,
+    //                            (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+    //                            dstDescPtr,
+    //                            affineTensor,
+    //                            roiTensorPtrSrc,
+    //                            roiType,
+    //                            rpp::deref(rppHandle));
+    // }
+    // else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    // {
+    //     warp_affine_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+    //                            srcDescPtr,
+    //                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+    //                            dstDescPtr,
+    //                            affineTensor,
+    //                            roiTensorPtrSrc,
+    //                            roiType,
+    //                            rpp::deref(rppHandle));
+    // }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}

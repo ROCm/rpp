@@ -11,11 +11,22 @@ using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 
 // float
+typedef struct d_float6
+{
+    float3 x;
+    float3 y;
+} d_float6;
 typedef struct d_float8
 {
     float4 x;
     float4 y;
 } d_float8;
+typedef struct d_float12
+{
+    float4 x;
+    float4 y;
+    float4 z;
+} d_float12;
 typedef struct d_float16
 {
     d_float8 x;
@@ -51,6 +62,11 @@ typedef struct d_uint6
 } d_uint6;
 
 // int
+typedef struct d_int4
+{
+    int2 x;
+    int2 y;
+} d_int4;
 typedef struct d_int6
 {
     int2 x;
@@ -653,30 +669,30 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(f
     srcPtr_f24 = (d_float24 *)&srcPtr[srcIdx];
 
     src_f24->x.x.x = srcPtr_f24->x.x.x;
-    src_f24->y.x.x = srcPtr_f24->x.x.y;
-    src_f24->z.x.x = srcPtr_f24->x.x.z;
     src_f24->x.x.y = srcPtr_f24->x.x.w;
-    src_f24->y.x.y = srcPtr_f24->x.y.x;
-    src_f24->z.x.y = srcPtr_f24->x.y.y;
     src_f24->x.x.z = srcPtr_f24->x.y.z;
-    src_f24->y.x.z = srcPtr_f24->x.y.w;
-
-    src_f24->z.x.z = srcPtr_f24->y.x.x;
     src_f24->x.x.w = srcPtr_f24->y.x.y;
-    src_f24->y.x.w = srcPtr_f24->y.x.z;
-    src_f24->z.x.w = srcPtr_f24->y.x.w;
     src_f24->x.y.x = srcPtr_f24->y.y.x;
-    src_f24->y.y.x = srcPtr_f24->y.y.y;
-    src_f24->z.y.x = srcPtr_f24->y.y.z;
     src_f24->x.y.y = srcPtr_f24->y.y.w;
-
-    src_f24->y.y.y = srcPtr_f24->z.x.x;
-    src_f24->z.y.y = srcPtr_f24->z.x.y;
     src_f24->x.y.z = srcPtr_f24->z.x.z;
-    src_f24->y.y.z = srcPtr_f24->z.x.w;
-    src_f24->z.y.z = srcPtr_f24->z.y.x;
     src_f24->x.y.w = srcPtr_f24->z.y.y;
+
+    src_f24->y.x.x = srcPtr_f24->x.x.y;
+    src_f24->y.x.y = srcPtr_f24->x.y.x;
+    src_f24->y.x.z = srcPtr_f24->x.y.w;
+    src_f24->y.x.w = srcPtr_f24->y.x.z;
+    src_f24->y.y.x = srcPtr_f24->y.y.y;
+    src_f24->y.y.y = srcPtr_f24->z.x.x;
+    src_f24->y.y.z = srcPtr_f24->z.x.w;
     src_f24->y.y.w = srcPtr_f24->z.y.z;
+
+    src_f24->z.x.x = srcPtr_f24->x.x.z;
+    src_f24->z.x.y = srcPtr_f24->x.y.y;
+    src_f24->z.x.z = srcPtr_f24->y.x.x;
+    src_f24->z.x.w = srcPtr_f24->y.x.w;
+    src_f24->z.y.x = srcPtr_f24->y.y.z;
+    src_f24->z.y.y = srcPtr_f24->z.x.y;
+    src_f24->z.y.z = srcPtr_f24->z.y.x;
     src_f24->z.y.w = srcPtr_f24->z.y.w;
 }
 
@@ -1151,6 +1167,26 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half 
     *((d_half24 *)(&dstPtr[dstIdx])) = dst_h24;
 }
 
+// U8 stores with layout toggle PKD3 to PLN3 (24 U8 pixels)
+
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(uchar *dstPtr, uint dstIdx, uint increment, d_float24 *dst_f24)
+{
+    d_uint6 dst;
+
+    dst.x.x = rpp_hip_pack(make_float4(dst_f24->x.x.x, dst_f24->x.x.w, dst_f24->x.y.z, dst_f24->y.x.y));
+    dst.x.y = rpp_hip_pack(make_float4(dst_f24->y.y.x, dst_f24->y.y.w, dst_f24->z.x.z, dst_f24->z.y.y));
+    dst.y.x = rpp_hip_pack(make_float4(dst_f24->x.x.y, dst_f24->x.y.x, dst_f24->x.y.w, dst_f24->y.x.z));
+    dst.y.y = rpp_hip_pack(make_float4(dst_f24->y.y.y, dst_f24->z.x.x, dst_f24->z.x.w, dst_f24->z.y.z));
+    dst.z.x = rpp_hip_pack(make_float4(dst_f24->x.x.z, dst_f24->x.y.y, dst_f24->y.x.x, dst_f24->y.x.w));
+    dst.z.y = rpp_hip_pack(make_float4(dst_f24->y.y.z, dst_f24->z.x.y, dst_f24->z.y.x, dst_f24->z.y.w));
+
+    *((uint2 *)(&dstPtr[dstIdx])) = dst.x;
+    dstIdx += increment;
+    *((uint2 *)(&dstPtr[dstIdx])) = dst.y;
+    dstIdx += increment;
+    *((uint2 *)(&dstPtr[dstIdx])) = dst.z;
+}
+
 // -------------------- Set 6 - Loads to uchar --------------------
 
 // WITHOUT LAYOUT TOGGLE
@@ -1479,6 +1515,154 @@ __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24
     dst_f24->y.y = src_f24->y.y - subtrahend_f4;
     dst_f24->z.x = src_f24->z.x - subtrahend_f4;
     dst_f24->z.y = src_f24->z.y - subtrahend_f4;
+}
+
+/******************** DEVICE INTERPOLATION HELPER FUNCTIONS ********************/
+
+// INTERPOLATION LOAD HELPERS
+
+// U8 loads for bilinear interpolation (4 U8 pixels)
+
+__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(uchar *srcPtr, uint srcStrideH, float2 *locSrcFloor, float4 *srcNeighborhood_f4)
+{
+    uint src;
+    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x;
+    src = *(uint *)&srcPtr[srcIdx];
+    srcNeighborhood_f4->x = rpp_hip_unpack0(src);
+    srcNeighborhood_f4->y = rpp_hip_unpack1(src);
+    srcIdx += srcStrideH;
+    src = *(uint *)&srcPtr[srcIdx];
+    srcNeighborhood_f4->z = rpp_hip_unpack0(src);
+    srcNeighborhood_f4->w = rpp_hip_unpack1(src);
+}
+
+// U8 loads for bilinear interpolation (12 U8 pixels)
+
+__device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *srcPtr, uint srcStrideH, float2 *locSrcFloor, d_float12 *srcNeighborhood_f12)
+{
+    uint2 src_u2;
+    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
+    src_u2 = *(uint2 *)&srcPtr[srcIdx];
+    srcNeighborhood_f12->x.x = rpp_hip_unpack0(src_u2.x);
+    srcNeighborhood_f12->x.y = rpp_hip_unpack3(src_u2.x);
+    srcNeighborhood_f12->y.x = rpp_hip_unpack1(src_u2.x);
+    srcNeighborhood_f12->y.y = rpp_hip_unpack0(src_u2.y);
+    srcNeighborhood_f12->z.x = rpp_hip_unpack2(src_u2.x);
+    srcNeighborhood_f12->z.y = rpp_hip_unpack1(src_u2.y);
+    srcIdx += srcStrideH;
+    src_u2 = *(uint2 *)&srcPtr[srcIdx];
+    srcNeighborhood_f12->x.z = rpp_hip_unpack0(src_u2.x);
+    srcNeighborhood_f12->x.w = rpp_hip_unpack3(src_u2.x);
+    srcNeighborhood_f12->y.z = rpp_hip_unpack1(src_u2.x);
+    srcNeighborhood_f12->y.w = rpp_hip_unpack0(src_u2.y);
+    srcNeighborhood_f12->z.z = rpp_hip_unpack2(src_u2.x);
+    srcNeighborhood_f12->z.w = rpp_hip_unpack1(src_u2.y);
+}
+
+// INTERPOLATION EXECUTION HELPERS
+
+// float bilinear interpolation computation
+
+__device__ __forceinline__ void rpp_hip_interpolate_bilinear(float4 *srcNeighborhood_f4, float2 *weightedWH, float2 *oneMinusWeightedWH, float *dst)
+{
+    *dst = fmaf(srcNeighborhood_f4->x, oneMinusWeightedWH->y * oneMinusWeightedWH->x,
+                fmaf(srcNeighborhood_f4->y, oneMinusWeightedWH->y * weightedWH->x,
+                    fmaf(srcNeighborhood_f4->z, weightedWH->y * oneMinusWeightedWH->x,
+                        srcNeighborhood_f4->w * weightedWH->y * weightedWH->x)));
+}
+
+// float bilinear interpolation pln1
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_pln1(T *srcPtr, uint srcStrideH, float locSrcX, float locSrcY, d_int4 *roiPtrSrc, float *dst)
+{
+    float2 locSrcFloor, weightedWH, oneMinusWeightedWH;
+    locSrcFloor.x = floorf(locSrcX);
+    locSrcFloor.y = floorf(locSrcY);
+    if ((locSrcFloor.x < roiPtrSrc->x.x) || (locSrcFloor.y < roiPtrSrc->x.y) || (locSrcFloor.x + 1 > roiPtrSrc->y.x) || (locSrcFloor.y + 1 > roiPtrSrc->y.y))
+    {
+        *dst = 0.0f;
+    }
+    else
+    {
+        weightedWH.x = locSrcX - locSrcFloor.x;
+        weightedWH.y = locSrcY - locSrcFloor.y;
+        oneMinusWeightedWH.x = 1.0f - weightedWH.x;
+        oneMinusWeightedWH.y = 1.0f - weightedWH.y;
+        float4 srcNeighborhood_f4;
+        rpp_hip_interpolate1_bilinear_load_pln1(srcPtr, srcStrideH, &locSrcFloor, &srcNeighborhood_f4);
+        rpp_hip_interpolate_bilinear(&srcNeighborhood_f4, &weightedWH, &oneMinusWeightedWH, dst);
+    }
+}
+
+// float3 bilinear interpolation pkd3
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate3_bilinear_pkd3(T *srcPtr, uint srcStrideH, float locSrcX, float locSrcY, d_int4 *roiPtrSrc, float3 *dst_f3)
+{
+    float2 locSrcFloor, weightedWH, oneMinusWeightedWH;
+    locSrcFloor.x = floorf(locSrcX);
+    locSrcFloor.y = floorf(locSrcY);
+    if ((locSrcFloor.x < roiPtrSrc->x.x) || (locSrcFloor.y < roiPtrSrc->x.y) || (locSrcFloor.x + 1 > roiPtrSrc->y.x) || (locSrcFloor.y + 1 > roiPtrSrc->y.y))
+    {
+        dst_f3->x = 0.0f;
+        dst_f3->y = 0.0f;
+        dst_f3->z = 0.0f;
+    }
+    else
+    {
+        weightedWH.x = locSrcX - locSrcFloor.x;
+        weightedWH.y = locSrcY - locSrcFloor.y;
+        oneMinusWeightedWH.x = 1.0f - weightedWH.x;
+        oneMinusWeightedWH.y = 1.0f - weightedWH.y;
+        d_float12 srcNeighborhood_f12;
+        rpp_hip_interpolate3_bilinear_load_pkd3(srcPtr, srcStrideH, &locSrcFloor, &srcNeighborhood_f12);
+        rpp_hip_interpolate_bilinear(&srcNeighborhood_f12.x, &weightedWH, &oneMinusWeightedWH, &(dst_f3->x));
+        rpp_hip_interpolate_bilinear(&srcNeighborhood_f12.y, &weightedWH, &oneMinusWeightedWH, &(dst_f3->y));
+        rpp_hip_interpolate_bilinear(&srcNeighborhood_f12.z, &weightedWH, &oneMinusWeightedWH, &(dst_f3->z));
+    }
+}
+
+// d_float8 bilinear interpolation in pln1
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate8_bilinear_pln1(T *srcPtr, uint srcStrideH, d_float16 *locPtrSrc_f16, d_int4 *roiPtrSrc, d_float8 *dst_f8)
+{
+    rpp_hip_interpolate1_bilinear_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.x.x, locPtrSrc_f16->y.x.x, roiPtrSrc, &(dst_f8->x.x));
+    rpp_hip_interpolate1_bilinear_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.x.y, locPtrSrc_f16->y.x.y, roiPtrSrc, &(dst_f8->x.y));
+    rpp_hip_interpolate1_bilinear_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.x.z, locPtrSrc_f16->y.x.z, roiPtrSrc, &(dst_f8->x.z));
+    rpp_hip_interpolate1_bilinear_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.x.w, locPtrSrc_f16->y.x.w, roiPtrSrc, &(dst_f8->x.w));
+    rpp_hip_interpolate1_bilinear_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.y.x, locPtrSrc_f16->y.y.x, roiPtrSrc, &(dst_f8->y.x));
+    rpp_hip_interpolate1_bilinear_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.y.y, locPtrSrc_f16->y.y.y, roiPtrSrc, &(dst_f8->y.y));
+    rpp_hip_interpolate1_bilinear_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.y.z, locPtrSrc_f16->y.y.z, roiPtrSrc, &(dst_f8->y.z));
+    rpp_hip_interpolate1_bilinear_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.y.w, locPtrSrc_f16->y.y.w, roiPtrSrc, &(dst_f8->y.w));
+}
+
+// d_float24 bilinear interpolation in pln3
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate24_bilinear_pln3(T *srcPtr, uint3 *srcStridesNCH, d_float16 *locPtrSrc_f16, d_int4 *roiPtrSrc, d_float24 *dst_f24)
+{
+    rpp_hip_interpolate8_bilinear_pln1(srcPtr, srcStridesNCH->z, locPtrSrc_f16, roiPtrSrc, &(dst_f24->x));
+    srcPtr += srcStridesNCH->y;
+    rpp_hip_interpolate8_bilinear_pln1(srcPtr, srcStridesNCH->z, locPtrSrc_f16, roiPtrSrc, &(dst_f24->y));
+    srcPtr += srcStridesNCH->y;
+    rpp_hip_interpolate8_bilinear_pln1(srcPtr, srcStridesNCH->z, locPtrSrc_f16, roiPtrSrc, &(dst_f24->z));
+}
+
+// d_float24 bilinear interpolation in pkd3
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate24_bilinear_pkd3(T *srcPtr, uint srcStrideH, d_float16 *locPtrSrc_f16, d_int4 *roiPtrSrc, d_float24_as_float3s *dst_f24)
+{
+    rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.x.x, locPtrSrc_f16->y.x.x, roiPtrSrc, &(dst_f24->x.x));
+    rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.x.y, locPtrSrc_f16->y.x.y, roiPtrSrc, &(dst_f24->x.y));
+    rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.x.z, locPtrSrc_f16->y.x.z, roiPtrSrc, &(dst_f24->x.z));
+    rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.x.w, locPtrSrc_f16->y.x.w, roiPtrSrc, &(dst_f24->x.w));
+    rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.x, locPtrSrc_f16->y.y.x, roiPtrSrc, &(dst_f24->y.x));
+    rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.y, locPtrSrc_f16->y.y.y, roiPtrSrc, &(dst_f24->y.y));
+    rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.z, locPtrSrc_f16->y.y.z, roiPtrSrc, &(dst_f24->y.z));
+    rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.w, locPtrSrc_f16->y.y.w, roiPtrSrc, &(dst_f24->y.w));
 }
 
 #endif // RPP_HIP_COMMON_H
