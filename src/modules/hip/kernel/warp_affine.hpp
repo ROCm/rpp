@@ -13,6 +13,21 @@ __device__ void warp_affine_srclocs_hip_compute(float affineMatrixElement, float
     locSrcPtr_f8->y = locSrcComponent_f4 + increment_f8.y;
 }
 
+__device__ void warp_affine_roi_and_srclocs_hip_compute(d_int4 *roiSrc, int id_x, int id_y, d_float6 *affineMatrix_f6, d_float16 *locSrc_f16)
+{
+    float2 locDst_f2, locSrc_f2;
+    int roiHalfWidth = (roiSrc->y.x - roiSrc->x.x + 1) >> 1;
+    int roiHalfHeight = (roiSrc->y.y - roiSrc->x.y + 1) >> 1;
+    roiSrc->y.x -= 1;
+    roiSrc->y.y -= 1;
+    locDst_f2.x = (float) (id_x - roiHalfWidth);
+    locDst_f2.y = (float) (id_y - roiHalfHeight);
+    locSrc_f2.x = fmaf(locDst_f2.x, affineMatrix_f6->x.x, fmaf(locDst_f2.y, affineMatrix_f6->x.y, affineMatrix_f6->x.z)) + roiHalfWidth;
+    locSrc_f2.y = fmaf(locDst_f2.x, affineMatrix_f6->y.x, fmaf(locDst_f2.y, affineMatrix_f6->y.y, affineMatrix_f6->y.z)) + roiHalfHeight;
+    warp_affine_srclocs_hip_compute(affineMatrix_f6->x.x, (float4)locSrc_f2.x, &(locSrc_f16->x));    // Compute 8 locSrcX
+    warp_affine_srclocs_hip_compute(affineMatrix_f6->y.x, (float4)locSrc_f2.y, &(locSrc_f16->y));    // Compute 8 locSrcY
+}
+
 template <typename T>
 __global__ void warp_affine_pkd_tensor(T *srcPtr,
                                        uint2 srcStridesNH,
@@ -35,23 +50,11 @@ __global__ void warp_affine_pkd_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
-    d_int4 roiSrc;
-    float2 locDst_f2, locSrc_f2;
-    roiSrc.x.x = roiTensorPtrSrc[id_z].xywhROI.xy.x; // probably use ltrb roi?
-    roiSrc.x.y = roiTensorPtrSrc[id_z].xywhROI.xy.y;
-    roiSrc.y.x = roiSrc.x.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1;
-    roiSrc.y.y = roiSrc.x.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1;
-
-    locDst_f2.x = (float) ((id_x) - (roiTensorPtrSrc[id_z].xywhROI.roiWidth >> 1));
-    locDst_f2.y = (float) ((id_y) - (roiTensorPtrSrc[id_z].xywhROI.roiHeight >> 1));
-    locSrc_f2.x = fmaf(roiTensorPtrSrc[id_z].xywhROI.roiWidth, 0.5f, fmaf(locDst_f2.x, affineMatrix_f6.x.x, fmaf(locDst_f2.y, affineMatrix_f6.x.y, affineMatrix_f6.x.z)));
-    locSrc_f2.y = fmaf(roiTensorPtrSrc[id_z].xywhROI.roiHeight, 0.5f, fmaf(locDst_f2.x, affineMatrix_f6.y.x, fmaf(locDst_f2.y, affineMatrix_f6.y.y, affineMatrix_f6.y.z)));
-
+    d_int4 roiSrc = *(d_int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    d_float24_as_float3s dst_f24;
-    warp_affine_srclocs_hip_compute(affineMatrix_f6.x.x, (float4)locSrc_f2.x, &(locSrc_f16.x));    // Compute 8 locSrcX
-    warp_affine_srclocs_hip_compute(affineMatrix_f6.y.x, (float4)locSrc_f2.y, &(locSrc_f16.y));    // Compute 8 locSrcY
+    warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
+    d_float24_as_float3s dst_f24;
     rpp_hip_interpolate24_bilinear_pkd3(&srcPtr[srcIdx], srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, (d_float24 *)&dst_f24);
 }
@@ -79,23 +82,11 @@ __global__ void warp_affine_pln_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
-    d_int4 roiSrc;
-    float2 locDst_f2, locSrc_f2;
-    roiSrc.x.x = roiTensorPtrSrc[id_z].xywhROI.xy.x; // probably use ltrb roi?
-    roiSrc.x.y = roiTensorPtrSrc[id_z].xywhROI.xy.y;
-    roiSrc.y.x = roiSrc.x.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1;
-    roiSrc.y.y = roiSrc.x.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1;
-
-    locDst_f2.x = (float) ((id_x) - (roiTensorPtrSrc[id_z].xywhROI.roiWidth >> 1));
-    locDst_f2.y = (float) ((id_y) - (roiTensorPtrSrc[id_z].xywhROI.roiHeight >> 1));
-    locSrc_f2.x = fmaf(roiTensorPtrSrc[id_z].xywhROI.roiWidth, 0.5f, fmaf(locDst_f2.x, affineMatrix_f6.x.x, fmaf(locDst_f2.y, affineMatrix_f6.x.y, affineMatrix_f6.x.z)));
-    locSrc_f2.y = fmaf(roiTensorPtrSrc[id_z].xywhROI.roiHeight, 0.5f, fmaf(locDst_f2.x, affineMatrix_f6.y.x, fmaf(locDst_f2.y, affineMatrix_f6.y.y, affineMatrix_f6.y.z)));
-
+    d_int4 roiSrc = *(d_int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    d_float8 dst_f8;
-    warp_affine_srclocs_hip_compute(affineMatrix_f6.x.x, (float4)locSrc_f2.x, &(locSrc_f16.x));    // Compute 8 locSrcX
-    warp_affine_srclocs_hip_compute(affineMatrix_f6.y.x, (float4)locSrc_f2.y, &(locSrc_f16.y));    // Compute 8 locSrcY
+    warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
+    d_float8 dst_f8;
     rpp_hip_interpolate8_bilinear_pln1(&srcPtr[srcIdx], srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
     rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
 
@@ -137,23 +128,11 @@ __global__ void warp_affine_pkd3_pln3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
-    d_int4 roiSrc;
-    float2 locDst_f2, locSrc_f2;
-    roiSrc.x.x = roiTensorPtrSrc[id_z].xywhROI.xy.x; // probably use ltrb roi?
-    roiSrc.x.y = roiTensorPtrSrc[id_z].xywhROI.xy.y;
-    roiSrc.y.x = roiSrc.x.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1;
-    roiSrc.y.y = roiSrc.x.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1;
-
-    locDst_f2.x = (float) ((id_x) - (roiTensorPtrSrc[id_z].xywhROI.roiWidth >> 1));
-    locDst_f2.y = (float) ((id_y) - (roiTensorPtrSrc[id_z].xywhROI.roiHeight >> 1));
-    locSrc_f2.x = fmaf(roiTensorPtrSrc[id_z].xywhROI.roiWidth, 0.5f, fmaf(locDst_f2.x, affineMatrix_f6.x.x, fmaf(locDst_f2.y, affineMatrix_f6.x.y, affineMatrix_f6.x.z)));
-    locSrc_f2.y = fmaf(roiTensorPtrSrc[id_z].xywhROI.roiHeight, 0.5f, fmaf(locDst_f2.x, affineMatrix_f6.y.x, fmaf(locDst_f2.y, affineMatrix_f6.y.y, affineMatrix_f6.y.z)));
-
+    d_int4 roiSrc = *(d_int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    d_float24_as_float3s dst_f24;
-    warp_affine_srclocs_hip_compute(affineMatrix_f6.x.x, (float4)locSrc_f2.x, &(locSrc_f16.x));    // Compute 8 locSrcX
-    warp_affine_srclocs_hip_compute(affineMatrix_f6.y.x, (float4)locSrc_f2.y, &(locSrc_f16.y));    // Compute 8 locSrcY
+    warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
+    d_float24_as_float3s dst_f24;
     rpp_hip_interpolate24_bilinear_pkd3(&srcPtr[srcIdx], srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
     rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, (d_float24 *)&dst_f24);
 }
@@ -180,23 +159,11 @@ __global__ void warp_affine_pln3_pkd3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
-    d_int4 roiSrc;
-    float2 locDst_f2, locSrc_f2;
-    roiSrc.x.x = roiTensorPtrSrc[id_z].xywhROI.xy.x; // probably use ltrb roi?
-    roiSrc.x.y = roiTensorPtrSrc[id_z].xywhROI.xy.y;
-    roiSrc.y.x = roiSrc.x.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1;
-    roiSrc.y.y = roiSrc.x.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1;
-
-    locDst_f2.x = (float) ((id_x) - (roiTensorPtrSrc[id_z].xywhROI.roiWidth >> 1));
-    locDst_f2.y = (float) ((id_y) - (roiTensorPtrSrc[id_z].xywhROI.roiHeight >> 1));
-    locSrc_f2.x = fmaf(roiTensorPtrSrc[id_z].xywhROI.roiWidth, 0.5f, fmaf(locDst_f2.x, affineMatrix_f6.x.x, fmaf(locDst_f2.y, affineMatrix_f6.x.y, affineMatrix_f6.x.z)));
-    locSrc_f2.y = fmaf(roiTensorPtrSrc[id_z].xywhROI.roiHeight, 0.5f, fmaf(locDst_f2.x, affineMatrix_f6.y.x, fmaf(locDst_f2.y, affineMatrix_f6.y.y, affineMatrix_f6.y.z)));
-
+    d_int4 roiSrc = *(d_int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    d_float24 dst_f24;
-    warp_affine_srclocs_hip_compute(affineMatrix_f6.x.x, (float4)locSrc_f2.x, &(locSrc_f16.x));    // Compute 8 locSrcX
-    warp_affine_srclocs_hip_compute(affineMatrix_f6.y.x, (float4)locSrc_f2.y, &(locSrc_f16.y));    // Compute 8 locSrcY
+    warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
+    d_float24 dst_f24;
     rpp_hip_interpolate24_bilinear_pln3(&srcPtr[srcIdx], &srcStridesNCH, &locSrc_f16, &roiSrc, &dst_f24);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
 }
@@ -211,8 +178,8 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle)
 {
-    if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+    if (roiType == RpptRoiType::XYWH)
+        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
     int localThreads_x = 16;
     int localThreads_y = 16;

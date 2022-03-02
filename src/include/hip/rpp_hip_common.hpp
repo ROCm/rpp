@@ -1579,7 +1579,7 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_pln1(T *srcPtr, ui
     float2 locSrcFloor, weightedWH, oneMinusWeightedWH;
     locSrcFloor.x = floorf(locSrcX);
     locSrcFloor.y = floorf(locSrcY);
-    if ((locSrcFloor.x < roiPtrSrc->x.x) || (locSrcFloor.y < roiPtrSrc->x.y) || (locSrcFloor.x + 1 > roiPtrSrc->y.x) || (locSrcFloor.y + 1 > roiPtrSrc->y.y))
+    if ((locSrcFloor.x < roiPtrSrc->x.x) || (locSrcFloor.y < roiPtrSrc->x.y) || (locSrcFloor.x > roiPtrSrc->y.x) || (locSrcFloor.y > roiPtrSrc->y.y))
     {
         *dst = 0.0f;
     }
@@ -1603,7 +1603,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_pkd3(T *srcPtr, ui
     float2 locSrcFloor, weightedWH, oneMinusWeightedWH;
     locSrcFloor.x = floorf(locSrcX);
     locSrcFloor.y = floorf(locSrcY);
-    if ((locSrcFloor.x < roiPtrSrc->x.x) || (locSrcFloor.y < roiPtrSrc->x.y) || (locSrcFloor.x + 1 > roiPtrSrc->y.x) || (locSrcFloor.y + 1 > roiPtrSrc->y.y))
+    if ((locSrcFloor.x < roiPtrSrc->x.x) || (locSrcFloor.y < roiPtrSrc->x.y) || (locSrcFloor.x > roiPtrSrc->y.x) || (locSrcFloor.y > roiPtrSrc->y.y))
     {
         dst_f3->x = 0.0f;
         dst_f3->y = 0.0f;
