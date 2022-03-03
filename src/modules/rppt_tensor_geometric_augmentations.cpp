@@ -149,11 +149,15 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
                                RppPtr_t dstPtr,
                                RpptDescPtr dstDescPtr,
                                Rpp32f *affineTensor,
+                               RpptInterpolationType interpolationType,
                                RpptROIPtr roiTensorPtrSrc,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+        return RPP_ERROR_NOT_IMPLEMENTED;
+
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_warp_affine_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -161,6 +165,7 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                     dstDescPtr,
                                     affineTensor,
+                                    interpolationType,
                                     roiTensorPtrSrc,
                                     roiType,
                                     rpp::deref(rppHandle));

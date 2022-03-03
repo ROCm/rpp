@@ -1519,7 +1519,7 @@ __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24
 
 /******************** DEVICE INTERPOLATION HELPER FUNCTIONS ********************/
 
-// INTERPOLATION LOAD HELPERS
+// BILINEAR INTERPOLATION LOAD HELPERS
 
 // U8 loads for bilinear interpolation (4 U8 pixels)
 
@@ -1559,7 +1559,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
     srcNeighborhood_f12->z.w = rpp_hip_unpack1(src_u2.y);
 }
 
-// INTERPOLATION EXECUTION HELPERS
+// BILINEAR INTERPOLATION EXECUTION HELPERS
 
 // float bilinear interpolation computation
 
@@ -1605,9 +1605,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_pkd3(T *srcPtr, ui
     locSrcFloor.y = floorf(locSrcY);
     if ((locSrcFloor.x < roiPtrSrc->x.x) || (locSrcFloor.y < roiPtrSrc->x.y) || (locSrcFloor.x > roiPtrSrc->y.x) || (locSrcFloor.y > roiPtrSrc->y.y))
     {
-        dst_f3->x = 0.0f;
-        dst_f3->y = 0.0f;
-        dst_f3->z = 0.0f;
+        *dst_f3 = (float3) 0.0f;
     }
     else
     {
@@ -1663,6 +1661,92 @@ __device__ __forceinline__ void rpp_hip_interpolate24_bilinear_pkd3(T *srcPtr, u
     rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.y, locPtrSrc_f16->y.y.y, roiPtrSrc, &(dst_f24->y.y));
     rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.z, locPtrSrc_f16->y.y.z, roiPtrSrc, &(dst_f24->y.z));
     rpp_hip_interpolate3_bilinear_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.w, locPtrSrc_f16->y.y.w, roiPtrSrc, &(dst_f24->y.w));
+}
+
+// NEAREST NEIGHBOR INTERPOLATION EXECUTION HELPERS
+
+// float nearest neighbor interpolation pln1
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate1_nearest_neighbor_pln1(T *srcPtr, uint srcStrideH, float locSrcX, float locSrcY, d_int4 *roiPtrSrc, float *dst)
+{
+    int2 locSrc;
+    locSrc.x = roundf(locSrcX);
+    locSrc.y = roundf(locSrcY);
+
+    if ((locSrc.x < roiPtrSrc->x.x) || (locSrc.y < roiPtrSrc->x.y) || (locSrc.x > roiPtrSrc->y.x) || (locSrc.y > roiPtrSrc->y.y))
+    {
+        *dst = 0.0f;
+    }
+    else
+    {
+        int srcIdx = locSrc.y * srcStrideH + locSrc.x;
+        *dst = rpp_hip_unpack0(*(uint *)&srcPtr[srcIdx]);
+    }
+}
+
+// float3 nearest neighbor interpolation pkd3
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_pkd3(T *srcPtr, uint srcStrideH, float locSrcX, float locSrcY, d_int4 *roiPtrSrc, float3 *dst_f3)
+{
+    int2 locSrc;
+    locSrc.x = roundf(locSrcX);
+    locSrc.y = roundf(locSrcY);
+
+    if ((locSrc.x < roiPtrSrc->x.x) || (locSrc.y < roiPtrSrc->x.y) || (locSrc.x > roiPtrSrc->y.x) || (locSrc.y > roiPtrSrc->y.y))
+    {
+        *dst_f3 = (float3) 0.0f;
+    }
+    else
+    {
+        uint src;
+        int srcIdx = locSrc.y * srcStrideH + locSrc.x * 3;
+        src = *(uint *)&srcPtr[srcIdx];
+        *dst_f3 = make_float3(rpp_hip_unpack0(src), rpp_hip_unpack1(src), rpp_hip_unpack2(src));
+    }
+}
+
+// d_float8 nearest neighbor interpolation in pln1
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate8_nearest_neighbor_pln1(T *srcPtr, uint srcStrideH, d_float16 *locPtrSrc_f16, d_int4 *roiPtrSrc, d_float8 *dst_f8)
+{
+    rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.x.x, locPtrSrc_f16->y.x.x, roiPtrSrc, &(dst_f8->x.x));
+    rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.x.y, locPtrSrc_f16->y.x.y, roiPtrSrc, &(dst_f8->x.y));
+    rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.x.z, locPtrSrc_f16->y.x.z, roiPtrSrc, &(dst_f8->x.z));
+    rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.x.w, locPtrSrc_f16->y.x.w, roiPtrSrc, &(dst_f8->x.w));
+    rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.y.x, locPtrSrc_f16->y.y.x, roiPtrSrc, &(dst_f8->y.x));
+    rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.y.y, locPtrSrc_f16->y.y.y, roiPtrSrc, &(dst_f8->y.y));
+    rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.y.z, locPtrSrc_f16->y.y.z, roiPtrSrc, &(dst_f8->y.z));
+    rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->x.y.w, locPtrSrc_f16->y.y.w, roiPtrSrc, &(dst_f8->y.w));
+}
+
+// d_float24 nearest neighbor interpolation in pln3
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate24_nearest_neighbor_pln3(T *srcPtr, uint3 *srcStridesNCH, d_float16 *locPtrSrc_f16, d_int4 *roiPtrSrc, d_float24 *dst_f24)
+{
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr, srcStridesNCH->z, locPtrSrc_f16, roiPtrSrc, &(dst_f24->x));
+    srcPtr += srcStridesNCH->y;
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr, srcStridesNCH->z, locPtrSrc_f16, roiPtrSrc, &(dst_f24->y));
+    srcPtr += srcStridesNCH->y;
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr, srcStridesNCH->z, locPtrSrc_f16, roiPtrSrc, &(dst_f24->z));
+}
+
+// d_float24 nearest neighbor interpolation in pkd3
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate24_nearest_neighbor_pkd3(T *srcPtr, uint srcStrideH, d_float16 *locPtrSrc_f16, d_int4 *roiPtrSrc, d_float24_as_float3s *dst_f24)
+{
+    rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.x.x, locPtrSrc_f16->y.x.x, roiPtrSrc, &(dst_f24->x.x));
+    rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.x.y, locPtrSrc_f16->y.x.y, roiPtrSrc, &(dst_f24->x.y));
+    rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.x.z, locPtrSrc_f16->y.x.z, roiPtrSrc, &(dst_f24->x.z));
+    rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.x.w, locPtrSrc_f16->y.x.w, roiPtrSrc, &(dst_f24->x.w));
+    rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.x, locPtrSrc_f16->y.y.x, roiPtrSrc, &(dst_f24->y.x));
+    rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.y, locPtrSrc_f16->y.y.y, roiPtrSrc, &(dst_f24->y.y));
+    rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.z, locPtrSrc_f16->y.y.z, roiPtrSrc, &(dst_f24->y.z));
+    rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->x.y.w, locPtrSrc_f16->y.y.w, roiPtrSrc, &(dst_f24->y.w));
 }
 
 #endif // RPP_HIP_COMMON_H

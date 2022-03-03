@@ -212,6 +212,16 @@ typedef enum
 
 } RpptRoiType;
 
+typedef enum
+{
+    NEAREST_NEIGHBOR = 0,
+    BILINEAR,
+    BICUBIC,
+    LANCZOS,
+    GAUSSIAN,
+    TRIANGULAR
+} RpptInterpolationType;
+
 typedef struct
 {
     RppiPoint lt, rb;
