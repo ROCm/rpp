@@ -170,17 +170,18 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
                                     roiType,
                                     rpp::deref(rppHandle));
     }
-    // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    // {
-    //     warp_affine_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-    //                            srcDescPtr,
-    //                            (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-    //                            dstDescPtr,
-    //                            affineTensor,
-    //                            roiTensorPtrSrc,
-    //                            roiType,
-    //                            rpp::deref(rppHandle));
-    // }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_warp_affine_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                    srcDescPtr,
+                                    (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                    dstDescPtr,
+                                    affineTensor,
+                                    interpolationType,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    rpp::deref(rppHandle));
+    }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         hip_exec_warp_affine_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
@@ -193,17 +194,18 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
                                     roiType,
                                     rpp::deref(rppHandle));
     }
-    // else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-    // {
-    //     warp_affine_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-    //                            srcDescPtr,
-    //                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-    //                            dstDescPtr,
-    //                            affineTensor,
-    //                            roiTensorPtrSrc,
-    //                            roiType,
-    //                            rpp::deref(rppHandle));
-    // }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_warp_affine_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                    srcDescPtr,
+                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                    dstDescPtr,
+                                    affineTensor,
+                                    interpolationType,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    rpp::deref(rppHandle));
+    }
 
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)

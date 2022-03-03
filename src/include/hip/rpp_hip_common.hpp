@@ -1228,6 +1228,54 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(float
     *(d_float8 *)&dstPtr[dstIdx] = dstPtr_f24.z;
 }
 
+// I8 stores with layout toggle PKD3 to PLN3 (24 I8 pixels)
+
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(schar *dstPtr, uint dstIdx, uint increment, d_float24 *dst_f24)
+{
+    d_uint6 dst;
+
+    dst.x.x = rpp_hip_pack_i8(make_float4(dst_f24->x.x.x, dst_f24->x.x.w, dst_f24->x.y.z, dst_f24->y.x.y));
+    dst.x.y = rpp_hip_pack_i8(make_float4(dst_f24->y.y.x, dst_f24->y.y.w, dst_f24->z.x.z, dst_f24->z.y.y));
+    dst.y.x = rpp_hip_pack_i8(make_float4(dst_f24->x.x.y, dst_f24->x.y.x, dst_f24->x.y.w, dst_f24->y.x.z));
+    dst.y.y = rpp_hip_pack_i8(make_float4(dst_f24->y.y.y, dst_f24->z.x.x, dst_f24->z.x.w, dst_f24->z.y.z));
+    dst.z.x = rpp_hip_pack_i8(make_float4(dst_f24->x.x.z, dst_f24->x.y.y, dst_f24->y.x.x, dst_f24->y.x.w));
+    dst.z.y = rpp_hip_pack_i8(make_float4(dst_f24->y.y.z, dst_f24->z.x.y, dst_f24->z.y.x, dst_f24->z.y.w));
+
+    *((uint2 *)(&dstPtr[dstIdx])) = dst.x;
+    dstIdx += increment;
+    *((uint2 *)(&dstPtr[dstIdx])) = dst.y;
+    dstIdx += increment;
+    *((uint2 *)(&dstPtr[dstIdx])) = dst.z;
+}
+
+// F16 stores with layout toggle PKD3 to PLN3 (24 F16 pixels)
+
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(half *dstPtr, uint dstIdx, uint increment, d_float24 *dst_f24)
+{
+    d_half24 dst_h24;
+
+    dst_h24.x.x.x = __float22half2_rn(make_float2(dst_f24->x.x.x, dst_f24->x.x.w));
+    dst_h24.x.x.y = __float22half2_rn(make_float2(dst_f24->x.y.z, dst_f24->y.x.y));
+    dst_h24.x.y.x = __float22half2_rn(make_float2(dst_f24->y.y.x, dst_f24->y.y.w));
+    dst_h24.x.y.y = __float22half2_rn(make_float2(dst_f24->z.x.z, dst_f24->z.y.y));
+
+    dst_h24.y.x.x = __float22half2_rn(make_float2(dst_f24->x.x.y, dst_f24->x.y.x));
+    dst_h24.y.x.y = __float22half2_rn(make_float2(dst_f24->x.y.w, dst_f24->y.x.z));
+    dst_h24.y.y.x = __float22half2_rn(make_float2(dst_f24->y.y.y, dst_f24->z.x.x));
+    dst_h24.y.y.y = __float22half2_rn(make_float2(dst_f24->z.x.w, dst_f24->z.y.z));
+
+    dst_h24.z.x.x = __float22half2_rn(make_float2(dst_f24->x.x.z, dst_f24->x.y.y));
+    dst_h24.z.x.y = __float22half2_rn(make_float2(dst_f24->y.x.x, dst_f24->y.x.w));
+    dst_h24.z.y.x = __float22half2_rn(make_float2(dst_f24->y.y.z, dst_f24->z.x.y));
+    dst_h24.z.y.y = __float22half2_rn(make_float2(dst_f24->z.y.x, dst_f24->z.y.w));
+
+    *((d_half8 *)(&dstPtr[dstIdx])) = dst_h24.x;
+    dstIdx += increment;
+    *((d_half8 *)(&dstPtr[dstIdx])) = dst_h24.y;
+    dstIdx += increment;
+    *((d_half8 *)(&dstPtr[dstIdx])) = dst_h24.z;
+}
+
 // -------------------- Set 6 - Loads to uchar --------------------
 
 // WITHOUT LAYOUT TOGGLE
@@ -1592,6 +1640,33 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(float *s
     srcNeighborhood_f4->w = src_f2.y;
 }
 
+// I8 loads for bilinear interpolation (4 I8 pixels)
+
+__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(schar *srcPtr, uint srcStrideH, float2 *locSrcFloor, float4 *srcNeighborhood_f4)
+{
+    int src;
+    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x;
+    src = *(int *)&srcPtr[srcIdx];
+    srcNeighborhood_f4->x = rpp_hip_unpack0(src);
+    srcNeighborhood_f4->y = rpp_hip_unpack1(src);
+    srcIdx += srcStrideH;
+    src = *(int *)&srcPtr[srcIdx];
+    srcNeighborhood_f4->z = rpp_hip_unpack0(src);
+    srcNeighborhood_f4->w = rpp_hip_unpack1(src);
+}
+
+// F16 loads for bilinear interpolation (4 F16 pixels)
+
+__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(half *srcPtr, uint srcStrideH, float2 *locSrcFloor, float4 *srcNeighborhood_f4)
+{
+    float2 srcUpper_f2, srcLower_f2;
+    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x;
+    srcUpper_f2 = __half22float2(*(half2 *)&srcPtr[srcIdx]);
+    srcIdx += srcStrideH;
+    srcLower_f2 = __half22float2(*(half2 *)&srcPtr[srcIdx]);
+    *srcNeighborhood_f4 = make_float4(srcUpper_f2.x, srcUpper_f2.y, srcLower_f2.x, srcLower_f2.y);
+}
+
 // U8 loads for bilinear interpolation (12 U8 pixels)
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *srcPtr, uint srcStrideH, float2 *locSrcFloor, d_float12 *srcNeighborhood_f12)
@@ -1636,6 +1711,52 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(float *s
     srcNeighborhood_f12->y.w = src_f6.y.y;
     srcNeighborhood_f12->z.z = src_f6.x.z;
     srcNeighborhood_f12->z.w = src_f6.y.z;
+}
+
+// I8 loads for bilinear interpolation (12 I8 pixels)
+
+__device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(schar *srcPtr, uint srcStrideH, float2 *locSrcFloor, d_float12 *srcNeighborhood_f12)
+{
+    int2 src_i2;
+    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
+    src_i2 = *(int2 *)&srcPtr[srcIdx];
+    srcNeighborhood_f12->x.x = rpp_hip_unpack0(src_i2.x);
+    srcNeighborhood_f12->x.y = rpp_hip_unpack3(src_i2.x);
+    srcNeighborhood_f12->y.x = rpp_hip_unpack1(src_i2.x);
+    srcNeighborhood_f12->y.y = rpp_hip_unpack0(src_i2.y);
+    srcNeighborhood_f12->z.x = rpp_hip_unpack2(src_i2.x);
+    srcNeighborhood_f12->z.y = rpp_hip_unpack1(src_i2.y);
+    srcIdx += srcStrideH;
+    src_i2 = *(int2 *)&srcPtr[srcIdx];
+    srcNeighborhood_f12->x.z = rpp_hip_unpack0(src_i2.x);
+    srcNeighborhood_f12->x.w = rpp_hip_unpack3(src_i2.x);
+    srcNeighborhood_f12->y.z = rpp_hip_unpack1(src_i2.x);
+    srcNeighborhood_f12->y.w = rpp_hip_unpack0(src_i2.y);
+    srcNeighborhood_f12->z.z = rpp_hip_unpack2(src_i2.x);
+    srcNeighborhood_f12->z.w = rpp_hip_unpack1(src_i2.y);
+}
+
+// F16 loads for bilinear interpolation (12 F16 pixels)
+
+__device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *srcPtr, uint srcStrideH, float2 *locSrcFloor, d_float12 *srcNeighborhood_f12)
+{
+    // d_float6 src_f6;
+    // int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
+    // src_f6 = *(d_float6 *)&srcPtr[srcIdx];
+    // srcNeighborhood_f12->x.x = src_f6.x.x;
+    // srcNeighborhood_f12->x.y = src_f6.y.x;
+    // srcNeighborhood_f12->y.x = src_f6.x.y;
+    // srcNeighborhood_f12->y.y = src_f6.y.y;
+    // srcNeighborhood_f12->z.x = src_f6.x.z;
+    // srcNeighborhood_f12->z.y = src_f6.y.z;
+    // srcIdx += srcStrideH;
+    // src_f6 = *(d_float6 *)&srcPtr[srcIdx];
+    // srcNeighborhood_f12->x.z = src_f6.x.x;
+    // srcNeighborhood_f12->x.w = src_f6.y.x;
+    // srcNeighborhood_f12->y.z = src_f6.x.y;
+    // srcNeighborhood_f12->y.w = src_f6.y.y;
+    // srcNeighborhood_f12->z.z = src_f6.x.z;
+    // srcNeighborhood_f12->z.w = src_f6.y.z;
 }
 
 // BILINEAR INTERPOLATION EXECUTION HELPERS (templated execution routines for all bit depths)
@@ -1744,7 +1865,7 @@ __device__ __forceinline__ void rpp_hip_interpolate24_bilinear_pkd3(T *srcPtr, u
 
 // NEAREST NEIGHBOR INTERPOLATION LOAD HELPERS (separate load routines for each bit depth)
 
-// U8 loads for nearest_neighbor interpolation (4 U8 pixels)
+// U8 loads for nearest_neighbor interpolation (1 U8 pixel)
 
 __device__ __forceinline__ void rpp_hip_interpolate1_nearest_neighbor_load_pln1(uchar *srcPtr, int srcIdx, float *dst)
 {
@@ -1752,14 +1873,29 @@ __device__ __forceinline__ void rpp_hip_interpolate1_nearest_neighbor_load_pln1(
     *dst = rpp_hip_unpack0(src);
 }
 
-// F32 loads for nearest_neighbor interpolation (4 F32 pixels)
+// F32 loads for nearest_neighbor interpolation (1 F32 pixel)
 
 __device__ __forceinline__ void rpp_hip_interpolate1_nearest_neighbor_load_pln1(float *srcPtr, int srcIdx, float *dst)
 {
     *dst = srcPtr[srcIdx];
 }
 
-// U8 loads for nearest_neighbor interpolation (12 U8 pixels)
+// I8 loads for nearest_neighbor interpolation (1 I8 pixel)
+
+__device__ __forceinline__ void rpp_hip_interpolate1_nearest_neighbor_load_pln1(schar *srcPtr, int srcIdx, float *dst)
+{
+    int src = *(int *)&srcPtr[srcIdx];
+    *dst = rpp_hip_unpack0(src);
+}
+
+// F16 loads for nearest_neighbor interpolation (1 F16 pixel)
+
+__device__ __forceinline__ void rpp_hip_interpolate1_nearest_neighbor_load_pln1(half *srcPtr, int srcIdx, float *dst)
+{
+    *dst = __half2float(srcPtr[srcIdx]);
+}
+
+// U8 loads for nearest_neighbor interpolation (3 U8 pixels)
 
 __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_load_pkd3(uchar *srcPtr, int srcIdx, float3 *dst_f3)
 {
@@ -1767,12 +1903,30 @@ __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_load_pkd3(
     *dst_f3 = make_float3(rpp_hip_unpack0(src), rpp_hip_unpack1(src), rpp_hip_unpack2(src));
 }
 
-// F32 loads for nearest_neighbor interpolation (12 F32 pixels)
+// F32 loads for nearest_neighbor interpolation (3 F32 pixels)
 
 __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_load_pkd3(float *srcPtr, int srcIdx, float3 *dst_f3)
 {
     float3 src_f3 = *(float3 *)&srcPtr[srcIdx];
     *dst_f3 = src_f3;
+}
+
+// I8 loads for nearest_neighbor interpolation (3 I8 pixels)
+
+__device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_load_pkd3(schar *srcPtr, int srcIdx, float3 *dst_f3)
+{
+    int src = *(int *)&srcPtr[srcIdx];
+    *dst_f3 = make_float3(rpp_hip_unpack0(src), rpp_hip_unpack1(src), rpp_hip_unpack2(src));
+}
+
+// F16 loads for nearest_neighbor interpolation (3 F16 pixels)
+
+__device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_load_pkd3(half *srcPtr, int srcIdx, float3 *dst_f3)
+{
+    d_half3 src_h3 = *(d_half3 *)&srcPtr[srcIdx];
+    dst_f3->x = __half2float(src_h3.x);
+    dst_f3->y = __half2float(src_h3.y);
+    dst_f3->z = __half2float(src_h3.z);
 }
 
 // NEAREST NEIGHBOR INTERPOLATION EXECUTION HELPERS (templated execution routines for all bit depths)
