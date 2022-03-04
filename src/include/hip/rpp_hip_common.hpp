@@ -13,8 +13,9 @@ typedef halfhpp Rpp16f;
 // float
 typedef struct d_float6
 {
-    float3 x;
-    float3 y;
+    float2 x;
+    float2 y;
+    float2 z;
 } d_float6;
 typedef struct d_float8
 {
@@ -38,6 +39,11 @@ typedef struct d_float24
     d_float8 y;
     d_float8 z;
 } d_float24;
+typedef struct d_float6_as_float3s
+{
+    float3 x;
+    float3 y;
+} d_float6_as_float3s;
 typedef struct d_float12_as_float3s
 {
     float3 x;
@@ -86,6 +92,12 @@ typedef struct d_half4
     half2 x;
     half2 y;
 } d_half4;
+typedef struct d_half6
+{
+    half2 x;
+    half2 y;
+    half2 z;
+} d_half6;
 typedef struct d_half8
 {
     d_half4 x;
@@ -1694,9 +1706,9 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(float *srcPtr, uint srcStrideH, float2 *locSrcFloor, d_float12 *srcNeighborhood_f12)
 {
-    d_float6 src_f6;
+    d_float6_as_float3s src_f6;
     int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
-    src_f6 = *(d_float6 *)&srcPtr[srcIdx];
+    src_f6 = *(d_float6_as_float3s *)&srcPtr[srcIdx];
     srcNeighborhood_f12->x.x = src_f6.x.x;
     srcNeighborhood_f12->x.y = src_f6.y.x;
     srcNeighborhood_f12->y.x = src_f6.x.y;
@@ -1704,7 +1716,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(float *s
     srcNeighborhood_f12->z.x = src_f6.x.z;
     srcNeighborhood_f12->z.y = src_f6.y.z;
     srcIdx += srcStrideH;
-    src_f6 = *(d_float6 *)&srcPtr[srcIdx];
+    src_f6 = *(d_float6_as_float3s *)&srcPtr[srcIdx];
     srcNeighborhood_f12->x.z = src_f6.x.x;
     srcNeighborhood_f12->x.w = src_f6.y.x;
     srcNeighborhood_f12->y.z = src_f6.x.y;
@@ -1740,23 +1752,31 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(schar *s
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *srcPtr, uint srcStrideH, float2 *locSrcFloor, d_float12 *srcNeighborhood_f12)
 {
-    // d_float6 src_f6;
-    // int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
-    // src_f6 = *(d_float6 *)&srcPtr[srcIdx];
-    // srcNeighborhood_f12->x.x = src_f6.x.x;
-    // srcNeighborhood_f12->x.y = src_f6.y.x;
-    // srcNeighborhood_f12->y.x = src_f6.x.y;
-    // srcNeighborhood_f12->y.y = src_f6.y.y;
-    // srcNeighborhood_f12->z.x = src_f6.x.z;
-    // srcNeighborhood_f12->z.y = src_f6.y.z;
-    // srcIdx += srcStrideH;
-    // src_f6 = *(d_float6 *)&srcPtr[srcIdx];
-    // srcNeighborhood_f12->x.z = src_f6.x.x;
-    // srcNeighborhood_f12->x.w = src_f6.y.x;
-    // srcNeighborhood_f12->y.z = src_f6.x.y;
-    // srcNeighborhood_f12->y.w = src_f6.y.y;
-    // srcNeighborhood_f12->z.z = src_f6.x.z;
-    // srcNeighborhood_f12->z.w = src_f6.y.z;
+    d_half6 src_h6;
+    d_float6 src_f6;
+    d_float6_as_float3s *src_f6f3s = (d_float6_as_float3s *)&src_f6;
+    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
+    src_h6 = *(d_half6 *)&srcPtr[srcIdx];
+    src_f6.x = __half22float2(src_h6.x);
+    src_f6.y = __half22float2(src_h6.y);
+    src_f6.z = __half22float2(src_h6.z);
+    srcNeighborhood_f12->x.x = src_f6f3s->x.x;
+    srcNeighborhood_f12->x.y = src_f6f3s->y.x;
+    srcNeighborhood_f12->y.x = src_f6f3s->x.y;
+    srcNeighborhood_f12->y.y = src_f6f3s->y.y;
+    srcNeighborhood_f12->z.x = src_f6f3s->x.z;
+    srcNeighborhood_f12->z.y = src_f6f3s->y.z;
+    srcIdx += srcStrideH;
+    src_h6 = *(d_half6 *)&srcPtr[srcIdx];
+    src_f6.x = __half22float2(src_h6.x);
+    src_f6.y = __half22float2(src_h6.y);
+    src_f6.z = __half22float2(src_h6.z);
+    srcNeighborhood_f12->x.z = src_f6f3s->x.x;
+    srcNeighborhood_f12->x.w = src_f6f3s->y.x;
+    srcNeighborhood_f12->y.z = src_f6f3s->x.y;
+    srcNeighborhood_f12->y.w = src_f6f3s->y.y;
+    srcNeighborhood_f12->z.z = src_f6f3s->x.z;
+    srcNeighborhood_f12->z.w = src_f6f3s->y.z;
 }
 
 // BILINEAR INTERPOLATION EXECUTION HELPERS (templated execution routines for all bit depths)
