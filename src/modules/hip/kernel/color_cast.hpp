@@ -55,11 +55,11 @@ __global__ void color_cast_pkd_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &src_f24);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
     color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
 template <typename T>
@@ -90,11 +90,11 @@ __global__ void color_cast_pln_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr, srcIdx, srcStridesNCH.y, &src_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
     color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>
@@ -125,11 +125,11 @@ __global__ void color_cast_pkd3_pln3_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &src_f24);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
     color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>
@@ -160,11 +160,11 @@ __global__ void color_cast_pln3_pkd3_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr, srcIdx, srcStridesNCH.y, &src_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
     color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
     color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
 template <typename T>

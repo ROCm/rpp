@@ -60,9 +60,9 @@ __global__ void gamma_correction_pkd_tensor(T *srcPtr,
 
     d_float8 src_f8, dst_f8;
 
-    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
     gamma_correction_hip_compute(srcPtr, &src_f8, &dst_f8, &gammaLUT[gammaLutIdx]);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
 template <typename T>
@@ -89,25 +89,25 @@ __global__ void gamma_correction_pln_tensor(T *srcPtr,
 
     d_float8 src_f8, dst_f8;
 
-    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
     gamma_correction_hip_compute(srcPtr, &src_f8, &dst_f8, &gammaLUT[gammaLutIdx]);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
         gamma_correction_hip_compute(srcPtr, &src_f8, &dst_f8, &gammaLUT[gammaLutIdx]);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &src_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
         gamma_correction_hip_compute(srcPtr, &src_f8, &dst_f8, &gammaLUT[gammaLutIdx]);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
 
@@ -134,11 +134,11 @@ __global__ void gamma_correction_pkd3_pln3_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &src_f24);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
     gamma_correction_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &gammaLUT[gammaLutIdx]);
     gamma_correction_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &gammaLUT[gammaLutIdx]);
     gamma_correction_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &gammaLUT[gammaLutIdx]);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>
@@ -164,11 +164,11 @@ __global__ void gamma_correction_pln3_pkd3_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr, srcIdx, srcStridesNCH.y, &src_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
     gamma_correction_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &gammaLUT[gammaLutIdx]);
     gamma_correction_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &gammaLUT[gammaLutIdx]);
     gamma_correction_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &gammaLUT[gammaLutIdx]);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
 __global__ void gamma_correction_lut_compute(float *gammaLUT,

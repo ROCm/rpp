@@ -1,38 +1,36 @@
 #include <hip/hip_runtime.h>
 #include "hip/rpp_hip_common.hpp"
 
-__device__ void brightness_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
+__device__ void exposure_hip_compute(uchar *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4;
+    pix_f8->x = rpp_hip_pixel_check_0to255(pix_f8->x * *exposureParam_f4);
+    pix_f8->y = rpp_hip_pixel_check_0to255(pix_f8->y * *exposureParam_f4);
 }
 
-__device__ void brightness_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
+__device__ void exposure_hip_compute(float *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
+    pix_f8->x = rpp_hip_pixel_check_0to255(pix_f8->x * *exposureParam_f4);
+    pix_f8->y = rpp_hip_pixel_check_0to255(pix_f8->y * *exposureParam_f4);
 }
 
-__device__ void brightness_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
+__device__ void exposure_hip_compute(schar *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    dst_f8->x = rpp_hip_pixel_check_0to255((src_f8->x + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
-    dst_f8->y = rpp_hip_pixel_check_0to255((src_f8->y + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
+    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x + (float4)128) * *exposureParam_f4) - (float4)128;
+    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y + (float4)128) * *exposureParam_f4) - (float4)128;
 }
-
-__device__ void brightness_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
+__device__ void exposure_hip_compute(half *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
+    pix_f8->x = rpp_hip_pixel_check_0to255(pix_f8->x * *exposureParam_f4);
+    pix_f8->y = rpp_hip_pixel_check_0to255(pix_f8->y * *exposureParam_f4);
 }
 
 template <typename T>
-__global__ void brightness_pkd_tensor(T *srcPtr,
-                                      uint2 srcStridesNH,
-                                      T *dstPtr,
-                                      uint2 dstStridesNH,
-                                      float *alpha,
-                                      float *beta,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void exposure_pkd_tensor(T *srcPtr,
+                                    uint2 srcStridesNH,
+                                    T *dstPtr,
+                                    uint2 dstStridesNH,
+                                    float *exposureFactorTensor,
+                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -46,25 +44,24 @@ __global__ void brightness_pkd_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
-    float4 alpha_f4 = (float4)alpha[id_z];
-    float4 beta_f4 = (float4)beta[id_z];
+    float multiplyingFactor = powf(2.0f, exposureFactorTensor[id_z]);
+    float4 exposureParam_f4 = (float4)multiplyingFactor;
 
-    d_float8 src_f8, dst_f8;
+    d_float8 pix_f8;
 
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-    brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+    exposure_hip_compute(srcPtr, &pix_f8, &exposureParam_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 }
 
 template <typename T>
-__global__ void brightness_pln_tensor(T *srcPtr,
-                                      uint3 srcStridesNCH,
-                                      T *dstPtr,
-                                      uint3 dstStridesNCH,
-                                      int channelsDst,
-                                      float *alpha,
-                                      float *beta,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void exposure_pln_tensor(T *srcPtr,
+                                    uint3 srcStridesNCH,
+                                    T *dstPtr,
+                                    uint3 dstStridesNCH,
+                                    int channelsDst,
+                                    float *exposureFactorTensor,
+                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -78,41 +75,39 @@ __global__ void brightness_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = (float4)(alpha[id_z]);
-    float4 beta_f4 = (float4)(beta[id_z]);
+    float multiplyingFactor = powf(2.0f, exposureFactorTensor[id_z]);
+    float4 exposureParam_f4 = (float4)multiplyingFactor;
 
-    d_float8 src_f8, dst_f8;
-
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-    brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+    d_float8 pix_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+    exposure_hip_compute(srcPtr, &pix_f8, &exposureParam_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-        brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+        exposure_hip_compute(srcPtr, &pix_f8, &exposureParam_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-        brightness_hip_compute(srcPtr, &src_f8, &dst_f8, &alpha_f4, &beta_f4);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+        exposure_hip_compute(srcPtr, &pix_f8, &exposureParam_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
     }
 }
 
 template <typename T>
-__global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
-                                            uint2 srcStridesNH,
-                                            T *dstPtr,
-                                            uint3 dstStridesNCH,
-                                            float *alpha,
-                                            float *beta,
-                                            RpptROIPtr roiTensorPtrSrc)
+__global__ void exposure_pkd3_pln3_tensor(T *srcPtr,
+                                          uint2 srcStridesNH,
+                                          T *dstPtr,
+                                          uint3 dstStridesNCH,
+                                          float *exposureFactorTensor,
+                                          RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -126,26 +121,25 @@ __global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = (float4)alpha[id_z];
-    float4 beta_f4 = (float4)beta[id_z];
+    float multiplyingFactor = powf(2.0f, exposureFactorTensor[id_z]);
+    float4 exposureParam_f4 = (float4)multiplyingFactor;
 
-    d_float24 src_f24, dst_f24;
+    d_float24 pix_f24;
 
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+    exposure_hip_compute(srcPtr, &pix_f24.x, &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.y, &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.z, &exposureParam_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
 template <typename T>
-__global__ void brightness_pln3_pkd3_tensor(T *srcPtr,
-                                            uint3 srcStridesNCH,
-                                            T *dstPtr,
-                                            uint2 dstStridesNH,
-                                            float *alpha,
-                                            float *beta,
-                                            RpptROIPtr roiTensorPtrSrc)
+__global__ void exposure_pln3_pkd3_tensor(T *srcPtr,
+                                          uint3 srcStridesNCH,
+                                          T *dstPtr,
+                                          uint2 dstStridesNH,
+                                          float *exposureFactorTensor,
+                                          RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -159,26 +153,25 @@ __global__ void brightness_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 alpha_f4 = (float4)(alpha[id_z]);
-    float4 beta_f4 = (float4)(beta[id_z]);
+    float multiplyingFactor = powf(2.0f, exposureFactorTensor[id_z]);
+    float4 exposureParam_f4 = (float4)multiplyingFactor;
 
-    d_float24 src_f24, dst_f24;
-
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+    d_float24 pix_f24;
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
+    exposure_hip_compute(srcPtr, &pix_f24.x, &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.y, &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.z, &exposureParam_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
 template <typename T>
-RppStatus hip_exec_brightness_tensor(T *srcPtr,
-                                     RpptDescPtr srcDescPtr,
-                                     T *dstPtr,
-                                     RpptDescPtr dstDescPtr,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     rpp::Handle& handle)
+RppStatus hip_exec_exposure_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
@@ -192,7 +185,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(brightness_pkd_tensor,
+        hipLaunchKernelGGL(exposure_pkd_tensor,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -202,12 +195,11 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(brightness_pln_tensor,
+        hipLaunchKernelGGL(exposure_pln_tensor,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -218,14 +210,13 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(brightness_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(exposure_pkd3_pln3_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -235,13 +226,12 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(brightness_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(exposure_pln3_pkd3_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -251,7 +241,6 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
                                roiTensorPtrSrc);
         }
     }

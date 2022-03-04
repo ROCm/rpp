@@ -387,9 +387,9 @@ inline RppStatus rpp_store16_f32_to_u8(Rpp8u *dstPtr, __m128 *p)
 inline RppStatus rpp_load16_f32_to_f32(Rpp32f *srcPtr, __m128 *p)
 {
     p[0] = _mm_loadu_ps(srcPtr);
-    p[1] = _mm_loadu_ps(&srcPtr[4]);
-    p[2] = _mm_loadu_ps(&srcPtr[8]);
-    p[3] = _mm_loadu_ps(&srcPtr[12]);
+    p[1] = _mm_loadu_ps(srcPtr + 4);
+    p[2] = _mm_loadu_ps(srcPtr + 8);
+    p[3] = _mm_loadu_ps(srcPtr + 12);
 
     return RPP_SUCCESS;
 }
@@ -397,9 +397,9 @@ inline RppStatus rpp_load16_f32_to_f32(Rpp32f *srcPtr, __m128 *p)
 inline RppStatus rpp_load12_f32pkd3_to_f32pln3(Rpp32f *srcPtr, __m128 *p)
 {
     p[0] = _mm_loadu_ps(srcPtr);
-    p[1] = _mm_loadu_ps(&srcPtr[3]);
-    p[2] = _mm_loadu_ps(&srcPtr[6]);
-    p[3] = _mm_loadu_ps(&srcPtr[9]);
+    p[1] = _mm_loadu_ps(srcPtr + 3);
+    p[2] = _mm_loadu_ps(srcPtr + 6);
+    p[3] = _mm_loadu_ps(srcPtr + 9);
     _MM_TRANSPOSE4_PS(p[0], p[1], p[2], p[3]);
 
     return RPP_SUCCESS;
@@ -867,14 +867,14 @@ inline RppStatus rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
     p128[0] = _mm_loadu_ps(srcPtr);
-    p128[1] = _mm_loadu_ps(&srcPtr[3]);
-    p128[2] = _mm_loadu_ps(&srcPtr[6]);
-    p128[3] = _mm_loadu_ps(&srcPtr[9]);
+    p128[1] = _mm_loadu_ps(srcPtr + 3);
+    p128[2] = _mm_loadu_ps(srcPtr + 6);
+    p128[3] = _mm_loadu_ps(srcPtr + 9);
     _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
-    p128[4] = _mm_loadu_ps(&srcPtr[12]);
-    p128[5] = _mm_loadu_ps(&srcPtr[15]);
-    p128[6] = _mm_loadu_ps(&srcPtr[18]);
-    p128[7] = _mm_loadu_ps(&srcPtr[21]);
+    p128[4] = _mm_loadu_ps(srcPtr + 12);
+    p128[5] = _mm_loadu_ps(srcPtr + 15);
+    p128[6] = _mm_loadu_ps(srcPtr + 18);
+    p128[7] = _mm_loadu_ps(srcPtr + 21);
     _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
     p[0] = _mm256_setr_m128(p128[0], p128[4]);
     p[1] = _mm256_setr_m128(p128[1], p128[5]);
@@ -888,14 +888,14 @@ inline RppStatus rpp_load24_f32pkd3_to_f32pln3_mirror_avx(Rpp32f *srcPtr, __m256
     __m128 p128[8];
     __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
     p128[0] = _mm_loadu_ps(srcPtr); /* loads R01|G01|B01|R02 */
-    p128[1] = _mm_loadu_ps(&srcPtr[3]); /* loads R02|G02|B02|R03 */
-    p128[2] = _mm_loadu_ps(&srcPtr[6]); /* loads R03|G03|B03|R04 */
-    p128[3] = _mm_loadu_ps(&srcPtr[9]); /* loads R04|G04|B04|R05 */
+    p128[1] = _mm_loadu_ps(srcPtr + 3); /* loads R02|G02|B02|R03 */
+    p128[2] = _mm_loadu_ps(srcPtr + 6); /* loads R03|G03|B03|R04 */
+    p128[3] = _mm_loadu_ps(srcPtr + 9); /* loads R04|G04|B04|R05 */
     _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]); /* Transpose the 4x4 matrix and forms [[R01 R02 R03 R04][B01 B02 B03 B04][G01 G02 G03 G03][R02 R03 R04 R05]] */
-    p128[4] = _mm_loadu_ps(&srcPtr[12]); /* loads R05|G05|B05|R06 */
-    p128[5] = _mm_loadu_ps(&srcPtr[15]); /* loads R06|G06|B06|R07 */
-    p128[6] = _mm_loadu_ps(&srcPtr[18]); /* loads R07|G07|B07|R08 */
-    p128[7] = _mm_loadu_ps(&srcPtr[21]); /* loads R08|G08|B08|R09 */
+    p128[4] = _mm_loadu_ps(srcPtr + 12); /* loads R05|G05|B05|R06 */
+    p128[5] = _mm_loadu_ps(srcPtr + 15); /* loads R06|G06|B06|R07 */
+    p128[6] = _mm_loadu_ps(srcPtr + 18); /* loads R07|G07|B07|R08 */
+    p128[7] = _mm_loadu_ps(srcPtr + 21); /* loads R08|G08|B08|R09 */
     _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]); /* Transpose the 4x4 matrix and forms [[R05 R06 R07 R08][B05 B06 B07 B08][G05 G06 G07 G08][R06 R07 R08 R09]] */
     p[0] = _mm256_setr_m128(p128[0], p128[4]); /* packs as R01-R08 */
     p[1] = _mm256_setr_m128(p128[1], p128[5]); /* packs as G01-R08 */
@@ -989,7 +989,7 @@ inline RppStatus rpp_store8_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 inline RppStatus rpp_load16_f32_to_f32_avx(Rpp32f *srcPtr, __m256 *p)
 {
     p[0] = _mm256_loadu_ps(srcPtr);
-    p[1] = _mm256_loadu_ps(&srcPtr[8]);
+    p[1] = _mm256_loadu_ps(srcPtr + 8);
 
     return RPP_SUCCESS;
 }
