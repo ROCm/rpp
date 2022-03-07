@@ -1,34 +1,31 @@
 #include <hip/hip_runtime.h>
 #include "hip/rpp_hip_common.hpp"
 
-__device__ void contrast_hip_compute(uchar *srcPtr, d_float8 *pix_f8, float4 *contrastFactor_f4, float4 *contrastCenter_f4)
+__device__ void contrast_hip_compute(uchar *srcPtr, d_float8 *pix_f8, d_float8 *contrastParams_f8)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x - *contrastCenter_f4) * *contrastFactor_f4 + *contrastCenter_f4);
-    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y - *contrastCenter_f4) * *contrastFactor_f4 + *contrastCenter_f4);
+    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x - contrastParams_f8->y) * contrastParams_f8->x + contrastParams_f8->y);
+    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y - contrastParams_f8->y) * contrastParams_f8->x + contrastParams_f8->y);
 }
 
-__device__ void contrast_hip_compute(float *srcPtr, d_float8 *pix_f8, float4 *contrastFactor_f4, float4 *contrastCenter_f4)
+__device__ void contrast_hip_compute(float *srcPtr, d_float8 *pix_f8, d_float8 *contrastParams_f8)
 {
     float4 normalizer_f4 = (float4) ONE_OVER_255;
 
-    pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - (*contrastCenter_f4 * normalizer_f4)) * *contrastFactor_f4 + *contrastCenter_f4 * normalizer_f4);
-    pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - (*contrastCenter_f4 * normalizer_f4)) * *contrastFactor_f4 + *contrastCenter_f4 * normalizer_f4);
-    
-    // pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - *contrastCenter_f4) * *contrastFactor_f4 + *contrastCenter_f4);
-    // pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - *contrastCenter_f4) * *contrastFactor_f4 + *contrastCenter_f4);
+    pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - (contrastParams_f8->y * normalizer_f4)) * contrastParams_f8->x + contrastParams_f8->y * normalizer_f4);
+    pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - (contrastParams_f8->y * normalizer_f4)) * contrastParams_f8->x + contrastParams_f8->y * normalizer_f4);
 }
 
-__device__ void contrast_hip_compute(schar *srcPtr, d_float8 *pix_f8, float4 *contrastFactor_f4, float4 *contrastCenter_f4)
+__device__ void contrast_hip_compute(schar *srcPtr, d_float8 *pix_f8, d_float8 *contrastParams_f8)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x + (float4)128 - *contrastCenter_f4) * *contrastFactor_f4 + *contrastCenter_f4) - (float4)128;
-    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y + (float4)128 - *contrastCenter_f4) * *contrastFactor_f4 + *contrastCenter_f4) - (float4)128;
+    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x + (float4)128 - contrastParams_f8->y) * contrastParams_f8->x + contrastParams_f8->y) - (float4)128;
+    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y + (float4)128 - contrastParams_f8->y) * contrastParams_f8->x + contrastParams_f8->y) - (float4)128;
 }
-__device__ void contrast_hip_compute(half *srcPtr, d_float8 *pix_f8, float4 *contrastFactor_f4, float4 *contrastCenter_f4)
+__device__ void contrast_hip_compute(half *srcPtr, d_float8 *pix_f8, d_float8 *contrastParams_f8)
 {
     float4 normalizer_f4 = (float4) ONE_OVER_255;
 
-    pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - (*contrastCenter_f4 * normalizer_f4)) * *contrastFactor_f4 + *contrastCenter_f4 * normalizer_f4);
-    pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - (*contrastCenter_f4 * normalizer_f4)) * *contrastFactor_f4 + *contrastCenter_f4 * normalizer_f4);
+    pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - (contrastParams_f8->y * normalizer_f4)) * contrastParams_f8->x + contrastParams_f8->y * normalizer_f4);
+    pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - (contrastParams_f8->y * normalizer_f4)) * contrastParams_f8->x + contrastParams_f8->y * normalizer_f4);
 }
 
 template <typename T>
@@ -52,13 +49,12 @@ __global__ void contrast_pkd_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
-    float4 contrastFactor_f4 = (float4)contrastFactor[id_z];
-    float4 contrastCenter_f4 = (float4)contrastCenter[id_z];
-
-    d_float8 pix_f8;
+    d_float8 pix_f8, contrastParams_f8;
+    contrastParams_f8.x = (float4)contrastFactor[id_z];
+    contrastParams_f8.y = (float4)contrastCenter[id_z];
 
     rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
-    contrast_hip_compute(srcPtr, &pix_f8, &contrastFactor_f4, &contrastCenter_f4);
+    contrast_hip_compute(srcPtr, &pix_f8, &contrastParams_f8);
     rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
 }
 
@@ -84,13 +80,12 @@ __global__ void contrast_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 contrastFactor_f4 = (float4)(contrastFactor[id_z]);
-    float4 contrastCenter_f4 = (float4)(contrastCenter[id_z]);
-
-    d_float8 pix_f8;
+    d_float8 pix_f8, contrastParams_f8;
+    contrastParams_f8.x = (float4)(contrastFactor[id_z]);
+    contrastParams_f8.y = (float4)(contrastCenter[id_z]);
 
     rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
-    contrast_hip_compute(srcPtr, &pix_f8, &contrastFactor_f4, &contrastCenter_f4);
+    contrast_hip_compute(srcPtr, &pix_f8, &contrastParams_f8);
     rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
 
     if (channelsDst == 3)
@@ -99,14 +94,14 @@ __global__ void contrast_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
-        contrast_hip_compute(srcPtr, &pix_f8, &contrastFactor_f4, &contrastCenter_f4);
+        contrast_hip_compute(srcPtr, &pix_f8, &contrastParams_f8);
         rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
-        contrast_hip_compute(srcPtr, &pix_f8, &contrastFactor_f4, &contrastCenter_f4);
+        contrast_hip_compute(srcPtr, &pix_f8, &contrastParams_f8);
         rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
     }
 }
@@ -132,15 +127,15 @@ __global__ void contrast_pkd3_pln3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 contrastFactor_f4 = (float4)contrastFactor[id_z];
-    float4 contrastCenter_f4 = (float4)contrastCenter[id_z];
-
-    d_float24 pix_f24;;
+    d_float24 pix_f24;
+    d_float8 contrastParams_f8;
+    contrastParams_f8.x = (float4)contrastFactor[id_z];
+    contrastParams_f8.y = (float4)contrastCenter[id_z];
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &pix_f24);
-    contrast_hip_compute(srcPtr, &pix_f24.x, &contrastFactor_f4, &contrastCenter_f4);
-    contrast_hip_compute(srcPtr, &pix_f24.y, &contrastFactor_f4, &contrastCenter_f4);
-    contrast_hip_compute(srcPtr, &pix_f24.z, &contrastFactor_f4, &contrastCenter_f4);
+    contrast_hip_compute(srcPtr, &pix_f24.x, &contrastParams_f8);
+    contrast_hip_compute(srcPtr, &pix_f24.y, &contrastParams_f8);
+    contrast_hip_compute(srcPtr, &pix_f24.z, &contrastParams_f8);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
@@ -165,14 +160,15 @@ __global__ void contrast_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 contrastFactor_f4 = (float4)(contrastFactor[id_z]);
-    float4 contrastCenter_f4 = (float4)(contrastCenter[id_z]);
-
     d_float24 pix_f24;
+    d_float8 contrastParams_f8;
+    contrastParams_f8.x = (float4)contrastFactor[id_z];
+    contrastParams_f8.y = (float4)contrastCenter[id_z];
+
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr, srcIdx, srcStridesNCH.y, &pix_f24);
-    contrast_hip_compute(srcPtr, &pix_f24.x, &contrastFactor_f4, &contrastCenter_f4);
-    contrast_hip_compute(srcPtr, &pix_f24.y, &contrastFactor_f4, &contrastCenter_f4);
-    contrast_hip_compute(srcPtr, &pix_f24.z, &contrastFactor_f4, &contrastCenter_f4);
+    contrast_hip_compute(srcPtr, &pix_f24.x, &contrastParams_f8);
+    contrast_hip_compute(srcPtr, &pix_f24.y, &contrastParams_f8);
+    contrast_hip_compute(srcPtr, &pix_f24.z, &contrastParams_f8);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &pix_f24);
 }
 
