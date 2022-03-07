@@ -24,5 +24,6 @@ THE SOFTWARE.
 #define HIP_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
 
 #include "kernel/crop.hpp"
+#include "kernel/crop_mirror_normalize.hpp"
 
 #endif // HIP_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP

@@ -61,7 +61,7 @@ include(CheckCXXCompilerFlag)
 # Set defaults
 
 if (NOT DEFINED BACKEND)
-    SET(BACKEND "OCL")
+    SET(BACKEND "HIP")
 endif()
 
 if(WIN32 AND CMAKE_CROSSCOMPILING)
