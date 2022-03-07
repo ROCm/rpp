@@ -9,8 +9,11 @@ __device__ void cmn_hip_compute(uchar *srcPtr, d_float8 *pix_f8, d_float8 *cmnPa
 
 __device__ void cmn_hip_compute(float *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x - cmnParams_f8->x) * cmnParams_f8->y);
-    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y - cmnParams_f8->x) * cmnParams_f8->y);
+    float4 normalizer_f4 = (float4) ONE_OVER_255;
+    cmnParams_f8->x = cmnParams_f8->x * normalizer_f4;
+
+    pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - cmnParams_f8->x) * cmnParams_f8->y);
+    pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - cmnParams_f8->x) * cmnParams_f8->y);
 }
 
 __device__ void cmn_hip_compute(schar *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
@@ -20,8 +23,11 @@ __device__ void cmn_hip_compute(schar *srcPtr, d_float8 *pix_f8, d_float8 *cmnPa
 }
 __device__ void cmn_hip_compute(half *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x - cmnParams_f8->x) * cmnParams_f8->y);
-    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y - cmnParams_f8->x) * cmnParams_f8->y);
+    float4 normalizer_f4 = (float4) ONE_OVER_255;
+    cmnParams_f8->x = cmnParams_f8->x * normalizer_f4;
+
+    pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - cmnParams_f8->x) * cmnParams_f8->y);
+    pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - cmnParams_f8->x) * cmnParams_f8->y);
 }
 
 template <typename T>

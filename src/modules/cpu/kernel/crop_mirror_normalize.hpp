@@ -405,7 +405,7 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f mean = meanTensor[batchCount];
+        Rpp32f mean = meanTensor[batchCount] * ONE_OVER_255;
         Rpp32f stdDev = stdDevTensor[batchCount];
         Rpp32f invStdDev = 1.0 / stdDev;
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
@@ -788,7 +788,7 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f mean = meanTensor[batchCount];
+        Rpp32f mean = meanTensor[batchCount] * ONE_OVER_255;
         Rpp32f stdDev = stdDevTensor[batchCount];
         Rpp32f invStdDev = 1.0 / stdDev;
         Rpp32u mirrorFlag = mirrorTensor[batchCount];

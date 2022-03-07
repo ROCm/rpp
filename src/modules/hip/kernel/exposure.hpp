@@ -9,8 +9,8 @@ __device__ void exposure_hip_compute(uchar *srcPtr, d_float8 *pix_f8, float4 *ex
 
 __device__ void exposure_hip_compute(float *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255(pix_f8->x * *exposureParam_f4);
-    pix_f8->y = rpp_hip_pixel_check_0to255(pix_f8->y * *exposureParam_f4);
+    pix_f8->x = rpp_hip_pixel_check_0to1(pix_f8->x * *exposureParam_f4);
+    pix_f8->y = rpp_hip_pixel_check_0to1(pix_f8->y * *exposureParam_f4);
 }
 
 __device__ void exposure_hip_compute(schar *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
@@ -20,8 +20,8 @@ __device__ void exposure_hip_compute(schar *srcPtr, d_float8 *pix_f8, float4 *ex
 }
 __device__ void exposure_hip_compute(half *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255(pix_f8->x * *exposureParam_f4);
-    pix_f8->y = rpp_hip_pixel_check_0to255(pix_f8->y * *exposureParam_f4);
+    pix_f8->x = rpp_hip_pixel_check_0to1(pix_f8->x * *exposureParam_f4);
+    pix_f8->y = rpp_hip_pixel_check_0to1(pix_f8->y * *exposureParam_f4);
 }
 
 template <typename T>
