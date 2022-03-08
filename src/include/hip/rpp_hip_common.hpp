@@ -1754,29 +1754,28 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *sr
 {
     d_half6 src_h6;
     d_float6 src_f6;
-    d_float6_as_float3s *src_f6f3s = (d_float6_as_float3s *)&src_f6;
     int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
     src_h6 = *(d_half6 *)&srcPtr[srcIdx];
     src_f6.x = __half22float2(src_h6.x);
     src_f6.y = __half22float2(src_h6.y);
     src_f6.z = __half22float2(src_h6.z);
-    srcNeighborhood_f12->x.x = src_f6f3s->x.x;
-    srcNeighborhood_f12->x.y = src_f6f3s->y.x;
-    srcNeighborhood_f12->y.x = src_f6f3s->x.y;
-    srcNeighborhood_f12->y.y = src_f6f3s->y.y;
-    srcNeighborhood_f12->z.x = src_f6f3s->x.z;
-    srcNeighborhood_f12->z.y = src_f6f3s->y.z;
+    srcNeighborhood_f12->x.x = src_f6.x.x;
+    srcNeighborhood_f12->x.y = src_f6.y.y;
+    srcNeighborhood_f12->y.x = src_f6.x.y;
+    srcNeighborhood_f12->y.y = src_f6.z.x;
+    srcNeighborhood_f12->z.x = src_f6.y.x;
+    srcNeighborhood_f12->z.y = src_f6.z.y;
     srcIdx += srcStrideH;
     src_h6 = *(d_half6 *)&srcPtr[srcIdx];
     src_f6.x = __half22float2(src_h6.x);
     src_f6.y = __half22float2(src_h6.y);
     src_f6.z = __half22float2(src_h6.z);
-    srcNeighborhood_f12->x.z = src_f6f3s->x.x;
-    srcNeighborhood_f12->x.w = src_f6f3s->y.x;
-    srcNeighborhood_f12->y.z = src_f6f3s->x.y;
-    srcNeighborhood_f12->y.w = src_f6f3s->y.y;
-    srcNeighborhood_f12->z.z = src_f6f3s->x.z;
-    srcNeighborhood_f12->z.w = src_f6f3s->y.z;
+    srcNeighborhood_f12->x.z = src_f6.x.x;
+    srcNeighborhood_f12->x.w = src_f6.y.y;
+    srcNeighborhood_f12->y.z = src_f6.x.y;
+    srcNeighborhood_f12->y.w = src_f6.z.x;
+    srcNeighborhood_f12->z.z = src_f6.y.x;
+    srcNeighborhood_f12->z.w = src_f6.z.y;
 }
 
 // BILINEAR INTERPOLATION EXECUTION HELPERS (templated execution routines for all bit depths)
