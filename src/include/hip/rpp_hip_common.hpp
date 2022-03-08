@@ -1392,7 +1392,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(float
     dstPtr_f24.z.y.z = dst_f24->y.y.w;
     dstPtr_f24.z.y.w = dst_f24->z.y.w;
 
-    *(d_float24 *)&dstPtr[dstIdx] = dstPtr_f24;
+    *((d_float24 *)(dstPtr)) = dstPtr_f24;
 }
 
 // I8 stores with layout toggle PLN3 to PKD3 (24 I8 pixels)
@@ -1437,7 +1437,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half 
 
 // U8 stores with layout toggle PKD3 to PLN3 (24 U8 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(uchar *dstPtr, uint dstIdx, uint increment, d_float24 *dst_f24)
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(uchar *dstPtr, uint increment, d_float24 *dst_f24)
 {
     d_uint6 dst;
 
@@ -1448,16 +1448,16 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(uchar
     dst.z.x = rpp_hip_pack(make_float4(dst_f24->x.x.z, dst_f24->x.y.y, dst_f24->y.x.x, dst_f24->y.x.w));
     dst.z.y = rpp_hip_pack(make_float4(dst_f24->y.y.z, dst_f24->z.x.y, dst_f24->z.y.x, dst_f24->z.y.w));
 
-    *((uint2 *)(&dstPtr[dstIdx])) = dst.x;
-    dstIdx += increment;
-    *((uint2 *)(&dstPtr[dstIdx])) = dst.y;
-    dstIdx += increment;
-    *((uint2 *)(&dstPtr[dstIdx])) = dst.z;
+    *((uint2 *)(dstPtr)) = dst.x;
+    dstPtr += increment;
+    *((uint2 *)(dstPtr)) = dst.y;
+    dstPtr += increment;
+    *((uint2 *)(dstPtr)) = dst.z;
 }
 
 // F32 stores with layout toggle PKD3 to PLN3 (24 F32 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(float *dstPtr, uint dstIdx, uint increment, d_float24 *dst_f24)
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(float *dstPtr, uint increment, d_float24 *dst_f24)
 {
     d_float24 dstPtr_f24;
 
@@ -1488,16 +1488,16 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(float
     dstPtr_f24.z.y.z = dst_f24->z.y.x;
     dstPtr_f24.z.y.w = dst_f24->z.y.w;
 
-    *(d_float8 *)&dstPtr[dstIdx] = dstPtr_f24.x;
-    dstIdx += increment;
-    *(d_float8 *)&dstPtr[dstIdx] = dstPtr_f24.y;
-    dstIdx += increment;
-    *(d_float8 *)&dstPtr[dstIdx] = dstPtr_f24.z;
+    *(d_float8 *)dstPtr = dstPtr_f24.x;
+    dstPtr += increment;
+    *(d_float8 *)dstPtr = dstPtr_f24.y;
+    dstPtr += increment;
+    *(d_float8 *)dstPtr = dstPtr_f24.z;
 }
 
 // I8 stores with layout toggle PKD3 to PLN3 (24 I8 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(schar *dstPtr, uint dstIdx, uint increment, d_float24 *dst_f24)
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(schar *dstPtr, uint increment, d_float24 *dst_f24)
 {
     d_uint6 dst;
 
@@ -1508,16 +1508,16 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(schar
     dst.z.x = rpp_hip_pack_i8(make_float4(dst_f24->x.x.z, dst_f24->x.y.y, dst_f24->y.x.x, dst_f24->y.x.w));
     dst.z.y = rpp_hip_pack_i8(make_float4(dst_f24->y.y.z, dst_f24->z.x.y, dst_f24->z.y.x, dst_f24->z.y.w));
 
-    *((uint2 *)(&dstPtr[dstIdx])) = dst.x;
-    dstIdx += increment;
-    *((uint2 *)(&dstPtr[dstIdx])) = dst.y;
-    dstIdx += increment;
-    *((uint2 *)(&dstPtr[dstIdx])) = dst.z;
+    *((uint2 *)(dstPtr)) = dst.x;
+    dstPtr += increment;
+    *((uint2 *)(dstPtr)) = dst.y;
+    dstPtr += increment;
+    *((uint2 *)(dstPtr)) = dst.z;
 }
 
 // F16 stores with layout toggle PKD3 to PLN3 (24 F16 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(half *dstPtr, uint dstIdx, uint increment, d_float24 *dst_f24)
+__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(half *dstPtr, uint increment, d_float24 *dst_f24)
 {
     d_half24 dst_h24;
 
@@ -1536,11 +1536,11 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(half 
     dst_h24.z.y.x = __float22half2_rn(make_float2(dst_f24->y.y.z, dst_f24->z.x.y));
     dst_h24.z.y.y = __float22half2_rn(make_float2(dst_f24->z.y.x, dst_f24->z.y.w));
 
-    *((d_half8 *)(&dstPtr[dstIdx])) = dst_h24.x;
-    dstIdx += increment;
-    *((d_half8 *)(&dstPtr[dstIdx])) = dst_h24.y;
-    dstIdx += increment;
-    *((d_half8 *)(&dstPtr[dstIdx])) = dst_h24.z;
+    *((d_half8 *)(dstPtr)) = dst_h24.x;
+    dstPtr += increment;
+    *((d_half8 *)(dstPtr)) = dst_h24.y;
+    dstPtr += increment;
+    *((d_half8 *)(dstPtr)) = dst_h24.z;
 }
 
 // -------------------- Set 6 - Loads to uchar --------------------

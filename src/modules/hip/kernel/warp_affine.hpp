@@ -59,8 +59,8 @@ __global__ void warp_affine_bilinear_pkd_tensor(T *srcPtr,
     warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
     d_float24_as_float3s dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(&srcPtr[srcIdx], srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, (d_float24 *)&dst_f24);
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, (d_float24 *)&dst_f24);
 }
 
 template <typename T>
@@ -91,22 +91,22 @@ __global__ void warp_affine_bilinear_pln_tensor(T *srcPtr,
     warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
     d_float8 dst_f8;
-    rpp_hip_interpolate8_bilinear_pln1(&srcPtr[srcIdx], srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+    rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_bilinear_pln1(&srcPtr[srcIdx], srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_bilinear_pln1(&srcPtr[srcIdx], srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
 
@@ -137,8 +137,8 @@ __global__ void warp_affine_bilinear_pkd3_pln3_tensor(T *srcPtr,
     warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
     d_float24_as_float3s dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(&srcPtr[srcIdx], srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, (d_float24 *)&dst_f24);
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, (d_float24 *)&dst_f24);
 }
 
 template <typename T>
@@ -168,8 +168,8 @@ __global__ void warp_affine_bilinear_pln3_pkd3_tensor(T *srcPtr,
     warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pln3(&srcPtr[srcIdx], &srcStridesNCH, &locSrc_f16, &roiSrc, &dst_f24);
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
+    rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &roiSrc, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
 // -------------------- Set 2 - Nearest Neighbor Interpolation --------------------
@@ -201,8 +201,8 @@ __global__ void warp_affine_nearest_neighbor_pkd_tensor(T *srcPtr,
     warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
     d_float24_as_float3s dst_f24;
-    rpp_hip_interpolate24_nearest_neighbor_pkd3(&srcPtr[srcIdx], srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, (d_float24 *)&dst_f24);
+    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, (d_float24 *)&dst_f24);
 }
 
 template <typename T>
@@ -233,22 +233,22 @@ __global__ void warp_affine_nearest_neighbor_pln_tensor(T *srcPtr,
     warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
     d_float8 dst_f8;
-    rpp_hip_interpolate8_nearest_neighbor_pln1(&srcPtr[srcIdx], srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_nearest_neighbor_pln1(&srcPtr[srcIdx], srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_nearest_neighbor_pln1(&srcPtr[srcIdx], srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &dst_f8);
+        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &roiSrc, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
 
@@ -279,8 +279,8 @@ __global__ void warp_affine_nearest_neighbor_pkd3_pln3_tensor(T *srcPtr,
     warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
     d_float24_as_float3s dst_f24;
-    rpp_hip_interpolate24_nearest_neighbor_pkd3(&srcPtr[srcIdx], srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, (d_float24 *)&dst_f24);
+    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &roiSrc, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, (d_float24 *)&dst_f24);
 }
 
 template <typename T>
@@ -310,8 +310,8 @@ __global__ void warp_affine_nearest_neighbor_pln3_pkd3_tensor(T *srcPtr,
     warp_affine_roi_and_srclocs_hip_compute(&roiSrc, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_nearest_neighbor_pln3(&srcPtr[srcIdx], &srcStridesNCH, &locSrc_f16, &roiSrc, &dst_f24);
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &dst_f24);
+    rpp_hip_interpolate24_nearest_neighbor_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &roiSrc, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
 // -------------------- Set 3 - Kernel Executors --------------------
