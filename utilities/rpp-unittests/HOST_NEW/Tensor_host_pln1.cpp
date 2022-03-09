@@ -25,6 +25,43 @@ typedef half Rpp16f;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
+std::string get_interpolation_type(int val, RpptInterpolationType &interpType)
+{
+    switch(val)
+    {
+    case 0:
+        {
+            interpType = RpptInterpolationType::NEAREST_NEIGHBOR;
+            return "nearest_neighbor";
+        }
+        case 2:
+        {
+            interpType = RpptInterpolationType::BICUBIC;
+            return "bicubic";
+        }
+        case 3:
+        {
+            interpType = RpptInterpolationType::LANCZOS;
+            return "lanczos";
+        }
+        case 4:
+        {
+            interpType = RpptInterpolationType::TRIANGULAR;
+            return "triangular";
+        }
+        case 5:
+        {
+            interpType = RpptInterpolationType::GAUSSIAN;
+            return "gaussian";
+        }
+        default:
+        {
+            interpType = RpptInterpolationType::BILINEAR;
+            return "bilinear";
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -42,16 +79,11 @@ int main(int argc, char **argv)
         printf("\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
         return -1;
     }
-
-    if (atoi(argv[7]) == 1)
+    if ((atoi(argv[6]) == 21) && argc < MIN_ARG_COUNT + 1)
     {
-        printf("\nInputs for this test case are:");
-        printf("\nsrc1 = %s", argv[1]);
-        printf("\nsrc2 = %s", argv[2]);
-        printf("\ndst = %s", argv[3]);
-        printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
-        printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (0:84) = %s", argv[6]);
+        printf("\nImproper Usage! Interpolation type required for resize!\n");
+        printf("\nUsage: ./Tensor_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <interp_type = 0:5> <verbosity = 0/1>\n");
+        return -1;
     }
 
     char *src = argv[1];
@@ -60,6 +92,32 @@ int main(int argc, char **argv)
     int ip_bitDepth = atoi(argv[4]);
     unsigned int outputFormatToggle = atoi(argv[5]);
     int test_case = atoi(argv[6]);
+    unsigned int verbosity = (test_case == 21) ? atoi(argv[8]) : atoi(argv[7]);
+    // Params specific to case 21 - Resize
+    int interpolation_type_num = (test_case == 21) ? atoi(argv[7]) : 1;
+    RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
+    std::string interpolationTypeName;
+    if(test_case == 21)
+    {
+        if(interpolation_type_num != 1)
+        {
+            printf("\nCurrently only bilinear interpolation is supported for resize\n");
+            interpolation_type_num = 1;
+        }
+        interpolationTypeName = get_interpolation_type(interpolation_type_num, interpolationType);
+    }
+
+    if (verbosity)
+    {
+        printf("\nInputs for this test case are:");
+        printf("\nsrc1 = %s", argv[1]);
+        printf("\nsrc2 = %s", argv[2]);
+        printf("\ndst = %s", argv[3]);
+        printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
+        printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
+        printf("\ncase number (0:84) = %s", argv[6]);
+        printf("\ninterpolation type (0:5) = %s", interpolationTypeName.c_str());
+    }
 
     int ip_channel = 1;
 
@@ -81,6 +139,9 @@ int main(int argc, char **argv)
         break;
     case 13:
         strcpy(funcName, "exposure");
+        break;
+    case 21:
+        strcpy(funcName, "resize");
         break;
     case 31:
         strcpy(funcName, "color_cast");
@@ -182,6 +243,11 @@ int main(int argc, char **argv)
     char func[1000];
     strcpy(func, funcName);
     strcat(func, funcType);
+    if(test_case == 21)
+    {
+        strcat(func, "_");
+        strcat(func, interpolationTypeName.c_str());
+    }
     printf("\nRunning %s...", func);
 
     char src1[1000];
@@ -212,6 +278,11 @@ int main(int argc, char **argv)
 
     RpptROI *roiTensorPtrSrc = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
     RpptROI *roiTensorPtrDst = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
+
+    // Initialize the ImagePatch for source and destination
+
+    RpptImagePatch *srcImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
+    RpptImagePatch *dstImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
 
     // Set ROI tensors types for src/dst
 
@@ -245,6 +316,11 @@ int main(int argc, char **argv)
         roiTensorPtrDst[count].xywhROI.xy.y = 0;
         roiTensorPtrDst[count].xywhROI.roiWidth = image.cols;
         roiTensorPtrDst[count].xywhROI.roiHeight = image.rows;
+
+        srcImgSizes[count].width = roiTensorPtrSrc[count].xywhROI.roiWidth;
+        srcImgSizes[count].height = roiTensorPtrSrc[count].xywhROI.roiHeight;
+        dstImgSizes[count].width = roiTensorPtrDst[count].xywhROI.roiWidth;
+        dstImgSizes[count].height = roiTensorPtrDst[count].xywhROI.roiHeight;
 
         maxHeight = RPPMAX2(maxHeight, roiTensorPtrSrc[count].xywhROI.roiHeight);
         maxWidth = RPPMAX2(maxWidth, roiTensorPtrSrc[count].xywhROI.roiWidth);
@@ -313,15 +389,15 @@ int main(int argc, char **argv)
 
     Rpp16f *inputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
     Rpp16f *inputf16_second = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
-    Rpp16f *outputf16 = (Rpp16f *)calloc(ioBufferSize, sizeof(Rpp16f));
+    Rpp16f *outputf16 = (Rpp16f *)calloc(oBufferSize, sizeof(Rpp16f));
 
     Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
     Rpp32f *inputf32_second = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+    Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
 
     Rpp8s *inputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
     Rpp8s *inputi8_second = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
-    Rpp8s *outputi8 = (Rpp8s *)calloc(ioBufferSize, sizeof(Rpp8s));
+    Rpp8s *outputi8 = (Rpp8s *)calloc(oBufferSize, sizeof(Rpp8s));
 
     // Set 8u host buffers for src/dst
 
@@ -466,16 +542,19 @@ int main(int argc, char **argv)
         {
             roiTensorPtrSrc[i].xywhROI.xy.x = 0;
             roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
         }*/
 
         // Uncomment to run test case with an ltrbROI override
         /*for (i = 0; i < images; i++)
+        {
             roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
             roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
             roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
             roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
@@ -516,16 +595,19 @@ int main(int argc, char **argv)
         {
             roiTensorPtrSrc[i].xywhROI.xy.x = 0;
             roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
         }*/
 
         // Uncomment to run test case with an ltrbROI override
         /*for (i = 0; i < images; i++)
+        {
             roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
             roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
             roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
             roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
@@ -566,16 +648,19 @@ int main(int argc, char **argv)
         {
             roiTensorPtrSrc[i].xywhROI.xy.x = 0;
             roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
         }*/
 
         // Uncomment to run test case with an ltrbROI override
         /*for (i = 0; i < images; i++)
+        {
             roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
             roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
             roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
             roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
@@ -632,6 +717,57 @@ int main(int argc, char **argv)
 
         break;
     }
+case 21:
+    {
+        test_case_name = "resize";
+
+        for (i = 0; i < images; i++)
+        {
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }*/
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_resize_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_resize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_resize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_resize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
     case 37:
     {
         test_case_name = "crop";
@@ -641,16 +777,19 @@ int main(int argc, char **argv)
         {
             roiTensorPtrSrc[i].xywhROI.xy.x = 0;
             roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
         }
 
         // Uncomment to run test case with an ltrbROI override
         /*for (i = 0; i < images; i++)
+        {
             roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
             roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
             roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
             roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
@@ -692,18 +831,21 @@ int main(int argc, char **argv)
         // Uncomment to run test case with an xywhROI override
         for (i = 0; i < images; i++)
         {
-            roiTensorPtrSrc[i].xywhROI.xy.x = 50;
-            roiTensorPtrSrc[i].xywhROI.xy.y = 50;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
         }
 
         // Uncomment to run test case with an ltrbROI override
         /*for (i = 0; i < images; i++)
+        {
             roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
             roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
             roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
             roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
@@ -745,16 +887,19 @@ int main(int argc, char **argv)
         {
             roiTensorPtrSrc[i].xywhROI.xy.x = 0;
             roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
         }*/
 
         // Uncomment to run test case with an ltrbROI override
         /*for (i = 0; i < images; i++)
+        {
             roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
             roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
             roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
             roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
@@ -806,16 +951,19 @@ int main(int argc, char **argv)
         {
             roiTensorPtrSrc[i].xywhROI.xy.x = 0;
             roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
         }*/
 
         // Uncomment to run test case with an ltrbROI override
         /*for (i = 0; i < images; i++)
+        {
             roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
             roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
             roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
             roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
@@ -991,13 +1139,20 @@ int main(int argc, char **argv)
 
     mkdir(dst, 0700);
     strcat(dst, "/");
+    if(test_case == 21)
+    {
+        strcat(dst, interpolationTypeName.c_str());
+        mkdir(dst, 0700);
+        strcat(dst, "/");
+    }
+
     count = 0;
     elementsInRowMax = dstDescPtr->w * ip_channel;
 
     for (j = 0; j < dstDescPtr->n; j++)
     {
-        int height = roiTensorPtrSrc[j].xywhROI.roiHeight;
-        int width = roiTensorPtrSrc[j].xywhROI.roiWidth;
+        int height = dstImgSizes[j].height;
+        int width = dstImgSizes[j].width;
 
         int op_size = height * width * ip_channel;
         Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
