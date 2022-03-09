@@ -207,6 +207,16 @@ typedef enum
 
 } RpptRoiType;
 
+typedef enum
+{
+    NEAREST_NEIGHBOR = 0,
+    BILINEAR,
+    BICUBIC,
+    LANCZOS,
+    GAUSSIAN,
+    TRIANGULAR
+} RpptInterpolationType;
+
 typedef struct
 {
     RppiPoint lt, rb;
@@ -271,7 +281,11 @@ typedef struct
     Rpp32f y;
 } RpptFloatVector2D;
 
-
+typedef struct
+{
+    Rpp32u width;
+    Rpp32u height;
+} RpptImagePatch, *RpptImagePatchPtr;
 
 
 
