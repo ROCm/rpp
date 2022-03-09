@@ -21,6 +21,43 @@ using namespace std;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
+std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
+{
+    switch(val)
+    {
+        case 0:
+        {
+            interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
+            return "NearestNeighbor";
+        }
+        case 2:
+        {
+            interpolationType = RpptInterpolationType::BICUBIC;
+            return "Bicubic";
+        }
+        case 3:
+        {
+            interpolationType = RpptInterpolationType::LANCZOS;
+            return "Lanczos";
+        }
+        case 4:
+        {
+            interpolationType = RpptInterpolationType::TRIANGULAR;
+            return "Triangular";
+        }
+        case 5:
+        {
+            interpolationType = RpptInterpolationType::GAUSSIAN;
+            return "Gaussian";
+        }
+        default:
+        {
+            interpolationType = RpptInterpolationType::BILINEAR;
+            return "Bilinear";
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -39,10 +76,13 @@ int main(int argc, char **argv)
     int ip_bitDepth = atoi(argv[3]);
     unsigned int outputFormatToggle = atoi(argv[4]);
     int test_case = atoi(argv[5]);
-    unsigned int verbosity = (test_case == 40 || test_case == 41 || test_case == 49) ? atoi(argv[7]) : atoi(argv[6]);
-    unsigned int additionalParam = (test_case == 40 || test_case == 41 || test_case == 49) ? atoi(argv[6]) : 1;
-    char additionalParam_char[2];
-    std::sprintf(additionalParam_char, "%u", additionalParam);
+
+    bool additionalParamCase = (test_case == 24 || test_case == 40 || test_case == 41 || test_case == 49);
+    bool kernelSizeCase = (test_case == 40 || test_case == 41 || test_case == 49);
+    bool interpolationTypeCase = (test_case == 24);
+
+    unsigned int verbosity = additionalParamCase ? atoi(argv[7]) : atoi(argv[6]);
+    unsigned int additionalParam = additionalParamCase ? atoi(argv[6]) : 1;
 
     if (verbosity == 1)
     {
@@ -74,6 +114,9 @@ int main(int argc, char **argv)
         break;
     case 13:
         strcpy(funcName, "exposure");
+        break;
+    case 24:
+        strcpy(funcName, "warp_affine");
         break;
     case 31:
         strcpy(funcName, "color_cast");
@@ -198,10 +241,21 @@ int main(int argc, char **argv)
     char func[1000];
     strcpy(func, funcName);
     strcat(func, funcType);
-    if (test_case == 40 || test_case == 41 || test_case == 49)
+
+    RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
+    if (kernelSizeCase)
     {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%u", additionalParam);
         strcat(func, "_kSize");
         strcat(func, additionalParam_char);
+    }
+    else if (interpolationTypeCase)
+    {
+        std::string interpolationTypeName;
+        interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
+        strcat(func, "_interpolationType");
+        strcat(func, interpolationTypeName.c_str());
     }
 
     // Get number of images
@@ -826,6 +880,70 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_exposure_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, exposureFactor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
+        case 24:
+        {
+            test_case_name = "warp_affine";
+
+            if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+            {
+                missingFuncFlag = 1;
+                break;
+            }
+
+            Rpp32f6 affineTensor_f6[images];
+            Rpp32f *affineTensor = (Rpp32f *)affineTensor_f6;
+            for (i = 0; i < images; i++)
+            {
+                affineTensor_f6[i].data[0] = 1.23;
+                affineTensor_f6[i].data[1] = 0.5;
+                affineTensor_f6[i].data[2] = 0;
+                affineTensor_f6[i].data[3] = -0.8;
+                affineTensor_f6[i].data[4] = 0.83;
+                affineTensor_f6[i].data[5] = 0;
+            }
+
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+            start = clock();
+
+            if (ip_bitDepth == 0)
+                rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_warp_affine_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, affineTensor, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_warp_affine_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, affineTensor, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_warp_affine_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, affineTensor, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
