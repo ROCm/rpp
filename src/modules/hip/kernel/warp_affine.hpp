@@ -6,10 +6,7 @@
 __device__ void warp_affine_srclocs_hip_compute(float affineMatrixElement, float4 locSrcComponent_f4, d_float8 *locSrcPtr_f8)
 {
     d_float8 increment_f8;
-    increment_f8.x.x = 0;
-    increment_f8.x.y = affineMatrixElement;
-    increment_f8.x.z = affineMatrixElement + increment_f8.x.y;
-    increment_f8.x.w = affineMatrixElement + increment_f8.x.z;
+    increment_f8.x = make_float4(0, affineMatrixElement, affineMatrixElement + affineMatrixElement, affineMatrixElement + affineMatrixElement + affineMatrixElement);
     increment_f8.y = (float4)(affineMatrixElement + increment_f8.x.w) + increment_f8.x;
     locSrcPtr_f8->x = locSrcComponent_f4 + increment_f8.x;
     locSrcPtr_f8->y = locSrcComponent_f4 + increment_f8.y;
