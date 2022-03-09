@@ -84,7 +84,7 @@ set(COMPILER_FOR_OPENCL clang++)
 
 # Backend specific settings
 
-if( "${BACKEND}" STREQUAL "HIP")
+if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
 
     add_definitions(-DSTATIC) # This line is to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
 
@@ -106,7 +106,7 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
 
-elseif("${BACKEND}" STREQUAL "OCL")
+elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OpenCL")
 
     # Find package
     find_package(OpenCL REQUIRED)
