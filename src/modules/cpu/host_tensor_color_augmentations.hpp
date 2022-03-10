@@ -30,5 +30,6 @@ THE SOFTWARE.
 #include "kernel/color_jitter.hpp"
 #include "kernel/color_cast.hpp"
 #include "kernel/exposure.hpp"
+#include "kernel/contrast.hpp"
 
 #endif // HOST_TENSOR_COLOR_AUGMENTATIONS_HPP

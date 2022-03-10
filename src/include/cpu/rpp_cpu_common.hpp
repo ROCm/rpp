@@ -2069,6 +2069,42 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline RppStatus compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[2] = _mm256_fmadd_ps(_mm256_sub_ps(p[2], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[3] = _mm256_fmadd_ps(_mm256_sub_ps(p[3], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[4] = _mm256_fmadd_ps(_mm256_sub_ps(p[4], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[5] = _mm256_fmadd_ps(_mm256_sub_ps(p[5], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_contrast_24_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[2] = _mm256_fmadd_ps(_mm256_sub_ps(p[2], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_contrast_16_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_contrast_8_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus compute_exposure_48_host(__m256 *p, __m256 &pExposureParam)
 {
     p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
