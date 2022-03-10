@@ -192,10 +192,34 @@ elif profilingOption == "YES":
 
                     if (CASE_NUM == 40 or CASE_NUM == 41 or CASE_NUM == 49) and TYPE.startswith("Tensor"):
                         KSIZE_LIST = [3, 5, 7, 9]
-                        # Loop through extra param kSize for box_filter
+                        # Loop through extra param kSize
                         for KSIZE in KSIZE_LIST:
                             # Write into csv file
                             CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kSize" + str(KSIZE) + ".stats.csv"
+                            print("CASE_FILE_PATH = " + CASE_FILE_PATH)
+                            try:
+                                case_file = open(CASE_FILE_PATH,'r')
+                                for line in case_file:
+                                    print(line)
+                                    if not(line.startswith('"Name"')):
+                                        if TYPE in TENSOR_TYPE_LIST:
+                                            new_file.write(line)
+                                            d_counter[TYPE] = d_counter[TYPE] + 1
+                                        elif TYPE in BATCHPD_TYPE_LIST:
+                                            if prev != line.split(",")[0]:
+                                                new_file.write(line)
+                                                prev = line.split(",")[0]
+                                                d_counter[TYPE] = d_counter[TYPE] + 1
+                                case_file.close()
+                            except IOError:
+                                print("Unable to open case results")
+                                continue
+                    elif (CASE_NUM == 24) and TYPE.startswith("Tensor"):
+                        INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
+                        # Loop through extra param interpolationType
+                        for INTERPOLATIONTYPE in INTERPOLATIONTYPE_LIST:
+                            # Write into csv file
+                            CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_interpolationType" + str(INTERPOLATIONTYPE) + ".stats.csv"
                             print("CASE_FILE_PATH = " + CASE_FILE_PATH)
                             try:
                                 case_file = open(CASE_FILE_PATH,'r')

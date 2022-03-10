@@ -53,9 +53,9 @@ __global__ void contrast_pkd_tensor(T *srcPtr,
     contrastParams_f8.x = (float4)contrastFactor[id_z];
     contrastParams_f8.y = (float4)contrastCenter[id_z];
 
-    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
     contrast_hip_compute(srcPtr, &pix_f8, &contrastParams_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 }
 
 template <typename T>
@@ -84,25 +84,25 @@ __global__ void contrast_pln_tensor(T *srcPtr,
     contrastParams_f8.x = (float4)(contrastFactor[id_z]);
     contrastParams_f8.y = (float4)(contrastCenter[id_z]);
 
-    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
     contrast_hip_compute(srcPtr, &pix_f8, &contrastParams_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
         contrast_hip_compute(srcPtr, &pix_f8, &contrastParams_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
         contrast_hip_compute(srcPtr, &pix_f8, &contrastParams_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
     }
 }
 
@@ -132,11 +132,11 @@ __global__ void contrast_pkd3_pln3_tensor(T *srcPtr,
     contrastParams_f8.x = (float4)contrastFactor[id_z];
     contrastParams_f8.y = (float4)contrastCenter[id_z];
 
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &pix_f24);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     contrast_hip_compute(srcPtr, &pix_f24.x, &contrastParams_f8);
     contrast_hip_compute(srcPtr, &pix_f24.y, &contrastParams_f8);
     contrast_hip_compute(srcPtr, &pix_f24.z, &contrastParams_f8);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &pix_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
 template <typename T>
@@ -165,11 +165,11 @@ __global__ void contrast_pln3_pkd3_tensor(T *srcPtr,
     contrastParams_f8.x = (float4)contrastFactor[id_z];
     contrastParams_f8.y = (float4)contrastCenter[id_z];
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr, srcIdx, srcStridesNCH.y, &pix_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     contrast_hip_compute(srcPtr, &pix_f24.x, &contrastParams_f8);
     contrast_hip_compute(srcPtr, &pix_f24.y, &contrastParams_f8);
     contrast_hip_compute(srcPtr, &pix_f24.z, &contrastParams_f8);
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr, dstIdx, &pix_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
 template <typename T>

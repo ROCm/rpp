@@ -105,6 +105,11 @@ typedef struct
     Rpp32u bufferMultiplier;
 } RppLayoutParams;
 
+typedef struct
+{
+    Rpp32f data[6];
+} Rpp32f6;
+
 
 
 
@@ -206,6 +211,16 @@ typedef enum
     XYWH
 
 } RpptRoiType;
+
+typedef enum
+{
+    NEAREST_NEIGHBOR = 0,
+    BILINEAR,
+    BICUBIC,
+    LANCZOS,
+    GAUSSIAN,
+    TRIANGULAR
+} RpptInterpolationType;
 
 typedef struct
 {

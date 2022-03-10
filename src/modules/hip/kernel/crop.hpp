@@ -21,8 +21,8 @@ __global__ void crop_pkd_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
     d_float8 pix_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 }
 
 template <typename T>
@@ -46,18 +46,18 @@ __global__ void crop_pln_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     d_float8 pix_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr, srcIdx, &pix_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr, dstIdx, &pix_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
     }
 }
 
@@ -81,8 +81,8 @@ __global__ void crop_pkd3_pln3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     d_float24 pix_f24;
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr, srcIdx, &pix_f24);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr, dstIdx, dstStridesNCH.y, &pix_f24);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
 template <typename T>
@@ -105,8 +105,8 @@ __global__ void crop_pln3_pkd3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     d_float24 pix_f24;
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr, srcIdx, srcStridesNCH.y, &pix_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr, dstIdx, &pix_f24);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
 template <typename T>
