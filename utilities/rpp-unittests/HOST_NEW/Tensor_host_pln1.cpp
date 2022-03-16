@@ -642,7 +642,7 @@ int main(int argc, char **argv)
         Rpp32u flipAxis[images];
         for (i = 0; i < images; i++)
         {
-            flipAxis[i] = 1;
+            flipAxis[i] = 0;
         }
 
         start_omp = omp_get_wtime();
