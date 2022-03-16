@@ -353,7 +353,8 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr,
                          RpptDescPtr srcDescPtr,
                          RppPtr_t dstPtr,
                          RpptDescPtr dstDescPtr,
-                         Rpp32u *flipAxisTensor,
+                         Rpp32u *horizontalTensor,
+                         Rpp32u *verticalTensor,
                          RpptROIPtr roiTensorPtrSrc,
                          RpptRoiType roiType,
                          rppHandle_t rppHandle)
@@ -366,40 +367,44 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr,
                                srcDescPtr,
                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
-                               flipAxisTensor,
+                               horizontalTensor,
+                               verticalTensor,
                                roiTensorPtrSrc,
                                roiType,
                                layoutParams);
     }
-    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    {
-        flip_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                 srcDescPtr,
-                                 (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                 dstDescPtr,
-                                 flipAxisTensor,
-                                 roiTensorPtrSrc,
-                                 roiType,
-                                 layoutParams);
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    {
-        flip_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                 srcDescPtr,
-                                 (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                 dstDescPtr,
-                                 flipAxisTensor,
-                                 roiTensorPtrSrc,
-                                 roiType,
-                                 layoutParams);
-    }
+    // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    // {
+    //     flip_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+    //                              srcDescPtr,
+    //                              (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+    //                              dstDescPtr,
+    //                              horizontalTensor,
+    //                              verticalTensor,
+    //                              roiTensorPtrSrc,
+    //                              roiType,
+    //                              layoutParams);
+    // }
+    // else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    // {
+    //     flip_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+    //                              srcDescPtr,
+    //                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+    //                              dstDescPtr,
+    //                              horizontalTensor,
+    //                              verticalTensor,
+    //                              roiTensorPtrSrc,
+    //                              roiType,
+    //                              layoutParams);
+    // }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
         flip_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
-                               flipAxisTensor,
+                               horizontalTensor,
+                               verticalTensor,
                                roiTensorPtrSrc,
                                roiType,
                                layoutParams);
