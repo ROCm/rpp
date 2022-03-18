@@ -105,6 +105,11 @@ typedef struct
     Rpp32u bufferMultiplier;
 } RppLayoutParams;
 
+typedef struct
+{
+    Rpp32f data[6];
+} Rpp32f6;
+
 
 
 

@@ -83,14 +83,34 @@ RPP is developed for **Linux** operating system.
 
 ## [Instructions to build the library](#rpp-installation)
 
+The Radeon Performance Primitives (RPP) library has support for two backends: HIP and OPENCL:
+
+-   Instructions for building RPP with the **HIP** backend (default):
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ cd rpp
 $ mkdir build
 $ cd build
-$ cmake -DBACKEND=OCL .. #for OCL and HOST
+$ cmake ..
 or
-$ cmake -DBACKEND=HIP .. #for HIP
+$ cmake -DBACKEND=HIP ..
+or
+$ cmake -DBACKEND=hip ..
+$ make -j16
+$ sudo make install
+```
+
+-   Instructions for building RPP with the **OPENCL** backend:
+```
+$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
+$ cd rpp
+$ mkdir build
+$ cd build
+$ cmake -DBACKEND=OCL ..
+or
+$ cmake -DBACKEND=OPENCL ..
+or
+$ cmake -DBACKEND=OpenCL ..
 $ make -j16
 $ sudo make install
 ```
