@@ -24,19 +24,24 @@ __global__ void flip_pkd_tensor(T *srcPtr,
     horizontalFlag = horizontalTensor[id_z];
     verticalFlag = verticalTensor[id_z];
 
-    if(verticalFlag)
-        srcIdx += (roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y;
-    else
-        srcIdx += (roiTensorPtrSrc[id_z].xywhROI.xy.y + id_y) * srcStridesNH.y;
-    
-    if(horizontalFlag)
+    if(horizontalFlag == 0 && verticalFlag == 0)
     {
-        srcIdx +=  (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+    }
+    else if(horizontalFlag == 1 && verticalFlag == 1)
+    {
+        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
+        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
+    }
+    else if(horizontalFlag == 1)
+    {
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
     }
     else
     {
-        srcIdx +=  (roiTensorPtrSrc[id_z].xywhROI.xy.x + id_x) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     }
 
@@ -144,19 +149,24 @@ __global__ void flip_pkd3_pln3_tensor(T *srcPtr,
     horizontalFlag = horizontalTensor[id_z];
     verticalFlag = verticalTensor[id_z];
 
-    if(verticalFlag)
-        srcIdx += (roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y;
-    else
-        srcIdx += (roiTensorPtrSrc[id_z].xywhROI.xy.y + id_y) * srcStridesNH.y;
-    
-    if(horizontalFlag)
+    if(horizontalFlag == 0 && verticalFlag == 0)
     {
-        srcIdx +=  (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+    }
+    else if(horizontalFlag == 1 && verticalFlag == 1)
+    {
+        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
+        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
+    }
+    else if(horizontalFlag == 1)
+    {
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
     }
     else
     {
-        srcIdx +=  (roiTensorPtrSrc[id_z].xywhROI.xy.x + id_x) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     }
 
@@ -187,19 +197,24 @@ __global__ void flip_pln3_pkd3_tensor(T *srcPtr,
     horizontalFlag = horizontalTensor[id_z];
     verticalFlag = verticalTensor[id_z];
 
-    if(verticalFlag)
-        srcIdx += (roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNCH.z;
-    else
-        srcIdx += (roiTensorPtrSrc[id_z].xywhROI.xy.y + id_y) * srcStridesNCH.z;
-    
-    if(horizontalFlag)
+    if(horizontalFlag == 0 && verticalFlag == 0)
     {
-        srcIdx +=  (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8);
+        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
+    }
+    else if(horizontalFlag == 1 && verticalFlag == 1)
+    {
+        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8);
+        rpp_hip_load24_pln3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
+    }
+    else if(horizontalFlag == 1)
+    {
+        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8);
         rpp_hip_load24_pln3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     }
     else
     {
-        srcIdx +=  (roiTensorPtrSrc[id_z].xywhROI.xy.x + id_x);
+        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
         rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     }
 
