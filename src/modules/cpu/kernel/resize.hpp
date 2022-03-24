@@ -11,50 +11,21 @@ RppStatus resize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                    RpptRoiType roiType,
                                    RppLayoutParams srcLayoutParams)
 {
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr = roiPtrDefault;
-        }
-        else
-        {
-            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-            RpptROI roiImage;
-            RpptROIPtr roiPtrImage;
-
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage = &roiImage;
-                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage = roiPtrInput;
-            }
-
-            roiPtr = &roi;
-            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
-        }
         compute_dst_size_cap_host(&dstImgSize[batchCount], dstDescPtr);
-        Rpp32f wRatio = ((Rpp32f)(roiPtr->xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
-        Rpp32f hRatio = ((Rpp32f)(roiPtr->xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
-        Rpp32u heightLimit = roiPtr->xywhROI.roiHeight - 1;
-        Rpp32u widthLimit = roiPtr->xywhROI.roiWidth - 1;
+        Rpp32f wRatio = ((Rpp32f)(roi.xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
+        Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
+        Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
+        Rpp32u widthLimit = roi.xywhROI.roiWidth - 1;
         Rpp32f hOffset = (hRatio - 1) * 0.5f;
         Rpp32f wOffset = (wRatio - 1) * 0.5f;
         Rpp32s kernelSize = 2;
@@ -65,14 +36,13 @@ omp_set_dynamic(0);
         Rpp8u *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         Rpp32u alignedLength = dstImgSize[batchCount].width & ~7;
         __m256 pWRatio = _mm256_set1_ps(wRatio);
         __m256 pWOffset = _mm256_set1_ps(wOffset);
         __m256 pWidthLimit = _mm256_set1_ps((float)widthLimit);
-        __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
         __m256 pWeightParams[noOfCoeffs], pBilinearCoeffs[noOfCoeffs], pDstLoc;
         Rpp32f weightParams[noOfCoeffs], bilinearCoeffs[noOfCoeffs];
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
@@ -99,7 +69,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -150,7 +120,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;            // srcPtrBottomRowB for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -192,7 +162,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -236,7 +206,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;           // srcPtrBottomRowB for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -286,50 +256,21 @@ RppStatus resize_f32_f32_host_tensor(Rpp32f *srcPtr,
                                      RpptRoiType roiType,
                                      RppLayoutParams srcLayoutParams)
 {
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr = roiPtrDefault;
-        }
-        else
-        {
-            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-            RpptROI roiImage;
-            RpptROIPtr roiPtrImage;
-
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage = &roiImage;
-                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage = roiPtrInput;
-            }
-
-            roiPtr = &roi;
-            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
-        }
         compute_dst_size_cap_host(&dstImgSize[batchCount], dstDescPtr);
-        Rpp32f wRatio = ((Rpp32f)(roiPtr->xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
-        Rpp32f hRatio = ((Rpp32f)(roiPtr->xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
-        Rpp32u heightLimit = roiPtr->xywhROI.roiHeight - 1;
-        Rpp32u widthLimit = roiPtr->xywhROI.roiWidth - 1;
+        Rpp32f wRatio = ((Rpp32f)(roi.xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
+        Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
+        Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
+        Rpp32u widthLimit = roi.xywhROI.roiWidth - 1;
         Rpp32f hOffset = (hRatio - 1) * 0.5f;
         Rpp32f wOffset = (wRatio - 1) * 0.5f;
         Rpp32s kernelSize = 2;
@@ -340,14 +281,13 @@ omp_set_dynamic(0);
         Rpp32f *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         Rpp32u alignedLength = dstImgSize[batchCount].width & ~7;
         __m256 pWRatio = _mm256_set1_ps(wRatio);
         __m256 pWOffset = _mm256_set1_ps(wOffset);
         __m256 pWidthLimit = _mm256_set1_ps((float)widthLimit);
-        __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
         __m256 pWeightParams[noOfCoeffs], pBilinearCoeffs[noOfCoeffs], pDstLoc;
         Rpp32f weightParams[noOfCoeffs], bilinearCoeffs[noOfCoeffs];
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
@@ -374,7 +314,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -425,7 +365,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;            // srcPtrBottomRowB for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -468,7 +408,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -513,7 +453,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;           // srcPtrBottomRowB for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -563,50 +503,21 @@ RppStatus resize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                      RpptRoiType roiType,
                                      RppLayoutParams srcLayoutParams)
 {
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr = roiPtrDefault;
-        }
-        else
-        {
-            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-            RpptROI roiImage;
-            RpptROIPtr roiPtrImage;
-
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage = &roiImage;
-                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage = roiPtrInput;
-            }
-
-            roiPtr = &roi;
-            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
-        }
         compute_dst_size_cap_host(&dstImgSize[batchCount], dstDescPtr);
-        Rpp32f wRatio = ((Rpp32f)(roiPtr->xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
-        Rpp32f hRatio = ((Rpp32f)(roiPtr->xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
-        Rpp32u heightLimit = roiPtr->xywhROI.roiHeight - 1;
-        Rpp32u widthLimit = roiPtr->xywhROI.roiWidth - 1;
+        Rpp32f wRatio = ((Rpp32f)(roi.xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
+        Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
+        Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
+        Rpp32u widthLimit = roi.xywhROI.roiWidth - 1;
         Rpp32f hOffset = (hRatio - 1) * 0.5f;
         Rpp32f wOffset = (wRatio - 1) * 0.5f;
         Rpp32s kernelSize = 2;
@@ -617,14 +528,13 @@ omp_set_dynamic(0);
         Rpp16f *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         Rpp32u alignedLength = dstImgSize[batchCount].width & ~7;
         __m256 pWRatio = _mm256_set1_ps(wRatio);
         __m256 pWOffset = _mm256_set1_ps(wOffset);
         __m256 pWidthLimit = _mm256_set1_ps((float)widthLimit);
-        __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
         __m256 pWeightParams[noOfCoeffs], pBilinearCoeffs[noOfCoeffs], pDstLoc;
         Rpp32f weightParams[noOfCoeffs], bilinearCoeffs[noOfCoeffs];
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
@@ -651,7 +561,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -702,7 +612,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;            // srcPtrBottomRowB for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -745,7 +655,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -790,7 +700,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;          // srcPtrBottomRowB for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -841,50 +751,21 @@ RppStatus resize_i8_i8_host_tensor(Rpp8s *srcPtr,
                                    RpptRoiType roiType,
                                    RppLayoutParams srcLayoutParams)
 {
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = srcDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = srcDescPtr->h;
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
-        RpptROIPtr roiPtr;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr = roiPtrDefault;
-        }
-        else
-        {
-            RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-
-            RpptROI roiImage;
-            RpptROIPtr roiPtrImage;
-
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage = &roiImage;
-                compute_xywh_from_ltrb_host(roiPtrInput, roiPtrImage);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage = roiPtrInput;
-            }
-
-            roiPtr = &roi;
-            compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
-        }
         compute_dst_size_cap_host(&dstImgSize[batchCount], dstDescPtr);
-        Rpp32f wRatio = ((Rpp32f)(roiPtr->xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
-        Rpp32f hRatio = ((Rpp32f)(roiPtr->xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
-        Rpp32u heightLimit = roiPtr->xywhROI.roiHeight - 1;
-        Rpp32u widthLimit = roiPtr->xywhROI.roiWidth - 1;
+        Rpp32f wRatio = ((Rpp32f)(roi.xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
+        Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
+        Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
+        Rpp32u widthLimit = roi.xywhROI.roiWidth - 1;
         Rpp32f hOffset = (hRatio - 1) * 0.5f;
         Rpp32f wOffset = (wRatio - 1) * 0.5f;
         Rpp32s kernelSize = 2;
@@ -895,14 +776,14 @@ omp_set_dynamic(0);
         Rpp8s *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        srcPtrChannel = srcPtrImage + (roiPtr->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr->xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         Rpp32u alignedLength = dstImgSize[batchCount].width & ~7;
         __m256 pWRatio = _mm256_set1_ps(wRatio);
         __m256 pWOffset = _mm256_set1_ps(wOffset);
         __m256 pWidthLimit = _mm256_set1_ps((float)widthLimit);
-        __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
+
         __m256 pWeightParams[noOfCoeffs], pBilinearCoeffs[noOfCoeffs], pDstLoc;
         Rpp32f weightParams[noOfCoeffs], bilinearCoeffs[noOfCoeffs];
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
@@ -929,7 +810,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -980,7 +861,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;            // srcPtrBottomRowB for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -1022,7 +903,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -1066,7 +947,7 @@ omp_set_dynamic(0);
                 srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;           // srcPtrBottomRowB for bilinear interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
-                pDstLoc = pDstLocInit;
+                pDstLoc = avx_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
