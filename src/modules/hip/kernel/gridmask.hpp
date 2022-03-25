@@ -1,563 +1,620 @@
-// #include <hip/hip_runtime.h>
-// #include "hip/rpp_hip_common.hpp"
+#include <hip/hip_runtime.h>
+#include "hip/rpp_hip_common.hpp"
 
-// // Gridmask helper - Computing row and column ratios
+// Gridmask helper - Computing row and column ratios
 
-// __device__ void gridmask_ratio_hip_compute(int id_x, int id_y, float2 *rotateRatios, float2 *translateRatios, float2 *gridRowRatio, d_float16 *gridColRatio)
-// {
-//     gridRowRatio->x = fmaf(id_y, -rotateRatios->y, -translateRatios->x);
-//     gridRowRatio->y = fmaf(id_y, rotateRatios->x, -translateRatios->y);
+__device__ void gridmask_ratio_hip_compute(int id_x, int id_y, float2 *rotateRatios_f2, float2 *translateRatios_f2, float2 *gridRowRatio_f2, d_float16 *gridColRatio_f16)
+{
+    gridRowRatio_f2->x = fmaf(id_y, -rotateRatios_f2->y, -translateRatios_f2->x);
+    gridRowRatio_f2->y = fmaf(id_y, rotateRatios_f2->x, -translateRatios_f2->y);
 
-//     int id_x_vector[8];
-//     id_x_vector[0] = id_x;
-//     id_x_vector[1] = id_x + 1;
-//     id_x_vector[2] = id_x + 2;
-//     id_x_vector[3] = id_x + 3;
-//     id_x_vector[4] = id_x + 4;
-//     id_x_vector[5] = id_x + 5;
-//     id_x_vector[6] = id_x + 6;
-//     id_x_vector[7] = id_x + 7;
+    int id_x_vector[8];
+    id_x_vector[0] = id_x;
+    id_x_vector[1] = id_x + 1;
+    id_x_vector[2] = id_x + 2;
+    id_x_vector[3] = id_x + 3;
+    id_x_vector[4] = id_x + 4;
+    id_x_vector[5] = id_x + 5;
+    id_x_vector[6] = id_x + 6;
+    id_x_vector[7] = id_x + 7;
 
-//     gridColRatio->x.x.x = fmaf(id_x_vector[0], rotateRatios->x, gridRowRatio->x);
-//     gridColRatio->x.x.y = fmaf(id_x_vector[1], rotateRatios->x, gridRowRatio->x);
-//     gridColRatio->x.x.z = fmaf(id_x_vector[2], rotateRatios->x, gridRowRatio->x);
-//     gridColRatio->x.x.w = fmaf(id_x_vector[3], rotateRatios->x, gridRowRatio->x);
-//     gridColRatio->x.y.x = fmaf(id_x_vector[4], rotateRatios->x, gridRowRatio->x);
-//     gridColRatio->x.y.y = fmaf(id_x_vector[5], rotateRatios->x, gridRowRatio->x);
-//     gridColRatio->x.y.z = fmaf(id_x_vector[6], rotateRatios->x, gridRowRatio->x);
-//     gridColRatio->x.y.w = fmaf(id_x_vector[7], rotateRatios->x, gridRowRatio->x);
+    gridColRatio_f16->f1[ 0] = fmaf(id_x_vector[0], rotateRatios_f2->x, gridRowRatio_f2->x);
+    gridColRatio_f16->f1[ 1] = fmaf(id_x_vector[1], rotateRatios_f2->x, gridRowRatio_f2->x);
+    gridColRatio_f16->f1[ 2] = fmaf(id_x_vector[2], rotateRatios_f2->x, gridRowRatio_f2->x);
+    gridColRatio_f16->f1[ 3] = fmaf(id_x_vector[3], rotateRatios_f2->x, gridRowRatio_f2->x);
+    gridColRatio_f16->f1[ 4] = fmaf(id_x_vector[4], rotateRatios_f2->x, gridRowRatio_f2->x);
+    gridColRatio_f16->f1[ 5] = fmaf(id_x_vector[5], rotateRatios_f2->x, gridRowRatio_f2->x);
+    gridColRatio_f16->f1[ 6] = fmaf(id_x_vector[6], rotateRatios_f2->x, gridRowRatio_f2->x);
+    gridColRatio_f16->f1[ 7] = fmaf(id_x_vector[7], rotateRatios_f2->x, gridRowRatio_f2->x);
 
-//     gridColRatio->y.x.x = fmaf(id_x_vector[0], rotateRatios->y, gridRowRatio->y);
-//     gridColRatio->y.x.y = fmaf(id_x_vector[1], rotateRatios->y, gridRowRatio->y);
-//     gridColRatio->y.x.z = fmaf(id_x_vector[2], rotateRatios->y, gridRowRatio->y);
-//     gridColRatio->y.x.w = fmaf(id_x_vector[3], rotateRatios->y, gridRowRatio->y);
-//     gridColRatio->y.y.x = fmaf(id_x_vector[4], rotateRatios->y, gridRowRatio->y);
-//     gridColRatio->y.y.y = fmaf(id_x_vector[5], rotateRatios->y, gridRowRatio->y);
-//     gridColRatio->y.y.z = fmaf(id_x_vector[6], rotateRatios->y, gridRowRatio->y);
-//     gridColRatio->y.y.w = fmaf(id_x_vector[7], rotateRatios->y, gridRowRatio->y);
-// }
+    gridColRatio_f16->f1[ 8] = fmaf(id_x_vector[0], rotateRatios_f2->y, gridRowRatio_f2->y);
+    gridColRatio_f16->f1[ 9] = fmaf(id_x_vector[1], rotateRatios_f2->y, gridRowRatio_f2->y);
+    gridColRatio_f16->f1[10] = fmaf(id_x_vector[2], rotateRatios_f2->y, gridRowRatio_f2->y);
+    gridColRatio_f16->f1[11] = fmaf(id_x_vector[3], rotateRatios_f2->y, gridRowRatio_f2->y);
+    gridColRatio_f16->f1[12] = fmaf(id_x_vector[4], rotateRatios_f2->y, gridRowRatio_f2->y);
+    gridColRatio_f16->f1[13] = fmaf(id_x_vector[5], rotateRatios_f2->y, gridRowRatio_f2->y);
+    gridColRatio_f16->f1[14] = fmaf(id_x_vector[6], rotateRatios_f2->y, gridRowRatio_f2->y);
+    gridColRatio_f16->f1[15] = fmaf(id_x_vector[7], rotateRatios_f2->y, gridRowRatio_f2->y);
+}
 
-// // Gridmask helpers - Vector masked store computes for 8 pixels per channel (PKD3/PLN3/PLN1)
+// Gridmask helpers - Vector masked store computes for packed layouts
 
-// template <typename T>
-// __device__ void gridmask_vector_masked_store_hip_compute(T *src, T *dst, d_float16 *gridColRatio, float gridRatio)
-// {
-//     dst->x.x = ((gridColRatio->x.x.x >= gridRatio) || (gridColRatio->y.x.x >= gridRatio)) ? src->x.x : dst->x.x;
-//     dst->x.y = ((gridColRatio->x.x.y >= gridRatio) || (gridColRatio->y.x.y >= gridRatio)) ? src->x.y : dst->x.y;
-//     dst->x.z = ((gridColRatio->x.x.z >= gridRatio) || (gridColRatio->y.x.z >= gridRatio)) ? src->x.z : dst->x.z;
-//     dst->x.w = ((gridColRatio->x.x.w >= gridRatio) || (gridColRatio->y.x.w >= gridRatio)) ? src->x.w : dst->x.w;
-//     dst->y.x = ((gridColRatio->x.y.x >= gridRatio) || (gridColRatio->y.y.x >= gridRatio)) ? src->y.x : dst->y.x;
-//     dst->y.y = ((gridColRatio->x.y.y >= gridRatio) || (gridColRatio->y.y.y >= gridRatio)) ? src->y.y : dst->y.y;
-//     dst->y.z = ((gridColRatio->x.y.z >= gridRatio) || (gridColRatio->y.y.z >= gridRatio)) ? src->y.z : dst->y.z;
-//     dst->y.w = ((gridColRatio->x.y.w >= gridRatio) || (gridColRatio->y.y.w >= gridRatio)) ? src->y.w : dst->y.w;
-// }
+// 24 pixels (8 RGB sets)
 
-// // Gridmask helpers for different data layouts
+__device__ void gridmask_vector_masked_store24_hip_compute(d_uchar24 *srcPtr_uc24, d_uchar24 *dstPtr_uc24, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    dstPtr_uc24->uc3[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_uc24->uc3[0] : dstPtr_uc24->uc3[0];
+    dstPtr_uc24->uc3[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_uc24->uc3[1] : dstPtr_uc24->uc3[1];
+    dstPtr_uc24->uc3[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_uc24->uc3[2] : dstPtr_uc24->uc3[2];
+    dstPtr_uc24->uc3[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_uc24->uc3[3] : dstPtr_uc24->uc3[3];
+    dstPtr_uc24->uc3[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_uc24->uc3[4] : dstPtr_uc24->uc3[4];
+    dstPtr_uc24->uc3[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_uc24->uc3[5] : dstPtr_uc24->uc3[5];
+    dstPtr_uc24->uc3[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_uc24->uc3[6] : dstPtr_uc24->uc3[6];
+    dstPtr_uc24->uc3[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_uc24->uc3[7] : dstPtr_uc24->uc3[7];
+}
+__device__ void gridmask_vector_masked_store24_hip_compute(d_float24 *srcPtr_f24, d_float24 *dstPtr_f24, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    dstPtr_f24->f3[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_f24->f3[0] : dstPtr_f24->f3[0];
+    dstPtr_f24->f3[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_f24->f3[1] : dstPtr_f24->f3[1];
+    dstPtr_f24->f3[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_f24->f3[2] : dstPtr_f24->f3[2];
+    dstPtr_f24->f3[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_f24->f3[3] : dstPtr_f24->f3[3];
+    dstPtr_f24->f3[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_f24->f3[4] : dstPtr_f24->f3[4];
+    dstPtr_f24->f3[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_f24->f3[5] : dstPtr_f24->f3[5];
+    dstPtr_f24->f3[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_f24->f3[6] : dstPtr_f24->f3[6];
+    dstPtr_f24->f3[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_f24->f3[7] : dstPtr_f24->f3[7];
+}
+__device__ void gridmask_vector_masked_store24_hip_compute(d_schar24 *srcPtr_sc24, d_schar24 *dstPtr_sc24, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    dstPtr_sc24->sc3[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_sc24->sc3[0] : dstPtr_sc24->sc3[0];
+    dstPtr_sc24->sc3[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_sc24->sc3[1] : dstPtr_sc24->sc3[1];
+    dstPtr_sc24->sc3[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_sc24->sc3[2] : dstPtr_sc24->sc3[2];
+    dstPtr_sc24->sc3[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_sc24->sc3[3] : dstPtr_sc24->sc3[3];
+    dstPtr_sc24->sc3[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_sc24->sc3[4] : dstPtr_sc24->sc3[4];
+    dstPtr_sc24->sc3[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_sc24->sc3[5] : dstPtr_sc24->sc3[5];
+    dstPtr_sc24->sc3[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_sc24->sc3[6] : dstPtr_sc24->sc3[6];
+    dstPtr_sc24->sc3[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_sc24->sc3[7] : dstPtr_sc24->sc3[7];
+}
+__device__ void gridmask_vector_masked_store24_hip_compute(d_half24 *srcPtr_h24, d_half24 *dstPtr_h24, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    dstPtr_h24->h3[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_h24->h3[0] : dstPtr_h24->h3[0];
+    dstPtr_h24->h3[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_h24->h3[1] : dstPtr_h24->h3[1];
+    dstPtr_h24->h3[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_h24->h3[2] : dstPtr_h24->h3[2];
+    dstPtr_h24->h3[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_h24->h3[3] : dstPtr_h24->h3[3];
+    dstPtr_h24->h3[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_h24->h3[4] : dstPtr_h24->h3[4];
+    dstPtr_h24->h3[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_h24->h3[5] : dstPtr_h24->h3[5];
+    dstPtr_h24->h3[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_h24->h3[6] : dstPtr_h24->h3[6];
+    dstPtr_h24->h3[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_h24->h3[7] : dstPtr_h24->h3[7];
+}
 
-// // PKD3 -> PKD3
-// __device__ void gridmask_result_pkd3_pkd3_hip_compute(uchar *srcPtr, int srcIdx, uchar *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_uchar24_as_uchar3s src, dst;
-//     src = *(d_uchar24_as_uchar3s *)&srcPtr[srcIdx];
-//     dst = *(d_uchar24_as_uchar3s *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src, &dst, gridColRatio, gridRatio);
-//     *(d_uchar24_as_uchar3s *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pkd3_pkd3_hip_compute(float *srcPtr, int srcIdx, float *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_float24_as_float3s src, dst;
-//     src = *(d_float24_as_float3s *)&srcPtr[srcIdx];
-//     dst = *(d_float24_as_float3s *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src, &dst, gridColRatio, gridRatio);
-//     *(d_float24_as_float3s *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pkd3_pkd3_hip_compute(schar *srcPtr, int srcIdx, schar *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_schar24_as_schar3s src, dst;
-//     src = *(d_schar24_as_schar3s *)&srcPtr[srcIdx];
-//     dst = *(d_schar24_as_schar3s *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src, &dst, gridColRatio, gridRatio);
-//     *(d_schar24_as_schar3s *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pkd3_pkd3_hip_compute(half *srcPtr, int srcIdx, half *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_half24_as_half3s src, dst;
-//     src = *(d_half24_as_half3s *)&srcPtr[srcIdx];
-//     dst = *(d_half24_as_half3s *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src, &dst, gridColRatio, gridRatio);
-//     *(d_half24_as_half3s *)&dstPtr[dstIdx] = dst;
-// }
+// 8 pixels
 
-// // PLN3 -> PLN3
-// __device__ void gridmask_result_pln3_pln3_hip_compute(uchar *srcPtr, int srcIdx, uint srcStrideC, uchar *dstPtr, int dstIdx, uint dstStrideC, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_uchar24 src, dst;
-//     src.x = *(d_uchar8 *)&srcPtr[srcIdx];
-//     dst.x = *(d_uchar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     *(d_uchar8 *)&dstPtr[dstIdx] = dst.x;
-//     srcIdx += srcStrideC;
-//     dstIdx += dstStrideC;
-//     src.y = *(d_uchar8 *)&srcPtr[srcIdx];
-//     dst.y = *(d_uchar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     *(d_uchar8 *)&dstPtr[dstIdx] = dst.y;
-//     srcIdx += srcStrideC;
-//     dstIdx += dstStrideC;
-//     src.z = *(d_uchar8 *)&srcPtr[srcIdx];
-//     dst.z = *(d_uchar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     *(d_uchar8 *)&dstPtr[dstIdx] = dst.z;
-// }
-// __device__ void gridmask_result_pln3_pln3_hip_compute(float *srcPtr, int srcIdx, uint srcStrideC, float *dstPtr, int dstIdx, uint dstStrideC, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_float24 src, dst;
-//     src.x = *(d_float8 *)&srcPtr[srcIdx];
-//     dst.x = *(d_float8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     *(d_float8 *)&dstPtr[dstIdx] = dst.x;
-//     srcIdx += srcStrideC;
-//     dstIdx += dstStrideC;
-//     src.y = *(d_float8 *)&srcPtr[srcIdx];
-//     dst.y = *(d_float8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     *(d_float8 *)&dstPtr[dstIdx] = dst.y;
-//     srcIdx += srcStrideC;
-//     dstIdx += dstStrideC;
-//     src.z = *(d_float8 *)&srcPtr[srcIdx];
-//     dst.z = *(d_float8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     *(d_float8 *)&dstPtr[dstIdx] = dst.z;
-// }
-// __device__ void gridmask_result_pln3_pln3_hip_compute(schar *srcPtr, int srcIdx, uint srcStrideC, schar *dstPtr, int dstIdx, uint dstStrideC, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_schar24 src, dst;
-//     src.x = *(d_schar8 *)&srcPtr[srcIdx];
-//     dst.x = *(d_schar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     *(d_schar8 *)&dstPtr[dstIdx] = dst.x;
-//     srcIdx += srcStrideC;
-//     dstIdx += dstStrideC;
-//     src.y = *(d_schar8 *)&srcPtr[srcIdx];
-//     dst.y = *(d_schar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     *(d_schar8 *)&dstPtr[dstIdx] = dst.y;
-//     srcIdx += srcStrideC;
-//     dstIdx += dstStrideC;
-//     src.z = *(d_schar8 *)&srcPtr[srcIdx];
-//     dst.z = *(d_schar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     *(d_schar8 *)&dstPtr[dstIdx] = dst.z;
-// }
-// __device__ void gridmask_result_pln3_pln3_hip_compute(half *srcPtr, int srcIdx, uint srcStrideC, half *dstPtr, int dstIdx, uint dstStrideC, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_half24_as_halfs src, dst;
-//     src.x = *(d_half8_as_halfs *)&srcPtr[srcIdx];
-//     dst.x = *(d_half8_as_halfs *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.x;
-//     srcIdx += srcStrideC;
-//     dstIdx += dstStrideC;
-//     src.y = *(d_half8_as_halfs *)&srcPtr[srcIdx];
-//     dst.y = *(d_half8_as_halfs *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.y;
-//     srcIdx += srcStrideC;
-//     dstIdx += dstStrideC;
-//     src.z = *(d_half8_as_halfs *)&srcPtr[srcIdx];
-//     dst.z = *(d_half8_as_halfs *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.z;
-// }
+__device__ void gridmask_vector_masked_store8_hip_compute(d_uchar8 *srcPtr_uc8, d_uchar8 *dstPtr_uc8, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    dstPtr_uc8->uc1[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_uc8->uc1[0] : dstPtr_uc8->uc1[0];
+    dstPtr_uc8->uc1[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_uc8->uc1[1] : dstPtr_uc8->uc1[1];
+    dstPtr_uc8->uc1[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_uc8->uc1[2] : dstPtr_uc8->uc1[2];
+    dstPtr_uc8->uc1[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_uc8->uc1[3] : dstPtr_uc8->uc1[3];
+    dstPtr_uc8->uc1[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_uc8->uc1[4] : dstPtr_uc8->uc1[4];
+    dstPtr_uc8->uc1[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_uc8->uc1[5] : dstPtr_uc8->uc1[5];
+    dstPtr_uc8->uc1[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_uc8->uc1[6] : dstPtr_uc8->uc1[6];
+    dstPtr_uc8->uc1[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_uc8->uc1[7] : dstPtr_uc8->uc1[7];
+}
+__device__ void gridmask_vector_masked_store8_hip_compute(d_float8 *srcPtr_f8, d_float8 *dstPtr_f8, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    dstPtr_f8->f1[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_f8->f1[0] : dstPtr_f8->f1[0];
+    dstPtr_f8->f1[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_f8->f1[1] : dstPtr_f8->f1[1];
+    dstPtr_f8->f1[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_f8->f1[2] : dstPtr_f8->f1[2];
+    dstPtr_f8->f1[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_f8->f1[3] : dstPtr_f8->f1[3];
+    dstPtr_f8->f1[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_f8->f1[4] : dstPtr_f8->f1[4];
+    dstPtr_f8->f1[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_f8->f1[5] : dstPtr_f8->f1[5];
+    dstPtr_f8->f1[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_f8->f1[6] : dstPtr_f8->f1[6];
+    dstPtr_f8->f1[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_f8->f1[7] : dstPtr_f8->f1[7];
+}
+__device__ void gridmask_vector_masked_store8_hip_compute(d_schar8 *srcPtr_sc8, d_schar8 *dstPtr_sc8, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    dstPtr_sc8->sc1[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_sc8->sc1[0] : dstPtr_sc8->sc1[0];
+    dstPtr_sc8->sc1[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_sc8->sc1[1] : dstPtr_sc8->sc1[1];
+    dstPtr_sc8->sc1[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_sc8->sc1[2] : dstPtr_sc8->sc1[2];
+    dstPtr_sc8->sc1[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_sc8->sc1[3] : dstPtr_sc8->sc1[3];
+    dstPtr_sc8->sc1[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_sc8->sc1[4] : dstPtr_sc8->sc1[4];
+    dstPtr_sc8->sc1[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_sc8->sc1[5] : dstPtr_sc8->sc1[5];
+    dstPtr_sc8->sc1[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_sc8->sc1[6] : dstPtr_sc8->sc1[6];
+    dstPtr_sc8->sc1[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_sc8->sc1[7] : dstPtr_sc8->sc1[7];
+}
+__device__ void gridmask_vector_masked_store8_hip_compute(d_half8 *srcPtr_h8, d_half8 *dstPtr_h8, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    dstPtr_h8->h1[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_h8->h1[0] : dstPtr_h8->h1[0];
+    dstPtr_h8->h1[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_h8->h1[1] : dstPtr_h8->h1[1];
+    dstPtr_h8->h1[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_h8->h1[2] : dstPtr_h8->h1[2];
+    dstPtr_h8->h1[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_h8->h1[3] : dstPtr_h8->h1[3];
+    dstPtr_h8->h1[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_h8->h1[4] : dstPtr_h8->h1[4];
+    dstPtr_h8->h1[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_h8->h1[5] : dstPtr_h8->h1[5];
+    dstPtr_h8->h1[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_h8->h1[6] : dstPtr_h8->h1[6];
+    dstPtr_h8->h1[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_h8->h1[7] : dstPtr_h8->h1[7];
+}
 
-// // PLN1 -> PLN1
-// __device__ void gridmask_result_pln1_pln1_hip_compute(uchar *srcPtr, int srcIdx, uchar *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_uchar8 src, dst;
-//     src = *(d_uchar8 *)&srcPtr[srcIdx];
-//     dst = *(d_uchar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src, &dst, gridColRatio, gridRatio);
-//     *(d_uchar8 *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pln1_pln1_hip_compute(float *srcPtr, int srcIdx, float *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_float8 src, dst;
-//     src = *(d_float8 *)&srcPtr[srcIdx];
-//     dst = *(d_float8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src, &dst, gridColRatio, gridRatio);
-//     *(d_float8 *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pln1_pln1_hip_compute(schar *srcPtr, int srcIdx, schar *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_schar8 src, dst;
-//     src = *(d_schar8 *)&srcPtr[srcIdx];
-//     dst = *(d_schar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src, &dst, gridColRatio, gridRatio);
-//     *(d_schar8 *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pln1_pln1_hip_compute(half *srcPtr, int srcIdx, half *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_half8_as_halfs src, dst;
-//     src = *(d_half8_as_halfs *)&srcPtr[srcIdx];
-//     dst = *(d_half8_as_halfs *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src, &dst, gridColRatio, gridRatio);
-//     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst;
-// }
+// Gridmask helpers for different data layouts
 
-// // PKD3 -> PLN3
-// __device__ void gridmask_result_pkd3_pln3_hip_compute(uchar *srcPtr, int srcIdx, uchar *dstPtr, int dstIdx, uint dstStrideC, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_uchar24 src, dst;
-//     src = *(d_uchar24 *)&srcPtr[srcIdx];
-//     rpp_hip_layouttoggle24_pkd3_to_pln3(&src);
-//     dst.x = *(d_uchar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     *(d_uchar8 *)&dstPtr[dstIdx] = dst.x;
-//     dstIdx += dstStrideC;
-//     dst.y = *(d_uchar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     *(d_uchar8 *)&dstPtr[dstIdx] = dst.y;
-//     dstIdx += dstStrideC;
-//     dst.z = *(d_uchar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     *(d_uchar8 *)&dstPtr[dstIdx] = dst.z;
-// }
-// __device__ void gridmask_result_pkd3_pln3_hip_compute(float *srcPtr, int srcIdx, float *dstPtr, int dstIdx, uint dstStrideC, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_float24 src, dst;
-//     src = *(d_float24 *)&srcPtr[srcIdx];
-//     rpp_hip_layouttoggle24_pkd3_to_pln3(&src);
-//     dst.x = *(d_float8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     *(d_float8 *)&dstPtr[dstIdx] = dst.x;
-//     dstIdx += dstStrideC;
-//     dst.y = *(d_float8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     *(d_float8 *)&dstPtr[dstIdx] = dst.y;
-//     dstIdx += dstStrideC;
-//     dst.z = *(d_float8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     *(d_float8 *)&dstPtr[dstIdx] = dst.z;
-// }
-// __device__ void gridmask_result_pkd3_pln3_hip_compute(schar *srcPtr, int srcIdx, schar *dstPtr, int dstIdx, uint dstStrideC, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_schar24 src, dst;
-//     src = *(d_schar24 *)&srcPtr[srcIdx];
-//     rpp_hip_layouttoggle24_pkd3_to_pln3(&src);
-//     dst.x = *(d_schar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     *(d_schar8 *)&dstPtr[dstIdx] = dst.x;
-//     dstIdx += dstStrideC;
-//     dst.y = *(d_schar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     *(d_schar8 *)&dstPtr[dstIdx] = dst.y;
-//     dstIdx += dstStrideC;
-//     dst.z = *(d_schar8 *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     *(d_schar8 *)&dstPtr[dstIdx] = dst.z;
-// }
-// __device__ void gridmask_result_pkd3_pln3_hip_compute(half *srcPtr, int srcIdx, half *dstPtr, int dstIdx, uint dstStrideC, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_half24_as_halfs src, dst;
-//     src = *(d_half24_as_halfs *)&srcPtr[srcIdx];
-//     rpp_hip_layouttoggle24_pkd3_to_pln3(&src);
-//     dst.x = *(d_half8_as_halfs *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.x;
-//     dstIdx += dstStrideC;
-//     dst.y = *(d_half8_as_halfs *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.y;
-//     dstIdx += dstStrideC;
-//     dst.z = *(d_half8_as_halfs *)&dstPtr[dstIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     *(d_half8_as_halfs *)&dstPtr[dstIdx] = dst.z;
-// }
+// PKD3 -> PKD3
+__device__ void gridmask_result_pkd3_pkd3_hip_compute(uchar *srcPtr, uchar *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_uchar24 src_uc24, dst_uc24;
+    *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
+    *(d_uchar24_s *)&dst_uc24 = *(d_uchar24_s *)dstPtr;
+    gridmask_vector_masked_store24_hip_compute(&src_uc24, &dst_uc24, gridColRatio_f16, gridRatio);
+    *(d_uchar24_s *)dstPtr = *(d_uchar24_s *)&dst_uc24;
+}
+__device__ void gridmask_result_pkd3_pkd3_hip_compute(float *srcPtr, float *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_float24 src_f24, dst_f24;
+    *(d_float24_s *)&src_f24 = *(d_float24_s *)srcPtr;
+    *(d_float24_s *)&dst_f24 = *(d_float24_s *)dstPtr;
+    gridmask_vector_masked_store24_hip_compute(&src_f24, &dst_f24, gridColRatio_f16, gridRatio);
+    *(d_float24_s *)dstPtr = *(d_float24_s *)&dst_f24;
+}
+__device__ void gridmask_result_pkd3_pkd3_hip_compute(schar *srcPtr, schar *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_schar24 src_sc24, dst_sc24;
+    src_sc24 = *(d_schar24 *)srcPtr;
+    dst_sc24 = *(d_schar24 *)dstPtr;
+    gridmask_vector_masked_store24_hip_compute(&src_sc24, &dst_sc24, gridColRatio_f16, gridRatio);
+    *(d_schar24 *)dstPtr = dst_sc24;
+}
+__device__ void gridmask_result_pkd3_pkd3_hip_compute(half *srcPtr, half *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_half24 src_h24, dst_h24;
+    src_h24 = *(d_half24 *)srcPtr;
+    dst_h24 = *(d_half24 *)dstPtr;
+    gridmask_vector_masked_store24_hip_compute(&src_h24, &dst_h24, gridColRatio_f16, gridRatio);
+    *(d_half24 *)dstPtr = dst_h24;
+}
 
-// // PLN3 -> PKD3
-// __device__ void gridmask_result_pln3_pkd3_hip_compute(uchar *srcPtr, int srcIdx, uint srcStrideC, uchar *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_uchar24 src, dst;
-//     dst = *(d_uchar24 *)&dstPtr[dstIdx];
-//     src.x = *(d_uchar8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     srcIdx += srcStrideC;
-//     src.y = *(d_uchar8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     srcIdx += srcStrideC;
-//     src.z = *(d_uchar8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     rpp_hip_layouttoggle24_pln3_to_pkd3(&dst);
-//     *(d_uchar24 *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pln3_pkd3_hip_compute(float *srcPtr, int srcIdx, uint srcStrideC, float *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_float24 src, dst;
-//     dst = *(d_float24 *)&dstPtr[dstIdx];
-//     src.x = *(d_float8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     srcIdx += srcStrideC;
-//     src.y = *(d_float8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     srcIdx += srcStrideC;
-//     src.z = *(d_float8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     rpp_hip_layouttoggle24_pln3_to_pkd3(&dst);
-//     *(d_float24 *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pln3_pkd3_hip_compute(schar *srcPtr, int srcIdx, uint srcStrideC, schar *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_schar24 src, dst;
-//     dst = *(d_schar24 *)&dstPtr[dstIdx];
-//     src.x = *(d_schar8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     srcIdx += srcStrideC;
-//     src.y = *(d_schar8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     srcIdx += srcStrideC;
-//     src.z = *(d_schar8 *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     rpp_hip_layouttoggle24_pln3_to_pkd3(&dst);
-//     *(d_schar24 *)&dstPtr[dstIdx] = dst;
-// }
-// __device__ void gridmask_result_pln3_pkd3_hip_compute(half *srcPtr, int srcIdx, uint srcStrideC, half *dstPtr, int dstIdx, d_float16 *gridColRatio, float gridRatio)
-// {
-//     d_half24_as_halfs src, dst;
-//     dst = *(d_half24_as_halfs *)&dstPtr[dstIdx];
-//     src.x = *(d_half8_as_halfs *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.x, &dst.x, gridColRatio, gridRatio);
-//     srcIdx += srcStrideC;
-//     src.y = *(d_half8_as_halfs *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.y, &dst.y, gridColRatio, gridRatio);
-//     srcIdx += srcStrideC;
-//     src.z = *(d_half8_as_halfs *)&srcPtr[srcIdx];
-//     gridmask_vector_masked_store_hip_compute(&src.z, &dst.z, gridColRatio, gridRatio);
-//     rpp_hip_layouttoggle24_pln3_to_pkd3(&dst);
-//     *(d_half24_as_halfs *)&dstPtr[dstIdx] = dst;
-// }
+// PLN3 -> PLN3
+__device__ void gridmask_result_pln3_pln3_hip_compute(uchar *srcPtr, uint srcStrideC, uchar *dstPtr, uint dstStrideC, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_uchar8 src_uc8, dst_uc8;
+    *(uint2 *)&src_uc8 = *(uint2 *)srcPtr;
+    *(uint2 *)&dst_uc8 = *(uint2 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_uc8, &dst_uc8, gridColRatio_f16, gridRatio);
+    *(uint2 *)dstPtr = *(uint2 *)&dst_uc8;
+    srcPtr += srcStrideC;
+    dstPtr += dstStrideC;
+    *(uint2 *)&src_uc8 = *(uint2 *)srcPtr;
+    *(uint2 *)&dst_uc8 = *(uint2 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_uc8, &dst_uc8, gridColRatio_f16, gridRatio);
+    *(uint2 *)dstPtr = *(uint2 *)&dst_uc8;
+    srcPtr += srcStrideC;
+    dstPtr += dstStrideC;
+    *(uint2 *)&src_uc8 = *(uint2 *)srcPtr;
+    *(uint2 *)&dst_uc8 = *(uint2 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_uc8, &dst_uc8, gridColRatio_f16, gridRatio);
+    *(uint2 *)dstPtr = *(uint2 *)&dst_uc8;
+}
+__device__ void gridmask_result_pln3_pln3_hip_compute(float *srcPtr, uint srcStrideC, float *dstPtr, uint dstStrideC, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_float8 src_f8, dst_f8;
+    *(d_float8_s *)&src_f8 = *(d_float8_s *)srcPtr;
+    *(d_float8_s *)&dst_f8 = *(d_float8_s *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_f8, &dst_f8, gridColRatio_f16, gridRatio);
+    *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f8;
+    srcPtr += srcStrideC;
+    dstPtr += dstStrideC;
+    *(d_float8_s *)&src_f8 = *(d_float8_s *)srcPtr;
+    *(d_float8_s *)&dst_f8 = *(d_float8_s *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_f8, &dst_f8, gridColRatio_f16, gridRatio);
+    *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f8;
+    srcPtr += srcStrideC;
+    dstPtr += dstStrideC;
+    *(d_float8_s *)&src_f8 = *(d_float8_s *)srcPtr;
+    *(d_float8_s *)&dst_f8 = *(d_float8_s *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_f8, &dst_f8, gridColRatio_f16, gridRatio);
+    *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f8;
+}
+__device__ void gridmask_result_pln3_pln3_hip_compute(schar *srcPtr, uint srcStrideC, schar *dstPtr, uint dstStrideC, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_schar8 src_sc8, dst_sc8;
+    src_sc8 = *(d_schar8 *)srcPtr;
+    dst_sc8 = *(d_schar8 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_sc8, &dst_sc8, gridColRatio_f16, gridRatio);
+    *(d_schar8 *)dstPtr = dst_sc8;
+    srcPtr += srcStrideC;
+    dstPtr += dstStrideC;
+    src_sc8 = *(d_schar8 *)srcPtr;
+    dst_sc8 = *(d_schar8 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_sc8, &dst_sc8, gridColRatio_f16, gridRatio);
+    *(d_schar8 *)dstPtr = dst_sc8;
+    srcPtr += srcStrideC;
+    dstPtr += dstStrideC;
+    src_sc8 = *(d_schar8 *)srcPtr;
+    dst_sc8 = *(d_schar8 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_sc8, &dst_sc8, gridColRatio_f16, gridRatio);
+    *(d_schar8 *)dstPtr = dst_sc8;
+}
+__device__ void gridmask_result_pln3_pln3_hip_compute(half *srcPtr, uint srcStrideC, half *dstPtr, uint dstStrideC, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_half8 src_h8, dst_h8;
+    src_h8 = *(d_half8 *)srcPtr;
+    dst_h8 = *(d_half8 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_h8, &dst_h8, gridColRatio_f16, gridRatio);
+    *(d_half8 *)dstPtr = dst_h8;
+    srcPtr += srcStrideC;
+    dstPtr += dstStrideC;
+    src_h8 = *(d_half8 *)srcPtr;
+    dst_h8 = *(d_half8 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_h8, &dst_h8, gridColRatio_f16, gridRatio);
+    *(d_half8 *)dstPtr = dst_h8;
+    srcPtr += srcStrideC;
+    dstPtr += dstStrideC;
+    src_h8 = *(d_half8 *)srcPtr;
+    dst_h8 = *(d_half8 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_h8, &dst_h8, gridColRatio_f16, gridRatio);
+    *(d_half8 *)dstPtr = dst_h8;
+}
 
-// // Gridmask kernels
+// PLN1 -> PLN1
+__device__ void gridmask_result_pln1_pln1_hip_compute(uchar *srcPtr, uchar *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_uchar8 src_uc8, dst_uc8;
+    *(uint2 *)&src_uc8 = *(uint2 *)srcPtr;
+    *(uint2 *)&dst_uc8 = *(uint2 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_uc8, &dst_uc8, gridColRatio_f16, gridRatio);
+    *(uint2 *)dstPtr = *(uint2 *)&dst_uc8;
+}
+__device__ void gridmask_result_pln1_pln1_hip_compute(float *srcPtr, float *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_float8 src_f8, dst_f8;
+    *(d_float8_s *)&src_f8 = *(d_float8_s *)srcPtr;
+    *(d_float8_s *)&dst_f8 = *(d_float8_s *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_f8, &dst_f8, gridColRatio_f16, gridRatio);
+    *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f8;
+}
+__device__ void gridmask_result_pln1_pln1_hip_compute(schar *srcPtr, schar *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_schar8 src_sc8, dst_sc8;
+    src_sc8 = *(d_schar8 *)srcPtr;
+    dst_sc8 = *(d_schar8 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_sc8, &dst_sc8, gridColRatio_f16, gridRatio);
+    *(d_schar8 *)dstPtr = dst_sc8;
+}
+__device__ void gridmask_result_pln1_pln1_hip_compute(half *srcPtr, half *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_half8 src_h8, dst_h8;
+    src_h8 = *(d_half8 *)srcPtr;
+    dst_h8 = *(d_half8 *)dstPtr;
+    gridmask_vector_masked_store8_hip_compute(&src_h8, &dst_h8, gridColRatio_f16, gridRatio);
+    *(d_half8 *)dstPtr = dst_h8;
+}
 
-// template <typename T>
-// __global__ void gridmask_pkd_tensor(T *srcPtr,
-//                                     uint2 srcStridesNH,
-//                                     T *dstPtr,
-//                                     uint2 dstStridesNH,
-//                                     float2 rotateRatios,
-//                                     float2 translateRatios,
-//                                     float gridRatio,
-//                                     RpptROIPtr roiTensorPtrSrc)
-// {
-//     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+// PKD3 -> PLN3
+__device__ void gridmask_result_pkd3_pln3_hip_compute(uchar *srcPtr, uchar *dstPtr, uint dstStrideC, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_uchar24 src_uc24, dst_uc24;
+    *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
+    *(d_uchar24_s *)&dst_uc24 = *(d_uchar24_s *)dstPtr;
+    gridmask_vector_masked_store24_hip_compute(&src_uc24, &dst_uc24, gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uchar24_s *)&dst_uc24);
+    *(uint2 *)dstPtr = *(uint2 *)&dst_uc24.uc8[0];
+    dstPtr += dstStrideC;
+    *(uint2 *)dstPtr = *(uint2 *)&dst_uc24.uc8[1];
+    dstPtr += dstStrideC;
+    *(uint2 *)dstPtr = *(uint2 *)&dst_uc24.uc8[2];
+}
+__device__ void gridmask_result_pkd3_pln3_hip_compute(float *srcPtr, float *dstPtr, uint dstStrideC, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_float24 src_f24, dst_f24;
+    *(d_float24_s *)&src_f24 = *(d_float24_s *)srcPtr;
+    *(d_float24_s *)&dst_f24 = *(d_float24_s *)dstPtr;
+    gridmask_vector_masked_store24_hip_compute(&src_f24, &dst_f24, gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_float24_s *)&dst_f24);
+    *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f24.f8[0];
+    dstPtr += dstStrideC;
+    *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f24.f8[1];
+    dstPtr += dstStrideC;
+    *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f24.f8[2];
+}
+__device__ void gridmask_result_pkd3_pln3_hip_compute(schar *srcPtr, schar *dstPtr, uint dstStrideC, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_schar24 src_sc24, dst_sc24;
+    src_sc24 = *(d_schar24 *)srcPtr;
+    dst_sc24 = *(d_schar24 *)dstPtr;
+    gridmask_vector_masked_store24_hip_compute(&src_sc24, &dst_sc24, gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_schar24_s *)&dst_sc24);
+    *(d_schar8 *)dstPtr = dst_sc24.sc8[0];
+    dstPtr += dstStrideC;
+    *(d_schar8 *)dstPtr = dst_sc24.sc8[1];
+    dstPtr += dstStrideC;
+    *(d_schar8 *)dstPtr = dst_sc24.sc8[2];
+}
+__device__ void gridmask_result_pkd3_pln3_hip_compute(half *srcPtr, half *dstPtr, uint dstStrideC, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_half24 src_h24, dst_h24;
+    src_h24 = *(d_half24 *)srcPtr;
+    dst_h24 = *(d_half24 *)dstPtr;
+    gridmask_vector_masked_store24_hip_compute(&src_h24, &dst_h24, gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_half24_s *)&dst_h24);
+    *(d_half8 *)dstPtr = dst_h24.h8[0];
+    dstPtr += dstStrideC;
+    *(d_half8 *)dstPtr = dst_h24.h8[1];
+    dstPtr += dstStrideC;
+    *(d_half8 *)dstPtr = dst_h24.h8[2];
+}
 
-//     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-//     {
-//         return;
-//     }
+// PLN3 -> PKD3
+__device__ void gridmask_result_pln3_pkd3_hip_compute(uchar *srcPtr, uint srcStrideC, uchar *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_uchar24 src_uc24, dst_uc24;
+    *(uint2 *)&src_uc24.uc8[0] = *(uint2 *)srcPtr;
+    srcPtr += srcStrideC;
+    *(uint2 *)&src_uc24.uc8[1] = *(uint2 *)srcPtr;
+    srcPtr += srcStrideC;
+    *(uint2 *)&src_uc24.uc8[2] = *(uint2 *)srcPtr;
+    *(d_uchar24_s *)&dst_uc24 = *(d_uchar24_s *)dstPtr;
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_uchar24_s *)&src_uc24);
+    gridmask_vector_masked_store24_hip_compute(&src_uc24, &dst_uc24, gridColRatio_f16, gridRatio);
+    *(d_uchar24_s *)dstPtr = *(d_uchar24_s *)&dst_uc24;
+}
+__device__ void gridmask_result_pln3_pkd3_hip_compute(float *srcPtr, uint srcStrideC, float *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_float24 src_f24, dst_f24;
+    *(d_float8_s *)&src_f24.f8[0] = *(d_float8_s *)srcPtr;
+    srcPtr += srcStrideC;
+    *(d_float8_s *)&src_f24.f8[1] = *(d_float8_s *)srcPtr;
+    srcPtr += srcStrideC;
+    *(d_float8_s *)&src_f24.f8[2] = *(d_float8_s *)srcPtr;
+    *(d_float24_s *)&dst_f24 = *(d_float24_s *)dstPtr;
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_float24_s *)&src_f24);
+    gridmask_vector_masked_store24_hip_compute(&src_f24, &dst_f24, gridColRatio_f16, gridRatio);
+    *(d_float24_s *)dstPtr = *(d_float24_s *)&dst_f24;
+}
+__device__ void gridmask_result_pln3_pkd3_hip_compute(schar *srcPtr, uint srcStrideC, schar *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_schar24 src_sc24, dst_sc24;
+    src_sc24.sc8[0] = *(d_schar8 *)srcPtr;
+    srcPtr += srcStrideC;
+    src_sc24.sc8[1] = *(d_schar8 *)srcPtr;
+    srcPtr += srcStrideC;
+    src_sc24.sc8[2] = *(d_schar8 *)srcPtr;
+    dst_sc24 = *(d_schar24 *)dstPtr;
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_schar24_s *)&src_sc24);
+    gridmask_vector_masked_store24_hip_compute(&src_sc24, &dst_sc24, gridColRatio_f16, gridRatio);
+    *(d_schar24 *)dstPtr = dst_sc24;
+}
+__device__ void gridmask_result_pln3_pkd3_hip_compute(half *srcPtr, uint srcStrideC, half *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
+{
+    d_half24 src_h24, dst_h24;
+    src_h24.h8[0] = *(d_half8 *)srcPtr;
+    srcPtr += srcStrideC;
+    src_h24.h8[1] = *(d_half8 *)srcPtr;
+    srcPtr += srcStrideC;
+    src_h24.h8[2] = *(d_half8 *)srcPtr;
+    dst_h24 = *(d_half24 *)dstPtr;
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_half24_s *)&src_h24);
+    gridmask_vector_masked_store24_hip_compute(&src_h24, &dst_h24, gridColRatio_f16, gridRatio);
+    *(d_half24 *)dstPtr = dst_h24;
+}
 
-//     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-//     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
+// Gridmask kernels
 
-//     float2 gridRowRatio;
-//     d_float16 gridColRatio, gridColRatioFloor;
-//     gridmask_ratio_hip_compute(id_x, id_y, &rotateRatios, &translateRatios, &gridRowRatio, &gridColRatio);
-//     rpp_hip_math_floor16(&gridColRatio, &gridColRatioFloor);
-//     rpp_hip_math_subtract16(&gridColRatio, &gridColRatioFloor, &gridColRatio);
-//     gridmask_result_pkd3_pkd3_hip_compute(srcPtr, srcIdx, dstPtr, dstIdx, &gridColRatio, gridRatio);
-// }
+template <typename T>
+__global__ void gridmask_pkd_tensor(T *srcPtr,
+                                    uint2 srcStridesNH,
+                                    T *dstPtr,
+                                    uint2 dstStridesNH,
+                                    float2 rotateRatios,
+                                    float2 translateRatios,
+                                    float gridRatio,
+                                    RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-// template <typename T>
-// __global__ void gridmask_pln_tensor(T *srcPtr,
-//                                     uint3 srcStridesNCH,
-//                                     T *dstPtr,
-//                                     uint3 dstStridesNCH,
-//                                     int channelsDst,
-//                                     float2 rotateRatios,
-//                                     float2 translateRatios,
-//                                     float gridRatio,
-//                                     RpptROIPtr roiTensorPtrSrc)
-// {
-//     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
 
-//     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-//     {
-//         return;
-//     }
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
 
-//     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-//     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    float2 gridRowRatio_f2;
+    d_float16 gridColRatio_f16, gridColRatioFloor_f16;
+    gridmask_ratio_hip_compute(id_x, id_y, &rotateRatios, &translateRatios, &gridRowRatio_f2, &gridColRatio_f16);
+    rpp_hip_math_floor16(&gridColRatio_f16, &gridColRatioFloor_f16);
+    rpp_hip_math_subtract16(&gridColRatio_f16, &gridColRatioFloor_f16, &gridColRatio_f16);
+    gridmask_result_pkd3_pkd3_hip_compute(srcPtr + srcIdx, dstPtr + dstIdx, &gridColRatio_f16, gridRatio);
+}
 
-//     float2 gridRowRatio;
-//     d_float16 gridColRatio, gridColRatioFloor;
-//     gridmask_ratio_hip_compute(id_x, id_y, &rotateRatios, &translateRatios, &gridRowRatio, &gridColRatio);
-//     rpp_hip_math_floor16(&gridColRatio, &gridColRatioFloor);
-//     rpp_hip_math_subtract16(&gridColRatio, &gridColRatioFloor, &gridColRatio);
+template <typename T>
+__global__ void gridmask_pln_tensor(T *srcPtr,
+                                    uint3 srcStridesNCH,
+                                    T *dstPtr,
+                                    uint3 dstStridesNCH,
+                                    int channelsDst,
+                                    float2 rotateRatios,
+                                    float2 translateRatios,
+                                    float gridRatio,
+                                    RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-//     if (channelsDst == 3)
-//         gridmask_result_pln3_pln3_hip_compute(srcPtr, srcIdx, srcStridesNCH.y, dstPtr, dstIdx, dstStridesNCH.y, &gridColRatio, gridRatio);
-//     else
-//         gridmask_result_pln1_pln1_hip_compute(srcPtr, srcIdx, dstPtr, dstIdx, &gridColRatio, gridRatio);
-// }
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
 
-// template <typename T>
-// __global__ void gridmask_pkd3_pln3_tensor(T *srcPtr,
-//                                           uint2 srcStridesNH,
-//                                           T *dstPtr,
-//                                           uint3 dstStridesNCH,
-//                                           float2 rotateRatios,
-//                                           float2 translateRatios,
-//                                           float gridRatio,
-//                                           RpptROIPtr roiTensorPtrSrc)
-// {
-//     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-//     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-//     {
-//         return;
-//     }
+    float2 gridRowRatio_f2;
+    d_float16 gridColRatio_f16, gridColRatioFloor_f16;
+    gridmask_ratio_hip_compute(id_x, id_y, &rotateRatios, &translateRatios, &gridRowRatio_f2, &gridColRatio_f16);
+    rpp_hip_math_floor16(&gridColRatio_f16, &gridColRatioFloor_f16);
+    rpp_hip_math_subtract16(&gridColRatio_f16, &gridColRatioFloor_f16, &gridColRatio_f16);
 
-//     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-//     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    if (channelsDst == 3)
+        gridmask_result_pln3_pln3_hip_compute(srcPtr + srcIdx, srcStridesNCH.y, dstPtr + dstIdx, dstStridesNCH.y, &gridColRatio_f16, gridRatio);
+    else
+        gridmask_result_pln1_pln1_hip_compute(srcPtr + srcIdx, dstPtr + dstIdx, &gridColRatio_f16, gridRatio);
+}
 
-//     float2 gridRowRatio;
-//     d_float16 gridColRatio, gridColRatioFloor;
-//     gridmask_ratio_hip_compute(id_x, id_y, &rotateRatios, &translateRatios, &gridRowRatio, &gridColRatio);
-//     rpp_hip_math_floor16(&gridColRatio, &gridColRatioFloor);
-//     rpp_hip_math_subtract16(&gridColRatio, &gridColRatioFloor, &gridColRatio);
-//     gridmask_result_pkd3_pln3_hip_compute(srcPtr, srcIdx, dstPtr, dstIdx, dstStridesNCH.y, &gridColRatio, gridRatio);
-// }
+template <typename T>
+__global__ void gridmask_pkd3_pln3_tensor(T *srcPtr,
+                                          uint2 srcStridesNH,
+                                          T *dstPtr,
+                                          uint3 dstStridesNCH,
+                                          float2 rotateRatios,
+                                          float2 translateRatios,
+                                          float gridRatio,
+                                          RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-// template <typename T>
-// __global__ void gridmask_pln3_pkd3_tensor(T *srcPtr,
-//                                           uint3 srcStridesNCH,
-//                                           T *dstPtr,
-//                                           uint2 dstStridesNH,
-//                                           float2 rotateRatios,
-//                                           float2 translateRatios,
-//                                           float gridRatio,
-//                                           RpptROIPtr roiTensorPtrSrc)
-// {
-//     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
 
-//     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-//     {
-//         return;
-//     }
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-//     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-//     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
+    float2 gridRowRatio_f2;
+    d_float16 gridColRatio_f16, gridColRatioFloor_f16;
+    gridmask_ratio_hip_compute(id_x, id_y, &rotateRatios, &translateRatios, &gridRowRatio_f2, &gridColRatio_f16);
+    rpp_hip_math_floor16(&gridColRatio_f16, &gridColRatioFloor_f16);
+    rpp_hip_math_subtract16(&gridColRatio_f16, &gridColRatioFloor_f16, &gridColRatio_f16);
+    gridmask_result_pkd3_pln3_hip_compute(srcPtr + srcIdx, dstPtr + dstIdx, dstStridesNCH.y, &gridColRatio_f16, gridRatio);
+}
 
-//     float2 gridRowRatio;
-//     d_float16 gridColRatio, gridColRatioFloor;
-//     gridmask_ratio_hip_compute(id_x, id_y, &rotateRatios, &translateRatios, &gridRowRatio, &gridColRatio);
-//     rpp_hip_math_floor16(&gridColRatio, &gridColRatioFloor);
-//     rpp_hip_math_subtract16(&gridColRatio, &gridColRatioFloor, &gridColRatio);
-//     gridmask_result_pln3_pkd3_hip_compute(srcPtr, srcIdx, srcStridesNCH.y, dstPtr, dstIdx, &gridColRatio, gridRatio);
-// }
+template <typename T>
+__global__ void gridmask_pln3_pkd3_tensor(T *srcPtr,
+                                          uint3 srcStridesNCH,
+                                          T *dstPtr,
+                                          uint2 dstStridesNH,
+                                          float2 rotateRatios,
+                                          float2 translateRatios,
+                                          float gridRatio,
+                                          RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-// template <typename T>
-// RppStatus hip_exec_gridmask_tensor(T *srcPtr,
-//                                    RpptDescPtr srcDescPtr,
-//                                    T *dstPtr,
-//                                    RpptDescPtr dstDescPtr,
-//                                    Rpp32u tileWidth,
-//                                    Rpp32f gridRatio,
-//                                    Rpp32f gridAngle,
-//                                    RpptUintVector2D translateVector,
-//                                    RpptROIPtr roiTensorPtrSrc,
-//                                    RpptRoiType roiType,
-//                                    rpp::Handle& handle)
-// {
-//     if (roiType == RpptRoiType::LTRB)
-//         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
 
-//     int localThreads_x = LOCAL_THREADS_X;
-//     int localThreads_y = LOCAL_THREADS_Y;
-//     int localThreads_z = LOCAL_THREADS_Z;
-//     int globalThreads_x = (dstDescPtr->w + 7) >> 3;
-//     int globalThreads_y = dstDescPtr->h;
-//     int globalThreads_z = handle.GetBatchSize();
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
 
-//     Rpp32f tileWidthInv = 1.0f / (Rpp32f)tileWidth;
-//     float2 rotateRatios = make_float2((cos(gridAngle) * tileWidthInv), (sin(gridAngle) * tileWidthInv));
-//     float2 translateRatios = make_float2((translateVector.x * tileWidthInv), (translateVector.y * tileWidthInv));
+    float2 gridRowRatio_f2;
+    d_float16 gridColRatio_f16, gridColRatioFloor_f16;
+    gridmask_ratio_hip_compute(id_x, id_y, &rotateRatios, &translateRatios, &gridRowRatio_f2, &gridColRatio_f16);
+    rpp_hip_math_floor16(&gridColRatio_f16, &gridColRatioFloor_f16);
+    rpp_hip_math_subtract16(&gridColRatio_f16, &gridColRatioFloor_f16, &gridColRatio_f16);
+    gridmask_result_pln3_pkd3_hip_compute(srcPtr + srcIdx, srcStridesNCH.y, dstPtr + dstIdx, &gridColRatio_f16, gridRatio);
+}
 
-//     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
-//     {
-//         hipLaunchKernelGGL(gridmask_pkd_tensor,
-//                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-//                            dim3(localThreads_x, localThreads_y, localThreads_z),
-//                            0,
-//                            handle.GetStream(),
-//                            srcPtr,
-//                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-//                            dstPtr,
-//                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-//                            rotateRatios,
-//                            translateRatios,
-//                            gridRatio,
-//                            roiTensorPtrSrc);
-//     }
-//     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
-//     {
-//         hipLaunchKernelGGL(gridmask_pln_tensor,
-//                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-//                            dim3(localThreads_x, localThreads_y, localThreads_z),
-//                            0,
-//                            handle.GetStream(),
-//                            srcPtr,
-//                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-//                            dstPtr,
-//                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-//                            dstDescPtr->c,
-//                            rotateRatios,
-//                            translateRatios,
-//                            gridRatio,
-//                            roiTensorPtrSrc);
-//     }
-//     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
-//     {
-//         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
-//         {
-//             hipLaunchKernelGGL(gridmask_pkd3_pln3_tensor,
-//                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-//                                dim3(localThreads_x, localThreads_y, localThreads_z),
-//                                0,
-//                                handle.GetStream(),
-//                                srcPtr,
-//                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-//                                dstPtr,
-//                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-//                                rotateRatios,
-//                                translateRatios,
-//                                gridRatio,
-//                                roiTensorPtrSrc);
-//         }
-//         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
-//         {
-//             hipLaunchKernelGGL(gridmask_pln3_pkd3_tensor,
-//                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-//                                dim3(localThreads_x, localThreads_y, localThreads_z),
-//                                0,
-//                                handle.GetStream(),
-//                                srcPtr,
-//                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-//                                dstPtr,
-//                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-//                                rotateRatios,
-//                                translateRatios,
-//                                gridRatio,
-//                                roiTensorPtrSrc);
-//         }
-//     }
+template <typename T>
+RppStatus hip_exec_gridmask_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u tileWidth,
+                                   Rpp32f gridRatio,
+                                   Rpp32f gridAngle,
+                                   RpptUintVector2D translateVector,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-//     return RPP_SUCCESS;
-// }
+    int localThreads_x = LOCAL_THREADS_X;
+    int localThreads_y = LOCAL_THREADS_Y;
+    int localThreads_z = LOCAL_THREADS_Z;
+    int globalThreads_x = (dstDescPtr->w + 7) >> 3;
+    int globalThreads_y = dstDescPtr->h;
+    int globalThreads_z = handle.GetBatchSize();
+
+    Rpp32f tileWidthInv = 1.0f / (Rpp32f)tileWidth;
+    float2 rotateRatios = make_float2((cos(gridAngle) * tileWidthInv), (sin(gridAngle) * tileWidthInv));
+    float2 translateRatios = make_float2((translateVector.x * tileWidthInv), (translateVector.y * tileWidthInv));
+
+    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        hipLaunchKernelGGL(gridmask_pkd_tensor,
+                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           rotateRatios,
+                           translateRatios,
+                           gridRatio,
+                           roiTensorPtrSrc);
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        hipLaunchKernelGGL(gridmask_pln_tensor,
+                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           dstDescPtr->c,
+                           rotateRatios,
+                           translateRatios,
+                           gridRatio,
+                           roiTensorPtrSrc);
+    }
+    else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(gridmask_pkd3_pln3_tensor,
+                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               rotateRatios,
+                               translateRatios,
+                               gridRatio,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            hipLaunchKernelGGL(gridmask_pln3_pkd3_tensor,
+                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               rotateRatios,
+                               translateRatios,
+                               gridRatio,
+                               roiTensorPtrSrc);
+        }
+    }
+
+    return RPP_SUCCESS;
+}

@@ -9,18 +9,20 @@
 #include "hip/rpp_hip_roi_conversion.hpp"
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
-
-typedef struct { uint ui1[6];                                                                   }   d_uint6_s;      // used
-typedef struct { float f1[8];                                                                   }   d_float8_s;     // used
-typedef struct { float f1[24];                                                                  }   d_float24_s;    // used
-typedef struct { half h1[24];                                                                   }   d_half24_s;     // used
-typedef struct { float uc1[24];                                                                 }   d_uchar24_s;    // used
+typedef unsigned char uchar;
+typedef signed char schar;
+typedef struct { uint   data[ 6]; } d_uint6_s;      // used
+typedef struct { float  data[ 8]; } d_float8_s;     // used
+typedef struct { float  data[24]; } d_float24_s;    // used
+typedef struct { half   data[24]; } d_half24_s;     // used
+typedef struct { uchar  data[24]; } d_uchar24_s;    // used
+typedef struct { schar  data[24]; } d_schar24_s;    // used
 
 // float
 typedef union { float2 f2[3];   float3 f3[2];                                                   }   d_float6;
 typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;       // used
 typedef union { float3 f3[4];   float4 f4[3];                                                   }   d_float12;
-typedef union { float4 f4[4];   d_float8 f8[2];                                                 }   d_float16;
+typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;      // used
 typedef union { float f1[24];   float2 f2[12];   float3 f3[8];   float4 f4[6];   d_float8 f8[3];}   d_float24;      // used
 
 // uint
@@ -39,13 +41,11 @@ typedef union { half h1[12];    half2 h2[6];    d_half3 h3[4];  d_half4 h4[3];  
 typedef union { half h1[24];    half2 h2[12];   d_half3 h3[8];  d_half4 h4[6];  d_half8 h8[3];  }   d_half24;
 
 // uchar
-typedef unsigned char uchar;
-typedef union { uchar4 uc4[2];                                                                  }   d_uchar8;       // used
+typedef union { uchar uc1[8];   uchar4 uc4[2];                                                  }   d_uchar8;       // used
 typedef union { uchar3 uc3[4];                                                                  }   d_uchar12;
 typedef union { uchar uc1[24];  uchar3 uc3[8];  uchar4 uc4[6];  d_uchar8 uc8[3];                }   d_uchar24;      // used
 
 // schar
-typedef signed char schar;
 typedef union { schar sc1[3];                                                                   }   d_schar3;
 typedef union { schar sc1[4];                                                                   }   d_schar4;
 typedef union { schar sc1[8];   d_schar4 sc4[2];                                                }   d_schar8;
@@ -1277,117 +1277,107 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(half *srcPtr,
 
 // PKD3 to PLN3
 
-// template <typename T>
-// __device__ __forceinline__ void rpp_hip_layouttoggle24_pkd3_to_pln3(T *src)
-// {
-//     T pixpln3;
+template <typename T>
+__device__ __forceinline__ void rpp_hip_layouttoggle24_pkd3_to_pln3(T *pixpkd3Ptr_T24)
+{
+    T pixpln3_T24;
 
-//     pixpln3.x.x.x = src->x.x.x;
-//     pixpln3.x.x.y = src->x.x.w;
-//     pixpln3.x.x.z = src->x.y.z;
-//     pixpln3.x.x.w = src->y.x.y;
-//     pixpln3.x.y.x = src->y.y.x;
-//     pixpln3.x.y.y = src->y.y.w;
-//     pixpln3.x.y.z = src->z.x.z;
-//     pixpln3.x.y.w = src->z.y.y;
+    pixpln3_T24.data[ 0] = pixpkd3Ptr_T24->data[ 0];
+    pixpln3_T24.data[ 1] = pixpkd3Ptr_T24->data[ 3];
+    pixpln3_T24.data[ 2] = pixpkd3Ptr_T24->data[ 6];
+    pixpln3_T24.data[ 3] = pixpkd3Ptr_T24->data[ 9];
+    pixpln3_T24.data[ 4] = pixpkd3Ptr_T24->data[12];
+    pixpln3_T24.data[ 5] = pixpkd3Ptr_T24->data[15];
+    pixpln3_T24.data[ 6] = pixpkd3Ptr_T24->data[18];
+    pixpln3_T24.data[ 7] = pixpkd3Ptr_T24->data[21];
+    pixpln3_T24.data[ 8] = pixpkd3Ptr_T24->data[ 1];
+    pixpln3_T24.data[ 9] = pixpkd3Ptr_T24->data[ 4];
+    pixpln3_T24.data[10] = pixpkd3Ptr_T24->data[ 7];
+    pixpln3_T24.data[11] = pixpkd3Ptr_T24->data[10];
+    pixpln3_T24.data[12] = pixpkd3Ptr_T24->data[13];
+    pixpln3_T24.data[13] = pixpkd3Ptr_T24->data[16];
+    pixpln3_T24.data[14] = pixpkd3Ptr_T24->data[19];
+    pixpln3_T24.data[15] = pixpkd3Ptr_T24->data[22];
+    pixpln3_T24.data[16] = pixpkd3Ptr_T24->data[ 2];
+    pixpln3_T24.data[17] = pixpkd3Ptr_T24->data[ 5];
+    pixpln3_T24.data[18] = pixpkd3Ptr_T24->data[ 8];
+    pixpln3_T24.data[19] = pixpkd3Ptr_T24->data[11];
+    pixpln3_T24.data[20] = pixpkd3Ptr_T24->data[14];
+    pixpln3_T24.data[21] = pixpkd3Ptr_T24->data[17];
+    pixpln3_T24.data[22] = pixpkd3Ptr_T24->data[20];
+    pixpln3_T24.data[23] = pixpkd3Ptr_T24->data[23];
 
-//     pixpln3.y.x.x = src->x.x.y;
-//     pixpln3.y.x.y = src->x.y.x;
-//     pixpln3.y.x.z = src->x.y.w;
-//     pixpln3.y.x.w = src->y.x.z;
-//     pixpln3.y.y.x = src->y.y.y;
-//     pixpln3.y.y.y = src->z.x.x;
-//     pixpln3.y.y.z = src->z.x.w;
-//     pixpln3.y.y.w = src->z.y.z;
-
-//     pixpln3.z.x.x = src->x.x.z;
-//     pixpln3.z.x.y = src->x.y.y;
-//     pixpln3.z.x.z = src->y.x.x;
-//     pixpln3.z.x.w = src->y.x.w;
-//     pixpln3.z.y.x = src->y.y.z;
-//     pixpln3.z.y.y = src->z.x.y;
-//     pixpln3.z.y.z = src->z.y.x;
-//     pixpln3.z.y.w = src->z.y.w;
-
-//     *src = pixpln3;
-// }
+    *pixpkd3Ptr_T24 = pixpln3_T24;
+}
 
 // PLN3 to PKD3
 
-// template <typename T>
-// __device__ __forceinline__ void rpp_hip_layouttoggle24_pln3_to_pkd3(T *src)
-// {
-//     T pixpkd3;
+template <typename T>
+__device__ __forceinline__ void rpp_hip_layouttoggle24_pln3_to_pkd3(T *pixpln3Ptr_T24)
+{
+    T pixpkd3_T24;
 
-//     pixpkd3.x.x.x = src->x.x.x;
-//     pixpkd3.x.x.y = src->y.x.x;
-//     pixpkd3.x.x.z = src->z.x.x;
+    pixpkd3_T24.data[ 0] = pixpln3Ptr_T24->data[ 0];
+    pixpkd3_T24.data[ 1] = pixpln3Ptr_T24->data[ 8];
+    pixpkd3_T24.data[ 2] = pixpln3Ptr_T24->data[16];
+    pixpkd3_T24.data[ 3] = pixpln3Ptr_T24->data[ 1];
+    pixpkd3_T24.data[ 4] = pixpln3Ptr_T24->data[ 9];
+    pixpkd3_T24.data[ 5] = pixpln3Ptr_T24->data[17];
+    pixpkd3_T24.data[ 6] = pixpln3Ptr_T24->data[ 2];
+    pixpkd3_T24.data[ 7] = pixpln3Ptr_T24->data[10];
+    pixpkd3_T24.data[ 8] = pixpln3Ptr_T24->data[18];
+    pixpkd3_T24.data[ 9] = pixpln3Ptr_T24->data[ 3];
+    pixpkd3_T24.data[10] = pixpln3Ptr_T24->data[11];
+    pixpkd3_T24.data[11] = pixpln3Ptr_T24->data[19];
+    pixpkd3_T24.data[12] = pixpln3Ptr_T24->data[ 4];
+    pixpkd3_T24.data[13] = pixpln3Ptr_T24->data[12];
+    pixpkd3_T24.data[14] = pixpln3Ptr_T24->data[20];
+    pixpkd3_T24.data[15] = pixpln3Ptr_T24->data[ 5];
+    pixpkd3_T24.data[16] = pixpln3Ptr_T24->data[13];
+    pixpkd3_T24.data[17] = pixpln3Ptr_T24->data[21];
+    pixpkd3_T24.data[18] = pixpln3Ptr_T24->data[ 6];
+    pixpkd3_T24.data[19] = pixpln3Ptr_T24->data[14];
+    pixpkd3_T24.data[20] = pixpln3Ptr_T24->data[22];
+    pixpkd3_T24.data[21] = pixpln3Ptr_T24->data[ 7];
+    pixpkd3_T24.data[22] = pixpln3Ptr_T24->data[15];
+    pixpkd3_T24.data[23] = pixpln3Ptr_T24->data[23];
 
-//     pixpkd3.x.x.w = src->x.x.y;
-//     pixpkd3.x.y.x = src->y.x.y;
-//     pixpkd3.x.y.y = src->z.x.y;
-
-//     pixpkd3.x.y.z = src->x.x.z;
-//     pixpkd3.x.y.w = src->y.x.z;
-//     pixpkd3.y.x.x = src->z.x.z;
-
-//     pixpkd3.y.x.y = src->x.x.w;
-//     pixpkd3.y.x.z = src->y.x.w;
-//     pixpkd3.y.x.w = src->z.x.w;
-
-//     pixpkd3.y.y.x = src->x.y.x;
-//     pixpkd3.y.y.y = src->y.y.x;
-//     pixpkd3.y.y.z = src->z.y.x;
-
-//     pixpkd3.y.y.w = src->x.y.y;
-//     pixpkd3.z.x.x = src->y.y.y;
-//     pixpkd3.z.x.y = src->z.y.y;
-
-//     pixpkd3.z.x.z = src->x.y.z;
-//     pixpkd3.z.x.w = src->y.y.z;
-//     pixpkd3.z.y.x = src->z.y.z;
-
-//     pixpkd3.z.y.y = src->x.y.w;
-//     pixpkd3.z.y.z = src->y.y.w;
-//     pixpkd3.z.y.w = src->z.y.w;
-
-//     *src = pixpkd3;
-// }
+    *pixpln3Ptr_T24 = pixpkd3_T24;
+}
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
 
 // d_float16 floor
 
-// __device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *src_f16, d_float16 *dst_f16)
-// {
-//     dst_f16->x.x.x = floorf(src_f16->x.x.x);
-//     dst_f16->x.x.y = floorf(src_f16->x.x.y);
-//     dst_f16->x.x.z = floorf(src_f16->x.x.z);
-//     dst_f16->x.x.w = floorf(src_f16->x.x.w);
-//     dst_f16->x.y.x = floorf(src_f16->x.y.x);
-//     dst_f16->x.y.y = floorf(src_f16->x.y.y);
-//     dst_f16->x.y.z = floorf(src_f16->x.y.z);
-//     dst_f16->x.y.w = floorf(src_f16->x.y.w);
-
-//     dst_f16->y.x.x = floorf(src_f16->y.x.x);
-//     dst_f16->y.x.y = floorf(src_f16->y.x.y);
-//     dst_f16->y.x.z = floorf(src_f16->y.x.z);
-//     dst_f16->y.x.w = floorf(src_f16->y.x.w);
-//     dst_f16->y.y.x = floorf(src_f16->y.y.x);
-//     dst_f16->y.y.y = floorf(src_f16->y.y.y);
-//     dst_f16->y.y.z = floorf(src_f16->y.y.z);
-//     dst_f16->y.y.w = floorf(src_f16->y.y.w);
-// }
+__device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *srcPtr_f16, d_float16 *dstPtr_f16)
+{
+    dstPtr_f16->f1[ 0] = floorf(srcPtr_f16->f1[ 0]);
+    dstPtr_f16->f1[ 1] = floorf(srcPtr_f16->f1[ 1]);
+    dstPtr_f16->f1[ 2] = floorf(srcPtr_f16->f1[ 2]);
+    dstPtr_f16->f1[ 3] = floorf(srcPtr_f16->f1[ 3]);
+    dstPtr_f16->f1[ 4] = floorf(srcPtr_f16->f1[ 4]);
+    dstPtr_f16->f1[ 5] = floorf(srcPtr_f16->f1[ 5]);
+    dstPtr_f16->f1[ 6] = floorf(srcPtr_f16->f1[ 6]);
+    dstPtr_f16->f1[ 7] = floorf(srcPtr_f16->f1[ 7]);
+    dstPtr_f16->f1[ 8] = floorf(srcPtr_f16->f1[ 8]);
+    dstPtr_f16->f1[ 9] = floorf(srcPtr_f16->f1[ 9]);
+    dstPtr_f16->f1[10] = floorf(srcPtr_f16->f1[10]);
+    dstPtr_f16->f1[11] = floorf(srcPtr_f16->f1[11]);
+    dstPtr_f16->f1[12] = floorf(srcPtr_f16->f1[12]);
+    dstPtr_f16->f1[13] = floorf(srcPtr_f16->f1[13]);
+    dstPtr_f16->f1[14] = floorf(srcPtr_f16->f1[14]);
+    dstPtr_f16->f1[15] = floorf(srcPtr_f16->f1[15]);
+}
 
 // d_float16 subtract
 
-// __device__ __forceinline__ void rpp_hip_math_subtract16(d_float16 *src1_f16, d_float16 *src2_f16, d_float16 *dst_f16)
-// {
-//     dst_f16->x.x = src1_f16->x.x - src2_f16->x.x;
-//     dst_f16->x.y = src1_f16->x.y - src2_f16->x.y;
-//     dst_f16->y.x = src1_f16->y.x - src2_f16->y.x;
-//     dst_f16->y.y = src1_f16->y.y - src2_f16->y.y;
-// }
+__device__ __forceinline__ void rpp_hip_math_subtract16(d_float16 *src1Ptr_f16, d_float16 *src2Ptr_f16, d_float16 *dstPtr_f16)
+{
+    dstPtr_f16->f4[0] = src1Ptr_f16->f4[0] - src2Ptr_f16->f4[0];
+    dstPtr_f16->f4[1] = src1Ptr_f16->f4[1] - src2Ptr_f16->f4[1];
+    dstPtr_f16->f4[2] = src1Ptr_f16->f4[2] - src2Ptr_f16->f4[2];
+    dstPtr_f16->f4[3] = src1Ptr_f16->f4[3] - src2Ptr_f16->f4[3];
+}
 
 // d_float24 multiply with constant
 
