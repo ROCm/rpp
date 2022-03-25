@@ -25,39 +25,39 @@ typedef half Rpp16f;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
-std::string get_interpolation_type(int val, RpptInterpolationType &interpType)
+std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
 {
     switch(val)
     {
-    case 0:
+        case 0:
         {
-            interpType = RpptInterpolationType::NEAREST_NEIGHBOR;
-            return "nearest_neighbor";
+            interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
+            return "NearestNeighbor";
         }
         case 2:
         {
-            interpType = RpptInterpolationType::BICUBIC;
-            return "bicubic";
+            interpolationType = RpptInterpolationType::BICUBIC;
+            return "Bicubic";
         }
         case 3:
         {
-            interpType = RpptInterpolationType::LANCZOS;
-            return "lanczos";
+            interpolationType = RpptInterpolationType::LANCZOS;
+            return "Lanczos";
         }
         case 4:
         {
-            interpType = RpptInterpolationType::TRIANGULAR;
-            return "triangular";
+            interpolationType = RpptInterpolationType::TRIANGULAR;
+            return "Triangular";
         }
         case 5:
         {
-            interpType = RpptInterpolationType::GAUSSIAN;
-            return "gaussian";
+            interpolationType = RpptInterpolationType::GAUSSIAN;
+            return "Gaussian";
         }
         default:
         {
-            interpType = RpptInterpolationType::BILINEAR;
-            return "bilinear";
+            interpolationType = RpptInterpolationType::BILINEAR;
+            return "Bilinear";
         }
     }
 }
@@ -79,34 +79,21 @@ int main(int argc, char **argv)
         printf("\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
         return -1;
     }
-    if ((atoi(argv[5]) == 21) && argc < MIN_ARG_COUNT + 1)
-    {
-        printf("\nImproper Usage! Interpolation type required for resize!\n");
-        printf("\nUsage: ./Tensor_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <interp_type = 0:5> <verbosity = 0/1>\n");
-        return -1;
-    }
 
     char *src = argv[1];
     char *src_second = argv[2];
     int ip_bitDepth = atoi(argv[3]);
     unsigned int outputFormatToggle = atoi(argv[4]);
     int test_case = atoi(argv[5]);
-    unsigned int verbosity = (test_case == 21) ? atoi(argv[7]) : atoi(argv[6]);
-    // Params specific to case 21 - Resize
-    int interpolation_type_num = (test_case == 21) ? atoi(argv[6]) : 1;
-    RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
-    std::string interpolationTypeName;
-    if(test_case == 21)
-    {
-        if(interpolation_type_num != 1)
-        {
-            printf("\nCurrently only bilinear interpolation is supported for resize\n");
-            interpolation_type_num = 1;
-        }
-        interpolationTypeName = get_interpolation_type(interpolation_type_num, interpolationType);
-    }
 
-    if (verbosity)
+    bool additionalParamCase = (test_case == 21);
+    bool kernelSizeCase = false;
+    bool interpolationTypeCase = (test_case == 21);
+
+    unsigned int verbosity = additionalParamCase ? atoi(argv[7]) : atoi(argv[6]);
+    unsigned int additionalParam = additionalParamCase ? atoi(argv[6]) : 1;
+
+    if (verbosity == 1)
     {
         printf("\nInputs for this test case are:");
         printf("\nsrc1 = %s", argv[1]);
@@ -114,7 +101,6 @@ int main(int argc, char **argv)
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[3]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[4]);
         printf("\ncase number (0:84) = %s", argv[5]);
-        printf("\ninterpolation type (0:5) = %s", interpolationTypeName.c_str());
     }
 
     int ip_channel = 1;
@@ -238,24 +224,32 @@ int main(int argc, char **argv)
 
     // String ops on function name
 
-    char func[1000];
-    strcpy(func, funcName);
-    strcat(func, funcType);
-    if(test_case == 21)
-    {
-        strcat(func, "_");
-        strcat(func, interpolationTypeName.c_str());
-    }
-
     char src1[1000];
     strcpy(src1, src);
     strcat(src1, "/");
-
     char src1_second[1000];
     strcpy(src1_second, src_second);
     strcat(src1_second, "/");
 
-    strcat(funcName, funcType);
+    char func[1000];
+    strcpy(func, funcName);
+    strcat(func, funcType);
+
+    RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
+    if (kernelSizeCase)
+    {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%u", additionalParam);
+        strcat(func, "_kSize");
+        strcat(func, additionalParam_char);
+    }
+    else if (interpolationTypeCase)
+    {
+        std::string interpolationTypeName;
+        interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
+        strcat(func, "_interpolationType");
+        strcat(func, interpolationTypeName.c_str());
+    }
 
     // Get number of images
 
@@ -549,6 +543,7 @@ int main(int argc, char **argv)
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
+            {
                 roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -599,6 +594,7 @@ int main(int argc, char **argv)
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
+            {
                 roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -649,6 +645,7 @@ int main(int argc, char **argv)
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
+            {
                 roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -688,6 +685,26 @@ int main(int argc, char **argv)
                 exposureFactor[i] = 1.4;
             }
 
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 0)
@@ -713,6 +730,12 @@ case 21:
         {
             test_case_name = "resize";
 
+            if (interpolationType != RpptInterpolationType::BILINEAR)
+            {
+                missingFuncFlag = 1;
+                break;
+            }
+
             for (i = 0; i < images; i++)
             {
                 dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
@@ -730,6 +753,7 @@ case 21:
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
+            {
                 roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -774,6 +798,7 @@ case 21:
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
+            {
                 roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -827,6 +852,7 @@ case 21:
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
+            {
                 roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -878,6 +904,7 @@ case 21:
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
+            {
                 roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -939,6 +966,7 @@ case 21:
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
+            {
                 roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                 roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                 roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
