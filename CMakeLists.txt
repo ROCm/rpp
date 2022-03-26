@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(amd_rpp)
-set(VERSION "0.93")
+set(VERSION "0.95")
 
 find_program(MAKE_NSIS_EXE makensis)
 find_program(RPMBUILD_EXE rpmbuild)
