@@ -63,10 +63,9 @@ omp_set_dynamic(0);
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
 
-                Rpp8u *srcRowPtrsForInterp[2];
+                Rpp8u *srcRowPtrsForInterp[2];     // kernelSize(2)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset); // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRow for bilinear interpolation
-                srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -110,14 +109,9 @@ omp_set_dynamic(0);
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp8u *srcRowPtrsForInterp[6];
+                Rpp8u *srcRowPtrsForInterp[6];     // kernelSize(2) * numOfPlanes(3)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRowR for bilinear interpolation
-                srcRowPtrsForInterp[1] = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;            // srcPtrBottomRowR for bilinear interpolation
-                srcRowPtrsForInterp[2] = srcRowPtrsForInterp[0] + srcDescPtr->strides.cStride;            // srcPtrTopRowG for bilinear interpolation
-                srcRowPtrsForInterp[3] = srcRowPtrsForInterp[1] + srcDescPtr->strides.cStride;            // srcPtrBottomRowG for bilinear interpolation
-                srcRowPtrsForInterp[4] = srcRowPtrsForInterp[2] + srcDescPtr->strides.cStride;            // srcPtrTopRowB for bilinear interpolation
-                srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;            // srcPtrBottomRowB for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation_pln(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -156,10 +150,9 @@ omp_set_dynamic(0);
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp8u *srcRowPtrsForInterp[2];
+                Rpp8u *srcRowPtrsForInterp[2];     // kernelSize(2)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRow for bilinear interpolation
-                srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -196,14 +189,9 @@ omp_set_dynamic(0);
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                Rpp8u *srcRowPtrsForInterp[6];
+                Rpp8u *srcRowPtrsForInterp[6];     // kernelSize(2) * numOfPlanes(3)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;   // srcPtrTopRowR for bilinear interpolation
-                srcRowPtrsForInterp[1] = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRowR for bilinear interpolation
-                srcRowPtrsForInterp[2] = srcRowPtrsForInterp[0] + srcDescPtr->strides.cStride;           // srcPtrTopRowG for bilinear interpolation
-                srcRowPtrsForInterp[3] = srcRowPtrsForInterp[1] + srcDescPtr->strides.cStride;           // srcPtrBottomRowG for bilinear interpolation
-                srcRowPtrsForInterp[4] = srcRowPtrsForInterp[2] + srcDescPtr->strides.cStride;           // srcPtrTopRowB for bilinear interpolation
-                srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;           // srcPtrBottomRowB for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation_pln(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -308,10 +296,9 @@ omp_set_dynamic(0);
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
 
-                Rpp32f *srcRowPtrsForInterp[2];
+                Rpp32f *srcRowPtrsForInterp[2];     // kernelSize(2)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRow for bilinear interpolation
-                srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -355,14 +342,9 @@ omp_set_dynamic(0);
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp32f *srcRowPtrsForInterp[6];
+                Rpp32f *srcRowPtrsForInterp[6];     // kernelSize(2) * numOfPlanes(3)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRowR for bilinear interpolation
-                srcRowPtrsForInterp[1] = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;            // srcPtrBottomRowR for bilinear interpolation
-                srcRowPtrsForInterp[2] = srcRowPtrsForInterp[0] + srcDescPtr->strides.cStride;            // srcPtrTopRowG for bilinear interpolation
-                srcRowPtrsForInterp[3] = srcRowPtrsForInterp[1] + srcDescPtr->strides.cStride;            // srcPtrBottomRowG for bilinear interpolation
-                srcRowPtrsForInterp[4] = srcRowPtrsForInterp[2] + srcDescPtr->strides.cStride;            // srcPtrTopRowB for bilinear interpolation
-                srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;            // srcPtrBottomRowB for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation_pln(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -402,10 +384,9 @@ omp_set_dynamic(0);
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp32f *srcRowPtrsForInterp[2];
+                Rpp32f *srcRowPtrsForInterp[2];     // kernelSize(2)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRow for bilinear interpolation
-                srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -443,14 +424,9 @@ omp_set_dynamic(0);
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp32f *srcRowPtrsForInterp[6];
+                Rpp32f *srcRowPtrsForInterp[6];     // kernelSize(2) * numOfPlanes(3)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;   // srcPtrTopRowR for bilinear interpolation
-                srcRowPtrsForInterp[1] = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRowR for bilinear interpolation
-                srcRowPtrsForInterp[2] = srcRowPtrsForInterp[0] + srcDescPtr->strides.cStride;           // srcPtrTopRowG for bilinear interpolation
-                srcRowPtrsForInterp[3] = srcRowPtrsForInterp[1] + srcDescPtr->strides.cStride;           // srcPtrBottomRowG for bilinear interpolation
-                srcRowPtrsForInterp[4] = srcRowPtrsForInterp[2] + srcDescPtr->strides.cStride;           // srcPtrTopRowB for bilinear interpolation
-                srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;           // srcPtrBottomRowB for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation_pln(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -555,10 +531,9 @@ omp_set_dynamic(0);
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
 
-                Rpp16f *srcRowPtrsForInterp[2];
+                Rpp16f *srcRowPtrsForInterp[2];     // kernelSize(2)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRow for bilinear interpolation
-                srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -602,14 +577,9 @@ omp_set_dynamic(0);
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp16f *srcRowPtrsForInterp[6];
+                Rpp16f *srcRowPtrsForInterp[6];     // kernelSize(2) * numOfPlanes(3)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRowR for bilinear interpolation
-                srcRowPtrsForInterp[1] = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;            // srcPtrBottomRowR for bilinear interpolation
-                srcRowPtrsForInterp[2] = srcRowPtrsForInterp[0] + srcDescPtr->strides.cStride;            // srcPtrTopRowG for bilinear interpolation
-                srcRowPtrsForInterp[3] = srcRowPtrsForInterp[1] + srcDescPtr->strides.cStride;            // srcPtrBottomRowG for bilinear interpolation
-                srcRowPtrsForInterp[4] = srcRowPtrsForInterp[2] + srcDescPtr->strides.cStride;            // srcPtrTopRowB for bilinear interpolation
-                srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;            // srcPtrBottomRowB for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation_pln(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -649,10 +619,9 @@ omp_set_dynamic(0);
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp16f *srcRowPtrsForInterp[2];
+                Rpp16f *srcRowPtrsForInterp[2];     // kernelSize(2)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRow for bilinear interpolation
-                srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -690,14 +659,9 @@ omp_set_dynamic(0);
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp16f *srcRowPtrsForInterp[6];
+                Rpp16f *srcRowPtrsForInterp[6];     // kernelSize(2) * numOfPlanes(3)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;  // srcPtrTopRowR for bilinear interpolation
-                srcRowPtrsForInterp[1] = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;          // srcPtrBottomRowR for bilinear interpolation
-                srcRowPtrsForInterp[2] = srcRowPtrsForInterp[0] + srcDescPtr->strides.cStride;          // srcPtrTopRowG for bilinear interpolation
-                srcRowPtrsForInterp[3] = srcRowPtrsForInterp[1] + srcDescPtr->strides.cStride;          // srcPtrBottomRowG for bilinear interpolation
-                srcRowPtrsForInterp[4] = srcRowPtrsForInterp[2] + srcDescPtr->strides.cStride;          // srcPtrTopRowB for bilinear interpolation
-                srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;          // srcPtrBottomRowB for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation_pln(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -804,10 +768,9 @@ omp_set_dynamic(0);
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
 
-                Rpp8s *srcRowPtrsForInterp[2];
+                Rpp8s *srcRowPtrsForInterp[2];     // kernelSize(2)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRow for bilinear interpolation
-                srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -851,14 +814,9 @@ omp_set_dynamic(0);
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp8s *srcRowPtrsForInterp[6];
+                Rpp8s *srcRowPtrsForInterp[6];     // kernelSize(2) * numOfPlanes(3)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRowR for bilinear interpolation
-                srcRowPtrsForInterp[1] = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;            // srcPtrBottomRowR for bilinear interpolation
-                srcRowPtrsForInterp[2] = srcRowPtrsForInterp[0] + srcDescPtr->strides.cStride;            // srcPtrTopRowG for bilinear interpolation
-                srcRowPtrsForInterp[3] = srcRowPtrsForInterp[1] + srcDescPtr->strides.cStride;            // srcPtrBottomRowG for bilinear interpolation
-                srcRowPtrsForInterp[4] = srcRowPtrsForInterp[2] + srcDescPtr->strides.cStride;            // srcPtrTopRowB for bilinear interpolation
-                srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;            // srcPtrBottomRowB for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation_pln(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -897,10 +855,9 @@ omp_set_dynamic(0);
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                Rpp8s *srcRowPtrsForInterp[2];
+                Rpp8s *srcRowPtrsForInterp[2];     // kernelSize(2)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;    // srcPtrTopRow for bilinear interpolation
-                srcRowPtrsForInterp[1]  = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRow for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
@@ -937,14 +894,9 @@ omp_set_dynamic(0);
             {
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                Rpp8s *srcRowPtrsForInterp[6];
+                Rpp8s *srcRowPtrsForInterp[6];     // kernelSize(2) * numOfPlanes(3)
                 compute_resize_src_loc(dstLocRow, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);  // Compute the src row location correspoding to the dst row location
-                srcRowPtrsForInterp[0] = srcPtrChannel + srcLocationRow * srcDescPtr->strides.hStride;   // srcPtrTopRowR for bilinear interpolation
-                srcRowPtrsForInterp[1] = srcRowPtrsForInterp[0] + srcDescPtr->strides.hStride;           // srcPtrBottomRowR for bilinear interpolation
-                srcRowPtrsForInterp[2] = srcRowPtrsForInterp[0] + srcDescPtr->strides.cStride;           // srcPtrTopRowG for bilinear interpolation
-                srcRowPtrsForInterp[3] = srcRowPtrsForInterp[1] + srcDescPtr->strides.cStride;           // srcPtrBottomRowG for bilinear interpolation
-                srcRowPtrsForInterp[4] = srcRowPtrsForInterp[2] + srcDescPtr->strides.cStride;           // srcPtrTopRowB for bilinear interpolation
-                srcRowPtrsForInterp[5] = srcRowPtrsForInterp[3] + srcDescPtr->strides.cStride;           // srcPtrBottomRowB for bilinear interpolation
+                compute_src_row_ptrs_for_interpolation_pln(srcRowPtrsForInterp, srcPtrChannel, srcLocationRow, srcDescPtr); // Compute the src row pointers for interpolation
                 pWeightParams[0] = _mm256_set1_ps(weightParams[0]);
                 pWeightParams[1]  = _mm256_set1_ps(weightParams[1]);
                 pDstLoc = avx_pDstLocInit;
