@@ -11,47 +11,42 @@ using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 typedef unsigned char uchar;
 typedef signed char schar;
-typedef struct { uint   data[ 6]; } d_uint6_s;      // used
-typedef struct { float  data[ 6]; } d_float6_s;     // used
-typedef struct { float  data[ 8]; } d_float8_s;     // used
-typedef struct { float  data[24]; } d_float24_s;    // used
-typedef struct { half   data[24]; } d_half24_s;     // used
-typedef struct { uchar  data[24]; } d_uchar24_s;    // used
-typedef struct { schar  data[24]; } d_schar24_s;    // used
+typedef struct { uint   data[ 6]; } d_uint6_s;
+typedef struct { float  data[ 6]; } d_float6_s;
+typedef struct { float  data[ 8]; } d_float8_s;
+typedef struct { float  data[24]; } d_float24_s;
+typedef struct { half   data[24]; } d_half24_s;
+typedef struct { uchar  data[24]; } d_uchar24_s;
+typedef struct { schar  data[24]; } d_schar24_s;
 
 // float
-typedef union { float f1[6];    float2 f2[3];   float3 f3[2];                                                   }   d_float6;
-typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;       // used
-typedef union { float f1[12];   float3 f3[4];   float4 f4[3];                                                   }   d_float12;
-typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;      // used
-typedef union { float f1[24];   float2 f2[12];   float3 f3[8];   float4 f4[6];   d_float8 f8[3];}   d_float24;      // used
+typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
+typedef union { float f1[8];    float4 f4[2];                                                   }   d_float8;
+typedef union { float f1[12];   float4 f4[3];                                                   }   d_float12;
+typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;
+typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   d_float8 f8[3]; }   d_float24;
 
 // uint
-typedef union { uint ui1[6];    uint2 ui2[3];                                                   }   d_uint6;        // used
+typedef union { uint ui1[6];    uint2 ui2[3];                                                   }   d_uint6;
 
 // int
-typedef union { int2 i2[2];                                                                     }   d_int4;
-typedef union { int i1[6];      int2 i2[3];                                                     }   d_int6;         // used
+typedef union { int i1[6];      int2 i2[3];                                                     }   d_int6;
 
 // half
 typedef union { half h1[3];                                                                     }   d_half3;
-typedef union { half h1[4];     half2 h2[2];                                                    }   d_half4;
 typedef union { half2 h2[3];                                                                    }   d_half6;
-typedef union { half h1[8];     half2 h2[4];    d_half4 h4[2];                                  }   d_half8;        // used
-typedef union { half h1[12];    half2 h2[6];    d_half3 h3[4];  d_half4 h4[3];                  }   d_half12;
-typedef union { half h1[24];    half2 h2[12];   d_half3 h3[8];  d_half4 h4[6];  d_half8 h8[3];  }   d_half24;
+typedef union { half h1[8];     half2 h2[4];                                                    }   d_half8;
+typedef union { half h1[12];    half2 h2[6];    d_half3 h3[4];                                  }   d_half12;
+typedef union { half h1[24];    half2 h2[12];   d_half3 h3[8];    d_half8 h8[3];                }   d_half24;
 
 // uchar
-typedef union { uchar uc1[8];   uchar4 uc4[2];                                                  }   d_uchar8;       // used
-typedef union { uchar3 uc3[4];                                                                  }   d_uchar12;
-typedef union { uchar uc1[24];  uchar3 uc3[8];  uchar4 uc4[6];  d_uchar8 uc8[3];                }   d_uchar24;      // used
+typedef union { uchar uc1[8];   uchar4 uc4[2];                                                  }   d_uchar8;
+typedef union { uchar uc1[24];  uchar3 uc3[8];  d_uchar8 uc8[3];                                }   d_uchar24;
 
 // schar
 typedef union { schar sc1[3];                                                                   }   d_schar3;
-typedef union { schar sc1[4];                                                                   }   d_schar4;
-typedef union { schar sc1[8];   d_schar4 sc4[2];                                                }   d_schar8;
-typedef union { schar sc1[12];  d_schar3 sc3[4];                                                }   d_schar12;
-typedef union { schar sc1[24];  d_schar3 sc3[8];    d_schar8 sc8[3];                            }   d_schar24;
+typedef union { schar sc1[8];                                                                   }   d_schar8;
+typedef union { d_schar3 sc3[8];    d_schar8 sc8[3];                                            }   d_schar24;
 
 enum class RPPTensorDataType
 {
