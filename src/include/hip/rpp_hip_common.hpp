@@ -44,9 +44,8 @@ typedef union { uchar uc1[8];   uchar4 uc4[2];                                  
 typedef union { uchar uc1[24];  uchar3 uc3[8];  d_uchar8 uc8[3];                                }   d_uchar24;
 
 // schar
-typedef union { schar sc1[3];                                                                   }   d_schar3;
 typedef union { schar sc1[8];                                                                   }   d_schar8;
-typedef union { d_schar3 sc3[8];    d_schar8 sc8[3];                                            }   d_schar24;
+typedef union { d_schar8 sc8[3];                                                                }   d_schar24;
 
 enum class RPPTensorDataType
 {

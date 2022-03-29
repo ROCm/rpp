@@ -37,56 +37,7 @@ __device__ void gridmask_ratio_hip_compute(int id_x, int id_y, float2 *rotateRat
     gridColRatio_f16->f1[15] = fmaf(id_x_vector[7], rotateRatios_f2->y, gridRowRatio_f2->y);
 }
 
-// Gridmask helpers - Vector masked store computes for packed layouts
-
-// 24 pixels (8 RGB sets)
-
-__device__ void gridmask_vector_masked_store24_hip_compute(d_uchar24 *srcPtr_uc24, d_uchar24 *dstPtr_uc24, d_float16 *gridColRatio_f16, float gridRatio)
-{
-    dstPtr_uc24->uc3[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_uc24->uc3[0] : dstPtr_uc24->uc3[0];
-    dstPtr_uc24->uc3[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_uc24->uc3[1] : dstPtr_uc24->uc3[1];
-    dstPtr_uc24->uc3[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_uc24->uc3[2] : dstPtr_uc24->uc3[2];
-    dstPtr_uc24->uc3[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_uc24->uc3[3] : dstPtr_uc24->uc3[3];
-    dstPtr_uc24->uc3[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_uc24->uc3[4] : dstPtr_uc24->uc3[4];
-    dstPtr_uc24->uc3[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_uc24->uc3[5] : dstPtr_uc24->uc3[5];
-    dstPtr_uc24->uc3[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_uc24->uc3[6] : dstPtr_uc24->uc3[6];
-    dstPtr_uc24->uc3[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_uc24->uc3[7] : dstPtr_uc24->uc3[7];
-}
-__device__ void gridmask_vector_masked_store24_hip_compute(d_float24 *srcPtr_f24, d_float24 *dstPtr_f24, d_float16 *gridColRatio_f16, float gridRatio)
-{
-    dstPtr_f24->f3[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_f24->f3[0] : dstPtr_f24->f3[0];
-    dstPtr_f24->f3[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_f24->f3[1] : dstPtr_f24->f3[1];
-    dstPtr_f24->f3[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_f24->f3[2] : dstPtr_f24->f3[2];
-    dstPtr_f24->f3[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_f24->f3[3] : dstPtr_f24->f3[3];
-    dstPtr_f24->f3[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_f24->f3[4] : dstPtr_f24->f3[4];
-    dstPtr_f24->f3[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_f24->f3[5] : dstPtr_f24->f3[5];
-    dstPtr_f24->f3[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_f24->f3[6] : dstPtr_f24->f3[6];
-    dstPtr_f24->f3[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_f24->f3[7] : dstPtr_f24->f3[7];
-}
-__device__ void gridmask_vector_masked_store24_hip_compute(d_schar24 *srcPtr_sc24, d_schar24 *dstPtr_sc24, d_float16 *gridColRatio_f16, float gridRatio)
-{
-    dstPtr_sc24->sc3[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_sc24->sc3[0] : dstPtr_sc24->sc3[0];
-    dstPtr_sc24->sc3[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_sc24->sc3[1] : dstPtr_sc24->sc3[1];
-    dstPtr_sc24->sc3[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_sc24->sc3[2] : dstPtr_sc24->sc3[2];
-    dstPtr_sc24->sc3[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_sc24->sc3[3] : dstPtr_sc24->sc3[3];
-    dstPtr_sc24->sc3[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_sc24->sc3[4] : dstPtr_sc24->sc3[4];
-    dstPtr_sc24->sc3[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_sc24->sc3[5] : dstPtr_sc24->sc3[5];
-    dstPtr_sc24->sc3[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_sc24->sc3[6] : dstPtr_sc24->sc3[6];
-    dstPtr_sc24->sc3[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_sc24->sc3[7] : dstPtr_sc24->sc3[7];
-}
-__device__ void gridmask_vector_masked_store24_hip_compute(d_half24 *srcPtr_h24, d_half24 *dstPtr_h24, d_float16 *gridColRatio_f16, float gridRatio)
-{
-    dstPtr_h24->h3[0] = ((gridColRatio_f16->f1[0] >= gridRatio) || (gridColRatio_f16->f1[ 8] >= gridRatio)) ? srcPtr_h24->h3[0] : dstPtr_h24->h3[0];
-    dstPtr_h24->h3[1] = ((gridColRatio_f16->f1[1] >= gridRatio) || (gridColRatio_f16->f1[ 9] >= gridRatio)) ? srcPtr_h24->h3[1] : dstPtr_h24->h3[1];
-    dstPtr_h24->h3[2] = ((gridColRatio_f16->f1[2] >= gridRatio) || (gridColRatio_f16->f1[10] >= gridRatio)) ? srcPtr_h24->h3[2] : dstPtr_h24->h3[2];
-    dstPtr_h24->h3[3] = ((gridColRatio_f16->f1[3] >= gridRatio) || (gridColRatio_f16->f1[11] >= gridRatio)) ? srcPtr_h24->h3[3] : dstPtr_h24->h3[3];
-    dstPtr_h24->h3[4] = ((gridColRatio_f16->f1[4] >= gridRatio) || (gridColRatio_f16->f1[12] >= gridRatio)) ? srcPtr_h24->h3[4] : dstPtr_h24->h3[4];
-    dstPtr_h24->h3[5] = ((gridColRatio_f16->f1[5] >= gridRatio) || (gridColRatio_f16->f1[13] >= gridRatio)) ? srcPtr_h24->h3[5] : dstPtr_h24->h3[5];
-    dstPtr_h24->h3[6] = ((gridColRatio_f16->f1[6] >= gridRatio) || (gridColRatio_f16->f1[14] >= gridRatio)) ? srcPtr_h24->h3[6] : dstPtr_h24->h3[6];
-    dstPtr_h24->h3[7] = ((gridColRatio_f16->f1[7] >= gridRatio) || (gridColRatio_f16->f1[15] >= gridRatio)) ? srcPtr_h24->h3[7] : dstPtr_h24->h3[7];
-}
-
-// 8 pixels
+// Gridmask helpers - Vector masked store computes
 
 __device__ void gridmask_vector_masked_store8_hip_compute(d_uchar8 *srcPtr_uc8, d_uchar8 *dstPtr_uc8, d_float16 *gridColRatio_f16, float gridRatio)
 {
