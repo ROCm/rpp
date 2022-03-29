@@ -691,7 +691,7 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_m
 __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(half *srcPtr, d_float24 *srcPtr_f24)
 {
     d_half24 src_h24;
-    *(d_half24_s *)&src_h24 = *(d_half24_s *)srcPtr;
+    src_h24 = *(d_half24 *)srcPtr;
 
     srcPtr_f24->f4[0] = make_float4(__half2float(src_h24.h1[ 0]), __half2float(src_h24.h1[ 3]), __half2float(src_h24.h1[ 6]), __half2float(src_h24.h1[ 9]));    // write R00-R03
     srcPtr_f24->f4[1] = make_float4(__half2float(src_h24.h1[12]), __half2float(src_h24.h1[15]), __half2float(src_h24.h1[18]), __half2float(src_h24.h1[21]));    // write R04-R07
@@ -704,7 +704,7 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(h
 __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(half *srcPtr, d_float24 *srcPtr_f24)
 {
     d_half24 src_h24;
-    *(d_half24_s *)&src_h24 = *(d_half24_s *)srcPtr;
+    src_h24 = *(d_half24 *)srcPtr;
 
     srcPtr_f24->f4[0] = make_float4(__half2float(src_h24.h1[21]), __half2float(src_h24.h1[18]), __half2float(src_h24.h1[15]), __half2float(src_h24.h1[12]));    // write R07-R04 (mirrored load)
     srcPtr_f24->f4[1] = make_float4(__half2float(src_h24.h1[ 9]), __half2float(src_h24.h1[ 6]), __half2float(src_h24.h1[ 3]), __half2float(src_h24.h1[ 0]));    // write R03-R00 (mirrored load)
@@ -897,7 +897,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(half 
     dst_h24.h2[10] = __float22half2_rn(make_float2(dstPtr_f24->f1[20], dstPtr_f24->f1[21]));    // write B06R07
     dst_h24.h2[11] = __float22half2_rn(make_float2(dstPtr_f24->f1[22], dstPtr_f24->f1[23]));    // write G07B07
 
-    *(d_half24_s *)dstPtr = *(d_half24_s *)&dst_h24;
+    *(d_half24 *)dstPtr = dst_h24;
 }
 
 // U8 stores without layout toggle PLN3 to PLN3 (24 U8 pixels)
@@ -1046,7 +1046,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half 
     dst_h24.h2[10] = __float22half2_rn(make_float2(dstPtr_f24->f1[22], dstPtr_f24->f1[ 7]));    // write B06R07
     dst_h24.h2[11] = __float22half2_rn(make_float2(dstPtr_f24->f1[15], dstPtr_f24->f1[23]));    // write G07B07
 
-    *(d_half24_s *)dstPtr = *(d_half24_s *)&dst_h24;
+    *(d_half24 *)dstPtr = dst_h24;
 }
 
 // U8 stores with layout toggle PKD3 to PLN3 (24 U8 pixels)
@@ -1242,7 +1242,7 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(schar *srcPtr
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(half *srcPtr, uchar **srcPtrs_uchar8)
 {
     d_half24 src_h24;
-    *(d_half24_s *)&src_h24 = *(d_half24_s *)srcPtr;
+    src_h24 = *(d_half24 *)srcPtr;
 
     d_float24 src_f24;
     float2 src1_f2, src2_f2;

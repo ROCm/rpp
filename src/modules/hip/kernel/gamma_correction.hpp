@@ -185,8 +185,10 @@ __global__ void gamma_correction_lut_compute(float *gammaLUT,
     uint gammaLutIdx = (256 * id_y) + id_x;
     uint gammaIdx = id_y;
 
-    d_float8 *gammaLUT_f8;
-    gammaLUT_f8 = (d_float8 *)&gammaLUT[gammaLutIdx];
+    d_float8 gammaLUT_f8;
+    d_float8_s *gammaLUTPtr_f8;
+    gammaLUTPtr_f8 = (d_float8_s *)&gammaLUT[gammaLutIdx];
+    *(d_float8_s *)&gammaLUT_f8 = *gammaLUTPtr_f8;
 
     float4 inv255_f4 = (float4) ONE_OVER_255;
     d_float8 pixVal_f8;
@@ -194,17 +196,19 @@ __global__ void gamma_correction_lut_compute(float *gammaLUT,
     pixVal_f8.f4[0] = make_float4(id_x, id_x + 1, id_x + 2, id_x + 3);
     pixVal_f8.f4[1] = make_float4(id_x + 4, id_x + 5, id_x + 6, id_x + 7);
 
-    gammaLUT_f8->f4[0] = pixVal_f8.f4[0] * inv255_f4;
-    gammaLUT_f8->f4[1] = pixVal_f8.f4[1] * inv255_f4;
+    gammaLUT_f8.f4[0] = pixVal_f8.f4[0] * inv255_f4;
+    gammaLUT_f8.f4[1] = pixVal_f8.f4[1] * inv255_f4;
 
-    gammaLUT_f8->f4[0] = make_float4(powf(gammaLUT_f8->f1[0], gamma[gammaIdx]),
-                                     powf(gammaLUT_f8->f1[1], gamma[gammaIdx]),
-                                     powf(gammaLUT_f8->f1[2], gamma[gammaIdx]),
-                                     powf(gammaLUT_f8->f1[3], gamma[gammaIdx]));
-    gammaLUT_f8->f4[1] = make_float4(powf(gammaLUT_f8->f1[4], gamma[gammaIdx]),
-                                     powf(gammaLUT_f8->f1[5], gamma[gammaIdx]),
-                                     powf(gammaLUT_f8->f1[6], gamma[gammaIdx]),
-                                     powf(gammaLUT_f8->f1[7], gamma[gammaIdx]));
+    gammaLUT_f8.f4[0] = make_float4(powf(gammaLUT_f8.f1[0], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[1], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[2], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[3], gamma[gammaIdx]));
+    gammaLUT_f8.f4[1] = make_float4(powf(gammaLUT_f8.f1[4], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[5], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[6], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[7], gamma[gammaIdx]));
+
+    *gammaLUTPtr_f8 = *(d_float8_s *)&gammaLUT_f8;
 }
 
 template <typename T>
