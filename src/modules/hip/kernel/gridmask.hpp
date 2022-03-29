@@ -141,7 +141,11 @@ __device__ void gridmask_result_pkd3_pkd3_hip_compute(uchar *srcPtr, uchar *dstP
     d_uchar24 src_uc24, dst_uc24;
     *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
     *(d_uchar24_s *)&dst_uc24 = *(d_uchar24_s *)dstPtr;
-    gridmask_vector_masked_store24_hip_compute(&src_uc24, &dst_uc24, gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uchar24_s *)&src_uc24);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[0], &dst_uc24.uc8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[1], &dst_uc24.uc8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[2], &dst_uc24.uc8[2], gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_uchar24_s *)&dst_uc24);
     *(d_uchar24_s *)dstPtr = *(d_uchar24_s *)&dst_uc24;
 }
 __device__ void gridmask_result_pkd3_pkd3_hip_compute(float *srcPtr, float *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
@@ -149,7 +153,11 @@ __device__ void gridmask_result_pkd3_pkd3_hip_compute(float *srcPtr, float *dstP
     d_float24 src_f24, dst_f24;
     *(d_float24_s *)&src_f24 = *(d_float24_s *)srcPtr;
     *(d_float24_s *)&dst_f24 = *(d_float24_s *)dstPtr;
-    gridmask_vector_masked_store24_hip_compute(&src_f24, &dst_f24, gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_float24_s *)&src_f24);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[0], &dst_f24.f8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[1], &dst_f24.f8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[2], &dst_f24.f8[2], gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_float24_s *)&dst_f24);
     *(d_float24_s *)dstPtr = *(d_float24_s *)&dst_f24;
 }
 __device__ void gridmask_result_pkd3_pkd3_hip_compute(schar *srcPtr, schar *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
@@ -157,7 +165,11 @@ __device__ void gridmask_result_pkd3_pkd3_hip_compute(schar *srcPtr, schar *dstP
     d_schar24 src_sc24, dst_sc24;
     src_sc24 = *(d_schar24 *)srcPtr;
     dst_sc24 = *(d_schar24 *)dstPtr;
-    gridmask_vector_masked_store24_hip_compute(&src_sc24, &dst_sc24, gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_schar24_s *)&src_sc24);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[0], &dst_sc24.sc8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[1], &dst_sc24.sc8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[2], &dst_sc24.sc8[2], gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_schar24_s *)&dst_sc24);
     *(d_schar24 *)dstPtr = dst_sc24;
 }
 __device__ void gridmask_result_pkd3_pkd3_hip_compute(half *srcPtr, half *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
@@ -165,7 +177,11 @@ __device__ void gridmask_result_pkd3_pkd3_hip_compute(half *srcPtr, half *dstPtr
     d_half24 src_h24, dst_h24;
     src_h24 = *(d_half24 *)srcPtr;
     dst_h24 = *(d_half24 *)dstPtr;
-    gridmask_vector_masked_store24_hip_compute(&src_h24, &dst_h24, gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_half24_s *)&src_h24);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[0], &dst_h24.h8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[1], &dst_h24.h8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[2], &dst_h24.h8[2], gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_half24_s *)&dst_h24);
     *(d_half24 *)dstPtr = dst_h24;
 }
 
@@ -291,8 +307,10 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(uchar *srcPtr, uchar *dstP
     d_uchar24 src_uc24, dst_uc24;
     *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
     *(d_uchar24_s *)&dst_uc24 = *(d_uchar24_s *)dstPtr;
-    gridmask_vector_masked_store24_hip_compute(&src_uc24, &dst_uc24, gridColRatio_f16, gridRatio);
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uchar24_s *)&dst_uc24);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uchar24_s *)&src_uc24);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[0], &dst_uc24.uc8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[1], &dst_uc24.uc8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[2], &dst_uc24.uc8[2], gridColRatio_f16, gridRatio);
     *(uint2 *)dstPtr = *(uint2 *)&dst_uc24.uc8[0];
     dstPtr += dstStrideC;
     *(uint2 *)dstPtr = *(uint2 *)&dst_uc24.uc8[1];
@@ -304,8 +322,10 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(float *srcPtr, float *dstP
     d_float24 src_f24, dst_f24;
     *(d_float24_s *)&src_f24 = *(d_float24_s *)srcPtr;
     *(d_float24_s *)&dst_f24 = *(d_float24_s *)dstPtr;
-    gridmask_vector_masked_store24_hip_compute(&src_f24, &dst_f24, gridColRatio_f16, gridRatio);
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_float24_s *)&dst_f24);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_float24_s *)&src_f24);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[0], &dst_f24.f8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[1], &dst_f24.f8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[2], &dst_f24.f8[2], gridColRatio_f16, gridRatio);
     *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f24.f8[0];
     dstPtr += dstStrideC;
     *(d_float8_s *)dstPtr = *(d_float8_s *)&dst_f24.f8[1];
@@ -317,8 +337,10 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(schar *srcPtr, schar *dstP
     d_schar24 src_sc24, dst_sc24;
     src_sc24 = *(d_schar24 *)srcPtr;
     dst_sc24 = *(d_schar24 *)dstPtr;
-    gridmask_vector_masked_store24_hip_compute(&src_sc24, &dst_sc24, gridColRatio_f16, gridRatio);
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_schar24_s *)&dst_sc24);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_schar24_s *)&src_sc24);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[0], &dst_sc24.sc8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[1], &dst_sc24.sc8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[2], &dst_sc24.sc8[2], gridColRatio_f16, gridRatio);
     *(d_schar8 *)dstPtr = dst_sc24.sc8[0];
     dstPtr += dstStrideC;
     *(d_schar8 *)dstPtr = dst_sc24.sc8[1];
@@ -330,8 +352,10 @@ __device__ void gridmask_result_pkd3_pln3_hip_compute(half *srcPtr, half *dstPtr
     d_half24 src_h24, dst_h24;
     src_h24 = *(d_half24 *)srcPtr;
     dst_h24 = *(d_half24 *)dstPtr;
-    gridmask_vector_masked_store24_hip_compute(&src_h24, &dst_h24, gridColRatio_f16, gridRatio);
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_half24_s *)&dst_h24);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_half24_s *)&src_h24);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[0], &dst_h24.h8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[1], &dst_h24.h8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[2], &dst_h24.h8[2], gridColRatio_f16, gridRatio);
     *(d_half8 *)dstPtr = dst_h24.h8[0];
     dstPtr += dstStrideC;
     *(d_half8 *)dstPtr = dst_h24.h8[1];
@@ -349,8 +373,10 @@ __device__ void gridmask_result_pln3_pkd3_hip_compute(uchar *srcPtr, uint srcStr
     srcPtr += srcStrideC;
     *(uint2 *)&src_uc24.uc8[2] = *(uint2 *)srcPtr;
     *(d_uchar24_s *)&dst_uc24 = *(d_uchar24_s *)dstPtr;
-    rpp_hip_layouttoggle24_pln3_to_pkd3((d_uchar24_s *)&src_uc24);
-    gridmask_vector_masked_store24_hip_compute(&src_uc24, &dst_uc24, gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[0], &dst_uc24.uc8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[1], &dst_uc24.uc8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_uc24.uc8[2], &dst_uc24.uc8[2], gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_uchar24_s *)&dst_uc24);
     *(d_uchar24_s *)dstPtr = *(d_uchar24_s *)&dst_uc24;
 }
 __device__ void gridmask_result_pln3_pkd3_hip_compute(float *srcPtr, uint srcStrideC, float *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
@@ -362,8 +388,10 @@ __device__ void gridmask_result_pln3_pkd3_hip_compute(float *srcPtr, uint srcStr
     srcPtr += srcStrideC;
     *(d_float8_s *)&src_f24.f8[2] = *(d_float8_s *)srcPtr;
     *(d_float24_s *)&dst_f24 = *(d_float24_s *)dstPtr;
-    rpp_hip_layouttoggle24_pln3_to_pkd3((d_float24_s *)&src_f24);
-    gridmask_vector_masked_store24_hip_compute(&src_f24, &dst_f24, gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[0], &dst_f24.f8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[1], &dst_f24.f8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_f24.f8[2], &dst_f24.f8[2], gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_float24_s *)&dst_f24);
     *(d_float24_s *)dstPtr = *(d_float24_s *)&dst_f24;
 }
 __device__ void gridmask_result_pln3_pkd3_hip_compute(schar *srcPtr, uint srcStrideC, schar *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
@@ -375,8 +403,10 @@ __device__ void gridmask_result_pln3_pkd3_hip_compute(schar *srcPtr, uint srcStr
     srcPtr += srcStrideC;
     src_sc24.sc8[2] = *(d_schar8 *)srcPtr;
     dst_sc24 = *(d_schar24 *)dstPtr;
-    rpp_hip_layouttoggle24_pln3_to_pkd3((d_schar24_s *)&src_sc24);
-    gridmask_vector_masked_store24_hip_compute(&src_sc24, &dst_sc24, gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[0], &dst_sc24.sc8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[1], &dst_sc24.sc8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_sc24.sc8[2], &dst_sc24.sc8[2], gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_schar24_s *)&dst_sc24);
     *(d_schar24 *)dstPtr = dst_sc24;
 }
 __device__ void gridmask_result_pln3_pkd3_hip_compute(half *srcPtr, uint srcStrideC, half *dstPtr, d_float16 *gridColRatio_f16, float gridRatio)
@@ -388,8 +418,10 @@ __device__ void gridmask_result_pln3_pkd3_hip_compute(half *srcPtr, uint srcStri
     srcPtr += srcStrideC;
     src_h24.h8[2] = *(d_half8 *)srcPtr;
     dst_h24 = *(d_half24 *)dstPtr;
-    rpp_hip_layouttoggle24_pln3_to_pkd3((d_half24_s *)&src_h24);
-    gridmask_vector_masked_store24_hip_compute(&src_h24, &dst_h24, gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[0], &dst_h24.h8[0], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[1], &dst_h24.h8[1], gridColRatio_f16, gridRatio);
+    gridmask_vector_masked_store8_hip_compute(&src_h24.h8[2], &dst_h24.h8[2], gridColRatio_f16, gridRatio);
+    rpp_hip_layouttoggle24_pln3_to_pkd3((d_half24_s *)&dst_h24);
     *(d_half24 *)dstPtr = dst_h24;
 }
 
