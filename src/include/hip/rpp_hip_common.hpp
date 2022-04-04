@@ -17,7 +17,7 @@ typedef struct { float  data[ 8]; } d_float8_s;
 typedef struct { float  data[24]; } d_float24_s;
 typedef struct { half   data[24]; } d_half24_s;
 typedef struct { uchar  data[24]; } d_uchar24_s;
-typedef struct { schar  data[24]; } d_schar24_s;
+typedef struct { schar  data[24]; } d_schar24sc1s_s;
 
 // float
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
@@ -33,19 +33,19 @@ typedef union { uint ui1[6];    uint2 ui2[3];                                   
 typedef union { int i1[6];      int2 i2[3];                                                     }   d_int6;
 
 // half
-typedef union { half h1[3];                                                                     }   d_half3;
-typedef union { half2 h2[3];                                                                    }   d_half6;
+typedef struct { half h1[3];                                                                    }   d_half3_s;
+typedef struct { half2 h2[3];                                                                   }   d_half6_s;
 typedef union { half h1[8];     half2 h2[4];                                                    }   d_half8;
-typedef union { half h1[12];    half2 h2[6];    d_half3 h3[4];                                  }   d_half12;
-typedef union { half h1[24];    half2 h2[12];   d_half3 h3[8];    d_half8 h8[3];                }   d_half24;
+typedef union { half h1[12];    half2 h2[6];    d_half3_s h3[4];                                }   d_half12;
+typedef union { half h1[24];    half2 h2[12];   d_half3_s h3[8];    d_half8 h8[3];              }   d_half24;
 
 // uchar
 typedef union { uchar uc1[8];   uchar4 uc4[2];                                                  }   d_uchar8;
 typedef union { uchar uc1[24];  uchar3 uc3[8];  d_uchar8 uc8[3];                                }   d_uchar24;
 
 // schar
-typedef union { schar sc1[8];                                                                   }   d_schar8;
-typedef union { d_schar8 sc8[3];                                                                }   d_schar24;
+typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
+typedef struct { d_schar8_s sc8[3];                                                             }   d_schar24_s;
 
 enum class RPPTensorDataType
 {
@@ -1544,10 +1544,10 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(schar *s
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *srcPtr, uint srcStrideH, float2 *locSrcFloor, d_float12 *srcNeighborhood_f12)
 {
-    d_half6 src_h6;
+    d_half6_s src_h6;
     d_float6 src_f6;
     int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
-    src_h6 = *(d_half6 *)&srcPtr[srcIdx];
+    src_h6 = *(d_half6_s *)&srcPtr[srcIdx];
     src_f6.f2[0] = __half22float2(src_h6.h2[0]);
     src_f6.f2[1] = __half22float2(src_h6.h2[1]);
     src_f6.f2[2] = __half22float2(src_h6.h2[2]);
@@ -1558,7 +1558,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *sr
     srcNeighborhood_f12->f1[8] = src_f6.f1[2];
     srcNeighborhood_f12->f1[9] = src_f6.f1[5];
     srcIdx += srcStrideH;
-    src_h6 = *(d_half6 *)&srcPtr[srcIdx];
+    src_h6 = *(d_half6_s *)&srcPtr[srcIdx];
     src_f6.f2[0] = __half22float2(src_h6.h2[0]);
     src_f6.f2[1] = __half22float2(src_h6.h2[1]);
     src_f6.f2[2] = __half22float2(src_h6.h2[2]);
@@ -1734,7 +1734,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_load_pkd3(
 
 __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_load_pkd3(half *srcPtr, float3 *dstPtr_f3)
 {
-    d_half3 src_h3 = *(d_half3 *)srcPtr;
+    d_half3_s src_h3 = *(d_half3_s *)srcPtr;
     dstPtr_f3->x = __half2float(src_h3.h1[0]);
     dstPtr_f3->y = __half2float(src_h3.h1[1]);
     dstPtr_f3->z = __half2float(src_h3.h1[2]);
