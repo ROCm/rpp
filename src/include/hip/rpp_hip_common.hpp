@@ -1498,23 +1498,23 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(float *srcPtr, uint srcStrideH, float2 *locSrcFloor, d_float12 *srcNeighborhood_f12)
 {
-    d_float6 src_f6;
+    d_float6_s src_f6;
     int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
-    *(d_float6_s *)&src_f6 = *(d_float6_s *)&srcPtr[srcIdx];
-    srcNeighborhood_f12->f1[0] = src_f6.f1[0];
-    srcNeighborhood_f12->f1[1] = src_f6.f1[3];
-    srcNeighborhood_f12->f1[4] = src_f6.f1[1];
-    srcNeighborhood_f12->f1[5] = src_f6.f1[4];
-    srcNeighborhood_f12->f1[8] = src_f6.f1[2];
-    srcNeighborhood_f12->f1[9] = src_f6.f1[5];
+    src_f6 = *(d_float6_s *)&srcPtr[srcIdx];
+    srcNeighborhood_f12->f1[0] = src_f6.data[0];
+    srcNeighborhood_f12->f1[1] = src_f6.data[3];
+    srcNeighborhood_f12->f1[4] = src_f6.data[1];
+    srcNeighborhood_f12->f1[5] = src_f6.data[4];
+    srcNeighborhood_f12->f1[8] = src_f6.data[2];
+    srcNeighborhood_f12->f1[9] = src_f6.data[5];
     srcIdx += srcStrideH;
-    *(d_float6_s *)&src_f6 = *(d_float6_s *)&srcPtr[srcIdx];
-    srcNeighborhood_f12->f1[ 2] = src_f6.f1[0];
-    srcNeighborhood_f12->f1[ 3] = src_f6.f1[3];
-    srcNeighborhood_f12->f1[ 6] = src_f6.f1[1];
-    srcNeighborhood_f12->f1[ 7] = src_f6.f1[4];
-    srcNeighborhood_f12->f1[10] = src_f6.f1[2];
-    srcNeighborhood_f12->f1[11] = src_f6.f1[5];
+    src_f6 = *(d_float6_s *)&srcPtr[srcIdx];
+    srcNeighborhood_f12->f1[ 2] = src_f6.data[0];
+    srcNeighborhood_f12->f1[ 3] = src_f6.data[3];
+    srcNeighborhood_f12->f1[ 6] = src_f6.data[1];
+    srcNeighborhood_f12->f1[ 7] = src_f6.data[4];
+    srcNeighborhood_f12->f1[10] = src_f6.data[2];
+    srcNeighborhood_f12->f1[11] = src_f6.data[5];
 }
 
 // I8 loads for bilinear interpolation (12 I8 pixels)
