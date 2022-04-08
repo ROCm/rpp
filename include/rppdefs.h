@@ -286,7 +286,11 @@ typedef struct
     Rpp32f y;
 } RpptFloatVector2D;
 
-
+typedef struct
+{
+    Rpp32u width;
+    Rpp32u height;
+} RpptImagePatch, *RpptImagePatchPtr;
 
 
 
