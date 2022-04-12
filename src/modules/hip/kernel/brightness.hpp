@@ -3,26 +3,26 @@
 
 __device__ void brightness_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4;
+    dst_f8->f4[0] = src_f8->f4[0] * *alpha_f4 + *beta_f4;
+    dst_f8->f4[1] = src_f8->f4[1] * *alpha_f4 + *beta_f4;
 }
 
 __device__ void brightness_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
+    dst_f8->f4[0] = src_f8->f4[0] * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
+    dst_f8->f4[1] = src_f8->f4[1] * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
 }
 
 __device__ void brightness_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    dst_f8->x = rpp_hip_pixel_check_0to255((src_f8->x + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
-    dst_f8->y = rpp_hip_pixel_check_0to255((src_f8->y + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] + (float4)128) * *alpha_f4 + *beta_f4) - (float4)128;
 }
 
 __device__ void brightness_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
-    dst_f8->x = src_f8->x * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
-    dst_f8->y = src_f8->y * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
+    dst_f8->f4[0] = src_f8->f4[0] * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
+    dst_f8->f4[1] = src_f8->f4[1] * *alpha_f4 + *beta_f4 * (float4) ONE_OVER_255;
 }
 
 template <typename T>
@@ -132,9 +132,9 @@ __global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
+    brightness_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &alpha_f4, &beta_f4);
+    brightness_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &alpha_f4, &beta_f4);
+    brightness_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &alpha_f4, &beta_f4);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -165,9 +165,9 @@ __global__ void brightness_pln3_pkd3_tensor(T *srcPtr,
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    brightness_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &alpha_f4, &beta_f4);
-    brightness_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &alpha_f4, &beta_f4);
+    brightness_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &alpha_f4, &beta_f4);
+    brightness_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &alpha_f4, &beta_f4);
+    brightness_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &alpha_f4, &beta_f4);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 

@@ -276,7 +276,7 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** warp_affine ********************/
+// /******************** warp_affine ********************/
 
 RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
                                RpptDescPtr srcDescPtr,
