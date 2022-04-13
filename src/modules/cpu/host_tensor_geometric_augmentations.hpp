@@ -26,5 +26,6 @@ THE SOFTWARE.
 #include "kernel/crop.hpp"
 #include "kernel/crop_mirror_normalize.hpp"
 #include "kernel/flip.hpp"
+#include "kernel/resize.hpp"
 
 #endif // HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
