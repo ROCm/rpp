@@ -103,6 +103,7 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
 /******************** resize ********************/
 
 // Resize augmentation for a NCHW/NHWC layout tensor
+
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDesc source tensor descriptor
 // *param[out] dstPtr destination tensor memory
