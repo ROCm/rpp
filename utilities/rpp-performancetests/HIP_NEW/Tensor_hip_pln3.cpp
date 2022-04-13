@@ -899,7 +899,7 @@ int main(int argc, char **argv)
             for (i = 0; i < images; i++)
             {
                 horizontalFlag[i] = 1;
-                verticalFlag[i] = 1;
+                verticalFlag[i] = 0;
             }
 
             // Uncomment to run test case with an xywhROI override
@@ -936,7 +936,7 @@ int main(int argc, char **argv)
             else if (ip_bitDepth == 4)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
-                rppt_flip_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, exposureFactor, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_flip_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, horizontalFlag, verticalFlag, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else

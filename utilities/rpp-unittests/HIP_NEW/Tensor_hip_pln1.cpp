@@ -843,8 +843,8 @@ int main(int argc, char **argv)
         Rpp32u verticalFlag[images];
         for (i = 0; i < images; i++)
         {
-            horizontalFlag[i] = 1;
-            verticalFlag[i] = 0;
+            horizontalFlag[i] = 0;
+            verticalFlag[i] = 1;
         }
 
         // Uncomment to run test case with an xywhROI override

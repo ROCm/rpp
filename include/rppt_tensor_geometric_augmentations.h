@@ -100,6 +100,23 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 
 RppStatus rppt_flip_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *horizontalTensor, Rpp32u *verticalTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
+/******************** resize ********************/
+
+// Resize augmentation for a NCHW/NHWC layout tensor
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDesc source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDescPtr destination tensor descriptor
+// *param[in] dstImgSizes destination image size
+// *param[in] interpolationType resize interpolation type
+// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_resize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstImgSizes, RpptInterpolationType interpolationType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif

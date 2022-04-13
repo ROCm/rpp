@@ -3,31 +3,31 @@
 
 __device__ void cmn_hip_compute(uchar *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x - cmnParams_f8->x) * cmnParams_f8->y);
-    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y - cmnParams_f8->x) * cmnParams_f8->y);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
 }
 
 __device__ void cmn_hip_compute(float *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
     float4 normalizer_f4 = (float4) ONE_OVER_255;
-    cmnParams_f8->x = cmnParams_f8->x * normalizer_f4;
+    cmnParams_f8->f4[0] = cmnParams_f8->f4[0] * normalizer_f4;
 
-    pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - cmnParams_f8->x) * cmnParams_f8->y);
-    pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - cmnParams_f8->x) * cmnParams_f8->y);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
 }
 
 __device__ void cmn_hip_compute(schar *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255(((pix_f8->x + (float4)128) - cmnParams_f8->x) * cmnParams_f8->y) - (float4)128;
-    pix_f8->y = rpp_hip_pixel_check_0to255(((pix_f8->y + (float4)128) - cmnParams_f8->x) * cmnParams_f8->y) - (float4)128;
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(((pix_f8->f4[0] + (float4)128) - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]) - (float4)128;
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(((pix_f8->f4[1] + (float4)128) - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]) - (float4)128;
 }
 __device__ void cmn_hip_compute(half *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
     float4 normalizer_f4 = (float4) ONE_OVER_255;
-    cmnParams_f8->x = cmnParams_f8->x * normalizer_f4;
+    cmnParams_f8->f4[0] = cmnParams_f8->f4[0] * normalizer_f4;
 
-    pix_f8->x = rpp_hip_pixel_check_0to1((pix_f8->x - cmnParams_f8->x) * cmnParams_f8->y);
-    pix_f8->y = rpp_hip_pixel_check_0to1((pix_f8->y - cmnParams_f8->x) * cmnParams_f8->y);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
 }
 
 template <typename T>
@@ -65,12 +65,12 @@ __global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
     d_float8 cmnParams_f8;
-    cmnParams_f8.x = (float4)meanTensor[id_z];
-    cmnParams_f8.y = (float4)(1 / stdDevTensor[id_z]);
+    cmnParams_f8.f4[0] = (float4)meanTensor[id_z];
+    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
 
-    cmn_hip_compute(srcPtr, &pix_f24.x, &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.y, &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.z, &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[0], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[1], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[2], &cmnParams_f8);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
@@ -98,8 +98,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
     d_float8 pix_f8, cmnParams_f8;
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    cmnParams_f8.x = (float4)meanTensor[id_z];
-    cmnParams_f8.y = (float4)(1 / stdDevTensor[id_z]);
+    cmnParams_f8.f4[0] = (float4)meanTensor[id_z];
+    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
 
     if(mirrorTensor[id_z] == 1)
     {
@@ -186,12 +186,12 @@ __global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     d_float8 cmnParams_f8;
-    cmnParams_f8.x = (float4)meanTensor[id_z];
-    cmnParams_f8.y = (float4)(1 / stdDevTensor[id_z]);
+    cmnParams_f8.f4[0] = (float4)meanTensor[id_z];
+    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
 
-    cmn_hip_compute(srcPtr, &pix_f24.x, &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.y, &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.z, &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[0], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[1], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[2], &cmnParams_f8);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
@@ -230,12 +230,12 @@ __global__ void crop_mirror_normalize_pln3_pkd3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     d_float8 cmnParams_f8;
-    cmnParams_f8.x = (float4)meanTensor[id_z];
-    cmnParams_f8.y = (float4)(1 / stdDevTensor[id_z]);
+    cmnParams_f8.f4[0] = (float4)meanTensor[id_z];
+    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
 
-    cmn_hip_compute(srcPtr, &pix_f24.x, &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.y, &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.z, &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[0], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[1], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, &pix_f24.f8[2], &cmnParams_f8);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
