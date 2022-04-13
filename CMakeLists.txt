@@ -20,24 +20,21 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(amd_rpp)
-set(VERSION "0.93")
+set(VERSION "0.95")
 
 find_program(MAKE_NSIS_EXE makensis)
 find_program(RPMBUILD_EXE rpmbuild)
 find_program(DPKG_EXE dpkg)
 
 # ROCm Path
-
-set(ROCM_PATH /opt/rocm CACHE PATH "ROCm installation path")
-
+set(ROCM_PATH /opt/rocm CACHE PATH "RPP default ROCm installation path")
 # Avoid setting the default path to /usr/local
-
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX ${ROCM_PATH}/rpp CACHE PATH "RPP default ROCm installation path" FORCE)
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH}/rpp CACHE PATH "RPP default ROCm installation path" FORCE)
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Set message options
-
 if(NOT WIN32)
     string(ASCII 27 Esc)
     set(ColourReset "${Esc}[m")
@@ -59,7 +56,6 @@ message("-- ${Green}CMake version found: ${CMAKE_VERSION}${ColourReset}")
 include(CheckCXXCompilerFlag)
 
 # Set defaults
-
 if (NOT DEFINED BACKEND)
     SET(BACKEND "HIP")
 endif()
@@ -71,21 +67,17 @@ else()
 endif()
 
 # Cmake checks and setups
-
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "-- ${Red}In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
 endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # Set Compilers for HIP and OPENCL backends
-
 set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
 set(COMPILER_FOR_OPENCL clang++)
 
 # Backend specific settings
-
 if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
-
     add_definitions(-DSTATIC) # This line is to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
 
     # Find package
@@ -105,9 +97,7 @@ if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
     link_libraries(stdc++)
 
     message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
-
 elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OpenCL")
-
     # Find package
     find_package(OpenCL REQUIRED)
 
@@ -131,7 +121,6 @@ endif()
 configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
-
 if(NOT DEFINED SIMD_ENABLE)
     SET(SIMD_ENABLE "1")
 endif()
@@ -146,7 +135,6 @@ else()
 endif()
 
 # Target setting
-
 option(Boost_USE_STATIC_LIBS "Use boost static libraries" OFF)
 set(BOOST_COMPONENTS filesystem system)
 add_definitions(-DBOOST_ALL_NO_LIB=1)
@@ -168,14 +156,12 @@ target_include_directories(${PROJECT_NAME}
 add_subdirectory(addkernels)
 
 # Installation
-
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*.h.in" EXCLUDE)
 install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 
 # Set package information
-
 set(CPACK_PACKAGE_VERSION       ${VERSION})
 set(CPACK_PACKAGE_NAME          "rpp")
 set(CPACK_PACKAGE_LICENSE       "MIT")

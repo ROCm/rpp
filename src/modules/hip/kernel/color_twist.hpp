@@ -72,14 +72,14 @@ __device__ void color_twist_1RGB_hip_compute(float *pixelR, float *pixelG, float
 
 __device__ void color_twist_8RGB_hip_compute(d_float24 *pix_f24, float4 *colorTwistParams_f4)
 {
-    color_twist_1RGB_hip_compute(&(pix_f24->x.x.x), &(pix_f24->y.x.x), &(pix_f24->z.x.x), colorTwistParams_f4);
-    color_twist_1RGB_hip_compute(&(pix_f24->x.x.y), &(pix_f24->y.x.y), &(pix_f24->z.x.y), colorTwistParams_f4);
-    color_twist_1RGB_hip_compute(&(pix_f24->x.x.z), &(pix_f24->y.x.z), &(pix_f24->z.x.z), colorTwistParams_f4);
-    color_twist_1RGB_hip_compute(&(pix_f24->x.x.w), &(pix_f24->y.x.w), &(pix_f24->z.x.w), colorTwistParams_f4);
-    color_twist_1RGB_hip_compute(&(pix_f24->x.y.x), &(pix_f24->y.y.x), &(pix_f24->z.y.x), colorTwistParams_f4);
-    color_twist_1RGB_hip_compute(&(pix_f24->x.y.y), &(pix_f24->y.y.y), &(pix_f24->z.y.y), colorTwistParams_f4);
-    color_twist_1RGB_hip_compute(&(pix_f24->x.y.z), &(pix_f24->y.y.z), &(pix_f24->z.y.z), colorTwistParams_f4);
-    color_twist_1RGB_hip_compute(&(pix_f24->x.y.w), &(pix_f24->y.y.w), &(pix_f24->z.y.w), colorTwistParams_f4);
+    color_twist_1RGB_hip_compute(&(pix_f24->f1[ 0]), &(pix_f24->f1[ 8]), &(pix_f24->f1[16]), colorTwistParams_f4);
+    color_twist_1RGB_hip_compute(&(pix_f24->f1[ 1]), &(pix_f24->f1[ 9]), &(pix_f24->f1[17]), colorTwistParams_f4);
+    color_twist_1RGB_hip_compute(&(pix_f24->f1[ 2]), &(pix_f24->f1[10]), &(pix_f24->f1[18]), colorTwistParams_f4);
+    color_twist_1RGB_hip_compute(&(pix_f24->f1[ 3]), &(pix_f24->f1[11]), &(pix_f24->f1[19]), colorTwistParams_f4);
+    color_twist_1RGB_hip_compute(&(pix_f24->f1[ 4]), &(pix_f24->f1[12]), &(pix_f24->f1[20]), colorTwistParams_f4);
+    color_twist_1RGB_hip_compute(&(pix_f24->f1[ 5]), &(pix_f24->f1[13]), &(pix_f24->f1[21]), colorTwistParams_f4);
+    color_twist_1RGB_hip_compute(&(pix_f24->f1[ 6]), &(pix_f24->f1[14]), &(pix_f24->f1[22]), colorTwistParams_f4);
+    color_twist_1RGB_hip_compute(&(pix_f24->f1[ 7]), &(pix_f24->f1[15]), &(pix_f24->f1[23]), colorTwistParams_f4);
 }
 
 __device__ void color_twist_hip_compute(uchar *srcPtr, d_float24 *pix_f24, float4 *colorTwistParams_f4)
