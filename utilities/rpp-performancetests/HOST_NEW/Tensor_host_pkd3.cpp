@@ -638,39 +638,6 @@ int main(int argc, char **argv)
 
             break;
         }
-        case 20:
-        {
-            test_case_name = "flip";
-
-            Rpp32u horizontalFlag[images];
-            Rpp32u verticalFlag[images];
-            for (i = 0; i < images; i++)
-            {
-                horizontalFlag[i] = 1;
-                verticalFlag[i] = 0;
-            }
-
-            start_omp = omp_get_wtime();
-            start = clock();
-            if (ip_bitDepth == 0)
-                rppt_flip_host(input, srcDescPtr, output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (ip_bitDepth == 1)
-                rppt_flip_host(inputf16, srcDescPtr, outputf16, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (ip_bitDepth == 2)
-                rppt_flip_host(inputf32, srcDescPtr, outputf32, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                rppt_flip_host(inputi8, srcDescPtr, outputi8, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            break;
-        }
         case 31:
         {
             test_case_name = "color_cast";
