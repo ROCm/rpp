@@ -6,271 +6,271 @@
 __device__ void erode_3x3_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
 {
     float src_f;
-    uint3 src_uchar12;
-    src_uchar12 = *(uint3 *)srcPtr;
-    src_f = rpp_hip_unpack0(src_uchar12.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    src_f = rpp_hip_unpack1(src_uchar12.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    src_f = rpp_hip_unpack2(src_uchar12.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    src_f = rpp_hip_unpack3(src_uchar12.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    src_f = rpp_hip_unpack0(src_uchar12.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    src_f = rpp_hip_unpack1(src_uchar12.y);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    src_f = rpp_hip_unpack2(src_uchar12.y);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    src_f = rpp_hip_unpack3(src_uchar12.y);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack0(src_uchar12.z);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack1(src_uchar12.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
+    uint3 src_ui3;
+    src_ui3 = *(uint3 *)srcPtr;
+    src_f = rpp_hip_unpack0(src_ui3.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    src_f = rpp_hip_unpack1(src_ui3.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    src_f = rpp_hip_unpack2(src_ui3.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    src_f = rpp_hip_unpack3(src_ui3.x);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    src_f = rpp_hip_unpack0(src_ui3.y);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    src_f = rpp_hip_unpack1(src_ui3.y);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    src_f = rpp_hip_unpack2(src_ui3.y);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    src_f = rpp_hip_unpack3(src_ui3.y);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack0(src_ui3.z);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack1(src_ui3.z);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
 }
 
 __device__ void erode_5x5_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
 {
     float src_f;
-    uint3 src_uchar12;
-    src_uchar12 = *(uint3 *)srcPtr;
-    src_f = rpp_hip_unpack0(src_uchar12.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    src_f = rpp_hip_unpack1(src_uchar12.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    src_f = rpp_hip_unpack2(src_uchar12.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    src_f = rpp_hip_unpack3(src_uchar12.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    src_f = rpp_hip_unpack0(src_uchar12.y);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    src_f = rpp_hip_unpack1(src_uchar12.y);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    src_f = rpp_hip_unpack2(src_uchar12.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    src_f = rpp_hip_unpack3(src_uchar12.y);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack0(src_uchar12.z);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack1(src_uchar12.z);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack2(src_uchar12.z);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack3(src_uchar12.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
+    uint3 src_ui3;
+    src_ui3 = *(uint3 *)srcPtr;
+    src_f = rpp_hip_unpack0(src_ui3.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    src_f = rpp_hip_unpack1(src_ui3.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    src_f = rpp_hip_unpack2(src_ui3.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    src_f = rpp_hip_unpack3(src_ui3.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    src_f = rpp_hip_unpack0(src_ui3.y);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    src_f = rpp_hip_unpack1(src_ui3.y);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    src_f = rpp_hip_unpack2(src_ui3.y);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    src_f = rpp_hip_unpack3(src_ui3.y);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack0(src_ui3.z);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack1(src_ui3.z);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack2(src_ui3.z);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack3(src_ui3.z);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
 }
 
 __device__ void erode_7x7_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
 {
     float src_f;
-    uint4 src_uchar16 = *(uint4 *)srcPtr;
-    src_f = rpp_hip_unpack0(src_uchar16.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    src_f = rpp_hip_unpack1(src_uchar16.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    src_f = rpp_hip_unpack2(src_uchar16.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    src_f = rpp_hip_unpack3(src_uchar16.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    src_f = rpp_hip_unpack0(src_uchar16.y);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    src_f = rpp_hip_unpack1(src_uchar16.y);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    src_f = rpp_hip_unpack2(src_uchar16.y);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    src_f = rpp_hip_unpack3(src_uchar16.y);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack0(src_uchar16.z);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack1(src_uchar16.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack2(src_uchar16.z);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack3(src_uchar16.z);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack0(src_uchar16.w);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack1(src_uchar16.w);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
+    uint4 src_ui4 = *(uint4 *)srcPtr;
+    src_f = rpp_hip_unpack0(src_ui4.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    src_f = rpp_hip_unpack1(src_ui4.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    src_f = rpp_hip_unpack2(src_ui4.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    src_f = rpp_hip_unpack3(src_ui4.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    src_f = rpp_hip_unpack0(src_ui4.y);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    src_f = rpp_hip_unpack1(src_ui4.y);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    src_f = rpp_hip_unpack2(src_ui4.y);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    src_f = rpp_hip_unpack3(src_ui4.y);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack0(src_ui4.z);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack1(src_ui4.z);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack2(src_ui4.z);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack3(src_ui4.z);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack0(src_ui4.w);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack1(src_ui4.w);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
 }
 
 __device__ void erode_9x9_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
 {
     float src_f;
-    uint4 src_uchar16 = *(uint4 *)srcPtr;
-    src_f = rpp_hip_unpack0(src_uchar16.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    src_f = rpp_hip_unpack1(src_uchar16.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    src_f = rpp_hip_unpack2(src_uchar16.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    src_f = rpp_hip_unpack3(src_uchar16.x);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    src_f = rpp_hip_unpack0(src_uchar16.y);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    src_f = rpp_hip_unpack1(src_uchar16.y);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    src_f = rpp_hip_unpack2(src_uchar16.y);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    src_f = rpp_hip_unpack3(src_uchar16.y);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack0(src_uchar16.z);
-    dst_f8->x.x = fminf(src_f, dst_f8->x.x);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack1(src_uchar16.z);
-    dst_f8->x.y = fminf(src_f, dst_f8->x.y);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack2(src_uchar16.z);
-    dst_f8->x.z = fminf(src_f, dst_f8->x.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack3(src_uchar16.z);
-    dst_f8->x.w = fminf(src_f, dst_f8->x.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack0(src_uchar16.w);
-    dst_f8->y.x = fminf(src_f, dst_f8->y.x);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack1(src_uchar16.w);
-    dst_f8->y.y = fminf(src_f, dst_f8->y.y);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack2(src_uchar16.w);
-    dst_f8->y.z = fminf(src_f, dst_f8->y.z);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
-    src_f = rpp_hip_unpack3(src_uchar16.w);
-    dst_f8->y.w = fminf(src_f, dst_f8->y.w);
+    uint4 src_ui4 = *(uint4 *)srcPtr;
+    src_f = rpp_hip_unpack0(src_ui4.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    src_f = rpp_hip_unpack1(src_ui4.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    src_f = rpp_hip_unpack2(src_ui4.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    src_f = rpp_hip_unpack3(src_ui4.x);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    src_f = rpp_hip_unpack0(src_ui4.y);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    src_f = rpp_hip_unpack1(src_ui4.y);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    src_f = rpp_hip_unpack2(src_ui4.y);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    src_f = rpp_hip_unpack3(src_ui4.y);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack0(src_ui4.z);
+    dst_f8->f1[0] = fminf(src_f, dst_f8->f1[0]);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack1(src_ui4.z);
+    dst_f8->f1[1] = fminf(src_f, dst_f8->f1[1]);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack2(src_ui4.z);
+    dst_f8->f1[2] = fminf(src_f, dst_f8->f1[2]);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack3(src_ui4.z);
+    dst_f8->f1[3] = fminf(src_f, dst_f8->f1[3]);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack0(src_ui4.w);
+    dst_f8->f1[4] = fminf(src_f, dst_f8->f1[4]);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack1(src_ui4.w);
+    dst_f8->f1[5] = fminf(src_f, dst_f8->f1[5]);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack2(src_ui4.w);
+    dst_f8->f1[6] = fminf(src_f, dst_f8->f1[6]);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
+    src_f = rpp_hip_unpack3(src_ui4.w);
+    dst_f8->f1[7] = fminf(src_f, dst_f8->f1[7]);
 }
 
 // -------------------- Set 1 - PKD3->PKD3 for T = U8/F32/F16/I8 --------------------
@@ -297,12 +297,12 @@ __global__ void erode_3x3_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -334,15 +334,15 @@ __global__ void erode_3x3_pkd_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
@@ -370,12 +370,12 @@ __global__ void erode_5x5_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -407,21 +407,21 @@ __global__ void erode_5x5_pkd_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
@@ -449,12 +449,12 @@ __global__ void erode_7x7_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -486,27 +486,27 @@ __global__ void erode_7x7_pkd_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.z);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
@@ -534,12 +534,12 @@ __global__ void erode_9x9_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -571,33 +571,33 @@ __global__ void erode_9x9_pkd_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.z);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
@@ -628,8 +628,8 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    sum_f8.x = (float4) 255;
-    sum_f8.y = (float4) 255;
+    sum_f8.f4[0] = (float4) 255;
+    sum_f8.f4[1] = (float4) 255;
     uint2 borderVal;
     borderVal.x = 0xFFFFFFFF;
     borderVal.y = 0xFFFFFFFF;
@@ -644,7 +644,7 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
         erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
         erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
         rpp_hip_adjust_range(dstPtr, &sum_f8);
@@ -656,8 +656,8 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.x = (float4) 255;
-        sum_f8.y = (float4) 255;
+        sum_f8.f4[0] = (float4) 255;
+        sum_f8.f4[1] = (float4) 255;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -669,7 +669,7 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+            erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
@@ -679,8 +679,8 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.x = (float4) 255;
-        sum_f8.y = (float4) 255;
+        sum_f8.f4[0] = (float4) 255;
+        sum_f8.f4[1] = (float4) 255;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -692,7 +692,7 @@ __global__ void erode_3x3_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+            erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
@@ -724,8 +724,8 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    sum_f8.x = (float4) 255;
-    sum_f8.y = (float4) 255;
+    sum_f8.f4[0] = (float4) 255;
+    sum_f8.f4[1] = (float4) 255;
     uint2 borderVal;
     borderVal.x = 0xFFFFFFFF;
     borderVal.y = 0xFFFFFFFF;
@@ -740,7 +740,7 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
         erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
         erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
         erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -754,8 +754,8 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.x = (float4) 255;
-        sum_f8.y = (float4) 255;
+        sum_f8.f4[0] = (float4) 255;
+        sum_f8.f4[1] = (float4) 255;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -767,7 +767,7 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+            erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -779,8 +779,8 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.x = (float4) 255;
-        sum_f8.y = (float4) 255;
+        sum_f8.f4[0] = (float4) 255;
+        sum_f8.f4[1] = (float4) 255;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -792,7 +792,7 @@ __global__ void erode_5x5_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+            erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -826,8 +826,8 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    sum_f8.x = (float4) 255;
-    sum_f8.y = (float4) 255;
+    sum_f8.f4[0] = (float4) 255;
+    sum_f8.f4[1] = (float4) 255;
     uint2 borderVal;
     borderVal.x = 0xFFFFFFFF;
     borderVal.y = 0xFFFFFFFF;
@@ -842,7 +842,7 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
         erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
         erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
         erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -858,8 +858,8 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.x = (float4) 255;
-        sum_f8.y = (float4) 255;
+        sum_f8.f4[0] = (float4) 255;
+        sum_f8.f4[1] = (float4) 255;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -871,7 +871,7 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+            erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -885,8 +885,8 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.x = (float4) 255;
-        sum_f8.y = (float4) 255;
+        sum_f8.f4[0] = (float4) 255;
+        sum_f8.f4[1] = (float4) 255;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -898,7 +898,7 @@ __global__ void erode_7x7_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+            erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -934,8 +934,8 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    sum_f8.x = (float4) 255;
-    sum_f8.y = (float4) 255;
+    sum_f8.f4[0] = (float4) 255;
+    sum_f8.f4[1] = (float4) 255;
     uint2 borderVal;
     borderVal.x = 0xFFFFFFFF;
     borderVal.y = 0xFFFFFFFF;
@@ -950,7 +950,7 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
         erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
         erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
         erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -968,8 +968,8 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.x = (float4) 255;
-        sum_f8.y = (float4) 255;
+        sum_f8.f4[0] = (float4) 255;
+        sum_f8.f4[1] = (float4) 255;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -981,7 +981,7 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+            erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -997,8 +997,8 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.x = (float4) 255;
-        sum_f8.y = (float4) 255;
+        sum_f8.f4[0] = (float4) 255;
+        sum_f8.f4[1] = (float4) 255;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -1010,7 +1010,7 @@ __global__ void erode_9x9_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y][hipThreadIdx_x8], &sum_f8);
+            erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
@@ -1049,12 +1049,12 @@ __global__ void erode_3x3_pkd3_pln3_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1086,15 +1086,15 @@ __global__ void erode_3x3_pkd3_pln3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
@@ -1122,12 +1122,12 @@ __global__ void erode_5x5_pkd3_pln3_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1159,21 +1159,21 @@ __global__ void erode_5x5_pkd3_pln3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
@@ -1201,12 +1201,12 @@ __global__ void erode_7x7_pkd3_pln3_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1238,27 +1238,27 @@ __global__ void erode_7x7_pkd3_pln3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.z);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
@@ -1286,12 +1286,12 @@ __global__ void erode_9x9_pkd3_pln3_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1323,33 +1323,33 @@ __global__ void erode_9x9_pkd3_pln3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.z);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
@@ -1382,12 +1382,12 @@ __global__ void erode_3x3_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1416,15 +1416,15 @@ __global__ void erode_3x3_pln3_pkd3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
@@ -1455,12 +1455,12 @@ __global__ void erode_5x5_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1489,21 +1489,21 @@ __global__ void erode_5x5_pln3_pkd3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_5x5_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
@@ -1534,12 +1534,12 @@ __global__ void erode_7x7_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1568,27 +1568,27 @@ __global__ void erode_7x7_pln3_pkd3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.z);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.x);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.y);
-        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.z);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_7x7_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
@@ -1619,12 +1619,12 @@ __global__ void erode_9x9_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    sum_f24.x.x = (float4) 255;
-    sum_f24.x.y = (float4) 255;
-    sum_f24.y.x = (float4) 255;
-    sum_f24.y.y = (float4) 255;
-    sum_f24.z.x = (float4) 255;
-    sum_f24.z.y = (float4) 255;
+    sum_f24.f4[0] = (float4) 255;
+    sum_f24.f4[1] = (float4) 255;
+    sum_f24.f4[2] = (float4) 255;
+    sum_f24.f4[3] = (float4) 255;
+    sum_f24.f4[4] = (float4) 255;
+    sum_f24.f4[5] = (float4) 255;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1653,33 +1653,33 @@ __global__ void erode_9x9_pln3_pkd3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.z);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.x);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.y);
-        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.z);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
+        erode_9x9_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }

@@ -3,8 +3,8 @@
 
 __device__ void blend_hip_compute(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
 {
-    dst_f8->x = (src1_f8->x - src2_f8->x) * *alpha_f4 + src2_f8->x;
-    dst_f8->y = (src1_f8->y - src2_f8->y) * *alpha_f4 + src2_f8->y;
+    dst_f8->f4[0] = (src1_f8->f4[0] - src2_f8->f4[0]) * *alpha_f4 + src2_f8->f4[0];
+    dst_f8->f4[1] = (src1_f8->f4[1] - src2_f8->f4[1]) * *alpha_f4 + src2_f8->f4[1];
 }
 
 template <typename T>
@@ -116,9 +116,9 @@ __global__ void blend_pkd3_pln3_tensor(T *srcPtr1,
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx, &src1_f24);
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr2 + srcIdx, &src2_f24);
-    blend_hip_compute(&src1_f24.x, &src2_f24.x, &dst_f24.x, &alpha_f4);
-    blend_hip_compute(&src1_f24.y, &src2_f24.y, &dst_f24.y, &alpha_f4);
-    blend_hip_compute(&src1_f24.z, &src2_f24.z, &dst_f24.z, &alpha_f4);
+    blend_hip_compute(&src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0], &alpha_f4);
+    blend_hip_compute(&src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1], &alpha_f4);
+    blend_hip_compute(&src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2], &alpha_f4);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -149,9 +149,9 @@ __global__ void blend_pln3_pkd3_tensor(T *srcPtr1,
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr1 + srcIdx, srcStridesNCH.y, &src1_f24);
     rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr2 + srcIdx, srcStridesNCH.y, &src2_f24);
-    blend_hip_compute(&src1_f24.x, &src2_f24.x, &dst_f24.x, &alpha_f4);
-    blend_hip_compute(&src1_f24.y, &src2_f24.y, &dst_f24.y, &alpha_f4);
-    blend_hip_compute(&src1_f24.z, &src2_f24.z, &dst_f24.z, &alpha_f4);
+    blend_hip_compute(&src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0], &alpha_f4);
+    blend_hip_compute(&src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1], &alpha_f4);
+    blend_hip_compute(&src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2], &alpha_f4);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
