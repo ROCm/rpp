@@ -3,38 +3,38 @@
 
 __device__ void gamma_correction_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float *gammaLUT)
 {
-    dst_f8->x = make_float4(gammaLUT[(int) src_f8->x.x], gammaLUT[(int) src_f8->x.y], gammaLUT[(int) src_f8->x.z], gammaLUT[(int) src_f8->x.w]) * (float4) 255.0;
-    dst_f8->y = make_float4(gammaLUT[(int) src_f8->y.x], gammaLUT[(int) src_f8->y.y], gammaLUT[(int) src_f8->y.z], gammaLUT[(int) src_f8->y.w]) * (float4) 255.0;
+    dst_f8->f4[0] = make_float4(gammaLUT[(int) src_f8->f1[0]], gammaLUT[(int) src_f8->f1[1]], gammaLUT[(int) src_f8->f1[2]], gammaLUT[(int) src_f8->f1[3]]) * (float4) 255.0;
+    dst_f8->f4[1] = make_float4(gammaLUT[(int) src_f8->f1[4]], gammaLUT[(int) src_f8->f1[5]], gammaLUT[(int) src_f8->f1[6]], gammaLUT[(int) src_f8->f1[7]]) * (float4) 255.0;
 }
 
 __device__ void gamma_correction_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float *gammaLUT)
 {
-    d_float8 src_f8_norm;
-    src_f8_norm.x = src_f8->x * (float4) 255.0;
-    src_f8_norm.y = src_f8->y * (float4) 255.0;
+    d_float8 srcNorm_f8;
+    srcNorm_f8.f4[0] = src_f8->f4[0] * (float4) 255.0;
+    srcNorm_f8.f4[1] = src_f8->f4[1] * (float4) 255.0;
 
-    dst_f8->x = make_float4(gammaLUT[(int) src_f8_norm.x.x], gammaLUT[(int) src_f8_norm.x.y], gammaLUT[(int) src_f8_norm.x.z], gammaLUT[(int) src_f8_norm.x.w]);
-    dst_f8->y = make_float4(gammaLUT[(int) src_f8_norm.y.x], gammaLUT[(int) src_f8_norm.y.y], gammaLUT[(int) src_f8_norm.y.z], gammaLUT[(int) src_f8_norm.y.w]);
+    dst_f8->f4[0] = make_float4(gammaLUT[(int) srcNorm_f8.f1[0]], gammaLUT[(int) srcNorm_f8.f1[1]], gammaLUT[(int) srcNorm_f8.f1[2]], gammaLUT[(int) srcNorm_f8.f1[3]]);
+    dst_f8->f4[1] = make_float4(gammaLUT[(int) srcNorm_f8.f1[4]], gammaLUT[(int) srcNorm_f8.f1[5]], gammaLUT[(int) srcNorm_f8.f1[6]], gammaLUT[(int) srcNorm_f8.f1[7]]);
 }
 
 __device__ void gamma_correction_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float *gammaLUT)
 {
-    d_float8 src_f8_norm;
-    src_f8_norm.x = src_f8->x + (float4)128;
-    src_f8_norm.y = src_f8->y + (float4)128;
+    d_float8 srcNorm_f8;
+    srcNorm_f8.f4[0] = src_f8->f4[0] + (float4)128;
+    srcNorm_f8.f4[1] = src_f8->f4[1] + (float4)128;
 
-    dst_f8->x = (make_float4(gammaLUT[(int) src_f8_norm.x.x], gammaLUT[(int) src_f8_norm.x.y], gammaLUT[(int) src_f8_norm.x.z], gammaLUT[(int) src_f8_norm.x.w]) * (float4) 255) - (float4) 128;
-    dst_f8->y = (make_float4(gammaLUT[(int) src_f8_norm.y.x], gammaLUT[(int) src_f8_norm.y.y], gammaLUT[(int) src_f8_norm.y.z], gammaLUT[(int) src_f8_norm.y.w]) * (float4) 255) - (float4) 128;
+    dst_f8->f4[0] = (make_float4(gammaLUT[(int) srcNorm_f8.f1[0]], gammaLUT[(int) srcNorm_f8.f1[1]], gammaLUT[(int) srcNorm_f8.f1[2]], gammaLUT[(int) srcNorm_f8.f1[3]]) * (float4) 255) - (float4) 128;
+    dst_f8->f4[1] = (make_float4(gammaLUT[(int) srcNorm_f8.f1[4]], gammaLUT[(int) srcNorm_f8.f1[5]], gammaLUT[(int) srcNorm_f8.f1[6]], gammaLUT[(int) srcNorm_f8.f1[7]]) * (float4) 255) - (float4) 128;
 }
 
 __device__ void gamma_correction_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float *gammaLUT)
 {
-    d_float8 src_f8_norm;
-    src_f8_norm.x = src_f8->x * (float4) 255.0;
-    src_f8_norm.y = src_f8->y * (float4) 255.0;
+    d_float8 srcNorm_f8;
+    srcNorm_f8.f4[0] = src_f8->f4[0] * (float4) 255.0;
+    srcNorm_f8.f4[1] = src_f8->f4[1] * (float4) 255.0;
 
-    dst_f8->x = make_float4(gammaLUT[(int) src_f8_norm.x.x], gammaLUT[(int) src_f8_norm.x.y], gammaLUT[(int) src_f8_norm.x.z], gammaLUT[(int) src_f8_norm.x.w]);
-    dst_f8->y = make_float4(gammaLUT[(int) src_f8_norm.y.x], gammaLUT[(int) src_f8_norm.y.y], gammaLUT[(int) src_f8_norm.y.z], gammaLUT[(int) src_f8_norm.y.w]);
+    dst_f8->f4[0] = make_float4(gammaLUT[(int) srcNorm_f8.f1[0]], gammaLUT[(int) srcNorm_f8.f1[1]], gammaLUT[(int) srcNorm_f8.f1[2]], gammaLUT[(int) srcNorm_f8.f1[3]]);
+    dst_f8->f4[1] = make_float4(gammaLUT[(int) srcNorm_f8.f1[4]], gammaLUT[(int) srcNorm_f8.f1[5]], gammaLUT[(int) srcNorm_f8.f1[6]], gammaLUT[(int) srcNorm_f8.f1[7]]);
 }
 
 template <typename T>
@@ -135,9 +135,9 @@ __global__ void gamma_correction_pkd3_pln3_tensor(T *srcPtr,
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    gamma_correction_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &gammaLUT[gammaLutIdx]);
-    gamma_correction_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &gammaLUT[gammaLutIdx]);
-    gamma_correction_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &gammaLUT[gammaLutIdx]);
+    gamma_correction_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &gammaLUT[gammaLutIdx]);
+    gamma_correction_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &gammaLUT[gammaLutIdx]);
+    gamma_correction_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &gammaLUT[gammaLutIdx]);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -165,9 +165,9 @@ __global__ void gamma_correction_pln3_pkd3_tensor(T *srcPtr,
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    gamma_correction_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &gammaLUT[gammaLutIdx]);
-    gamma_correction_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &gammaLUT[gammaLutIdx]);
-    gamma_correction_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &gammaLUT[gammaLutIdx]);
+    gamma_correction_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &gammaLUT[gammaLutIdx]);
+    gamma_correction_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &gammaLUT[gammaLutIdx]);
+    gamma_correction_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &gammaLUT[gammaLutIdx]);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -185,26 +185,30 @@ __global__ void gamma_correction_lut_compute(float *gammaLUT,
     uint gammaLutIdx = (256 * id_y) + id_x;
     uint gammaIdx = id_y;
 
-    d_float8 *gammaLUT_f8;
-    gammaLUT_f8 = (d_float8 *)&gammaLUT[gammaLutIdx];
+    d_float8 gammaLUT_f8;
+    d_float8_s *gammaLUTPtr_f8;
+    gammaLUTPtr_f8 = (d_float8_s *)&gammaLUT[gammaLutIdx];
+    *(d_float8_s *)&gammaLUT_f8 = *gammaLUTPtr_f8;
 
     float4 inv255_f4 = (float4) ONE_OVER_255;
     d_float8 pixVal_f8;
 
-    pixVal_f8.x = make_float4(id_x, id_x + 1, id_x + 2, id_x + 3);
-    pixVal_f8.y = make_float4(id_x + 4, id_x + 5, id_x + 6, id_x + 7);
+    pixVal_f8.f4[0] = make_float4(id_x, id_x + 1, id_x + 2, id_x + 3);
+    pixVal_f8.f4[1] = make_float4(id_x + 4, id_x + 5, id_x + 6, id_x + 7);
 
-    gammaLUT_f8->x = pixVal_f8.x * inv255_f4;
-    gammaLUT_f8->y = pixVal_f8.y * inv255_f4;
+    gammaLUT_f8.f4[0] = pixVal_f8.f4[0] * inv255_f4;
+    gammaLUT_f8.f4[1] = pixVal_f8.f4[1] * inv255_f4;
 
-    gammaLUT_f8->x = make_float4(powf(gammaLUT_f8->x.x, gamma[gammaIdx]),
-                                 powf(gammaLUT_f8->x.y, gamma[gammaIdx]),
-                                 powf(gammaLUT_f8->x.z, gamma[gammaIdx]),
-                                 powf(gammaLUT_f8->x.w, gamma[gammaIdx]));
-    gammaLUT_f8->y = make_float4(powf(gammaLUT_f8->y.x, gamma[gammaIdx]),
-                                 powf(gammaLUT_f8->y.y, gamma[gammaIdx]),
-                                 powf(gammaLUT_f8->y.z, gamma[gammaIdx]),
-                                 powf(gammaLUT_f8->y.w, gamma[gammaIdx]));
+    gammaLUT_f8.f4[0] = make_float4(powf(gammaLUT_f8.f1[0], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[1], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[2], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[3], gamma[gammaIdx]));
+    gammaLUT_f8.f4[1] = make_float4(powf(gammaLUT_f8.f1[4], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[5], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[6], gamma[gammaIdx]),
+                                    powf(gammaLUT_f8.f1[7], gamma[gammaIdx]));
+
+    *gammaLUTPtr_f8 = *(d_float8_s *)&gammaLUT_f8;
 }
 
 template <typename T>
