@@ -2069,6 +2069,22 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline RppStatus compute_rmn_12_host(__m256 *p, __m256 *pRMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
+    p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pRMNParams[0]), pRMNParams[1]);
+    p[2] = _mm256_mul_ps(_mm256_sub_ps(p[2], pRMNParams[0]), pRMNParams[1]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_rmn_4_host(__m256 *p, __m256 *pRMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
+   
+    return RPP_SUCCESS;
+}
+
 inline RppStatus compute_brightness_48_host(__m256 *p, __m256 *pBrightnessParams)
 {
     p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
