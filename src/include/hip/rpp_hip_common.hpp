@@ -1410,6 +1410,38 @@ __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24
     dst_f24->f4[5] = src_f24->f4[5] - subtrahend_f4;
 }
 
+// /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
+
+__device__ __forceinline__ float rpp_hip_rng_xorwow_f32(RpptXorwowState *xorwowState)
+{
+    uint t  = xorwowState->x[4];
+    uint s  = xorwowState->x[0];
+    xorwowState->x[4] = xorwowState->x[3];
+    xorwowState->x[3] = xorwowState->x[2];
+    xorwowState->x[2] = xorwowState->x[1];
+    xorwowState->x[1] = s;
+    t ^= t >> 2;
+    t ^= t << 1;
+    t ^= s ^ (s << 4);
+    xorwowState->x[0] = t;
+    xorwowState->counter = (xorwowState->counter + 362437) & 0xFFFFFFFF;
+    uint out = (0b111111100000000000000000000000 | ((t + xorwowState->counter) & 0x7fffff));
+    float outFloat = *(float *)&out;
+    return  outFloat - 1;
+}
+
+__device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(RpptXorwowState *xorwowState, d_float8 *randomNumbersPtr_f8)
+{
+    randomNumbersPtr_f8->f1[0] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[1] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[2] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[3] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[4] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[5] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[6] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[7] = rpp_hip_rng_xorwow_f32(xorwowState);
+}
+
 // /******************** DEVICE INTERPOLATION HELPER FUNCTIONS ********************/
 
 // BILINEAR INTERPOLATION LOAD HELPERS (separate load routines for each bit depth)

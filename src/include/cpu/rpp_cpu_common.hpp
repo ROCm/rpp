@@ -75,6 +75,24 @@ inline int fastrand()
     return (g_seed>>16)&0x7FFF;
 }
 
+inline float rpp_host_rng_xorwow_f32(RpptXorwowState *xorwowState)
+{
+    uint t  = xorwowState->x[4];
+    uint s  = xorwowState->x[0];
+    xorwowState->x[4] = xorwowState->x[3];
+    xorwowState->x[3] = xorwowState->x[2];
+    xorwowState->x[2] = xorwowState->x[1];
+    xorwowState->x[1] = s;
+    t ^= t >> 2;
+    t ^= t << 1;
+    t ^= s ^ (s << 4);
+    xorwowState->x[0] = t;
+    xorwowState->counter = (xorwowState->counter + 362437) & 0xFFFFFFFF;
+    uint out = (0b111111100000000000000000000000 | ((t + xorwowState->counter) & 0x7fffff));
+    float outFloat = *(float *)&out;
+    return  outFloat - 1;
+}
+
 inline int power_function(int a, int b)
 {
     int product = 1;
