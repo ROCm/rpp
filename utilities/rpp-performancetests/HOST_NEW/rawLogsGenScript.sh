@@ -156,7 +156,14 @@ do
             printf "\n./BatchPD_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
             ./BatchPD_host_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_host_pkd3_host_raw_performance_log.txt"
 
-            if [ "$case" -eq 21 ]
+            if [ "$case" -eq 8 ]
+            then
+                for ((noiseType=0;noiseType<3;noiseType++))
+                do
+                    printf "\n./Tensor_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
+                    ./Tensor_host_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0" | tee -a "$DST_FOLDER/Tensor_host_pkd3_host_raw_performance_log.txt"
+                done
+            elif [ "$case" -eq 21 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -205,7 +212,14 @@ do
             printf "\n./BatchPD_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
             ./BatchPD_host_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_host_pln1_host_raw_performance_log.txt"
 
-            if [ "$case" -eq 21 ]
+            if [ "$case" -eq 8 ]
+            then
+                for ((noiseType=0;noiseType<3;noiseType++))
+                do
+                    printf "\n./Tensor_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
+                    ./Tensor_host_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0" | tee -a "$DST_FOLDER/Tensor_host_pln1_host_raw_performance_log.txt"
+                done
+            elif [ "$case" -eq 21 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -254,7 +268,14 @@ do
             printf "\n./BatchPD_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0"
             ./BatchPD_host_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" | tee -a "$DST_FOLDER/BatchPD_host_pln3_host_raw_performance_log.txt"
 
-            if [ "$case" -eq 21 ]
+            if [ "$case" -eq 8 ]
+            then
+                for ((noiseType=0;noiseType<6;noiseType++))
+                do
+                    printf "\n./Tensor_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
+                    ./Tensor_host_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0" | tee -a "$DST_FOLDER/Tensor_host_pln3_host_raw_performance_log.txt"
+                done
+            elif [ "$case" -eq 21 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do

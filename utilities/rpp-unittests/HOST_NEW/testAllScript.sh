@@ -200,7 +200,14 @@ do
             printf "\n./BatchPD_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case 0"
             ./BatchPD_host_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0"
 
-            if [ "$case" -eq 21 ]
+            if [ "$case" -eq 8 ]
+            then
+                for ((noiseType=0;noiseType<3;noiseType++))
+                do
+                    printf "\n./Tensor_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
+                    ./Tensor_host_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0"
+                done
+            elif [ "$case" -eq 21 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -269,7 +276,14 @@ do
             printf "\n./BatchPD_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case 0"
             ./BatchPD_host_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0"
 
-            if [ "$case" -eq 21 ]
+            if [ "$case" -eq 8 ]
+            then
+                for ((noiseType=0;noiseType<3;noiseType++))
+                do
+                    printf "\n./Tensor_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
+                    ./Tensor_host_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0"
+                done
+            elif [ "$case" -eq 21 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -338,7 +352,14 @@ do
             printf "\n./BatchPD_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case 0"
             ./BatchPD_host_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0"
 
-            if [ "$case" -eq 21 ]
+            if [ "$case" -eq 8 ]
+            then
+                for ((noiseType=0;noiseType<3;noiseType++))
+                do
+                    printf "\n./Tensor_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
+                    ./Tensor_host_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0"
+                done
+            elif [ "$case" -eq 21 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
