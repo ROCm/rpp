@@ -58,6 +58,17 @@ std::string get_interpolation_type(unsigned int val, RpptInterpolationType &inte
     }
 }
 
+std::string get_noise_type(unsigned int val)
+{
+    switch(val)
+    {
+        case 0: return "SaltAndPepper";
+        case 1: return "Gaussian";
+        case 2: return "Shot";
+        default:return "SaltAndPepper";
+    }
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -78,9 +89,10 @@ int main(int argc, char **argv)
     unsigned int outputFormatToggle = atoi(argv[5]);
     int test_case = atoi(argv[6]);
 
-    bool additionalParamCase = (test_case == 24 || test_case == 40 || test_case == 41 || test_case == 49);
+    bool additionalParamCase = (test_case == 8 || test_case == 24 || test_case == 40 || test_case == 41 || test_case == 49);
     bool kernelSizeCase = (test_case == 40 || test_case == 41 || test_case == 49);
     bool interpolationTypeCase = (test_case == 24);
+    bool noiseTypeCase = (test_case == 8);
 
     unsigned int verbosity = additionalParamCase ? atoi(argv[8]) : atoi(argv[7]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -113,6 +125,9 @@ int main(int argc, char **argv)
         break;
     case 2:
         strcpy(funcName, "blend");
+        break;
+    case 8:
+        strcpy(funcName, "noise");
         break;
     case 13:
         strcpy(funcName, "exposure");
@@ -265,6 +280,15 @@ int main(int argc, char **argv)
         strcat(func, interpolationTypeName.c_str());
         strcat(dst, "_interpolationType");
         strcat(dst, interpolationTypeName.c_str());
+    }
+    else if (noiseTypeCase)
+    {
+        std::string noiseTypeName;
+        noiseTypeName = get_noise_type(additionalParam);
+        strcat(func, "_noiseType");
+        strcat(func, noiseTypeName.c_str());
+        strcat(dst, "_noiseType");
+        strcat(dst, noiseTypeName.c_str());
     }
 
     printf("\nRunning %s...", func);
@@ -764,6 +788,88 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
+
+        break;
+    }
+    case 8:
+    {
+        test_case_name = "noise";
+
+        switch(additionalParam)
+        {
+            case 0:
+            {
+                Rpp32f noiseProbabilityTensor[images];
+                Rpp32f saltProbabilityTensor[images];
+                Rpp32f saltValueTensor[images];
+                Rpp32f pepperValueTensor[images];
+                Rpp32u seed = 1255459;
+                for (i = 0; i < images; i++)
+                {
+                    noiseProbabilityTensor[i] = 0.05f;
+                    saltProbabilityTensor[i] = 0.5f;
+                    saltValueTensor[i] = 1.0f;
+                    pepperValueTensor[i] = 0.0f;
+                }
+
+                // Uncomment to run test case with an xywhROI override
+                /*for (i = 0; i < images; i++)
+                {
+                    roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                    roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                    roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                    roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                }*/
+
+                // Uncomment to run test case with an ltrbROI override
+                /*for (i = 0; i < images; i++)
+                    roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                    roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                    roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                    roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                }
+                roiTypeSrc = RpptRoiType::LTRB;
+                roiTypeDst = RpptRoiType::LTRB;*/
+
+                hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+                start = clock();
+
+                if (ip_bitDepth == 0)
+                    rppt_salt_and_pepper_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 1)
+                    rppt_salt_and_pepper_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 2)
+                    rppt_salt_and_pepper_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 3)
+                    missingFuncFlag = 1;
+                else if (ip_bitDepth == 4)
+                    missingFuncFlag = 1;
+                else if (ip_bitDepth == 5)
+                    rppt_salt_and_pepper_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 6)
+                    missingFuncFlag = 1;
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 1:
+            {
+                missingFuncFlag = 1;
+                break;
+            }
+            case 2:
+            {
+                missingFuncFlag = 1;
+                break;
+            }
+            default:
+            {
+                missingFuncFlag = 1;
+                break;
+            }
+        }
 
         break;
     }
