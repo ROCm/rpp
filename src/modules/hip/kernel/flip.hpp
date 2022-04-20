@@ -6,6 +6,7 @@ __global__ void flip_pkd_tensor(T *srcPtr,
                                 uint2 srcStridesNH,
                                 T *dstPtr,
                                 uint2 dstStridesNH,
+                                uint2 dstDimsWH,
                                 unsigned int *horizontalTensor,
                                 unsigned int *verticalTensor,
                                 RpptROIPtr roiTensorPtrSrc)
@@ -14,34 +15,34 @@ __global__ void flip_pkd_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
 
     d_float24 pix_f24;
-    uint horizontalFlag, verticalFlag, srcIdx = id_z * srcStridesNH.x;
+    uint horizontalFlag, verticalFlag, srcIdx;
     horizontalFlag = horizontalTensor[id_z];
     verticalFlag = verticalTensor[id_z];
 
     if(horizontalFlag == 0 && verticalFlag == 0)
     {
-        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     }
     else if(horizontalFlag == 1 && verticalFlag == 1)
     {
-        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
     }
     else if(horizontalFlag == 1)
     {
-        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
     }
     else
     {
-        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     }
 
@@ -54,6 +55,7 @@ __global__ void flip_pln_tensor(T *srcPtr,
                                 uint3 srcStridesNCH,
                                 T *dstPtr,
                                 uint3 dstStridesNCH,
+                                uint2 dstDimsWH,
                                 int channelsDst,
                                 unsigned int *horizontalTensor,
                                 unsigned int *verticalTensor,
@@ -63,7 +65,7 @@ __global__ void flip_pln_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -73,13 +75,13 @@ __global__ void flip_pln_tensor(T *srcPtr,
     verticalFlag = verticalTensor[id_z];
 
     if(horizontalFlag == 0 && verticalFlag == 0)
-        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x);
     else if(horizontalFlag == 1 && verticalFlag == 1)
-        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8);
+        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7);
     else if(horizontalFlag == 1)
-        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8);
+        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7);
     else
-        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x);
         
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     d_float8 pix_f8;
@@ -131,6 +133,7 @@ __global__ void flip_pkd3_pln3_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
+                                      uint2 dstDimsWH,
                                       unsigned int *horizontalTensor,
                                       unsigned int *verticalTensor,
                                       RpptROIPtr roiTensorPtrSrc)
@@ -139,7 +142,7 @@ __global__ void flip_pkd3_pln3_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -151,22 +154,22 @@ __global__ void flip_pkd3_pln3_tensor(T *srcPtr,
 
     if(horizontalFlag == 0 && verticalFlag == 0)
     {
-        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     }
     else if(horizontalFlag == 1 && verticalFlag == 1)
     {
-        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
     }
     else if(horizontalFlag == 1)
     {
-        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
     }
     else
     {
-        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+        srcIdx = (id_z * srcStridesNH.x) + ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x) * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     }
 
@@ -179,6 +182,7 @@ __global__ void flip_pln3_pkd3_tensor(T *srcPtr,
                                       uint3 srcStridesNCH,
                                       T *dstPtr,
                                       uint2 dstStridesNH,
+                                      uint2 dstDimsWH,
                                       unsigned int *horizontalTensor,
                                       unsigned int *verticalTensor,
                                       RpptROIPtr roiTensorPtrSrc)
@@ -187,34 +191,34 @@ __global__ void flip_pln3_pkd3_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
     
     d_float24 pix_f24;
-    uint horizontalFlag, verticalFlag, srcIdx = id_z * srcStridesNCH.x;
+    uint horizontalFlag, verticalFlag, srcIdx;
     horizontalFlag = horizontalTensor[id_z];
     verticalFlag = verticalTensor[id_z];
 
     if(horizontalFlag == 0 && verticalFlag == 0)
     {
-        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x);
         rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     }
     else if(horizontalFlag == 1 && verticalFlag == 1)
     {
-        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8);
+        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7);
         rpp_hip_load24_pln3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     }
     else if(horizontalFlag == 1)
     {
-        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8);
+        srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7);
         rpp_hip_load24_pln3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     }
     else
     {
-        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1 - id_y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        srcIdx = (id_z * srcStridesNCH.x) + ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x);
         rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     }
 
@@ -231,8 +235,8 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                RpptRoiType roiType,
                                rpp::Handle& handle)
 {
-    if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+    if (roiType == RpptRoiType::XYWH)
+        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
     int localThreads_x = LOCAL_THREADS_X;
     int localThreads_y = LOCAL_THREADS_Y;
@@ -252,6 +256,7 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           make_uint2(dstDescPtr->w - 8, dstDescPtr->h),
                            handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
                            handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                            roiTensorPtrSrc);
@@ -267,6 +272,7 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           make_uint2(dstDescPtr->w - 8, dstDescPtr->h),
                            dstDescPtr->c,
                            handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
                            handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
@@ -285,6 +291,7 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               make_uint2(dstDescPtr->w - 8, dstDescPtr->h),
                                handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
                                handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                                roiTensorPtrSrc);
@@ -301,6 +308,7 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               make_uint2(dstDescPtr->w - 8, dstDescPtr->h),
                                handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
                                handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
                                roiTensorPtrSrc);
