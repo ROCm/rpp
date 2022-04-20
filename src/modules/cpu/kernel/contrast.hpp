@@ -161,24 +161,23 @@ RppStatus contrast_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p[2];
-
                         rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrTemp, p);    // simd loads
                         compute_contrast_16_host(p, pContrastParams);  // contrast adjustment
                         rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
-
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f)(*srcPtrTemp) - contrastCenter) * contrastFactor + contrastCenter);
-
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
+
                     srcPtrRow += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
+
                 srcPtrChannel += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
@@ -332,7 +331,6 @@ RppStatus contrast_f32_f32_host_tensor(Rpp32f *srcPtr,
         else
         {
             Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
-
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp32f *srcPtrRow, *dstPtrRow;
@@ -349,18 +347,15 @@ RppStatus contrast_f32_f32_host_tensor(Rpp32f *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p[1];
-
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
                         compute_contrast_8_host(p, pContrastParams);  // contrast adjustment
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
-
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = RPPPIXELCHECKF32((*srcPtrTemp - contrastCenter) * contrastFactor + contrastCenter);
-
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
@@ -545,7 +540,6 @@ RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
         else
         {
             Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
-
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp16f *srcPtrRow, *dstPtrRow;
@@ -562,12 +556,9 @@ RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
-
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                        {
                             srcPtrTemp_ps[cnt] = (Rpp16f) srcPtrTemp[cnt];
-                        }
-
+                        
                         __m256 p[1];
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, p);    // simd loads
@@ -575,9 +566,7 @@ RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);    // simd stores
 
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                        {
                             dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
-                        }
 
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
@@ -585,7 +574,6 @@ RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = (Rpp16f) RPPPIXELCHECKF32(((Rpp32f)(*srcPtrTemp) - contrastCenter) * contrastFactor + contrastCenter);
-
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
@@ -747,7 +735,6 @@ RppStatus contrast_i8_i8_host_tensor(Rpp8s *srcPtr,
         else
         {
             Rpp32u alignedLength = bufferLength & ~15;
-
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8s *srcPtrRow, *dstPtrRow;
@@ -764,18 +751,15 @@ RppStatus contrast_i8_i8_host_tensor(Rpp8s *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p[2];
-
                         rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtrTemp, p);    // simd loads
                         compute_contrast_16_host(p, pContrastParams);  // contrast adjustment
                         rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);    // simd stores
-
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = (Rpp8s) RPPPIXELCHECKI8(((Rpp32f) (*srcPtrTemp) + 128 - contrastCenter) * contrastFactor + contrastCenter - 128);
-
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }

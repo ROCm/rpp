@@ -165,7 +165,7 @@ RppStatus rppt_exposure_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
 // *param[in] srcDesc source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDesc destination tensor descriptor
-// *param[in] contrastFactorTensor contrast factor values for contrast calculation (1D tensor of size batchSize)
+// *param[in] contrastFactorTensor contrast factor values for contrast calculation (1D tensor of size batchSize with contrastFactorTensor[n] > 0 for each image in a batch))
 // *param[in] contrastCenterTensor contrast center values for contrast calculation (1D tensor of size batchSize)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
