@@ -4332,7 +4332,7 @@ inline RppStatus compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u
     return RPP_SUCCESS;
 }
 
-inline void compute_resize_src_loc_sse(__m128 &pDstLoc, __m128 &pScale, __m128 &pLimit, Rpp32s *srcLoc, __m128 *pWeight, __m128 pOffset = xmm_p0, bool hasRGBChannels = false)
+inline RppStatus compute_resize_src_loc_sse(__m128 &pDstLoc, __m128 &pScale, __m128 &pLimit, Rpp32s *srcLoc, __m128 *pWeight, __m128 pOffset = xmm_p0, bool hasRGBChannels = false)
 {
     __m128 pLoc = _mm_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm_add_ps(pDstLoc, xmm_p4);
