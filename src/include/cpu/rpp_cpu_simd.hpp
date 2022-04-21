@@ -72,6 +72,7 @@ const __m128i xmm_px3 = _mm_set1_epi32(3);
 const __m128i xmm_px4 = _mm_set1_epi32(4);
 const __m128i xmm_px5 = _mm_set1_epi32(5);
 const __m128i xmm_pxConvertI8  = _mm_set1_epi8((char)128);
+const __m128 xmm_pDstLocInit = _mm_setr_ps(0, 1, 2, 3);
 
 const __m256 avx_p0 = _mm256_set1_ps(0.0f);
 const __m256 avx_p1 = _mm256_set1_ps(1.0f);
