@@ -458,13 +458,8 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
             return RPP_ERROR_INVALID_ARGUMENTS;
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-    RpptXorwowState xorwowInitialState;
-    xorwowInitialState.x[0] = 123456789U + seed;
-    xorwowInitialState.x[1] = 362436069U + seed;
-    xorwowInitialState.x[2] = 521288629U + seed;
-    xorwowInitialState.x[3] = 88675123U + seed;
-    xorwowInitialState.x[4] = 5783321U + seed;
-    xorwowInitialState.counter = 6615241U + seed;
+    RpptXorwowState xorwowInitialState[4];
+    rpp_host_rng_xorwow_f32_initialize(xorwowInitialState, seed);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -476,7 +471,7 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
                                                 saltProbabilityTensor,
                                                 saltValueTensor,
                                                 pepperValueTensor,
-                                                &xorwowInitialState,
+                                                xorwowInitialState,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 layoutParams);
@@ -491,7 +486,7 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
                                                   saltProbabilityTensor,
                                                   saltValueTensor,
                                                   pepperValueTensor,
-                                                  &xorwowInitialState,
+                                                  xorwowInitialState,
                                                   roiTensorPtrSrc,
                                                   roiType,
                                                   layoutParams);
@@ -506,7 +501,7 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
                                                   saltProbabilityTensor,
                                                   saltValueTensor,
                                                   pepperValueTensor,
-                                                  &xorwowInitialState,
+                                                  xorwowInitialState,
                                                   roiTensorPtrSrc,
                                                   roiType,
                                                   layoutParams);
@@ -521,7 +516,7 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
                                                 saltProbabilityTensor,
                                                 saltValueTensor,
                                                 pepperValueTensor,
-                                                &xorwowInitialState,
+                                                xorwowInitialState,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 layoutParams);
