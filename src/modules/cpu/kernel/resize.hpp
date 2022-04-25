@@ -2,14 +2,14 @@
 #include "cpu/rpp_cpu_simd.hpp"
 #include "cpu/rpp_cpu_common.hpp"
 
-RppStatus resize_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp8u *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   RpptImagePatchPtr dstImgSize,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams srcLayoutParams)
+RppStatus resize_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            Rpp8u *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            RpptImagePatchPtr dstImgSize,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            RppLayoutParams srcLayoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -235,14 +235,14 @@ omp_set_dynamic(0);
     return RPP_SUCCESS;
 }
 
-RppStatus resize_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                     RpptDescPtr srcDescPtr,
-                                     Rpp32f *dstPtr,
-                                     RpptDescPtr dstDescPtr,
-                                     RpptImagePatchPtr dstImgSize,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     RppLayoutParams srcLayoutParams)
+RppStatus resize_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp32f *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              RpptImagePatchPtr dstImgSize,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              RppLayoutParams srcLayoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -470,14 +470,14 @@ omp_set_dynamic(0);
     return RPP_SUCCESS;
 }
 
-RppStatus resize_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                     RpptDescPtr srcDescPtr,
-                                     Rpp16f *dstPtr,
-                                     RpptDescPtr dstDescPtr,
-                                     RpptImagePatchPtr dstImgSize,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     RppLayoutParams srcLayoutParams)
+RppStatus resize_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp16f *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              RpptImagePatchPtr dstImgSize,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              RppLayoutParams srcLayoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -706,14 +706,14 @@ omp_set_dynamic(0);
     return RPP_SUCCESS;
 }
 
-RppStatus resize_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp8s *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   RpptImagePatchPtr dstImgSize,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams srcLayoutParams)
+RppStatus resize_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            Rpp8s *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            RpptImagePatchPtr dstImgSize,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            RppLayoutParams srcLayoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -936,6 +936,80 @@ omp_set_dynamic(0);
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+    }
+
+    return RPP_SUCCESS;
+}
+
+template <typename T>
+RppStatus resize_separable_host_tensor(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptImagePatchPtr dstImgSize,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams srcLayoutParams,
+                                       Rpp32f* intermediateBuffer,
+                                       RpptDescPtr intermediateDescPtr)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+
+omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        compute_dst_size_cap_host(&dstImgSize[batchCount], dstDescPtr);
+        Rpp32f wRatio = ((Rpp32f)(roi.xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
+        Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
+        Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
+        Rpp32u widthLimit = roi.xywhROI.roiWidth - 1;
+        Rpp32s hKernelSize = std::ceil((hRatio < 1 ? 1 : hRatio) * 2);
+        Rpp32s wKernelSize = std::ceil((wRatio < 1 ? 1 : wRatio) * 2);
+        hKernelSize = wKernelSize = 6; // For LANCZOS interpolation kernelSize = 6
+        Rpp32f hOffset = (hRatio - 1) * 0.5f - (hKernelSize / 2);
+        Rpp32f wOffset = (wRatio - 1) * 0.5f - (wKernelSize / 2);
+
+        Rpp32s rowIndex[dstImgSize[batchCount].height], colIndex[dstImgSize[batchCount].width];
+        Rpp32f rowCoeffs[dstImgSize[batchCount].height * hKernelSize];
+        Rpp32f colCoeffs[((dstImgSize[batchCount].width + 3) & ~3) * wKernelSize]; // image width is made a multiple pf 4 inorder to allocate sufficient memory for Horizontal coefficients
+
+        // Pre-compute row index and coefficients
+        for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].height; indexCount++, coeffCount += hKernelSize)
+        {
+            Rpp32f weightParam[2];
+            compute_resize_src_loc(indexCount, hRatio, heightLimit, rowIndex[indexCount], weightParam, hOffset);
+            compute_index_and_weights(rowIndex[indexCount], weightParam[0], hKernelSize, heightLimit, &rowCoeffs[coeffCount]);
+        }
+        // Pre-compute col index and coefficients
+        for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].width; indexCount++)
+        {
+            Rpp32f weightParam[2];
+            compute_resize_src_loc(indexCount, wRatio, widthLimit, colIndex[indexCount], weightParam, wOffset, srcDescPtr->strides.wStride);
+            coeffCount = (indexCount % 4 == 0) ? (indexCount * wKernelSize) : coeffCount + 1;
+            compute_col_index_and_weights(colIndex[indexCount], weightParam[0], wKernelSize, widthLimit, &colCoeffs[coeffCount], srcDescPtr->strides.wStride);
+        }
+
+        T *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        srcPtrImage = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
+
+        RpptImagePatch srcImgSize;
+        srcImgSize.width = roi.xywhROI.roiWidth;
+        srcImgSize.height = roi.xywhROI.roiHeight;
+
+        // The intermediate result from Vertical Resampling will have the src width and dest height
+        RpptImagePatch tempImgSize;
+        tempImgSize.width = roi.xywhROI.roiWidth;
+        tempImgSize.height = dstImgSize[batchCount].height;
+
+        resample_vertical(srcPtrImage, intermediateBuffer, srcDescPtr, intermediateDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
+        resample_horizontal(intermediateBuffer, dstPtrImage, intermediateDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
     }
 
     return RPP_SUCCESS;

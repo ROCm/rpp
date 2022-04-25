@@ -745,7 +745,7 @@ case 21:
     {
         test_case_name = "resize";
 
-        if (interpolationType != RpptInterpolationType::BILINEAR)
+        if (interpolationType != RpptInterpolationType::BILINEAR && interpolationType != RpptInterpolationType::LANCZOS)
         {
             missingFuncFlag = 1;
             break;

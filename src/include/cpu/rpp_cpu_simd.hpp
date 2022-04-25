@@ -113,6 +113,8 @@ const __m128i xmm_pxMaskBMirror = _mm_setr_epi8(11, 0x80, 0x80, 0x80, 8, 0x80, 0
 const __m128i xmm_pxStore4Pkd = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 0x80, 0x80, 0x80, 0x80);
 const __m256i avx_pxPermPkd = _mm256_setr_epi32(0, 1, 2, 4, 5, 6, 7, 3);
 const __m256i avx_pxShufflePkd = _mm256_setr_m128(xmm_pxStore4Pkd, xmm_pxStore4Pkd);
+const __m128i xmm_pDstLocInit = _mm_setr_epi32(0, 1, 2, 3);
+
 // Print helpers
 
 inline void rpp_mm_print_epi8(__m128i vPrintArray)
@@ -2100,6 +2102,155 @@ inline RppStatus rpp_store24_f32pln3_to_f16pln3_avx(Rpp16f* dstRPtr, Rpp16f* dst
         *(dstGPtr + i) = (Rpp16f)(temp[1][i]);
         *(dstBPtr + i) = (Rpp16f)(temp[2][i]);
     }
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_load(Rpp8u *srcPtr, __m128 *p)
+{
+    rpp_load16_u8_to_f32(srcPtr, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_load(Rpp32f *srcPtr, __m128 *p)
+{
+    rpp_load4_f32_to_f32(srcPtr, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_load(Rpp8s *srcPtr, __m128 *p)
+{
+    rpp_load16_i8_to_f32(srcPtr, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_load(Rpp16f *srcPtr, __m128 *p)
+{
+    /* Convert float 16 to float 32 type*/
+    Rpp32f srcPtrTemp_ps[8];
+    for(int cnt = 0; cnt < 8; cnt ++)
+        *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr + cnt);
+
+    rpp_load4_f32_to_f32(srcPtrTemp_ps, p);
+    rpp_load4_f32_to_f32(srcPtrTemp_ps + 4, &p[1]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store(Rpp8u *dstPtr, __m128 *p)
+{
+    rpp_store16_f32_to_u8(dstPtr, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store(Rpp32f *dstPtr, __m128 *p)
+{
+    rpp_store4_f32_to_f32(dstPtr, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store(Rpp8s *dstPtr, __m128 *p)
+{
+    rpp_store16_f32_to_i8(dstPtr, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store(Rpp16f *dstPtr, __m128 *p)
+{
+    Rpp32f dstPtrTemp_ps[8];
+    rpp_store4_f32_to_f32(dstPtrTemp_ps, p);
+    rpp_store4_f32_to_f32(dstPtrTemp_ps + 4, &p[1]);
+    for(int cnt = 0; cnt < 8; cnt ++)
+        *(dstPtr + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store_pln3(Rpp8u *dstPtrR, Rpp8u *dstPtrG, Rpp8u *dstPtrB, __m128 *p)
+{
+    rpp_store48_f32pln3_to_u8pln3(dstPtrR, dstPtrG, dstPtrB, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store_pln3(Rpp32f *dstPtrR, Rpp32f *dstPtrG, Rpp32f *dstPtrB, __m128 *p)
+{
+    rpp_store12_f32pln3_to_f32pln3(dstPtrR, dstPtrG, dstPtrB, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store_pln3(Rpp16f *dstPtrR, Rpp16f *dstPtrG, Rpp16f *dstPtrB, __m128 *p)
+{
+    __m128 temp[3];
+    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
+    temp[0] = p[0]; /* R channel */
+    temp[1] = p[2]; /* G channel */
+    temp[2] = p[4]; /* B channel */
+    rpp_store12_f32pln3_to_f32pln3(dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, temp);
+    temp[0] = p[1]; /* R channel */
+    temp[1] = p[3]; /* R channel */
+    temp[2] = p[5]; /* R channel */
+    rpp_store12_f32pln3_to_f32pln3(dstPtrTempR_ps + 4, dstPtrTempG_ps + 4, dstPtrTempB_ps + 4, temp);
+
+    for(int cnt = 0; cnt < 8; cnt++)
+    {
+        *(dstPtrR + cnt) = (Rpp16f) *(dstPtrTempR_ps + cnt);
+        *(dstPtrG + cnt) = (Rpp16f) *(dstPtrTempG_ps + cnt);
+        *(dstPtrB + cnt) = (Rpp16f) *(dstPtrTempB_ps + cnt);
+    }
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store_pln3(Rpp8s *dstPtrR, Rpp8s *dstPtrG, Rpp8s *dstPtrB, __m128 *p)
+{
+    rpp_store48_f32pln3_to_i8pln3(dstPtrR, dstPtrG, dstPtrB, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store_pkd3(Rpp8u *dstPtr, __m128 *p)
+{
+    rpp_store48_f32pln3_to_u8pkd3(dstPtr, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store_pkd3(Rpp32f *dstPtr, __m128 *p)
+{
+    rpp_store12_f32pln3_to_f32pkd3(dstPtr, p);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store_pkd3(Rpp16f *dstPtr, __m128 *p)
+{
+    Rpp32f dstPtrTemp_ps[24];
+    __m128 temp[4];
+    temp[0] = p[0]; /* R channel */
+    temp[1] = p[2]; /* G channel */
+    temp[2] = p[4]; /* B channel */
+    temp[3] = xmm_p0;
+    rpp_store12_f32pln3_to_f32pkd3(dstPtrTemp_ps, temp);
+    temp[0] = p[1]; /* R channel */
+    temp[1] = p[3]; /* G channel */
+    temp[2] = p[5]; /* B channel */
+    rpp_store12_f32pln3_to_f32pkd3(dstPtrTemp_ps + 12, temp);
+    for(int cnt = 0; cnt < 24; cnt++)
+        *(dstPtr + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_resize_store_pkd3(Rpp8s *dstPtr, __m128 *p)
+{
+    rpp_store48_f32pln3_to_i8pkd3(dstPtr, p);
 
     return RPP_SUCCESS;
 }
