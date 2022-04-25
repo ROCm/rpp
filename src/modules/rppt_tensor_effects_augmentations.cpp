@@ -458,8 +458,13 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
             return RPP_ERROR_INVALID_ARGUMENTS;
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+#if __AVX2__
+    RpptXorwowState xorwowInitialState[8];
+    rpp_host_rng_xorwow_f32_initialize_8seed_stream(xorwowInitialState, seed);
+#else
     RpptXorwowState xorwowInitialState[4];
-    rpp_host_rng_xorwow_f32_initialize(xorwowInitialState, seed);
+    rpp_host_rng_xorwow_f32_initialize_4seed_stream(xorwowInitialState, seed);
+#endif
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
