@@ -949,9 +949,7 @@ RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RpptImagePatchPtr dstImgSize,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
-                                       RppLayoutParams srcLayoutParams,
-                                       Rpp32f* intermediateBuffer,
-                                       RpptDescPtr intermediateDescPtr)
+                                       RppLayoutParams srcLayoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -998,7 +996,6 @@ omp_set_dynamic(0);
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
         srcPtrImage = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
-        Rpp32f * interPtrImage = intermediateBuffer + batchCount * intermediateDescPtr->strides.nStride;
 
         RpptImagePatch srcImgSize;
         srcImgSize.width = roi.xywhROI.roiWidth;
@@ -1009,8 +1006,22 @@ omp_set_dynamic(0);
         tempImgSize.width = roi.xywhROI.roiWidth;
         tempImgSize.height = dstImgSize[batchCount].height;
 
-        resample_vertical(srcPtrImage, interPtrImage, srcDescPtr, intermediateDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
-        resample_horizontal(interPtrImage, dstPtrImage, intermediateDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
+        // Allocate buffer to store intermediate result of separable resampling
+        Rpp32f * interPtr = (float *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * sizeof(float));
+
+        RpptDesc tempDesc;
+        tempDesc = *srcDescPtr;
+        RpptDescPtr tempDescPtr = &tempDesc;
+        tempDescPtr->h = dstDescPtr->h;
+
+        // The channel stride changes with the change in the height for PLN images
+        if(srcDescPtr->layout == RpptLayout::NCHW)
+            tempDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
+
+        resample_vertical(srcPtrImage, interPtr, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
+        resample_horizontal(interPtr, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
+
+        free(interPtr);
     }
 
     return RPP_SUCCESS;

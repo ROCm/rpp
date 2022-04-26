@@ -410,18 +410,6 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
     }
     else if(interpolationType == RpptInterpolationType::LANCZOS)
     {
-        // Allocate buffer to store intermediate result of separable resampling
-        Rpp32f * interPtr = (float *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * srcDescPtr->n * sizeof(float));
-
-        RpptDesc tempDesc;
-        tempDesc = *srcDescPtr;
-        RpptDescPtr tempDescPtr = &tempDesc;
-        tempDescPtr->h = dstDescPtr->h;
-        tempDescPtr->strides.nStride = srcDescPtr->w * dstDescPtr->h * srcDescPtr->c;
-
-        // The channel stride changes with the change in the height for PLN images
-        if(srcDescPtr->layout == RpptLayout::NCHW)
-            tempDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -432,9 +420,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams,
-                                         interPtr,
-                                         tempDescPtr);
+                                         srcLayoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -445,9 +431,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams,
-                                         interPtr,
-                                         tempDescPtr);
+                                         srcLayoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -458,9 +442,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams,
-                                         interPtr,
-                                         tempDescPtr);
+                                         srcLayoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -471,11 +453,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams,
-                                         interPtr,
-                                         tempDescPtr);
+                                         srcLayoutParams);
         }
-        free(interPtr);
     }
 
     return RPP_SUCCESS;
