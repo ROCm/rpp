@@ -1,5 +1,6 @@
 #include <hip/hip_runtime.h>
 #include "hip/rpp_hip_common.hpp"
+#include "func_specific/rng_seed_stream.hpp"
 
 __device__ void salt_and_pepper_noise_1_hip_compute(float *src, float *dst, float noiseProbability, float saltProbability, float salt, float pepper, float randomNumberFloat)
 {
@@ -7,15 +8,6 @@ __device__ void salt_and_pepper_noise_1_hip_compute(float *src, float *dst, floa
         *dst = *src;
     else
         *dst = ((randomNumberFloat <= saltProbability) ? salt : pepper);
-}
-
-__device__ void salt_and_pepper_noise_3_hip_compute(float3 *src_f3, float3 *dst_f3, float noiseProbability, float saltProbability, float3 salt_f3, float3 pepper_f3, RpptXorwowState *xorwowStatePtr)
-{
-    float randomNumberFloat = rpp_hip_rng_xorwow_f32(xorwowStatePtr);
-    if (randomNumberFloat > noiseProbability)
-        *dst_f3 = *src_f3;
-    else
-        *dst_f3 = ((randomNumberFloat <= saltProbability) ? salt_f3 : pepper_f3);
 }
 
 __device__ void salt_and_pepper_noise_8_hip_compute(d_float8 *src_f8, d_float8 *dst_f8, float noiseProbability, float saltProbability, float salt, float pepper, d_float8 *randomNumbers_f8)
@@ -28,18 +20,6 @@ __device__ void salt_and_pepper_noise_8_hip_compute(d_float8 *src_f8, d_float8 *
     salt_and_pepper_noise_1_hip_compute(&src_f8->f1[5], &dst_f8->f1[5], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[5]);
     salt_and_pepper_noise_1_hip_compute(&src_f8->f1[6], &dst_f8->f1[6], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[6]);
     salt_and_pepper_noise_1_hip_compute(&src_f8->f1[7], &dst_f8->f1[7], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[7]);
-}
-
-__device__ void salt_and_pepper_noise_24_hip_compute(d_float24 *src_f24, d_float24 *dst_f24, float noiseProbability, float saltProbability, float3 salt_f3, float3 pepper_f3, RpptXorwowState *xorwowStatePtr)
-{
-    salt_and_pepper_noise_3_hip_compute(&src_f24->f3[0], &dst_f24->f3[0], noiseProbability, saltProbability, salt_f3, pepper_f3, xorwowStatePtr);
-    salt_and_pepper_noise_3_hip_compute(&src_f24->f3[1], &dst_f24->f3[1], noiseProbability, saltProbability, salt_f3, pepper_f3, xorwowStatePtr);
-    salt_and_pepper_noise_3_hip_compute(&src_f24->f3[2], &dst_f24->f3[2], noiseProbability, saltProbability, salt_f3, pepper_f3, xorwowStatePtr);
-    salt_and_pepper_noise_3_hip_compute(&src_f24->f3[3], &dst_f24->f3[3], noiseProbability, saltProbability, salt_f3, pepper_f3, xorwowStatePtr);
-    salt_and_pepper_noise_3_hip_compute(&src_f24->f3[4], &dst_f24->f3[4], noiseProbability, saltProbability, salt_f3, pepper_f3, xorwowStatePtr);
-    salt_and_pepper_noise_3_hip_compute(&src_f24->f3[5], &dst_f24->f3[5], noiseProbability, saltProbability, salt_f3, pepper_f3, xorwowStatePtr);
-    salt_and_pepper_noise_3_hip_compute(&src_f24->f3[6], &dst_f24->f3[6], noiseProbability, saltProbability, salt_f3, pepper_f3, xorwowStatePtr);
-    salt_and_pepper_noise_3_hip_compute(&src_f24->f3[7], &dst_f24->f3[7], noiseProbability, saltProbability, salt_f3, pepper_f3, xorwowStatePtr);
 }
 
 __device__ void salt_and_pepper_noise_adjusted_input_hip_compute(uchar *srcPtr, float *saltValue, float *pepperValue) { *saltValue *= 255.0f; *pepperValue *= 255.0f; }
@@ -57,6 +37,7 @@ __global__ void salt_and_pepper_noise_pkd_tensor(T *srcPtr,
                                                  float *saltValueTensor,
                                                  float *pepperValueTensor,
                                                  RpptXorwowState *xorwowInitialStatePtr,
+                                                 uint *xorwowSeedStream,
                                                  RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -70,32 +51,21 @@ __global__ void salt_and_pepper_noise_pkd_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    uint seedStreamIdx = (id_y * dstStridesNH.y) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
 
     float noiseProbability = noiseProbabilityTensor[id_z];
     float saltProbability = saltProbabilityTensor[id_z] * noiseProbability;
     float saltValue = saltValueTensor[id_z];
     float pepperValue = pepperValueTensor[id_z];
+
     RpptXorwowState xorwowState;
-    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + srcIdx;
-    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + srcIdx;
-    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + srcIdx;
-    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + srcIdx;
-    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + srcIdx;
-    xorwowState.counter = xorwowInitialStatePtr->counter + srcIdx;
-
-
-    // Method 1
-
-    // d_float24 src_f24, dst_f24;
-
-    // rpp_hip_load24_pkd3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, &src_f24);
-    // salt_and_pepper_noise_adjusted_input_hip_compute(srcPtr, &saltValue, &pepperValue);
-    // salt_and_pepper_noise_24_hip_compute(&src_f24, &dst_f24, noiseProbability, saltProbability, (float3)saltValue, (float3)pepperValue, &xorwowState);
-    // rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
-
-
-
-    // Method 2
+    uint xorwowSeed = (seedStreamIdx >= SEED_STREAM_MAX_SIZE) ? xorwowSeedStream[seedStreamIdx - SEED_STREAM_MAX_SIZE] : xorwowSeedStream[seedStreamIdx];
+    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
+    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
+    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
+    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + xorwowSeed;
+    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + xorwowSeed;
+    xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
 
     d_float8 randomNumbers_f8;
     d_float24 src_f24, dst_f24;
@@ -120,6 +90,7 @@ __global__ void salt_and_pepper_noise_pln_tensor(T *srcPtr,
                                                  float *saltValueTensor,
                                                  float *pepperValueTensor,
                                                  RpptXorwowState *xorwowInitialStatePtr,
+                                                 uint *xorwowSeedStream,
                                                  RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -133,18 +104,21 @@ __global__ void salt_and_pepper_noise_pln_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    uint seedStreamIdx = (id_y * dstStridesNCH.z) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
 
     float noiseProbability = noiseProbabilityTensor[id_z];
     float saltProbability = saltProbabilityTensor[id_z] * noiseProbability;
     float saltValue = saltValueTensor[id_z];
     float pepperValue = pepperValueTensor[id_z];
+
     RpptXorwowState xorwowState;
-    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + srcIdx;
-    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + srcIdx;
-    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + srcIdx;
-    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + srcIdx;
-    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + srcIdx;
-    xorwowState.counter = xorwowInitialStatePtr->counter + srcIdx;
+    uint xorwowSeed = (seedStreamIdx >= SEED_STREAM_MAX_SIZE) ? xorwowSeedStream[seedStreamIdx - SEED_STREAM_MAX_SIZE] : xorwowSeedStream[seedStreamIdx];
+    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
+    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
+    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
+    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + xorwowSeed;
+    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + xorwowSeed;
+    xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
 
     d_float8 src_f8, dst_f8, randomNumbers_f8;
     rpp_hip_rng_8_xorwow_f32(&xorwowState, &randomNumbers_f8);
@@ -182,6 +156,7 @@ __global__ void salt_and_pepper_noise_pkd3_pln3_tensor(T *srcPtr,
                                                        float *saltValueTensor,
                                                        float *pepperValueTensor,
                                                        RpptXorwowState *xorwowInitialStatePtr,
+                                                       uint *xorwowSeedStream,
                                                        RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -195,31 +170,21 @@ __global__ void salt_and_pepper_noise_pkd3_pln3_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    uint seedStreamIdx = (id_y * dstStridesNCH.z) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
 
     float noiseProbability = noiseProbabilityTensor[id_z];
     float saltProbability = saltProbabilityTensor[id_z] * noiseProbability;
     float saltValue = saltValueTensor[id_z];
     float pepperValue = pepperValueTensor[id_z];
+
     RpptXorwowState xorwowState;
-    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + srcIdx;
-    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + srcIdx;
-    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + srcIdx;
-    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + srcIdx;
-    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + srcIdx;
-    xorwowState.counter = xorwowInitialStatePtr->counter + srcIdx;
-
-    // Method 1
-
-    // d_float24 src_f24, dst_f24;
-
-    // rpp_hip_load24_pkd3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, &src_f24);
-    // salt_and_pepper_noise_adjusted_input_hip_compute(srcPtr, &saltValue, &pepperValue);
-    // salt_and_pepper_noise_24_hip_compute(&src_f24, &dst_f24, noiseProbability, saltProbability, (float3)saltValue, (float3)pepperValue, &xorwowState);
-    // rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
-
-
-
-    // Method 2
+    uint xorwowSeed = (seedStreamIdx >= SEED_STREAM_MAX_SIZE) ? xorwowSeedStream[seedStreamIdx - SEED_STREAM_MAX_SIZE] : xorwowSeedStream[seedStreamIdx];
+    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
+    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
+    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
+    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + xorwowSeed;
+    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + xorwowSeed;
+    xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
 
     d_float8 randomNumbers_f8;
     d_float24 src_f24, dst_f24;
@@ -243,6 +208,7 @@ __global__ void salt_and_pepper_noise_pln3_pkd3_tensor(T *srcPtr,
                                                        float *saltValueTensor,
                                                        float *pepperValueTensor,
                                                        RpptXorwowState *xorwowInitialStatePtr,
+                                                       uint *xorwowSeedStream,
                                                        RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -256,34 +222,21 @@ __global__ void salt_and_pepper_noise_pln3_pkd3_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    uint seedStreamIdx = (id_y * dstStridesNH.y) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
 
     float noiseProbability = noiseProbabilityTensor[id_z];
     float saltProbability = saltProbabilityTensor[id_z] * noiseProbability;
     float saltValue = saltValueTensor[id_z];
     float pepperValue = pepperValueTensor[id_z];
+
     RpptXorwowState xorwowState;
-    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + srcIdx;
-    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + srcIdx;
-    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + srcIdx;
-    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + srcIdx;
-    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + srcIdx;
-    xorwowState.counter = xorwowInitialStatePtr->counter + srcIdx;
-
-
-
-    // Method 1
-
-    // d_float24 src_f24, dst_f24;
-
-    // rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    // salt_and_pepper_noise_adjusted_input_hip_compute(srcPtr, &saltValue, &pepperValue);
-    // salt_and_pepper_noise_24_hip_compute(&src_f24, &dst_f24, noiseProbability, saltProbability, (float3)saltValue, (float3)pepperValue, &xorwowState);
-    // rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
-
-
-
-
-    // Method 2
+    uint xorwowSeed = (seedStreamIdx >= SEED_STREAM_MAX_SIZE) ? xorwowSeedStream[seedStreamIdx - SEED_STREAM_MAX_SIZE] : xorwowSeedStream[seedStreamIdx];
+    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
+    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
+    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
+    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + xorwowSeed;
+    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + xorwowSeed;
+    xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
 
     d_float8 randomNumbers_f8;
     d_float24 src_f24, dst_f24;
@@ -317,41 +270,9 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
-    // d_xorwow_state xorwowState;
-    // d_xorwow_state *xorwowStatePtr;
-    // xorwowStatePtr = &xorwowState;
-    // *xorwowStatePtr = xorwowInitialState;
-    // for (int i = 0; i < 10; i++)
-    // {
-    //     uint randomNumber = rpp_hip_rng_xorwow(&xorwowState);
-    // }
-
-    // d_xorwow_state_s xorwowState, xorwowStateFloat;
-    // xorwowState.x[0] = 123456789U;
-    // xorwowState.x[1] = 362436069U;
-    // xorwowState.x[2] = 521288629U;
-    // xorwowState.x[3] = 88675123U;
-    // xorwowState.x[4] = 5783321U;
-    // xorwowState.counter = 6615241U;
-    // xorwowStateFloat = xorwowState;
-    // // xorwowStateFloat.x[0] = 123456789U;
-    // // xorwowStateFloat.x[1] = 0;
-    // // xorwowStateFloat.x[2] = 0;
-    // // xorwowStateFloat.x[3] = 0;
-    // // xorwowStateFloat.x[4] = 0;
-    // // xorwowStateFloat.counter = 0;
-    // for (int i = 0; i < 10; i++)
-    // {
-    //     uint randomNumber = rpp_hip_rng_xorwow(&xorwowState);
-    //     float randomNumberFloat = rpp_hip_rng_xorwow_f32(&xorwowStateFloat);
-    //     printf("\n %d, %f", randomNumber, randomNumberFloat);
-    // }
-
-
-    // hipMemcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(float), hipMemcpyDeviceToDevice);
-    // std::random_device rd;  // Random number engine seed
-    // std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-    // std::uniform_real_distribution<> mt19937Distrib(0, 1);
+    Rpp32u *xorwowSeedStream;
+    xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
+    hipMemcpy(xorwowSeedStream, rngSeedStream1036800, 1036800 * sizeof(Rpp32u), hipMemcpyHostToDevice);
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -370,6 +291,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
                            handle.GetInitHandle()->mem.mgpu.floatArr[2].floatmem,
                            handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
                            xorwowInitialStatePtr,
+                           xorwowSeedStream,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -389,6 +311,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
                            handle.GetInitHandle()->mem.mgpu.floatArr[2].floatmem,
                            handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
                            xorwowInitialStatePtr,
+                           xorwowSeedStream,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -409,6 +332,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
                                handle.GetInitHandle()->mem.mgpu.floatArr[2].floatmem,
                                handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
                                xorwowInitialStatePtr,
+                               xorwowSeedStream,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -428,6 +352,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
                                handle.GetInitHandle()->mem.mgpu.floatArr[2].floatmem,
                                handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
                                xorwowInitialStatePtr,
+                               xorwowSeedStream,
                                roiTensorPtrSrc);
         }
     }
