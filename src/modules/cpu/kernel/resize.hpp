@@ -983,7 +983,7 @@ omp_set_dynamic(0);
         {
             Rpp32f weightParam[2];
             compute_resize_src_loc(indexCount, hRatio, heightLimit, rowIndex[indexCount], weightParam, hOffset);
-            compute_index_and_weights(rowIndex[indexCount], weightParam[0], hKernelSize, heightLimit, &rowCoeffs[coeffCount]);
+            compute_index_and_weights(rowIndex[indexCount], weightParam[0], hKernelSize, &rowCoeffs[coeffCount]);
         }
         // Pre-compute col index and coefficients
         for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].width; indexCount++)
@@ -991,13 +991,14 @@ omp_set_dynamic(0);
             Rpp32f weightParam[2];
             compute_resize_src_loc(indexCount, wRatio, widthLimit, colIndex[indexCount], weightParam, wOffset, srcDescPtr->strides.wStride);
             coeffCount = (indexCount % 4 == 0) ? (indexCount * wKernelSize) : coeffCount + 1;
-            compute_col_index_and_weights(colIndex[indexCount], weightParam[0], wKernelSize, widthLimit, &colCoeffs[coeffCount], srcDescPtr->strides.wStride);
+            compute_col_index_and_weights(colIndex[indexCount], weightParam[0], wKernelSize, &colCoeffs[coeffCount], srcDescPtr->strides.wStride);
         }
 
         T *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
         srcPtrImage = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
+        Rpp32f * interPtrImage = intermediateBuffer + batchCount * intermediateDescPtr->strides.nStride;
 
         RpptImagePatch srcImgSize;
         srcImgSize.width = roi.xywhROI.roiWidth;
@@ -1008,8 +1009,8 @@ omp_set_dynamic(0);
         tempImgSize.width = roi.xywhROI.roiWidth;
         tempImgSize.height = dstImgSize[batchCount].height;
 
-        resample_vertical(srcPtrImage, intermediateBuffer, srcDescPtr, intermediateDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
-        resample_horizontal(intermediateBuffer, dstPtrImage, intermediateDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
+        resample_vertical(srcPtrImage, interPtrImage, srcDescPtr, intermediateDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
+        resample_horizontal(interPtrImage, dstPtrImage, intermediateDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
     }
 
     return RPP_SUCCESS;

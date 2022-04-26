@@ -4345,7 +4345,7 @@ inline RppStatus compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u
 {
     Rpp32f srcLocation = ((Rpp32f) dstLocation) * scale + offset;
     Rpp32s srcLocationFloor = (Rpp32s) std::ceil(srcLocation);
-    weight[0] = srcLocation - srcLocationFloor;
+    weight[0] = srcLocationFloor - srcLocation;
     weight[1] = 1 - weight[0];
     srcLoc = srcLocationFloor * srcStride;
 
@@ -4356,10 +4356,9 @@ inline RppStatus compute_resize_src_loc_avx(__m256 &pDstLoc, __m256 &pScale, __m
 {
     __m256 pLoc = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
-    __m256 pLocFloor = _mm256_floor_ps(pLoc);
-    pWeight[0] = _mm256_sub_ps(pLoc, pLocFloor);
+    __m256 pLocFloor = _mm256_ceil_ps(pLoc);
+    pWeight[0] = _mm256_sub_ps(pLocFloor, pLoc);
     pWeight[1] = _mm256_sub_ps(avx_p1, pWeight[0]);
-    pLocFloor = _mm256_max_ps(_mm256_min_ps(pLocFloor, pLimit), avx_p0);
     if(hasRGBChannels)
         pLocFloor = _mm256_mul_ps(pLocFloor, avx_p3);
     __m256i pxLocFloor = _mm256_cvtps_epi32(pLocFloor);
@@ -4382,11 +4381,9 @@ inline void compute_lanczos3_coefficient(Rpp32f weight, Rpp32f &coeff)
 }
 
 // Computes the src loc and coefficients
-inline void compute_index_and_weights(Rpp32s loc, Rpp32f weight, Rpp32s kernelSize, Rpp32s limit, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_index_and_weights(Rpp32s loc, Rpp32f weight, Rpp32s kernelSize, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f kernelSize2 = kernelSize / 2;
-    Rpp32f kernelSize2Channel = kernelSize2 * srcStride;
-    limit = limit * srcStride;
     Rpp32f sum = 0;
 
     for(int k = 0; k < kernelSize; k++)
@@ -4403,11 +4400,9 @@ inline void compute_index_and_weights(Rpp32s loc, Rpp32f weight, Rpp32s kernelSi
 }
 
 // Computes the src loc and coefficients
-inline void compute_col_index_and_weights(Rpp32s loc, Rpp32f weight, Rpp32s kernelSize, Rpp32s limit, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_col_index_and_weights(Rpp32s loc, Rpp32f weight, Rpp32s kernelSize, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f kernelSize2 = kernelSize / 2;
-    Rpp32f kernelSize2Channel = kernelSize2 * srcStride;
-    limit = limit * srcStride;
     Rpp32f sum = 0;
 
     for(int k = 0, kPos = 0; k < kernelSize; k++, kPos += 4)
@@ -4696,9 +4691,6 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
             __m128 pFirstVal_R = _mm_set1_ps(in_row_r[0]);
             __m128 pFirstVal_G = _mm_set1_ps(in_row_g[0]);
             __m128 pFirstVal_B = _mm_set1_ps(in_row_b[0]);
-            __m128 pLastVal_R = _mm_set1_ps(in_row_r[inputWidthLimit]);
-            __m128 pLastVal_G = _mm_set1_ps(in_row_g[inputWidthLimit]);
-            __m128 pLastVal_B = _mm_set1_ps(in_row_b[inputWidthLimit]);
             bool breakLoop = false;
             int x = 0;
             for (; x + kNumLanes <= alignedLength; x += kNumLanes)
@@ -4790,7 +4782,7 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
                 int xStride = x * outputDescPtr->strides.wStride;
                 if(outputDescPtr->layout == RpptLayout::NCHW)
                     rpp_resize_store_pln3(out_row_r + xStride, out_row_g + xStride, out_row_b + xStride, pOutputChannel);
-                if(outputDescPtr->layout == RpptLayout::NHWC)
+                else if(outputDescPtr->layout == RpptLayout::NHWC)
                     rpp_resize_store_pkd3(out_row_r + xStride, pOutputChannel);
             }
             int k0 = 0;
@@ -4861,7 +4853,7 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
                 int xStride = x * outputDescPtr->strides.wStride;
                 if(outputDescPtr->layout == RpptLayout::NCHW)
                     rpp_resize_store_pln3(out_row_r + xStride, out_row_g + xStride, out_row_b + xStride, pOutputChannel);
-                if(outputDescPtr->layout == RpptLayout::NHWC)
+                else if(outputDescPtr->layout == RpptLayout::NHWC)
                     rpp_resize_store_pkd3(out_row_r + xStride, pOutputChannel);
             }
             int k0 = 0;
@@ -4896,7 +4888,6 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
             Rpp32s bufferLength = outputImgSize.width;
             Rpp32s alignedLength = bufferLength &~ (kNumLanes-1);
             __m128 pFirstVal = _mm_set1_ps(in_row[0]);
-            __m128 pLastVal = _mm_set1_ps(in_row[inputWidthLimit]);
             bool breakLoop = false;
             int x = 0;
             for (; x + kNumLanes <= alignedLength; x += kNumLanes)

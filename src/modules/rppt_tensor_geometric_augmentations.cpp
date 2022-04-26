@@ -411,12 +411,13 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
     else if(interpolationType == RpptInterpolationType::LANCZOS)
     {
         // Allocate buffer to store intermediate result of separable resampling
-        Rpp32f * interPtr = (float *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * sizeof(float));
+        Rpp32f * interPtr = (float *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * srcDescPtr->n * sizeof(float));
 
         RpptDesc tempDesc;
         tempDesc = *srcDescPtr;
         RpptDescPtr tempDescPtr = &tempDesc;
         tempDescPtr->h = dstDescPtr->h;
+        tempDescPtr->strides.nStride = srcDescPtr->w * dstDescPtr->h * srcDescPtr->c;
 
         // The channel stride changes with the change in the height for PLN images
         if(srcDescPtr->layout == RpptLayout::NCHW)
