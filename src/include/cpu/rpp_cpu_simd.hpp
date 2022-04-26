@@ -2206,19 +2206,39 @@ inline RppStatus rpp_resize_store_pkd3(Rpp32f *dstPtr, __m128 *p)
 
 inline RppStatus rpp_resize_store_pkd3(Rpp16f *dstPtr, __m128 *p)
 {
-    Rpp32f dstPtrTemp_ps[24];
-    __m128 temp[4];
+    // Rpp32f dstPtrTemp_ps[24];
+    // __m128 temp[4];
+    // temp[0] = p[0]; /* R channel */
+    // temp[1] = p[2]; /* G channel */
+    // temp[2] = p[4]; /* B channel */
+    // temp[3] = xmm_p0;
+    // rpp_store12_f32pln3_to_f32pkd3(dstPtrTemp_ps, temp);
+
+    // temp[0] = p[1]; /* R channel */
+    // temp[1] = p[3]; /* G channel */
+    // temp[2] = p[5]; /* B channel */
+    // temp[3] = xmm_p0;
+    // rpp_store12_f32pln3_to_f32pkd3(dstPtrTemp_ps + 12, temp);
+    // for(int cnt = 0; cnt < 24; cnt++)
+    //     *(dstPtr + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+
+    __m128 temp[3];
+    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
     temp[0] = p[0]; /* R channel */
     temp[1] = p[2]; /* G channel */
     temp[2] = p[4]; /* B channel */
-    temp[3] = xmm_p0;
-    rpp_store12_f32pln3_to_f32pkd3(dstPtrTemp_ps, temp);
+    rpp_store12_f32pln3_to_f32pln3(dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, temp);
     temp[0] = p[1]; /* R channel */
-    temp[1] = p[3]; /* G channel */
-    temp[2] = p[5]; /* B channel */
-    rpp_store12_f32pln3_to_f32pkd3(dstPtrTemp_ps + 12, temp);
-    for(int cnt = 0; cnt < 24; cnt++)
-        *(dstPtr + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+    temp[1] = p[3]; /* R channel */
+    temp[2] = p[5]; /* R channel */
+    rpp_store12_f32pln3_to_f32pln3(dstPtrTempR_ps + 4, dstPtrTempG_ps + 4, dstPtrTempB_ps + 4, temp);
+
+    for(int cnt = 0; cnt < 8; cnt++)
+    {
+        *dstPtr++ = (Rpp16f) *(dstPtrTempR_ps + cnt);
+        *dstPtr++ = (Rpp16f) *(dstPtrTempG_ps + cnt);
+        *dstPtr++ = (Rpp16f) *(dstPtrTempB_ps + cnt);
+    }
 
     return RPP_SUCCESS;
 }
