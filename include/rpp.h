@@ -3,7 +3,7 @@
 
 #include <export.h>
 
-#if RPP_BACKEND_OPENCL
+#if OCL_COMPILE
 #define CL_TARGET_OPENCL_VERSION 220
 #if defined(__APPLE__) || defined(__MACOSX)
 #include <OpenCL/cl.h>
@@ -26,7 +26,7 @@
 
 
 
-#if RPP_BACKEND_OPENCL
+#if OCL_COMPILE
 typedef cl_command_queue rppAcceleratorQueue_t;
 #elif HIP_COMPILE
 typedef hipStream_t rppAcceleratorQueue_t;

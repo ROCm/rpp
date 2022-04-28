@@ -97,7 +97,6 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
-    add_definitions(-DRPP_BACKEND_OPENCL)
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
     add_definitions(-DMOD_CL_PATH="${CMAKE_CURRENT_LIST_DIR}/cl/kernel/")
 

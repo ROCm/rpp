@@ -107,7 +107,6 @@ elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKE
     endforeach(MOD_NAME)
 
     # Set compiler and flags
-    set(RPP_BACKEND_OPENCL 1)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
     set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})

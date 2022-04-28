@@ -37,7 +37,7 @@ std::string GetKernelInc(std::string key);
 std::vector<std::string> GetKernelIncList();
 } // namespace rpp
 
-#if RPP_BACKEND_OPENCL
+#if OCL_COMPILE
 #include <hip/rpp/clhelper.hpp>
 #include <hip/rpp/oclkernel.hpp>
 

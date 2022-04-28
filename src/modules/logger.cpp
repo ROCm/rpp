@@ -124,7 +124,7 @@ std::string LoggingPrefix()
         ss << GetProcessAndThreadId() << ' ';
     }
     ss << "RPP";
-#if RPP_BACKEND_OPENCL
+#if OCL_COMPILE
     ss << "(OpenCL)";
 #elif HIP_COMPILE
     ss << "(HIP)";

@@ -29,7 +29,7 @@
 #include <hip/rpp/manage_ptr.hpp>
 #include <rpp.h>
 
-#if RPP_BACKEND_OPENCL
+#if OCL_COMPILE
 
 using Data_t = cl_mem;
 // Const doesnt apply to cl_mem
