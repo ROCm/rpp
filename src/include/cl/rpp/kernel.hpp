@@ -48,7 +48,7 @@ using Program      = SharedProgramPtr;
 
 } // namespace rpp
 
-#elif RPP_BACKEND_HIP
+#elif HIP_COMPILE
 #include <rpp/hipoc_kernel.hpp>
 
 namespace rpp {

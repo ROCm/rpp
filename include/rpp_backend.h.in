@@ -2,6 +2,6 @@
 #define GUARD_RPP_BACKEND_H_IN
 
 #cmakedefine01 RPP_BACKEND_OPENCL
-#cmakedefine01 RPP_BACKEND_HIP
+#cmakedefine01 HIP_COMPILE
 
 #endif

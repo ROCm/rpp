@@ -149,7 +149,7 @@ struct Handle : rppHandle
     WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz);
     void ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz);
 
-#if RPP_BACKEND_HIP
+#if HIP_COMPILE
     shared<ConstData_t> CreateSubBuffer(ConstData_t data, std::size_t offset, std::size_t size);
 #endif
     shared<Data_t> CreateSubBuffer(Data_t data, std::size_t offset, std::size_t size);

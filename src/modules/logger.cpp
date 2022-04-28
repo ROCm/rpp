@@ -126,7 +126,7 @@ std::string LoggingPrefix()
     ss << "RPP";
 #if RPP_BACKEND_OPENCL
     ss << "(OpenCL)";
-#elif RPP_BACKEND_HIP
+#elif HIP_COMPILE
     ss << "(HIP)";
 #endif
     ss << ": ";

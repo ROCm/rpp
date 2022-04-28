@@ -78,7 +78,6 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Add HIP specific preprocessor flags
     add_definitions(-DHIP_COMPILE)
-    add_definitions(-DRPP_BACKEND_HIP)
 
     # Add HIP specific includes
     set(HIP_INC "/opt/rocm/hip/include")

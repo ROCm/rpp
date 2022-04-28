@@ -50,7 +50,7 @@ inline ConstData_t DataCast(const void* p)
 #endif
 }
 
-#elif RPP_BACKEND_HIP
+#elif HIP_COMPILE
 
 using Data_t        = void*;
 using ConstData_t   = const void*;

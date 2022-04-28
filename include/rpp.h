@@ -10,7 +10,7 @@
 #else
 #include <CL/cl.h>
 #endif
-#elif RPP_BACKEND_HIP
+#elif HIP_COMPILE
 #include <hip/hip_runtime_api.h>
 #endif
 
@@ -28,7 +28,7 @@
 
 #if RPP_BACKEND_OPENCL
 typedef cl_command_queue rppAcceleratorQueue_t;
-#elif RPP_BACKEND_HIP
+#elif HIP_COMPILE
 typedef hipStream_t rppAcceleratorQueue_t;
 #endif
 
