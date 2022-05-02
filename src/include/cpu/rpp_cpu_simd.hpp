@@ -1722,6 +1722,17 @@ inline RppStatus rpp_store4_f32pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256 &p)
     return RPP_SUCCESS;
 }
 
+inline RppStatus rpp_store4_f32pln1_to_u8pln1_mirror_avx(Rpp8u* dstPtr, __m256 &p)
+{
+    __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+    __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
+    px1 = _mm256_packus_epi16(px1, avx_px0);
+    px1 = _mm256_permutevar8x32_epi32(px1, pxMask);
+    _mm256_storeu_si256((__m256i *)(dstPtr), px1);
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus rpp_store12_f32pln3_to_u8pln3_avx(Rpp8u* dstRPtr, Rpp8u* dstGPtr, Rpp8u* dstBPtr, __m256* p)
 {
     rpp_store4_f32pln1_to_u8pln1_avx(dstRPtr, p[0]);
