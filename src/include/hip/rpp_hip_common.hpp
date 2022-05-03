@@ -1425,7 +1425,7 @@ __device__ __forceinline__ float rpp_hip_rng_xorwow_f32(RpptXorwowState *xorwowS
     t ^= s ^ (s << 4);
     xorwowState->x[0] = t;
     xorwowState->counter = (xorwowState->counter + 362437) & 0xFFFFFFFF;
-    uint out = (0b111111100000000000000000000000 | ((t + xorwowState->counter) & 0x7fffff));
+    uint out = (0x3F800000 | ((t + xorwowState->counter) & 0x7fffff));    // 0x3F800000 is Hex for 0b111111100000000000000000000000 - 23 bits of mantissa set to 0 and 01111111 for the exponent
     float outFloat = *(float *)&out;
     return  outFloat - 1;
 }

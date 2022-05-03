@@ -120,7 +120,7 @@ inline __m256 rpp_host_rng_xorwow_8_f32_avx(__m256i *pxXorwowStateXParam, __m256
     __m256i px362437 = _mm256_set1_epi32(362437);
     __m256i pxFFFFFFFF = _mm256_set1_epi32(0xFFFFFFFF);
     __m256i px7FFFFF = _mm256_set1_epi32(0x7FFFFF);
-    __m256i pxExponentFloat = _mm256_set1_epi32(0b111111100000000000000000000000);
+    __m256i pxExponentFloat = _mm256_set1_epi32(0x3F800000);    // 0x3F800000 is Hex for 0b111111100000000000000000000000 - 23 bits of mantissa set to 0 and 01111111 for the exponent in IEEE float
     __m256i pxT = pxXorwowStateXParam[4];
     __m256i pxS = pxXorwowStateXParam[0];
     pxXorwowStateXParam[4] = pxXorwowStateXParam[3];
@@ -141,7 +141,7 @@ inline __m128 rpp_host_rng_xorwow_4_f32_sse(__m128i *pxXorwowStateXParam, __m128
     __m128i px362437 = _mm_set1_epi32(362437);
     __m128i pxFFFFFFFF = _mm_set1_epi32(0xFFFFFFFF);
     __m128i px7FFFFF = _mm_set1_epi32(0x7FFFFF);
-    __m128i pxExponentFloat = _mm_set1_epi32(0b111111100000000000000000000000);
+    __m128i pxExponentFloat = _mm_set1_epi32(0x3F800000);    // 0x3F800000 is Hex for 0b111111100000000000000000000000 - 23 bits of mantissa set to 0 and 01111111 for the exponent in IEEE float
     __m128i pxT = pxXorwowStateXParam[4];
     __m128i pxS = pxXorwowStateXParam[0];
     pxXorwowStateXParam[4] = pxXorwowStateXParam[3];
@@ -170,7 +170,7 @@ inline float rpp_host_rng_xorwow_f32(RpptXorwowState *xorwowState)
     t ^= s ^ (s << 4);
     xorwowState->x[0] = t;
     xorwowState->counter = (xorwowState->counter + 362437) & 0xFFFFFFFF;
-    uint out = (0b111111100000000000000000000000 | ((t + xorwowState->counter) & 0x7FFFFF));
+    uint out = (0x3F800000 | ((t + xorwowState->counter) & 0x7FFFFF));    // 0x3F800000 is Hex for 0b111111100000000000000000000000 - 23 bits of mantissa set to 0 and 01111111 for the exponent in IEEE float
     float outFloat = *(float *)&out;
     return  outFloat - 1;
 }
