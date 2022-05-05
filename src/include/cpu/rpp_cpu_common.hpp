@@ -32,10 +32,17 @@ typedef halfhpp Rpp16f;
 #define RPPISGREATER(pixel, value)      ((pixel > value) ? 1 : 0)
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 
+#if __AVX2__
+#define SIMD_FLOAT_VECTOR_LENGTH        8
+#else
+#define SIMD_FLOAT_VECTOR_LENGTH        4
+#endif
+
 static uint16_t wyhash16_x;
 
 alignas(64) const Rpp32f sch_mat[16] = {0.701f, -0.299f, -0.300f, 0.0f, -0.587f, 0.413f, -0.588f, 0.0f, -0.114f, -0.114f, 0.886f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 alignas(64) const Rpp32f ssh_mat[16] = {0.168f, -0.328f, 1.250f, 0.0f, 0.330f, 0.035f, -1.050f, 0.0f, -0.497f, 0.292f, -0.203f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+alignas(64) const Rpp32u multiseedStreamOffset[8] = {1436021U, 2316707U, 4377697U, 1648039U, 1194659U, 2224457U, 3005987U, 2790331U};
 
 inline uint32_t hash16(uint32_t input, uint32_t key) {
   uint32_t hash = input * key;
@@ -75,36 +82,13 @@ inline int fastrand()
     return (g_seed>>16)&0x7FFF;
 }
 
-inline void rpp_host_rng_xorwow_f32_initialize_8seed_stream(RpptXorwowState *xorwowInitialState, Rpp32u seed)
+template<Rpp32s STREAM_SIZE>
+inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState *xorwowInitialState, Rpp32u seed)
 {
-    Rpp32u xorwowSeedStream[8];
-    xorwowSeedStream[0] = seed + 1436017U;
-    xorwowSeedStream[1] = seed + 2316719U;
-    xorwowSeedStream[2] = seed + 4377713U;
-    xorwowSeedStream[3] = seed + 1648031U;
-    xorwowSeedStream[4] = seed + 1194655U;
-    xorwowSeedStream[5] = seed + 2224453U;
-    xorwowSeedStream[6] = seed + 3005991U;
-    xorwowSeedStream[7] = seed + 2790345U;
-    for (int i = 0; i < 8; i++)
-    {
-        xorwowInitialState[i].x[0] = 123456789U + xorwowSeedStream[i];
-        xorwowInitialState[i].x[1] = 362436069U + xorwowSeedStream[i];
-        xorwowInitialState[i].x[2] = 521288629U + xorwowSeedStream[i];
-        xorwowInitialState[i].x[3] = 88675123U + xorwowSeedStream[i];
-        xorwowInitialState[i].x[4] = 5783321U + xorwowSeedStream[i];
-        xorwowInitialState[i].counter = 6615241U + xorwowSeedStream[i];
-    }
-}
-
-inline void rpp_host_rng_xorwow_f32_initialize_4seed_stream(RpptXorwowState *xorwowInitialState, Rpp32u seed)
-{
-    Rpp32u xorwowSeedStream[4];
-    xorwowSeedStream[0] = seed + 1436017U;
-    xorwowSeedStream[1] = seed + 2316719U;
-    xorwowSeedStream[2] = seed + 4377713U;
-    xorwowSeedStream[3] = seed + 1648031U;
-    for (int i = 0; i < 4; i++)
+    Rpp32u xorwowSeedStream[STREAM_SIZE];
+    for (int i = 0; i < STREAM_SIZE; i++)
+        xorwowSeedStream[i] = seed + multiseedStreamOffset[i];
+    for (int i = 0; i < STREAM_SIZE; i++)
     {
         xorwowInitialState[i].x[0] = 123456789U + xorwowSeedStream[i];
         xorwowInitialState[i].x[1] = 362436069U + xorwowSeedStream[i];
