@@ -1714,6 +1714,23 @@ inline RppStatus rpp_store12_f32pln3_to_u8pkd3_avx(Rpp8u* dstPtr, __m256* p)
     return RPP_SUCCESS;
 }
 
+inline RppStatus rpp_store12_f32pln3_to_u8pkd3_mirror_avx(Rpp8u* dstPtr, __m256* p)
+{
+     __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+    p[0] = _mm256_permutevar8x32_ps(p[0], pxMask);
+    p[1] = _mm256_permutevar8x32_ps(p[1], pxMask);
+    p[2] = _mm256_permutevar8x32_ps(p[2], pxMask);
+
+    __m256i px1 = _mm256_packus_epi32(_mm256_cvtps_epi32(p[0]), _mm256_cvtps_epi32(p[1])); /* Pack p[0] and p[1] (R and G channels) */
+    __m256i px2 = _mm256_packus_epi32(_mm256_cvtps_epi32(p[2]), avx_px0);                  /* Pack p[2] and zeros (B channel)*/
+    px1 = _mm256_packus_epi16(px1, px2);                    /* Pack to obtain |R01|R02|R03|R04|G01|G02|G03|G04|B01|B02|B03|B04|00|...|R05|R06|R07|R08|G05|G06|G07|G08|B05|B06|B07|B08|00|... */
+    px1 = _mm256_shuffle_epi8(px1, avx_pxShufflePkd);       /* Shuffle to obtain in RGB packed format */
+    px1 = _mm256_permutevar8x32_epi32(px1, avx_pxPermPkd);  /* Permute to eliminate the zeros in between */
+    _mm256_storeu_si256((__m256i *)(dstPtr), px1);          /* store the 24 U8 pixels in dst */
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus rpp_store4_f32pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256 &p)
 {
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
@@ -1725,9 +1742,9 @@ inline RppStatus rpp_store4_f32pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256 &p)
 inline RppStatus rpp_store4_f32pln1_to_u8pln1_mirror_avx(Rpp8u* dstPtr, __m256 &p)
 {
     __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+    p = _mm256_permutevar8x32_ps(p, pxMask);
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
     px1 = _mm256_packus_epi16(px1, avx_px0);
-    px1 = _mm256_permutevar8x32_epi32(px1, pxMask);
     _mm256_storeu_si256((__m256i *)(dstPtr), px1);
 
     return RPP_SUCCESS;
@@ -1738,6 +1755,15 @@ inline RppStatus rpp_store12_f32pln3_to_u8pln3_avx(Rpp8u* dstRPtr, Rpp8u* dstGPt
     rpp_store4_f32pln1_to_u8pln1_avx(dstRPtr, p[0]);
     rpp_store4_f32pln1_to_u8pln1_avx(dstGPtr, p[1]);
     rpp_store4_f32pln1_to_u8pln1_avx(dstBPtr, p[2]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store12_f32pln3_to_u8pln3_mirror_avx(Rpp8u* dstRPtr, Rpp8u* dstGPtr, Rpp8u* dstBPtr, __m256* p)
+{
+    rpp_store4_f32pln1_to_u8pln1_mirror_avx(dstRPtr, p[0]);
+    rpp_store4_f32pln1_to_u8pln1_mirror_avx(dstGPtr, p[1]);
+    rpp_store4_f32pln1_to_u8pln1_mirror_avx(dstBPtr, p[2]);
 
     return RPP_SUCCESS;
 }

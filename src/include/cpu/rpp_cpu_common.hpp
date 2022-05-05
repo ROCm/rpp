@@ -2069,7 +2069,7 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
-inline RppStatus compute_rmn_12_host(__m256 *p, __m256 *pRMNParams)
+inline RppStatus compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
     p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pRMNParams[0]), pRMNParams[1]);
@@ -2078,7 +2078,7 @@ inline RppStatus compute_rmn_12_host(__m256 *p, __m256 *pRMNParams)
     return RPP_SUCCESS;
 }
 
-inline RppStatus compute_rmn_4_host(__m256 *p, __m256 *pRMNParams)
+inline RppStatus compute_rmn_8_host(__m256 *p, __m256 *pRMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
    
@@ -4352,6 +4352,22 @@ inline RppStatus compute_resize_src_loc_avx(__m256 &pDstLoc, __m256 &pScale, __m
 {
     __m256 pLoc = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
+    __m256 pLocFloor = _mm256_floor_ps(pLoc);
+    pWeight[0] = _mm256_sub_ps(pLoc, pLocFloor);
+    pWeight[1] = _mm256_sub_ps(avx_p1, pWeight[0]);
+    pLocFloor = _mm256_max_ps(_mm256_min_ps(pLocFloor, pLimit), avx_p0);
+    if(hasRGBChannels)
+        pLocFloor = _mm256_mul_ps(pLocFloor, avx_p3);
+    __m256i pxLocFloor = _mm256_cvtps_epi32(pLocFloor);
+    _mm256_storeu_si256((__m256i*) srcLoc, pxLocFloor);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_resize_src_loc_mirror_avx(__m256 &pDstLoc, __m256 &pScale, __m256 &pLimit, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
+{
+    __m256 pLoc = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
+    pDstLoc = _mm256_sub_ps(pDstLoc, avx_p8);
     __m256 pLocFloor = _mm256_floor_ps(pLoc);
     pWeight[0] = _mm256_sub_ps(pLoc, pLocFloor);
     pWeight[1] = _mm256_sub_ps(avx_p1, pWeight[0]);
