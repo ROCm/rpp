@@ -378,12 +378,12 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr,
     copy_param_float(pepperValueTensor, rpp::deref(rppHandle), paramIndex++);
 
     RpptXorwowState xorwowInitialState;
-    xorwowInitialState.x[0] = 123456789U + seed;
-    xorwowInitialState.x[1] = 362436069U + seed;
-    xorwowInitialState.x[2] = 521288629U + seed;
-    xorwowInitialState.x[3] = 88675123U + seed;
-    xorwowInitialState.x[4] = 5783321U + seed;
-    xorwowInitialState.counter = 6615241U + seed;
+    xorwowInitialState.x[0] = 0x75BCD15 + seed;
+    xorwowInitialState.x[1] = 0x159A55E5 + seed;
+    xorwowInitialState.x[2] = 0x1F123BB5 + seed;
+    xorwowInitialState.x[3] = 0x5491333 + seed;
+    xorwowInitialState.x[4] = 0x583F19 + seed;
+    xorwowInitialState.counter = 0x64F0C9 + seed;
 
     RpptXorwowState *d_xorwowInitialStatePtr;
     d_xorwowInitialStatePtr = (RpptXorwowState *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.maskArr.floatmem;
