@@ -272,7 +272,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
 
     Rpp32u *xorwowSeedStream;
     xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
-    hipMemcpy(xorwowSeedStream, rngSeedStream1036800, 1036800 * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(xorwowSeedStream, rngSeedStream1036800, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice);
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
