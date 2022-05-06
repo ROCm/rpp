@@ -1716,7 +1716,7 @@ inline RppStatus rpp_store12_f32pln3_to_u8pkd3_avx(Rpp8u* dstPtr, __m256* p)
 
 inline RppStatus rpp_store12_f32pln3_to_u8pkd3_mirror_avx(Rpp8u* dstPtr, __m256* p)
 {
-     __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+    __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
     p[0] = _mm256_permutevar8x32_ps(p[0], pxMask);
     p[1] = _mm256_permutevar8x32_ps(p[1], pxMask);
     p[2] = _mm256_permutevar8x32_ps(p[2], pxMask);
@@ -1891,8 +1891,38 @@ inline RppStatus rpp_store12_f32pln3_to_i8pkd3_avx(Rpp8s* dstPtr, __m256* p)
     return RPP_SUCCESS;
 }
 
+inline RppStatus rpp_store12_f32pln3_to_i8pkd3_mirror_avx(Rpp8s* dstPtr, __m256* p)
+{
+    __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+    p[0] = _mm256_permutevar8x32_ps(p[0], pxMask);
+    p[1] = _mm256_permutevar8x32_ps(p[1], pxMask);
+    p[2] = _mm256_permutevar8x32_ps(p[2], pxMask);
+
+    __m256i px1 = _mm256_packus_epi32(_mm256_cvtps_epi32(p[0]), _mm256_cvtps_epi32(p[1]));  /* Pack the R and G channels to single vector*/
+    __m256i px2 = _mm256_packus_epi32(_mm256_cvtps_epi32(p[2]), avx_px0);                   /* Pack the B channel with zeros to single vector */
+    px1 = _mm256_packus_epi16(px1, px2);
+    px1 = _mm256_shuffle_epi8(px1, avx_pxShufflePkd);       /* Shuffle the pixels to obtain RGB in packed format */
+    px1 = _mm256_permutevar8x32_epi32(px1, avx_pxPermPkd);  /* Permute to get continuous RGB pixels */
+    px1 = _mm256_sub_epi8(px1, avx_pxConvertI8);            /* add I8 conversion param */
+    _mm256_storeu_si256((__m256i *)(dstPtr), px1);          /* store the 12 U8 pixels in dst */
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus rpp_store4_f32pln1_to_i8pln1_avx(Rpp8s* dstPtr, __m256 &p)
 {
+    __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
+    px1 = _mm256_sub_epi8(_mm256_packus_epi16(px1, avx_px0), avx_pxConvertI8);  /* Pack and add I8 conversion param */
+    _mm256_storeu_si256((__m256i *)(dstPtr), px1);                              /* store the 4 pixels in dst */
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store4_f32pln1_to_i8pln1_mirror_avx(Rpp8s* dstPtr, __m256 &p)
+{
+    __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+    p = _mm256_permutevar8x32_ps(p, pxMask);
+    
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
     px1 = _mm256_sub_epi8(_mm256_packus_epi16(px1, avx_px0), avx_pxConvertI8);  /* Pack and add I8 conversion param */
     _mm256_storeu_si256((__m256i *)(dstPtr), px1);                              /* store the 4 pixels in dst */
@@ -1905,6 +1935,15 @@ inline RppStatus rpp_store12_f32pln3_to_i8pln3_avx(Rpp8s* dstRPtr, Rpp8s* dstGPt
     rpp_store4_f32pln1_to_i8pln1_avx(dstRPtr, p[0]);
     rpp_store4_f32pln1_to_i8pln1_avx(dstGPtr, p[1]);
     rpp_store4_f32pln1_to_i8pln1_avx(dstBPtr, p[2]);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_store12_f32pln3_to_i8pln3_mirror_avx(Rpp8s* dstRPtr, Rpp8s* dstGPtr, Rpp8s* dstBPtr, __m256* p)
+{
+    rpp_store4_f32pln1_to_i8pln1_mirror_avx(dstRPtr, p[0]);
+    rpp_store4_f32pln1_to_i8pln1_mirror_avx(dstGPtr, p[1]);
+    rpp_store4_f32pln1_to_i8pln1_mirror_avx(dstBPtr, p[2]);
 
     return RPP_SUCCESS;
 }
