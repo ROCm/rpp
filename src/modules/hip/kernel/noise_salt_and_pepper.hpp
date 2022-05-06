@@ -75,7 +75,7 @@ __global__ void salt_and_pepper_noise_pkd_tensor(T *srcPtr,
     float pepperValue = pepperValueTensor[id_z];
 
     RpptXorwowState xorwowState;
-    uint xorwowSeed = (seedStreamIdx >= SEED_STREAM_MAX_SIZE) ? xorwowSeedStream[seedStreamIdx - SEED_STREAM_MAX_SIZE] : xorwowSeedStream[seedStreamIdx];
+    uint xorwowSeed = xorwowSeedStream[seedStreamIdx % SEED_STREAM_MAX_SIZE];
     xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
     xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
     xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
@@ -126,7 +126,7 @@ __global__ void salt_and_pepper_noise_pln_tensor(T *srcPtr,
     float pepperValue = pepperValueTensor[id_z];
 
     RpptXorwowState xorwowState;
-    uint xorwowSeed = (seedStreamIdx >= SEED_STREAM_MAX_SIZE) ? xorwowSeedStream[seedStreamIdx - SEED_STREAM_MAX_SIZE] : xorwowSeedStream[seedStreamIdx];
+    uint xorwowSeed = xorwowSeedStream[seedStreamIdx % SEED_STREAM_MAX_SIZE];
     xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
     xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
     xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
@@ -192,7 +192,7 @@ __global__ void salt_and_pepper_noise_pkd3_pln3_tensor(T *srcPtr,
     float pepperValue = pepperValueTensor[id_z];
 
     RpptXorwowState xorwowState;
-    uint xorwowSeed = (seedStreamIdx >= SEED_STREAM_MAX_SIZE) ? xorwowSeedStream[seedStreamIdx - SEED_STREAM_MAX_SIZE] : xorwowSeedStream[seedStreamIdx];
+    uint xorwowSeed = xorwowSeedStream[seedStreamIdx % SEED_STREAM_MAX_SIZE];
     xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
     xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
     xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
@@ -242,7 +242,7 @@ __global__ void salt_and_pepper_noise_pln3_pkd3_tensor(T *srcPtr,
     float pepperValue = pepperValueTensor[id_z];
 
     RpptXorwowState xorwowState;
-    uint xorwowSeed = (seedStreamIdx >= SEED_STREAM_MAX_SIZE) ? xorwowSeedStream[seedStreamIdx - SEED_STREAM_MAX_SIZE] : xorwowSeedStream[seedStreamIdx];
+    uint xorwowSeed = xorwowSeedStream[seedStreamIdx % SEED_STREAM_MAX_SIZE];
     xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
     xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
     xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
@@ -282,7 +282,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
 
     Rpp32u *xorwowSeedStream;
     xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
-    hipMemcpy(xorwowSeedStream, rngSeedStream1036800, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice);
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
