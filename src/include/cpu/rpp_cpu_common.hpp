@@ -86,16 +86,20 @@ template<Rpp32s STREAM_SIZE>
 inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState *xorwowInitialState, Rpp32u seed)
 {
     Rpp32u xorwowSeedStream[STREAM_SIZE];
+
+    // Loop to initialize STREAM_SIZE seed streams based on user seed and offset
     for (int i = 0; i < STREAM_SIZE; i++)
         xorwowSeedStream[i] = seed + multiseedStreamOffset[i];
+
+    // Loop to initialize STREAM_SIZE xorwow initial states for multi-stream random number generation
     for (int i = 0; i < STREAM_SIZE; i++)
     {
-        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];
-        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];
-        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];
-        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];
-        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];
-        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];
+        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U
+        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U
+        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U
+        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U
+        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U
+        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U
     }
 }
 
@@ -105,16 +109,16 @@ inline __m256 rpp_host_rng_xorwow_8_f32_avx(__m256i *pxXorwowStateXParam, __m256
     __m256i pxFFFFFFFF = _mm256_set1_epi32(0xFFFFFFFF);
     __m256i px7FFFFF = _mm256_set1_epi32(0x7FFFFF);
     __m256i pxExponentFloat = _mm256_set1_epi32(0x3F800000);    // 0x3F800000 is Hex for 0b111111100000000000000000000000 - 23 bits of mantissa set to 0 and 01111111 for the exponent in IEEE float
-    __m256i pxT = pxXorwowStateXParam[4];
-    __m256i pxS = pxXorwowStateXParam[0];
-    pxXorwowStateXParam[4] = pxXorwowStateXParam[3];
-    pxXorwowStateXParam[3] = pxXorwowStateXParam[2];
-    pxXorwowStateXParam[2] = pxXorwowStateXParam[1];
-    pxXorwowStateXParam[1] = pxS;
+    __m256i pxT = pxXorwowStateXParam[0];
+    __m256i pxS = pxXorwowStateXParam[4];
+    pxXorwowStateXParam[0] = pxXorwowStateXParam[1];
+    pxXorwowStateXParam[1] = pxXorwowStateXParam[2];
+    pxXorwowStateXParam[2] = pxXorwowStateXParam[3];
+    pxXorwowStateXParam[3] = pxXorwowStateXParam[4];
     pxT = _mm256_xor_si256(pxT, _mm256_srli_epi32(pxT, 2));
     pxT = _mm256_xor_si256(pxT, _mm256_slli_epi32(pxT, 1));
     pxT = _mm256_xor_si256(pxT, _mm256_xor_si256(pxS, _mm256_slli_epi32(pxS, 4)));
-    pxXorwowStateXParam[0] = pxT;
+    pxXorwowStateXParam[4] = pxT;
     *pxXorwowStateCounterParam = _mm256_and_si256(_mm256_add_epi32(*pxXorwowStateCounterParam, px362437), pxFFFFFFFF);
     pxS = _mm256_or_si256(pxExponentFloat, _mm256_and_si256(_mm256_add_epi32(pxT, *pxXorwowStateCounterParam), px7FFFFF));
     return _mm256_sub_ps(*(__m256 *)&pxS, avx_p1);
@@ -126,16 +130,16 @@ inline __m128 rpp_host_rng_xorwow_4_f32_sse(__m128i *pxXorwowStateXParam, __m128
     __m128i pxFFFFFFFF = _mm_set1_epi32(0xFFFFFFFF);
     __m128i px7FFFFF = _mm_set1_epi32(0x7FFFFF);
     __m128i pxExponentFloat = _mm_set1_epi32(0x3F800000);    // 0x3F800000 is Hex for 0b111111100000000000000000000000 - 23 bits of mantissa set to 0 and 01111111 for the exponent in IEEE float
-    __m128i pxT = pxXorwowStateXParam[4];
-    __m128i pxS = pxXorwowStateXParam[0];
-    pxXorwowStateXParam[4] = pxXorwowStateXParam[3];
-    pxXorwowStateXParam[3] = pxXorwowStateXParam[2];
-    pxXorwowStateXParam[2] = pxXorwowStateXParam[1];
-    pxXorwowStateXParam[1] = pxS;
+    __m128i pxT = pxXorwowStateXParam[0];
+    __m128i pxS = pxXorwowStateXParam[4];
+    pxXorwowStateXParam[0] = pxXorwowStateXParam[1];
+    pxXorwowStateXParam[1] = pxXorwowStateXParam[2];
+    pxXorwowStateXParam[2] = pxXorwowStateXParam[3];
+    pxXorwowStateXParam[3] = pxXorwowStateXParam[4];
     pxT = _mm_xor_si128(pxT, _mm_srli_epi32(pxT, 2));
     pxT = _mm_xor_si128(pxT, _mm_slli_epi32(pxT, 1));
     pxT = _mm_xor_si128(pxT, _mm_xor_si128(pxS, _mm_slli_epi32(pxS, 4)));
-    pxXorwowStateXParam[0] = pxT;
+    pxXorwowStateXParam[4] = pxT;
     *pxXorwowStateCounterParam = _mm_and_si128(_mm_add_epi32(*pxXorwowStateCounterParam, px362437), pxFFFFFFFF);
     pxS = _mm_or_si128(pxExponentFloat, _mm_and_si128(_mm_add_epi32(pxT, *pxXorwowStateCounterParam), px7FFFFF));
     return _mm_sub_ps(*(__m128 *)&pxS, xmm_p1);
@@ -143,21 +147,39 @@ inline __m128 rpp_host_rng_xorwow_4_f32_sse(__m128i *pxXorwowStateXParam, __m128
 
 inline float rpp_host_rng_xorwow_f32(RpptXorwowState *xorwowState)
 {
-    uint t  = xorwowState->x[4];
-    uint s  = xorwowState->x[0];
-    xorwowState->x[4] = xorwowState->x[3];
-    xorwowState->x[3] = xorwowState->x[2];
-    xorwowState->x[2] = xorwowState->x[1];
-    xorwowState->x[1] = s;
+    uint t  = xorwowState->x[0];
+    uint s  = xorwowState->x[4];
+    xorwowState->x[0] = xorwowState->x[1];
+    xorwowState->x[1] = xorwowState->x[2];
+    xorwowState->x[2] = xorwowState->x[3];
+    xorwowState->x[3] = xorwowState->x[4];
     t ^= t >> 2;
     t ^= t << 1;
     t ^= s ^ (s << 4);
-    xorwowState->x[0] = t;
+    xorwowState->x[4] = t;
     xorwowState->counter = (xorwowState->counter + 362437) & 0xFFFFFFFF;
     uint out = (0x3F800000 | ((t + xorwowState->counter) & 0x7FFFFF));    // 0x3F800000 is Hex for 0b111111100000000000000000000000 - 23 bits of mantissa set to 0 and 01111111 for the exponent in IEEE float
     float outFloat = *(float *)&out;
     return  outFloat - 1;
 }
+
+// inline float rpp_host_rng_xorwow_f32(RpptXorwowState *xorwowState)
+// {
+//     uint t  = xorwowState->x[4];
+//     uint s  = xorwowState->x[0];
+//     xorwowState->x[4] = xorwowState->x[3];
+//     xorwowState->x[3] = xorwowState->x[2];
+//     xorwowState->x[2] = xorwowState->x[1];
+//     xorwowState->x[1] = s;
+//     t ^= t >> 2;
+//     t ^= t << 1;
+//     t ^= s ^ (s << 4);
+//     xorwowState->x[0] = t;
+//     xorwowState->counter = (xorwowState->counter + 362437) & 0xFFFFFFFF;
+//     uint out = (0x3F800000 | ((t + xorwowState->counter) & 0x7FFFFF));    // 0x3F800000 is Hex for 0b111111100000000000000000000000 - 23 bits of mantissa set to 0 and 01111111 for the exponent in IEEE float
+//     float outFloat = *(float *)&out;
+//     return  outFloat - 1;
+// }
 
 inline int power_function(int a, int b)
 {
