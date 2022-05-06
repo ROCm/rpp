@@ -818,7 +818,7 @@ int main(int argc, char **argv)
                 Rpp32u seed = 1255459;
                 for (i = 0; i < images; i++)
                 {
-                    noiseProbabilityTensor[i] = 0.05f;
+                    noiseProbabilityTensor[i] = 0.1f;
                     saltProbabilityTensor[i] = 0.5f;
                     saltValueTensor[i] = 1.0f;
                     pepperValueTensor[i] = 0.0f;
