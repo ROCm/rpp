@@ -89,7 +89,7 @@ inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState 
 {
     Rpp32u xorwowSeedStream[STREAM_SIZE];
 
-    // Loop to initialize STREAM_SIZE seed streams based on user seed and offset
+    // Loop to initialize seed stream of size STREAM_SIZE based on user seed and offset
     for (int i = 0; i < STREAM_SIZE; i++)
         xorwowSeedStream[i] = seed + multiseedStreamOffset[i];
 
