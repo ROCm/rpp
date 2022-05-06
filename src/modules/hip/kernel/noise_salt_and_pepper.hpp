@@ -22,6 +22,32 @@ __device__ void salt_and_pepper_noise_8_hip_compute(d_float8 *src_f8, d_float8 *
     salt_and_pepper_noise_1_hip_compute(&src_f8->f1[7], &dst_f8->f1[7], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[7]);
 }
 
+__device__ void salt_and_pepper_noise_3_hip_compute(float *srcR, float *dstR, float *srcG, float *dstG, float *srcB, float *dstB, float noiseProbability, float saltProbability, float salt, float pepper, float randomNumberFloat)
+{
+    if (randomNumberFloat > noiseProbability)
+    {
+        *dstR = *srcR;
+        *dstG = *srcG;
+        *dstB = *srcB;
+    }
+    else
+    {
+        *dstR = *dstG = *dstB = ((randomNumberFloat <= saltProbability) ? salt : pepper);
+    }
+}
+
+__device__ void salt_and_pepper_noise_24_hip_compute(d_float24 *src_f24, d_float24 *dst_f24, float noiseProbability, float saltProbability, float salt, float pepper, d_float8 *randomNumbers_f8)
+{
+    salt_and_pepper_noise_3_hip_compute(&src_f24->f1[0], &dst_f24->f1[0], &src_f24->f1[ 8], &dst_f24->f1[ 8], &src_f24->f1[16], &dst_f24->f1[16], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[0]);
+    salt_and_pepper_noise_3_hip_compute(&src_f24->f1[1], &dst_f24->f1[1], &src_f24->f1[ 9], &dst_f24->f1[ 9], &src_f24->f1[17], &dst_f24->f1[17], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[1]);
+    salt_and_pepper_noise_3_hip_compute(&src_f24->f1[2], &dst_f24->f1[2], &src_f24->f1[10], &dst_f24->f1[10], &src_f24->f1[18], &dst_f24->f1[18], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[2]);
+    salt_and_pepper_noise_3_hip_compute(&src_f24->f1[3], &dst_f24->f1[3], &src_f24->f1[11], &dst_f24->f1[11], &src_f24->f1[19], &dst_f24->f1[19], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[3]);
+    salt_and_pepper_noise_3_hip_compute(&src_f24->f1[4], &dst_f24->f1[4], &src_f24->f1[12], &dst_f24->f1[12], &src_f24->f1[20], &dst_f24->f1[20], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[4]);
+    salt_and_pepper_noise_3_hip_compute(&src_f24->f1[5], &dst_f24->f1[5], &src_f24->f1[13], &dst_f24->f1[13], &src_f24->f1[21], &dst_f24->f1[21], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[5]);
+    salt_and_pepper_noise_3_hip_compute(&src_f24->f1[6], &dst_f24->f1[6], &src_f24->f1[14], &dst_f24->f1[14], &src_f24->f1[22], &dst_f24->f1[22], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[6]);
+    salt_and_pepper_noise_3_hip_compute(&src_f24->f1[7], &dst_f24->f1[7], &src_f24->f1[15], &dst_f24->f1[15], &src_f24->f1[23], &dst_f24->f1[23], noiseProbability, saltProbability, salt, pepper, randomNumbers_f8->f1[7]);
+}
+
 __device__ void salt_and_pepper_noise_adjusted_input_hip_compute(uchar *srcPtr, float *saltValue, float *pepperValue) { *saltValue *= 255.0f; *pepperValue *= 255.0f; }
 __device__ void salt_and_pepper_noise_adjusted_input_hip_compute(float *srcPtr, float *saltValue, float *pepperValue) {}
 __device__ void salt_and_pepper_noise_adjusted_input_hip_compute(schar *srcPtr, float *saltValue, float *pepperValue) { *saltValue = (*saltValue * 255.0f) - 128.0f; *pepperValue = (*pepperValue * 255.0f) - 128.0f; }
@@ -73,9 +99,7 @@ __global__ void salt_and_pepper_noise_pkd_tensor(T *srcPtr,
     rpp_hip_rng_8_xorwow_f32(&xorwowState, &randomNumbers_f8);
     salt_and_pepper_noise_adjusted_input_hip_compute(srcPtr, &saltValue, &pepperValue);
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[0], &dst_f24.f8[0], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[1], &dst_f24.f8[1], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[2], &dst_f24.f8[2], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
+    salt_and_pepper_noise_24_hip_compute(&src_f24, &dst_f24, noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -192,9 +216,7 @@ __global__ void salt_and_pepper_noise_pkd3_pln3_tensor(T *srcPtr,
     rpp_hip_rng_8_xorwow_f32(&xorwowState, &randomNumbers_f8);
     salt_and_pepper_noise_adjusted_input_hip_compute(srcPtr, &saltValue, &pepperValue);
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[0], &dst_f24.f8[0], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[1], &dst_f24.f8[1], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[2], &dst_f24.f8[2], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
+    salt_and_pepper_noise_24_hip_compute(&src_f24, &dst_f24, noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -244,9 +266,7 @@ __global__ void salt_and_pepper_noise_pln3_pkd3_tensor(T *srcPtr,
     rpp_hip_rng_8_xorwow_f32(&xorwowState, &randomNumbers_f8);
     salt_and_pepper_noise_adjusted_input_hip_compute(srcPtr, &saltValue, &pepperValue);
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[0], &dst_f24.f8[0], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[1], &dst_f24.f8[1], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
-    salt_and_pepper_noise_8_hip_compute(&src_f24.f8[2], &dst_f24.f8[2], noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
+    salt_and_pepper_noise_24_hip_compute(&src_f24, &dst_f24, noiseProbability, saltProbability, saltValue, pepperValue, &randomNumbers_f8);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
