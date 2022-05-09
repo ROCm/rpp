@@ -3,25 +3,25 @@
 
 __device__ void exposure_hip_compute(uchar *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255(pix_f8->x * *exposureParam_f4);
-    pix_f8->y = rpp_hip_pixel_check_0to255(pix_f8->y * *exposureParam_f4);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(pix_f8->f4[0] * *exposureParam_f4);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(pix_f8->f4[1] * *exposureParam_f4);
 }
 
 __device__ void exposure_hip_compute(float *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to1(pix_f8->x * *exposureParam_f4);
-    pix_f8->y = rpp_hip_pixel_check_0to1(pix_f8->y * *exposureParam_f4);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1(pix_f8->f4[0] * *exposureParam_f4);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1(pix_f8->f4[1] * *exposureParam_f4);
 }
 
 __device__ void exposure_hip_compute(schar *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to255((pix_f8->x + (float4)128) * *exposureParam_f4) - (float4)128;
-    pix_f8->y = rpp_hip_pixel_check_0to255((pix_f8->y + (float4)128) * *exposureParam_f4) - (float4)128;
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] + (float4)128) * *exposureParam_f4) - (float4)128;
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] + (float4)128) * *exposureParam_f4) - (float4)128;
 }
 __device__ void exposure_hip_compute(half *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    pix_f8->x = rpp_hip_pixel_check_0to1(pix_f8->x * *exposureParam_f4);
-    pix_f8->y = rpp_hip_pixel_check_0to1(pix_f8->y * *exposureParam_f4);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1(pix_f8->f4[0] * *exposureParam_f4);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1(pix_f8->f4[1] * *exposureParam_f4);
 }
 
 template <typename T>
@@ -127,9 +127,9 @@ __global__ void exposure_pkd3_pln3_tensor(T *srcPtr,
     d_float24 pix_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    exposure_hip_compute(srcPtr, &pix_f24.x, &exposureParam_f4);
-    exposure_hip_compute(srcPtr, &pix_f24.y, &exposureParam_f4);
-    exposure_hip_compute(srcPtr, &pix_f24.z, &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.f8[0], &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.f8[1], &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.f8[2], &exposureParam_f4);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
@@ -158,9 +158,9 @@ __global__ void exposure_pln3_pkd3_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
-    exposure_hip_compute(srcPtr, &pix_f24.x, &exposureParam_f4);
-    exposure_hip_compute(srcPtr, &pix_f24.y, &exposureParam_f4);
-    exposure_hip_compute(srcPtr, &pix_f24.z, &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.f8[0], &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.f8[1], &exposureParam_f4);
+    exposure_hip_compute(srcPtr, &pix_f24.f8[2], &exposureParam_f4);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 

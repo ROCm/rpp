@@ -3,28 +3,28 @@
 
 __device__ void color_cast_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
-    dst_f8->x = (src_f8->x - *pix_f4) * *alpha_f4 + *pix_f4;
-    dst_f8->y = (src_f8->y - *pix_f4) * *alpha_f4 + *pix_f4;
+    dst_f8->f4[0] = (src_f8->f4[0] - *pix_f4) * *alpha_f4 + *pix_f4;
+    dst_f8->f4[1] = (src_f8->f4[1] - *pix_f4) * *alpha_f4 + *pix_f4;
 }
 
 __device__ void color_cast_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
     float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
-    dst_f8->x = (src_f8->x - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
-    dst_f8->y = (src_f8->y - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
+    dst_f8->f4[0] = (src_f8->f4[0] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
+    dst_f8->f4[1] = (src_f8->f4[1] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
 }
 
 __device__ void color_cast_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
-    dst_f8->x = (src_f8->x + (float4)128 - *pix_f4) * *alpha_f4 + *pix_f4 - (float4)128;
-    dst_f8->y = (src_f8->y + (float4)128 - *pix_f4) * *alpha_f4 + *pix_f4 - (float4)128;
+    dst_f8->f4[0] = (src_f8->f4[0] + (float4)128 - *pix_f4) * *alpha_f4 + *pix_f4 - (float4)128;
+    dst_f8->f4[1] = (src_f8->f4[1] + (float4)128 - *pix_f4) * *alpha_f4 + *pix_f4 - (float4)128;
 }
 
 __device__ void color_cast_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
     float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
-    dst_f8->x = (src_f8->x - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
-    dst_f8->y = (src_f8->y - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
+    dst_f8->f4[0] = (src_f8->f4[0] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
+    dst_f8->f4[1] = (src_f8->f4[1] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
 }
 
 template <typename T>
@@ -56,9 +56,9 @@ __global__ void color_cast_pkd_tensor(T *srcPtr,
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
-    color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
-    color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &b_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &g_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &r_f4, &alpha_f4);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -91,9 +91,9 @@ __global__ void color_cast_pln_tensor(T *srcPtr,
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
-    color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
-    color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &b_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &g_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &r_f4, &alpha_f4);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -126,9 +126,9 @@ __global__ void color_cast_pkd3_pln3_tensor(T *srcPtr,
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
-    color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
-    color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &b_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &g_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &r_f4, &alpha_f4);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -161,9 +161,9 @@ __global__ void color_cast_pln3_pkd3_tensor(T *srcPtr,
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    color_cast_hip_compute(srcPtr, &src_f24.x, &dst_f24.x, &b_f4, &alpha_f4);
-    color_cast_hip_compute(srcPtr, &src_f24.y, &dst_f24.y, &g_f4, &alpha_f4);
-    color_cast_hip_compute(srcPtr, &src_f24.z, &dst_f24.z, &r_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &b_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &g_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &r_f4, &alpha_f4);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
