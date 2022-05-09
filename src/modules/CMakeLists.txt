@@ -1,11 +1,9 @@
 project(modules)
 
-if(${BACKEND} MATCHES OCL)
-    file(GLOB RPP_KERNELS cl/kernel/*.cl)
-endif()
-
-if(${BACKEND} MATCHES HIP)
+if( "${BACKEND}" STREQUAL "HIP")
     file(GLOB RPP_KERNELS hip/kernel/*.cpp)
+elseif( "${BACKEND}" STREQUAL "OCL")
+    file(GLOB RPP_KERNELS cl/kernel/*.cl)
 endif()
 
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/rpp_kernels.h)

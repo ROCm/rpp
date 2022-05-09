@@ -84,13 +84,13 @@ if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
     find_package(HIP REQUIRED)
 
     # Add modules
+    set(BACKEND "HIP")
     set(MODULES_LIST modules)
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
 
     # Set compiler and flags
-    set(BACKEND "HIP")
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
     set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
@@ -102,13 +102,13 @@ elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKE
     find_package(OpenCL REQUIRED)
 
     # Add modules
+    set(BACKEND "OCL")
     set(MODULES_LIST modules)
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
 
     # Set compiler and flags
-    set(BACKEND "OCL")
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
     set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
