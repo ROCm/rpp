@@ -104,6 +104,17 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST} ${ROCM_INC})
     message("-- ${Blue}OpenCL include directories -- ${INCLUDE_LIST}${ColourReset}")
 
+elseif( "${BACKEND}" STREQUAL "CPU")
+
+    # Set CPU compiler and flags
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14 -Wno-deprecated-declarations")
+
+    # Add CPU specific includes
+    set(ROCM_INC "/opt/rocm/include")
+    set(INCLUDE_LIST ${ROCM_INC})
+    message("-- ${Blue}CPU include directories -- ${INCLUDE_LIST}${ColourReset}")
+
 endif()
 
 # Kernels and includes additions
