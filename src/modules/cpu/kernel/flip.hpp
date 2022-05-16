@@ -71,7 +71,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32s srcPtrIncrementPerPixel = (horizontalFlag) ? -1 : 1;
         
         // flip without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW and  horizontalflag = 0 and verticalflag = 0)
-        if ((horizontalFlag == 0) && (verticalFlag == 0) && (srcDescPtr->layout == dstDescPtr->layout))
+        if (!(horizontalFlag | verticalFlag) && (srcDescPtr->layout == dstDescPtr->layout))
         {
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -347,7 +347,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32s srcPtrIncrementPerPixel = (horizontalFlag) ? -1 : 1;
 
         // flip without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW and  horizontalflag = 0 and verticalflag = 0)
-        if ((horizontalFlag == 0) && (verticalFlag == 0) && (srcDescPtr->layout == dstDescPtr->layout))
+        if (!(horizontalFlag | verticalFlag) && (srcDescPtr->layout == dstDescPtr->layout))
         {
             Rpp32u copyLengthInBytes = bufferLength * sizeof(Rpp32f);
             for(int c = 0; c < layoutParams.channelParam; c++)
@@ -624,7 +624,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32s srcPtrIncrementPerPixel = (horizontalFlag) ? -1 : 1;
         
         // flip without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW and  horizontalflag = 0 and verticalflag = 0)
-        if ((horizontalFlag == 0) && (verticalFlag == 0) && (srcDescPtr->layout == dstDescPtr->layout))
+        if (!(horizontalFlag | verticalFlag) && (srcDescPtr->layout == dstDescPtr->layout))
         {
             Rpp32u copyLengthInBytes = bufferLength * sizeof(Rpp16f);
             for(int c = 0; c < layoutParams.channelParam; c++)
@@ -941,7 +941,7 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32s srcPtrIncrementPerPixel = (horizontalFlag) ? -1 : 1;
         
         // flip without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW and  horizontalflag = 0 and verticalflag = 0)
-        if ((horizontalFlag == 0) && (verticalFlag == 0) && (srcDescPtr->layout == dstDescPtr->layout))
+        if (!(horizontalFlag | verticalFlag) && (srcDescPtr->layout == dstDescPtr->layout))
         {
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
