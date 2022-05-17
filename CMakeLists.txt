@@ -97,17 +97,6 @@ if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
         link_libraries(stdc++)
 
-        # target_include_directories(${PROJECT_NAME}
-        #     PUBLIC
-        #         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        #         ${ROCM_PATH}/include
-        #     PRIVATE
-        #         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
-        #         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
-        #         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific
-        #         ${INCLUDE_LIST}
-        # )
-
         message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
 
     else()
@@ -134,17 +123,6 @@ elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKE
         set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
         add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
 
-        # target_include_directories(${PROJECT_NAME}
-        #     PUBLIC
-        #         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        #         ${ROCM_PATH}/include
-        #     PRIVATE
-        #         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ocl
-        #         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
-        #         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific
-        #         ${INCLUDE_LIST}
-        # )
-
         message("-- ${Green}${PROJECT_NAME} set to build with OpenCL backend${ColourReset}")
 
     else()
@@ -167,16 +145,6 @@ if( "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
     # Set compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
-
-    # target_include_directories(${PROJECT_NAME}
-    #     PUBLIC
-    #         ${CMAKE_CURRENT_SOURCE_DIR}/include
-    #         ${ROCM_PATH}/include
-    #     PRIVATE
-    #         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
-    #         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific
-    #         ${INCLUDE_LIST}
-    # )
 
     message("-- ${Green}${PROJECT_NAME} set to build for CPU backend${ColourReset}")
 
