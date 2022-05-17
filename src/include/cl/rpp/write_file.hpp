@@ -1,5 +1,5 @@
-#ifndef GUARD_MLOPEN_WRITE_FILE_HPP
-#define GUARD_MLOPEN_WRITE_FILE_HPP
+#ifndef GUARD_RPP_WRITE_FILE_HPP
+#define GUARD_RPP_WRITE_FILE_HPP
 
 #include <boost/filesystem.hpp>
 #include <rpp/manage_ptr.hpp>

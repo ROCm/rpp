@@ -132,7 +132,7 @@ RPP_EXPORT rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
 
 // Function to set allocator for previously created rppHandle_t
 // *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] allocator A callback function rpp will use for internal memory allocations. The provided callback function should allocate device memory with requested size and return a pointer to this memory. Passing 0 will restore the default MIOpen allocator and deallocator.
+// *param[in] allocator A callback function rpp will use for internal memory allocations. The provided callback function should allocate device memory with requested size and return a pointer to this memory. Passing 0 will restore the default RPP allocator and deallocator.
 // *param[in] deallocator A callback function rpp will use to for internal memory deallocation. The provided callback function should free the specified memory pointer.
 // *param[in] allocatorContext User-specified pointer which is passed to allocator and deallocator. This allows the callback function to access state set by the caller to this function, for example a stateful heap allocator or a c++ class.
 // *returns a rppStatus_t enumeration.

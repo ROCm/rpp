@@ -24,8 +24,8 @@
  *
  *******************************************************************************/
 
-#ifndef GUARD_MLOPEN_BINARY_CACHE_HPP
-#define GUARD_MLOPEN_BINARY_CACHE_HPP
+#ifndef GUARD_RPP_BINARY_CACHE_HPP
+#define GUARD_RPP_BINARY_CACHE_HPP
 
 #include <string>
 #include <boost/filesystem/path.hpp>

@@ -23,8 +23,8 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#ifndef GUARD_MLOPEN_KERNEL_WARNINGS_HPP
-#define GUARD_MLOPEN_KERNEL_WARNINGS_HPP
+#ifndef GUARD_RPP_KERNEL_WARNINGS_HPP
+#define GUARD_RPP_KERNEL_WARNINGS_HPP
 
 #include <string>
 #include <vector>

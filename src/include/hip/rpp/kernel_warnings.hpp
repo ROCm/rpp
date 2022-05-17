@@ -29,11 +29,11 @@
 #include <string>
 #include <vector>
 
-namespace miopen {
+namespace rpp {
 
 const std::string& OclKernelWarningsString();
 const std::string& HipKernelWarningsString();
 
-} // namespace miopen
+} // namespace rpp
 
 #endif

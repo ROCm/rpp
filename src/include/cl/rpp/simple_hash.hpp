@@ -24,8 +24,8 @@
  *
  *******************************************************************************/
 
-#ifndef GUARD_MLOPEN_SIMPLE_HASH_HPP
-#define GUARD_MLOPEN_SIMPLE_HASH_HPP
+#ifndef GUARD_RPP_SIMPLE_HASH_HPP
+#define GUARD_RPP_SIMPLE_HASH_HPP
 
 #include <string>
 

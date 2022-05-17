@@ -1,5 +1,5 @@
-#ifndef MIOPEN_GUARD_MLOPEN_TMP_DIR_HPP
-#define MIOPEN_GUARD_MLOPEN_TMP_DIR_HPP
+#ifndef GUARD_RPP_TMP_DIR_HPP
+#define GUARD_RPP_TMP_DIR_HPP
 
 #include <string>
 #include <boost/filesystem/path.hpp>
