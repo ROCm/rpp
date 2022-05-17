@@ -29,17 +29,18 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
-#include <config.h>
-#include <hip/rpp/common.hpp>
-#include <hip/rpp/kernel.hpp>
-#include <rpp.h>
-#include <rppdefs.h>
-#include <hip/rpp/object.hpp>
-#include <hip/rpp/allocator.hpp>
-#include <hip/rpp/simple_hash.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <vector>
 #include <unordered_map>
+#include <boost/range/adaptor/transformed.hpp>
+
+#include "rpp.h"
+#include "config.h"
+#include "rppdefs.h"
+#include "rpp/common.hpp"
+#include "rpp/kernel.hpp"
+#include "rpp/object.hpp"
+#include "rpp/allocator.hpp"
+#include "rpp/simple_hash.hpp"
 
 #if RPP_USE_ROCBLAS
 #include <rpp/manage_ptr.hpp>

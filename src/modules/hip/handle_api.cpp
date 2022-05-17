@@ -25,8 +25,9 @@
  *******************************************************************************/
 
 #include <cstdio>
-#include <hip/rpp/errors.hpp>
-#include <hip/rpp/handle.hpp>
+
+#include "rpp/errors.hpp"
+#include "rpp/handle.hpp"
 
 extern "C" const char* rppGetErrorString(rppStatus_t error)
 {

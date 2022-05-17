@@ -1,3 +1,23 @@
+# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 project(modules)
 
 if( "${BACKEND}" STREQUAL "HIP")
@@ -79,7 +99,8 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Add HIP specific includes
     set(HIP_INC "/opt/rocm/hip/include")
-    set(INCLUDE_LIST ${HIP_INC} ${INCLUDE_LIST})
+    list(APPEND HIP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/)
+    set(INCLUDE_LIST ${HIP_INCLUDE_DIRS} ${HIP_INC} ${INCLUDE_LIST})
     message("-- ${Blue}HIP include directories -- ${INCLUDE_LIST}${ColourReset}")
 
 elseif( "${BACKEND}" STREQUAL "OCL")
@@ -134,6 +155,19 @@ target_include_directories( ${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/include
         ${HIP_INC}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include
+        ${CMAKE_SOURCE_DIR}/src/include/cpu
+        ${CMAKE_SOURCE_DIR}/src/include/func_specific
         ${INCLUDE_LIST}
 )
+
+if( "${BACKEND}" STREQUAL "HIP")
+    target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
+    )
+elseif( "${BACKEND}" STREQUAL "OCL")
+    target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cl
+    )
+endif()

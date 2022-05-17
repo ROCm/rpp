@@ -43,13 +43,14 @@
 #ifndef GUARD_RPP_KERNEL_CACHE_HPP_
 #define GUARD_RPP_KERNEL_CACHE_HPP_
 
-#include <hip/rpp/handle.hpp>
-#include <hip/rpp/kernel.hpp>
-#include <hip/rpp/simple_hash.hpp>
-#include <rpp.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "rpp.h"
+#include "rpp/handle.hpp"
+#include "rpp/kernel.hpp"
+#include "rpp/simple_hash.hpp"
 
 namespace rpp {
 

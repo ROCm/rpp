@@ -25,8 +25,8 @@ THE SOFTWARE.
 #include "rppt_tensor_morphological_operations.h"
 
 #ifdef HIP_COMPILE
-    #include <hip/hip_fp16.h>
-    #include "hip/hip_tensor_morphological_operations.hpp"
+#include <hip/hip_fp16.h>
+#include "hip/hip_tensor_morphological_operations.hpp"
 #endif // HIP_COMPILE
 
 /******************** erode ********************/

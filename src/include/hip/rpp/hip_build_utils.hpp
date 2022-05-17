@@ -25,10 +25,11 @@
 *******************************************************************************/
 #pragma once
 
-#include <hip/rpp/kernel.hpp>
-#include <hip/rpp/tmp_dir.hpp>
-#include <hip/rpp/write_file.hpp>
 #include <boost/optional.hpp>
+
+#include "rpp/kernel.hpp"
+#include "rpp/tmp_dir.hpp"
+#include "rpp/write_file.hpp"
 
 namespace rpp {
 boost::filesystem::path HipBuild(boost::optional<rpp::TmpDir>& tmp_dir,

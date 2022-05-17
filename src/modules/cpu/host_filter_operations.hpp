@@ -1,11 +1,12 @@
 #ifndef HOST_FILTER_OPERATIONS_HPP
 #define HOST_FILTER_OPERATIONS_HPP
-#include <cpu/rpp_cpu_common.hpp>
+
+#include "rpp_cpu_common.hpp"
 
 /**************** box_filter ***************/
 
 template <typename T>
-RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                 Rpp32u *batch_kernelSize,
                                 RppiROI *roiPoints, Rpp32u nbatchSize,
                                 RppiChnFormat chnFormat, Rpp32u channel)
@@ -57,7 +58,7 @@ RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -95,12 +96,12 @@ RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
                 free(srcPtrROI);
             }
 
-            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernel, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernel, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
-            
+
             free(kernel);
             free(srcPtrBoundedROI);
         }
@@ -112,7 +113,7 @@ RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -141,7 +142,7 @@ RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
@@ -155,7 +156,7 @@ RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -175,7 +176,7 @@ RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
 
                 T *srcPtrImageTemp, *srcPtrROITemp;
                 srcPtrROITemp = srcPtrROI;
-                
+
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
@@ -189,17 +190,17 @@ RppStatus box_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *ba
                 free(srcPtrROI);
             }
 
-            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernel, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernel, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
-            
+
             free(kernel);
             free(srcPtrBoundedROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -223,7 +224,7 @@ RppStatus box_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     T *srcPtrMod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
-    
+
     RppiSize rppiKernelSize;
     rppiKernelSize.height = kernelSize;
     rppiKernelSize.width = kernelSize;
@@ -231,14 +232,14 @@ RppStatus box_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     free(kernel);
     free(srcPtrMod);
-    
+
     return RPP_SUCCESS;
 }
 
 /**************** median_filter ***************/
 
 template <typename T>
-RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                    Rpp32u *batch_kernelSize,
                                    RppiROI *roiPoints, Rpp32u nbatchSize,
                                    RppiChnFormat chnFormat, Rpp32u channel)
@@ -289,7 +290,7 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -328,7 +329,7 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             }
 
             Rpp32u remainingElementsInRow = srcSizeBoundedROI.width - rppiKernelSize.width;
-        
+
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
@@ -344,7 +345,7 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
                     T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -359,10 +360,10 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
                         {
                             if((x1 <= j) && (j <= x2 ))
                             {
-                                median_filter_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                          kernelSize, remainingElementsInRow, 
+                                median_filter_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                          kernelSize, remainingElementsInRow,
                                                           chnFormat, channel);
-                                
+
                                 srcPtrWindow++;
                                 srcPtrTemp++;
                                 dstPtrTemp++;
@@ -391,7 +392,7 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u imageDim = batch_srcSize[batchCount].height * batch_srcSize[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -418,7 +419,7 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
@@ -433,8 +434,8 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
-            (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound)) 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
+            (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
                 srcPtrBoundedROITemp = srcPtrBoundedROI;
@@ -453,7 +454,7 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
 
                 T *srcPtrImageTemp, *srcPtrROITemp;
                 srcPtrROITemp = srcPtrROI;
-                
+
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
@@ -501,8 +502,8 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
                         {
                             for(int c = 0; c < channel; c++)
                             {
-                                median_filter_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                          kernelSize, remainingElementsInRow, 
+                                median_filter_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                          kernelSize, remainingElementsInRow,
                                                           chnFormat, channel);
 
                                 srcPtrWindow++;
@@ -518,7 +519,7 @@ RppStatus median_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
             free(srcPtrBoundedROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -539,14 +540,14 @@ RppStatus median_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     Rpp8u *srcPtrMod = (Rpp8u *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(Rpp8u));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
-    
+
     Rpp32u remainingElementsInRowPlanar = srcSizeMod.width - kernelSize;
     Rpp32u remainingElementsInRowPacked = (srcSizeMod.width - kernelSize) * channel;
-    
+
     T *srcPtrWindow, *dstPtrTemp;
     srcPtrWindow = srcPtrMod;
     dstPtrTemp = dstPtr;
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for (int c = 0; c < channel; c++)
@@ -555,8 +556,8 @@ RppStatus median_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             {
                 for (int j = 0; j < srcSize.width; j++)
                 {
-                    median_filter_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRowPlanar, 
+                    median_filter_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRowPlanar,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -573,9 +574,9 @@ RppStatus median_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
-                {   
-                    median_filter_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRowPacked, 
+                {
+                    median_filter_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRowPacked,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -586,14 +587,14 @@ RppStatus median_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
 
     free(srcPtrMod);
-    
+
     return RPP_SUCCESS;
 }
 
 /**************** gaussian_filter ***************/
 
 template <typename T>
-RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                      Rpp32f *batch_stdDev, Rpp32u *batch_kernelSize,
                                      RppiROI *roiPoints, Rpp32u nbatchSize,
                                      RppiChnFormat chnFormat, Rpp32u channel)
@@ -622,7 +623,7 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
             }
 
             Rpp32f stdDev = batch_stdDev[batchCount];
-            
+
             Rpp32f kernelSize = batch_kernelSize[batchCount];
             Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
             int bound = ((kernelSize - 1) / 2);
@@ -647,7 +648,7 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -685,12 +686,12 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
                 free(srcPtrROI);
             }
 
-            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernel, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernel, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
-            
+
             free(kernel);
             free(srcPtrBoundedROI);
         }
@@ -702,7 +703,7 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -719,7 +720,7 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
             }
 
             Rpp32f stdDev = batch_stdDev[batchCount];
-            
+
             Rpp32f kernelSize = batch_kernelSize[batchCount];
             Rpp32f *kernel = (Rpp32f *)calloc(kernelSize * kernelSize, sizeof(Rpp32f));
             int bound = ((kernelSize - 1) / 2);
@@ -733,7 +734,7 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
@@ -747,7 +748,7 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -767,7 +768,7 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
 
                 T *srcPtrImageTemp, *srcPtrROITemp;
                 srcPtrROITemp = srcPtrROI;
-                
+
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
@@ -781,17 +782,17 @@ RppStatus gaussian_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
                 free(srcPtrROI);
             }
 
-            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernel, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernel, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
-            
+
             free(kernel);
             free(srcPtrBoundedROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -815,7 +816,7 @@ RppStatus gaussian_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     T *srcPtrMod = (T *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(T));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
-    
+
     RppiSize rppiKernelSize;
     rppiKernelSize.height = kernelSize;
     rppiKernelSize.width = kernelSize;
@@ -823,14 +824,14 @@ RppStatus gaussian_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     free(kernel);
     free(srcPtrMod);
-    
+
     return RPP_SUCCESS;
 }
 
 /**************** nonlinear_filter ***************/
 
 template <typename T>
-RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                    Rpp32u *batch_kernelSize,
                                    RppiROI *roiPoints, Rpp32u nbatchSize,
                                    RppiChnFormat chnFormat, Rpp32u channel)
@@ -881,7 +882,7 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -920,7 +921,7 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             }
 
             Rpp32u remainingElementsInRow = srcSizeBoundedROI.width - rppiKernelSize.width;
-        
+
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
@@ -936,7 +937,7 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                     T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -951,10 +952,10 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                         {
                             if((x1 <= j) && (j <= x2 ))
                             {
-                                median_filter_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                          kernelSize, remainingElementsInRow, 
+                                median_filter_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                          kernelSize, remainingElementsInRow,
                                                           chnFormat, channel);
-                                
+
                                 srcPtrWindow++;
                                 srcPtrTemp++;
                                 dstPtrTemp++;
@@ -983,7 +984,7 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u imageDim = batch_srcSize[batchCount].height * batch_srcSize[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1010,7 +1011,7 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
@@ -1025,7 +1026,7 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -1045,7 +1046,7 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
 
                 T *srcPtrImageTemp, *srcPtrROITemp;
                 srcPtrROITemp = srcPtrROI;
-                
+
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
@@ -1093,8 +1094,8 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                         {
                             for(int c = 0; c < channel; c++)
                             {
-                                median_filter_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                          kernelSize, remainingElementsInRow, 
+                                median_filter_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                          kernelSize, remainingElementsInRow,
                                                           chnFormat, channel);
 
                                 srcPtrWindow++;
@@ -1110,7 +1111,7 @@ RppStatus nonlinear_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             free(srcPtrBoundedROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1131,14 +1132,14 @@ RppStatus nonlinear_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     Rpp8u *srcPtrMod = (Rpp8u *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(Rpp8u));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
-    
+
     Rpp32u remainingElementsInRowPlanar = srcSizeMod.width - kernelSize;
     Rpp32u remainingElementsInRowPacked = (srcSizeMod.width - kernelSize) * channel;
-    
+
     T *srcPtrWindow, *dstPtrTemp;
     srcPtrWindow = srcPtrMod;
     dstPtrTemp = dstPtr;
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for (int c = 0; c < channel; c++)
@@ -1147,8 +1148,8 @@ RppStatus nonlinear_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             {
                 for (int j = 0; j < srcSize.width; j++)
                 {
-                    median_filter_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRowPlanar, 
+                    median_filter_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRowPlanar,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -1165,9 +1166,9 @@ RppStatus nonlinear_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
-                {   
-                    median_filter_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRowPacked, 
+                {
+                    median_filter_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRowPacked,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -1178,14 +1179,14 @@ RppStatus nonlinear_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     }
 
     free(srcPtrMod);
-    
+
     return RPP_SUCCESS;
 }
 
 /**************** non_max_suppression ***************/
 
 template <typename T>
-RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                          Rpp32u *batch_kernelSize,
                                          RppiROI *roiPoints, Rpp32u nbatchSize,
                                          RppiChnFormat chnFormat, Rpp32u channel)
@@ -1235,7 +1236,7 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -1274,7 +1275,7 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
             }
 
             Rpp32u remainingElementsInRow = srcSizeBoundedROI.width - rppiKernelSize.width;
-        
+
             for(int c = 0; c < channel; c++)
             {
                 T *srcPtrBoundedROIChannel, *srcPtrChannel, *dstPtrChannel;
@@ -1291,7 +1292,7 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
                     T *srcPtrWindow, *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -1307,8 +1308,8 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
                             T windowCenter = (T) *(srcPtrWindow + windowCenterPosIncrement);
                             if((x1 <= j) && (j <= x2 ))
                             {
-                                non_max_suppression_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                                kernelSize, remainingElementsInRow, windowCenter, 
+                                non_max_suppression_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                                kernelSize, remainingElementsInRow, windowCenter,
                                                                 chnFormat, channel);
                                 srcPtrWindow++;
                                 srcPtrTemp++;
@@ -1338,7 +1339,7 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u imageDim = batch_srcSize[batchCount].height * batch_srcSize[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1365,7 +1366,7 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
@@ -1380,7 +1381,7 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -1400,7 +1401,7 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
 
                 T *srcPtrImageTemp, *srcPtrROITemp;
                 srcPtrROITemp = srcPtrROI;
-                
+
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
@@ -1450,10 +1451,10 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
                             for(int c = 0; c < channel; c++)
                             {
                                 T windowCenter = (T) *(srcPtrWindow + windowCenterPosIncrement);
-                                non_max_suppression_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount], 
-                                                                kernelSize, remainingElementsInRow, windowCenter, 
+                                non_max_suppression_kernel_host(srcPtrWindow, dstPtrTemp, batch_srcSize[batchCount],
+                                                                kernelSize, remainingElementsInRow, windowCenter,
                                                                 chnFormat, channel);
-                                
+
                                 srcPtrWindow++;
                                 srcPtrTemp++;
                                 dstPtrTemp++;
@@ -1467,7 +1468,7 @@ RppStatus non_max_suppression_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rpp
             free(srcPtrBoundedROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1488,12 +1489,12 @@ RppStatus non_max_suppression_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     Rpp8u *srcPtrMod = (Rpp8u *)calloc(srcSizeMod.height * srcSizeMod.width * channel, sizeof(Rpp8u));
 
     generate_evenly_padded_image_host(srcPtr, srcSize, srcPtrMod, srcSizeMod, chnFormat, channel);
-    
+
     T *srcPtrWindow, *dstPtrTemp;
     T windowCenter;
     srcPtrWindow = srcPtrMod;
     dstPtrTemp = dstPtr;
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         Rpp32u windowCenterPosIncrement = (bound * srcSizeMod.width) + bound;
@@ -1505,8 +1506,8 @@ RppStatus non_max_suppression_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                 for (int j = 0; j < srcSize.width; j++)
                 {
                     windowCenter = (T) *(srcPtrWindow + windowCenterPosIncrement);
-                    non_max_suppression_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRow, windowCenter, 
+                    non_max_suppression_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRow, windowCenter,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -1525,10 +1526,10 @@ RppStatus non_max_suppression_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             for (int j = 0; j < srcSize.width; j++)
             {
                 for (int c = 0; c < channel; c++)
-                {   
+                {
                     windowCenter = (T) *(srcPtrWindow + windowCenterPosIncrement);
-                    non_max_suppression_kernel_host(srcPtrWindow, dstPtrTemp, srcSize, 
-                                      kernelSize, remainingElementsInRow, windowCenter, 
+                    non_max_suppression_kernel_host(srcPtrWindow, dstPtrTemp, srcSize,
+                                      kernelSize, remainingElementsInRow, windowCenter,
                                       chnFormat, channel);
                     srcPtrWindow++;
                     dstPtrTemp++;
@@ -1546,8 +1547,8 @@ RppStatus non_max_suppression_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** sobel_filter ***************/
 
 template <typename T>
-RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                                  Rpp32u *batch_sobelType, 
+RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                                  Rpp32u *batch_sobelType,
                                   RppiROI *roiPoints, Rpp32u nbatchSize,
                                   RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1602,7 +1603,7 @@ RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -1642,48 +1643,48 @@ RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
             if (sobelType == 0)
             {
-                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernelX, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernelX, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
             }
             else if (sobelType == 1)
             {
-                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernelY, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernelY, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
             }
             else if (sobelType == 2)
             {
-                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernelX, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernelX, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
                 T *image1PtrUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
-                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], image1PtrUnpadded, 
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], image1PtrUnpadded,
                                           chnFormat, channel);
-                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernelY, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernelY, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
                 T *image2PtrUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
-                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], image2PtrUnpadded, 
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], image2PtrUnpadded,
                                           chnFormat, channel);
                 T *imageOutPtrUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
                 compute_magnitude_ROI_host(image1PtrUnpadded, image2PtrUnpadded, batch_srcSize[batchCount], imageOutPtrUnpadded, x1, y1, x2, y2, chnFormat, channel);
-                compute_padded_from_unpadded_host(imageOutPtrUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
+                compute_padded_from_unpadded_host(imageOutPtrUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
                                           chnFormat, channel);
-                
+
                 free(image1PtrUnpadded);
                 free(image2PtrUnpadded);
                 free(imageOutPtrUnpadded);
             }
-            
+
             free(kernelX);
             free(kernelY);
             free(srcPtrBoundedROI);
@@ -1696,7 +1697,7 @@ RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -1729,7 +1730,7 @@ RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * bound);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * bound);
@@ -1743,7 +1744,7 @@ RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= bound) &&(y1 >= bound))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -1763,7 +1764,7 @@ RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
                 T *srcPtrImageTemp, *srcPtrROITemp;
                 srcPtrROITemp = srcPtrROI;
-                
+
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
@@ -1779,43 +1780,43 @@ RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
             if (sobelType == 0)
             {
-                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernelX, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernelX, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
             }
             else if (sobelType == 1)
             {
-                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernelY, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernelY, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
             }
             else if (sobelType == 2)
             {
-                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernelX, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernelX, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
                 T *image1PtrUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
-                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], image1PtrUnpadded, 
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], image1PtrUnpadded,
                                           chnFormat, channel);
-                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernelY, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+                convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernelY, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
                 T *image2PtrUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
-                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], image2PtrUnpadded, 
+                compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], image2PtrUnpadded,
                                           chnFormat, channel);
                 T *imageOutPtrUnpadded = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
                 compute_magnitude_ROI_host(image1PtrUnpadded, image2PtrUnpadded, batch_srcSize[batchCount], imageOutPtrUnpadded, x1, y1, x2, y2, chnFormat, channel);
-                compute_padded_from_unpadded_host(imageOutPtrUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
+                compute_padded_from_unpadded_host(imageOutPtrUnpadded, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
                                           chnFormat, channel);
-                
+
                 free(image1PtrUnpadded);
                 free(image2PtrUnpadded);
                 free(imageOutPtrUnpadded);
@@ -1826,13 +1827,13 @@ RppStatus sobel_filter_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             free(srcPtrBoundedROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus sobel_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-                            Rpp32u sobelType, 
+RppStatus sobel_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                            Rpp32u sobelType,
                             RppiChnFormat chnFormat, Rpp32u channel)
 {
     RppiSize srcSizeMod;
@@ -1890,8 +1891,8 @@ RppStatus sobel_filter_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** custom_convolution ***************/
 
 template <typename T>
-RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
-                                        Rpp32f *batch_kernel, RppiSize *batch_rppiKernelSize, 
+RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                                        Rpp32f *batch_kernel, RppiSize *batch_rppiKernelSize,
                                         RppiROI *roiPoints, Rpp32u nbatchSize,
                                         RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1948,7 +1949,7 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
             srcSizeROI.height = roiPoints[batchCount].roiHeight;
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= boundY) &&(y1 >= boundX))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -1994,12 +1995,12 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
                 free(srcPtrCornerBoundedROI);
             }
 
-            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernel, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernel, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
-            
+
             free(srcPtrBoundedROI);
             free(kernel);
         }
@@ -2011,7 +2012,7 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32f x1 = roiPoints[batchCount].x;
             Rpp32f y1 = roiPoints[batchCount].y;
             Rpp32f x2 = x1 + roiPoints[batchCount].roiWidth - 1;
@@ -2046,7 +2047,7 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
             srcPtrImage = srcPtr + loc;
             dstPtrImage = dstPtr + loc;
-            
+
             RppiSize srcSizeBoundedROI;
             srcSizeBoundedROI.height = roiPoints[batchCount].roiHeight + (2 * boundY);
             srcSizeBoundedROI.width = roiPoints[batchCount].roiWidth + (2 * boundX);
@@ -2060,7 +2061,7 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
             Rpp32u elementsInRowBoundedROI = channel * srcSizeBoundedROI.width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
 
-            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) && 
+            if ((srcSizeBoundedROI.height <= batch_srcSize[batchCount].height) &&
             (srcSizeBoundedROI.width <= batch_srcSize[batchCount].width) &&(x1 >= boundY) &&(y1 >= boundX))
             {
                 T *srcPtrImageTemp, *srcPtrBoundedROITemp;
@@ -2080,7 +2081,7 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
 
                 T *srcPtrImageTemp, *srcPtrROITemp;
                 srcPtrROITemp = srcPtrROI;
-                
+
                 srcPtrImageTemp = srcPtrImage + ((Rpp32u) y1 * elementsInRowMax) + (channel * (Rpp32u) x1);
                 for (int i = 0; i < srcSizeROI.height; i++)
                 {
@@ -2102,27 +2103,27 @@ RppStatus custom_convolution_host_batch(T* srcPtr, RppiSize *batch_srcSize, Rppi
                 free(srcPtrCornerBoundedROI);
             }
 
-            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage, 
-                                      srcPtrBoundedROI, srcSizeBoundedROI, 
-                                      kernel, rppiKernelSize, 
-                                      x1, y1, x2, y2, 
+            convolve_image_host_batch(srcPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImage,
+                                      srcPtrBoundedROI, srcSizeBoundedROI,
+                                      kernel, rppiKernelSize,
+                                      x1, y1, x2, y2,
                                       chnFormat, channel);
-            
+
             free(srcPtrBoundedROI);
             free(kernel);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
 RppStatus custom_convolution_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
-                                  Rpp32f *kernel, RppiSize rppiKernelSize, 
+                                  Rpp32f *kernel, RppiSize rppiKernelSize,
                                   RppiChnFormat chnFormat, Rpp32u channel)
 {
     custom_convolve_image_host(srcPtr, srcSize, dstPtr, kernel, rppiKernelSize, chnFormat, channel);
-    
+
     return RPP_SUCCESS;
 }
 

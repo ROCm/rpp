@@ -25,8 +25,8 @@ THE SOFTWARE.
 #include "rppt_tensor_filter_augmentations.h"
 
 #ifdef HIP_COMPILE
-    #include <hip/hip_fp16.h>
-    #include "hip/hip_tensor_filter_augmentations.hpp"
+#include <hip/hip_fp16.h>
+#include "hip/hip_tensor_filter_augmentations.hpp"
 #endif // HIP_COMPILE
 
 /******************** box_filter ********************/

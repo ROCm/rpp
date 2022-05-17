@@ -29,34 +29,16 @@
 #include <string>
 #include <vector>
 
-#include <config.h>
+#include "config.h"
+#include "rpp/hipoc_kernel.hpp"
 
 namespace rpp {
 std::string GetKernelSrc(std::string name);
 std::string GetKernelInc(std::string key);
 std::vector<std::string> GetKernelIncList();
-} // namespace rpp
-
-#if OCL_COMPILE
-#include <hip/rpp/clhelper.hpp>
-#include <hip/rpp/oclkernel.hpp>
-
-namespace rpp {
-using Kernel       = OCLKernel;
-using KernelInvoke = OCLKernelInvoke;
-using Program      = SharedProgramPtr;
-
-} // namespace rpp
-
-#else
-#include <hip/rpp/hipoc_kernel.hpp>
-
-namespace rpp {
 using Kernel       = HIPOCKernel;
 using KernelInvoke = HIPOCKernelInvoke;
 using Program      = HIPOCProgram;
+}    // namespace rpp
 
-} // namespace rpp
-#endif
-
-#endif
+#endif    // GUARD_RPP_KERNEL_HPP

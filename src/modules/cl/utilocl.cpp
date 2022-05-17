@@ -23,13 +23,13 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #include <cmath>
-#include <rpp/kernel_cache.hpp>
-#include <rpp/util.hpp>
-#include <rpp/logger.hpp>
-
-
 #include <boost/range/adaptors.hpp>
+
+#include "rpp/kernel_cache.hpp"
+#include "rpp/util.hpp"
+#include "rpp/logger.hpp"
 
 #define WG_SIZE 256
 #define MAX_ACTIVE_THREADS (64 * 4 * 64)

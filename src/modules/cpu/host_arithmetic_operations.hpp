@@ -1,6 +1,7 @@
 #ifndef HOST_ARITHMETIC_OPERATIONS_HPP
 #define HOST_ARITHMETIC_OPERATIONS_HPP
-#include <cpu/rpp_cpu_common.hpp>
+
+#include "rpp_cpu_common.hpp"
 
 /**************** absolute_difference ***************/
 

@@ -28,11 +28,12 @@
 
 #include <exception>
 #include <iostream>
-#include <rpp.h>
-#include <hip/rpp/object.hpp>
-#include <hip/rpp/returns.hpp>
 #include <string>
 #include <tuple>
+
+#include "rpp.h"
+#include "rpp/object.hpp"
+#include "rpp/returns.hpp"
 
 namespace rpp {
 

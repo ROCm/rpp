@@ -27,13 +27,14 @@
 #ifndef GUARD_RPP_HANDLE_LOCK_HPP
 #define GUARD_RPP_HANDLE_LOCK_HPP
 
+#include <mutex>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <mutex>
-#include <hip/rpp/errors.hpp>
-#include <config.h>
+
+#include "config.h"
+#include "rpp/errors.hpp"
 
 namespace rpp {
 

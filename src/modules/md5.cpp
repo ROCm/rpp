@@ -37,12 +37,16 @@
  * optimizations are not included to reduce source code size and avoid
  * compile-time configuration.
  */
-#include <hip/rpp/md5.hpp>
+
 #include <array>
 #include <cstring>
 #include <cstdint>
 #include <sstream>
 #include <iomanip>
+
+#if HIP_COMPILE
+#include "rpp/md5.hpp"
+#endif    // HIP_COMPILE
 
 #define MD5_DIGEST_LENGTH 16
 

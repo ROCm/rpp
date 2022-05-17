@@ -39,12 +39,12 @@
  * limitations under the License.
  * ************************************************************************ */
 
-#include <hip/rpp/errors.hpp>
-#include <hip/rpp/kernel_cache.hpp>
-#include <hip/rpp/logger.hpp>
-
 #include <iostream>
 #include <iterator>
+
+#include "rpp/errors.hpp"
+#include "rpp/kernel_cache.hpp"
+#include "rpp/logger.hpp"
 
 namespace rpp {
 

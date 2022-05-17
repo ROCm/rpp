@@ -23,24 +23,24 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include <algorithm>
-#include <hip/rpp/logger.hpp>
-#include <hip/rpp/device_name.hpp>
-#include <hip/rpp/errors.hpp>
-#include <hip/rpp/handle.hpp>
-#include <hip/rpp/kernel_cache.hpp>
-#include <hip/rpp/binary_cache.hpp>
-#include <boost/filesystem.hpp>
-#include <hip/rpp/handle_lock.hpp>
 
+#include <algorithm>
+#include <cassert>
+#include <chrono>
+#include <thread>
+#include <boost/filesystem.hpp>
+
+#include "rpp/logger.hpp"
+#include "rpp/device_name.hpp"
+#include "rpp/errors.hpp"
+#include "rpp/handle.hpp"
+#include "rpp/kernel_cache.hpp"
+#include "rpp/binary_cache.hpp"
+#include "rpp/handle_lock.hpp"
 
 #ifndef _WIN32
 #include <unistd.h>
 #endif
-
-#include <cassert>
-#include <chrono>
-#include <thread>
 
 namespace rpp {
 
@@ -101,7 +101,7 @@ void set_device(int id)
 
 void set_ctx(hipCtx_t ctx)
 {
-    auto status =  0; 
+    auto status =  0;
     if(status != hipSuccess)
         RPP_THROW("Error setting context");
 }
@@ -279,14 +279,14 @@ Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
         this->impl->stream = HandleImpl::reference_stream(stream);
 
     this->SetAllocator(nullptr, nullptr, nullptr);
-    
+
     impl->PreInitializeBuffer();
 
 #if RPP_USE_ROCBLAS
     rhandle_ = CreateRocblasHandle();
 #endif
     // RPP_LOG_I(*this);
-    
+
 }
 
 
@@ -309,7 +309,7 @@ Handle::Handle(rppAcceleratorQueue_t stream, size_t batchSize) : impl(new Handle
     rhandle_ = CreateRocblasHandle();
 #endif
     RPP_LOG_I(*this);
-    
+
 }
 
 Handle::Handle() : impl(new HandleImpl())

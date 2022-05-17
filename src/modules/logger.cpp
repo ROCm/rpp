@@ -24,14 +24,15 @@
  *
  *******************************************************************************/
 #include <cstdlib>
-#include <hip/rpp/env.hpp>
-#include <hip/rpp/logger.hpp>
 #include <config.h>
 
 #ifdef __linux__
 #include <unistd.h>
 #include <sys/syscall.h> /* For SYS_xxx definitions */
 #endif
+
+#include "rpp/env.hpp"
+#include "rpp/logger.hpp"
 
 namespace rpp {
 
