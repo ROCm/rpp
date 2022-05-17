@@ -44,9 +44,7 @@
 #include <sstream>
 #include <iomanip>
 
-#if HIP_COMPILE
 #include "rpp/md5.hpp"
-#endif    // HIP_COMPILE
 
 #define MD5_DIGEST_LENGTH 16
 

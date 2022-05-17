@@ -27,10 +27,7 @@
 #ifndef GUARD_RPP_COMMON_HPP_
 #define GUARD_RPP_COMMON_HPP_
 
-#include <rpp.h>
-
-#if OCL_COMPILE
-
+#include "rpp.h"
 #include "rpp/manage_ptr.hpp"
 
 using Data_t = cl_mem;
@@ -52,5 +49,4 @@ inline ConstData_t DataCast(const void* p)
 #endif
 }
 
-#endif    // OCL_COMPILE
 #endif    // GUARD_RPP_COMMON_HPP_

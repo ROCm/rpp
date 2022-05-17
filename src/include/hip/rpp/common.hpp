@@ -26,10 +26,7 @@
 #ifndef GUARD_RPP_COMMON_HPP_
 #define GUARD_RPP_COMMON_HPP_
 
-#include <rpp.h>
-
-#if HIP_COMPILE
-
+#include "rpp.h"
 #include "rpp/manage_ptr.hpp"
 
 using Data_t        = void*;
@@ -40,5 +37,4 @@ inline Data_t DataCast(void* p) { return p; }
 
 inline ConstData_t DataCast(const void* p) { return p; }
 
-#endif    // HIP_COMPILE
 #endif    // GUARD_RPP_COMMON_HPP_

@@ -148,9 +148,6 @@ struct Handle : rppHandle
     WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz);
     void ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz);
     shared<Data_t> CreateSubBuffer(Data_t data, std::size_t offset, std::size_t size);
-#if HIP_COMPILE
-    shared<ConstData_t> CreateSubBuffer(ConstData_t data, std::size_t offset, std::size_t size);
-#endif
 
     template <class T>
     Allocator::ManageDataPtr Create(std::size_t sz)
