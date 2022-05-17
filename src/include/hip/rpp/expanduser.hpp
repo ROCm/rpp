@@ -23,8 +23,8 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#ifndef RPP_GUARD_RPP_EXPANDUSER_HPP
-#define RPP_GUARD_RPP_EXPANDUSER_HPP
+#ifndef GUARD_RPP_EXPANDUSER_HPP
+#define GUARD_RPP_EXPANDUSER_HPP
 
 #include <string>
 

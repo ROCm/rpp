@@ -23,8 +23,8 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#ifndef RPP_GUARD_OCL_HELPER_HPP_
-#define RPP_GUARD_OCL_HELPER_HPP_
+#ifndef GUARD_OCL_HELPER_HPP_
+#define GUARD_OCL_HELPER_HPP_
 
 #include <iostream>
 #include <rpp/manage_ptr.hpp>
@@ -58,4 +58,4 @@ cl_device_id GetDevice(cl_command_queue q);
 cl_context GetContext(cl_command_queue q);
 } // namespace rpp
 
-#endif // RPP_GUARD_OCL_HELPER_HPP_
+#endif // GUARD_OCL_HELPER_HPP_
