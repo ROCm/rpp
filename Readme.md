@@ -68,7 +68,7 @@ RPP is developed for **Linux** operating system.
         unzip 4.5.5.zip
         cd opencv-4.5.5/
 
--  OpenCV 3.4.0 or OpenCV 4.5.5 installation
+-   OpenCV 3.4.0 or OpenCV 4.5.5 installation
 
         mkdir build
         cd build
