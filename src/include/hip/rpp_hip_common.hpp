@@ -80,11 +80,14 @@ struct RPPTensorFunctionMetaData
     }
 };
 
-#define LOCAL_THREADS_X 16
-#define LOCAL_THREADS_Y 16
-#define LOCAL_THREADS_Z 1
-#define ONE_OVER_255 0.00392157f
-#define SIX_OVER_360 0.01666667f
+#define LOCAL_THREADS_X                 16
+#define LOCAL_THREADS_Y                 16
+#define LOCAL_THREADS_Z                 1
+#define ONE_OVER_255                    0.00392157f
+#define SIX_OVER_360                    0.01666667f
+#define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
+#define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
   (byte & 0x80 ? '1' : '0'), \
@@ -1408,6 +1411,43 @@ __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24
     dst_f24->f4[3] = src_f24->f4[3] - subtrahend_f4;
     dst_f24->f4[4] = src_f24->f4[4] - subtrahend_f4;
     dst_f24->f4[5] = src_f24->f4[5] - subtrahend_f4;
+}
+
+// /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
+
+__device__ __forceinline__ float rpp_hip_rng_xorwow_f32(RpptXorwowState *xorwowState)
+{
+    // Save current first and last x-params of xorwow state and compute t
+    uint t  = xorwowState->x[0];
+    uint s  = xorwowState->x[4];
+    t ^= t >> 2;
+    t ^= t << 1;
+    t ^= s ^ (s << 4);
+
+    // Update all 6 xorwow state params
+    xorwowState->x[0] = xorwowState->x[1];                                              // set new state param x[0]
+    xorwowState->x[1] = xorwowState->x[2];                                              // set new state param x[1]
+    xorwowState->x[2] = xorwowState->x[3];                                              // set new state param x[2]
+    xorwowState->x[3] = xorwowState->x[4];                                              // set new state param x[3]
+    xorwowState->x[4] = t;                                                              // set new state param x[4]
+    xorwowState->counter = (xorwowState->counter + XORWOW_COUNTER_INC) & 0xFFFFFFFF;    // set new state param counter
+
+    // Create float representation and return 0 <= outFloat < 1
+    uint out = (XORWOW_EXPONENT_MASK | ((t + xorwowState->counter) & 0x7FFFFF));        // bitmask 23 mantissa bits, OR with exponent
+    float outFloat = *(float *)&out;                                                    // reinterpret out as float
+    return  outFloat - 1;                                                               // return 0 <= outFloat < 1
+}
+
+__device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(RpptXorwowState *xorwowState, d_float8 *randomNumbersPtr_f8)
+{
+    randomNumbersPtr_f8->f1[0] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[1] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[2] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[3] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[4] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[5] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[6] = rpp_hip_rng_xorwow_f32(xorwowState);
+    randomNumbersPtr_f8->f1[7] = rpp_hip_rng_xorwow_f32(xorwowState);
 }
 
 // /******************** DEVICE INTERPOLATION HELPER FUNCTIONS ********************/
