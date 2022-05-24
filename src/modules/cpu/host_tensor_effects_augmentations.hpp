@@ -26,5 +26,6 @@ THE SOFTWARE.
 #include "kernel/gridmask.hpp"
 #include "kernel/spatter.hpp"
 #include "kernel/noise_salt_and_pepper.hpp"
+#include "kernel/noise_shot.hpp"
 
 #endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP

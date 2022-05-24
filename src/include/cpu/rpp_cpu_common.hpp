@@ -3031,6 +3031,19 @@ inline RppStatus compute_salt_and_pepper_noise_48_host(__m128 *p, __m128i *pxXor
     return RPP_SUCCESS;
 }
 
+inline Rpp32u compute_shot_noise_1_host(RpptXorwowState *xorwowStatePtr, Rpp32f lambda)
+{
+    Rpp32u shotNoiseValue = 0;
+    Rpp32f p = expf(lambda);
+    do
+    {
+        shotNoiseValue++;
+        p *= rpp_host_rng_xorwow_f32(xorwowStatePtr);
+    }while (p > 1.0f);
+
+    return shotNoiseValue - 1;
+}
+
 // Compute Functions for RPP Image API
 
 template<typename T>
