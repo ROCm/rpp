@@ -122,7 +122,7 @@ RppStatus salt_and_pepper_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     Rpp8u dst[3];
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dst, srcPtrTemp, 3);
                     else
@@ -186,7 +186,7 @@ RppStatus salt_and_pepper_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp8u src[3] = {*srcPtrTempR, *srcPtrTempG, *srcPtrTempB};
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dstPtrTemp, src, 3);
                     else
@@ -240,7 +240,7 @@ RppStatus salt_and_pepper_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dstPtrTemp, srcPtrTemp, 3);
                     else
@@ -302,7 +302,7 @@ RppStatus salt_and_pepper_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                     {
                         *dstPtrTempR = *srcPtrTempR;
@@ -376,7 +376,7 @@ RppStatus salt_and_pepper_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         *dstPtrTemp = *srcPtrTemp;
                     else
@@ -522,7 +522,7 @@ RppStatus salt_and_pepper_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     Rpp32f dst[3];
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dst, srcPtrTemp, 12);
                     else
@@ -586,7 +586,7 @@ RppStatus salt_and_pepper_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp32f src[3] = {*srcPtrTempR, *srcPtrTempG, *srcPtrTempB};
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dstPtrTemp, src, 12);
                     else
@@ -640,7 +640,7 @@ RppStatus salt_and_pepper_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dstPtrTemp, srcPtrTemp, 12);
                     else
@@ -702,7 +702,7 @@ RppStatus salt_and_pepper_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                     {
                         *dstPtrTempR = *srcPtrTempR;
@@ -779,7 +779,7 @@ RppStatus salt_and_pepper_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         *dstPtrTemp = *srcPtrTemp;
                     else
@@ -935,7 +935,7 @@ RppStatus salt_and_pepper_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     Rpp16f dst[3];
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dst, srcPtrTemp, 6);
                     else
@@ -1009,7 +1009,7 @@ RppStatus salt_and_pepper_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp16f src[3] = {*srcPtrTempR, *srcPtrTempG, *srcPtrTempB};
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dstPtrTemp, src, 6);
                     else
@@ -1069,7 +1069,7 @@ RppStatus salt_and_pepper_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dstPtrTemp, srcPtrTemp, 6);
                     else
@@ -1145,7 +1145,7 @@ RppStatus salt_and_pepper_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                     {
                         *dstPtrTempR = *srcPtrTempR;
@@ -1227,7 +1227,7 @@ RppStatus salt_and_pepper_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         *dstPtrTemp = *srcPtrTemp;
                     else
@@ -1369,7 +1369,7 @@ RppStatus salt_and_pepper_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     Rpp8s dst[3];
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dst, srcPtrTemp, 3);
                     else
@@ -1433,7 +1433,7 @@ RppStatus salt_and_pepper_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp8s src[3] = {*srcPtrTempR, *srcPtrTempG, *srcPtrTempB};
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dstPtrTemp, src, 3);
                     else
@@ -1487,7 +1487,7 @@ RppStatus salt_and_pepper_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         memcpy(dstPtrTemp, srcPtrTemp, 3);
                     else
@@ -1549,7 +1549,7 @@ RppStatus salt_and_pepper_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                     {
                         *dstPtrTempR = *srcPtrTempR;
@@ -1623,7 +1623,7 @@ RppStatus salt_and_pepper_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    float randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     if (randomNumberFloat > noiseProbability)
                         *dstPtrTemp = *srcPtrTemp;
                     else
