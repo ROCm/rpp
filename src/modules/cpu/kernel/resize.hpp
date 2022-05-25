@@ -949,7 +949,8 @@ RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RpptImagePatchPtr dstImgSize,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
-                                       RppLayoutParams srcLayoutParams)
+                                       RppLayoutParams srcLayoutParams,
+                                       RpptInterpolationType interpolationType)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -966,9 +967,9 @@ omp_set_dynamic(0);
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
         Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
         Rpp32u widthLimit = roi.xywhROI.roiWidth - 1;
-        Rpp32s hKernelSize = std::ceil((hRatio < 1 ? 1 : hRatio) * 2);
-        Rpp32s wKernelSize = std::ceil((wRatio < 1 ? 1 : wRatio) * 2);
-        hKernelSize = wKernelSize = 6; // For LANCZOS interpolation kernelSize = 6
+        Rpp32s hKernelSize, wKernelSize;
+        hKernelSize = compute_kernel_size(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
+        wKernelSize = compute_kernel_size(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);
         Rpp32f hOffset = (hRatio - 1) * 0.5f - (hKernelSize / 2);
         Rpp32f wOffset = (wRatio - 1) * 0.5f - (wKernelSize / 2);
 
@@ -981,7 +982,7 @@ omp_set_dynamic(0);
         {
             Rpp32f weightParam[2];
             compute_resize_src_loc(indexCount, hRatio, heightLimit, rowIndex[indexCount], weightParam, hOffset);
-            compute_index_and_weights(rowIndex[indexCount], weightParam[0], hKernelSize, &rowCoeffs[coeffCount]);
+            compute_index_and_weights(interpolationType, weightParam[0], hKernelSize, &rowCoeffs[coeffCount]);
         }
         // Pre-compute col index and coefficients
         for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].width; indexCount++)
@@ -989,7 +990,7 @@ omp_set_dynamic(0);
             Rpp32f weightParam[2];
             compute_resize_src_loc(indexCount, wRatio, widthLimit, colIndex[indexCount], weightParam, wOffset, srcDescPtr->strides.wStride);
             coeffCount = (indexCount % 4 == 0) ? (indexCount * wKernelSize) : coeffCount + 1;
-            compute_col_index_and_weights(colIndex[indexCount], weightParam[0], wKernelSize, &colCoeffs[coeffCount], srcDescPtr->strides.wStride);
+            compute_col_index_and_weights(interpolationType, weightParam[0], wKernelSize, &colCoeffs[coeffCount], srcDescPtr->strides.wStride);
         }
 
         T *srcPtrImage, *dstPtrImage;

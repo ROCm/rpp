@@ -4367,6 +4367,23 @@ inline RppStatus compute_resize_src_loc_avx(__m256 &pDstLoc, __m256 &pScale, __m
     return RPP_SUCCESS;
 }
 
+inline void compute_bicubic_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+  Rpp32f x = fabsf(weight);
+  if (x >= 2)
+  {
+      coeff = 0;
+      return;
+  }
+
+  float x2 = x*x;
+  float x3 = x2*x;
+  if (x > 1)
+    coeff = -0.5f*x3 + 2.5f*x2 - 4.0f*x + 2.0f;
+  else
+    coeff = 1.5f*x3 - 2.5f*x2 + 1.0f;
+}
+
 inline Rpp32f sinc(Rpp32f x)
 {
     x *= PI;
@@ -4380,15 +4397,34 @@ inline void compute_lanczos3_coefficient(Rpp32f weight, Rpp32f &coeff)
     coeff = fabs(weight) >= 3 ? 0.0f : (sinc(weight)*sinc(weight / 3));
 }
 
+inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f weight, Rpp32f &coeff)
+{
+    switch (interpolationType)
+    {
+    case RpptInterpolationType::BICUBIC:
+    {
+        compute_bicubic_coefficient(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::LANCZOS:
+    {
+        compute_lanczos3_coefficient(weight, coeff);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 // Computes the src loc and coefficients
-inline void compute_index_and_weights(Rpp32s loc, Rpp32f weight, Rpp32s kernelSize, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_index_and_weights(RpptInterpolationType interpolationType, Rpp32f weight, Rpp32s kernelSize, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f kernelSize2 = kernelSize / 2;
     Rpp32f sum = 0;
 
     for(int k = 0; k < kernelSize; k++)
     {
-        compute_lanczos3_coefficient(weight + k - kernelSize2, coeffs[k]);
+        compute_coefficient(interpolationType, weight + k - kernelSize2, coeffs[k]);
         sum += coeffs[k];
     }
     if(sum)
@@ -4400,14 +4436,14 @@ inline void compute_index_and_weights(Rpp32s loc, Rpp32f weight, Rpp32s kernelSi
 }
 
 // Computes the src loc and coefficients
-inline void compute_col_index_and_weights(Rpp32s loc, Rpp32f weight, Rpp32s kernelSize, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_col_index_and_weights(RpptInterpolationType interpolationType, Rpp32f weight, Rpp32s kernelSize, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f kernelSize2 = kernelSize / 2;
     Rpp32f sum = 0;
 
     for(int k = 0, kPos = 0; k < kernelSize; k++, kPos += 4)
     {
-        compute_lanczos3_coefficient(weight + k - kernelSize2, coeffs[kPos]);
+        compute_coefficient(interpolationType, weight + k - kernelSize2, coeffs[kPos]);
         sum += coeffs[kPos];
     }
     if(sum)
@@ -4516,6 +4552,19 @@ inline RppStatus compute_src_row_ptrs_for_interpolation_pln(T **rowPtrsForInterp
     rowPtrsForInterp[5] = rowPtrsForInterp[3] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (B channel)
 
     return RPP_SUCCESS;
+}
+
+inline Rpp32s compute_kernel_size(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
+{
+    switch(interpolationType)
+    {
+    case RpptInterpolationType::BICUBIC:
+        return 4;
+    case RpptInterpolationType::LANCZOS:
+        return in_size > out_size ? std::ceil(6 * scale) : 6;
+    default:
+        return 2;
+    }
 }
 
 inline void set_zeros(__m128 *pVecs, Rpp32s numVecs)

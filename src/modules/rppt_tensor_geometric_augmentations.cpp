@@ -408,7 +408,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                                srcLayoutParams);
         }
     }
-    else if(interpolationType == RpptInterpolationType::LANCZOS)
+    else if(interpolationType == RpptInterpolationType::LANCZOS || interpolationType == RpptInterpolationType::BICUBIC)
     {
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
@@ -420,7 +420,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams);
+                                         srcLayoutParams,
+                                         interpolationType);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -431,7 +432,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams);
+                                         srcLayoutParams,
+                                         interpolationType);
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -442,7 +444,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams);
+                                         srcLayoutParams,
+                                         interpolationType);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -453,7 +456,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams);
+                                         srcLayoutParams,
+                                         interpolationType);
         }
     }
 
