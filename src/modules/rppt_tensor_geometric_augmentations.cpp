@@ -411,6 +411,44 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
 
 /******************** resize mirror normalize ********************/
 
+RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           RppPtr_t dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           RpptImagePatchPtr dstImgSizes,
+                                           RpptInterpolationType interpolationType,
+                                           Rpp32f *meanTensor,
+                                           Rpp32f *stdDevTensor,
+                                           Rpp32u *mirrorTensor,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    Rpp32u paramIndex = 0;
+    copy_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uint(mirrorTensor, rpp::deref(rppHandle), paramIndex++);
+
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_resize_mirror_normalize_tensor((Rpp32f*)(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                srcDescPtr,
+                                                (Rpp32f*)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                dstDescPtr,
+                                                dstImgSizes,
+                                                interpolationType,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                rpp::deref(rppHandle));
+    }
+    
+return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
 RppStatus rppt_resize_mirror_normalize_host(RppPtr_t srcPtr,
                                             RpptDescPtr srcDescPtr,
                                             RppPtr_t dstPtr,
