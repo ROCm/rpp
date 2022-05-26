@@ -57,8 +57,9 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
         pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset, xorwowInitialStatePtr[4].x[4] + offset, xorwowInitialStatePtr[5].x[4] + offset, xorwowInitialStatePtr[6].x[4] + offset, xorwowInitialStatePtr[7].x[4] + offset);
         pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset, xorwowInitialStatePtr[4].counter + offset, xorwowInitialStatePtr[5].counter + offset, xorwowInitialStatePtr[6].counter + offset, xorwowInitialStatePtr[7].counter + offset);
 
-        __m256 pShotNoiseFactor;
+        __m256 pShotNoiseFactor, pShotNoiseFactorInv;
         pShotNoiseFactor = _mm256_set1_ps(shotNoiseFactor);
+        pShotNoiseFactorInv = _mm256_set1_ps(shotNoiseFactorInv);
 #else
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
         pxXorwowStateX[0] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset);
@@ -68,8 +69,9 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
         pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset);
         pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset);
 
-        __m128 pShotNoiseFactor;
+        __m128 pShotNoiseFactor, pShotNoiseFactorInv;
         pShotNoiseFactor = _mm_set1_ps(shotNoiseFactor);
+        pShotNoiseFactorInv = _mm_set1_ps(shotNoiseFactorInv);
 #endif
 
         // Salt and Pepper Noise with fused output-layout toggle (NHWC -> NCHW)
@@ -90,33 +92,29 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-//                 {
-// #if __AVX2__
-//                     __m256 p[6];
-//                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-//                     compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-// #else
-//                     __m128 p[12];
-//                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-//                     compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-// #endif
-//                     srcPtrTemp += vectorIncrement;
-//                     dstPtrTempR += vectorIncrementPerChannel;
-//                     dstPtrTempG += vectorIncrementPerChannel;
-//                     dstPtrTempB += vectorIncrementPerChannel;
-//                 }
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#else
+                    __m128 p[12];
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    if (shotNoiseFactor == 0.0f)
-                    {
-                        *dstPtrTempR = srcPtrTemp[0];
-                        *dstPtrTempG = srcPtrTemp[1];
-                        *dstPtrTempB = srcPtrTemp[2];
-                    }
-                    else
+                    if (shotNoiseFactor != 0.0f)
                     {
                         Rpp32f poissonDistribLambda[3];
                         poissonDistribLambda[0] = (Rpp32f) srcPtrTemp[0] * shotNoiseFactorInv;
@@ -125,6 +123,12 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                         *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
                         *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
                         *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                    }
+                    else
+                    {
+                        *dstPtrTempR = srcPtrTemp[0];
+                        *dstPtrTempG = srcPtrTemp[1];
+                        *dstPtrTempB = srcPtrTemp[2];
                     }
 
                     srcPtrTemp+=3;
@@ -158,31 +162,31 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-//                 {
-// #if __AVX2__
-//                     __m256 p[6];
-//                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-//                     compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
-// #else
-//                     __m128 p[12];
-//                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-//                     compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-// #endif
-//                     srcPtrTempR += vectorIncrementPerChannel;
-//                     srcPtrTempG += vectorIncrementPerChannel;
-//                     srcPtrTempB += vectorIncrementPerChannel;
-//                     dstPtrTemp += vectorIncrement;
-//                 }
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                    __m128 p[12];
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
+#endif
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
+                }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp8u src[3] = {*srcPtrTempR, *srcPtrTempG, *srcPtrTempB};
 
-                    if (shotNoiseFactor == 0.0f)
-                        memcpy(dstPtrTemp, src, 3);
-                    else
+                    if (shotNoiseFactor != 0.0f)
                     {
                         Rpp32f poissonDistribLambda[3];
                         poissonDistribLambda[0] = (Rpp32f) src[0] * shotNoiseFactorInv;
@@ -192,6 +196,8 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
                         dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
                     }
+                    else
+                        memcpy(dstPtrTemp, src, 3);
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -220,27 +226,27 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-//                 {
-// #if __AVX2__
-//                     __m256 p[6];
-//                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-//                     compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
-// #else
-//                     __m128 p[12];
-//                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-//                     compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-// #endif
-//                     srcPtrTemp += vectorIncrement;
-//                     dstPtrTemp += vectorIncrement;
-//                 }
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
+                    __m128 p[12];
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
+#endif
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTemp += vectorIncrement;
+                }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    if (shotNoiseFactor == 0.0f)
-                        memcpy(dstPtrTemp, srcPtrTemp, 3);
-                    else
+                    if (shotNoiseFactor != 0.0f)
                     {
                         Rpp32f poissonDistribLambda[3];
                         poissonDistribLambda[0] = (Rpp32f) srcPtrTemp[0] * shotNoiseFactorInv;
@@ -250,6 +256,8 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
                         dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
                     }
+                    else
+                        memcpy(dstPtrTemp, srcPtrTemp, 3);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -282,35 +290,31 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-//                 {
-// #if __AVX2__
-//                     __m256 p[6];
-//                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-//                     compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-// #else
-//                     __m128 p[12];
-//                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-//                     compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-// #endif
-//                     srcPtrTempR += vectorIncrementPerChannel;
-//                     srcPtrTempG += vectorIncrementPerChannel;
-//                     srcPtrTempB += vectorIncrementPerChannel;
-//                     dstPtrTempR += vectorIncrementPerChannel;
-//                     dstPtrTempG += vectorIncrementPerChannel;
-//                     dstPtrTempB += vectorIncrementPerChannel;
-//                 }
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 p[6];
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#else
+                    __m128 p[12];
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#endif
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    if (shotNoiseFactor == 0.0f)
-                    {
-                        *dstPtrTempR = *srcPtrTempR;
-                        *dstPtrTempG = *srcPtrTempG;
-                        *dstPtrTempB = *srcPtrTempB;
-                    }
-                    else
+                    if (shotNoiseFactor != 0.0f)
                     {
                         Rpp32f poissonDistribLambda[3];
                         poissonDistribLambda[0] = (Rpp32f) *srcPtrTempR * shotNoiseFactorInv;
@@ -319,6 +323,12 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                         *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
                         *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
                         *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                    }
+                    else
+                    {
+                        *dstPtrTempR = *srcPtrTempR;
+                        *dstPtrTempG = *srcPtrTempG;
+                        *dstPtrTempB = *srcPtrTempB;
                     }
 
                     srcPtrTempR++;
@@ -354,28 +364,30 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-//                 {
-// #if __AVX2__
-//                     __m256 p[2];
-//                     rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrTemp, p);    // simd loads
-//                     compute_shot_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
-// #else
-//                     __m128 p[4];
-//                     rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-//                     compute_shot_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
-//                     rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
-// #endif
-//                     srcPtrTemp += vectorIncrementPerChannel;
-//                     dstPtrTemp += vectorIncrementPerChannel;
-//                 }
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 p[2];
+                    rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrTemp, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
+#else
+                    __m128 p[4];
+                    rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
+                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
+#endif
+                    srcPtrTemp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrementPerChannel;
+                }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    if (shotNoiseFactor == 0.0f)
-                        *dstPtrTemp = *srcPtrTemp;
-                    else
+                    if (shotNoiseFactor != 0.0f)
                         *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, ((Rpp32f) *srcPtrTemp * shotNoiseFactorInv)) * shotNoiseFactor);
+                    else
+                        *dstPtrTemp = *srcPtrTemp;
 
                     srcPtrTemp++;
                     dstPtrTemp++;

@@ -1344,6 +1344,32 @@ static  inline __m128 fast_exp_sse (__m128 x)
     return r;
 }
 
+#if __AVX2__
+static inline __m256 fast_exp_avx(__m256 x)
+{
+    __m256 t, f, e, p, r;
+    __m256i i, j;
+    __m256 l2e = _mm256_set1_ps(1.442695041f);    /* log2(e) */
+    __m256 c0  = _mm256_set1_ps(0.3371894346f);
+    __m256 c1  = _mm256_set1_ps(0.657636276f);
+    __m256 c2  = _mm256_set1_ps(1.00172476f);
+
+    /* exp(x) = 2^i * 2^f; i = floor (log2(e) * x), 0 <= f <= 1 */
+    t = _mm256_mul_ps(x, l2e);             /* t = log2(e) * x */
+    e = _mm256_floor_ps(t);                /* floor(t) */
+    i = _mm256_cvtps_epi32(e);             /* (int)floor(t) */
+    f = _mm256_sub_ps(t, e);               /* f = t - floor(t) */
+    p = c0;                                /* c0 */
+    p = _mm256_mul_ps(p, f);               /* c0 * f */
+    p = _mm256_add_ps(p, c1);              /* c0 * f + c1 */
+    p = _mm256_mul_ps(p, f);               /* (c0 * f + c1) * f */
+    p = _mm256_add_ps(p, c2);              /* p = (c0 * f + c1) * f + c2 ~= 2^f */
+    j = _mm256_slli_epi32(i, 23);          /* i << 23 */
+    r = _mm256_castsi256_ps(_mm256_add_epi32(j, _mm256_castps_si256(p)));    /* r = p * 2^i*/
+    return r;
+}
+#endif
+
 #define set1_ps_hex(x) _mm_castsi128_ps(_mm_set1_epi32(x))
 
 static const __m128 _ps_0 = _mm_set1_ps(0.f);
