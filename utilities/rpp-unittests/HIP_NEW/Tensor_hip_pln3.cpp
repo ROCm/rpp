@@ -293,6 +293,15 @@ int main(int argc, char **argv)
     hipMalloc(&d_roiTensorPtrSrc, noOfImages * sizeof(RpptROI));
     hipMalloc(&d_roiTensorPtrDst, noOfImages * sizeof(RpptROI));
 
+    // Initialize the ImagePatch for source and destination
+
+    RpptImagePatch *srcImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
+    RpptImagePatch *dstImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
+
+    RpptImagePatch *d_srcImgSizes, *d_dstImgSizes;
+    hipMalloc(&d_srcImgSizes, noOfImages * sizeof(RpptImagePatch));
+    hipMalloc(&d_dstImgSizes, noOfImages * sizeof(RpptImagePatch));
+
     // Set ROI tensors types for src/dst
 
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -325,6 +334,11 @@ int main(int argc, char **argv)
         roiTensorPtrDst[count].xywhROI.xy.y = 0;
         roiTensorPtrDst[count].xywhROI.roiWidth = image.cols;
         roiTensorPtrDst[count].xywhROI.roiHeight = image.rows;
+
+        srcImgSizes[count].width = roiTensorPtrSrc[count].xywhROI.roiWidth;
+        srcImgSizes[count].height = roiTensorPtrSrc[count].xywhROI.roiHeight;
+        dstImgSizes[count].width = roiTensorPtrDst[count].xywhROI.roiWidth;
+        dstImgSizes[count].height = roiTensorPtrDst[count].xywhROI.roiHeight;
 
         maxHeight = RPPMAX2(maxHeight, roiTensorPtrSrc[count].xywhROI.roiHeight);
         maxWidth = RPPMAX2(maxWidth, roiTensorPtrSrc[count].xywhROI.roiWidth);
@@ -1330,8 +1344,6 @@ int main(int argc, char **argv)
             break;
         }
 
-        RpptImagePatch *dstImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
-
         for (i = 0; i < images; i++)
         {
             dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
@@ -1344,8 +1356,8 @@ int main(int argc, char **argv)
         for (i = 0; i < images; i++)
         {
             mean[i] = 100.0;
-            stdDev[i] = 1.0;
-            mirror[i] = 1;
+            stdDev[i] = 0.75;
+            mirror[i] = 0;
         }
 
         // Uncomment to run test case with an xywhROI override
@@ -1371,20 +1383,21 @@ int main(int argc, char **argv)
         roiTypeDst = RpptRoiType::LTRB;*/
 
         hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+        hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
 
         start = clock();
         if (ip_bitDepth == 0)
-            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_resize_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_resize_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_resize_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1707,8 +1720,8 @@ int main(int argc, char **argv)
     offsetted_output = output + dstDescPtr->offsetInBytes;
     for (j = 0; j < dstDescPtr->n; j++)
     {
-        int height = roiTensorPtrSrc[j].xywhROI.roiHeight;
-        int width = roiTensorPtrSrc[j].xywhROI.roiWidth;
+        int height = dstImgSizes[j].height;
+        int width = dstImgSizes[j].width;
 
         int op_size = height * width * ip_channel;
         Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
@@ -1742,9 +1755,14 @@ int main(int argc, char **argv)
     free(roiTensorPtrDst);
     hipFree(d_roiTensorPtrSrc);
     hipFree(d_roiTensorPtrDst);
+    free(srcImgSizes);
+    free(dstImgSizes);
+    hipFree(d_srcImgSizes);
+    hipFree(d_dstImgSizes);
     free(input);
     free(input_second);
     free(output);
+    
 
     if (ip_bitDepth == 0)
     {
