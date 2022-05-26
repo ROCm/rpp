@@ -63,19 +63,12 @@ omp_set_dynamic(0);
 
         __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
         auto computeFnSrcLocAvx = &compute_resize_src_loc_avx;
-        auto store24FnPlnPkd = &rpp_store12_f32pln3_to_u8pkd3_avx;
-        auto store24FnPlnPln = &rpp_store12_f32pln3_to_u8pln3_avx;
-        auto store8FnPlnPln = &rpp_store4_f32pln1_to_u8pln1_avx;
-
         if(mirrorFlag)
         {
-            pDstLocInit =  _mm256_setr_ps(width - 8, width - 7, width - 6, width - 5, width - 4, width - 3, width - 2, width - 1);
+            pDstLocInit =  _mm256_setr_ps(width - 1, width - 2, width - 3, width - 4, width - 5, width - 6, width - 7, width - 8);
             computeFnSrcLocAvx = &compute_resize_src_loc_mirror_avx;
-            store24FnPlnPkd = &rpp_store12_f32pln3_to_u8pkd3_mirror_avx;
-            store24FnPlnPln = &rpp_store12_f32pln3_to_u8pln3_mirror_avx;
-            store8FnPlnPln = &rpp_store4_f32pln1_to_u8pln1_mirror_avx;
         }
-
+        
         // Resize Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -107,7 +100,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_u8pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
-                    rpp_simd_store(store24FnPlnPln, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    rpp_simd_store(rpp_store12_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
@@ -160,7 +153,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_u8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[4], srcLocationColumnArray, &pSrc[8]);
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams); 
-                    rpp_simd_store(store24FnPlnPkd, dstPtrTemp, pDst);    // Store dst pixels
+                    rpp_simd_store(rpp_store12_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst);    // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSizes[batchCount].width; vectorLoopCount++)
@@ -204,7 +197,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_u8pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);     
-                    rpp_simd_store(store24FnPlnPkd, dstPtrTemp, pDst);   // Store dst pixels
+                    rpp_simd_store(rpp_store12_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSizes[batchCount].width; vectorLoopCount++)
@@ -254,7 +247,7 @@ omp_set_dynamic(0);
                         rpp_simd_load(rpp_bilinear_load_u8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[c * kernelSize], srcLocationColumnArray, pSrc); // Load input pixels required for bilinear interpolation
                         compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
                         compute_rmn_8_host(&pDst, pRMNParams);
-                        rpp_simd_store(store8FnPlnPln, dstPtrTempChn, pDst);  // Store dst pixels
+                        rpp_simd_store(rpp_store4_f32pln1_to_u8pln1_avx, dstPtrTempChn, pDst);  // Store dst pixels
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
 
@@ -345,17 +338,11 @@ omp_set_dynamic(0);
 
         __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
         auto computeFnSrcLocAvx = &compute_resize_src_loc_avx;
-        auto store24FnPlnPkd = &rpp_store24_f32pln3_to_f32pkd3_avx;
-        auto store24FnPlnPln = &rpp_store24_f32pln3_to_f32pln3_avx;
-        auto store8FnPlnPln = &rpp_store8_f32pln1_to_f32pln1_avx;
 
         if(mirrorFlag)
         {
-            pDstLocInit =  _mm256_setr_ps(width - 8, width - 7, width - 6, width - 5, width - 4, width - 3, width - 2, width - 1);
+            pDstLocInit =  _mm256_setr_ps(width - 1, width - 2, width - 3, width - 4, width - 5, width - 6, width - 7, width - 8);
             computeFnSrcLocAvx = &compute_resize_src_loc_mirror_avx;
-            store24FnPlnPkd = &rpp_store24_f32pln3_to_f32pkd3_mirror_avx;
-            store24FnPlnPln = &rpp_store24_f32pln3_to_f32pln3_mirror_avx;
-            store8FnPlnPln = &rpp_store8_f32pln1_to_f32pln1_mirror_avx;
         }
 
         // Resize with fused output-layout toggle (NHWC -> NCHW)
@@ -389,7 +376,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_f32pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc); // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);                             // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
-                    rpp_simd_store(store24FnPlnPln, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
@@ -442,7 +429,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_f32pln1_to_f32pln1_avx, &srcRowPtrsForInterp[4], srcLocationColumnArray, &pSrc[8]);
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
-                    rpp_simd_store(store24FnPlnPkd, dstPtrTemp, pDst);   // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSizes[batchCount].width; vectorLoopCount++)
@@ -487,7 +474,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_f32pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc); // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
-                    rpp_simd_store(store24FnPlnPkd, dstPtrTemp, pDst);   // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSizes[batchCount].width; vectorLoopCount++)
@@ -537,7 +524,7 @@ omp_set_dynamic(0);
                         rpp_simd_load(rpp_bilinear_load_f32pln1_to_f32pln1_avx, &srcRowPtrsForInterp[c * kernelSize], srcLocationColumnArray, pSrc);    // Load input pixels required for bilinear interpolation
                         compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                         compute_rmn_8_host(&pDst, pRMNParams);
-                        rpp_simd_store(store8FnPlnPln, dstPtrTempChn, pDst); // Store dst pixels
+                        rpp_simd_store(rpp_store8_f32pln1_to_f32pln1_avx, dstPtrTempChn, pDst); // Store dst pixels
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp += vectorIncrementPerChannel;
@@ -626,17 +613,11 @@ omp_set_dynamic(0);
 
         __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
         auto computeFnSrcLocAvx = &compute_resize_src_loc_avx;
-        auto store24FnPlnPkd = &rpp_store24_f32pln3_to_f16pkd3_avx;
-        auto store24FnPlnPln = &rpp_store24_f32pln3_to_f16pln3_avx;
-        auto store8FnPlnPln = &rpp_store8_f32pln1_to_f16pln1_avx;
 
         if(mirrorFlag)
         {
-            pDstLocInit =  _mm256_setr_ps(width - 8, width - 7, width - 6, width - 5, width - 4, width - 3, width - 2, width - 1);
+            pDstLocInit =  _mm256_setr_ps(width - 1, width - 2, width - 3, width - 4, width - 5, width - 6, width - 7, width - 8);
             computeFnSrcLocAvx = &compute_resize_src_loc_mirror_avx;
-            store24FnPlnPkd = &rpp_store24_f32pln3_to_f16pkd3_mirror_avx;
-            store24FnPlnPln = &rpp_store24_f32pln3_to_f16pln3_mirror_avx;
-            store8FnPlnPln = &rpp_store8_f32pln1_to_f16pln1_mirror_avx;
         }
 
         // Resize with fused output-layout toggle (NHWC -> NCHW)
@@ -670,7 +651,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_f16pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc); // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);                             // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
-                    rpp_simd_store(store24FnPlnPln, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
@@ -723,7 +704,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_f16pln1_to_f32pln1_avx, &srcRowPtrsForInterp[4], srcLocationColumnArray, &pSrc[8]);
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
-                    rpp_simd_store(store24FnPlnPkd, dstPtrTemp, pDst);   // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSizes[batchCount].width; vectorLoopCount++)
@@ -768,7 +749,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_f16pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc); // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
-                    rpp_simd_store(store24FnPlnPkd, dstPtrTemp, pDst);   // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSizes[batchCount].width; vectorLoopCount++)
@@ -818,7 +799,7 @@ omp_set_dynamic(0);
                         rpp_simd_load(rpp_bilinear_load_f16pln1_to_f32pln1_avx, &srcRowPtrsForInterp[c * kernelSize], srcLocationColumnArray, pSrc);    // Load input pixels required for bilinear interpolation
                         compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                         compute_rmn_8_host(&pDst, pRMNParams);
-                        rpp_simd_store(store8FnPlnPln, dstPtrTempChn, pDst); // Store dst pixels
+                        rpp_simd_store(rpp_store8_f32pln1_to_f16pln1_avx, dstPtrTempChn, pDst); // Store dst pixels
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp += vectorIncrementPerChannel;
@@ -907,17 +888,10 @@ omp_set_dynamic(0);
 
         __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
         auto computeFnSrcLocAvx = &compute_resize_src_loc_avx;
-        auto store24FnPlnPkd = &rpp_store12_f32pln3_to_i8pkd3_avx;
-        auto store24FnPlnPln = &rpp_store12_f32pln3_to_i8pln3_avx;
-        auto store8FnPlnPln = &rpp_store4_f32pln1_to_i8pln1_avx;
-
         if(mirrorFlag)
         {
-            pDstLocInit =  _mm256_setr_ps(width - 8, width - 7, width - 6, width - 5, width - 4, width - 3, width - 2, width - 1);
+            pDstLocInit =  _mm256_setr_ps(width - 1, width - 2, width - 3, width - 4, width - 5, width - 6, width - 7, width - 8);
             computeFnSrcLocAvx = &compute_resize_src_loc_mirror_avx;
-            store24FnPlnPkd = &rpp_store12_f32pln3_to_i8pkd3_mirror_avx;
-            store24FnPlnPln = &rpp_store12_f32pln3_to_i8pln3_mirror_avx;
-            store8FnPlnPln = &rpp_store4_f32pln1_to_i8pln1_mirror_avx;
         }
 
         // Resize Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
@@ -951,7 +925,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_i8pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
-                    rpp_simd_store(store24FnPlnPln, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    rpp_simd_store(rpp_store12_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
@@ -1004,7 +978,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_i8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[4], srcLocationColumnArray, &pSrc[8]);
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams); 
-                    rpp_simd_store(store24FnPlnPkd, dstPtrTemp, pDst);    // Store dst pixels
+                    rpp_simd_store(rpp_store12_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst);    // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSizes[batchCount].width; vectorLoopCount++)
@@ -1048,7 +1022,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_i8pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);     
-                    rpp_simd_store(store24FnPlnPkd, dstPtrTemp, pDst);   // Store dst pixels
+                    rpp_simd_store(rpp_store12_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSizes[batchCount].width; vectorLoopCount++)
@@ -1098,7 +1072,7 @@ omp_set_dynamic(0);
                         rpp_simd_load(rpp_bilinear_load_i8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[c * kernelSize], srcLocationColumnArray, pSrc); // Load input pixels required for bilinear interpolation
                         compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
                         compute_rmn_8_host(&pDst, pRMNParams);
-                        rpp_simd_store(store8FnPlnPln, dstPtrTempChn, pDst);  // Store dst pixels
+                        rpp_simd_store(rpp_store4_f32pln1_to_i8pln1_avx, dstPtrTempChn, pDst);  // Store dst pixels
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
 
