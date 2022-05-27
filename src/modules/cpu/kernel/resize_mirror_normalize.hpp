@@ -124,7 +124,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize with fused output-layout toggle (NCHW -> NHWC)
+        // Resize Mirror Normalize with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *dstPtrRow;
@@ -345,7 +345,7 @@ omp_set_dynamic(0);
             computeFnSrcLocAvx = &compute_resize_src_loc_mirror_avx;
         }
 
-        // Resize with fused output-layout toggle (NHWC -> NCHW)
+        // Resize Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -400,7 +400,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize with fused output-layout toggle (NCHW -> NHWC)
+        // Resize Mirror Normalize with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *dstPtrRow;
@@ -447,7 +447,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize without fused output-layout toggle (NHWC -> NHWC)
+        // Resize Mirror Normalize without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *dstPtrRow;
@@ -492,7 +492,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize without fused output-layout toggle (NCHW -> NCHW for 1 channel and 3 channel)
+        // Resize Mirror Normalize without fused output-layout toggle (NCHW -> NCHW for 1 channel and 3 channel)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRow;
@@ -620,7 +620,7 @@ omp_set_dynamic(0);
             computeFnSrcLocAvx = &compute_resize_src_loc_mirror_avx;
         }
 
-        // Resize with fused output-layout toggle (NHWC -> NCHW)
+        // Resize Mirror Normalize with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -675,7 +675,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize with fused output-layout toggle (NCHW -> NHWC)
+        // Resize Mirror Normalize with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *dstPtrRow;
@@ -722,7 +722,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize without fused output-layout toggle (NHWC -> NHWC)
+        // Resize Mirror Normalize without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *dstPtrRow;
@@ -767,7 +767,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize without fused output-layout toggle (NCHW -> NCHW for 1 channel and 3 channel)
+        // Resize Mirror Normalize without fused output-layout toggle (NCHW -> NCHW for 1 channel and 3 channel)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRow;
@@ -949,7 +949,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize with fused output-layout toggle (NCHW -> NHWC)
+        // Resize Mirror Normalize with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *dstPtrRow;

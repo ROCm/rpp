@@ -25,8 +25,6 @@ __device__ void rmn_hip_compute(half *srcPtr, d_float8 *pix_f8, d_float8 *rmnPar
     pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParams_f8->f4[0] * (float4) ONE_OVER_255) * rmnParams_f8->f4[1]);
 }
 
-// -------------------- Set 0 - resize_mirror_normalize device helpers --------------------
-
 __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
 {
     float wRatio = float(srcRoiPtr_i4->z) / (float)dstDimsWH->x;
@@ -68,8 +66,6 @@ __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute_mirror(int4 
     locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * float4(hRatio)) + float4(hOffset);  // Compute First 4 locSrcY
     locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * float4(hRatio)) + float4(hOffset);  // Compute Next 4 locSrcY
 }
-
-// -------------------- Set 1 - Bilinear Interpolation --------------------
 
 template <typename T>
 __global__ void resize_mirror_normalize_bilinear_pkd_tensor(T *srcPtr,
