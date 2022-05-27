@@ -31,11 +31,20 @@ typedef halfhpp Rpp16f;
 #define RPPPIXELCHECKI8(pixel)          (pixel < (Rpp32f) -128) ? ((Rpp32f) -128) : ((pixel < (Rpp32f) 127) ? pixel : ((Rpp32f) 127))
 #define RPPISGREATER(pixel, value)      ((pixel > value) ? 1 : 0)
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
+#define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
+#define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+
+#if __AVX2__
+#define SIMD_FLOAT_VECTOR_LENGTH        8
+#else
+#define SIMD_FLOAT_VECTOR_LENGTH        4
+#endif
 
 static uint16_t wyhash16_x;
 
 alignas(64) const Rpp32f sch_mat[16] = {0.701f, -0.299f, -0.300f, 0.0f, -0.587f, 0.413f, -0.588f, 0.0f, -0.114f, -0.114f, 0.886f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 alignas(64) const Rpp32f ssh_mat[16] = {0.168f, -0.328f, 1.250f, 0.0f, 0.330f, 0.035f, -1.050f, 0.0f, -0.497f, 0.292f, -0.203f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+alignas(64) const Rpp32u multiseedStreamOffset[8] = {0x15E975, 0x2359A3, 0x42CC61, 0x1925A7, 0x123AA3, 0x21F149, 0x2DDE23, 0x2A93BB};    // Prime numbers for multiseed stream initialization
 
 inline uint32_t hash16(uint32_t input, uint32_t key) {
   uint32_t hash = input * key;
@@ -73,6 +82,106 @@ inline int fastrand()
 {
     g_seed = (214013*g_seed+2531011);
     return (g_seed>>16)&0x7FFF;
+}
+
+template<Rpp32s STREAM_SIZE>
+inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState *xorwowInitialState, Rpp32u seed)
+{
+    Rpp32u xorwowSeedStream[STREAM_SIZE];
+
+    // Loop to initialize seed stream of size STREAM_SIZE based on user seed and offset
+    for (int i = 0; i < STREAM_SIZE; i++)
+        xorwowSeedStream[i] = seed + multiseedStreamOffset[i];
+
+    // Loop to initialize STREAM_SIZE xorwow initial states for multi-stream random number generation
+    for (int i = 0; i < STREAM_SIZE; i++)
+    {
+        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U
+        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U
+        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U
+        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U
+        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U
+        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U
+    }
+}
+
+inline __m256 rpp_host_rng_xorwow_8_f32_avx(__m256i *pxXorwowStateXParam, __m256i *pxXorwowStateCounterParam)
+{
+    // Initialize avx-xorwow specific constants
+    __m256i pxFFFFFFFF = _mm256_set1_epi32(0xFFFFFFFF);
+    __m256i px7FFFFF = _mm256_set1_epi32(0x7FFFFF);
+    __m256i pxXorwowCounterInc = _mm256_set1_epi32(XORWOW_COUNTER_INC);
+    __m256i pxExponentFloat = _mm256_set1_epi32(XORWOW_EXPONENT_MASK);
+
+    // Save current first and last x-params of xorwow state and compute pxT
+    __m256i pxT = pxXorwowStateXParam[0];                                                                                           // uint t  = xorwowState->x[0];
+    __m256i pxS = pxXorwowStateXParam[4];                                                                                           // uint s  = xorwowState->x[4];
+    pxT = _mm256_xor_si256(pxT, _mm256_srli_epi32(pxT, 2));                                                                         // t ^= t >> 2;
+    pxT = _mm256_xor_si256(pxT, _mm256_slli_epi32(pxT, 1));                                                                         // t ^= t << 1;
+    pxT = _mm256_xor_si256(pxT, _mm256_xor_si256(pxS, _mm256_slli_epi32(pxS, 4)));                                                  // t ^= s ^ (s << 4);
+
+    // Update all 6 xorwow state params
+    pxXorwowStateXParam[0] = pxXorwowStateXParam[1];                                                                                // xorwowState->x[0] = xorwowState->x[1];
+    pxXorwowStateXParam[1] = pxXorwowStateXParam[2];                                                                                // xorwowState->x[1] = xorwowState->x[2];
+    pxXorwowStateXParam[2] = pxXorwowStateXParam[3];                                                                                // xorwowState->x[2] = xorwowState->x[3];
+    pxXorwowStateXParam[3] = pxXorwowStateXParam[4];                                                                                // xorwowState->x[3] = xorwowState->x[4];
+    pxXorwowStateXParam[4] = pxT;                                                                                                   // xorwowState->x[4] = t;
+    *pxXorwowStateCounterParam = _mm256_and_si256(_mm256_add_epi32(*pxXorwowStateCounterParam, pxXorwowCounterInc), pxFFFFFFFF);    // xorwowState->counter = (xorwowState->counter + XORWOW_COUNTER_INC) & 0xFFFFFFFF;
+
+    // Create float representation and return 0 <= pxS < 1
+    pxS = _mm256_or_si256(pxExponentFloat, _mm256_and_si256(_mm256_add_epi32(pxT, *pxXorwowStateCounterParam), px7FFFFF));          // uint out = (XORWOW_EXPONENT_MASK | ((t + xorwowState->counter) & 0x7FFFFF));
+    return _mm256_sub_ps(*(__m256 *)&pxS, avx_p1);                                                                                  // return  *(float *)&out - 1;
+}
+
+inline __m128 rpp_host_rng_xorwow_4_f32_sse(__m128i *pxXorwowStateXParam, __m128i *pxXorwowStateCounterParam)
+{
+    // Initialize sse-xorwow specific constants
+    __m128i pxFFFFFFFF = _mm_set1_epi32(0xFFFFFFFF);
+    __m128i px7FFFFF = _mm_set1_epi32(0x7FFFFF);
+    __m128i pxXorwowCounterInc = _mm_set1_epi32(XORWOW_COUNTER_INC);
+    __m128i pxExponentFloat = _mm_set1_epi32(XORWOW_EXPONENT_MASK);
+
+    // Save current first and last x-params of xorwow state and compute pxT
+    __m128i pxT = pxXorwowStateXParam[0];                                                                                           // uint t  = xorwowState->x[0];
+    __m128i pxS = pxXorwowStateXParam[4];                                                                                           // uint s  = xorwowState->x[4];
+    pxT = _mm_xor_si128(pxT, _mm_srli_epi32(pxT, 2));                                                                               // t ^= t >> 2;
+    pxT = _mm_xor_si128(pxT, _mm_slli_epi32(pxT, 1));                                                                               // t ^= t << 1;
+    pxT = _mm_xor_si128(pxT, _mm_xor_si128(pxS, _mm_slli_epi32(pxS, 4)));                                                           // t ^= s ^ (s << 4);
+
+    // Update all 6 xorwow state params
+    pxXorwowStateXParam[0] = pxXorwowStateXParam[1];                                                                                // xorwowState->x[0] = xorwowState->x[1];
+    pxXorwowStateXParam[1] = pxXorwowStateXParam[2];                                                                                // xorwowState->x[1] = xorwowState->x[2];
+    pxXorwowStateXParam[2] = pxXorwowStateXParam[3];                                                                                // xorwowState->x[2] = xorwowState->x[3];
+    pxXorwowStateXParam[3] = pxXorwowStateXParam[4];                                                                                // xorwowState->x[3] = xorwowState->x[4];
+    pxXorwowStateXParam[4] = pxT;                                                                                                   // xorwowState->x[4] = t;
+    *pxXorwowStateCounterParam = _mm_and_si128(_mm_add_epi32(*pxXorwowStateCounterParam, pxXorwowCounterInc), pxFFFFFFFF);          // xorwowState->counter = (xorwowState->counter + XORWOW_COUNTER_INC) & 0xFFFFFFFF;
+
+    // Create float representation and return 0 <= pxS < 1
+    pxS = _mm_or_si128(pxExponentFloat, _mm_and_si128(_mm_add_epi32(pxT, *pxXorwowStateCounterParam), px7FFFFF));                   // uint out = (XORWOW_EXPONENT_MASK | ((t + xorwowState->counter) & 0x7FFFFF));
+    return _mm_sub_ps(*(__m128 *)&pxS, xmm_p1);                                                                                     // return  *(float *)&out - 1;
+}
+
+inline float rpp_host_rng_xorwow_f32(RpptXorwowState *xorwowState)
+{
+    // Save current first and last x-params of xorwow state and compute t
+    uint t  = xorwowState->x[0];
+    uint s  = xorwowState->x[4];
+    t ^= t >> 2;
+    t ^= t << 1;
+    t ^= s ^ (s << 4);
+
+    // Update all 6 xorwow state params
+    xorwowState->x[0] = xorwowState->x[1];                                              // set new state param x[0]
+    xorwowState->x[1] = xorwowState->x[2];                                              // set new state param x[1]
+    xorwowState->x[2] = xorwowState->x[3];                                              // set new state param x[2]
+    xorwowState->x[3] = xorwowState->x[4];                                              // set new state param x[3]
+    xorwowState->x[4] = t;                                                              // set new state param x[4]
+    xorwowState->counter = (xorwowState->counter + XORWOW_COUNTER_INC) & 0xFFFFFFFF;    // set new state param counter
+
+    // Create float representation and return 0 <= outFloat < 1
+    uint out = (XORWOW_EXPONENT_MASK | ((t + xorwowState->counter) & 0x7FFFFF));        // bitmask 23 mantissa bits, OR with exponent
+    float outFloat = *(float *)&out;                                                    // reinterpret out as float
+    return  outFloat - 1;                                                               // return 0 <= outFloat < 1
 }
 
 inline int power_function(int a, int b)
@@ -2085,6 +2194,42 @@ inline RppStatus compute_rmn_8_host(__m256 *p, __m256 *pRMNParams)
     return RPP_SUCCESS;
 }
 
+inline RppStatus compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[2] = _mm256_fmadd_ps(_mm256_sub_ps(p[2], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[3] = _mm256_fmadd_ps(_mm256_sub_ps(p[3], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[4] = _mm256_fmadd_ps(_mm256_sub_ps(p[4], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[5] = _mm256_fmadd_ps(_mm256_sub_ps(p[5], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_contrast_24_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[2] = _mm256_fmadd_ps(_mm256_sub_ps(p[2], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_contrast_16_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_contrast_8_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus compute_brightness_48_host(__m256 *p, __m256 *pBrightnessParams)
 {
     p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
@@ -2794,6 +2939,110 @@ inline RppStatus compute_color_jitter_12_host(__m128 *p, __m128 *pCtm)
     p[0] = pResult[0];    // color_jitter adjustment R0-R3
     p[1] = pResult[1];    // color_jitter adjustment G0-G3
     p[2] = pResult[2];    // color_jitter adjustment B0-B3
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_salt_and_pepper_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+{
+    __m256 pMask[3];
+    __m256 pRandomNumbers = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
+    pMask[0] = _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[0], _CMP_GT_OQ);
+    pMask[1] = _mm256_andnot_ps(pMask[0], _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1], _CMP_LE_OQ));
+    pMask[2] = _mm256_andnot_ps(pMask[0], _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1], _CMP_GT_OQ));
+    p[0] = _mm256_and_ps(pMask[0], p[0]);
+    p[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], p[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    p[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], p[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_salt_and_pepper_noise_4_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+{
+    __m128 pMask[3];
+    __m128 pRandomNumbers = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
+    pMask[0] = _mm_cmpgt_ps(pRandomNumbers, pSaltAndPepperNoiseParams[0]);
+    pMask[1] = _mm_andnot_ps(pMask[0], _mm_cmple_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1]));
+    pMask[2] = _mm_andnot_ps(pMask[0], _mm_cmpgt_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1]));
+    p[0] = _mm_and_ps(pMask[0], p[0]);
+    p[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], p[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    p[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], p[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_salt_and_pepper_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+{
+    compute_salt_and_pepper_noise_8_host(p    , pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_8_host(p + 1, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_salt_and_pepper_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+{
+    compute_salt_and_pepper_noise_4_host(p    , pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_4_host(p + 1, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_4_host(p + 2, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_4_host(p + 3, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_salt_and_pepper_noise_24_host(__m256 *pR, __m256 *pG, __m256 *pB, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+{
+    __m256 pMask[3];
+    __m256 pRandomNumbers = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
+    pMask[0] = _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[0], _CMP_GT_OQ);
+    pMask[1] = _mm256_andnot_ps(pMask[0], _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1], _CMP_LE_OQ));
+    pMask[2] = _mm256_andnot_ps(pMask[0], _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1], _CMP_GT_OQ));
+    pR[0] = _mm256_and_ps(pMask[0], pR[0]);
+    pR[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], pR[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pR[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pR[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+    pG[0] = _mm256_and_ps(pMask[0], pG[0]);
+    pG[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], pG[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pG[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pG[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+    pB[0] = _mm256_and_ps(pMask[0], pB[0]);
+    pB[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], pB[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pB[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pB[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_salt_and_pepper_noise_12_host(__m128 *pR, __m128 *pG, __m128 *pB, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+{
+    __m128 pMask[3];
+    __m128 pRandomNumbers = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
+    pMask[0] = _mm_cmpgt_ps(pRandomNumbers, pSaltAndPepperNoiseParams[0]);
+    pMask[1] = _mm_andnot_ps(pMask[0], _mm_cmple_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1]));
+    pMask[2] = _mm_andnot_ps(pMask[0], _mm_cmpgt_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1]));
+    pR[0] = _mm_and_ps(pMask[0], pR[0]);
+    pR[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], pR[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pR[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], pR[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+    pG[0] = _mm_and_ps(pMask[0], pG[0]);
+    pG[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], pG[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pG[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], pG[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+    pB[0] = _mm_and_ps(pMask[0], pB[0]);
+    pB[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], pB[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pB[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], pB[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_salt_and_pepper_noise_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+{
+    compute_salt_and_pepper_noise_24_host(p    , p + 2, p +  4, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_24_host(p + 1, p + 3, p +  5, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_salt_and_pepper_noise_48_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+{
+    compute_salt_and_pepper_noise_12_host(p    , p + 4, p +  8, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_12_host(p + 1, p + 5, p +  9, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_12_host(p + 2, p + 6, p + 10, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_12_host(p + 3, p + 7, p + 11, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
 
     return RPP_SUCCESS;
 }

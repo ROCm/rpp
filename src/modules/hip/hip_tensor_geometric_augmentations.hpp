@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "kernel/crop.hpp"
 #include "kernel/crop_mirror_normalize.hpp"
 #include "kernel/warp_affine.hpp"
+#include "kernel/flip.hpp"
 #include "kernel/resize_mirror_normalize.hpp"
 
 #endif // HIP_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP

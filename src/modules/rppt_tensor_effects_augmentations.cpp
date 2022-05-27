@@ -350,3 +350,177 @@ RppStatus rppt_spatter_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+/******************** salt_and_pepper_noise ********************/
+
+RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         RppPtr_t dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32f *noiseProbabilityTensor,
+                                         Rpp32f *saltProbabilityTensor,
+                                         Rpp32f *saltValueTensor,
+                                         Rpp32f *pepperValueTensor,
+                                         Rpp32u seed,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    for(int i = 0; i < srcDescPtr->n; i++)
+        if (!RPPINRANGE(noiseProbabilityTensor[i], 0, 1) || !RPPINRANGE(saltProbabilityTensor[i], 0, 1) || !RPPINRANGE(saltValueTensor[i], 0, 1) || !RPPINRANGE(pepperValueTensor[i], 0, 1))
+            return RPP_ERROR_INVALID_ARGUMENTS;
+
+    Rpp32u paramIndex = 0;
+    copy_param_float(noiseProbabilityTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float(saltProbabilityTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float(saltValueTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float(pepperValueTensor, rpp::deref(rppHandle), paramIndex++);
+
+    RpptXorwowState xorwowInitialState;
+    xorwowInitialState.x[0] = 0x75BCD15 + seed;
+    xorwowInitialState.x[1] = 0x159A55E5 + seed;
+    xorwowInitialState.x[2] = 0x1F123BB5 + seed;
+    xorwowInitialState.x[3] = 0x5491333 + seed;
+    xorwowInitialState.x[4] = 0x583F19 + seed;
+    xorwowInitialState.counter = 0x64F0C9 + seed;
+
+    RpptXorwowState *d_xorwowInitialStatePtr;
+    d_xorwowInitialStatePtr = (RpptXorwowState *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowState), hipMemcpyHostToDevice);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_salt_and_pepper_noise_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                              srcDescPtr,
+                                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                              dstDescPtr,
+                                              d_xorwowInitialStatePtr,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_salt_and_pepper_noise_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                              srcDescPtr,
+                                              (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                              dstDescPtr,
+                                              d_xorwowInitialStatePtr,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_salt_and_pepper_noise_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                              srcDescPtr,
+                                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                              dstDescPtr,
+                                              d_xorwowInitialStatePtr,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_salt_and_pepper_noise_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                              srcDescPtr,
+                                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                              dstDescPtr,
+                                              d_xorwowInitialStatePtr,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          RppPtr_t dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32f *noiseProbabilityTensor,
+                                          Rpp32f *saltProbabilityTensor,
+                                          Rpp32f *saltValueTensor,
+                                          Rpp32f *pepperValueTensor,
+                                          Rpp32u seed,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          rppHandle_t rppHandle)
+{
+    for(int i = 0; i < srcDescPtr->n; i++)
+        if (!RPPINRANGE(noiseProbabilityTensor[i], 0, 1) || !RPPINRANGE(saltProbabilityTensor[i], 0, 1) || !RPPINRANGE(saltValueTensor[i], 0, 1) || !RPPINRANGE(pepperValueTensor[i], 0, 1))
+            return RPP_ERROR_INVALID_ARGUMENTS;
+
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    RpptXorwowState xorwowInitialState[SIMD_FLOAT_VECTOR_LENGTH];
+    rpp_host_rng_xorwow_f32_initialize_multiseed_stream<SIMD_FLOAT_VECTOR_LENGTH>(xorwowInitialState, seed);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        salt_and_pepper_noise_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                dstDescPtr,
+                                                noiseProbabilityTensor,
+                                                saltProbabilityTensor,
+                                                saltValueTensor,
+                                                pepperValueTensor,
+                                                xorwowInitialState,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        salt_and_pepper_noise_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                  srcDescPtr,
+                                                  (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                  dstDescPtr,
+                                                  noiseProbabilityTensor,
+                                                  saltProbabilityTensor,
+                                                  saltValueTensor,
+                                                  pepperValueTensor,
+                                                  xorwowInitialState,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        salt_and_pepper_noise_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                  srcDescPtr,
+                                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                  dstDescPtr,
+                                                  noiseProbabilityTensor,
+                                                  saltProbabilityTensor,
+                                                  saltValueTensor,
+                                                  pepperValueTensor,
+                                                  xorwowInitialState,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        salt_and_pepper_noise_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                dstDescPtr,
+                                                noiseProbabilityTensor,
+                                                saltProbabilityTensor,
+                                                saltValueTensor,
+                                                pepperValueTensor,
+                                                xorwowInitialState,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                layoutParams);
+    }
+
+    return RPP_SUCCESS;
+}
