@@ -351,7 +351,6 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
                 hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln3_pkd3_tensor,
                                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                    dim3(localThreads_x, localThreads_y, localThreads_z),

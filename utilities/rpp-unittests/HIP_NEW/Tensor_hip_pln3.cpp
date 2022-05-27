@@ -1577,8 +1577,8 @@ int main(int argc, char **argv)
         for (i = 0; i < images; i++)
         {
             mean[i] = 100.0;
-            stdDev[i] = 0.75;
-            mirror[i] = 0;
+            stdDev[i] = 1.0;
+            mirror[i] = 1;
         }
 
         // Uncomment to run test case with an xywhROI override
