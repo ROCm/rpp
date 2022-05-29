@@ -22,7 +22,7 @@ typedef halfhpp Rpp16f;
 #define RPPMAX2(a,b)                    ((a > b) ? a : b)
 #define RPPMAX3(a,b,c)                  ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
 #define RPPINRANGE(a, x, y)             ((a >= x) && (a <= y) ? 1 : 0)
-#define RPPPRANGECHECK(value, a, b)     (value < (Rpp32f) a) ? ((Rpp32f) a) : ((value < (Rpp32f) b) ? value : ((Rpp32f) b))
+#define RPPPRANGECHECK(value, a, b)     ((value < a) ? a : (value <  b) ? value : b)
 #define RPPFLOOR(a)                     ((int) a)
 #define RPPCEIL(a)                      ((int) (a + 1.0))
 #define RPPISEVEN(a)                    ((a % 2 == 0) ? 1 : 0)
@@ -4341,24 +4341,31 @@ inline RppStatus compute_dst_size_cap_host(RpptImagePatchPtr dstImgSize, RpptDes
     return RPP_SUCCESS;
 }
 
-inline RppStatus compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u limit, Rpp32s &srcLoc, Rpp32f *weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
+inline RppStatus compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32s &srcLoc, Rpp32f &weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
 {
     Rpp32f srcLocationFloat = ((Rpp32f) dstLocation) * scale + offset;
     Rpp32s srcLocation = (Rpp32s) std::ceil(srcLocationFloat);
-    weight[0] = srcLocation - srcLocationFloat;
-    weight[1] = 1 - weight[0];
+    weight = srcLocation - srcLocationFloat;
     srcLoc = srcLocation * srcStride;
 
     return RPP_SUCCESS;
 }
 
-inline RppStatus compute_resize_src_loc_avx(__m256 &pDstLoc, __m256 &pScale, __m256 &pLimit, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
+inline RppStatus compute_resize_bilinear_src_loc_and_weights(Rpp32s dstLocation, Rpp32f scale, Rpp32s &srcLoc, Rpp32f *weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
+{
+    compute_resize_src_loc(dstLocation, scale, srcLoc, weight[1], offset, srcStride);
+    weight[0] = 1 - weight[1];
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
 {
     __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
     __m256 pLoc = _mm256_ceil_ps(pLocFloat);
-    pWeight[0] = _mm256_sub_ps(pLoc, pLocFloat);
-    pWeight[1] = _mm256_sub_ps(avx_p1, pWeight[0]);
+    pWeight[1] = _mm256_sub_ps(pLoc, pLocFloat);
+    pWeight[0] = _mm256_sub_ps(avx_p1, pWeight[1]);
     if(hasRGBChannels)
         pLoc = _mm256_mul_ps(pLoc, avx_p3);
     __m256i pxLoc = _mm256_cvtps_epi32(pLoc);
@@ -4417,7 +4424,7 @@ inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f 
 }
 
 // Computes the src loc and coefficients
-inline void compute_index_and_weights(RpptInterpolationType interpolationType, Rpp32f weight, Rpp32s kernelSize, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_index_and_weights(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f kernelSize2 = kernelSize / 2;
     Rpp32f sum = 0;
@@ -4436,7 +4443,7 @@ inline void compute_index_and_weights(RpptInterpolationType interpolationType, R
 }
 
 // Computes the src loc and coefficients
-inline void compute_col_index_and_weights(RpptInterpolationType interpolationType, Rpp32f weight, Rpp32s kernelSize, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_col_index_and_weights(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f kernelSize2 = kernelSize / 2;
     Rpp32f sum = 0;
@@ -4533,19 +4540,19 @@ inline RppStatus compute_bilinear_interpolation_3c_avx(__m256 *pSrcPixels, __m25
 }
 
 template <typename T>
-inline RppStatus compute_src_row_ptrs_for_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, RpptDescPtr descPtr)
+inline RppStatus compute_src_row_ptrs_for_bilinear_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + loc * descPtr->strides.hStride;          // TopRow for bilinear interpolation
-    rowPtrsForInterp[1]  = rowPtrsForInterp[0] + descPtr->strides.hStride;  // BottomRow for bilinear interpolation
+    rowPtrsForInterp[0] = srcPtr + RPPPRANGECHECK(loc, 0, limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation
+    rowPtrsForInterp[1]  = srcPtr + RPPPRANGECHECK(loc + 1, 0, limit) * descPtr->strides.hStride;     // BottomRow for bilinear interpolation
 
     return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_src_row_ptrs_for_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, RpptDescPtr descPtr)
+inline RppStatus compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + loc * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
-    rowPtrsForInterp[1]  = rowPtrsForInterp[0] + descPtr->strides.hStride;  // BottomRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[0] = srcPtr + RPPPRANGECHECK(loc, 0, limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[1] = srcPtr + RPPPRANGECHECK(loc + 1, 0, limit) * descPtr->strides.hStride;      // BottomRow for bilinear interpolation (R channel)
     rowPtrsForInterp[2] = rowPtrsForInterp[0] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (G channel)
     rowPtrsForInterp[3] = rowPtrsForInterp[1] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (G channel)
     rowPtrsForInterp[4] = rowPtrsForInterp[2] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (B channel)
