@@ -975,7 +975,7 @@ omp_set_dynamic(0);
 
         Rpp32s rowIndex[dstImgSize[batchCount].height], colIndex[dstImgSize[batchCount].width];
         Rpp32f rowCoeffs[dstImgSize[batchCount].height * hKernelSize];
-        Rpp32f colCoeffs[((dstImgSize[batchCount].width + 3) & ~3) * wKernelSize]; // image width is made a multiple pf 4 inorder to allocate sufficient memory for Horizontal coefficients
+        Rpp32f colCoeffs[((dstImgSize[batchCount].width + 3) & ~3) * wKernelSize]; // image width is made a multiple of 4 inorder to allocate sufficient memory for Horizontal coefficients
 
         // Pre-compute row index and coefficients
         for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].height; indexCount++, coeffCount += hKernelSize)
@@ -1002,13 +1002,13 @@ omp_set_dynamic(0);
         srcImgSize.width = roi.xywhROI.roiWidth;
         srcImgSize.height = roi.xywhROI.roiHeight;
 
-        // The intermediate result from Vertical Resampling will have the src width and dest height
+        // The intermediate result from Vertical Resampling will have the src width and dst height
         RpptImagePatch tempImgSize;
         tempImgSize.width = roi.xywhROI.roiWidth;
         tempImgSize.height = dstImgSize[batchCount].height;
 
-        // Allocate buffer to store intermediate result of separable resampling
-        Rpp32f * interPtr = (float *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * sizeof(float));
+        // Allocate temproary buffer to store intermediate result of separable resampling
+        Rpp32f * tempPtrImage = (float *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * sizeof(float));
 
         RpptDesc tempDesc;
         tempDesc = *srcDescPtr;
@@ -1019,10 +1019,10 @@ omp_set_dynamic(0);
         if(srcDescPtr->layout == RpptLayout::NCHW)
             tempDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
 
-        resample_vertical(srcPtrImage, interPtr, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
-        resample_horizontal(interPtr, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
+        resample_vertical(srcPtrImage, tempPtrImage, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
+        resample_horizontal(tempPtrImage, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
 
-        free(interPtr);
+        free(tempPtrImage);
     }
 
     return RPP_SUCCESS;
