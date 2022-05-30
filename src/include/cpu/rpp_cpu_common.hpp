@@ -242,7 +242,7 @@ inline Rpp32f gaussian_2d_relative(Rpp32s locI, Rpp32s locJ, Rpp32f std_dev)
 
 // Generate Functions
 
-inline RppStatus generate_gaussian_kernel_host(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSize)
+inline void generate_gaussian_kernel_host(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSize)
 {
     Rpp32f s, sum = 0.0, multiplier;
     int bound = ((kernelSize - 1) / 2);
@@ -262,8 +262,6 @@ inline RppStatus generate_gaussian_kernel_host(Rpp32f stdDev, Rpp32f* kernel, Rp
     {
         kernel[i] /= sum;
     }
-
-    return RPP_SUCCESS;
 }
 
 inline RppStatus generate_gaussian_kernel_asymmetric_host(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSizeX, Rpp32u kernelSizeY)
@@ -295,12 +293,11 @@ inline RppStatus generate_gaussian_kernel_asymmetric_host(Rpp32f stdDev, Rpp32f*
     {
         kernel[i] /= sum;
     }
-
     return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus generate_bilateral_kernel_host(Rpp32f multiplierI, Rpp32f multiplierS, Rpp32f multiplier, Rpp32f* kernel, Rpp32u kernelSize, int bound,
+inline void generate_bilateral_kernel_host(Rpp32f multiplierI, Rpp32f multiplierS, Rpp32f multiplier, Rpp32f* kernel, Rpp32u kernelSize, int bound,
                                          T* srcPtrWindow, RppiSize srcSizeMod, Rpp32u remainingElementsInRow, Rpp32u incrementToWindowCenter,
                                          RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -353,8 +350,6 @@ inline RppStatus generate_bilateral_kernel_host(Rpp32f multiplierI, Rpp32f multi
         *kernelTemp = *kernelTemp / sum;
         kernelTemp++;
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
@@ -424,7 +419,7 @@ inline RppStatus generate_evenly_padded_image_host(T* srcPtr, RppiSize srcSize, 
 }
 
 template <typename T>
-inline RppStatus generate_corner_padded_image_host(T* srcPtr, RppiSize srcSize, T* srcPtrMod, RppiSize srcSizeMod, Rpp32u padType,
+inline void generate_corner_padded_image_host(T* srcPtr, RppiSize srcSize, T* srcPtrMod, RppiSize srcSizeMod, Rpp32u padType,
                                      RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp, *srcPtrModTemp;
@@ -519,11 +514,9 @@ inline RppStatus generate_corner_padded_image_host(T* srcPtr, RppiSize srcSize, 
             srcPtrModTemp += (numOfPixelsHrBorder);
         }
     }
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus generate_box_kernel_host(Rpp32f* kernel, Rpp32u kernelSize)
+inline void generate_box_kernel_host(Rpp32f* kernel, Rpp32u kernelSize)
 {
     Rpp32f* kernelTemp;
     kernelTemp = kernel;
@@ -533,12 +526,10 @@ inline RppStatus generate_box_kernel_host(Rpp32f* kernel, Rpp32u kernelSize)
         *kernelTemp = kernelValue;
         kernelTemp++;
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus generate_crop_host(T* srcPtr, RppiSize srcSize, T* srcPtrSubImage, RppiSize srcSizeSubImage, T* dstPtr,
+inline void generate_crop_host(T* srcPtr, RppiSize srcSize, T* srcPtrSubImage, RppiSize srcSizeSubImage, T* dstPtr,
                              RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrSubImageTemp, *dstPtrTemp;
@@ -600,8 +591,6 @@ inline RppStatus generate_crop_host(T* srcPtr, RppiSize srcSize, T* srcPtrSubIma
             srcPtrSubImageTemp += remainingElementsInRow;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
@@ -644,7 +633,7 @@ inline RppStatus generate_sobel_kernel_host(Rpp32f* kernel, Rpp32u type)
 }
 
 template <typename T>
-inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp32u *endpoints, Rpp32u *rasterCoordinates)
+inline void generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp32u *endpoints, Rpp32u *rasterCoordinates)
 {
     Rpp32u *rasterCoordinatesTemp;
     rasterCoordinatesTemp = rasterCoordinates;
@@ -736,8 +725,6 @@ inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp3
             }
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 
@@ -758,7 +745,7 @@ inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp3
 // Kernels for functions
 
 template<typename T, typename U>
-inline RppStatus convolution_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSize srcSize,
+inline void convolution_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSize srcSize,
                                        Rpp32f* kernel, RppiSize kernelSize, Rpp32u remainingElementsInRow, U maxVal, U minVal,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -798,12 +785,10 @@ inline RppStatus convolution_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSi
     }
     (pixel < (Rpp32f) minVal) ? pixel = (Rpp32f) minVal : ((pixel < (Rpp32f) maxVal) ? pixel : pixel = (Rpp32f) maxVal);
     *dstPtrPixel = (U) round(pixel);
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus histogram_kernel_host(T* srcPtr, RppiSize srcSize, Rpp32u* histogram,
+inline void histogram_kernel_host(T* srcPtr, RppiSize srcSize, Rpp32u* histogram,
                                 Rpp8u bins,
                                 Rpp32u channel)
 {
@@ -822,12 +807,10 @@ inline RppStatus histogram_kernel_host(T* srcPtr, RppiSize srcSize, Rpp32u* hist
             srcPtrTemp++;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-inline RppStatus accumulate_kernel_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
+inline void accumulate_kernel_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
                                         RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp;
@@ -845,13 +828,10 @@ inline RppStatus accumulate_kernel_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize
         srcPtr1Temp++;
         srcPtr2Temp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename U>
-inline RppStatus normalize_kernel_host(U* dstPtrROI, RppiSize dstSize, Rpp32u channel)
+inline void normalize_kernel_host(U* dstPtrROI, RppiSize dstSize, Rpp32u channel)
 {
     U* dstPtrROITemp;
     dstPtrROITemp = dstPtrROI;
@@ -865,8 +845,6 @@ inline RppStatus normalize_kernel_host(U* dstPtrROI, RppiSize dstSize, Rpp32u ch
         *dstPtrROITemp = *dstPtrROITemp * multiplier;
         dstPtrROITemp++;
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
@@ -1088,7 +1066,7 @@ inline RppStatus resize_kernel_host(T* srcPtr, RppiSize srcSize, U* dstPtr, Rppi
 }
 
 template <typename T>
-inline RppStatus resize_crop_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+inline void resize_crop_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                            Rpp32u x1, Rpp32u y1, Rpp32u x2, Rpp32u y2,
                            RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1104,13 +1082,10 @@ inline RppStatus resize_crop_kernel_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
     resize_kernel_host(srcPtrResize, srcSizeSubImage, dstPtr, dstSize, chnFormat, channel);
 
     free(srcPtrResize);
-
-    return RPP_SUCCESS;
-
 }
 
 template<typename T>
-inline RppStatus erode_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
+inline void erode_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
                                        Rpp32u kernelSize, Rpp32u remainingElementsInRow,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1151,12 +1126,10 @@ inline RppStatus erode_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize src
         }
     }
     *dstPtrPixel = pixel;
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus dilate_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
+inline void dilate_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
                                        Rpp32u kernelSize, Rpp32u remainingElementsInRow,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1197,12 +1170,10 @@ inline RppStatus dilate_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize sr
         }
     }
     *dstPtrPixel = pixel;
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus median_filter_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
+inline void median_filter_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
                                        Rpp32u kernelSize, Rpp32u remainingElementsInRow,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1245,12 +1216,10 @@ inline RppStatus median_filter_kernel_host(T* srcPtrWindow, T* dstPtrPixel, Rppi
     *dstPtrPixel = *(kernel + (((kernelSize * kernelSize) - 1) / 2));
 
     free(kernel);
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus local_binary_pattern_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
+inline void local_binary_pattern_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
                                        Rpp32u remainingElementsInRow, T* centerPixelPtr,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1362,12 +1331,10 @@ inline RppStatus local_binary_pattern_kernel_host(T* srcPtrWindow, T* dstPtrPixe
     }
 
     *dstPtrPixel = (T) RPPPIXELCHECK(pixel);
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus non_max_suppression_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
+inline void non_max_suppression_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
                                        Rpp32u kernelSize, Rpp32u remainingElementsInRow, T windowCenter,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1415,12 +1382,10 @@ inline RppStatus non_max_suppression_kernel_host(T* srcPtrWindow, T* dstPtrPixel
     {
         *dstPtrPixel = (T) 0;
     }
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus canny_non_max_suppression_kernel_host(T* dstPtrPixel, T windowCenter, T *position1Ptr, T *position2Ptr)
+inline void canny_non_max_suppression_kernel_host(T* dstPtrPixel, T windowCenter, T *position1Ptr, T *position2Ptr)
 {
     if ((windowCenter >= *position1Ptr) && (windowCenter >= *position2Ptr))
     {
@@ -1430,12 +1395,10 @@ inline RppStatus canny_non_max_suppression_kernel_host(T* dstPtrPixel, T windowC
     {
         *dstPtrPixel = (T) 0;
     }
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus canny_hysterisis_edge_tracing_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
+inline void canny_hysterisis_edge_tracing_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
                                        Rpp32u kernelSize, Rpp32u remainingElementsInRow, T windowCenter, Rpp32u bound,
                                        RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1449,19 +1412,16 @@ inline RppStatus canny_hysterisis_edge_tracing_kernel_host(T* srcPtrWindow, T* d
             if (*srcPtrWindowTemp == (T) 255)
             {
                 *dstPtrPixel = (T) 255;
-                return RPP_SUCCESS;
             }
             srcPtrWindowTemp++;
         }
         srcPtrWindowTemp += remainingElementsInRow;
     }
     *dstPtrPixel = (T) 0;
-
-    return RPP_SUCCESS;
 }
 
 template<typename T, typename U>
-inline RppStatus harris_corner_detector_kernel_host(T* srcPtrWindowX, T* srcPtrWindowY, U* dstPtrPixel, RppiSize srcSize,
+inline void harris_corner_detector_kernel_host(T* srcPtrWindowX, T* srcPtrWindowY, U* dstPtrPixel, RppiSize srcSize,
                                              Rpp32u kernelSize, Rpp32u remainingElementsInRow, Rpp32f kValue, Rpp32f threshold,
                                              RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -1501,12 +1461,10 @@ inline RppStatus harris_corner_detector_kernel_host(T* srcPtrWindowX, T* srcPtrW
     {
         *dstPtrPixel = (U) 0;
     }
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus harris_corner_set_maximum_kernel_host(T* dstPtrWindow, Rpp32u kernelSize, Rpp32u remainingElementsInRow,
+inline void harris_corner_set_maximum_kernel_host(T* dstPtrWindow, Rpp32u kernelSize, Rpp32u remainingElementsInRow,
                                                   RppiChnFormat chnFormat, Rpp32u channel)
 {
     T* dstPtrWindowTemp;
@@ -1536,12 +1494,10 @@ inline RppStatus harris_corner_set_maximum_kernel_host(T* dstPtrWindow, Rpp32u k
             dstPtrWindowTemp += remainingElementsInRow;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus harris_corner_set_minimum_kernel_host(T* dstPtrWindow, Rpp32u kernelSize, Rpp32u remainingElementsInRow,
+inline void harris_corner_set_minimum_kernel_host(T* dstPtrWindow, Rpp32u kernelSize, Rpp32u remainingElementsInRow,
                                                   RppiChnFormat chnFormat, Rpp32u channel)
 {
     T* dstPtrWindowTemp;
@@ -1571,22 +1527,18 @@ inline RppStatus harris_corner_set_minimum_kernel_host(T* dstPtrWindow, Rpp32u k
             dstPtrWindowTemp += remainingElementsInRow;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus tensor_index_exchange_kernel_host(Rpp32u *loopCount, Rpp32u *loopCountTransposed, Rpp32u tensorDimension, Rpp32u dimension1, Rpp32u dimension2)
+inline void tensor_index_exchange_kernel_host(Rpp32u *loopCount, Rpp32u *loopCountTransposed, Rpp32u tensorDimension, Rpp32u dimension1, Rpp32u dimension2)
 {
     memcpy(loopCountTransposed, loopCount, tensorDimension * sizeof(Rpp32u));
 
     loopCountTransposed[dimension2] = loopCount[dimension1];
     loopCountTransposed[dimension1] = loopCount[dimension2];
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus tensor_transpose_iterate_kernel_host(T* srcPtr, T* dstPtr,
+inline void tensor_transpose_iterate_kernel_host(T* srcPtr, T* dstPtr,
                                                Rpp32u tensorDimensionTemp, Rpp32u tensorDimension,
                                                Rpp32u *tensorDimensionValues, Rpp32u *tensorDimensionValuesProduct,
                                                Rpp32u *loopCount, Rpp32u *loopCountTransposed,
@@ -1611,8 +1563,6 @@ inline RppStatus tensor_transpose_iterate_kernel_host(T* srcPtr, T* dstPtr,
         srcPtrLoc += loopCountTransposed[0];
 
         *(dstPtr + dstPtrLoc) = *(srcPtr + srcPtrLoc);
-
-        return RPP_SUCCESS;
     }
     for (int i = 0; i < *(tensorDimensionValues + tensorDimensionTemp); i++)
     {
@@ -1623,12 +1573,10 @@ inline RppStatus tensor_transpose_iterate_kernel_host(T* srcPtr, T* dstPtr,
                                              loopCount, loopCountTransposed,
                                              dimension1, dimension2);
     }
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus fast_corner_detector_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
+inline void fast_corner_detector_kernel_host(T* srcPtrWindow, T* dstPtrPixel, RppiSize srcSize,
                                            Rpp32u* bresenhamCirclePositions, T threshold, Rpp32u numOfPixels)
 {
     T centerPixel = *(srcPtrWindow + (3 * srcSize.width) + 3);
@@ -1717,8 +1665,6 @@ inline RppStatus fast_corner_detector_kernel_host(T* srcPtrWindow, T* dstPtrPixe
     if (flag == 0)
     {
         *dstPtrPixel = (T) 0;
-
-        return RPP_SUCCESS;
     }
     else if (flag == 1)
     {
@@ -1786,12 +1732,10 @@ inline RppStatus fast_corner_detector_kernel_host(T* srcPtrWindow, T* dstPtrPixe
 
     free(bresenhamCircle);
     free(bresenhamCircleOutput);
-
-    return RPP_SUCCESS;
 }
 
 template<typename T, typename U>
-inline RppStatus fast_corner_detector_score_function_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSize srcSize,
+inline void fast_corner_detector_score_function_kernel_host(T* srcPtrWindow, U* dstPtrPixel, RppiSize srcSize,
                                                           Rpp32u* bresenhamCirclePositions, U centerPixel)
 {
     U* bresenhamCircle = (U*) calloc(16, sizeof(U));
@@ -1818,24 +1762,20 @@ inline RppStatus fast_corner_detector_score_function_kernel_host(T* srcPtrWindow
     *dstPtrPixel = score;
 
     free(bresenhamCircle);
-
-    return RPP_SUCCESS;
 }
 
 template<typename T, typename U, typename V>
-inline RppStatus hog_single_channel_gradient_computations_kernel_host(T* srcPtr, RppiSize srcSize, U* gradientX, U* gradientY, U* gradientMagnitude, V* gradientDirection,
+inline void hog_single_channel_gradient_computations_kernel_host(T* srcPtr, RppiSize srcSize, U* gradientX, U* gradientY, U* gradientMagnitude, V* gradientDirection,
                                                                Rpp32f* gradientKernel, RppiSize rppiGradientKernelSizeX, RppiSize rppiGradientKernelSizeY)
 {
     custom_convolve_image_host(srcPtr, srcSize, gradientX, gradientKernel, rppiGradientKernelSizeX, RPPI_CHN_PLANAR, 1);
     custom_convolve_image_host(srcPtr, srcSize, gradientY, gradientKernel, rppiGradientKernelSizeY, RPPI_CHN_PLANAR, 1);
     compute_magnitude_host(gradientX, gradientY, srcSize, gradientMagnitude, RPPI_CHN_PLANAR, 1);
     compute_gradient_direction_host(gradientX, gradientY, srcSize, gradientDirection, RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
 }
 
 template<typename T, typename U, typename V>
-inline RppStatus hog_three_channel_gradient_computations_kernel_host(T* srcPtr, T* srcPtrSingleChannel, RppiSize srcSize,
+inline void hog_three_channel_gradient_computations_kernel_host(T* srcPtr, T* srcPtrSingleChannel, RppiSize srcSize,
                                                               U* gradientX0, U* gradientY0, U* gradientX1, U* gradientY1, U* gradientX2, U* gradientY2,
                                                               U* gradientX, U* gradientY,
                                                               U* gradientMagnitude, V* gradientDirection,
@@ -1866,8 +1806,6 @@ inline RppStatus hog_three_channel_gradient_computations_kernel_host(T* srcPtr, 
 
     compute_magnitude_host(gradientX, gradientY, srcSize, gradientMagnitude, RPPI_CHN_PLANAR, 1);
     compute_gradient_direction_host(gradientX, gradientY, srcSize, gradientDirection, RPPI_CHN_PLANAR, 1);
-
-    return RPP_SUCCESS;
 }
 
 
@@ -1891,7 +1829,7 @@ inline RppStatus hog_three_channel_gradient_computations_kernel_host(T* srcPtr, 
 // Convolution Functions
 
 template<typename T>
-inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, RppiSize srcSizeMax, T* dstPtrImage,
+inline void convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, RppiSize srcSizeMax, T* dstPtrImage,
                                            T* srcPtrBoundedROI, RppiSize srcSizeBoundedROI,
                                            Rpp32f* kernel, RppiSize kernelSize,
                                            Rpp32f x1, Rpp32f y1, Rpp32f x2, Rpp32f y2,
@@ -2016,14 +1954,10 @@ inline RppStatus convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, Rpp
             }
         }
     }
-
-
-
-    return RPP_SUCCESS;
 }
 
 template<typename T, typename U>
-inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPtr, RppiSize srcSize,
+inline void convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPtr, RppiSize srcSize,
                         Rpp32f* kernel, RppiSize kernelSize,
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -2076,12 +2010,10 @@ inline RppStatus convolve_image_host(T* srcPtrMod, RppiSize srcSizeMod, U* dstPt
             srcPtrWindow += ((kernelSize.width - 1) * channel);
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template<typename T>
-inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* dstPtr, RppiSize srcSizeSubImage, RppiSize srcSize,
+inline void convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* dstPtr, RppiSize srcSizeSubImage, RppiSize srcSize,
                         Rpp32f* kernel, RppiSize kernelSize,
                         RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -2139,8 +2071,6 @@ inline RppStatus convolve_subimage_host(T* srcPtrMod, RppiSize srcSizeMod, T* ds
             dstPtrTemp += widthDiffPacked;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
@@ -2178,23 +2108,19 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
-inline RppStatus compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
+inline void compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
     p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pRMNParams[0]), pRMNParams[1]);
     p[2] = _mm256_mul_ps(_mm256_sub_ps(p[2], pRMNParams[0]), pRMNParams[1]);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_rmn_8_host(__m256 *p, __m256 *pRMNParams)
+inline void compute_rmn_8_host(__m256 *p, __m256 *pRMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
-   
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
+inline void compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
 {
     p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
     p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
@@ -2202,35 +2128,27 @@ inline RppStatus compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
     p[3] = _mm256_fmadd_ps(_mm256_sub_ps(p[3], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
     p[4] = _mm256_fmadd_ps(_mm256_sub_ps(p[4], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
     p[5] = _mm256_fmadd_ps(_mm256_sub_ps(p[5], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_contrast_24_host(__m256 *p, __m256 *pContrastParams)
+inline void compute_contrast_24_host(__m256 *p, __m256 *pContrastParams)
 {
     p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
     p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
     p[2] = _mm256_fmadd_ps(_mm256_sub_ps(p[2], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_contrast_16_host(__m256 *p, __m256 *pContrastParams)
+inline void compute_contrast_16_host(__m256 *p, __m256 *pContrastParams)
 {
     p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
     p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_contrast_8_host(__m256 *p, __m256 *pContrastParams)
+inline void compute_contrast_8_host(__m256 *p, __m256 *pContrastParams)
 {
     p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_48_host(__m256 *p, __m256 *pBrightnessParams)
+inline void compute_brightness_48_host(__m256 *p, __m256 *pBrightnessParams)
 {
     p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
@@ -2238,11 +2156,9 @@ inline RppStatus compute_brightness_48_host(__m256 *p, __m256 *pBrightnessParams
     p[3] = _mm256_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[4] = _mm256_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[5] = _mm256_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_48_host(__m128 *p, __m128 *pBrightnessParams)
+inline void compute_brightness_48_host(__m128 *p, __m128 *pBrightnessParams)
 {
     p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
@@ -2256,20 +2172,16 @@ inline RppStatus compute_brightness_48_host(__m128 *p, __m128 *pBrightnessParams
     p[9] = _mm_fmadd_ps(p[9], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[10] = _mm_fmadd_ps(p[10], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[11] = _mm_fmadd_ps(p[11], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_24_host(__m256 *p, __m256 *pBrightnessParams)
+inline void compute_brightness_24_host(__m256 *p, __m256 *pBrightnessParams)
 {
     p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_24_host(__m128 *p, __m128 *pBrightnessParams)
+inline void compute_brightness_24_host(__m128 *p, __m128 *pBrightnessParams)
 {
     p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
@@ -2277,60 +2189,46 @@ inline RppStatus compute_brightness_24_host(__m128 *p, __m128 *pBrightnessParams
     p[3] = _mm_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[4] = _mm_fmadd_ps(p[4], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[5] = _mm_fmadd_ps(p[5], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_16_host(__m256 *p, __m256 *pBrightnessParams)
+inline void compute_brightness_16_host(__m256 *p, __m256 *pBrightnessParams)
 {
     p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_16_host(__m128 *p, __m128 *pBrightnessParams)
+inline void compute_brightness_16_host(__m128 *p, __m128 *pBrightnessParams)
 {
     p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[2] = _mm_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[3] = _mm_fmadd_ps(p[3], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_12_host(__m128 *p, __m128 *pBrightnessParams)
+inline void compute_brightness_12_host(__m128 *p, __m128 *pBrightnessParams)
 {
     p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[2] = _mm_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_8_host(__m256 *p, __m256 *pBrightnessParams)
+inline void compute_brightness_8_host(__m256 *p, __m256 *pBrightnessParams)
 {
     p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_8_host(__m128 *p, __m128 *pBrightnessParams)
+inline void compute_brightness_8_host(__m128 *p, __m128 *pBrightnessParams)
 {
     p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
     p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_brightness_4_host(__m128 *p, __m128 *pBrightnessParams)
+inline void compute_brightness_4_host(__m128 *p, __m128 *pBrightnessParams)
 {
     p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_exposure_48_host(__m256 *p, __m256 &pExposureParam)
+inline void compute_exposure_48_host(__m256 *p, __m256 &pExposureParam)
 {
     p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
     p[1] = _mm256_mul_ps(p[1], pExposureParam);    // exposure adjustment
@@ -2338,35 +2236,27 @@ inline RppStatus compute_exposure_48_host(__m256 *p, __m256 &pExposureParam)
     p[3] = _mm256_mul_ps(p[3], pExposureParam);    // exposure adjustment
     p[4] = _mm256_mul_ps(p[4], pExposureParam);    // exposure adjustment
     p[5] = _mm256_mul_ps(p[5], pExposureParam);    // exposure adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_exposure_24_host(__m256 *p, __m256 &pExposureParam)
+inline void compute_exposure_24_host(__m256 *p, __m256 &pExposureParam)
 {
     p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
     p[1] = _mm256_mul_ps(p[1], pExposureParam);    // exposure adjustment
     p[2] = _mm256_mul_ps(p[2], pExposureParam);    // exposure adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_exposure_16_host(__m256 *p, __m256 &pExposureParam)
+inline void compute_exposure_16_host(__m256 *p, __m256 &pExposureParam)
 {
     p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
     p[1] = _mm256_mul_ps(p[1], pExposureParam);    // exposure adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_exposure_8_host(__m256 *p, __m256 &pExposureParam)
+inline void compute_exposure_8_host(__m256 *p, __m256 &pExposureParam)
 {
     p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_spatter_48_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
+inline void compute_spatter_48_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
 {
     p[0] = _mm256_fmadd_ps(p[0], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
     p[1] = _mm256_fmadd_ps(p[1], pSpatterMaskInv[1], _mm256_mul_ps(pSpatterValue[0], pSpatterMask[1]));    // spatter adjustment
@@ -2374,35 +2264,27 @@ inline RppStatus compute_spatter_48_host(__m256 *p, __m256 *pSpatterMaskInv, __m
     p[3] = _mm256_fmadd_ps(p[3], pSpatterMaskInv[1], _mm256_mul_ps(pSpatterValue[1], pSpatterMask[1]));    // spatter adjustment
     p[4] = _mm256_fmadd_ps(p[4], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[2], pSpatterMask[0]));    // spatter adjustment
     p[5] = _mm256_fmadd_ps(p[5], pSpatterMaskInv[1], _mm256_mul_ps(pSpatterValue[2], pSpatterMask[1]));    // spatter adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_spatter_24_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
+inline void compute_spatter_24_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
 {
     p[0] = _mm256_fmadd_ps(p[0], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
     p[1] = _mm256_fmadd_ps(p[1], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[1], pSpatterMask[0]));    // spatter adjustment
     p[2] = _mm256_fmadd_ps(p[2], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[2], pSpatterMask[0]));    // spatter adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_spatter_16_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 pSpatterValue)
+inline void compute_spatter_16_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 pSpatterValue)
 {
     p[0] = _mm256_fmadd_ps(p[0], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue, pSpatterMask[0]));    // spatter adjustment
     p[1] = _mm256_fmadd_ps(p[1], pSpatterMaskInv[1], _mm256_mul_ps(pSpatterValue, pSpatterMask[1]));    // spatter adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_spatter_8_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
+inline void compute_spatter_8_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
 {
     p[0] = _mm256_fmadd_ps(p[0], pSpatterMaskInv[0], _mm256_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_spatter_48_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
+inline void compute_spatter_48_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
 {
     p[0] = _mm_fmadd_ps(p[0], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
     p[1] = _mm_fmadd_ps(p[1], pSpatterMaskInv[1], _mm_mul_ps(pSpatterValue[0], pSpatterMask[1]));    // spatter adjustment
@@ -2416,37 +2298,29 @@ inline RppStatus compute_spatter_48_host(__m128 *p, __m128 *pSpatterMaskInv, __m
     p[9] = _mm_fmadd_ps(p[9], pSpatterMaskInv[1], _mm_mul_ps(pSpatterValue[2], pSpatterMask[1]));    // spatter adjustment
     p[10] = _mm_fmadd_ps(p[10], pSpatterMaskInv[2], _mm_mul_ps(pSpatterValue[2], pSpatterMask[2]));    // spatter adjustment
     p[11] = _mm_fmadd_ps(p[11], pSpatterMaskInv[3], _mm_mul_ps(pSpatterValue[2], pSpatterMask[3]));    // spatter adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_spatter_16_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 pSpatterValue)
+inline void compute_spatter_16_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 pSpatterValue)
 {
     p[0] = _mm_fmadd_ps(p[0], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue, pSpatterMask[0]));    // spatter adjustment
     p[1] = _mm_fmadd_ps(p[1], pSpatterMaskInv[1], _mm_mul_ps(pSpatterValue, pSpatterMask[1]));    // spatter adjustment
     p[2] = _mm_fmadd_ps(p[2], pSpatterMaskInv[2], _mm_mul_ps(pSpatterValue, pSpatterMask[2]));    // spatter adjustment
     p[3] = _mm_fmadd_ps(p[3], pSpatterMaskInv[3], _mm_mul_ps(pSpatterValue, pSpatterMask[3]));    // spatter adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_spatter_12_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
+inline void compute_spatter_12_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
 {
     p[0] = _mm_fmadd_ps(p[0], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
     p[1] = _mm_fmadd_ps(p[1], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[1], pSpatterMask[0]));    // spatter adjustment
     p[2] = _mm_fmadd_ps(p[2], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[2], pSpatterMask[0]));    // spatter adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_spatter_4_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
+inline void compute_spatter_4_host(__m128 *p, __m128 *pSpatterMaskInv, __m128 *pSpatterMask, __m128 *pSpatterValue)
 {
     p[0] = _mm_fmadd_ps(p[0], pSpatterMaskInv[0], _mm_mul_ps(pSpatterValue[0], pSpatterMask[0]));    // spatter adjustment
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_cmn_48_host(__m256 *p, __m256 *pCMNParams)
+inline void compute_cmn_48_host(__m256 *p, __m256 *pCMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
     p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pCMNParams[0]), pCMNParams[1]);
@@ -2454,35 +2328,27 @@ inline RppStatus compute_cmn_48_host(__m256 *p, __m256 *pCMNParams)
     p[3] = _mm256_mul_ps(_mm256_sub_ps(p[3], pCMNParams[0]), pCMNParams[1]);
     p[4] = _mm256_mul_ps(_mm256_sub_ps(p[4], pCMNParams[0]), pCMNParams[1]);
     p[5] = _mm256_mul_ps(_mm256_sub_ps(p[5], pCMNParams[0]), pCMNParams[1]);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_cmn_24_host(__m256 *p, __m256 *pCMNParams)
+inline void compute_cmn_24_host(__m256 *p, __m256 *pCMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
     p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pCMNParams[0]), pCMNParams[1]);
     p[2] = _mm256_mul_ps(_mm256_sub_ps(p[2], pCMNParams[0]), pCMNParams[1]);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_cmn_16_host(__m256 *p, __m256 *pCMNParams)
+inline void compute_cmn_16_host(__m256 *p, __m256 *pCMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
     p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pCMNParams[0]), pCMNParams[1]);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_cmn_8_host(__m256 *p, __m256 *pCMNParams)
+inline void compute_cmn_8_host(__m256 *p, __m256 *pCMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 *pMask)
+inline void compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 *pMask)
 {
     __m128 pCalc[2];
 
@@ -2514,11 +2380,9 @@ inline RppStatus compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRa
     pCol[1] = _mm_add_ps(pCol[1], xmm_p16);
     pCol[2] = _mm_add_ps(pCol[2], xmm_p16);
     pCol[3] = _mm_add_ps(pCol[3], xmm_p16);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_gridmask_masks_4_host(__m128 &pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 &pMask)
+inline void compute_gridmask_masks_4_host(__m128 &pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 &pMask)
 {
     __m128 pCalc[2];
 
@@ -2528,11 +2392,9 @@ inline RppStatus compute_gridmask_masks_4_host(__m128 &pCol, __m128 *pGridRowRat
     pCalc[1] = _mm_cmpge_ps(_mm_sub_ps(pCalc[1], _mm_floor_ps(pCalc[1])), pGridRatio);
     pMask = _mm_or_ps(pCalc[0], pCalc[1]);
     pCol = _mm_add_ps(pCol, xmm_p4);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_gridmask_result_48_host(__m128 *p, __m128 *pMask)
+inline void compute_gridmask_result_48_host(__m128 *p, __m128 *pMask)
 {
     p[0] = _mm_and_ps(p[0], pMask[0]);
     p[1] = _mm_and_ps(p[1], pMask[1]);
@@ -2546,37 +2408,29 @@ inline RppStatus compute_gridmask_result_48_host(__m128 *p, __m128 *pMask)
     p[9] = _mm_and_ps(p[9], pMask[1]);
     p[10] = _mm_and_ps(p[10], pMask[2]);
     p[11] = _mm_and_ps(p[11], pMask[3]);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_gridmask_result_16_host(__m128 *p, __m128 *pMask)
+inline void compute_gridmask_result_16_host(__m128 *p, __m128 *pMask)
 {
     p[0] = _mm_and_ps(p[0], pMask[0]);
     p[1] = _mm_and_ps(p[1], pMask[1]);
     p[2] = _mm_and_ps(p[2], pMask[2]);
     p[3] = _mm_and_ps(p[3], pMask[3]);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_gridmask_result_12_host(__m128 *p, __m128 pMask)
+inline void compute_gridmask_result_12_host(__m128 *p, __m128 pMask)
 {
     p[0] = _mm_and_ps(p[0], pMask);
     p[1] = _mm_and_ps(p[1], pMask);
     p[2] = _mm_and_ps(p[2], pMask);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_gridmask_result_4_host(__m128 *p, __m128 pMask)
+inline void compute_gridmask_result_4_host(__m128 *p, __m128 pMask)
 {
     p[0] = _mm_and_ps(p[0], pMask);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_twist_host(RpptFloatRGB *pixel, Rpp32f brightnessParam, Rpp32f contrastParam, Rpp32f hueParam, Rpp32f saturationParam)
+inline void compute_color_twist_host(RpptFloatRGB *pixel, Rpp32f brightnessParam, Rpp32f contrastParam, Rpp32f hueParam, Rpp32f saturationParam)
 {
     // RGB to HSV
 
@@ -2642,11 +2496,9 @@ inline RppStatus compute_color_twist_host(RpptFloatRGB *pixel, Rpp32f brightness
     pixel->R = std::fma(rf, brightnessParam, contrastParam);
     pixel->G = std::fma(gf, brightnessParam, contrastParam);
     pixel->B = std::fma(bf, brightnessParam, contrastParam);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_twist_12_host(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 *pColorTwistParams)
+inline void compute_color_twist_12_host(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 *pColorTwistParams)
 {
     __m128 pA, pH, pS, pV, pDelta, pAdd, pIntH;
     __m128 pMask[4];
@@ -2720,11 +2572,9 @@ inline RppStatus compute_color_twist_12_host(__m128 &pVecR, __m128 &pVecG, __m12
     pVecR = _mm_fmadd_ps(pVecR, pColorTwistParams[0], pColorTwistParams[1]);                                        // dstPtrR = rf * brightnessParam + contrastParam;
     pVecG = _mm_fmadd_ps(pVecG, pColorTwistParams[0], pColorTwistParams[1]);                                        // dstPtrG = gf * brightnessParam + contrastParam;
     pVecB = _mm_fmadd_ps(pVecB, pColorTwistParams[0], pColorTwistParams[1]);                                        // dstPtrB = bf * brightnessParam + contrastParam;
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_twist_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pColorTwistParams)
+inline void compute_color_twist_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pColorTwistParams)
 {
     __m256 pA, pH, pS, pV, pDelta, pAdd, pIntH;
     __m256 pMask[4];
@@ -2798,11 +2648,9 @@ inline RppStatus compute_color_twist_24_host(__m256 &pVecR, __m256 &pVecG, __m25
     pVecR = _mm256_fmadd_ps(pVecR, pColorTwistParams[0], pColorTwistParams[1]);                                        // dstPtrR = rf * brightnessParam + contrastParam;
     pVecG = _mm256_fmadd_ps(pVecG, pColorTwistParams[0], pColorTwistParams[1]);                                        // dstPtrG = gf * brightnessParam + contrastParam;
     pVecB = _mm256_fmadd_ps(pVecB, pColorTwistParams[0], pColorTwistParams[1]);                                        // dstPtrB = bf * brightnessParam + contrastParam;
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_cast_48_host(__m128 *p, __m128 pMul, __m128 *pAdd)
+inline void compute_color_cast_48_host(__m128 *p, __m128 pMul, __m128 *pAdd)
 {
     p[0] = _mm_fmadd_ps(_mm_sub_ps(p[0], pAdd[0]), pMul, pAdd[0]);    // color_cast adjustment Rs
     p[1] = _mm_fmadd_ps(_mm_sub_ps(p[1], pAdd[0]), pMul, pAdd[0]);    // color_cast adjustment Rs
@@ -2816,40 +2664,32 @@ inline RppStatus compute_color_cast_48_host(__m128 *p, __m128 pMul, __m128 *pAdd
     p[9] = _mm_fmadd_ps(_mm_sub_ps(p[9], pAdd[2]), pMul, pAdd[2]);    // color_cast adjustment Bs
     p[10] = _mm_fmadd_ps(_mm_sub_ps(p[10], pAdd[2]), pMul, pAdd[2]);    // color_cast adjustment Bs
     p[11] = _mm_fmadd_ps(_mm_sub_ps(p[11], pAdd[2]), pMul, pAdd[2]);    // color_cast adjustment Bs
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_cast_12_host(__m128 *p, __m128 pMul, __m128 *pAdd)
+inline void compute_color_cast_12_host(__m128 *p, __m128 pMul, __m128 *pAdd)
 {
     p[0] = _mm_fmadd_ps(_mm_sub_ps(p[0], pAdd[0]), pMul, pAdd[0]);    // color_cast adjustment Rs
     p[1] = _mm_fmadd_ps(_mm_sub_ps(p[1], pAdd[1]), pMul, pAdd[1]);    // color_cast adjustment Rs
     p[2] = _mm_fmadd_ps(_mm_sub_ps(p[2], pAdd[2]), pMul, pAdd[2]);    // color_cast adjustment Rs
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
+inline void compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
 {
     roiPtrImage->xywhROI.xy.x = roiPtrInput->ltrbROI.lt.x;
     roiPtrImage->xywhROI.xy.y = roiPtrInput->ltrbROI.lt.y;
     roiPtrImage->xywhROI.roiWidth = roiPtrInput->ltrbROI.rb.x - roiPtrInput->ltrbROI.lt.x + 1;
     roiPtrImage->xywhROI.roiHeight = roiPtrInput->ltrbROI.rb.y - roiPtrInput->ltrbROI.lt.y + 1;
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault)
+inline void compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault)
 {
     roiPtr->xywhROI.xy.x = std::max(roiPtrDefault->xywhROI.xy.x, roiPtrImage->xywhROI.xy.x);
     roiPtr->xywhROI.xy.y = std::max(roiPtrDefault->xywhROI.xy.y, roiPtrImage->xywhROI.xy.y);
     roiPtr->xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiPtrImage->xywhROI.xy.x, roiPtrImage->xywhROI.roiWidth);
     roiPtr->xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiPtrImage->xywhROI.xy.y, roiPtrImage->xywhROI.roiHeight);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_roi_validation_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault, RpptRoiType roiType)
+inline void compute_roi_validation_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault, RpptRoiType roiType)
 {
     if (roiPtrInput == NULL)
     {
@@ -2865,11 +2705,9 @@ inline RppStatus compute_roi_validation_host(RpptROIPtr roiPtrInput, RpptROIPtr 
             roiPtrImage = roiPtrInput;
         compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
     }
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_jitter_ctm_host(Rpp32f brightnessParam, Rpp32f contrastParam, Rpp32f hueParam, Rpp32f saturationParam, Rpp32f *ctm)
+inline void compute_color_jitter_ctm_host(Rpp32f brightnessParam, Rpp32f contrastParam, Rpp32f hueParam, Rpp32f saturationParam, Rpp32f *ctm)
 {
     contrastParam += 1.0f;
 
@@ -2893,11 +2731,9 @@ inline RppStatus compute_color_jitter_ctm_host(Rpp32f brightnessParam, Rpp32f co
     }
 
     fast_matmul4x4_sse(hue_saturation_matrix, brightness_contrast_matrix, ctm);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_jitter_48_host(__m128 *p, __m128 *pCtm)
+inline void compute_color_jitter_48_host(__m128 *p, __m128 *pCtm)
 {
     __m128 pResult[3];
 
@@ -2925,11 +2761,9 @@ inline RppStatus compute_color_jitter_48_host(__m128 *p, __m128 *pCtm)
     p[3] = pResult[0];    // color_jitter adjustment R12-R15
     p[7] = pResult[1];    // color_jitter adjustment G12-G15
     p[11] = pResult[2];    // color_jitter adjustment B12-B15
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_color_jitter_12_host(__m128 *p, __m128 *pCtm)
+inline void compute_color_jitter_12_host(__m128 *p, __m128 *pCtm)
 {
     __m128 pResult[3];
 
@@ -2939,11 +2773,9 @@ inline RppStatus compute_color_jitter_12_host(__m128 *p, __m128 *pCtm)
     p[0] = pResult[0];    // color_jitter adjustment R0-R3
     p[1] = pResult[1];    // color_jitter adjustment G0-G3
     p[2] = pResult[2];    // color_jitter adjustment B0-B3
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_salt_and_pepper_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+inline void compute_salt_and_pepper_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
 {
     __m256 pMask[3];
     __m256 pRandomNumbers = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
@@ -2953,11 +2785,9 @@ inline RppStatus compute_salt_and_pepper_noise_8_host(__m256 *p, __m256i *pxXorw
     p[0] = _mm256_and_ps(pMask[0], p[0]);
     p[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], p[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
     p[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], p[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_salt_and_pepper_noise_4_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+inline void compute_salt_and_pepper_noise_4_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
 {
     __m128 pMask[3];
     __m128 pRandomNumbers = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
@@ -2967,29 +2797,23 @@ inline RppStatus compute_salt_and_pepper_noise_4_host(__m128 *p, __m128i *pxXorw
     p[0] = _mm_and_ps(pMask[0], p[0]);
     p[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], p[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
     p[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], p[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_salt_and_pepper_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+inline void compute_salt_and_pepper_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
 {
     compute_salt_and_pepper_noise_8_host(p    , pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_8_host(p + 1, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_salt_and_pepper_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+inline void compute_salt_and_pepper_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
 {
     compute_salt_and_pepper_noise_4_host(p    , pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_4_host(p + 1, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_4_host(p + 2, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_4_host(p + 3, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_salt_and_pepper_noise_24_host(__m256 *pR, __m256 *pG, __m256 *pB, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+inline void compute_salt_and_pepper_noise_24_host(__m256 *pR, __m256 *pG, __m256 *pB, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
 {
     __m256 pMask[3];
     __m256 pRandomNumbers = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
@@ -3005,11 +2829,9 @@ inline RppStatus compute_salt_and_pepper_noise_24_host(__m256 *pR, __m256 *pG, _
     pB[0] = _mm256_and_ps(pMask[0], pB[0]);
     pB[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], pB[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
     pB[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pB[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_salt_and_pepper_noise_12_host(__m128 *pR, __m128 *pG, __m128 *pB, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+inline void compute_salt_and_pepper_noise_12_host(__m128 *pR, __m128 *pG, __m128 *pB, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
 {
     __m128 pMask[3];
     __m128 pRandomNumbers = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
@@ -3025,26 +2847,20 @@ inline RppStatus compute_salt_and_pepper_noise_12_host(__m128 *pR, __m128 *pG, _
     pB[0] = _mm_and_ps(pMask[0], pB[0]);
     pB[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], pB[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
     pB[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], pB[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_salt_and_pepper_noise_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+inline void compute_salt_and_pepper_noise_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
 {
     compute_salt_and_pepper_noise_24_host(p    , p + 2, p +  4, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_24_host(p + 1, p + 3, p +  5, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_salt_and_pepper_noise_48_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+inline void compute_salt_and_pepper_noise_48_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
 {
     compute_salt_and_pepper_noise_12_host(p    , p + 4, p +  8, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_12_host(p + 1, p + 5, p +  9, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_12_host(p + 2, p + 6, p + 10, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_12_host(p + 3, p + 7, p + 11, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
-
-    return RPP_SUCCESS;
 }
 
 // Compute Functions for RPP Image API
@@ -3082,7 +2898,7 @@ inline RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage,
 }
 
 template<typename T>
-inline RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+inline void compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                                  RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
@@ -3118,12 +2934,10 @@ inline RppStatus compute_transpose_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
             }
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-inline RppStatus compute_add_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_add_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                    Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
@@ -3143,13 +2957,10 @@ inline RppStatus compute_add_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* d
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T, typename U>
-inline RppStatus compute_subtract_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_subtract_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                         Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
@@ -3169,13 +2980,10 @@ inline RppStatus compute_subtract_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T, typename U>
-inline RppStatus compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
@@ -3195,12 +3003,10 @@ inline RppStatus compute_multiply_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize,
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-inline RppStatus compute_bitwise_AND_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_bitwise_AND_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                            Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
@@ -3220,13 +3026,10 @@ inline RppStatus compute_bitwise_AND_host(T* srcPtr1, U* srcPtr2, RppiSize srcSi
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T, typename U>
-inline RppStatus compute_inclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_inclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                             Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
@@ -3246,13 +3049,10 @@ inline RppStatus compute_inclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcS
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T, typename U>
-inline RppStatus compute_exclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_exclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                             Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
@@ -3272,13 +3072,10 @@ inline RppStatus compute_exclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcS
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T, typename U>
-inline RppStatus compute_min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
@@ -3294,13 +3091,10 @@ inline RppStatus compute_min_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* d
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T, typename U>
-inline RppStatus compute_max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
                                    Rpp32u channel)
 {
     T *srcPtr1Temp, *dstPtrTemp;
@@ -3316,13 +3110,10 @@ inline RppStatus compute_max_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* d
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T, typename U>
-inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+inline void compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
@@ -3559,12 +3350,10 @@ inline RppStatus compute_rgb_to_hsv_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             dstPtrTempV += 3;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-inline RppStatus compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+inline void compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTempH, *srcPtrTempS, *srcPtrTempV;
@@ -3829,12 +3618,10 @@ inline RppStatus compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             dstPtrTempB += 3;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, U* dstPtr,
+inline void compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, U* dstPtr,
                          RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtr1Temp, *srcPtr2Temp;
@@ -3857,13 +3644,10 @@ inline RppStatus compute_magnitude_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize
         srcPtr2Temp++;
         dstPtrTemp++;
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T>
-inline RppStatus compute_magnitude_ROI_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
+inline void compute_magnitude_ROI_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize, T* dstPtr,
                                             Rpp32f x1, Rpp32f y1, Rpp32f x2, Rpp32f y2,
                                             RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -3978,13 +3762,10 @@ inline RppStatus compute_magnitude_ROI_host(T* srcPtr1, T* srcPtr2, RppiSize src
             }
         }
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T, typename U>
-inline RppStatus compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
+inline void compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
                                  U min, U max, Rpp32u type,
                                  RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -4035,22 +3816,18 @@ inline RppStatus compute_threshold_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
             dstPtrTemp++;
         }
     }
-
-    return RPP_SUCCESS;
-
 }
 
 template <typename T>
-inline RppStatus compute_data_object_copy_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+inline void compute_data_object_copy_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
     memcpy(dstPtr, srcPtr, srcSize.height * srcSize.width * channel * sizeof(T));
 
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
+inline void compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                                          RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
@@ -4105,8 +3882,6 @@ inline RppStatus compute_downsampled_image_host(T* srcPtr, RppiSize srcSize, T* 
             srcPtrTemp += elementsInRow;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
@@ -4142,7 +3917,7 @@ inline RppStatus compute_channel_extract_host(T* srcPtr, RppiSize srcSize, T* ds
 }
 
 template <typename T, typename U>
-inline RppStatus compute_gradient_direction_host(T* gradientX, T* gradientY, RppiSize srcSize, U* gradientDirection,
+inline void compute_gradient_direction_host(T* gradientX, T* gradientY, RppiSize srcSize, U* gradientDirection,
                                           RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *gradientXTemp, *gradientYTemp;
@@ -4178,8 +3953,6 @@ inline RppStatus compute_gradient_direction_host(T* gradientX, T* gradientY, Rpp
         gradientXTemp++;
         gradientYTemp++;
     }
-
-    return RPP_SUCCESS;
 }
 
 inline Rpp32u fogGenerator(Rpp32u srcPtr, Rpp32f fogValue, int colour, int check)
@@ -4242,19 +4015,17 @@ inline Rpp32u fogGenerator(Rpp32u srcPtr, Rpp32f fogValue, int colour, int check
     return fog;
 }
 
-inline RppStatus compute_image_location_host(RppiSize *batch_srcSizeMax, int batchCount, Rpp32u *loc, Rpp32u channel)
+inline void compute_image_location_host(RppiSize *batch_srcSizeMax, int batchCount, Rpp32u *loc, Rpp32u channel)
 {
     for (int m = 0; m < batchCount; m++)
     {
         *loc += (batch_srcSizeMax[m].height * batch_srcSizeMax[m].width);
     }
     *loc *= channel;
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_1_channel_minmax_host(T *srcPtr, RppiSize srcSize, RppiSize srcSizeMax,
+inline void compute_1_channel_minmax_host(T *srcPtr, RppiSize srcSize, RppiSize srcSizeMax,
                                                     T *min, T *max,
                                                     RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -4297,12 +4068,10 @@ inline RppStatus compute_1_channel_minmax_host(T *srcPtr, RppiSize srcSize, Rppi
         }
         srcPtrTemp += (srcSizeMax.width - srcSize.width);
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_3_channel_minmax_host(T *srcPtr, RppiSize srcSize, RppiSize srcSizeMax,
+inline void compute_3_channel_minmax_host(T *srcPtr, RppiSize srcSize, RppiSize srcSizeMax,
                                                T *min, T *max,
                                                RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -4439,22 +4208,18 @@ inline RppStatus compute_3_channel_minmax_host(T *srcPtr, RppiSize srcSize, Rppi
         *(min + 2) = minBTemp;
         *(max + 2) = maxBTemp;
     }
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_histogram_location_host(Rpp32u *batch_bins, int batchCount, Rpp32u *locHist)
+inline void compute_histogram_location_host(Rpp32u *batch_bins, int batchCount, Rpp32u *locHist)
 {
     for (int m = 0; m < batchCount; m++)
     {
         *locHist += batch_bins[m];
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_unpadded_from_padded_host(T* srcPtrPadded, RppiSize srcSize, RppiSize srcSizeMax, T* dstPtrUnpadded,
+inline void compute_unpadded_from_padded_host(T* srcPtrPadded, RppiSize srcSize, RppiSize srcSizeMax, T* dstPtrUnpadded,
                                                    RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrPaddedChannel, *srcPtrPaddedRow, *dstPtrUnpaddedRow;
@@ -4485,12 +4250,10 @@ inline RppStatus compute_unpadded_from_padded_host(T* srcPtrPadded, RppiSize src
             dstPtrUnpaddedRow += elementsInRow;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_padded_from_unpadded_host(T* srcPtrUnpadded, RppiSize srcSize, RppiSize dstSizeMax, T* dstPtrPadded,
+inline void compute_padded_from_unpadded_host(T* srcPtrUnpadded, RppiSize srcSize, RppiSize dstSizeMax, T* dstPtrPadded,
                                                    RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *dstPtrPaddedChannel, *dstPtrPaddedRow, *srcPtrUnpaddedRow;
@@ -4521,12 +4284,10 @@ inline RppStatus compute_padded_from_unpadded_host(T* srcPtrUnpadded, RppiSize s
             srcPtrUnpaddedRow += elementsInRow;
         }
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+inline void compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                         Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
@@ -4547,12 +4308,10 @@ inline RppStatus compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* d
         }
         dstPtrTemp = dstPtr;
     }
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+inline void compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                         Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
@@ -4573,31 +4332,25 @@ inline RppStatus compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* d
         }
         srcPtrTemp = srcPtr;
     }
-
-    return RPP_SUCCESS;
 }
 
 /* Resize helper functions */
-inline RppStatus compute_dst_size_cap_host(RpptImagePatchPtr dstImgSize, RpptDescPtr dstDescPtr)
+inline void compute_dst_size_cap_host(RpptImagePatchPtr dstImgSize, RpptDescPtr dstDescPtr)
 {
     dstImgSize->width = std::min(dstImgSize->width, dstDescPtr->w);
     dstImgSize->height = std::min(dstImgSize->height, dstDescPtr->h);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u limit, Rpp32s &srcLoc, Rpp32f *weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
+inline void compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u limit, Rpp32s &srcLoc, Rpp32f *weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
 {
     Rpp32f srcLocation = ((Rpp32f) dstLocation) * scale + offset;
     Rpp32s srcLocationFloor = (Rpp32s) RPPFLOOR(srcLocation);
     weight[0] = srcLocation - srcLocationFloor;
     weight[1] = 1 - weight[0];
     srcLoc = ((srcLocationFloor > limit) ? limit : srcLocationFloor) * srcStride;
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_resize_src_loc_avx(__m256 &pDstLoc, __m256 &pScale, __m256 &pLimit, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
+inline void compute_resize_src_loc_avx(__m256 &pDstLoc, __m256 &pScale, __m256 &pLimit, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
 {
     __m256 pLoc = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
@@ -4609,11 +4362,9 @@ inline RppStatus compute_resize_src_loc_avx(__m256 &pDstLoc, __m256 &pScale, __m
         pLocFloor = _mm256_mul_ps(pLocFloor, avx_p3);
     __m256i pxLocFloor = _mm256_cvtps_epi32(pLocFloor);
     _mm256_storeu_si256((__m256i*) srcLoc, pxLocFloor);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_resize_src_loc_mirror_avx(__m256 &pDstLoc, __m256 &pScale, __m256 &pLimit, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
+inline void compute_resize_src_loc_mirror_avx(__m256 &pDstLoc, __m256 &pScale, __m256 &pLimit, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
 {
     __m256 pLoc = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_sub_ps(pDstLoc, avx_p8);
@@ -4625,43 +4376,35 @@ inline RppStatus compute_resize_src_loc_mirror_avx(__m256 &pDstLoc, __m256 &pSca
         pLocFloor = _mm256_mul_ps(pLocFloor, avx_p3);
     __m256i pxLocFloor = _mm256_cvtps_epi32(pLocFloor);
     _mm256_storeu_si256((__m256i*) srcLoc, pxLocFloor);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_bilinear_coefficients(Rpp32f *weightParams, Rpp32f *bilinearCoeffs)
+inline void compute_bilinear_coefficients(Rpp32f *weightParams, Rpp32f *bilinearCoeffs)
 {
     bilinearCoeffs[0] = weightParams[1] * weightParams[3];    // (1 - weightedHeight) * (1 - weightedWidth)
     bilinearCoeffs[1] = weightParams[1] * weightParams[2];    // (1 - weightedHeight) * weightedWidth
     bilinearCoeffs[2] = weightParams[0] * weightParams[3];    // weightedHeight * (1 - weightedWidth)
     bilinearCoeffs[3] = weightParams[0] * weightParams[2];    // weightedHeight * weightedWidth
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBilinearCoeffs)
+inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBilinearCoeffs)
 {
     pBilinearCoeffs[0] = _mm256_mul_ps(pWeightParams[1], pWeightParams[3]);    // (1 - weightedHeight) * (1 - weightedWidth)
     pBilinearCoeffs[1] = _mm256_mul_ps(pWeightParams[1], pWeightParams[2]);    // (1 - weightedHeight) * weightedWidth
     pBilinearCoeffs[2] = _mm256_mul_ps(pWeightParams[0], pWeightParams[3]);    // weightedHeight * (1 - weightedWidth)
     pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);    // weightedHeight * weightedWidth
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtr)
+inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtr)
 {
     *dstPtr = (T)(((*(srcRowPtrsForInterp[0] + loc)) * bilinearCoeffs[0]) +         // TopRow 1st Pixel * coeff0
                   ((*(srcRowPtrsForInterp[0] + loc + 1)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
                   ((*(srcRowPtrsForInterp[1] + loc)) * bilinearCoeffs[2]) +         // BottomRow 1st Pixel * coeff2
                   ((*(srcRowPtrsForInterp[1] + loc + 1)) * bilinearCoeffs[3]));     // BottomRow 2nd Pixel * coeff3
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
     Rpp32s channels = 3;
     *dstPtrR = (T)(((*(srcRowPtrsForInterp[0] + loc)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
@@ -4676,48 +4419,38 @@ inline RppStatus compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, 
                    ((*(srcRowPtrsForInterp[0] + loc + 5)) * bilinearCoeffs[1]) +    // TopRow B02 Pixel * coeff1
                    ((*(srcRowPtrsForInterp[1] + loc + 2)) * bilinearCoeffs[2]) +    // BottomRow B01 Pixel * coeff2
                    ((*(srcRowPtrsForInterp[1] + loc + 5)) * bilinearCoeffs[3]));    // BottomRow B02 Pixel * coeff3
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
     compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, bilinearCoeffs, dstPtrR);
     compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[2], loc, bilinearCoeffs, dstPtrG);
     compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[4], loc, bilinearCoeffs, dstPtrB);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 &pDstPixels)
+inline void compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 &pDstPixels)
 {
     pDstPixels = _mm256_fmadd_ps(pSrcPixels[3], pBilinearCoeffs[3], _mm256_fmadd_ps(pSrcPixels[2], pBilinearCoeffs[2],
                  _mm256_fmadd_ps(pSrcPixels[1], pBilinearCoeffs[1], _mm256_mul_ps(pSrcPixels[0], pBilinearCoeffs[0]))));
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus compute_bilinear_interpolation_3c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 *pDstPixels)
+inline void compute_bilinear_interpolation_3c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 *pDstPixels)
 {
     compute_bilinear_interpolation_1c_avx(&pSrcPixels[0], &pBilinearCoeffs[0], pDstPixels[0]);
     compute_bilinear_interpolation_1c_avx(&pSrcPixels[4], &pBilinearCoeffs[0], pDstPixels[1]);
     compute_bilinear_interpolation_1c_avx(&pSrcPixels[8], &pBilinearCoeffs[0], pDstPixels[2]);
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_src_row_ptrs_for_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, RpptDescPtr descPtr)
+inline void compute_src_row_ptrs_for_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, RpptDescPtr descPtr)
 {
     rowPtrsForInterp[0] = srcPtr + loc * descPtr->strides.hStride;          // TopRow for bilinear interpolation
     rowPtrsForInterp[1]  = rowPtrsForInterp[0] + descPtr->strides.hStride;  // BottomRow for bilinear interpolation
-
-    return RPP_SUCCESS;
 }
 
 template <typename T>
-inline RppStatus compute_src_row_ptrs_for_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, RpptDescPtr descPtr)
+inline void compute_src_row_ptrs_for_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, RpptDescPtr descPtr)
 {
     rowPtrsForInterp[0] = srcPtr + loc * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
     rowPtrsForInterp[1]  = rowPtrsForInterp[0] + descPtr->strides.hStride;  // BottomRow for bilinear interpolation (R channel)
@@ -4725,7 +4458,5 @@ inline RppStatus compute_src_row_ptrs_for_interpolation_pln(T **rowPtrsForInterp
     rowPtrsForInterp[3] = rowPtrsForInterp[1] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (G channel)
     rowPtrsForInterp[4] = rowPtrsForInterp[2] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (B channel)
     rowPtrsForInterp[5] = rowPtrsForInterp[3] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (B channel)
-
-    return RPP_SUCCESS;
 }
 #endif //RPP_CPU_COMMON_H
