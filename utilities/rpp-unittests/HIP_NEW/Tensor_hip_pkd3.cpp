@@ -1864,6 +1864,8 @@ int main(int argc, char **argv)
 
     Rpp8u *offsetted_output;
     offsetted_output = output + dstDescPtr->offsetInBytes;
+    Rpp32u elementsInRowMax = dstDescPtr->w * ip_channel;
+
     for (j = 0; j < dstDescPtr->n; j++)
     {
         int height = dstImgSizes[j].height;
@@ -1880,7 +1882,7 @@ int main(int argc, char **argv)
         {
             memcpy(temp_output_row, (output_row), elementsInRow * sizeof (Rpp8u));
             temp_output_row += elementsInRow;
-            output_row += srcDescPtr->strides.hStride;
+            output_row += elementsInRowMax;
         }
         count += dstDescPtr->strides.nStride;
 
