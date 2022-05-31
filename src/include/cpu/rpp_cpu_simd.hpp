@@ -1575,7 +1575,7 @@ static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
 }
 
 /* Resize loads and stores */
-inline RppStatus rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p)
+inline RppStatus rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
 {
     __m128i px[8];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|...] - Need RGB 01-02 */
@@ -1630,10 +1630,20 @@ inline RppStatus rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForIn
     p[10] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(px[2], xmm_pxMask08To11), _mm_shuffle_epi8(px[6], xmm_pxMask08To11))); /* Contains BottomRow B01 for all the dst locations */
     p[11] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(px[3], xmm_pxMask04To07), _mm_shuffle_epi8(px[7], xmm_pxMask04To07))); /* Contains BottomRow B02 for all the dst locations */
 
+    if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+        p[4] = _mm256_blendv_ps(p[4], p[5], mask);
+        p[6] = _mm256_blendv_ps(p[6], p[7], mask);
+        p[8] = _mm256_blendv_ps(p[8], p[9], mask);
+        p[10] = _mm256_blendv_ps(p[10], p[11], mask);
+    }
+
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p)
+inline RppStatus rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
 {
     __m128i pxTemp[8];
     pxTemp[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row load LOC0 [R01|R02|R03|R04|R05|R06|R07|...|R16] Need R01-02 */
@@ -1676,6 +1686,12 @@ inline RppStatus rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForIn
     p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(pxTemp[0], xmm_pxMask00To03), _mm_shuffle_epi8(pxTemp[4], xmm_pxMask00To03)));    /* Contains 1st pixels of 8 locations from Bottom row */
     p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(pxTemp[0], xmm_pxMask04To07), _mm_shuffle_epi8(pxTemp[4], xmm_pxMask04To07)));    /* Contains 2nd pixels of 8 locations from Bottom row */
 
+    if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+    }
+
     return RPP_SUCCESS;
 }
 
@@ -1708,7 +1724,7 @@ inline RppStatus rpp_store12_f32pln3_to_u8pln3_avx(Rpp8u* dstRPtr, Rpp8u* dstGPt
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p)
+inline RppStatus rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
 {
     __m128i px[8];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|...] - Need RGB 01-02 */
@@ -1763,10 +1779,20 @@ inline RppStatus rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForIn
     p[10] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(px[2], xmm_pxMask08To11), _mm_shuffle_epi8(px[6], xmm_pxMask08To11))); /* Contains BottomRow 1st pixels B channel for all the dst locations */
     p[11] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(px[3], xmm_pxMask04To07), _mm_shuffle_epi8(px[7], xmm_pxMask04To07))); /* Contains BottomRow 2nd pixels B channel for all the dst locations */
 
+    if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+        p[4] = _mm256_blendv_ps(p[4], p[5], mask);
+        p[6] = _mm256_blendv_ps(p[6], p[7], mask);
+        p[8] = _mm256_blendv_ps(p[8], p[9], mask);
+        p[10] = _mm256_blendv_ps(p[10], p[11], mask);
+    }
+
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p)
+inline RppStatus rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
 {
     __m128i pxTemp[8];
     pxTemp[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row load LOC0 [R01|R02|R03|R04|R05|R06|R07|...|R16] Need R01-02 */
@@ -1815,6 +1841,12 @@ inline RppStatus rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForIn
     p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(pxTemp[0], xmm_pxMask00To03), _mm_shuffle_epi8(pxTemp[4], xmm_pxMask00To03)));  /* Contains 1st pixels of 8 locations from Bottom row */
     p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(pxTemp[0], xmm_pxMask04To07), _mm_shuffle_epi8(pxTemp[4], xmm_pxMask04To07)));  /* Contains 2nd pixels of 8 locations from Bottom row */
 
+    if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+    }
+
     return RPP_SUCCESS;
 }
 
@@ -1849,7 +1881,7 @@ inline RppStatus rpp_store12_f32pln3_to_i8pln3_avx(Rpp8s* dstRPtr, Rpp8s* dstGPt
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p)
+inline RppStatus rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
 {
     __m256 pTemp[10];
     pTemp[0] = _mm256_loadu_ps(srcRowPtrsForInterp[0] + loc[0]);   /* Top Row load LOC0 [R01|G01|B01|R02|G02|B02|XX|XX] Need RGB 01-02 */
@@ -1930,10 +1962,20 @@ inline RppStatus rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsFor
     p[7] = _mm256_permute2f128_ps(pTemp[8], pTemp[0], 49);  /* Permute to obtain G02 of 8 dst pixels in Bottom Row*/
     p[11] = _mm256_permute2f128_ps(pTemp[9], pTemp[1], 49); /* Permute to obtain B02 of 8 dst pixels in Bottom Row*/
 
+    if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+        p[4] = _mm256_blendv_ps(p[4], p[5], mask);
+        p[6] = _mm256_blendv_ps(p[6], p[7], mask);
+        p[8] = _mm256_blendv_ps(p[8], p[9], mask);
+        p[10] = _mm256_blendv_ps(p[10], p[11], mask);
+    }
+
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p)
+inline RppStatus rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
 {
     __m128 pTemp[6];
     pTemp[0] = _mm_loadu_ps(srcRowPtrsForInterp[0] + loc[0]);   /* Top Row load LOC0 [R01|R02|R03|R04] Need R01-02 */
@@ -1966,6 +2008,12 @@ inline RppStatus rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsFor
     p[2] = _mm256_setr_m128(pTemp[0], pTemp[2]);
     p[3] = _mm256_setr_m128(pTemp[1], pTemp[3]);
 
+    if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+    }
+
     return RPP_SUCCESS;
 }
 
@@ -1976,7 +2024,7 @@ inline RppStatus rpp_store8_f32pln1_to_f32pln1_avx(Rpp32f* dstPtr, __m256 p)
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p)
+inline RppStatus rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
 {
     Rpp32f topRow0[3][8], topRow1[3][8], bottomRow0[3][8], bottomRow1[3][8];
     /* Converts float16 pixels to float type for computation*/
@@ -2013,10 +2061,20 @@ inline RppStatus rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsFor
     p[7] = _mm256_loadu_ps(bottomRow1[1]);
     p[11] = _mm256_loadu_ps(bottomRow1[2]);
 
+    if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+        p[4] = _mm256_blendv_ps(p[4], p[5], mask);
+        p[6] = _mm256_blendv_ps(p[6], p[7], mask);
+        p[8] = _mm256_blendv_ps(p[8], p[9], mask);
+        p[10] = _mm256_blendv_ps(p[10], p[11], mask);
+    }
+
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p)
+inline RppStatus rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
 {
     Rpp32f topRow0[8], topRow1[8], bottomRow0[8], bottomRow1[8];
     /*Converts float16 pixels to float type for computation*/
@@ -2031,6 +2089,12 @@ inline RppStatus rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsFor
     p[1] = _mm256_loadu_ps(topRow1);
     p[2] = _mm256_loadu_ps(bottomRow0);
     p[3] = _mm256_loadu_ps(bottomRow1);
+
+    if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+    }
 
     return RPP_SUCCESS;
 }

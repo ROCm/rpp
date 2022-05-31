@@ -4359,7 +4359,7 @@ inline RppStatus compute_resize_bilinear_src_loc_and_weights(Rpp32s dstLocation,
     return RPP_SUCCESS;
 }
 
-inline RppStatus compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
+inline RppStatus compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false)
 {
     __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
@@ -4370,7 +4370,8 @@ inline RppStatus compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc
         pLoc = _mm256_mul_ps(pLoc, avx_p3);
     __m256i pxLoc = _mm256_cvtps_epi32(pLoc);
     _mm256_storeu_si256((__m256i*) srcLoc, pxLoc);
-
+    if(srcLoc[0] < 0)
+        pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxLoc)); // Mask set to true if the location is negative
     return RPP_SUCCESS;
 }
 
