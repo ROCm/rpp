@@ -925,7 +925,8 @@ int main(int argc, char **argv)
         {
             test_case_name = "resize";
 
-            if (interpolationType != RpptInterpolationType::BILINEAR)
+            if (interpolationType != RpptInterpolationType::BILINEAR && interpolationType != RpptInterpolationType::LANCZOS &&
+                interpolationType != RpptInterpolationType::BICUBIC)
             {
                 missingFuncFlag = 1;
                 break;
