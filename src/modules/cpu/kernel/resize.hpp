@@ -26,10 +26,11 @@ omp_set_dynamic(0);
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
         Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
         Rpp32u widthLimit = (roi.xywhROI.roiWidth - 1) * srcDescPtr->strides.wStride;
-        Rpp32f hOffset = (hRatio - 1) * 0.5f - 1;
-        Rpp32f wOffset = (wRatio - 1) * 0.5f - 1;
         Rpp32s kernelSize = 2;
+        Rpp32f kernelRadius = 1.0f; // kernelSize / 2
         Rpp32s noOfCoeffs = 4; // kernelSize * kernelSize
+        Rpp32f hOffset = (hRatio - 1) * 0.5f - kernelRadius;
+        Rpp32f wOffset = (wRatio - 1) * 0.5f - kernelRadius;
         Rpp32s vectorIncrementPerChannel = 8;
         Rpp32s vectorIncrementPkd = 24;
 
@@ -267,10 +268,11 @@ omp_set_dynamic(0);
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
         Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
         Rpp32u widthLimit = (roi.xywhROI.roiWidth - 1) * srcDescPtr->strides.wStride;
-        Rpp32f hOffset = (hRatio - 1) * 0.5f - 1;
-        Rpp32f wOffset = (wRatio - 1) * 0.5f - 1;
         Rpp32s kernelSize = 2;
+        Rpp32f kernelRadius = 1.0f; // kernelSize / 2
         Rpp32s noOfCoeffs = 4; // kernelSize * kernelSize
+        Rpp32f hOffset = (hRatio - 1) * 0.5f - kernelRadius;
+        Rpp32f wOffset = (wRatio - 1) * 0.5f - kernelRadius;
         Rpp32s vectorIncrementPerChannel = 8;
         Rpp32s vectorIncrementPkd = 24;
 
@@ -510,10 +512,11 @@ omp_set_dynamic(0);
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
         Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
         Rpp32u widthLimit = (roi.xywhROI.roiWidth - 1) * srcDescPtr->strides.wStride;
-        Rpp32f hOffset = (hRatio - 1) * 0.5f - 1;
-        Rpp32f wOffset = (wRatio - 1) * 0.5f - 1;
         Rpp32s kernelSize = 2;
+        Rpp32f kernelRadius = 1.0f; // kernelSize / 2
         Rpp32s noOfCoeffs = 4; // kernelSize * kernelSize
+        Rpp32f hOffset = (hRatio - 1) * 0.5f - kernelRadius;
+        Rpp32f wOffset = (wRatio - 1) * 0.5f - kernelRadius;
         Rpp32s vectorIncrementPerChannel = 8;
         Rpp32s vectorIncrementPkd = 24;
 
@@ -754,10 +757,11 @@ omp_set_dynamic(0);
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
         Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
         Rpp32u widthLimit = (roi.xywhROI.roiWidth - 1) * srcDescPtr->strides.wStride;
-        Rpp32f hOffset = (hRatio - 1) * 0.5f - 1;
-        Rpp32f wOffset = (wRatio - 1) * 0.5f - 1;
         Rpp32s kernelSize = 2;
+        Rpp32f kernelRadius = 1.0f; // kernelSize / 2
         Rpp32s noOfCoeffs = 4; // kernelSize * kernelSize
+        Rpp32f hOffset = (hRatio - 1) * 0.5f - kernelRadius;
+        Rpp32f wOffset = (wRatio - 1) * 0.5f - kernelRadius;
         Rpp32s vectorIncrementPerChannel = 8;
         Rpp32s vectorIncrementPkd = 24;
 
@@ -1009,7 +1013,7 @@ omp_set_dynamic(0);
 
         Rpp32s rowIndex[dstImgSize[batchCount].height], colIndex[dstImgSize[batchCount].width];
         Rpp32f rowCoeffs[dstImgSize[batchCount].height * hKernelSize];
-        Rpp32f colCoeffs[((dstImgSize[batchCount].width + 3) & ~3) * wKernelSize]; // image width is made a multiple of 4 inorder to allocate sufficient memory for Horizontal coefficients
+        Rpp32f colCoeffs[((dstImgSize[batchCount].width + 3) & ~3) * wKernelSize]; // Buffer size is made a multiple of 4 inorder to allocate sufficient memory for Horizontal coefficients
 
         // Pre-compute row index and coefficients
         for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].height; indexCount++, coeffCount += hKernelSize)
@@ -1023,7 +1027,7 @@ omp_set_dynamic(0);
         {
             Rpp32f weightParam;
             compute_resize_src_loc(indexCount, wRatio, colIndex[indexCount], weightParam, wOffset, srcDescPtr->strides.wStride);
-            coeffCount = (indexCount % 4 == 0) ? (indexCount * wKernelSize) : coeffCount + 1;
+            coeffCount = (indexCount % 4 == 0) ? (indexCount * wKernelSize) : coeffCount + 1; // TODO - Add comment
             compute_col_coefficients(interpolationType, wKernelSize, wKernelRadius, weightParam, &colCoeffs[coeffCount], srcDescPtr->strides.wStride);
         }
 
@@ -1044,6 +1048,7 @@ omp_set_dynamic(0);
         // Allocate temproary buffer to store intermediate result of separable resampling
         Rpp32f tempPtrImage[srcDescPtr->w * dstDescPtr->h * srcDescPtr->c];
 
+        // Create description pointer for the temporary buffer
         RpptDesc tempDesc;
         tempDesc = *srcDescPtr;
         RpptDescPtr tempDescPtr = &tempDesc;
