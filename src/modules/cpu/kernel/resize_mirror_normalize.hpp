@@ -61,7 +61,7 @@ omp_set_dynamic(0);
         pRMNParams[0] = _mm256_set1_ps(mean);
         pRMNParams[1] = _mm256_set1_ps(invStdDev);
 
-        __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
+        __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_src_loc_avx;
         if(mirrorFlag)
         {
@@ -336,7 +336,7 @@ omp_set_dynamic(0);
         pRMNParams[0] = _mm256_set1_ps(mean);
         pRMNParams[1] = _mm256_set1_ps(invStdDev);
 
-        __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
+        __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_src_loc_avx;
 
         if(mirrorFlag)
@@ -611,7 +611,7 @@ omp_set_dynamic(0);
         pRMNParams[0] = _mm256_set1_ps(mean);
         pRMNParams[1] = _mm256_set1_ps(invStdDev);
 
-        __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
+        __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_src_loc_avx;
 
         if(mirrorFlag)
@@ -886,7 +886,7 @@ omp_set_dynamic(0);
         pRMNParams[0] = _mm256_set1_ps(mean);
         pRMNParams[1] = _mm256_set1_ps(invStdDev);
 
-        __m256 pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
+        __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_src_loc_avx;
         if(mirrorFlag)
         {

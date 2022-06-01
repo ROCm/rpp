@@ -45,7 +45,7 @@ extern "C" {
 RppStatus rppt_crop_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 RppStatus rppt_crop_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
-/******************** crop mirror normalize ********************/
+/******************** crop_mirror_normalize ********************/
 
 // crop mirror normalize augmentation for a NCHW/NHWC layout tensor
 
@@ -119,7 +119,7 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
 
 RppStatus rppt_resize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstImgSizes, RpptInterpolationType interpolationType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
-/******************** resize mirror normalize ********************/
+/******************** resize_mirror_normalize ********************/
 
 // Resize Mirror Normalize augmentation for a NCHW/NHWC layout tensor
 

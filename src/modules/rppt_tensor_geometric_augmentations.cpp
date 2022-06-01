@@ -142,7 +142,7 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** crop mirror normalize ********************/
+/******************** crop_mirror_normalize ********************/
 
 RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
                                          RpptDescPtr srcDescPtr,
@@ -536,7 +536,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** resize mirror normalize ********************/
+/******************** resize_mirror_normalize ********************/
 
 RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                            RpptDescPtr srcDescPtr,
