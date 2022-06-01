@@ -1458,7 +1458,7 @@ static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
 }
 
 /* Resize loads and stores */
-inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
+inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     __m128i px[8];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|...] - Need RGB 01-02 */
@@ -1515,16 +1515,16 @@ inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp,
 
     if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
     {
-        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
-        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
-        p[4] = _mm256_blendv_ps(p[4], p[5], mask);
-        p[6] = _mm256_blendv_ps(p[6], p[7], mask);
-        p[8] = _mm256_blendv_ps(p[8], p[9], mask);
-        p[10] = _mm256_blendv_ps(p[10], p[11], mask);
+        p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
+        p[4] = _mm256_blendv_ps(p[4], p[5], pNegativeIndexMask);
+        p[6] = _mm256_blendv_ps(p[6], p[7], pNegativeIndexMask);
+        p[8] = _mm256_blendv_ps(p[8], p[9], pNegativeIndexMask);
+        p[10] = _mm256_blendv_ps(p[10], p[11], pNegativeIndexMask);
     }
 }
 
-inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
+inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     __m128i pxTemp[8];
     pxTemp[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row load LOC0 [R01|R02|R03|R04|R05|R06|R07|...|R16] Need R01-02 */
@@ -1569,8 +1569,8 @@ inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp,
 
     if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
     {
-        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
-        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+        p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
     }
 }
 
@@ -1597,7 +1597,7 @@ inline void rpp_store12_f32pln3_to_u8pln3_avx(Rpp8u* dstRPtr, Rpp8u* dstGPtr, Rp
     rpp_store4_f32pln1_to_u8pln1_avx(dstBPtr, p[2]);
 }
 
-inline void rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
+inline void rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     __m128i px[8];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|...] - Need RGB 01-02 */
@@ -1654,16 +1654,16 @@ inline void rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp,
 
     if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
     {
-        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
-        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
-        p[4] = _mm256_blendv_ps(p[4], p[5], mask);
-        p[6] = _mm256_blendv_ps(p[6], p[7], mask);
-        p[8] = _mm256_blendv_ps(p[8], p[9], mask);
-        p[10] = _mm256_blendv_ps(p[10], p[11], mask);
+        p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
+        p[4] = _mm256_blendv_ps(p[4], p[5], pNegativeIndexMask);
+        p[6] = _mm256_blendv_ps(p[6], p[7], pNegativeIndexMask);
+        p[8] = _mm256_blendv_ps(p[8], p[9], pNegativeIndexMask);
+        p[10] = _mm256_blendv_ps(p[10], p[11], pNegativeIndexMask);
     }
 }
 
-inline void rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
+inline void rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     __m128i pxTemp[8];
     pxTemp[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row load LOC0 [R01|R02|R03|R04|R05|R06|R07|...|R16] Need R01-02 */
@@ -1714,8 +1714,8 @@ inline void rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForInterp,
 
     if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
     {
-        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
-        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+        p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
     }
 }
 
@@ -1744,7 +1744,7 @@ inline void rpp_store12_f32pln3_to_i8pln3_avx(Rpp8s* dstRPtr, Rpp8s* dstGPtr, Rp
     rpp_store4_f32pln1_to_i8pln1_avx(dstBPtr, p[2]);
 }
 
-inline void rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
+inline void rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     __m256 pTemp[10];
     pTemp[0] = _mm256_loadu_ps(srcRowPtrsForInterp[0] + loc[0]);   /* Top Row load LOC0 [R01|G01|B01|R02|G02|B02|XX|XX] Need RGB 01-02 */
@@ -1827,16 +1827,16 @@ inline void rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInter
 
     if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
     {
-        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
-        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
-        p[4] = _mm256_blendv_ps(p[4], p[5], mask);
-        p[6] = _mm256_blendv_ps(p[6], p[7], mask);
-        p[8] = _mm256_blendv_ps(p[8], p[9], mask);
-        p[10] = _mm256_blendv_ps(p[10], p[11], mask);
+        p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
+        p[4] = _mm256_blendv_ps(p[4], p[5], pNegativeIndexMask);
+        p[6] = _mm256_blendv_ps(p[6], p[7], pNegativeIndexMask);
+        p[8] = _mm256_blendv_ps(p[8], p[9], pNegativeIndexMask);
+        p[10] = _mm256_blendv_ps(p[10], p[11], pNegativeIndexMask);
     }
 }
 
-inline void rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
+inline void rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     __m128 pTemp[6];
     pTemp[0] = _mm_loadu_ps(srcRowPtrsForInterp[0] + loc[0]);   /* Top Row load LOC0 [R01|R02|R03|R04] Need R01-02 */
@@ -1871,8 +1871,8 @@ inline void rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInter
 
     if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
     {
-        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
-        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+        p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
     }
 }
 
@@ -1881,7 +1881,7 @@ inline void rpp_store8_f32pln1_to_f32pln1_avx(Rpp32f* dstPtr, __m256 p)
     _mm256_storeu_ps(dstPtr, p);   /* store the 8 pixels in dst*/
 }
 
-inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
+inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     Rpp32f topRow0[3][8], topRow1[3][8], bottomRow0[3][8], bottomRow1[3][8];
     /* Converts float16 pixels to float type for computation*/
@@ -1920,16 +1920,16 @@ inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInter
 
     if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
     {
-        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
-        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
-        p[4] = _mm256_blendv_ps(p[4], p[5], mask);
-        p[6] = _mm256_blendv_ps(p[6], p[7], mask);
-        p[8] = _mm256_blendv_ps(p[8], p[9], mask);
-        p[10] = _mm256_blendv_ps(p[10], p[11], mask);
+        p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
+        p[4] = _mm256_blendv_ps(p[4], p[5], pNegativeIndexMask);
+        p[6] = _mm256_blendv_ps(p[6], p[7], pNegativeIndexMask);
+        p[8] = _mm256_blendv_ps(p[8], p[9], pNegativeIndexMask);
+        p[10] = _mm256_blendv_ps(p[10], p[11], pNegativeIndexMask);
     }
 }
 
-inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &mask)
+inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     Rpp32f topRow0[8], topRow1[8], bottomRow0[8], bottomRow1[8];
     /*Converts float16 pixels to float type for computation*/
@@ -1947,18 +1947,17 @@ inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInter
 
     if(loc[0] < 0) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
     {
-        p[0] = _mm256_blendv_ps(p[0], p[1], mask);
-        p[2] = _mm256_blendv_ps(p[2], p[3], mask);
+        p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
+        p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
     }
 }
 
 inline void rpp_store24_f32pln3_to_f16pkd3_avx(Rpp16f* dstPtr, __m256* p)
 {
     Rpp32f temp[3][8];
-    _mm256_storeu_ps((float *)temp[0], p[0]);
-    _mm256_storeu_ps((float *)temp[1], p[1]);
-    _mm256_storeu_ps((float *)temp[2], p[2]);
-    /* Convert float pixels to float16 type and store in destination */
+    _mm256_storeu_ps((Rpp32f *)temp[0], p[0]);
+    _mm256_storeu_ps((Rpp32f *)temp[1], p[1]);
+    _mm256_storeu_ps((Rpp32f *)temp[2], p[2]);
     for(int i = 0, wStride = 0; i < 8; i++)
     {
         wStride = i * 3;
@@ -1972,7 +1971,6 @@ inline void rpp_store8_f32pln1_to_f16pln1_avx(Rpp16f* dstPtr, __m256 p)
 {
     Rpp32f temp[8];
     _mm256_storeu_ps(temp, p);
-    /* Convert float pixels to float16 type and store in destination */
     for(int i = 0; i < 8; i++)
         dstPtr[i] = (Rpp16f) temp[i];
 }
@@ -1980,10 +1978,9 @@ inline void rpp_store8_f32pln1_to_f16pln1_avx(Rpp16f* dstPtr, __m256 p)
 inline void rpp_store24_f32pln3_to_f16pln3_avx(Rpp16f* dstRPtr, Rpp16f* dstGPtr, Rpp16f* dstBPtr, __m256* p)
 {
     Rpp32f temp[3][8];  // 8 float pixels per channel
-    _mm256_storeu_ps((float *)temp[0], p[0]);
-    _mm256_storeu_ps((float *)temp[1], p[1]);
-    _mm256_storeu_ps((float *)temp[2], p[2]);
-    /* Convert float pixels to float16 type and store in destination */
+    _mm256_storeu_ps((Rpp32f *)temp[0], p[0]);
+    _mm256_storeu_ps((Rpp32f *)temp[1], p[1]);
+    _mm256_storeu_ps((Rpp32f *)temp[2], p[2]);
     for(int i = 0; i < 8; i++)
     {
         *(dstRPtr + i) = (Rpp16f)(temp[0][i]);
@@ -2009,7 +2006,6 @@ inline void rpp_resize_load(Rpp8s *srcPtr, __m128 *p)
 
 inline void rpp_resize_load(Rpp16f *srcPtr, __m128 *p)
 {
-    /* Convert float 16 to float 32 type*/
     Rpp32f srcPtrTemp_ps[8];
     for(int cnt = 0; cnt < 8; cnt ++)
         *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr + cnt);
