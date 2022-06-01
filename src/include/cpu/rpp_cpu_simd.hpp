@@ -384,9 +384,9 @@ inline void rpp_load16_f32_to_f32(Rpp32f *srcPtr, __m128 *p)
 inline void rpp_load12_f32pkd3_to_f32pln3(Rpp32f *srcPtr, __m128 *p)
 {
     p[0] = _mm_loadu_ps(srcPtr);
-    p[1] = _mm_loadu_ps(&srcPtr[3]);
-    p[2] = _mm_loadu_ps(&srcPtr[6]);
-    p[3] = _mm_loadu_ps(&srcPtr[9]);
+    p[1] = _mm_loadu_ps(srcPtr + 3);
+    p[2] = _mm_loadu_ps(srcPtr + 6);
+    p[3] = _mm_loadu_ps(srcPtr + 9);
     _MM_TRANSPOSE4_PS(p[0], p[1], p[2], p[3]);
 }
 
@@ -408,9 +408,9 @@ inline void rpp_store12_f32pln3_to_f32pkd3(Rpp32f *dstPtr, __m128 *p)
 {
     _MM_TRANSPOSE4_PS(p[0], p[1], p[2], p[3]);
     _mm_storeu_ps(dstPtr, p[0]);
-    _mm_storeu_ps(&dstPtr[3], p[1]);
-    _mm_storeu_ps(&dstPtr[6], p[2]);
-    _mm_storeu_ps(&dstPtr[9], p[3]);
+    _mm_storeu_ps(dstPtr + 3, p[1]);
+    _mm_storeu_ps(dstPtr + 6, p[2]);
+    _mm_storeu_ps(dstPtr + 9, p[3]);
 }
 
 inline void rpp_load4_f32_to_f32(Rpp32f *srcPtr, __m128 *p)
@@ -791,14 +791,14 @@ inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
     p128[0] = _mm_loadu_ps(srcPtr);
-    p128[1] = _mm_loadu_ps(&srcPtr[3]);
-    p128[2] = _mm_loadu_ps(&srcPtr[6]);
-    p128[3] = _mm_loadu_ps(&srcPtr[9]);
+    p128[1] = _mm_loadu_ps(srcPtr + 3);
+    p128[2] = _mm_loadu_ps(srcPtr + 6);
+    p128[3] = _mm_loadu_ps(srcPtr + 9);
     _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
-    p128[4] = _mm_loadu_ps(&srcPtr[12]);
-    p128[5] = _mm_loadu_ps(&srcPtr[15]);
-    p128[6] = _mm_loadu_ps(&srcPtr[18]);
-    p128[7] = _mm_loadu_ps(&srcPtr[21]);
+    p128[4] = _mm_loadu_ps(srcPtr + 12);
+    p128[5] = _mm_loadu_ps(srcPtr + 15);
+    p128[6] = _mm_loadu_ps(srcPtr + 18);
+    p128[7] = _mm_loadu_ps(srcPtr + 21);
     _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
     p[0] = _mm256_setr_m128(p128[0], p128[4]);
     p[1] = _mm256_setr_m128(p128[1], p128[5]);
@@ -863,17 +863,17 @@ inline void rpp_store24_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
     p128[2] = _mm256_extractf128_ps(p[2], 0);
     _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
     _mm_storeu_ps(dstPtr, p128[0]);
-    _mm_storeu_ps(&dstPtr[3], p128[1]);
-    _mm_storeu_ps(&dstPtr[6], p128[2]);
-    _mm_storeu_ps(&dstPtr[9], p128[3]);
+    _mm_storeu_ps(dstPtr + 3, p128[1]);
+    _mm_storeu_ps(dstPtr + 6, p128[2]);
+    _mm_storeu_ps(dstPtr + 9, p128[3]);
     p128[0] = _mm256_extractf128_ps(p[0], 1);
     p128[1] = _mm256_extractf128_ps(p[1], 1);
     p128[2] = _mm256_extractf128_ps(p[2], 1);
     _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
-    _mm_storeu_ps(&dstPtr[12], p128[0]);
-    _mm_storeu_ps(&dstPtr[15], p128[1]);
-    _mm_storeu_ps(&dstPtr[18], p128[2]);
-    _mm_storeu_ps(&dstPtr[21], p128[3]);
+    _mm_storeu_ps(dstPtr + 12, p128[0]);
+    _mm_storeu_ps(dstPtr + 15, p128[1]);
+    _mm_storeu_ps(dstPtr + 18, p128[2]);
+    _mm_storeu_ps(dstPtr + 21, p128[3]);
 }
 
 inline void rpp_load16_f32_to_f32_avx(Rpp32f *srcPtr, __m256 *p)
@@ -2015,7 +2015,7 @@ inline void rpp_resize_load(Rpp16f *srcPtr, __m128 *p)
         *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr + cnt);
 
     rpp_load4_f32_to_f32(srcPtrTemp_ps, p);
-    rpp_load4_f32_to_f32(srcPtrTemp_ps + 4, &p[1]);
+    rpp_load4_f32_to_f32(srcPtrTemp_ps + 4, p + 1);
 }
 
 inline void rpp_resize_store(Rpp8u *dstPtr, __m128 *p)
@@ -2037,7 +2037,7 @@ inline void rpp_resize_store(Rpp16f *dstPtr, __m128 *p)
 {
     Rpp32f dstPtrTemp_ps[8];
     rpp_store4_f32_to_f32(dstPtrTemp_ps, p);
-    rpp_store4_f32_to_f32(dstPtrTemp_ps + 4, &p[1]);
+    rpp_store4_f32_to_f32(dstPtrTemp_ps + 4, p + 1);
     for(int cnt = 0; cnt < 8; cnt ++)
         *(dstPtr + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
 }

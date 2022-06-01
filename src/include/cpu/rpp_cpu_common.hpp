@@ -4516,8 +4516,8 @@ template <typename T>
 inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
     compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, bilinearCoeffs, dstPtrR);
-    compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[2], loc, bilinearCoeffs, dstPtrG);
-    compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[4], loc, bilinearCoeffs, dstPtrB);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, bilinearCoeffs, dstPtrG);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 4, loc, bilinearCoeffs, dstPtrB);
 }
 
 inline void compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 &pDstPixels)
@@ -4528,9 +4528,9 @@ inline void compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pB
 
 inline void compute_bilinear_interpolation_3c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 *pDstPixels)
 {
-    compute_bilinear_interpolation_1c_avx(&pSrcPixels[0], &pBilinearCoeffs[0], pDstPixels[0]);
-    compute_bilinear_interpolation_1c_avx(&pSrcPixels[4], &pBilinearCoeffs[0], pDstPixels[1]);
-    compute_bilinear_interpolation_1c_avx(&pSrcPixels[8], &pBilinearCoeffs[0], pDstPixels[2]);
+    compute_bilinear_interpolation_1c_avx(pSrcPixels, pBilinearCoeffs, pDstPixels[0]);
+    compute_bilinear_interpolation_1c_avx(pSrcPixels + 4, pBilinearCoeffs, pDstPixels[1]);
+    compute_bilinear_interpolation_1c_avx(pSrcPixels + 8, pBilinearCoeffs, pDstPixels[2]);
 }
 
 template <typename T>
@@ -4641,9 +4641,9 @@ inline void resample_vertical(T *inputPtr, float *outputPtr, RpptDescPtr inputDe
                 }
                 for(int vec = 0, vec4 = 0; vec < kNumVecs; vec++, vec4 += 4)
                 {
-                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrR + x + vec4, &pTempR[vec]);
-                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrG + x + vec4, &pTempG[vec]);
-                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrB + x + vec4, &pTempB[vec]);
+                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrR + x + vec4, pTempR + vec);
+                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrG + x + vec4, pTempG + vec);
+                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrB + x + vec4, pTempB + vec);
                 }
             }
 
@@ -4745,9 +4745,9 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
             {
                 __m128 pOutputChannel[kNumVecs * 3];
                 set_zeros(pOutputChannel, kNumVecs * 3);
-                __m128 *pOutputR = &pOutputChannel[0];
-                __m128 *pOutputG = &pOutputChannel[kNumVecs];
-                __m128 *pOutputB = &pOutputChannel[kNumVecs * 2];
+                __m128 *pOutputR = pOutputChannel;
+                __m128 *pOutputG = pOutputChannel + kNumVecs;
+                __m128 *pOutputB = pOutputChannel + (kNumVecs * 2);
                 for(int vec = 0, dstx = x; vec < kNumVecs; vec++, dstx += 4) // Number of dst pixels per iter
                 {
                     Rpp32s coeffIdx = (dstx * kernelSize);
@@ -4775,9 +4775,9 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
                             {
                                 indexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(idx[l], kVal), xmm_pDstLocInit), xmm_px0);
                                 int srcx = index[dstx + l] + k;
-                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtrR[srcx], &pInputR[l]);
-                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtrG[srcx], &pInputG[l]);
-                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtrB[srcx], &pInputB[l]);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrR + srcx, pInputR + l);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrG + srcx, pInputG + l);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrB + srcx, pInputB + l);
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));        // Load coefficients
                                 pInputR[l] = _mm_blendv_ps(pInputR[l], pFirstValR, indexMask[l]);   // If negative index is present load the pixel value with first value in the row
                                 pInputG[l] = _mm_blendv_ps(pInputG[l], pFirstValG, indexMask[l]);
@@ -4814,9 +4814,9 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));
                                 int srcx = index[dstx + l] + k;
                                 srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
-                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtrR[srcx], &pInputR[l]);
-                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtrG[srcx], &pInputG[l]);
-                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtrB[srcx], &pInputB[l]);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrR + srcx, pInputR + l);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrG + srcx, pInputG + l);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrB + srcx, pInputB + l);
                             }
                             _MM_TRANSPOSE4_PS(pInputR[0], pInputR[1], pInputR[2], pInputR[3]);
                             _MM_TRANSPOSE4_PS(pInputG[0], pInputG[1], pInputG[2], pInputG[3]);
@@ -4854,9 +4854,9 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
                     sumB += (coeffs[k0 + kPos] * inRowPtrB[srcx]);
                 }
                 int xStride = x * outputDescPtr->strides.wStride;
-                saturate_pixel(sumR, &outRowPtrR[xStride]);
-                saturate_pixel(sumG, &outRowPtrG[xStride]);
-                saturate_pixel(sumB, &outRowPtrB[xStride]);
+                saturate_pixel(sumR, outRowPtrR + xStride);
+                saturate_pixel(sumG, outRowPtrG + xStride);
+                saturate_pixel(sumB, outRowPtrB + xStride);
             }
         }
     }
@@ -4878,9 +4878,9 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
             {
                 __m128 pOutputChannel[kNumVecs * 3];
                 set_zeros(pOutputChannel, kNumVecs * 3);
-                __m128 *pOutputR = &pOutputChannel[0];
-                __m128 *pOutputG = &pOutputChannel[kNumVecs];
-                __m128 *pOutputB = &pOutputChannel[kNumVecs * 2];
+                __m128 *pOutputR = pOutputChannel;
+                __m128 *pOutputG = pOutputChannel + kNumVecs;
+                __m128 *pOutputB = pOutputChannel + (kNumVecs * 2);
                 for(int vec = 0, dstx = x; vec < kNumVecs; vec++, dstx += 4)
                 {
                     Rpp32s coeffIdx = (dstx * kernelSize);
@@ -4925,9 +4925,9 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
                     sumB += (coeffs[k0 + kPos] * inRowPtr[srcx + 2]);
                 }
                 int xStride = x * outputDescPtr->strides.wStride;
-                saturate_pixel(sumR, &outRowPtrR[xStride]);
-                saturate_pixel(sumG, &outRowPtrG[xStride]);
-                saturate_pixel(sumB, &outRowPtrB[xStride]);
+                saturate_pixel(sumR, outRowPtrR + xStride);
+                saturate_pixel(sumG, outRowPtrG + xStride);
+                saturate_pixel(sumB, outRowPtrB + xStride);
             }
         }
     }
@@ -4994,7 +4994,7 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));
                                 int srcx = index[dstx + l] + k;
                                 srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
-                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtr[srcx], &pInput[l]);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtr + srcx, pInput + l);
 
                             }
                             _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);
@@ -5019,7 +5019,7 @@ inline void resample_horizontal(float *inputPtr, T *outputPtr, RpptDescPtr input
                     srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
                     sum += (coeffs[k0 + (k * 4)] * inRowPtr[srcx]);
                 }
-                saturate_pixel(sum, &out_row[x]);
+                saturate_pixel(sum, out_row + x);
             }
         }
     }
