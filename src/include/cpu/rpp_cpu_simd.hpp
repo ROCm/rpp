@@ -1884,7 +1884,6 @@ inline void rpp_store8_f32pln1_to_f32pln1_avx(Rpp32f* dstPtr, __m256 p)
 inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     Rpp32f topRow0[3][8], topRow1[3][8], bottomRow0[3][8], bottomRow1[3][8];
-    /* Converts float16 pixels to float type for computation*/
     for(int cnt = 0; cnt < 8; cnt++)
     {
         *(topRow0[0] + cnt) = (Rpp32f) *(srcRowPtrsForInterp[0] + loc[cnt]);
@@ -1932,7 +1931,6 @@ inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInter
 inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
 {
     Rpp32f topRow0[8], topRow1[8], bottomRow0[8], bottomRow1[8];
-    /*Converts float16 pixels to float type for computation*/
     for(int cnt = 0; cnt < 8; cnt++)
     {
         *(topRow0 + cnt) = (Rpp32f) *(srcRowPtrsForInterp[0] + loc[cnt]);
@@ -2093,8 +2091,8 @@ inline void rpp_resize_store_pkd3(Rpp16f *dstPtr, __m128 *p)
     temp[2] = p[4]; /* B channel */
     rpp_store12_f32pln3_to_f32pln3(dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, temp);
     temp[0] = p[1]; /* R channel */
-    temp[1] = p[3]; /* R channel */
-    temp[2] = p[5]; /* R channel */
+    temp[1] = p[3]; /* G channel */
+    temp[2] = p[5]; /* B channel */
     rpp_store12_f32pln3_to_f32pln3(dstPtrTempR_ps + 4, dstPtrTempG_ps + 4, dstPtrTempB_ps + 4, temp);
 
     for(int cnt = 0; cnt < 8; cnt++)

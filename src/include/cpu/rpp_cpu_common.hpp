@@ -4579,6 +4579,7 @@ inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, 
     static constexpr Rpp32s numVecs = numLanes * sizeof(Rpp32f) / maxNumLanes; // No of float vectors required to process numLanes pixels
 
     Rpp32s inputHeightLimit = inputImgSize.height - 1;
+    Rpp32s outPixelsPerIter = 4;
 
     // For PLN3 inputs/outputs
     if (inputDescPtr->c == 3 && inputDescPtr->layout == RpptLayout::NCHW)
@@ -4632,7 +4633,7 @@ inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, 
                         pTempB[v] = _mm_fmadd_ps(pCoeff[k], pInputB[v], pTempB[v]);
                     }
                 }
-                for(int vec = 0, outStoreStride = 0; vec < numVecs; vec++, outStoreStride += 4)    // Since 4 output pixels are stored per iteration
+                for(int vec = 0, outStoreStride = 0; vec < numVecs; vec++, outStoreStride += outPixelsPerIter)    // Since 4 output pixels are stored per iteration
                 {
                     rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrR + outLocCol + outStoreStride, pTempR + vec);
                     rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrG + outLocCol + outStoreStride, pTempG + vec);
@@ -4693,7 +4694,7 @@ inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, 
                     for (int v = 0; v < numVecs; v++)
                         pTemp[v] = _mm_fmadd_ps(pInput[v], pCoeff[k], pTemp[v]);
                 }
-                for(int vec = 0, outStoreStride = 0; vec < numVecs; vec++, outStoreStride += 4)     // Since 4 output pixels are stored per iteration
+                for(int vec = 0, outStoreStride = 0; vec < numVecs; vec++, outStoreStride += outPixelsPerIter)     // Since 4 output pixels are stored per iteration
                     rpp_simd_store(rpp_store4_f32_to_f32, outRowPtr + outLocCol + outStoreStride, &pTemp[vec]);
             }
 
@@ -4716,6 +4717,10 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     static constexpr Rpp32s maxNumLanes = 16;                                   // Maximum number of pixels that can be present in a vector
     static constexpr Rpp32s numLanes = maxNumLanes / sizeof(T);                 // No of pixels that can be present in a vector wrt data type
     static constexpr Rpp32s numVecs = numLanes * sizeof(Rpp32f) / maxNumLanes;  // No of float vectors required to process numLanes pixels
+    Rpp32s numOutPixels, kernelStride;
+    numOutPixels = kernelStride = 4;
+    Rpp32s kernelSizeOverStride = kernelSize % kernelStride;
+    Rpp32s kernelRadius = (Rpp32s)(kernelSize * 0.5f);
 
     Rpp32s inputWidthLimit = (inputImgSize.width - 1) * inputDescPtr->strides.wStride;
     __m128i pxInputWidthLimit = _mm_set1_epi32(inputWidthLimit);
@@ -4748,34 +4753,34 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                 __m128 *pOutputR = pOutputChannel;
                 __m128 *pOutputG = pOutputChannel + numVecs;
                 __m128 *pOutputB = pOutputChannel + (numVecs * 2);
-                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += 4) // 4 dst pixels processed per iteration
+                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += numOutPixels)
                 {
                     Rpp32s coeffIdx = (x * kernelSize);
                     if(index[x] < 0)
                     {
-                        __m128i pxIdx[4];
+                        __m128i pxIdx[numOutPixels];
                         pxIdx[0] = _mm_set1_epi32(index[x]);
                         pxIdx[1] = _mm_set1_epi32(index[x + 1]);
                         pxIdx[2] = _mm_set1_epi32(index[x + 2]);
                         pxIdx[3] = _mm_set1_epi32(index[x + 3]);
-                        for(int k = 0; k < kernelSize; k += 4)
+                        for(int k = 0; k < kernelSize; k += kernelStride)
                         {
                             // Generate mask to determine the negative indices in the iteration
-                            __m128i pxNegativeIndexMask[4];
+                            __m128i pxNegativeIndexMask[numOutPixels];
                             __m128i pxKernelIdx = _mm_set1_epi32(k);
-                            __m128 pInputR[4], pInputG[4], pInputB[4], pCoeffs[4];
-                            Rpp32s kernelAdd = (k + 4) > kernelSize ? kernelSize % 4 : 4;
-                            set_zeros(pInputR, 4);
-                            set_zeros(pInputG, 4);
-                            set_zeros(pInputB, 4);
-                            set_zeros(pCoeffs, 4);
+                            __m128 pInputR[numOutPixels], pInputG[numOutPixels], pInputB[numOutPixels], pCoeffs[numOutPixels];
+                            Rpp32s kernelAdd = (k + kernelStride) > kernelSize ? kernelSizeOverStride : kernelStride;
+                            set_zeros(pInputR, numOutPixels);
+                            set_zeros(pInputG, numOutPixels);
+                            set_zeros(pInputB, numOutPixels);
+                            set_zeros(pCoeffs, numOutPixels);
 
-                            for(int l = 0; l < 4; l++)
+                            for(int l = 0; l < numOutPixels; l++)
                             {
                                 pxNegativeIndexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pDstLocInit), xmm_px0);    // Generate mask to determine the negative indices in the iteration
                                 Rpp32s srcx = index[x + l] + k;
 
-                                // Load 4 consecutive pixels
+                                // Load kernelStride(4) consecutive pixels
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrR + srcx, pInputR + l);
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrG + srcx, pInputG + l);
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrB + srcx, pInputB + l);
@@ -4787,7 +4792,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                                 pInputB[l] = _mm_blendv_ps(pInputB[l], pFirstValB, pxNegativeIndexMask[l]);
                             }
 
-                            // Perform transpose operation to arrange input pixels from different dst pixels in each vector
+                            // Perform transpose operation to arrange input pixels from different output locations in each vector
                             _MM_TRANSPOSE4_PS(pInputR[0], pInputR[1], pInputR[2], pInputR[3]);
                             _MM_TRANSPOSE4_PS(pInputG[0], pInputG[1], pInputG[2], pInputG[3]);
                             _MM_TRANSPOSE4_PS(pInputB[0], pInputB[1], pInputB[2], pInputB[3]);
@@ -4807,24 +4812,24 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                     else
                     {
                         // Considers a 4x1 window for computation each time
-                        for(int k = 0; k < kernelSize; k += 4)
+                        for(int k = 0; k < kernelSize; k += kernelStride)
                         {
-                            __m128 pInputR[4], pInputG[4], pInputB[4];
-                            __m128 pCoeffs[4];
-                            Rpp32s kernelAdd = (k + 4) > kernelSize ? kernelSize % 4 : 4;
-                            for (int l = 0; l < 4; l++) // Number of dst pixels per iter
+                            __m128 pInputR[numOutPixels], pInputG[numOutPixels], pInputB[numOutPixels];
+                            __m128 pCoeffs[numOutPixels];
+                            Rpp32s kernelAdd = (k + kernelStride) > kernelSize ? kernelSizeOverStride : kernelStride;
+                            for (int l = 0; l < numOutPixels; l++)
                             {
                                 pInputR[l] = pInputG[l] = pInputB[l] = pCoeffs[l] = xmm_p0;
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)])); // Load coefficients
                                 Rpp32s srcx = index[x + l] + k;
                                 srcx = std::min(std::max(srcx, 0), inputWidthLimit);
-                                // Load 4(kernelStride) consecutive pixels
+                                // Load kernelStride(4) consecutive pixels
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrR + srcx, pInputR + l);
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrG + srcx, pInputG + l);
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrB + srcx, pInputB + l);
                             }
 
-                            // Perform transpose operation to arrange input pixels from different dst pixels in each vector
+                            // Perform transpose operation to arrange input pixels from different output locations in each vector
                             _MM_TRANSPOSE4_PS(pInputR[0], pInputR[1], pInputR[2], pInputR[3]);
                             _MM_TRANSPOSE4_PS(pInputG[0], pInputG[1], pInputG[2], pInputG[3]);
                             _MM_TRANSPOSE4_PS(pInputB[0], pInputB[1], pInputB[2], pInputB[3]);
@@ -4848,14 +4853,14 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             for (; outLocCol < outputImgSize.width; outLocCol++)
             {
                 Rpp32s x0 = index[outLocCol];
-                k0 = outLocCol % 4 == 0 ? outLocCol * kernelSize : k0 + 1;
+                k0 = outLocCol % 4 == 0 ? outLocCol * kernelSize : k0 + 1; // Since coeffs are stored in continuously for 4 dst pixels
                 Rpp32f sumR, sumG, sumB;
                 sumR = sumG = sumB = 0;
                 for (int k = 0; k < kernelSize; k++)
                 {
                     Rpp32s srcx = x0 + k;
                     srcx = std::min(std::max(srcx, 0), inputWidthLimit);
-                    Rpp32s kPos = (k * 4);
+                    Rpp32s kPos = (k * 4);      // Since coeffs are stored in continuously for 4 dst pixels
                     sumR += (coeffs[k0 + kPos] * inRowPtrR[srcx]);
                     sumG += (coeffs[k0 + kPos] * inRowPtrG[srcx]);
                     sumB += (coeffs[k0 + kPos] * inRowPtrB[srcx]);
@@ -4889,14 +4894,14 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                 __m128 *pOutputR = pOutputChannel;
                 __m128 *pOutputG = pOutputChannel + numVecs;
                 __m128 *pOutputB = pOutputChannel + (numVecs * 2);
-                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += 4)   // 4 dst pixels processed per iteration
+                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += numOutPixels)   // 4 dst pixels processed per iteration
                 {
                     Rpp32s coeffIdx = (x * kernelSize);
                     for(int k = 0, kStrided = 0; k < kernelSize; k ++, kStrided = k * 3)
                     {
-                        __m128 pInput[4];
-                        __m128 pCoeffs = _mm_loadu_ps(&(coeffs[coeffIdx + (k * 4)]));
-                        for (int l = 0; l < 4; l++)
+                        __m128 pInput[numOutPixels];
+                        __m128 pCoeffs = _mm_loadu_ps(&(coeffs[coeffIdx + (k * numOutPixels)]));
+                        for (int l = 0; l < numOutPixels; l++)
                         {
                             Rpp32s srcx = index[x + l] + kStrided;
                             srcx = std::min(std::max(srcx, 0), inputWidthLimit);
@@ -4921,14 +4926,14 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             for (; outLocCol < outputImgSize.width; outLocCol++)
             {
                 Rpp32s x0 = index[outLocCol];
-                k0 = outLocCol % 4 == 0 ? outLocCol * kernelSize : k0 + 1;
+                k0 = outLocCol % 4 == 0 ? outLocCol * kernelSize : k0 + 1;  // Since coeffs are stored in continuously for 4 dst pixels
                 Rpp32f sumR, sumG, sumB;
                 sumR = sumG = sumB = 0;
                 for (int k = 0; k < kernelSize; k++)
                 {
                     Rpp32s srcx = x0 + (k * 3);
                     srcx = std::min(std::max(srcx, 0), inputWidthLimit);
-                    Rpp32s kPos = (k * 4);
+                    Rpp32s kPos = (k * 4);      // Since coeffs are stored in continuously for 4 dst pixels
                     sumR += (coeffs[k0 + kPos] * inRowPtr[srcx]);
                     sumG += (coeffs[k0 + kPos] * inRowPtr[srcx + 1]);
                     sumB += (coeffs[k0 + kPos] * inRowPtr[srcx + 2]);
@@ -4958,32 +4963,32 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             {
                 __m128 pOutput[numVecs];
                 set_zeros(pOutput, numVecs);
-                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += 4)   // 4 dst pixels processed per iteration
+                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += numOutPixels)
                 {
                     Rpp32s coeffIdx = (x * kernelSize);
                     if(index[x] < 0)
                     {
-                        __m128i pxIdx[4];
+                        __m128i pxIdx[numOutPixels];
                         pxIdx[0] = _mm_set1_epi32(index[x]);
                         pxIdx[1] = _mm_set1_epi32(index[x + 1]);
                         pxIdx[2] = _mm_set1_epi32(index[x + 2]);
                         pxIdx[3] = _mm_set1_epi32(index[x + 3]);
-                        for(int k = 0; k < kernelSize; k += 4)
+                        for(int k = 0; k < kernelSize; k += kernelStride)
                         {
-                            __m128i pxNegativeIndexMask[4];
+                            __m128i pxNegativeIndexMask[numOutPixels];
                             __m128i pxKernelIdx = _mm_set1_epi32(k);
-                            __m128 pInput[4], pCoeffs[4];
-                            Rpp32s kernelAdd = (k + 4) > kernelSize ? kernelSize % 4 : 4;
-                            set_zeros(pInput, 4);
-                            set_zeros(pCoeffs, 4);
-                            for(int l = 0; l < 4; l++)
+                            __m128 pInput[numOutPixels], pCoeffs[numOutPixels];
+                            Rpp32s kernelAdd = (k + kernelStride) > kernelSize ? kernelSizeOverStride : kernelStride;
+                            set_zeros(pInput, numOutPixels);
+                            set_zeros(pCoeffs, numOutPixels);
+                            for(int l = 0; l < numOutPixels; l++)
                             {
                                 pxNegativeIndexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pDstLocInit), xmm_px0);    // Generate mask to determine the negative indices in the iteration
-                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtr[index[x + l] + k], &pInput[l]);   // Load 4(kernelStride) consecutive pixels
+                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtr[index[x + l] + k], &pInput[l]);   // Load kernelStride(4) consecutive pixels
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));                 // Load coefficients
                                 pInput[l] = _mm_blendv_ps(pInput[l], pFirstVal, pxNegativeIndexMask[l]);        // If negative index is present replace the pixel value with first value in the row
                             }
-                            _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);  // Perform transpose operation to arrange input pixels from different dst pixels in each vector
+                            _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);  // Perform transpose operation to arrange input pixels from different output locations in each vector
                             for (int l = 0; l < kernelAdd; l++)
                                 pOutput[vec] = _mm_fmadd_ps(pCoeffs[l], pInput[l], pOutput[vec]);
                         }
@@ -4995,19 +5000,19 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                     }
                     else
                     {
-                        for(int k = 0; k < kernelSize; k += 4)
+                        for(int k = 0; k < kernelSize; k += kernelStride)
                         {
-                            __m128 pInput[4], pCoeffs[4];
-                            Rpp32s kernelAdd = (k + 4) > kernelSize ? kernelSize % 4 : 4;
-                            for (int l = 0; l < 4; l++)
+                            __m128 pInput[numOutPixels], pCoeffs[numOutPixels];
+                            Rpp32s kernelAdd = (k + kernelStride) > kernelSize ? kernelSizeOverStride : kernelStride;
+                            for (int l = 0; l < numOutPixels; l++)
                             {
                                 pInput[l] = pCoeffs[l] = xmm_p0;
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));     // Load coefficients
                                 Rpp32s srcx = index[x + l] + k;
                                 srcx = std::min(std::max(srcx, 0), inputWidthLimit);
-                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtr + srcx, pInput + l);   // Load 4(kernelStride) consecutive pixels
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtr + srcx, pInput + l);   // Load kernelStride(4) consecutive pixels
                             }
-                            _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);  // Perform transpose operation to arrange input pixels from different dst pixels in each vector
+                            _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);  // Perform transpose operation to arrange input pixels from different output locations in each vector
                             for (int l = 0; l < kernelAdd; l++)
                                 pOutput[vec] = _mm_fmadd_ps(pCoeffs[l], pInput[l], pOutput[vec]);
                         }
@@ -5020,7 +5025,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             for (; outLocCol < bufferLength; outLocCol++)
             {
                 Rpp32s x0 = index[outLocCol];
-                k0 = outLocCol % 4 == 0 ? outLocCol * kernelSize : k0 + 1;
+                k0 = outLocCol % 4 == 0 ? outLocCol * kernelSize : k0 + 1;  // Since coeffs are stored in continuously for 4 dst pixels
                 Rpp32f sum = 0;
                 for (int k = 0; k < kernelSize; k++)
                 {
