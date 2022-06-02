@@ -4512,7 +4512,6 @@ inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s lo
 template <typename T>
 inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
-    Rpp32s channels = 3;
     Rpp32s loc1 = std::max(loc, 0);
     Rpp32s loc2 = std::min(loc + 3, limit);
     *dstPtrR = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
@@ -4530,11 +4529,11 @@ inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32
 }
 
 template <typename T>
-inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, bilinearCoeffs, dstPtrR);
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, bilinearCoeffs, dstPtrG);
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 4, loc, bilinearCoeffs, dstPtrB);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, limit, bilinearCoeffs, dstPtrR);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, limit, bilinearCoeffs, dstPtrG);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 4, loc, limit, bilinearCoeffs, dstPtrB);
 }
 
 inline void compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 &pDstPixels)
