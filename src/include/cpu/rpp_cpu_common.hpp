@@ -22,7 +22,7 @@ typedef halfhpp Rpp16f;
 #define RPPMAX2(a,b)                    ((a > b) ? a : b)
 #define RPPMAX3(a,b,c)                  ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
 #define RPPINRANGE(a, x, y)             ((a >= x) && (a <= y) ? 1 : 0)
-#define RPPPRANGECHECK(value, a, b)     ((value < a) ? a : (value <  b) ? value : b)
+#define RPPPRANGECHECK(value, a, b)     (value < (Rpp32f) a) ? ((Rpp32f) a) : ((value < (Rpp32f) b) ? value : ((Rpp32f) b))
 #define RPPFLOOR(a)                     ((int) a)
 #define RPPCEIL(a)                      ((int) (a + 1.0))
 #define RPPISEVEN(a)                    ((a % 2 == 0) ? 1 : 0)
@@ -4552,15 +4552,15 @@ inline void compute_bilinear_interpolation_3c_avx(__m256 *pSrcPixels, __m256 *pB
 template <typename T>
 inline void compute_src_row_ptrs_for_bilinear_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + RPPPRANGECHECK(loc, 0, limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation
-    rowPtrsForInterp[1]  = srcPtr + RPPPRANGECHECK(loc + 1, 0, limit) * descPtr->strides.hStride;     // BottomRow for bilinear interpolation
+    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, 0), limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation
+    rowPtrsForInterp[1]  = srcPtr + std::min(std::max(loc + 1, 0), limit) * descPtr->strides.hStride;     // BottomRow for bilinear interpolation
 }
 
 template <typename T>
 inline void compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + RPPPRANGECHECK(loc, 0, limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
-    rowPtrsForInterp[1] = srcPtr + RPPPRANGECHECK(loc + 1, 0, limit) * descPtr->strides.hStride;      // BottomRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, 0), limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[1] = srcPtr + std::min(std::max(loc + 1, 0), limit) * descPtr->strides.hStride;      // BottomRow for bilinear interpolation (R channel)
     rowPtrsForInterp[2] = rowPtrsForInterp[0] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (G channel)
     rowPtrsForInterp[3] = rowPtrsForInterp[1] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (G channel)
     rowPtrsForInterp[4] = rowPtrsForInterp[2] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (B channel)
@@ -4599,7 +4599,7 @@ inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, 
             for (int k = 0; k < kernelSize; k++)
             {
                 Rpp32s inRow = index[outRow] + k;
-                inRow = RPPPRANGECHECK(inRow, 0, inputHeightLimit);
+                inRow = std::min(std::max(inRow, 0), inputHeightLimit);
                 inRowPtrR[k] = inputPtr + inRow * inputDescPtr->strides.hStride;
                 inRowPtrG[k] = inRowPtrR[k] + inputDescPtr->strides.cStride;
                 inRowPtrB[k] = inRowPtrG[k] + inputDescPtr->strides.cStride;
@@ -4670,7 +4670,7 @@ inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, 
             for (int k = 0; k < kernelSize; k++)
             {
                 Rpp32s inRow = index[outRow] + k;
-                inRow = RPPPRANGECHECK(inRow, 0, inputHeightLimit);
+                inRow = std::min(std::max(inRow, 0), inputHeightLimit);
                 inRowPtr[k] = inputPtr + inRow * inputDescPtr->strides.hStride;
                 pCoeff[k] = _mm_set1_ps(coeffs[k0 + k]);
             }
@@ -4810,7 +4810,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                                 pInputR[l] = pInputG[l] = pInputB[l] = pCoeffs[l] = xmm_p0;
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));
                                 Rpp32s srcx = index[x + l] + k;
-                                srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
+                                srcx = std::min(std::max(srcx, 0), inputWidthLimit);
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrR + srcx, pInputR + l);
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrG + srcx, pInputG + l);
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrB + srcx, pInputB + l);
@@ -4844,7 +4844,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                 for (int k = 0; k < kernelSize; k++)
                 {
                     Rpp32s srcx = x0 + k;
-                    srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
+                    srcx = std::min(std::max(srcx, 0), inputWidthLimit);
                     Rpp32s kPos = (k * 4);
                     sumR += (coeffs[k0 + kPos] * inRowPtrR[srcx]);
                     sumG += (coeffs[k0 + kPos] * inRowPtrG[srcx]);
@@ -4888,7 +4888,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                         for (int l = 0; l < 4; l++)
                         {
                             Rpp32s srcx = index[x + l] + kStrided; // Needs change
-                            srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
+                            srcx = std::min(std::max(srcx, 0), inputWidthLimit);
                             rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtr[srcx], &pInput[l]);
                         }
                         _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);
@@ -4915,7 +4915,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                 for (int k = 0; k < kernelSize; k++)
                 {
                     Rpp32s srcx = x0 + (k * 3);
-                    srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
+                    srcx = std::min(std::max(srcx, 0), inputWidthLimit);
                     Rpp32s kPos = (k * 4);
                     sumR += (coeffs[k0 + kPos] * inRowPtr[srcx]);
                     sumG += (coeffs[k0 + kPos] * inRowPtr[srcx + 1]);
@@ -4990,7 +4990,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                                 pInput[l] = pCoeffs[l] = xmm_p0;
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));
                                 Rpp32s srcx = index[x + l] + k;
-                                srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
+                                srcx = std::min(std::max(srcx, 0), inputWidthLimit);
                                 rpp_simd_load(rpp_load4_f32_to_f32, inRowPtr + srcx, pInput + l);
 
                             }
@@ -5012,7 +5012,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                 for (int k = 0; k < kernelSize; k++)
                 {
                     Rpp32s srcx = x0 + k;
-                    srcx = RPPPRANGECHECK(srcx, 0, inputWidthLimit);
+                    srcx = std::min(std::max(srcx, 0), inputWidthLimit);
                     sum += (coeffs[k0 + (k * 4)] * inRowPtr[srcx]);
                 }
                 saturate_pixel(sum, out_row + outCol);
