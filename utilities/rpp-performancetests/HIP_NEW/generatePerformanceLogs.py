@@ -238,6 +238,30 @@ elif profilingOption == "YES":
                             except IOError:
                                 print("Unable to open case results")
                                 continue
+                    elif (CASE_NUM == 8) and TYPE.startswith("Tensor"):
+                        NOISETYPE_LIST = [0, 1, 2]
+                        # Loop through extra param noiseType
+                        for NOISETYPE in NOISETYPE_LIST:
+                            # Write into csv file
+                            CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_noiseType" + str(NOISETYPE) + ".stats.csv"
+                            print("CASE_FILE_PATH = " + CASE_FILE_PATH)
+                            try:
+                                case_file = open(CASE_FILE_PATH,'r')
+                                for line in case_file:
+                                    print(line)
+                                    if not(line.startswith('"Name"')):
+                                        if TYPE in TENSOR_TYPE_LIST:
+                                            new_file.write(line)
+                                            d_counter[TYPE] = d_counter[TYPE] + 1
+                                        elif TYPE in BATCHPD_TYPE_LIST:
+                                            if prev != line.split(",")[0]:
+                                                new_file.write(line)
+                                                prev = line.split(",")[0]
+                                                d_counter[TYPE] = d_counter[TYPE] + 1
+                                case_file.close()
+                            except IOError:
+                                print("Unable to open case results")
+                                continue
                     else:
                         # Write into csv file
                         CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + ".stats.csv"

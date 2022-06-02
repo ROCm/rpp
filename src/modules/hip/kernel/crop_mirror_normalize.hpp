@@ -9,11 +9,8 @@ __device__ void cmn_hip_compute(uchar *srcPtr, d_float8 *pix_f8, d_float8 *cmnPa
 
 __device__ void cmn_hip_compute(float *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    float4 normalizer_f4 = (float4) ONE_OVER_255;
-    cmnParams_f8->f4[0] = cmnParams_f8->f4[0] * normalizer_f4;
-
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
 }
 
 __device__ void cmn_hip_compute(schar *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
@@ -23,11 +20,8 @@ __device__ void cmn_hip_compute(schar *srcPtr, d_float8 *pix_f8, d_float8 *cmnPa
 }
 __device__ void cmn_hip_compute(half *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    float4 normalizer_f4 = (float4) ONE_OVER_255;
-    cmnParams_f8->f4[0] = cmnParams_f8->f4[0] * normalizer_f4;
-
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
 }
 
 template <typename T>
