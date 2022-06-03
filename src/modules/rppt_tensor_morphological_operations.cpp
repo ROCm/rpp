@@ -29,6 +29,12 @@ THE SOFTWARE.
 #include "hip/hip_tensor_morphological_operations.hpp"
 #endif // HIP_COMPILE
 
+/********************************************************************************************************************/
+/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
+/********************************************************************************************************************/
+
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+
 /******************** erode ********************/
 
 RppStatus rppt_erode_gpu(RppPtr_t srcPtr,
@@ -164,3 +170,5 @@ RppStatus rppt_dilate_gpu(RppPtr_t srcPtr,
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
+
+#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)

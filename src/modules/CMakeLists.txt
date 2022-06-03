@@ -99,7 +99,7 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Add HIP specific includes
     set(HIP_INC "/opt/rocm/hip/include")
-    list(APPEND HIP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/)
+    list(APPEND HIP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${HIP_INCLUDE_DIRS} ${HIP_INC} ${INCLUDE_LIST})
     message("-- ${Blue}HIP include directories -- ${INCLUDE_LIST}${ColourReset}")
 
@@ -121,7 +121,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 
     # Add OpenCL specific includes
     set(ROCM_INC "/opt/rocm/include")
-    list(APPEND OpenCL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/cl/)
+    list(APPEND OpenCL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST} ${ROCM_INC})
     message("-- ${Blue}OpenCL include directories -- ${INCLUDE_LIST}${ColourReset}")
 
@@ -133,7 +133,7 @@ elseif( "${BACKEND}" STREQUAL "CPU")
 
     # Add CPU specific includes
     set(ROCM_INC "/opt/rocm/include")
-    set(INCLUDE_LIST ${ROCM_INC})
+    set(INCLUDE_LIST ${ROCM_INC} ${CMAKE_SOURCE_DIR}/src/include/common/)
     message("-- ${Blue}CPU include directories -- ${INCLUDE_LIST}${ColourReset}")
 
 endif()
@@ -156,6 +156,7 @@ target_include_directories( ${PROJECT_NAME}
         ${HIP_INC}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/cpu
+        ${CMAKE_SOURCE_DIR}/src/include/common
         ${CMAKE_SOURCE_DIR}/src/include/func_specific
         ${INCLUDE_LIST}
 )

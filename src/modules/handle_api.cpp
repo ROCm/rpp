@@ -25,8 +25,8 @@
  *******************************************************************************/
 
 #include <cstdio>
-#include <rpp/errors.hpp>
-#include <rpp/handle.hpp>
+#include "rpp/errors.hpp"
+#include "rpp/handle.hpp"
 
 extern "C" const char* rppGetErrorString(rppStatus_t error)
 {
@@ -83,22 +83,7 @@ extern "C" rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize)
     return rpp::try_([&] { rpp::deref(batchSize) = rpp::deref(handle).GetBatchSize(); });
 }
 
-extern "C" rppStatus_t rppSetAllocator(rppHandle_t handle, rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext)
-{
-    return rpp::try_([&] { rpp::deref(handle).SetAllocator(allocator, deallocator, allocatorContext); });
-}
-
-extern "C" rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time)
-{
-    return rpp::try_([&] { rpp::deref(time) = rpp::deref(handle).GetKernelTime(); });
-}
-
-extern "C" rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable)
-{
-    return rpp::try_([&] { rpp::deref(handle).EnableProfiling(enable); });
-}
-
-#if defined OCL_COMPILE
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 extern "C" rppStatus_t rppCreateWithStream(rppHandle_t* handle, rppAcceleratorQueue_t stream)
 {
@@ -125,4 +110,19 @@ extern "C" rppStatus_t rppGetStream(rppHandle_t handle, rppAcceleratorQueue_t* s
     return rpp::try_([&] { rpp::deref(streamID) = rpp::deref(handle).GetStream(); });
 }
 
-#endif    // OCL_COMPILE
+extern "C" rppStatus_t rppSetAllocator(rppHandle_t handle, rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext)
+{
+    return rpp::try_([&] { rpp::deref(handle).SetAllocator(allocator, deallocator, allocatorContext); });
+}
+
+extern "C" rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time)
+{
+    return rpp::try_([&] { rpp::deref(time) = rpp::deref(handle).GetKernelTime(); });
+}
+
+extern "C" rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable)
+{
+    return rpp::try_([&] { rpp::deref(handle).EnableProfiling(enable); });
+}
+
+#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)

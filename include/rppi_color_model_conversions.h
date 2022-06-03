@@ -44,10 +44,12 @@ extern "C" {
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_hueRGB_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *hueShift, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_hueRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *hueShift, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_hueRGB_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *hueShift, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_hueRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *hueShift, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+RppStatus rppi_hueRGB_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *hueShift, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_hueRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *hueShift, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 /******************** saturation ********************/
 
@@ -64,10 +66,12 @@ RppStatus rppi_hueRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, R
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_saturationRGB_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_saturationRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_saturationRGB_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_saturationRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+RppStatus rppi_saturationRGB_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_saturationRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *saturationFactor, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 /******************** color_convert ********************/
 
@@ -84,10 +88,12 @@ RppStatus rppi_saturationRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *src
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_color_convert_u8_pln3_batchPS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_color_convert_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_color_convert_u8_pln3_batchPS_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+RppStatus rppi_color_convert_u8_pln3_batchPS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_color_convert_u8_pkd3_batchPS_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiColorConvertMode convert_mode, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 /******************** color_temperature ********************/
 
@@ -104,12 +110,14 @@ RppStatus rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr, RppiSize *src
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_color_temperature_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_color_temperature_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_color_temperature_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_color_temperature_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_color_temperature_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_color_temperature_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+RppStatus rppi_color_temperature_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_color_temperature_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_color_temperature_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32s *adjustmentValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 /******************** vignette ********************/
 
@@ -126,12 +134,14 @@ RppStatus rppi_color_temperature_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize 
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_vignette_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_vignette_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_vignette_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_vignette_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_vignette_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_vignette_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+RppStatus rppi_vignette_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_vignette_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_vignette_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *stdDev, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 /******************** channel_extract ********************/
 
@@ -148,12 +158,14 @@ RppStatus rppi_vignette_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_channel_extract_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_channel_extract_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_channel_extract_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_channel_extract_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_channel_extract_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_channel_extract_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+RppStatus rppi_channel_extract_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_channel_extract_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_channel_extract_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *extractChannelNumber, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 /******************** channel_combine ********************/
 
@@ -171,12 +183,14 @@ RppStatus rppi_channel_extract_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *s
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_channel_combine_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_channel_combine_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_channel_combine_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_channel_combine_u8_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_channel_combine_u8_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_channel_combine_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+RppStatus rppi_channel_combine_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_channel_combine_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_channel_combine_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t srcPtr3, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 /******************** look_up_table ********************/
 
@@ -193,12 +207,14 @@ RppStatus rppi_channel_combine_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t s
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_look_up_table_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_look_up_table_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_look_up_table_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_look_up_table_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_look_up_table_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_look_up_table_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+RppStatus rppi_look_up_table_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_look_up_table_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_look_up_table_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp8u* lutPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 /******************** tensor_table_lookup ********************/
 

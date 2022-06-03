@@ -32,62 +32,6 @@ THE SOFTWARE.
 
 /******************** crop ********************/
 
-RppStatus rppt_crop_gpu(RppPtr_t srcPtr,
-                        RpptDescPtr srcDescPtr,
-                        RppPtr_t dstPtr,
-                        RpptDescPtr dstDescPtr,
-                        RpptROIPtr roiTensorPtrSrc,
-                        RpptRoiType roiType,
-                        rppHandle_t rppHandle)
-{
-#ifdef HIP_COMPILE
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-    {
-        hip_exec_crop_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                             srcDescPtr,
-                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                             dstDescPtr,
-                             roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    {
-        hip_exec_crop_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                             srcDescPtr,
-                             (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                             dstDescPtr,
-                             roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    {
-        hip_exec_crop_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                             srcDescPtr,
-                             (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                             dstDescPtr,
-                             roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-    {
-        hip_exec_crop_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                             srcDescPtr,
-                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                             dstDescPtr,
-                             roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
-    }
-
-    return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
-}
-
 RppStatus rppt_crop_host(RppPtr_t srcPtr,
                          RpptDescPtr srcDescPtr,
                          RppPtr_t dstPtr,
@@ -143,70 +87,6 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
 }
 
 /******************** crop mirror normalize ********************/
-
-RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
-                                         RpptDescPtr srcDescPtr,
-                                         RppPtr_t dstPtr,
-                                         RpptDescPtr dstDescPtr,
-                                         Rpp32f *meanTensor,
-                                         Rpp32f *stdDevTensor,
-                                         Rpp32u *mirrorTensor,
-                                         RpptROIPtr roiTensorPtrSrc,
-                                         RpptRoiType roiType,
-                                         rppHandle_t rppHandle)
-{
-#ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    copy_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uint(mirrorTensor, rpp::deref(rppHandle), paramIndex++);
-
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-    {
-        hip_exec_crop_mirror_normalize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                              srcDescPtr,
-                                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                              dstDescPtr,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              rpp::deref(rppHandle));
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    {
-        hip_exec_crop_mirror_normalize_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                              srcDescPtr,
-                                              (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                              dstDescPtr,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              rpp::deref(rppHandle));
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    {
-        hip_exec_crop_mirror_normalize_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                              srcDescPtr,
-                                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                              dstDescPtr,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              rpp::deref(rppHandle));
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-    {
-        hip_exec_crop_mirror_normalize_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                              srcDescPtr,
-                                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                              dstDescPtr,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              rpp::deref(rppHandle));
-    }
-
-    return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
-}
 
 RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                           RpptDescPtr srcDescPtr,
@@ -274,6 +154,198 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                 layoutParams);
     }
     return RPP_SUCCESS;
+}
+
+/******************** resize ********************/
+
+RppStatus rppt_resize_host(RppPtr_t srcPtr,
+                           RpptDescPtr srcDescPtr,
+                           RppPtr_t dstPtr,
+                           RpptDescPtr dstDescPtr,
+                           RpptImagePatchPtr dstImgSizes,
+                           RpptInterpolationType interpolationType,
+                           RpptROIPtr roiTensorPtrSrc,
+                           RpptRoiType roiType,
+                           rppHandle_t rppHandle)
+{
+    RppLayoutParams srcLayoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        resize_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                 srcDescPtr,
+                                 static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                 dstDescPtr,
+                                 dstImgSizes,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 srcLayoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        resize_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                   srcDescPtr,
+                                   (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                   dstDescPtr,
+                                   dstImgSizes,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   srcLayoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        resize_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                   srcDescPtr,
+                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                   dstDescPtr,
+                                   dstImgSizes,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   srcLayoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        resize_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                 srcDescPtr,
+                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                 dstDescPtr,
+                                 dstImgSizes,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 srcLayoutParams);
+    }
+
+    return RPP_SUCCESS;
+}
+
+/********************************************************************************************************************/
+/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
+/********************************************************************************************************************/
+
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+
+/******************** crop ********************/
+
+RppStatus rppt_crop_gpu(RppPtr_t srcPtr,
+                        RpptDescPtr srcDescPtr,
+                        RppPtr_t dstPtr,
+                        RpptDescPtr dstDescPtr,
+                        RpptROIPtr roiTensorPtrSrc,
+                        RpptRoiType roiType,
+                        rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_crop_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                             srcDescPtr,
+                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                             dstDescPtr,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_crop_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                             srcDescPtr,
+                             (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                             dstDescPtr,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_crop_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                             srcDescPtr,
+                             (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                             dstDescPtr,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_crop_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                             srcDescPtr,
+                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                             dstDescPtr,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** crop mirror normalize ********************/
+
+RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         RppPtr_t dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32f *meanTensor,
+                                         Rpp32f *stdDevTensor,
+                                         Rpp32u *mirrorTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    Rpp32u paramIndex = 0;
+    copy_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_uint(mirrorTensor, rpp::deref(rppHandle), paramIndex++);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_crop_mirror_normalize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                              srcDescPtr,
+                                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                              dstDescPtr,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_crop_mirror_normalize_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                              srcDescPtr,
+                                              (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                              dstDescPtr,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_crop_mirror_normalize_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                              srcDescPtr,
+                                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                              dstDescPtr,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_crop_mirror_normalize_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                              srcDescPtr,
+                                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                              dstDescPtr,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
 }
 
 // /******************** warp_affine ********************/
@@ -347,64 +419,4 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-/******************** resize ********************/
-
-RppStatus rppt_resize_host(RppPtr_t srcPtr,
-                           RpptDescPtr srcDescPtr,
-                           RppPtr_t dstPtr,
-                           RpptDescPtr dstDescPtr,
-                           RpptImagePatchPtr dstImgSizes,
-                           RpptInterpolationType interpolationType,
-                           RpptROIPtr roiTensorPtrSrc,
-                           RpptRoiType roiType,
-                           rppHandle_t rppHandle)
-{
-    RppLayoutParams srcLayoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-    {
-        resize_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                 srcDescPtr,
-                                 static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                 dstDescPtr,
-                                 dstImgSizes,
-                                 roiTensorPtrSrc,
-                                 roiType,
-                                 srcLayoutParams);
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    {
-        resize_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                   srcDescPtr,
-                                   (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                   dstDescPtr,
-                                   dstImgSizes,
-                                   roiTensorPtrSrc,
-                                   roiType,
-                                   srcLayoutParams);
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    {
-        resize_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                   srcDescPtr,
-                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                   dstDescPtr,
-                                   dstImgSizes,
-                                   roiTensorPtrSrc,
-                                   roiType,
-                                   srcLayoutParams);
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-    {
-        resize_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                 srcDescPtr,
-                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                 dstDescPtr,
-                                 dstImgSizes,
-                                 roiTensorPtrSrc,
-                                 roiType,
-                                 srcLayoutParams);
-    }
-
-    return RPP_SUCCESS;
-}
+#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)

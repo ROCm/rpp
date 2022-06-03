@@ -43,7 +43,9 @@ extern "C" {
 // *retval RPP_SUCCESS : succesful completion
 // *retval RPP_ERROR : Error
 
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
 RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 #ifdef __cplusplus
 }

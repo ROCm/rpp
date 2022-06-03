@@ -46,6 +46,8 @@
 #include "rpp/kernel_cache.hpp"
 #include "rpp/logger.hpp"
 
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+
 namespace rpp {
 
 static std::ostream& operator<<(std::ostream& os, const std::vector<size_t>& v)
@@ -233,3 +235,5 @@ void KernelCache::ClearKernels(const std::string& algorithm, const std::string& 
 KernelCache::KernelCache() {}
 
 } // namespace rpp
+
+#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)

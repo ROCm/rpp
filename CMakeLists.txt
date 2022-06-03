@@ -182,6 +182,7 @@ target_include_directories(${PROJECT_NAME}
         ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/common
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific
         ${INCLUDE_LIST}
 )

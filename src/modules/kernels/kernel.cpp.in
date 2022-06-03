@@ -30,6 +30,7 @@
 #include "rpp_kernels.h"
 #include "rpp/kernel.hpp"
 #include "rpp/stringutils.hpp"
+#include "rpp/errors.hpp"
 
 namespace rpp {
 

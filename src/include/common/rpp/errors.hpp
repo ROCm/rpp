@@ -23,6 +23,7 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #ifndef GUARD_RPP_ERRORS_HPP
 #define GUARD_RPP_ERRORS_HPP
 
@@ -79,13 +80,13 @@ rppStatus_t try_(F f, bool output = true)
     catch(const Exception& ex)
     {
         if(output)
-            std::cerr << "Rpp Error: " << ex.what() << std::endl;
+            std::cerr << "RPP Error: " << ex.what() << std::endl;
         return ex.status;
     }
     catch(const std::exception& ex)
     {
         if(output)
-            std::cerr << "Rpp Error: " << ex.what() << std::endl;
+            std::cerr << "RPP Error: " << ex.what() << std::endl;
         return rppStatusUnknownError;
     }
     catch(...)

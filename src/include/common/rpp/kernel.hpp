@@ -23,6 +23,7 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #ifndef GUARD_RPP_KERNEL_HPP
 #define GUARD_RPP_KERNEL_HPP
 
@@ -30,8 +31,10 @@
 #include <vector>
 
 #include "config.h"
-#include "rpp/hipoc_kernel.hpp"
 
+#ifdef HIP_COMPILE
+
+#include "rpp/hipoc_kernel.hpp"
 namespace rpp {
 std::string GetKernelSrc(std::string name);
 std::string GetKernelInc(std::string key);
@@ -40,5 +43,20 @@ using Kernel       = HIPOCKernel;
 using KernelInvoke = HIPOCKernelInvoke;
 using Program      = HIPOCProgram;
 }    // namespace rpp
+
+#elif defined(OCL_COMPILE)
+
+#include "rpp/clhelper.hpp"
+#include "rpp/oclkernel.hpp"
+namespace rpp {
+std::string GetKernelSrc(std::string name);
+std::string GetKernelInc(std::string key);
+std::vector<std::string> GetKernelIncList();
+using Kernel       = OCLKernel;
+using KernelInvoke = OCLKernelInvoke;
+using Program      = SharedProgramPtr;
+} // namespace rpp
+
+#endif    // BACKEND
 
 #endif    // GUARD_RPP_KERNEL_HPP

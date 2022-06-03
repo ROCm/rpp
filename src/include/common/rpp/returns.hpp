@@ -24,30 +24,15 @@
  *
  *******************************************************************************/
 
-#ifndef GUARD_RPP_BINARY_CACHE_HPP
-#define GUARD_RPP_BINARY_CACHE_HPP
+#ifndef GUARD_RPP_RETURNS_HPP
+#define GUARD_RPP_RETURNS_HPP
 
-#include <string>
-#include <boost/filesystem/path.hpp>
+#define RPP_RETURNS(...) \
+    ->decltype(__VA_ARGS__) { return __VA_ARGS__; }
 
-namespace rpp {
+#define RPP_BODY_RETURNS(...) \
+    {                            \
+        return __VA_ARGS__;      \
+    }
 
-boost::filesystem::path GetCacheFile(const std::string& device,
-                                     const std::string& name,
-                                     const std::string& args,
-                                     bool is_kernel_str);
-
-boost::filesystem::path GetCachePath();
-std::string LoadBinary(const std::string& device,
-                       const std::string& name,
-                       const std::string& args,
-                       bool is_kernel_str = false);
-void SaveBinary(const boost::filesystem::path& binary_path,
-                const std::string& device,
-                const std::string& name,
-                const std::string& args,
-                bool is_kernel_str = false);
-
-} // namespace rpp
-
-#endif
+#endif    // GUARD_RPP_RETURNS_HPP

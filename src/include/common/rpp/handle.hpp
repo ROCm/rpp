@@ -23,22 +23,26 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #ifndef GUARD_RPP_CONTEXT_HPP_
 #define GUARD_RPP_CONTEXT_HPP_
 
 #include <cstdio>
 #include <cstring>
 #include <memory>
-#include <config.h>
-#include <rpp/common.hpp>
-#include <rpp/kernel.hpp>
-#include <rpp.h>
-#include <rpp/object.hpp>
-#include <rpp/allocator.hpp>
-#include <rpp/simple_hash.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <vector>
 #include <unordered_map>
+#include <boost/range/adaptor/transformed.hpp>
+
+#include "rpp.h"
+#include "config.h"
+#include "rppdefs.h"
+#include "rpp/common.hpp"
+#include "rpp/kernel.hpp"
+#include "rpp/object.hpp"
+#include "rpp/simple_hash.hpp"
+#include "rpp/allocator.hpp"
+
 
 #if RPP_USE_ROCBLAS
 #include <rpp/manage_ptr.hpp>
@@ -57,12 +61,11 @@ using GemmKey = std::pair<std::string, std::string>;
 using rocblas_handle_ptr = RPP_MANAGE_PTR(rocblas_handle, rocblas_destroy_handle);
 #endif
 
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+
 struct Handle : rppHandle
 {
-
     Handle();
-    Handle(rppAcceleratorQueue_t stream);
-    Handle(rppAcceleratorQueue_t stream, size_t nBatchSize);
     Handle(size_t nBatchSize);
     Handle(Handle&&) noexcept;
     ~Handle();
@@ -70,21 +73,17 @@ struct Handle : rppHandle
     InitHandle*  GetInitHandle() const;
     size_t GetBatchSize() const;
     void SetBatchSize(size_t bSize) const;
-    void rpp_destroy_object_gpu();
     void rpp_destroy_object_host();
+    void SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext) const;
 
+    Handle(rppAcceleratorQueue_t stream);
+    Handle(rppAcceleratorQueue_t stream, size_t nBatchSize);
+    void rpp_destroy_object_gpu();
     rppAcceleratorQueue_t GetStream() const;
     void SetStream(rppAcceleratorQueue_t streamID) const;
-
-    void SetAllocator(rppAllocatorFunction allocator,
-                      rppDeallocatorFunction deallocator,
-                      void* allocatorContext) const;
-
     void EnableProfiling(bool enable = true);
-
     void ResetKernelTime();
     void AccumKernelTime(float curr_time);
-
     float GetKernelTime() const;
     bool IsProfilingEnabled() const;
 
@@ -100,7 +99,6 @@ struct Handle : rppHandle
                            const std::string& kernel_src = "");
 
     bool HasKernel(const std::string& algorithm, const std::string& network_config) const;
-
     void ClearKernels(const std::string& algorithm, const std::string& network_config);
 
     auto GetKernels(const std::string& algorithm, const std::string& network_config)
@@ -108,6 +106,7 @@ struct Handle : rppHandle
         return this->GetKernelsImpl(algorithm, network_config) |
                boost::adaptors::transformed([this](Kernel k) { return this->Run(k); });
     }
+
     KernelInvoke GetKernel(const std::string& algorithm, const std::string& network_config)
     {
         auto ks = this->GetKernelsImpl(algorithm, network_config);
@@ -147,7 +146,12 @@ struct Handle : rppHandle
     Allocator::ManageDataPtr&
     WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz);
     void ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz);
+
+#ifdef HIP_COMPILE
+    shared<ConstData_t> CreateSubBuffer(ConstData_t data, std::size_t offset, std::size_t size);
+#elif defined(OCL_COMPILE)
     shared<Data_t> CreateSubBuffer(Data_t data, std::size_t offset, std::size_t size);
+#endif
 
     template <class T>
     Allocator::ManageDataPtr Create(std::size_t sz)
@@ -182,19 +186,6 @@ struct Handle : rppHandle
     }
 
     std::unique_ptr<HandleImpl> impl;
-    //std::unordered_map<std::string, std::vector<rppConvSolution_t>> find_map;
-#if RPP_USE_RPPGEMM
-    std::unordered_map<GemmKey, std::unique_ptr<GemmGeometry>, SimpleHash> geo_map;
-#endif
-
-#if RPP_USE_ROCBLAS
-    rocblas_handle_ptr& rhandle() { return rhandle_; }
-
-    private:
-    rocblas_handle_ptr CreateRocblasHandle() const;
-
-    rocblas_handle_ptr rhandle_;
-#endif
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Handle& handle) { return handle.Print(os); }
@@ -217,6 +208,23 @@ struct AutoEnableProfiling
     Handle& h;
     bool prev_state;
 };
+
+#else
+
+struct Handle : rppHandle
+{
+    Handle();
+    Handle(size_t nBatchSize);
+    Handle(Handle&&) noexcept;
+    ~Handle();
+
+    InitHandle*  GetInitHandle() const;
+    size_t GetBatchSize() const;
+    void SetBatchSize(size_t bSize) const;
+    void rpp_destroy_object_host();
+};
+
+#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
 
 } // namespace rpp
 RPP_DEFINE_OBJECT(rppHandle, rpp::Handle);

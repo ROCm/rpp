@@ -23,23 +23,24 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#ifndef GUARD_RPP_KERNEL_HPP
-#define GUARD_RPP_KERNEL_HPP
+#ifndef GUARD_RPP_COMMON_HPP_
+#define GUARD_RPP_COMMON_HPP_
 
-#include <string>
-#include <vector>
+#include "rpp.h"
+#include "rpp/manage_ptr.hpp"
 
-#include "config.h"
-#include "rpp/clhelper.hpp"
-#include "rpp/oclkernel.hpp"
+#ifdef HIP_COMPILE
+using Data_t        = void*;
+using ConstData_t   = const void*;
+using ManageDataPtr = RPP_MANAGE_PTR(void, hipFree);
+inline Data_t DataCast(void* p) { return p; }
+inline ConstData_t DataCast(const void* p) { return p; }
+#elif defined(OCL_COMPILE)
+using Data_t        = cl_mem;
+using ConstData_t   = Data_t;    // Const doesnt apply to cl_mem
+using ManageDataPtr = RPP_MANAGE_PTR(cl_mem, clReleaseMemObject);
+inline Data_t DataCast(void* p) { return reinterpret_cast<Data_t>(p); }
+inline ConstData_t DataCast(const void* p) { return reinterpret_cast<ConstData_t>(const_cast<void*>(p)); }
+#endif
 
-namespace rpp {
-std::string GetKernelSrc(std::string name);
-std::string GetKernelInc(std::string key);
-std::vector<std::string> GetKernelIncList();
-using Kernel       = OCLKernel;
-using KernelInvoke = OCLKernelInvoke;
-using Program      = SharedProgramPtr;
-} // namespace rpp
-
-#endif    // GUARD_RPP_KERNEL_HPP
+#endif    // GUARD_RPP_COMMON_HPP_

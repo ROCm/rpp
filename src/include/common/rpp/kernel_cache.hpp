@@ -52,12 +52,11 @@
 #include "rpp/kernel.hpp"
 #include "rpp/simple_hash.hpp"
 
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+
 namespace rpp {
 
-/**
- * @brief The KernelCache class Build and cache kernels
- *
- */
+// The KernelCache class - Build and cache kernels
 class KernelCache
 {
 
@@ -95,5 +94,7 @@ class KernelCache
 };
 
 } // namespace rpp
+
+#endif
 
 #endif // GUARD_RPP_KERNEL_CACHE_HPP_

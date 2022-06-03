@@ -8,6 +8,7 @@
 #include "rpp/errors.hpp"
 #include "rpp/manage_ptr.hpp"
 
+#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
 namespace rpp {
 
 struct AllocatorDeleter
@@ -50,4 +51,5 @@ struct Allocator
 
 } // namespace rpp
 
-#endif
+#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif    // GUARD_RPP_ALLOCATOR_HPP
