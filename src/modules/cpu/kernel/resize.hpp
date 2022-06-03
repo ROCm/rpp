@@ -138,7 +138,7 @@ omp_set_dynamic(0);
                 {
                     compute_resize_bilinear_src_loc_and_weights(vectorLoopCount, wRatio, srcLocationColumn, &weightParams[2], wOffset);  // Compute the src col location correspoding to the dst col location
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
-                    compute_bilinear_interpolation_3c_pkd(srcRowPtrsForInterp, srcLocationColumn, widthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
+                    compute_bilinear_interpolation_3c_pln(srcRowPtrsForInterp, srcLocationColumn, widthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
                     dstPtrTemp += dstDescPtr->c;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -231,7 +231,7 @@ omp_set_dynamic(0);
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
                     for (int c = 0; c < dstDescPtr->c; c++)
                     {
-                        compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * kernelSize], widthLimit, srcLocationColumn, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
+                        compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * kernelSize], srcLocationColumn, widthLimit, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp++;
@@ -380,7 +380,7 @@ omp_set_dynamic(0);
                 {
                     compute_resize_bilinear_src_loc_and_weights(vectorLoopCount, wRatio, srcLocationColumn, &weightParams[2], wOffset);  // Compute the src col location correspoding to the dst col location
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
-                    compute_bilinear_interpolation_3c_pkd(srcRowPtrsForInterp, srcLocationColumn, widthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
+                    compute_bilinear_interpolation_3c_pln(srcRowPtrsForInterp, srcLocationColumn, widthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
                     dstPtrTemp += dstDescPtr->c;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -475,7 +475,7 @@ omp_set_dynamic(0);
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
                     for (int c = 0; c < dstDescPtr->c; c++)
                     {
-                        compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * kernelSize], widthLimit, srcLocationColumn, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
+                        compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * kernelSize], srcLocationColumn, widthLimit, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp++;
@@ -624,7 +624,7 @@ omp_set_dynamic(0);
                 {
                     compute_resize_bilinear_src_loc_and_weights(vectorLoopCount, wRatio, srcLocationColumn, &weightParams[2], wOffset);  // Compute the src col location correspoding to the dst col location
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
-                    compute_bilinear_interpolation_3c_pkd(srcRowPtrsForInterp, srcLocationColumn, widthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
+                    compute_bilinear_interpolation_3c_pln(srcRowPtrsForInterp, srcLocationColumn, widthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
                     dstPtrTemp += dstDescPtr->c;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -720,7 +720,7 @@ omp_set_dynamic(0);
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
                     for (int c = 0; c < dstDescPtr->c; c++)
                     {
-                        compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * kernelSize], widthLimit, srcLocationColumn, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
+                        compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * kernelSize], srcLocationColumn, widthLimit, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp++;
@@ -870,7 +870,7 @@ omp_set_dynamic(0);
                 {
                     compute_resize_bilinear_src_loc_and_weights(vectorLoopCount, wRatio, srcLocationColumn, &weightParams[2], wOffset);  // Compute the src col location correspoding to the dst col location
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
-                    compute_bilinear_interpolation_3c_pkd(srcRowPtrsForInterp, srcLocationColumn, widthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
+                    compute_bilinear_interpolation_3c_pln(srcRowPtrsForInterp, srcLocationColumn, widthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
                     dstPtrTemp += dstDescPtr->c;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -964,7 +964,7 @@ omp_set_dynamic(0);
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
                     for (int c = 0; c < dstDescPtr->c; c++)
                     {
-                        compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * kernelSize], widthLimit, srcLocationColumn, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
+                        compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * kernelSize], srcLocationColumn, widthLimit, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp++;
