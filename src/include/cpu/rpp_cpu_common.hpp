@@ -4391,6 +4391,22 @@ inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m
         pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxLoc)); // Mask set to true if the location is negative
 }
 
+inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false)
+{
+  __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
+  pDstLoc = _mm256_sub_ps(pDstLoc, avx_p8);
+  __m256 pLoc = _mm256_ceil_ps(pLocFloat);
+  pWeight[1] = _mm256_sub_ps(pLoc, pLocFloat);
+  pWeight[0] = _mm256_sub_ps(avx_p1, pWeight[1]);
+  if(hasRGBChannels)
+    pLoc = _mm256_mul_ps(pLoc, avx_p3);
+
+  __m256i pxLoc = _mm256_cvtps_epi32(pLoc);
+  _mm256_storeu_si256((__m256i*) srcLoc, pxLoc);
+  if(srcLoc[0] < 0)
+    pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxLoc)); // Mask set to true if the location is negative
+}
+
 inline Rpp32s compute_kernel_size(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
 {
     switch(interpolationType)
@@ -4490,20 +4506,6 @@ inline void set_zeros_avx(__m256 *pVecs, Rpp32s numVecs)
 {
     for(int i = 0; i < numVecs; i++)
         pVecs[i] = avx_p0;
-}
-
-inline void compute_resize_src_loc_mirror_avx(__m256 &pDstLoc, __m256 &pScale, __m256 &pLimit, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
-{
-    __m256 pLoc = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
-    pDstLoc = _mm256_sub_ps(pDstLoc, avx_p8);
-    __m256 pLocFloor = _mm256_floor_ps(pLoc);
-    pWeight[0] = _mm256_sub_ps(pLoc, pLocFloor);
-    pWeight[1] = _mm256_sub_ps(avx_p1, pWeight[0]);
-    pLocFloor = _mm256_max_ps(_mm256_min_ps(pLocFloor, pLimit), avx_p0);
-    if(hasRGBChannels)
-        pLocFloor = _mm256_mul_ps(pLocFloor, avx_p3);
-    __m256i pxLocFloor = _mm256_cvtps_epi32(pLocFloor);
-    _mm256_storeu_si256((__m256i*) srcLoc, pxLocFloor);
 }
 
 inline void compute_bilinear_coefficients(Rpp32f *weightParams, Rpp32f *bilinearCoeffs)

@@ -366,6 +366,8 @@ int main(int argc, char **argv)
 
         count++;
     }
+    maxDstWidth = 640;
+    maxDstHeight = 480;
     closedir(dr1);
 
     // Set numDims, offset, n/c/h/w values for src/dst
@@ -1228,8 +1230,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
-            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 640;//roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 480;//roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
         }
 
         Rpp32f mean[images];
@@ -1237,7 +1239,7 @@ int main(int argc, char **argv)
         Rpp32u mirror[images];
         for (i = 0; i < images; i++)
         {
-            mean[i] = 100.0;
+            mean[i] = 0.0;
             stdDev[i] = 1.0;
             mirror[i] = 1;
         }
