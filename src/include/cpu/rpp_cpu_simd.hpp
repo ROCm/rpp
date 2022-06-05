@@ -1458,7 +1458,7 @@ static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
 }
 
 /* Resize loads and stores */
-inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
+inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask, Rpp32u widthLimit = 0)
 {
     __m128i px[8];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|...] - Need RGB 01-02 */
@@ -1522,9 +1522,18 @@ inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp,
         p[8] = _mm256_blendv_ps(p[8], p[9], pNegativeIndexMask);
         p[10] = _mm256_blendv_ps(p[10], p[11], pNegativeIndexMask);
     }
+    else if(loc[0] == widthLimit) // If any src location beyond limit is encountered replace the source pixel loaded with first pixel of the row
+    {
+        p[1] = _mm256_blendv_ps(p[1], p[0], pNegativeIndexMask);
+        p[3] = _mm256_blendv_ps(p[3], p[2], pNegativeIndexMask);
+        p[5] = _mm256_blendv_ps(p[5], p[4], pNegativeIndexMask);
+        p[7] = _mm256_blendv_ps(p[7], p[6], pNegativeIndexMask);
+        p[9] = _mm256_blendv_ps(p[9], p[8], pNegativeIndexMask);
+        p[11] = _mm256_blendv_ps(p[11], p[10], pNegativeIndexMask);
+    }
 }
 
-inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask)
+inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256 &pNegativeIndexMask, Rpp32u widthLimit = 0)
 {
     __m128i pxTemp[8];
     pxTemp[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row load LOC0 [R01|R02|R03|R04|R05|R06|R07|...|R16] Need R01-02 */
@@ -1571,6 +1580,11 @@ inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp,
     {
         p[0] = _mm256_blendv_ps(p[0], p[1], pNegativeIndexMask);
         p[2] = _mm256_blendv_ps(p[2], p[3], pNegativeIndexMask);
+    }
+    else if(loc[0] == widthLimit) // If any negative src location is encountered replace the source pixel loaded first pixel of the row
+    {
+        p[1] = _mm256_blendv_ps(p[1], p[0], pNegativeIndexMask);
+        p[3] = _mm256_blendv_ps(p[3], p[2], pNegativeIndexMask);
     }
 }
 

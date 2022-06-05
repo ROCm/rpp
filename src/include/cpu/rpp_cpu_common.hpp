@@ -4376,7 +4376,7 @@ inline void compute_resize_bilinear_src_loc_and_weights(Rpp32s dstLocation, Rpp3
     weight[0] = 1 - weight[1];
 }
 
-inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false)
+inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false, Rpp32u widthLimit = 0)
 {
     __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
@@ -4391,7 +4391,7 @@ inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m
         pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxLoc)); // Mask set to true if the location is negative
 }
 
-inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false)
+inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false, Rpp32u widthLimit = 0)
 {
   __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
   pDstLoc = _mm256_sub_ps(pDstLoc, avx_p8);
@@ -4403,8 +4403,11 @@ inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstL
 
   __m256i pxLoc = _mm256_cvtps_epi32(pLoc);
   _mm256_storeu_si256((__m256i*) srcLoc, pxLoc);
+  __m256i pWidthLimit = _mm256_set1_epi32(widthLimit);
   if(srcLoc[0] < 0)
     pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxLoc)); // Mask set to true if the location is negative
+  else if(srcLoc[0] == widthLimit)
+    pMask = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pWidthLimit, pxLoc)); // Mask set to true if the location is equal to widthLimit
 }
 
 inline Rpp32s compute_kernel_size(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
