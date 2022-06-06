@@ -775,7 +775,7 @@ mean_stddev_hip_batch(Rpp8u* srcPtr, Rpp32f *mean, Rpp32f *stddev, rpp::Handle& 
 
     for(int x = 0 ; x < nBatchSize ; x++)
     {
-        hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * channel, hipMemcpyDeviceToDevice);
+        hipMemcpy(srcPtr1, srcPtr+batchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * channel, hipMemcpyDeviceToDevice);
         int i;
 
         int LIST_SIZE = handle.GetInitHandle()->mem.mgpu.csrcSize.height[x] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[x] * channel;

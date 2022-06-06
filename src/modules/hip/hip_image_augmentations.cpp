@@ -554,7 +554,7 @@ random_shadow_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiC
         Rpp32u row1, row2, column2, column1;
         int x, y;
 
-        hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
+        hipMemcpy(srcPtr1, srcPtr+batchIndex, sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
         hipMemcpy(dstPtr1, srcPtr1,  sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
 
         for(x = 0 ; x < handle.GetInitHandle()->mem.mcpu.uintArr[4].uintmem[i]; x++)
@@ -766,7 +766,7 @@ histogram_balance_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, R
         numGroups = gDim3[0] * gDim3[1];
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
         gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-        hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
+        hipMemcpy(srcPtr1, srcPtr+batchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
 
         if (chnFormat == RPPI_CHN_PLANAR)
         {
