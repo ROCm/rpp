@@ -1004,10 +1004,11 @@ omp_set_dynamic(0);
         Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
         Rpp32u widthLimit = roi.xywhROI.roiWidth - 1;
         Rpp32s hKernelSize, wKernelSize;
-        hKernelSize = compute_kernel_size(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
-        wKernelSize = compute_kernel_size(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);
-        Rpp32f hKernelRadius = hKernelSize * 0.5f;
-        Rpp32f wKernelRadius = wKernelSize * 0.5f;
+        Rpp32f hKernelRadius, wKernelRadius;
+        hKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
+        wKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);
+        hKernelSize = std::ceil(hKernelRadius * 2);
+        wKernelSize = std::ceil(wKernelRadius * 2);
         Rpp32f hOffset = (hRatio - 1) * 0.5f - hKernelRadius;
         Rpp32f wOffset = (wRatio - 1) * 0.5f - wKernelRadius;
 

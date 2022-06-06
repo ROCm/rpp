@@ -535,7 +535,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                                srcLayoutParams);
         }
     }
-    else if(interpolationType == RpptInterpolationType::LANCZOS || interpolationType == RpptInterpolationType::BICUBIC)
+    else
     {
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))

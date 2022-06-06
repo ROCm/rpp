@@ -41,6 +41,10 @@ typedef halfhpp Rpp16f;
 #define SIMD_FLOAT_VECTOR_LENGTH        4
 #endif
 
+/*Constants used for Gaussian interpolation*/
+// Here sigma is considered as 0.5f
+#define GAUSSCONSTANT1                 -2.0f          // 1 / (sigma * sigma * -1 * 2);
+#define GAUSSCONSTANT2                  0.7978845608028654f // 1 / ((2 * PI)*(1/2) * sigma)
 static uint16_t wyhash16_x;
 
 alignas(64) const Rpp32f sch_mat[16] = {0.701f, -0.299f, -0.300f, 0.0f, -0.587f, 0.413f, -0.588f, 0.0f, -0.114f, -0.114f, 0.886f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
@@ -4379,18 +4383,22 @@ inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m
         pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxLoc)); // Mask set to true if the location is negative
 }
 
-inline Rpp32s compute_kernel_size(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
+inline Rpp32f compute_kernel_radius(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
 {
     switch(interpolationType)
     {
     case RpptInterpolationType::BILINEAR:
-        return 2;
+        return 1.0f;
     case RpptInterpolationType::BICUBIC:
-        return 4;
+        return 2.0f;
     case RpptInterpolationType::LANCZOS:
-        return in_size > out_size ? std::ceil(6 * scale) : 6;
+        return in_size > out_size ? 3 * scale : 3.0f;
+    case RpptInterpolationType::GAUSSIAN:
+        return in_size > out_size ? scale : 1;
+    case RpptInterpolationType::TRIANGULAR:
+        return in_size > out_size ? scale : 1;
     default:
-        return 2;
+        return 1.0f;
     }
 }
 
@@ -4411,6 +4419,17 @@ inline void compute_lanczos3_coefficient(Rpp32f weight, Rpp32f &coeff)
     coeff = fabs(weight) >= 3 ? 0.0f : (sinc(weight) * sinc(weight / 3));
 }
 
+inline void compute_gaussian_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+    coeff = expf(weight * weight * GAUSSCONSTANT1) * GAUSSCONSTANT2;
+}
+
+inline void compute_triangular_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+    coeff = 1 - std::fabs(weight);
+    coeff = coeff < 0 ? 0 : coeff;
+}
+
 inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f weight, Rpp32f &coeff)
 {
     switch (interpolationType)
@@ -4423,6 +4442,16 @@ inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f 
     case RpptInterpolationType::LANCZOS:
     {
         compute_lanczos3_coefficient(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::GAUSSIAN:
+    {
+        compute_gaussian_coefficient(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::TRIANGULAR:
+    {
+        compute_triangular_coefficient(weight, coeff);
         break;
     }
     default:
