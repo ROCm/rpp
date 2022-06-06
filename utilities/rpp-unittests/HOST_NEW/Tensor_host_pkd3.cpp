@@ -1241,16 +1241,18 @@ int main(int argc, char **argv)
         {
             mean[i] = 0.0;
             stdDev[i] = 1.0;
-            mirror[i] = 1;
+            mirror[i] = 0;
         }
 
         // Uncomment to run test case with an xywhROI override
         // for (i = 0; i < images; i++)
         // {
-        //     roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-        //     roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-        //     dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-        //     dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        //     roiTensorPtrSrc[i].xywhROI.xy.x = 20;
+        //     roiTensorPtrSrc[i].xywhROI.xy.y = 20;
+        //     roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+        //     roiTensorPtrSrc[i].xywhROI.roiHeight = 120;
+        //     dstImgSizes[i].width = 640;
+        //     dstImgSizes[i].height = 480;
         // }
 
         // Uncomment to run test case with an ltrbROI override
