@@ -617,7 +617,7 @@ rppi_histogram_u8_pkd3_host(RppPtr_t srcPtr,
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 /******************** thresholding ********************/
 
@@ -1506,4 +1506,4 @@ rppi_histogram_u8_pkd3_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

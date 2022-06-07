@@ -1063,7 +1063,7 @@ rppi_glitch_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize ma
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 /******************** water ********************/
 
@@ -1997,4 +1997,4 @@ rppi_glitch_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize max
     return (glitch_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr, srcSize, maxSrcSize, dstPtr, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, nbatchSize, rppHandle));
 }
 
-#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

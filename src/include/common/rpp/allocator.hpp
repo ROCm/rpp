@@ -8,7 +8,7 @@
 #include "rpp/errors.hpp"
 #include "rpp/manage_ptr.hpp"
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 namespace rpp {
 
 struct AllocatorDeleter
@@ -51,5 +51,5 @@ struct Allocator
 
 } // namespace rpp
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
-#endif    // GUARD_RPP_ALLOCATOR_HPP
+#endif // GPU_SUPPORT
+#endif // GUARD_RPP_ALLOCATOR_HPP

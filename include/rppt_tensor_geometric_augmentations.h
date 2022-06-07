@@ -43,9 +43,9 @@ extern "C" {
 // *retval RPP_ERROR : Error
 
 RppStatus rppt_crop_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 RppStatus rppt_crop_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT
 
 
 /******************** crop mirror normalize ********************/
@@ -66,9 +66,9 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
 // *retval RPP_ERROR : Error
 
 RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u *mirrorTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u *mirrorTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT
 
 
 /******************** warp_affine ********************/
@@ -87,9 +87,9 @@ RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr
 // *retval RPP_SUCCESS : succesful completion
 // *retval RPP_ERROR : Error
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *affineTensor, RpptInterpolationType interpolationType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT
 
 /******************** resize ********************/
 

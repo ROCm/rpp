@@ -399,7 +399,7 @@ rppi_inclusive_OR_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 /******************** bitwise_AND ********************/
 
@@ -904,4 +904,4 @@ rppi_inclusive_OR_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

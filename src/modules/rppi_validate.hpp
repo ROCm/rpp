@@ -93,7 +93,7 @@ inline void copy_host_roi(RppiROI roiPoints, rpp::Handle& handle)
     }
 }
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 inline void copy_srcSize(RppiSize *srcSize, rpp::Handle& handle)
 {
@@ -328,5 +328,5 @@ inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
 #endif // backend
 }
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
-#endif    // RPPI_VALIDATE_OPERATIONS_FUNCTIONS
+#endif // GPU_SUPPORT
+#endif // RPPI_VALIDATE_OPERATIONS_FUNCTIONS

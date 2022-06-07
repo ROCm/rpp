@@ -693,7 +693,7 @@ rppi_custom_convolution_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 /******************** box_filter ********************/
 
@@ -1606,4 +1606,4 @@ rppi_custom_convolution_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

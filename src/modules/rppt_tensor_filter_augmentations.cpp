@@ -33,7 +33,7 @@ THE SOFTWARE.
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 /******************** box_filter ********************/
 
@@ -103,4 +103,4 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

@@ -97,7 +97,7 @@ if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
         link_libraries(stdc++)
 
-        message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
+        message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using HIP backend${ColourReset}")
 
     else()
         set(BACKEND "CPU")
@@ -123,7 +123,7 @@ elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKE
         set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
         add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
 
-        message("-- ${Green}${PROJECT_NAME} set to build with OpenCL backend${ColourReset}")
+        message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using OpenCL backend${ColourReset}")
 
     else()
         set(BACKEND "CPU")
@@ -188,11 +188,13 @@ target_include_directories(${PROJECT_NAME}
 )
 
 if( "${BACKEND}" STREQUAL "HIP")
+    add_definitions(-DGPU_SUPPORT)
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
     )
 elseif( "${BACKEND}" STREQUAL "OCL")
+    add_definitions(-DGPU_SUPPORT)
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cl

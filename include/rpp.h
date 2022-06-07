@@ -107,7 +107,7 @@ RPP_EXPORT rppStatus_t rppDestroy(rppHandle_t handle);
 
 /******************** rppDestroyHost ********************/
 
-// Function to destroy a rpp host handle. To be called in the end to break down the rpp host environment
+// Function to destroy a rpp handle's host memory allocation. To be called in the end to break down the rpp environment
 // *param[in] handle An rpp handle of type rppHandle_t
 // *returns a rppStatus_t enumeration.
 RPP_EXPORT rppStatus_t rppDestroyHost(rppHandle_t handle);
@@ -127,6 +127,48 @@ RPP_EXPORT rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t batchSize);
 // *param[in] batchSize Batch size
 // *returns a rppStatus_t enumeration.
 RPP_EXPORT rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
+
+#if GPU_SUPPORT
+
+/******************** rppCreateWithStream ********************/
+
+// Function to create a rpp handle with an accelerator stream. To be called in the beginning to initialize the rpp environment
+// *param[in] handle A pointer to rpp handle of type rppHandle_t
+// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+// *returns a rppStatus_t enumeration.
+RPP_EXPORT rppStatus_t rppCreateWithStream(rppHandle_t* handle, rppAcceleratorQueue_t stream);
+
+/******************** rppCreateWithStreamAndBatchSize ********************/
+
+// Function to create a rpp handle with an accelerator stream for a batch. To be called in the beginning to initialize the rpp environment
+// *param[in] handle A pointer to rpp handle of type rppHandle_t
+// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+// *param[in] nBatchSize Batch size
+// *returns a rppStatus_t enumeration.
+RPP_EXPORT rppStatus_t rppCreateWithStreamAndBatchSize(rppHandle_t* handle, rppAcceleratorQueue_t stream, size_t nBatchSize);
+
+/******************** rppDestroyGPU ********************/
+
+// Function to destroy a rpp handle's device memory allocation. To be called in the end to break down the rpp environment
+// *param[in] handle An rpp handle of type rppHandle_t
+// *returns a rppStatus_t enumeration.
+RPP_EXPORT rppStatus_t rppDestroyGPU(rppHandle_t handle);
+
+/******************** rppSetStream ********************/
+
+// Function to set an accelerator command queue previously created
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+// *returns a rppStatus_t enumeration.
+RPP_EXPORT rppStatus_t rppSetStream(rppHandle_t handle, rppAcceleratorQueue_t streamID);
+
+/******************** rppGetStream ********************/
+
+// Function to get an accelerator command queue previously created
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+// *returns a rppStatus_t enumeration.
+RPP_EXPORT rppStatus_t rppGetStream(rppHandle_t handle, rppAcceleratorQueue_t* streamID);
 
 /******************** rppSetAllocator ********************/
 
@@ -154,49 +196,7 @@ RPP_EXPORT rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time);
 // *returns a rppStatus_t enumeration.
 RPP_EXPORT rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable);
 
-#if defined HIP_COMPILE || defined OCL_COMPILE
-
-/******************** rppCreateWithStream ********************/
-
-// Function to create a rpp handle with an accelerator stream. To be called in the beginning to initialize the rpp environment
-// *param[in] handle A pointer to rpp handle of type rppHandle_t
-// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
-// *returns a rppStatus_t enumeration.
-RPP_EXPORT rppStatus_t rppCreateWithStream(rppHandle_t* handle, rppAcceleratorQueue_t stream);
-
-/******************** rppCreateWithStreamAndBatchSize ********************/
-
-// Function to create a rpp handle with an accelerator stream for a batch. To be called in the beginning to initialize the rpp environment
-// *param[in] handle A pointer to rpp handle of type rppHandle_t
-// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
-// *param[in] nBatchSize Batch size
-// *returns a rppStatus_t enumeration.
-RPP_EXPORT rppStatus_t rppCreateWithStreamAndBatchSize(rppHandle_t* handle, rppAcceleratorQueue_t stream, size_t nBatchSize);
-
-/******************** rppDestroyGPU ********************/
-
-// Function to destroy a rpp GPU handle. To be called in the end to break down the rpp GPU environment
-// *param[in] handle An rpp handle of type rppHandle_t
-// *returns a rppStatus_t enumeration.
-RPP_EXPORT rppStatus_t rppDestroyGPU(rppHandle_t handle);
-
-/******************** rppSetStream ********************/
-
-// Function to set an accelerator command queue previously created
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
-// *returns a rppStatus_t enumeration.
-RPP_EXPORT rppStatus_t rppSetStream(rppHandle_t handle, rppAcceleratorQueue_t streamID);
-
-/******************** rppGetStream ********************/
-
-// Function to get an accelerator command queue previously created
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
-// *returns a rppStatus_t enumeration.
-RPP_EXPORT rppStatus_t rppGetStream(rppHandle_t handle, rppAcceleratorQueue_t* streamID);
-
-#endif    // HIP_COMPILE || OCL_COMPILE
+#endif // GPU_SUPPORT
 
 #ifdef __cplusplus
 }

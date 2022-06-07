@@ -61,7 +61,7 @@ using GemmKey = std::pair<std::string, std::string>;
 using rocblas_handle_ptr = RPP_MANAGE_PTR(rocblas_handle, rocblas_destroy_handle);
 #endif
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#if !GPU_SUPPORT
 
 struct Handle : rppHandle
 {
@@ -70,23 +70,45 @@ struct Handle : rppHandle
     Handle(Handle&&) noexcept;
     ~Handle();
 
+    InitHandle* GetInitHandle() const;
+    size_t GetBatchSize() const;
+    void SetBatchSize(size_t bSize) const;
+    void rpp_destroy_object_host();
+    std::unique_ptr<HandleImpl> impl;
+};
+
+#else
+
+struct Handle : rppHandle
+{
+    // Host handle related
+    Handle();
+    Handle(size_t nBatchSize);
+    Handle(Handle&&) noexcept;
+    ~Handle();
     InitHandle*  GetInitHandle() const;
     size_t GetBatchSize() const;
     void SetBatchSize(size_t bSize) const;
     void rpp_destroy_object_host();
+
+    // Allocator related
     void SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext) const;
 
+    // Device handle related
     Handle(rppAcceleratorQueue_t stream);
     Handle(rppAcceleratorQueue_t stream, size_t nBatchSize);
     void rpp_destroy_object_gpu();
     rppAcceleratorQueue_t GetStream() const;
     void SetStream(rppAcceleratorQueue_t streamID) const;
+
+    // Profiling and timing related
     void EnableProfiling(bool enable = true);
     void ResetKernelTime();
     void AccumKernelTime(float curr_time);
     float GetKernelTime() const;
     bool IsProfilingEnabled() const;
 
+    // Kernel related
     KernelInvoke AddKernel(const std::string& algorithm,
                            const std::string& network_config,
                            const std::string& program_name,
@@ -100,56 +122,31 @@ struct Handle : rppHandle
 
     bool HasKernel(const std::string& algorithm, const std::string& network_config) const;
     void ClearKernels(const std::string& algorithm, const std::string& network_config);
-
-    auto GetKernels(const std::string& algorithm, const std::string& network_config)
-    {
-        return this->GetKernelsImpl(algorithm, network_config) |
-               boost::adaptors::transformed([this](Kernel k) { return this->Run(k); });
-    }
-
-    KernelInvoke GetKernel(const std::string& algorithm, const std::string& network_config)
-    {
-        auto ks = this->GetKernelsImpl(algorithm, network_config);
-        if(ks.empty())
-        {
-            RPP_THROW("looking for default kernel (does not exist): " + algorithm + ", " +
-                         network_config);
-        }
-        return this->Run(ks.front());
-    }
-
+    auto GetKernels(const std::string& algorithm, const std::string& network_config);
+    KernelInvoke GetKernel(const std::string& algorithm, const std::string& network_config);
     KernelInvoke Run(Kernel k);
-    const std::vector<Kernel>& GetKernelsImpl(const std::string& algorithm,
-                                              const std::string& network_config);
-
-    Program LoadProgram(const std::string& program_name,
-                        std::string params,
-                        bool is_kernel_str,
-                        const std::string& kernel_src);
-
+    const std::vector<Kernel>& GetKernelsImpl(const std::string& algorithm, const std::string& network_config);
+    Program LoadProgram(const std::string& program_name, std::string params, bool is_kernel_str, const std::string& kernel_src);
     void Finish() const;
     void Flush() const;
 
+    // Memory related
     std::size_t GetLocalMemorySize();
     std::size_t GetGlobalMemorySize();
     std::size_t GetMaxComputeUnits();
-
     std::size_t m_MaxMemoryAllocSizeCached = 0;
     std::size_t GetMaxMemoryAllocSize();
 
+    // Other
     std::string GetDeviceName();
     std::ostream& Print(std::ostream& os) const;
-
     void Copy(ConstData_t src, Data_t dest, std::size_t size);
-
     Allocator::ManageDataPtr Create(std::size_t sz);
-    Allocator::ManageDataPtr&
-    WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz);
+    Allocator::ManageDataPtr& WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz);
     void ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz);
-
-#ifdef HIP_COMPILE
+#if HIP_COMPILE
     shared<ConstData_t> CreateSubBuffer(ConstData_t data, std::size_t offset, std::size_t size);
-#elif defined(OCL_COMPILE)
+#elif OCL_COMPILE
     shared<Data_t> CreateSubBuffer(Data_t data, std::size_t offset, std::size_t size);
 #endif
 
@@ -178,11 +175,7 @@ struct Handle : rppHandle
 
     std::string GetDbBasename()
     {
-        // clang-format off
-        return GetDeviceName()
-             + "_"
-             + std::to_string(GetMaxComputeUnits());
-        // clang-format on
+        return GetDeviceName() + "_" + std::to_string(GetMaxComputeUnits());
     }
 
     std::unique_ptr<HandleImpl> impl;
@@ -209,24 +202,10 @@ struct AutoEnableProfiling
     bool prev_state;
 };
 
-#else
-
-struct Handle : rppHandle
-{
-    Handle();
-    Handle(size_t nBatchSize);
-    Handle(Handle&&) noexcept;
-    ~Handle();
-
-    InitHandle*  GetInitHandle() const;
-    size_t GetBatchSize() const;
-    void SetBatchSize(size_t bSize) const;
-    void rpp_destroy_object_host();
-};
-
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT
 
 } // namespace rpp
+
 RPP_DEFINE_OBJECT(rppHandle, rpp::Handle);
 
 #endif // GUARD_RPP_CONTEXT_HPP_

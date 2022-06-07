@@ -73,7 +73,7 @@ extern "C" rppStatus_t rppDestroyHost(rppHandle_t handle)
     return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_host(); });
 }
 
-extern "C" rppStatus_t rppSetBatchSize(rppHandle_t handle , size_t batchSize)
+extern "C" rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t batchSize)
 {
     return rpp::try_([&] { rpp::deref(handle).SetBatchSize(batchSize); });
 }
@@ -83,7 +83,7 @@ extern "C" rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize)
     return rpp::try_([&] { rpp::deref(batchSize) = rpp::deref(handle).GetBatchSize(); });
 }
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#if GPU_SUPPORT
 
 extern "C" rppStatus_t rppCreateWithStream(rppHandle_t* handle, rppAcceleratorQueue_t stream)
 {
@@ -125,4 +125,4 @@ extern "C" rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable)
     return rpp::try_([&] { rpp::deref(handle).EnableProfiling(enable); });
 }
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

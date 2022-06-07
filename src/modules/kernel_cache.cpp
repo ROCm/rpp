@@ -46,7 +46,7 @@
 #include "rpp/kernel_cache.hpp"
 #include "rpp/logger.hpp"
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 namespace rpp {
 
@@ -236,4 +236,4 @@ KernelCache::KernelCache() {}
 
 } // namespace rpp
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

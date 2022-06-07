@@ -222,7 +222,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 /******************** crop ********************/
 
@@ -419,4 +419,4 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

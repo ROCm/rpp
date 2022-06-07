@@ -511,7 +511,7 @@ RppStatus rppt_exposure_host(RppPtr_t srcPtr,
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 /******************** brightness ********************/
 
@@ -910,4 +910,4 @@ RppStatus rppt_exposure_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-#endif    // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

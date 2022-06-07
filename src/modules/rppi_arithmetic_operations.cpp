@@ -907,7 +907,7 @@ rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1,
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#if defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#ifdef GPU_SUPPORT
 
 /******************** add ********************/
 
@@ -2136,4 +2136,4 @@ rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-#endif // defined(HIP_COMPILE) || defined(OCL_COMPILE)
+#endif // GPU_SUPPORT

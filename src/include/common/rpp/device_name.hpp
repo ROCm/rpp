@@ -23,6 +23,7 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #ifndef GUARD_RPP_DEVICE_NAME_HPP
 #define GUARD_RPP_DEVICE_NAME_HPP
 
