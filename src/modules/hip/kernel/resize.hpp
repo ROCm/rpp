@@ -7,8 +7,8 @@ __device__ void resize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *ds
 {
     float wRatio = float(srcRoiPtr_i4->z) / (float)dstDimsWH->x;
     float hRatio = float(srcRoiPtr_i4->w) / (float)dstDimsWH->y;
-    float4 wOffset_f4 = (float4)(wRatio * 0.5f);
-    float4 hOffset_f4 = (float4)(hRatio * 0.5f);
+    float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
+    float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
 
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
