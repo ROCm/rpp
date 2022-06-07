@@ -1382,9 +1382,9 @@ int main(int argc, char **argv)
         else if (ip_bitDepth == 2)
             rppt_crop_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
+            rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
+            rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 5)
             rppt_crop_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
