@@ -36,10 +36,6 @@
 #include "rpp/stringutils.hpp"
 #include "rpp/md5.hpp"
 
-#if HIP_COMPILE
-#include "rpp/expanduser.hpp"
-#endif    // HIP_COMPILE
-
 namespace rpp {
 
 RPP_DECLARE_ENV_VAR(RPP_DISABLE_CACHE)

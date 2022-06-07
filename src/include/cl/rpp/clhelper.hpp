@@ -23,13 +23,15 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #ifndef GUARD_OCL_HELPER_HPP_
 #define GUARD_OCL_HELPER_HPP_
 
 #include <iostream>
-#include <rpp/manage_ptr.hpp>
-#include <rpp.h>
 #include <string>
+
+#include "rpp.h"
+#include "rpp/manage_ptr.hpp"
 
 namespace rpp {
 

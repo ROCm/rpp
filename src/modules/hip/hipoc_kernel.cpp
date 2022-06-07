@@ -32,9 +32,8 @@
 #include "rpp/errors.hpp"
 #include "rpp/hipoc_kernel.hpp"
 #include "rpp/handle_lock.hpp"
-
 #if defined(STATIC)
-#include "rpp/hip_kernels.h"
+#include "rpp/hip_kernels.hpp"
 #endif
 
 namespace rpp {
