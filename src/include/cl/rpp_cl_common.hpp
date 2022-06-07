@@ -21,7 +21,7 @@ inline int getplnpkdind(RppiChnFormat &format)
     return format == RPPI_CHN_PLANAR ? 1 : 3;
 }
 
-inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f *kernel, Rpp32u kernelSize)
+inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f *kernel, Rpp32u kernelSize)
 {
     Rpp32f s, sum = 0.0, multiplier;
     int bound = ((kernelSize - 1) / 2);
@@ -41,7 +41,5 @@ inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f *kernel, Rpp
     {
         kernel[i] /= sum;
     }
-
-    return RPP_SUCCESS;
 }
 #endif //RPP_CL_COMMON_H

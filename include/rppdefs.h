@@ -335,6 +335,13 @@ typedef struct
     Rpp32u height;
 } RpptImagePatch, *RpptImagePatchPtr;
 
+typedef struct
+{   uint x[5];
+    uint counter;
+} RpptXorwowState;
+
+
+
 /******************** HOST memory typedefs ********************/
 
 typedef struct
