@@ -3,10 +3,10 @@
 
 // -------------------- Set 0 - resize device helpers --------------------
 
-__device__ void resize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
+__device__ void resize_roi_and_srclocs_hip_compute(uint2 *srcDimsWH, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
 {
-    float wRatio = float(srcRoiPtr_i4->z) / (float)dstDimsWH->x;
-    float hRatio = float(srcRoiPtr_i4->w) / (float)dstDimsWH->y;
+    float wRatio = float(srcDimsWH->x) / (float)dstDimsWH->x;
+    float hRatio = float(srcDimsWH->y) / (float)dstDimsWH->y;
     float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
     float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
 
@@ -51,11 +51,14 @@ __global__ void resize_bilinear_pkd_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    uint2 srcDimsWH;
+    srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
+    srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
     d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
+    resize_roi_and_srclocs_hip_compute(&srcDimsWH, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -85,11 +88,14 @@ __global__ void resize_bilinear_pln_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    uint2 srcDimsWH;
+    srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
+    srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
     d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
+    resize_roi_and_srclocs_hip_compute(&srcDimsWH, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float8 dst_f8;
-    rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+    rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
@@ -97,13 +103,13 @@ __global__ void resize_bilinear_pln_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -133,11 +139,14 @@ __global__ void resize_bilinear_pkd3_pln3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    uint2 srcDimsWH;
+    srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
+    srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
     d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
+    resize_roi_and_srclocs_hip_compute(&srcDimsWH, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
     rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -166,11 +175,14 @@ __global__ void resize_bilinear_pln3_pkd3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    uint2 srcDimsWH;
+    srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
+    srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
     d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
+    resize_roi_and_srclocs_hip_compute(&srcDimsWH, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 

@@ -12,8 +12,8 @@ static __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
     int4 *roiTensorPtrSrc_i4;
     roiTensorPtrSrc_i4 = (int4 *)&roiTensorPtrSrc[id_x];
 
-    roiTensorPtrSrc_i4->z -= (roiTensorPtrSrc_i4->x - 1);
-    roiTensorPtrSrc_i4->w -= (roiTensorPtrSrc_i4->y - 1);
+    roiTensorPtrSrc_i4->z -= (roiTensorPtrSrc_i4->x + 1);
+    roiTensorPtrSrc_i4->w -= (roiTensorPtrSrc_i4->y + 1);
 }
 
 static RppStatus hip_exec_roi_converison_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
