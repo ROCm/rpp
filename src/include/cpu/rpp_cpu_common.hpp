@@ -4376,7 +4376,7 @@ inline void compute_resize_bilinear_src_loc_and_weights(Rpp32s dstLocation, Rpp3
     weight[0] = 1 - weight[1];
 }
 
-inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false, Rpp32s maxSrcLoc = 0, Rpp32s minSrcLoc = 0)
+inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256i &pxLoc, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
 {
     __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
@@ -4385,19 +4385,11 @@ inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m
     pWeight[0] = _mm256_sub_ps(avx_p1, pWeight[1]);
     if(hasRGBChannels)
         pLoc = _mm256_mul_ps(pLoc, avx_p3);
-    __m256i pxLoc = _mm256_cvtps_epi32(pLoc);
+    pxLoc = _mm256_cvtps_epi32(pLoc);
     _mm256_storeu_si256((__m256i*) srcLoc, pxLoc);
-    __m256i pMinSrcLoc = _mm256_set1_epi32(minSrcLoc);
-    __m256i pMaxSrcLoc = _mm256_set1_epi32(maxSrcLoc);
-    if(srcLoc[0] < minSrcLoc)
-        pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pxLoc)); // Mask set to true if the location is negative
-    else if(srcLoc[7] == maxSrcLoc)
-        pMask = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pMaxSrcLoc, pxLoc)); // Mask set to true if the location is equal to widthLimit
-
-
 }
 
-inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false, Rpp32s maxSrcLoc = 0, Rpp32s minSrcLoc = 0)
+inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256i &pxLoc, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
 {
   __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
   pDstLoc = _mm256_sub_ps(pDstLoc, avx_p8);
@@ -4406,15 +4398,8 @@ inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstL
   pWeight[0] = _mm256_sub_ps(avx_p1, pWeight[1]);
   if(hasRGBChannels)
     pLoc = _mm256_mul_ps(pLoc, avx_p3);
-
-  __m256i pxLoc = _mm256_cvtps_epi32(pLoc);
+  pxLoc = _mm256_cvtps_epi32(pLoc);
   _mm256_storeu_si256((__m256i*) srcLoc, pxLoc);
-  __m256i pMaxSrcLoc = _mm256_set1_epi32(maxSrcLoc);
-  __m256i pMinSrcLoc = _mm256_set1_epi32(minSrcLoc);
-  if(srcLoc[7] < minSrcLoc)
-    pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pxLoc)); // Mask set to true if the location is negative
-  else if(srcLoc[0] == maxSrcLoc)
-    pMask = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pMaxSrcLoc, pxLoc)); // Mask set to true if the location is equal to widthLimit
 }
 
 inline Rpp32s compute_kernel_size(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
