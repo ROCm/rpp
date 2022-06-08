@@ -33,9 +33,9 @@ extern "C" {
 // Crop augmentation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor
+// *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
+// *param[in] dstDescPtr destination tensor descriptor
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.
@@ -53,9 +53,9 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
 // crop mirror normalize augmentation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor
+// *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
+// *param[in] dstDescPtr destination tensor descriptor
 // *param[in] meanTensor mean value for each image in the batch (meanTensor[n] >= 0)
 // *param[in] stdDevTensor standard deviation value for each image in the batch (stdDevTensor[n] >= 0)
 // *param[in] mirrorTensor mirror flag value to set mirroring on/off for each image in the batch (mirrorTensor[n] = 0/1)
@@ -76,9 +76,9 @@ RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr
 // Warp Affine augmentation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor
+// *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
+// *param[in] dstDescPtr destination tensor descriptor
 // *param[in] affineTensor affine matrix values for transformation calculation (2D tensor of size batchSize * 6 for each image in batch)
 // *param[in] interpolationType Interpolation type used (RpptInterpolationType::XYWH or RpptRoiType::LTRB)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
@@ -96,9 +96,9 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 // Flip augmentation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor
+// *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
-// *param[in] dstDesc destination tensor descriptor
+// *param[in] dstDescPtr destination tensor descriptor
 // *param[in] horizontalTensor horizontal flag value to set horizontal flip on/off for each image in the batch (horizontalTensor[n] = 0/1)
 // *param[in] verticalTensor vertical flag value to set vertical flip on/off for each image in the batch (verticalTensor[n] = 0/1)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
@@ -115,7 +115,7 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
 // Resize augmentation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
-// *param[in] srcDesc source tensor descriptor
+// *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDescPtr destination tensor descriptor
 // *param[in] dstImgSizes destination image size
