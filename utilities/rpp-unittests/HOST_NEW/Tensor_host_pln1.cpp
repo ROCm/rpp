@@ -362,8 +362,6 @@ int main(int argc, char **argv)
 
         count++;
     }
-    maxDstWidth = 640;
-    maxDstHeight = 480;
     closedir(dr1);
 
     // Set numDims, offset, n/c/h/w values for src/dst
@@ -1112,8 +1110,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 640;//roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
-            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 480;//roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
         }
 
         Rpp32f mean[images];
@@ -1121,20 +1119,18 @@ int main(int argc, char **argv)
         Rpp32u mirror[images];
         for (i = 0; i < images; i++)
         {
-            mean[i] = 0.0;
+            mean[i] = 100.0;
             stdDev[i] = 1.0;
-            mirror[i] = 0;
+            mirror[i] = 1;
         }
 
         // Uncomment to run test case with an xywhROI override
         // for (i = 0; i < images; i++)
         // {
-        //     roiTensorPtrSrc[i].xywhROI.xy.x = 20;
-        //     roiTensorPtrSrc[i].xywhROI.xy.y = 20;
-        //     roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-        //     roiTensorPtrSrc[i].xywhROI.roiHeight = 120;
-        //     dstImgSizes[i].width = 640;
-        //     dstImgSizes[i].height = 480;
+        //     roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+        //     roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+        //     dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+        //     dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
         // }
 
         // Uncomment to run test case with an ltrbROI override
