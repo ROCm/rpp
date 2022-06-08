@@ -1,6 +1,6 @@
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
 
 RppStatus contrast_u8_u8_host_tensor(Rpp8u *srcPtr,
                                      RpptDescPtr srcDescPtr,
@@ -558,7 +558,7 @@ RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
                         Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                             srcPtrTemp_ps[cnt] = (Rpp16f) srcPtrTemp[cnt];
-                        
+
                         __m256 p[1];
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, p);    // simd loads

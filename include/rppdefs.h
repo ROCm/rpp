@@ -196,42 +196,6 @@ typedef enum
     HSV
 } RppiFormat;
 
-enum class RPPTensorDataType
-{
-    U8 = 0,
-    FP32,
-    FP16,
-    I8,
-};
-
-struct RPPTensorFunctionMetaData
-{
-    RPPTensorDataType _in_type = RPPTensorDataType::U8;
-    RPPTensorDataType _out_type = RPPTensorDataType::U8;
-    RppiChnFormat _in_format = RppiChnFormat::RPPI_CHN_PACKED;
-    RppiChnFormat _out_format = RppiChnFormat::RPPI_CHN_PLANAR;
-    Rpp32u _in_channels = 3;
-
-    RPPTensorFunctionMetaData(RppiChnFormat in_chn_format,
-                              RPPTensorDataType in_tensor_type,
-                              RPPTensorDataType out_tensor_type,
-                              Rpp32u in_channels,
-                              bool out_format_change) :
-                              _in_format(in_chn_format),
-                              _in_type(in_tensor_type),
-                              _out_type(out_tensor_type),
-                              _in_channels(in_channels)
-    {
-        if (out_format_change)
-            if (_in_format == RPPI_CHN_PLANAR)
-                _out_format = RppiChnFormat::RPPI_CHN_PACKED;
-            else
-                _out_format = RppiChnFormat::RPPI_CHN_PLANAR;
-        else
-            _out_format = _in_format;
-    }
-};
-
 /******************** RPPT typedefs ********************/
 
 typedef enum
@@ -336,8 +300,8 @@ typedef struct
 } RpptImagePatch, *RpptImagePatchPtr;
 
 typedef struct
-{   uint x[5];
-    uint counter;
+{   Rpp32u x[5];
+    Rpp32u counter;
 } RpptXorwowState;
 
 
