@@ -27,8 +27,8 @@ __device__ void rmn_hip_compute(half *srcPtr, d_float8 *pix_f8, d_float8 *rmnPar
 
 __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
 {
-    float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x) / dstDimsWH->x;
-    float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y) / dstDimsWH->y;
+    float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) / dstDimsWH->x;
+    float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) / dstDimsWH->y;
     float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
     float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
 
@@ -48,8 +48,8 @@ __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute(int4 *srcRoi
 
 __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute_mirror(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
 {
-    float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x) / dstDimsWH->x;
-    float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y) / dstDimsWH->y;
+    float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) / dstDimsWH->x;
+    float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) / dstDimsWH->y;
     float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
     float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
 
@@ -94,9 +94,18 @@ __global__ void resize_mirror_normalize_bilinear_pkd_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
-    d_float8 rmnParams_f8;
-    rmnParams_f8.f4[0] = (float4)meanTensor[id_z];
-    rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
+    d_float8 rmnParams_R_f8, rmnParams_G_f8, rmnParams_B_f8;
+    //Get Params for R channel
+    rmnParams_R_f8.f4[0] = (float4)meanTensor[id_z * 3];
+    rmnParams_R_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3]);
+
+    //Get Params for G channel
+    rmnParams_G_f8.f4[0] = (float4)meanTensor[id_z * 3 + 1];
+    rmnParams_G_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 1]);
+
+    //Get Params for B channel
+    rmnParams_B_f8.f4[0] = (float4)meanTensor[id_z * 3 + 2];
+    rmnParams_B_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 2]);
 
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)
@@ -105,13 +114,11 @@ __global__ void resize_mirror_normalize_bilinear_pkd_tensor(T *srcPtr,
         resize_mirror_normalize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
-    if(meanTensor[id_z] != 0.0 && stdDevTensor[id_z] != 1.0)
-    {
-        rmn_hip_compute(dstPtr, &dst_f24.f8[0], &rmnParams_f8);
-        rmn_hip_compute(dstPtr, &dst_f24.f8[1], &rmnParams_f8);
-        rmn_hip_compute(dstPtr, &dst_f24.f8[2], &rmnParams_f8);
-    }
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
+    
+    rmn_hip_compute(dstPtr, &dst_f24.f8[0], &rmnParams_R_f8);
+    rmn_hip_compute(dstPtr, &dst_f24.f8[1], &rmnParams_G_f8);
+    rmn_hip_compute(dstPtr, &dst_f24.f8[2], &rmnParams_B_f8);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -144,9 +151,18 @@ __global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
-    d_float8 rmnParams_f8;
-    rmnParams_f8.f4[0] = (float4)meanTensor[id_z];
-    rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
+    d_float8 rmnParams_R_f8, rmnParams_G_f8, rmnParams_B_f8;
+    //Get Params for R channel
+    rmnParams_R_f8.f4[0] = (float4)meanTensor[id_z * 3];
+    rmnParams_R_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3]);
+
+    //Get Params for G channel
+    rmnParams_G_f8.f4[0] = (float4)meanTensor[id_z * 3 + 1];
+    rmnParams_G_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 1]);
+
+    //Get Params for B channel
+    rmnParams_B_f8.f4[0] = (float4)meanTensor[id_z * 3 + 2];
+    rmnParams_B_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 2]);
     
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)
@@ -155,9 +171,9 @@ __global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
         resize_mirror_normalize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
         
     d_float8 dst_f8;
-    rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
-    if(meanTensor[id_z] != 0.0 && stdDevTensor[id_z] != 1.0)
-        rmn_hip_compute(dstPtr, &dst_f8, &rmnParams_f8);
+    rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
+    if(!(meanTensor[id_z] == 0.0 && stdDevTensor[id_z] == 1.0))
+        rmn_hip_compute(dstPtr, &dst_f8, &rmnParams_R_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
@@ -165,17 +181,17 @@ __global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
-        if(meanTensor[id_z] != 0.0 && stdDevTensor[id_z] != 1.0)
-            rmn_hip_compute(dstPtr, &dst_f8, &rmnParams_f8);
+        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
+        if(!(meanTensor[id_z] == 0.0 && stdDevTensor[id_z] == 1.0))
+            rmn_hip_compute(dstPtr, &dst_f8, &rmnParams_G_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
-        if(meanTensor[id_z] != 0.0 && stdDevTensor[id_z] != 1.0)
-            rmn_hip_compute(dstPtr, &dst_f8, &rmnParams_f8);
+        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
+        if(!(meanTensor[id_z] == 0.0 && stdDevTensor[id_z] == 1.0))
+            rmn_hip_compute(dstPtr, &dst_f8, &rmnParams_B_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -208,9 +224,18 @@ __global__ void resize_mirror_normalize_bilinear_pkd3_pln3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
-    d_float8 rmnParams_f8;
-    rmnParams_f8.f4[0] = (float4)meanTensor[id_z];
-    rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
+    d_float8 rmnParams_R_f8, rmnParams_G_f8, rmnParams_B_f8;
+    //Get Params for R channel
+    rmnParams_R_f8.f4[0] = (float4)meanTensor[id_z * 3];
+    rmnParams_R_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3]);
+
+    //Get Params for G channel
+    rmnParams_G_f8.f4[0] = (float4)meanTensor[id_z * 3 + 1];
+    rmnParams_G_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 1]);
+
+    //Get Params for B channel
+    rmnParams_B_f8.f4[0] = (float4)meanTensor[id_z * 3 + 2];
+    rmnParams_B_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 2]);
 
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)
@@ -219,13 +244,11 @@ __global__ void resize_mirror_normalize_bilinear_pkd3_pln3_tensor(T *srcPtr,
         resize_mirror_normalize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
-    if(meanTensor[id_z] != 0.0 && stdDevTensor[id_z] != 1.0)
-    {
-        rmn_hip_compute(dstPtr, &dst_f24.f8[0], &rmnParams_f8);
-        rmn_hip_compute(dstPtr, &dst_f24.f8[1], &rmnParams_f8);
-        rmn_hip_compute(dstPtr, &dst_f24.f8[2], &rmnParams_f8);
-    }
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
+    
+    rmn_hip_compute(dstPtr, &dst_f24.f8[0], &rmnParams_R_f8);
+    rmn_hip_compute(dstPtr, &dst_f24.f8[1], &rmnParams_G_f8);
+    rmn_hip_compute(dstPtr, &dst_f24.f8[2], &rmnParams_B_f8);
     rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -256,9 +279,18 @@ __global__ void resize_mirror_normalize_bilinear_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    d_float8 rmnParams_f8;
-    rmnParams_f8.f4[0] = (float4)meanTensor[id_z];
-    rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
+    d_float8 rmnParams_R_f8, rmnParams_G_f8, rmnParams_B_f8;
+    //Get Params for R channel
+    rmnParams_R_f8.f4[0] = (float4)meanTensor[id_z * 3];
+    rmnParams_R_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3]);
+
+    //Get Params for G channel
+    rmnParams_G_f8.f4[0] = (float4)meanTensor[id_z * 3 + 1];
+    rmnParams_G_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 1]);
+
+    //Get Params for B channel
+    rmnParams_B_f8.f4[0] = (float4)meanTensor[id_z * 3 + 2];
+    rmnParams_B_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 2]);
     
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
@@ -268,13 +300,10 @@ __global__ void resize_mirror_normalize_bilinear_pln3_pkd3_tensor(T *srcPtr,
         resize_mirror_normalize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
         
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24);
-    if(meanTensor[id_z] != 0.0 && stdDevTensor[id_z] != 1.0)
-    {
-        rmn_hip_compute(dstPtr, &dst_f24.f8[0], &rmnParams_f8);
-        rmn_hip_compute(dstPtr, &dst_f24.f8[1], &rmnParams_f8);
-        rmn_hip_compute(dstPtr, &dst_f24.f8[2], &rmnParams_f8);
-    }
+    rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
+    rmn_hip_compute(dstPtr, &dst_f24.f8[0], &rmnParams_R_f8);
+    rmn_hip_compute(dstPtr, &dst_f24.f8[1], &rmnParams_G_f8);
+    rmn_hip_compute(dstPtr, &dst_f24.f8[2], &rmnParams_B_f8);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 

@@ -608,8 +608,8 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
 {
 #ifdef HIP_COMPILE
     Rpp32u paramIndex = 0;
-    copy_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float3(meanTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float3(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
     copy_param_uint(mirrorTensor, rpp::deref(rppHandle), paramIndex++);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
