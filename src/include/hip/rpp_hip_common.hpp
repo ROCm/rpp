@@ -1461,58 +1461,101 @@ __device__ __forceinline__ void rpp_hip_roi_range_check(float2 *locSrcFloor, int
     locSrc->y = (int)fminf(fmaxf(locSrcFloor->y, roiPtrSrc_i4->y), roiPtrSrc_i4->w);
 }
 
-__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(uchar *srcPtr, uint srcStrideH, float2 *locSrcFloor, float4 *srcNeighborhood_f4)
+__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(uchar *srcPtr, uint srcStrideH, float2 *locSrcFloor, int4 *roiPtrSrc_i4, float4 *srcNeighborhood_f4)
 {
-    uint src;
-    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x;
-    src = *(uint *)&srcPtr[srcIdx];
-    srcNeighborhood_f4->x = rpp_hip_unpack0(src);
-    srcNeighborhood_f4->y = rpp_hip_unpack1(src);
-    srcIdx += srcStrideH;
-    src = *(uint *)&srcPtr[srcIdx];
-    srcNeighborhood_f4->z = rpp_hip_unpack0(src);
-    srcNeighborhood_f4->w = rpp_hip_unpack1(src);
+    uint2 src;
+    int2 locSrc1, locSrc2;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc1);
+    *locSrcFloor = *locSrcFloor + (float2)1.0f;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc2);
+    int2 srcInterRowLoc;
+    srcInterRowLoc.x = locSrc1.y * srcStrideH;
+    srcInterRowLoc.y = locSrc2.y * srcStrideH;
+
+    int srcIdx1 = srcInterRowLoc.x + locSrc1.x;   // Top Left
+    int srcIdx2 = srcInterRowLoc.x + locSrc2.x;   // Top Right
+    src.x = *(uint *)&srcPtr[srcIdx1];
+    src.y = *(uint *)&srcPtr[srcIdx2];
+    srcNeighborhood_f4->x = rpp_hip_unpack0(src.x);
+    srcNeighborhood_f4->y = rpp_hip_unpack0(src.y);
+    srcIdx1 = srcInterRowLoc.y + locSrc1.x;   // Bottom left
+    srcIdx2 = srcInterRowLoc.y + locSrc2.x;   // Bottom right
+    src.x = *(uint *)&srcPtr[srcIdx1];
+    src.y = *(uint *)&srcPtr[srcIdx2];
+    srcNeighborhood_f4->z = rpp_hip_unpack0(src.x);
+    srcNeighborhood_f4->w = rpp_hip_unpack0(src.y);
 }
 
 // F32 loads for bilinear interpolation (4 F32 pixels)
 
-__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(float *srcPtr, uint srcStrideH, float2 *locSrcFloor, float4 *srcNeighborhood_f4)
+__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(float *srcPtr, uint srcStrideH, float2 *locSrcFloor, int4 *roiPtrSrc_i4, float4 *srcNeighborhood_f4)
 {
-    float2 src_f2;
-    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x;
-    src_f2 = *(float2 *)&srcPtr[srcIdx];
-    srcNeighborhood_f4->x = src_f2.x;
-    srcNeighborhood_f4->y = src_f2.y;
-    srcIdx += srcStrideH;
-    src_f2 = *(float2 *)&srcPtr[srcIdx];
-    srcNeighborhood_f4->z = src_f2.x;
-    srcNeighborhood_f4->w = src_f2.y;
+    int2 locSrc1, locSrc2;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc1);
+    *locSrcFloor = *locSrcFloor + (float2)1.0f;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc2);
+    int2 srcInterRowLoc;
+    srcInterRowLoc.x = locSrc1.y * srcStrideH;
+    srcInterRowLoc.y = locSrc2.y * srcStrideH;
+
+    int srcIdx1 = srcInterRowLoc.x + locSrc1.x;   // Top Left
+    int srcIdx2 = srcInterRowLoc.x + locSrc2.x;   // Top Right
+    srcNeighborhood_f4->x = *(float *)&srcPtr[srcIdx1];
+    srcNeighborhood_f4->y = *(float *)&srcPtr[srcIdx2];
+    srcIdx1 = srcInterRowLoc.y + locSrc1.x;   // Bottom left
+    srcIdx2 = srcInterRowLoc.y + locSrc2.x;   // Bottom right
+    srcNeighborhood_f4->z = *(float *)&srcPtr[srcIdx1];
+    srcNeighborhood_f4->w = *(float *)&srcPtr[srcIdx2];
 }
 
 // I8 loads for bilinear interpolation (4 I8 pixels)
 
-__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(schar *srcPtr, uint srcStrideH, float2 *locSrcFloor, float4 *srcNeighborhood_f4)
+__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(schar *srcPtr, uint srcStrideH, float2 *locSrcFloor, int4 *roiPtrSrc_i4, float4 *srcNeighborhood_f4)
 {
-    int src;
-    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x;
-    src = *(int *)&srcPtr[srcIdx];
-    srcNeighborhood_f4->x = rpp_hip_unpack0(src);
-    srcNeighborhood_f4->y = rpp_hip_unpack1(src);
-    srcIdx += srcStrideH;
-    src = *(int *)&srcPtr[srcIdx];
-    srcNeighborhood_f4->z = rpp_hip_unpack0(src);
-    srcNeighborhood_f4->w = rpp_hip_unpack1(src);
+    int2 src;
+    int2 locSrc1, locSrc2;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc1);
+    *locSrcFloor = *locSrcFloor + (float2)1.0f;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc2);
+    int2 srcInterRowLoc;
+    srcInterRowLoc.x = locSrc1.y * srcStrideH;
+    srcInterRowLoc.y = locSrc2.y * srcStrideH;
+
+    int srcIdx1 = srcInterRowLoc.x + locSrc1.x;   // Top Left
+    int srcIdx2 = srcInterRowLoc.x + locSrc2.x;   // Top Right
+    src.x = *(int *)&srcPtr[srcIdx1];
+    src.y = *(int *)&srcPtr[srcIdx2];
+    srcNeighborhood_f4->x = rpp_hip_unpack0(src.x);
+    srcNeighborhood_f4->y = rpp_hip_unpack0(src.y);
+    srcIdx1 = srcInterRowLoc.y + locSrc1.x;   // Bottom left
+    srcIdx2 = srcInterRowLoc.y + locSrc2.x;   // Bottom right
+    src.x = *(int *)&srcPtr[srcIdx1];
+    src.y = *(int *)&srcPtr[srcIdx2];
+    srcNeighborhood_f4->z = rpp_hip_unpack0(src.x);
+    srcNeighborhood_f4->w = rpp_hip_unpack0(src.y);
 }
 
 // F16 loads for bilinear interpolation (4 F16 pixels)
 
-__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(half *srcPtr, uint srcStrideH, float2 *locSrcFloor, float4 *srcNeighborhood_f4)
+__device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(half *srcPtr, uint srcStrideH, float2 *locSrcFloor, int4 *roiPtrSrc_i4, float4 *srcNeighborhood_f4)
 {
     float2 srcUpper_f2, srcLower_f2;
-    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x;
-    srcUpper_f2 = __half22float2(*(half2 *)&srcPtr[srcIdx]);
-    srcIdx += srcStrideH;
-    srcLower_f2 = __half22float2(*(half2 *)&srcPtr[srcIdx]);
+    int2 locSrc1, locSrc2;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc1);
+    *locSrcFloor = *locSrcFloor + (float2)1.0f;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc2);
+    int2 srcInterRowLoc;
+    srcInterRowLoc.x = locSrc1.y * srcStrideH;
+    srcInterRowLoc.y = locSrc2.y * srcStrideH;
+
+    int srcIdx1 = srcInterRowLoc.x + locSrc1.x;   // Top Left
+    int srcIdx2 = srcInterRowLoc.x + locSrc2.x;   // Top Right
+    srcUpper_f2.x = __half2float(*(half *)&srcPtr[srcIdx1]);
+    srcUpper_f2.y = __half2float(*(half *)&srcPtr[srcIdx2]);
+    srcIdx1 = srcInterRowLoc.y + locSrc1.x;   // Bottom left
+    srcIdx2 = srcInterRowLoc.y + locSrc2.x;   // Bottom right
+    srcLower_f2.x = __half2float(*(half *)&srcPtr[srcIdx1]);
+    srcLower_f2.y = __half2float(*(half *)&srcPtr[srcIdx2]);
     *srcNeighborhood_f4 = make_float4(srcUpper_f2.x, srcUpper_f2.y, srcLower_f2.x, srcLower_f2.y);
 }
 
@@ -1525,8 +1568,14 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
     rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc1);
     *locSrcFloor = *locSrcFloor + (float2)1.0f;
     rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc2);
-    int srcIdx1 = locSrc1.y * srcStrideH + locSrc1.x * 3;
-    int srcIdx2 = locSrc1.y * srcStrideH + locSrc2.x * 3;
+    int2 srcInterRowLoc_i2, srcInterColLoc_i2;
+    srcInterRowLoc_i2.x = locSrc1.y * srcStrideH;
+    srcInterRowLoc_i2.y = locSrc2.y * srcStrideH;
+    srcInterColLoc_i2.x = locSrc1.x * 3;
+    srcInterColLoc_i2.y = locSrc2.x * 3;
+
+    int srcIdx1 = srcInterRowLoc_i2.x + srcInterColLoc_i2.x;   // Top Left
+    int srcIdx2 = srcInterRowLoc_i2.x + srcInterColLoc_i2.y;   // Top Right
     src_u2.x = *(uint *)&srcPtr[srcIdx1];
     src_u2.y = *(uint *)&srcPtr[srcIdx2];
     srcNeighborhood_f12->f1[0] = rpp_hip_unpack0(src_u2.x);
@@ -1535,8 +1584,8 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
     srcNeighborhood_f12->f1[5] = rpp_hip_unpack1(src_u2.y);
     srcNeighborhood_f12->f1[8] = rpp_hip_unpack2(src_u2.x);
     srcNeighborhood_f12->f1[9] = rpp_hip_unpack2(src_u2.y);
-    srcIdx1 = locSrc2.y * srcStrideH + locSrc1.x * 3;
-    srcIdx2 = locSrc2.y * srcStrideH + locSrc2.x * 3;
+    srcIdx1 = srcInterRowLoc_i2.y + srcInterColLoc_i2.x;   // Bottom left
+    srcIdx2 = srcInterRowLoc_i2.y + srcInterColLoc_i2.y;   // Bottom right
     src_u2.x = *(uint *)&srcPtr[srcIdx1];
     src_u2.y = *(uint *)&srcPtr[srcIdx2];
     srcNeighborhood_f12->f1[ 2] = rpp_hip_unpack0(src_u2.x);
@@ -1551,76 +1600,111 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(float *srcPtr, uint srcStrideH, float2 *locSrcFloor, int4 *roiPtrSrc_i4, d_float12 *srcNeighborhood_f12)
 {
-    d_float6_s src_f6;
-    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
-    src_f6 = *(d_float6_s *)&srcPtr[srcIdx];
-    srcNeighborhood_f12->f1[0] = src_f6.data[0];
-    srcNeighborhood_f12->f1[1] = src_f6.data[3];
-    srcNeighborhood_f12->f1[4] = src_f6.data[1];
-    srcNeighborhood_f12->f1[5] = src_f6.data[4];
-    srcNeighborhood_f12->f1[8] = src_f6.data[2];
-    srcNeighborhood_f12->f1[9] = src_f6.data[5];
-    srcIdx += srcStrideH;
-    src_f6 = *(d_float6_s *)&srcPtr[srcIdx];
-    srcNeighborhood_f12->f1[ 2] = src_f6.data[0];
-    srcNeighborhood_f12->f1[ 3] = src_f6.data[3];
-    srcNeighborhood_f12->f1[ 6] = src_f6.data[1];
-    srcNeighborhood_f12->f1[ 7] = src_f6.data[4];
-    srcNeighborhood_f12->f1[10] = src_f6.data[2];
-    srcNeighborhood_f12->f1[11] = src_f6.data[5];
+    float3 src1_f3, src2_f3;
+    int2 locSrc1, locSrc2;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc1);
+    *locSrcFloor = *locSrcFloor + (float2)1.0f;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc2);
+    int2 srcInterRowLoc_i2, srcInterColLoc_i2;
+    srcInterRowLoc_i2.x = locSrc1.y * srcStrideH;
+    srcInterRowLoc_i2.y = locSrc2.y * srcStrideH;
+    srcInterColLoc_i2.x = locSrc1.x * 3;
+    srcInterColLoc_i2.y = locSrc2.x * 3;
+
+    int srcIdx1 = srcInterRowLoc_i2.x + srcInterColLoc_i2.x;   // Top Left
+    int srcIdx2 = srcInterRowLoc_i2.x + srcInterColLoc_i2.y;   // Top Right
+    src1_f3 = *(float3 *)&srcPtr[srcIdx1];
+    src2_f3 = *(float3 *)&srcPtr[srcIdx2];
+    srcNeighborhood_f12->f1[0] = src1_f3.x;
+    srcNeighborhood_f12->f1[1] = src2_f3.x;
+    srcNeighborhood_f12->f1[4] = src1_f3.y;
+    srcNeighborhood_f12->f1[5] = src2_f3.y;
+    srcNeighborhood_f12->f1[8] = src1_f3.z;
+    srcNeighborhood_f12->f1[9] = src2_f3.z;
+    srcIdx1 = srcInterRowLoc_i2.y + srcInterColLoc_i2.x;   // Bottom left
+    srcIdx2 = srcInterRowLoc_i2.y + srcInterColLoc_i2.y;   // Bottom right
+    src1_f3 = *(float3 *)&srcPtr[srcIdx1];
+    src2_f3 = *(float3 *)&srcPtr[srcIdx2];
+    srcNeighborhood_f12->f1[ 2] = src1_f3.x;
+    srcNeighborhood_f12->f1[ 3] = src2_f3.x;
+    srcNeighborhood_f12->f1[ 6] = src1_f3.y;
+    srcNeighborhood_f12->f1[ 7] = src2_f3.y;
+    srcNeighborhood_f12->f1[10] = src1_f3.z;
+    srcNeighborhood_f12->f1[11] = src2_f3.z;
 }
 
 // I8 loads for bilinear interpolation (12 I8 pixels)
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(schar *srcPtr, uint srcStrideH, float2 *locSrcFloor, int4 *roiPtrSrc_i4, d_float12 *srcNeighborhood_f12)
 {
-    int2 src_i2;
-    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
-    src_i2 = *(int2 *)&srcPtr[srcIdx];
-    srcNeighborhood_f12->f1[0] = rpp_hip_unpack0(src_i2.x);
-    srcNeighborhood_f12->f1[1] = rpp_hip_unpack3(src_i2.x);
-    srcNeighborhood_f12->f1[4] = rpp_hip_unpack1(src_i2.x);
-    srcNeighborhood_f12->f1[5] = rpp_hip_unpack0(src_i2.y);
-    srcNeighborhood_f12->f1[8] = rpp_hip_unpack2(src_i2.x);
-    srcNeighborhood_f12->f1[9] = rpp_hip_unpack1(src_i2.y);
-    srcIdx += srcStrideH;
-    src_i2 = *(int2 *)&srcPtr[srcIdx];
-    srcNeighborhood_f12->f1[ 2] = rpp_hip_unpack0(src_i2.x);
-    srcNeighborhood_f12->f1[ 3] = rpp_hip_unpack3(src_i2.x);
-    srcNeighborhood_f12->f1[ 6] = rpp_hip_unpack1(src_i2.x);
-    srcNeighborhood_f12->f1[ 7] = rpp_hip_unpack0(src_i2.y);
-    srcNeighborhood_f12->f1[10] = rpp_hip_unpack2(src_i2.x);
-    srcNeighborhood_f12->f1[11] = rpp_hip_unpack1(src_i2.y);
+    int2 src_u2;
+    int2 locSrc1, locSrc2;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc1);
+    *locSrcFloor = *locSrcFloor + (float2)1.0f;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc2);
+    int2 srcInterRowLoc_i2, srcInterColLoc_i2;
+    srcInterRowLoc_i2.x = locSrc1.y * srcStrideH;
+    srcInterRowLoc_i2.y = locSrc2.y * srcStrideH;
+    srcInterColLoc_i2.x = locSrc1.x * 3;
+    srcInterColLoc_i2.y = locSrc2.x * 3;
+
+    int srcIdx1 = srcInterRowLoc_i2.x + srcInterColLoc_i2.x;   // Top Left
+    int srcIdx2 = srcInterRowLoc_i2.x + srcInterColLoc_i2.y;   // Top Right
+    src_u2.x = *(int *)&srcPtr[srcIdx1];
+    src_u2.y = *(int *)&srcPtr[srcIdx2];
+    srcNeighborhood_f12->f1[0] = rpp_hip_unpack0(src_u2.x);
+    srcNeighborhood_f12->f1[1] = rpp_hip_unpack0(src_u2.y);
+    srcNeighborhood_f12->f1[4] = rpp_hip_unpack1(src_u2.x);
+    srcNeighborhood_f12->f1[5] = rpp_hip_unpack1(src_u2.y);
+    srcNeighborhood_f12->f1[8] = rpp_hip_unpack2(src_u2.x);
+    srcNeighborhood_f12->f1[9] = rpp_hip_unpack2(src_u2.y);
+    srcIdx1 = srcInterRowLoc_i2.y + srcInterColLoc_i2.x;   // Bottom left
+    srcIdx2 = srcInterRowLoc_i2.y + srcInterColLoc_i2.y;   // Bottom right
+    src_u2.x = *(int *)&srcPtr[srcIdx1];
+    src_u2.y = *(int *)&srcPtr[srcIdx2];
+    srcNeighborhood_f12->f1[ 2] = rpp_hip_unpack0(src_u2.x);
+    srcNeighborhood_f12->f1[ 3] = rpp_hip_unpack0(src_u2.y);
+    srcNeighborhood_f12->f1[ 6] = rpp_hip_unpack1(src_u2.x);
+    srcNeighborhood_f12->f1[ 7] = rpp_hip_unpack1(src_u2.y);
+    srcNeighborhood_f12->f1[10] = rpp_hip_unpack2(src_u2.x);
+    srcNeighborhood_f12->f1[11] = rpp_hip_unpack2(src_u2.y);
 }
 
 // F16 loads for bilinear interpolation (12 F16 pixels)
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *srcPtr, uint srcStrideH, float2 *locSrcFloor, int4 *roiPtrSrc_i4, d_float12 *srcNeighborhood_f12)
 {
-    d_half6_s src_h6;
-    d_float6 src_f6;
-    int srcIdx = (int)locSrcFloor->y * srcStrideH + (int)locSrcFloor->x * 3;
-    src_h6 = *(d_half6_s *)&srcPtr[srcIdx];
-    src_f6.f2[0] = __half22float2(src_h6.h2[0]);
-    src_f6.f2[1] = __half22float2(src_h6.h2[1]);
-    src_f6.f2[2] = __half22float2(src_h6.h2[2]);
-    srcNeighborhood_f12->f1[0] = src_f6.f1[0];
-    srcNeighborhood_f12->f1[1] = src_f6.f1[3];
-    srcNeighborhood_f12->f1[4] = src_f6.f1[1];
-    srcNeighborhood_f12->f1[5] = src_f6.f1[4];
-    srcNeighborhood_f12->f1[8] = src_f6.f1[2];
-    srcNeighborhood_f12->f1[9] = src_f6.f1[5];
-    srcIdx += srcStrideH;
-    src_h6 = *(d_half6_s *)&srcPtr[srcIdx];
-    src_f6.f2[0] = __half22float2(src_h6.h2[0]);
-    src_f6.f2[1] = __half22float2(src_h6.h2[1]);
-    src_f6.f2[2] = __half22float2(src_h6.h2[2]);
-    srcNeighborhood_f12->f1[ 2] = src_f6.f1[0];
-    srcNeighborhood_f12->f1[ 3] = src_f6.f1[3];
-    srcNeighborhood_f12->f1[ 6] = src_f6.f1[1];
-    srcNeighborhood_f12->f1[ 7] = src_f6.f1[4];
-    srcNeighborhood_f12->f1[10] = src_f6.f1[2];
-    srcNeighborhood_f12->f1[11] = src_f6.f1[5];
+    d_half3_s src1_h3, src2_h3;
+    int2 locSrc1, locSrc2;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc1);
+    *locSrcFloor = *locSrcFloor + (float2)1.0f;
+    rpp_hip_roi_range_check(locSrcFloor, roiPtrSrc_i4, &locSrc2);
+    int2 srcInterRowLoc_i2, srcInterColLoc_i2;
+    srcInterRowLoc_i2.x = locSrc1.y * srcStrideH;
+    srcInterRowLoc_i2.y = locSrc2.y * srcStrideH;
+    srcInterColLoc_i2.x = locSrc1.x * 3;
+    srcInterColLoc_i2.y = locSrc2.x * 3;
+
+    int srcIdx1 = srcInterRowLoc_i2.x + srcInterColLoc_i2.x;   // Top Left
+    int srcIdx2 = srcInterRowLoc_i2.x + srcInterColLoc_i2.y;   // Top Right
+    src1_h3 = *(d_half3_s *)&srcPtr[srcIdx1];
+    src2_h3 = *(d_half3_s *)&srcPtr[srcIdx2];
+    srcNeighborhood_f12->f1[0] = __half2float(src1_h3.h1[0]);
+    srcNeighborhood_f12->f1[1] = __half2float(src2_h3.h1[0]);
+    srcNeighborhood_f12->f1[4] = __half2float(src1_h3.h1[1]);
+    srcNeighborhood_f12->f1[5] = __half2float(src2_h3.h1[1]);
+    srcNeighborhood_f12->f1[8] = __half2float(src1_h3.h1[2]);
+    srcNeighborhood_f12->f1[9] = __half2float(src2_h3.h1[2]);
+    srcIdx1 = srcInterRowLoc_i2.y + srcInterColLoc_i2.x;   // Top Left
+    srcIdx2 = srcInterRowLoc_i2.y + srcInterColLoc_i2.y;   // Top Right
+    src1_h3 = *(d_half3_s *)&srcPtr[srcIdx1];
+    src2_h3 = *(d_half3_s *)&srcPtr[srcIdx2];
+    srcNeighborhood_f12->f1[ 2] = __half2float(src1_h3.h1[0]);
+    srcNeighborhood_f12->f1[ 3] = __half2float(src2_h3.h1[0]);
+    srcNeighborhood_f12->f1[ 6] = __half2float(src1_h3.h1[1]);
+    srcNeighborhood_f12->f1[ 7] = __half2float(src2_h3.h1[1]);
+    srcNeighborhood_f12->f1[10] = __half2float(src1_h3.h1[2]);
+    srcNeighborhood_f12->f1[11] = __half2float(src2_h3.h1[2]);
 }
 
 // BILINEAR INTERPOLATION EXECUTION HELPERS (templated execution routines for all bit depths)
@@ -1654,7 +1738,7 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_pln1(T *srcPtr, ui
         oneMinusWeightedWH.x = 1.0f - weightedWH.x;
         oneMinusWeightedWH.y = 1.0f - weightedWH.y;
         float4 srcNeighborhood_f4;
-        rpp_hip_interpolate1_bilinear_load_pln1(srcPtr, srcStrideH, &locSrcFloor, &srcNeighborhood_f4);
+        rpp_hip_interpolate1_bilinear_load_pln1(srcPtr, srcStrideH, &locSrcFloor, roiPtrSrc_i4, &srcNeighborhood_f4);
         rpp_hip_interpolate_bilinear(&srcNeighborhood_f4, &weightedWH, &oneMinusWeightedWH, dst);
     }
 }
