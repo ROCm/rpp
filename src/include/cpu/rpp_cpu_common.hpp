@@ -4379,18 +4379,18 @@ inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m
         pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxLoc)); // Mask set to true if the location is negative
 }
 
-inline Rpp32s compute_kernel_size(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
+inline Rpp32f compute_kernel_radius(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
 {
     switch(interpolationType)
     {
     case RpptInterpolationType::BILINEAR:
-        return 2;
+        return 1.0f;
     case RpptInterpolationType::BICUBIC:
-        return 4;
+        return 2.0f;
     case RpptInterpolationType::LANCZOS:
-        return in_size > out_size ? std::ceil(6 * scale) : 6;
+        return in_size > out_size ? 3 * scale : 3.0f;
     default:
-        return 2;
+        return 1.0f;
     }
 }
 
