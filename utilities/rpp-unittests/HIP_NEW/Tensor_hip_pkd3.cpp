@@ -377,8 +377,6 @@ int main(int argc, char **argv)
 
         count++;
     }
-    maxDstWidth = 660;
-    maxDstHeight = 500;
     closedir(dr1); 
 
     // Set numDims, offset, n/c/h/w values for src/dst

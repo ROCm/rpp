@@ -116,10 +116,12 @@ __global__ void resize_mirror_normalize_bilinear_pkd_tensor(T *srcPtr,
     d_float24 dst_f24;
     rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
     
-    rmn_hip_compute(dstPtr, &dst_f24.f8[0], &rmnParams_R_f8);
-    rmn_hip_compute(dstPtr, &dst_f24.f8[1], &rmnParams_G_f8);
-    rmn_hip_compute(dstPtr, &dst_f24.f8[2], &rmnParams_B_f8);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+    d_float24 dst_f24_pln;
+    rpp_hip_pack_float24_pkd3_to_pln3(&dst_f24, &dst_f24_pln);
+    rmn_hip_compute(dstPtr, &dst_f24_pln.f8[0], &rmnParams_R_f8);
+    rmn_hip_compute(dstPtr, &dst_f24_pln.f8[1], &rmnParams_G_f8);
+    rmn_hip_compute(dstPtr, &dst_f24_pln.f8[2], &rmnParams_B_f8);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24_pln);
 }
 
 template <typename T>   
@@ -246,10 +248,12 @@ __global__ void resize_mirror_normalize_bilinear_pkd3_pln3_tensor(T *srcPtr,
     d_float24 dst_f24;
     rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
     
-    rmn_hip_compute(dstPtr, &dst_f24.f8[0], &rmnParams_R_f8);
-    rmn_hip_compute(dstPtr, &dst_f24.f8[1], &rmnParams_G_f8);
-    rmn_hip_compute(dstPtr, &dst_f24.f8[2], &rmnParams_B_f8);
-    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+    d_float24 dst_f24_pln;
+    rpp_hip_pack_float24_pkd3_to_pln3(&dst_f24, &dst_f24_pln);
+    rmn_hip_compute(dstPtr, &dst_f24_pln.f8[0], &rmnParams_R_f8);
+    rmn_hip_compute(dstPtr, &dst_f24_pln.f8[1], &rmnParams_G_f8);
+    rmn_hip_compute(dstPtr, &dst_f24_pln.f8[2], &rmnParams_B_f8);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24_pln);
 }
 
 template <typename T>
