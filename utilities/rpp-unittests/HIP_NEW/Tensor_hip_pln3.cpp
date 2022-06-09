@@ -1576,10 +1576,10 @@ int main(int argc, char **argv)
         Rpp32u mirror[images];
         for (i = 0; i < images; i++)
         {
-            mean[3 * i] = 100.0;
+            mean[3 * i] = 60.0;
             stdDev[3 * i] = 1.0;
 
-            mean[3 * i + 1] = 100.0;
+            mean[3 * i + 1] = 80.0;
             stdDev[3 * i + 1] = 1.0;
 
             mean[3 * i + 2] = 100.0;
