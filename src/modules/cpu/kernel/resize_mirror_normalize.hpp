@@ -54,10 +54,16 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount], meanTensor[3 * batchCount + 1], meanTensor[3 * batchCount + 2]};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        Rpp32f mean[3] = {0.0f, 0.0f, 0.0f};
+        Rpp32f invStdDev[3] = {1.0f, 1.0f, 1.0f};
+
+        // Rpp32f mean[3] = {meanTensor[3 * batchCount], meanTensor[3 * batchCount + 1], meanTensor[3 * batchCount + 2]};
+        // Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
+
+        std::cout<<"mean :"<<mean[0]<<" "<<mean[1]<<" "<<mean[2]<<std::endl;
+        std::cout<<"invStdDev :"<<invStdDev[0]<<" "<<invStdDev[1]<<" "<<invStdDev[2]<<std::endl;
 
         __m256 pRMNParams[6];
         pRMNParams[0] = _mm256_set1_ps(mean[0]);
@@ -341,8 +347,10 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount] * ONE_OVER_255, meanTensor[3 * batchCount + 1] * ONE_OVER_255, meanTensor[3 * batchCount + 2] * ONE_OVER_255};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        Rpp32f mean[3] = {0.0f, 0.0f, 0.0f};
+        Rpp32f invStdDev[3] = {1.0f, 1.0f, 1.0f};
+        // Rpp32f mean[3] = {meanTensor[3 * batchCount] * ONE_OVER_255, meanTensor[3 * batchCount + 1] * ONE_OVER_255, meanTensor[3 * batchCount + 2] * ONE_OVER_255};
+        // Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
 
@@ -632,8 +640,11 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount] * ONE_OVER_255, meanTensor[3 * batchCount + 1] * ONE_OVER_255, meanTensor[3 * batchCount + 2] * ONE_OVER_255};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        Rpp32f mean[3] = {0.0f, 0.0f, 0.0f};
+        Rpp32f invStdDev[3] = {1.0f, 1.0f, 1.0f};
+
+        // Rpp32f mean[3] = {meanTensor[3 * batchCount] * ONE_OVER_255, meanTensor[3 * batchCount + 1] * ONE_OVER_255, meanTensor[3 * batchCount + 2] * ONE_OVER_255};
+        // Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
 
@@ -923,8 +934,11 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount], meanTensor[3 * batchCount + 1], meanTensor[3 * batchCount + 2]};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        Rpp32f mean[3] = {0.0f, 0.0f, 0.0f};
+        Rpp32f invStdDev[3] = {1.0f, 1.0f, 1.0f};
+
+        // Rpp32f mean[3] = {meanTensor[3 * batchCount], meanTensor[3 * batchCount + 1], meanTensor[3 * batchCount + 2]};
+        // Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
 
