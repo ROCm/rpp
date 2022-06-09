@@ -1,23 +1,913 @@
-#include <rppi_arithmetic_operations.h>
-#include <rppdefs.h>
+/*
+Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+#include "rppdefs.h"
 #include "rppi_validate.hpp"
+#include "rppi_arithmetic_operations.h"
+#include "cpu/host_arithmetic_operations.hpp"
 
 #ifdef HIP_COMPILE
-#include <hip/rpp_hip_common.hpp>
+#include "rpp_hip_common.hpp"
 #include "hip/hip_declarations.hpp"
 #elif defined(OCL_COMPILE)
-#include <cl/rpp_cl_common.hpp>
+#include "rpp_cl_common.hpp"
 #include "cl/cl_declarations.hpp"
 #endif //backend
 
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <chrono>
+/******************** add ********************/
 
-using namespace std::chrono;
+RppStatus
+rppi_add_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
+                              RppPtr_t srcPtr2,
+                              RppiSize *srcSize,
+                              RppiSize maxSrcSize,
+                              RppPtr_t dstPtr,
+                              Rpp32u nbatchSize,
+                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
 
-#include "cpu/host_arithmetic_operations.hpp"
+    add_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                          static_cast<Rpp8u*>(srcPtr2),
+                          srcSize,
+                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                          static_cast<Rpp8u*>(dstPtr),
+                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                          rpp::deref(rppHandle).GetBatchSize(),
+                          RPPI_CHN_PLANAR,
+                          1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_add_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
+                              RppPtr_t srcPtr2,
+                              RppiSize *srcSize,
+                              RppiSize maxSrcSize,
+                              RppPtr_t dstPtr,
+                              Rpp32u nbatchSize,
+                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    add_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                          static_cast<Rpp8u*>(srcPtr2),
+                          srcSize,
+                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                          static_cast<Rpp8u*>(dstPtr),
+                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                          rpp::deref(rppHandle).GetBatchSize(),
+                          RPPI_CHN_PLANAR,
+                          3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_add_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
+                              RppPtr_t srcPtr2,
+                              RppiSize *srcSize,
+                              RppiSize maxSrcSize,
+                              RppPtr_t dstPtr,
+                              Rpp32u nbatchSize,
+                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    add_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                          static_cast<Rpp8u*>(srcPtr2),
+                          srcSize,
+                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                          static_cast<Rpp8u*>(dstPtr),
+                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                          rpp::deref(rppHandle).GetBatchSize(),
+                          RPPI_CHN_PACKED,
+                          3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** subtract ********************/
+
+RppStatus
+rppi_subtract_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
+                                   RppPtr_t srcPtr2,
+                                   RppiSize *srcSize,
+                                   RppiSize maxSrcSize,
+                                   RppPtr_t dstPtr,
+                                   Rpp32u nbatchSize,
+                                   rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    subtract_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                               static_cast<Rpp8u*>(srcPtr2),
+                               srcSize,
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                               static_cast<Rpp8u*>(dstPtr),
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                               rpp::deref(rppHandle).GetBatchSize(),
+                               RPPI_CHN_PLANAR,
+                               1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_subtract_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
+                                   RppPtr_t srcPtr2,
+                                   RppiSize *srcSize,
+                                   RppiSize maxSrcSize,
+                                   RppPtr_t dstPtr,
+                                   Rpp32u nbatchSize,
+                                   rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    subtract_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                               static_cast<Rpp8u*>(srcPtr2),
+                               srcSize,
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                               static_cast<Rpp8u*>(dstPtr),
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                               rpp::deref(rppHandle).GetBatchSize(),
+                               RPPI_CHN_PLANAR,
+                               3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_subtract_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
+                                   RppPtr_t srcPtr2,
+                                   RppiSize *srcSize,
+                                   RppiSize maxSrcSize,
+                                   RppPtr_t dstPtr,
+                                   Rpp32u nbatchSize,
+                                   rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    subtract_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                               static_cast<Rpp8u*>(srcPtr2),
+                               srcSize,
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                               static_cast<Rpp8u*>(dstPtr),
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                               rpp::deref(rppHandle).GetBatchSize(),
+                               RPPI_CHN_PACKED,
+                               3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** multiply ********************/
+
+RppStatus
+rppi_multiply_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
+                                   RppPtr_t srcPtr2,
+                                   RppiSize *srcSize,
+                                   RppiSize maxSrcSize,
+                                   RppPtr_t dstPtr,
+                                   Rpp32u nbatchSize,
+                                   rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    multiply_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                               static_cast<Rpp8u*>(srcPtr2),
+                               srcSize,
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                               static_cast<Rpp8u*>(dstPtr),
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                               rpp::deref(rppHandle).GetBatchSize(),
+                               RPPI_CHN_PLANAR,
+                               1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_multiply_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
+                                   RppPtr_t srcPtr2,
+                                   RppiSize *srcSize,
+                                   RppiSize maxSrcSize,
+                                   RppPtr_t dstPtr,
+                                   Rpp32u nbatchSize,
+                                   rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    multiply_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                               static_cast<Rpp8u*>(srcPtr2),
+                               srcSize,
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                               static_cast<Rpp8u*>(dstPtr),
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                               rpp::deref(rppHandle).GetBatchSize(),
+                               RPPI_CHN_PLANAR,
+                               3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_multiply_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
+                                   RppPtr_t srcPtr2,
+                                   RppiSize *srcSize,
+                                   RppiSize maxSrcSize,
+                                   RppPtr_t dstPtr,
+                                   Rpp32u nbatchSize,
+                                   rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    multiply_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                               static_cast<Rpp8u*>(srcPtr2),
+                               srcSize,
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                               static_cast<Rpp8u*>(dstPtr),
+                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                               rpp::deref(rppHandle).GetBatchSize(),
+                               RPPI_CHN_PACKED,
+                               3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** absolute_difference ********************/
+
+RppStatus
+rppi_absolute_difference_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
+                                              RppPtr_t srcPtr2,
+                                              RppiSize *srcSize,
+                                              RppiSize maxSrcSize,
+                                              RppPtr_t dstPtr,
+                                              Rpp32u nbatchSize,
+                                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    absolute_difference_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                          static_cast<Rpp8u*>(srcPtr2),
+                                          srcSize,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                          static_cast<Rpp8u*>(dstPtr),
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                          rpp::deref(rppHandle).GetBatchSize(),
+                                          RPPI_CHN_PLANAR,
+                                          1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_absolute_difference_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
+                                              RppPtr_t srcPtr2,
+                                              RppiSize *srcSize,
+                                              RppiSize maxSrcSize,
+                                              RppPtr_t dstPtr,
+                                              Rpp32u nbatchSize,
+                                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    absolute_difference_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                          static_cast<Rpp8u*>(srcPtr2),
+                                          srcSize,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                          static_cast<Rpp8u*>(dstPtr),
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                          rpp::deref(rppHandle).GetBatchSize(),
+                                          RPPI_CHN_PLANAR,
+                                          3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_absolute_difference_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
+                                              RppPtr_t srcPtr2,
+                                              RppiSize *srcSize,
+                                              RppiSize maxSrcSize,
+                                              RppPtr_t dstPtr,
+                                              Rpp32u nbatchSize,
+                                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    absolute_difference_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                          static_cast<Rpp8u*>(srcPtr2),
+                                          srcSize,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                          static_cast<Rpp8u*>(dstPtr),
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                          rpp::deref(rppHandle).GetBatchSize(),
+                                          RPPI_CHN_PACKED,
+                                          3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** phase ********************/
+
+RppStatus
+rppi_phase_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
+                                RppPtr_t srcPtr2,
+                                RppiSize *srcSize,
+                                RppiSize maxSrcSize,
+                                RppPtr_t dstPtr,
+                                Rpp32u nbatchSize,
+                                rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    phase_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                            static_cast<Rpp8u*>(srcPtr2),
+                            srcSize,
+                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                            static_cast<Rpp8u*>(dstPtr),
+                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                            rpp::deref(rppHandle).GetBatchSize(),
+                            RPPI_CHN_PLANAR,
+                            1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_phase_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
+                                RppPtr_t srcPtr2,
+                                RppiSize *srcSize,
+                                RppiSize maxSrcSize,
+                                RppPtr_t dstPtr,
+                                Rpp32u nbatchSize,
+                                rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    phase_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                            static_cast<Rpp8u*>(srcPtr2),
+                            srcSize,
+                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                            static_cast<Rpp8u*>(dstPtr),
+                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                            rpp::deref(rppHandle).GetBatchSize(),
+                            RPPI_CHN_PLANAR,
+                            3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_phase_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
+                                RppPtr_t srcPtr2,
+                                RppiSize *srcSize,
+                                RppiSize maxSrcSize,
+                                RppPtr_t dstPtr,
+                                Rpp32u nbatchSize,
+                                rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    phase_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                            static_cast<Rpp8u*>(srcPtr2),
+                            srcSize,
+                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                            static_cast<Rpp8u*>(dstPtr),
+                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                            rpp::deref(rppHandle).GetBatchSize(),
+                            RPPI_CHN_PACKED,
+                            3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** magnitude ********************/
+
+RppStatus
+rppi_magnitude_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
+                                    RppPtr_t srcPtr2,
+                                    RppiSize *srcSize,
+                                    RppiSize maxSrcSize,
+                                    RppPtr_t dstPtr,
+                                    Rpp32u nbatchSize,
+                                    rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    magnitude_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                static_cast<Rpp8u*>(srcPtr2),
+                                srcSize,
+                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                static_cast<Rpp8u*>(dstPtr),
+                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                rpp::deref(rppHandle).GetBatchSize(),
+                                RPPI_CHN_PLANAR,
+                                1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_magnitude_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
+                                    RppPtr_t srcPtr2,
+                                    RppiSize *srcSize,
+                                    RppiSize maxSrcSize,
+                                    RppPtr_t dstPtr,
+                                    Rpp32u nbatchSize,
+                                    rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    magnitude_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                static_cast<Rpp8u*>(srcPtr2),
+                                srcSize,
+                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                static_cast<Rpp8u*>(dstPtr),
+                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                rpp::deref(rppHandle).GetBatchSize(),
+                                RPPI_CHN_PLANAR,
+                                3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_magnitude_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
+                                    RppPtr_t srcPtr2,
+                                    RppiSize *srcSize,
+                                    RppiSize maxSrcSize,
+                                    RppPtr_t dstPtr,
+                                    Rpp32u nbatchSize,
+                                    rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    magnitude_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                static_cast<Rpp8u*>(srcPtr2),
+                                srcSize,
+                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                static_cast<Rpp8u*>(dstPtr),
+                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                rpp::deref(rppHandle).GetBatchSize(),
+                                RPPI_CHN_PACKED,
+                                3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** accumulate ********************/
+
+RppStatus
+rppi_accumulate_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
+                                     RppPtr_t srcPtr2,
+                                     RppiSize *srcSize,
+                                     RppiSize maxSrcSize,
+                                     Rpp32u nbatchSize,
+                                     rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                 static_cast<Rpp8u*>(srcPtr2),
+                                 srcSize,
+                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                 rpp::deref(rppHandle).GetBatchSize(),
+                                 RPPI_CHN_PLANAR,
+                                 1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
+                                     RppPtr_t srcPtr2,
+                                     RppiSize *srcSize,
+                                     RppiSize maxSrcSize,
+                                     Rpp32u nbatchSize,
+                                     rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                 static_cast<Rpp8u*>(srcPtr2),
+                                 srcSize,
+                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                 rpp::deref(rppHandle).GetBatchSize(),
+                                 RPPI_CHN_PLANAR,
+                                 3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
+                                     RppPtr_t srcPtr2,
+                                     RppiSize *srcSize,
+                                     RppiSize maxSrcSize,
+                                     Rpp32u nbatchSize,
+                                     rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                 static_cast<Rpp8u*>(srcPtr2),
+                                 srcSize,
+                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                 rpp::deref(rppHandle).GetBatchSize(),
+                                 RPPI_CHN_PACKED,
+                                 3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** accumulate_weighted ********************/
+
+RppStatus
+rppi_accumulate_weighted_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
+                                              RppPtr_t srcPtr2,
+                                              RppiSize *srcSize,
+                                              RppiSize maxSrcSize,
+                                              Rpp32f *alpha,
+                                              Rpp32u nbatchSize,
+                                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_weighted_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                          static_cast<Rpp8u*>(srcPtr2),
+                                          srcSize,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                          alpha,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                          rpp::deref(rppHandle).GetBatchSize(),
+                                          RPPI_CHN_PLANAR,
+                                          1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_weighted_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
+                                              RppPtr_t srcPtr2,
+                                              RppiSize *srcSize,
+                                              RppiSize maxSrcSize,
+                                              Rpp32f *alpha,
+                                              Rpp32u nbatchSize,
+                                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_weighted_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                          static_cast<Rpp8u*>(srcPtr2),
+                                          srcSize,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                          alpha,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                          rpp::deref(rppHandle).GetBatchSize(),
+                                          RPPI_CHN_PLANAR,
+                                          3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_weighted_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
+                                              RppPtr_t srcPtr2,
+                                              RppiSize *srcSize,
+                                              RppiSize maxSrcSize,
+                                              Rpp32f *alpha,
+                                              Rpp32u nbatchSize,
+                                              rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_weighted_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                          static_cast<Rpp8u*>(srcPtr2),
+                                          srcSize,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                          alpha,
+                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                          rpp::deref(rppHandle).GetBatchSize(),
+                                          RPPI_CHN_PACKED,
+                                          3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** accumulate_squared ********************/
+
+RppStatus
+rppi_accumulate_squared_u8_pln1_batchPD_host(RppPtr_t srcPtr,
+                                             RppiSize *srcSize,
+                                             RppiSize maxSrcSize,
+                                             Rpp32u nbatchSize,
+                                             rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_squared_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+                                         srcSize,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                         rpp::deref(rppHandle).GetBatchSize(),
+                                         RPPI_CHN_PLANAR,
+                                         1);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_squared_u8_pln3_batchPD_host(RppPtr_t srcPtr,
+                                             RppiSize *srcSize,
+                                             RppiSize maxSrcSize,
+                                             Rpp32u nbatchSize,
+                                             rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_squared_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+                                         srcSize,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                         rpp::deref(rppHandle).GetBatchSize(),
+                                         RPPI_CHN_PLANAR,
+                                         3);
+
+    return RPP_SUCCESS;
+}
+
+RppStatus
+rppi_accumulate_squared_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
+                                             RppiSize *srcSize,
+                                             RppiSize maxSrcSize,
+                                             Rpp32u nbatchSize,
+                                             rppHandle_t rppHandle)
+{
+    RppiROI roiPoints;
+    roiPoints.x = 0;
+    roiPoints.y = 0;
+    roiPoints.roiHeight = 0;
+    roiPoints.roiWidth = 0;
+    copy_host_roi(roiPoints, rpp::deref(rppHandle));
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    accumulate_squared_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+                                         srcSize,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
+                                         rpp::deref(rppHandle).GetBatchSize(),
+                                         RPPI_CHN_PACKED,
+                                         3);
+
+    return RPP_SUCCESS;
+}
+
+/******************** tensor_add ********************/
+
+RppStatus
+rppi_tensor_add_u8_host(RppPtr_t srcPtr1,
+                        RppPtr_t srcPtr2,
+                        RppPtr_t dstPtr,
+                        Rpp32u tensorDimension,
+                        RppPtr_t tensorDimensionValues,
+                        rppHandle_t rppHandle)
+{
+    tensor_add_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                           static_cast<Rpp8u*>(srcPtr2),
+                           static_cast<Rpp8u*>(dstPtr),
+                           tensorDimension,
+                           static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+
+}
+
+/******************** tensor_subtract ********************/
+
+RppStatus
+rppi_tensor_subtract_u8_host(RppPtr_t srcPtr1,
+                             RppPtr_t srcPtr2,
+                             RppPtr_t dstPtr,
+                             Rpp32u tensorDimension,
+                             RppPtr_t tensorDimensionValues,
+                             rppHandle_t rppHandle)
+{
+    tensor_subtract_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                static_cast<Rpp8u*>(srcPtr2),
+                                static_cast<Rpp8u*>(dstPtr),
+                                tensorDimension,
+                                static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+
+}
+
+/******************** tensor_multiply ********************/
+
+RppStatus
+rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1,
+                             RppPtr_t srcPtr2,
+                             RppPtr_t dstPtr,
+                             Rpp32u tensorDimension,
+                             RppPtr_t tensorDimensionValues,
+                             rppHandle_t rppHandle)
+{
+    tensor_multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
+                                static_cast<Rpp8u*>(srcPtr2),
+                                static_cast<Rpp8u*>(dstPtr),
+                                tensorDimension,
+                                static_cast<Rpp32u*>(tensorDimensionValues));
+
+    return RPP_SUCCESS;
+
+}
+
+/********************************************************************************************************************/
+/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
+/********************************************************************************************************************/
+
+#ifdef GPU_SUPPORT
 
 /******************** add ********************/
 
@@ -143,96 +1033,6 @@ rppi_add_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
                       3);
     }
 #endif //BACKEND
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_add_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
-                              RppPtr_t srcPtr2,
-                              RppiSize *srcSize,
-                              RppiSize maxSrcSize,
-                              RppPtr_t dstPtr,
-                              Rpp32u nbatchSize,
-                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    add_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                          static_cast<Rpp8u*>(srcPtr2),
-                          srcSize,
-                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                          static_cast<Rpp8u*>(dstPtr),
-                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                          rpp::deref(rppHandle).GetBatchSize(),
-                          RPPI_CHN_PLANAR,
-                          1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_add_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
-                              RppPtr_t srcPtr2,
-                              RppiSize *srcSize,
-                              RppiSize maxSrcSize,
-                              RppPtr_t dstPtr,
-                              Rpp32u nbatchSize,
-                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    add_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                          static_cast<Rpp8u*>(srcPtr2),
-                          srcSize,
-                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                          static_cast<Rpp8u*>(dstPtr),
-                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                          rpp::deref(rppHandle).GetBatchSize(),
-                          RPPI_CHN_PLANAR,
-                          3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_add_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
-                              RppPtr_t srcPtr2,
-                              RppiSize *srcSize,
-                              RppiSize maxSrcSize,
-                              RppPtr_t dstPtr,
-                              Rpp32u nbatchSize,
-                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    add_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                          static_cast<Rpp8u*>(srcPtr2),
-                          srcSize,
-                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                          static_cast<Rpp8u*>(dstPtr),
-                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                          rpp::deref(rppHandle).GetBatchSize(),
-                          RPPI_CHN_PACKED,
-                          3);
 
     return RPP_SUCCESS;
 }
@@ -365,96 +1165,6 @@ rppi_subtract_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_subtract_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
-                                   RppPtr_t srcPtr2,
-                                   RppiSize *srcSize,
-                                   RppiSize maxSrcSize,
-                                   RppPtr_t dstPtr,
-                                   Rpp32u nbatchSize,
-                                   rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    subtract_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                               static_cast<Rpp8u*>(srcPtr2),
-                               srcSize,
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                               static_cast<Rpp8u*>(dstPtr),
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                               rpp::deref(rppHandle).GetBatchSize(),
-                               RPPI_CHN_PLANAR,
-                               1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_subtract_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
-                                   RppPtr_t srcPtr2,
-                                   RppiSize *srcSize,
-                                   RppiSize maxSrcSize,
-                                   RppPtr_t dstPtr,
-                                   Rpp32u nbatchSize,
-                                   rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    subtract_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                               static_cast<Rpp8u*>(srcPtr2),
-                               srcSize,
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                               static_cast<Rpp8u*>(dstPtr),
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                               rpp::deref(rppHandle).GetBatchSize(),
-                               RPPI_CHN_PLANAR,
-                               3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_subtract_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
-                                   RppPtr_t srcPtr2,
-                                   RppiSize *srcSize,
-                                   RppiSize maxSrcSize,
-                                   RppPtr_t dstPtr,
-                                   Rpp32u nbatchSize,
-                                   rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    subtract_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                               static_cast<Rpp8u*>(srcPtr2),
-                               srcSize,
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                               static_cast<Rpp8u*>(dstPtr),
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                               rpp::deref(rppHandle).GetBatchSize(),
-                               RPPI_CHN_PACKED,
-                               3);
-
-    return RPP_SUCCESS;
-}
-
 /******************** multiply ********************/
 
 RppStatus
@@ -579,96 +1289,6 @@ rppi_multiply_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
                            3);
     }
 #endif //BACKEND
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_multiply_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
-                                   RppPtr_t srcPtr2,
-                                   RppiSize *srcSize,
-                                   RppiSize maxSrcSize,
-                                   RppPtr_t dstPtr,
-                                   Rpp32u nbatchSize,
-                                   rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    multiply_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                               static_cast<Rpp8u*>(srcPtr2),
-                               srcSize,
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                               static_cast<Rpp8u*>(dstPtr),
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                               rpp::deref(rppHandle).GetBatchSize(),
-                               RPPI_CHN_PLANAR,
-                               1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_multiply_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
-                                   RppPtr_t srcPtr2,
-                                   RppiSize *srcSize,
-                                   RppiSize maxSrcSize,
-                                   RppPtr_t dstPtr,
-                                   Rpp32u nbatchSize,
-                                   rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    multiply_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                               static_cast<Rpp8u*>(srcPtr2),
-                               srcSize,
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                               static_cast<Rpp8u*>(dstPtr),
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                               rpp::deref(rppHandle).GetBatchSize(),
-                               RPPI_CHN_PLANAR,
-                               3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_multiply_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
-                                   RppPtr_t srcPtr2,
-                                   RppiSize *srcSize,
-                                   RppiSize maxSrcSize,
-                                   RppPtr_t dstPtr,
-                                   Rpp32u nbatchSize,
-                                   rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    multiply_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                               static_cast<Rpp8u*>(srcPtr2),
-                               srcSize,
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                               static_cast<Rpp8u*>(dstPtr),
-                               rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                               rpp::deref(rppHandle).GetBatchSize(),
-                               RPPI_CHN_PACKED,
-                               3);
 
     return RPP_SUCCESS;
 }
@@ -801,96 +1421,6 @@ rppi_absolute_difference_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_absolute_difference_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
-                                              RppPtr_t srcPtr2,
-                                              RppiSize *srcSize,
-                                              RppiSize maxSrcSize,
-                                              RppPtr_t dstPtr,
-                                              Rpp32u nbatchSize,
-                                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    absolute_difference_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                          static_cast<Rpp8u*>(srcPtr2),
-                                          srcSize,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                          static_cast<Rpp8u*>(dstPtr),
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                          rpp::deref(rppHandle).GetBatchSize(),
-                                          RPPI_CHN_PLANAR,
-                                          1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_absolute_difference_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
-                                              RppPtr_t srcPtr2,
-                                              RppiSize *srcSize,
-                                              RppiSize maxSrcSize,
-                                              RppPtr_t dstPtr,
-                                              Rpp32u nbatchSize,
-                                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    absolute_difference_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                          static_cast<Rpp8u*>(srcPtr2),
-                                          srcSize,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                          static_cast<Rpp8u*>(dstPtr),
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                          rpp::deref(rppHandle).GetBatchSize(),
-                                          RPPI_CHN_PLANAR,
-                                          3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_absolute_difference_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
-                                              RppPtr_t srcPtr2,
-                                              RppiSize *srcSize,
-                                              RppiSize maxSrcSize,
-                                              RppPtr_t dstPtr,
-                                              Rpp32u nbatchSize,
-                                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    absolute_difference_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                          static_cast<Rpp8u*>(srcPtr2),
-                                          srcSize,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                          static_cast<Rpp8u*>(dstPtr),
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                          rpp::deref(rppHandle).GetBatchSize(),
-                                          RPPI_CHN_PACKED,
-                                          3);
-
-    return RPP_SUCCESS;
-}
-
 /******************** phase ********************/
 
 RppStatus
@@ -1015,96 +1545,6 @@ rppi_phase_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
                         3);
     }
 #endif //BACKEND
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_phase_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
-                                RppPtr_t srcPtr2,
-                                RppiSize *srcSize,
-                                RppiSize maxSrcSize,
-                                RppPtr_t dstPtr,
-                                Rpp32u nbatchSize,
-                                rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    phase_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                            static_cast<Rpp8u*>(srcPtr2),
-                            srcSize,
-                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                            static_cast<Rpp8u*>(dstPtr),
-                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                            rpp::deref(rppHandle).GetBatchSize(),
-                            RPPI_CHN_PLANAR,
-                            1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_phase_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
-                                RppPtr_t srcPtr2,
-                                RppiSize *srcSize,
-                                RppiSize maxSrcSize,
-                                RppPtr_t dstPtr,
-                                Rpp32u nbatchSize,
-                                rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    phase_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                            static_cast<Rpp8u*>(srcPtr2),
-                            srcSize,
-                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                            static_cast<Rpp8u*>(dstPtr),
-                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                            rpp::deref(rppHandle).GetBatchSize(),
-                            RPPI_CHN_PLANAR,
-                            3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_phase_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
-                                RppPtr_t srcPtr2,
-                                RppiSize *srcSize,
-                                RppiSize maxSrcSize,
-                                RppPtr_t dstPtr,
-                                Rpp32u nbatchSize,
-                                rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    phase_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                            static_cast<Rpp8u*>(srcPtr2),
-                            srcSize,
-                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                            static_cast<Rpp8u*>(dstPtr),
-                            rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                            rpp::deref(rppHandle).GetBatchSize(),
-                            RPPI_CHN_PACKED,
-                            3);
 
     return RPP_SUCCESS;
 }
@@ -1237,96 +1677,6 @@ rppi_magnitude_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_magnitude_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
-                                    RppPtr_t srcPtr2,
-                                    RppiSize *srcSize,
-                                    RppiSize maxSrcSize,
-                                    RppPtr_t dstPtr,
-                                    Rpp32u nbatchSize,
-                                    rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    magnitude_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                static_cast<Rpp8u*>(srcPtr2),
-                                srcSize,
-                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                static_cast<Rpp8u*>(dstPtr),
-                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                rpp::deref(rppHandle).GetBatchSize(),
-                                RPPI_CHN_PLANAR,
-                                1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_magnitude_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
-                                    RppPtr_t srcPtr2,
-                                    RppiSize *srcSize,
-                                    RppiSize maxSrcSize,
-                                    RppPtr_t dstPtr,
-                                    Rpp32u nbatchSize,
-                                    rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    magnitude_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                static_cast<Rpp8u*>(srcPtr2),
-                                srcSize,
-                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                static_cast<Rpp8u*>(dstPtr),
-                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                rpp::deref(rppHandle).GetBatchSize(),
-                                RPPI_CHN_PLANAR,
-                                3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_magnitude_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
-                                    RppPtr_t srcPtr2,
-                                    RppiSize *srcSize,
-                                    RppiSize maxSrcSize,
-                                    RppPtr_t dstPtr,
-                                    Rpp32u nbatchSize,
-                                    rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    magnitude_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                static_cast<Rpp8u*>(srcPtr2),
-                                srcSize,
-                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                static_cast<Rpp8u*>(dstPtr),
-                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                rpp::deref(rppHandle).GetBatchSize(),
-                                RPPI_CHN_PACKED,
-                                3);
-
-    return RPP_SUCCESS;
-}
-
 /******************** accumulate ********************/
 
 RppStatus
@@ -1442,90 +1792,6 @@ rppi_accumulate_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
                              3);
     }
 #endif //BACKEND
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
-                                     RppPtr_t srcPtr2,
-                                     RppiSize *srcSize,
-                                     RppiSize maxSrcSize,
-                                     Rpp32u nbatchSize,
-                                     rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                 static_cast<Rpp8u*>(srcPtr2),
-                                 srcSize,
-                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                 rpp::deref(rppHandle).GetBatchSize(),
-                                 RPPI_CHN_PLANAR,
-                                 1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
-                                     RppPtr_t srcPtr2,
-                                     RppiSize *srcSize,
-                                     RppiSize maxSrcSize,
-                                     Rpp32u nbatchSize,
-                                     rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                 static_cast<Rpp8u*>(srcPtr2),
-                                 srcSize,
-                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                 rpp::deref(rppHandle).GetBatchSize(),
-                                 RPPI_CHN_PLANAR,
-                                 3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
-                                     RppPtr_t srcPtr2,
-                                     RppiSize *srcSize,
-                                     RppiSize maxSrcSize,
-                                     Rpp32u nbatchSize,
-                                     rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                 static_cast<Rpp8u*>(srcPtr2),
-                                 srcSize,
-                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                 rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                 rpp::deref(rppHandle).GetBatchSize(),
-                                 RPPI_CHN_PACKED,
-                                 3);
 
     return RPP_SUCCESS;
 }
@@ -1658,96 +1924,6 @@ rppi_accumulate_weighted_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_accumulate_weighted_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
-                                              RppPtr_t srcPtr2,
-                                              RppiSize *srcSize,
-                                              RppiSize maxSrcSize,
-                                              Rpp32f *alpha,
-                                              Rpp32u nbatchSize,
-                                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_weighted_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                          static_cast<Rpp8u*>(srcPtr2),
-                                          srcSize,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                          alpha,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                          rpp::deref(rppHandle).GetBatchSize(),
-                                          RPPI_CHN_PLANAR,
-                                          1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_weighted_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
-                                              RppPtr_t srcPtr2,
-                                              RppiSize *srcSize,
-                                              RppiSize maxSrcSize,
-                                              Rpp32f *alpha,
-                                              Rpp32u nbatchSize,
-                                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_weighted_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                          static_cast<Rpp8u*>(srcPtr2),
-                                          srcSize,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                          alpha,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                          rpp::deref(rppHandle).GetBatchSize(),
-                                          RPPI_CHN_PLANAR,
-                                          3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_weighted_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
-                                              RppPtr_t srcPtr2,
-                                              RppiSize *srcSize,
-                                              RppiSize maxSrcSize,
-                                              Rpp32f *alpha,
-                                              Rpp32u nbatchSize,
-                                              rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_weighted_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                          static_cast<Rpp8u*>(srcPtr2),
-                                          srcSize,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                          alpha,
-                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                          rpp::deref(rppHandle).GetBatchSize(),
-                                          RPPI_CHN_PACKED,
-                                          3);
-
-    return RPP_SUCCESS;
-}
-
 /******************** accumulate_squared ********************/
 
 RppStatus
@@ -1858,84 +2034,6 @@ rppi_accumulate_squared_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_accumulate_squared_u8_pln1_batchPD_host(RppPtr_t srcPtr,
-                                             RppiSize *srcSize,
-                                             RppiSize maxSrcSize,
-                                             Rpp32u nbatchSize,
-                                             rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_squared_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
-                                         srcSize,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                         rpp::deref(rppHandle).GetBatchSize(),
-                                         RPPI_CHN_PLANAR,
-                                         1);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_squared_u8_pln3_batchPD_host(RppPtr_t srcPtr,
-                                             RppiSize *srcSize,
-                                             RppiSize maxSrcSize,
-                                             Rpp32u nbatchSize,
-                                             rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_squared_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
-                                         srcSize,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                         rpp::deref(rppHandle).GetBatchSize(),
-                                         RPPI_CHN_PLANAR,
-                                         3);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_accumulate_squared_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
-                                             RppiSize *srcSize,
-                                             RppiSize maxSrcSize,
-                                             Rpp32u nbatchSize,
-                                             rppHandle_t rppHandle)
-{
-    RppiROI roiPoints;
-    roiPoints.x = 0;
-    roiPoints.y = 0;
-    roiPoints.roiHeight = 0;
-    roiPoints.roiWidth = 0;
-    copy_host_roi(roiPoints, rpp::deref(rppHandle));
-    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
-
-    accumulate_squared_host_batch<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
-                                         srcSize,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
-                                         rpp::deref(rppHandle).GetBatchSize(),
-                                         RPPI_CHN_PACKED,
-                                         3);
-
-    return RPP_SUCCESS;
-}
-
 /******************** tensor_add ********************/
 
 RppStatus
@@ -1968,24 +2066,6 @@ rppi_tensor_add_u8_gpu(RppPtr_t srcPtr1,
 #endif //BACKEND
 
     return RPP_SUCCESS;
-}
-
-RppStatus
-rppi_tensor_add_u8_host(RppPtr_t srcPtr1,
-                        RppPtr_t srcPtr2,
-                        RppPtr_t dstPtr,
-                        Rpp32u tensorDimension,
-                        RppPtr_t tensorDimensionValues,
-                        rppHandle_t rppHandle)
-{
-    tensor_add_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                           static_cast<Rpp8u*>(srcPtr2),
-                           static_cast<Rpp8u*>(dstPtr),
-                           tensorDimension,
-                           static_cast<Rpp32u*>(tensorDimensionValues));
-
-    return RPP_SUCCESS;
-
 }
 
 /******************** tensor_subtract ********************/
@@ -2022,24 +2102,6 @@ rppi_tensor_subtract_u8_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_tensor_subtract_u8_host(RppPtr_t srcPtr1,
-                             RppPtr_t srcPtr2,
-                             RppPtr_t dstPtr,
-                             Rpp32u tensorDimension,
-                             RppPtr_t tensorDimensionValues,
-                             rppHandle_t rppHandle)
-{
-    tensor_subtract_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                static_cast<Rpp8u*>(srcPtr2),
-                                static_cast<Rpp8u*>(dstPtr),
-                                tensorDimension,
-                                static_cast<Rpp32u*>(tensorDimensionValues));
-
-    return RPP_SUCCESS;
-
-}
-
 /******************** tensor_multiply ********************/
 
 RppStatus
@@ -2074,20 +2136,4 @@ rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-RppStatus
-rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1,
-                             RppPtr_t srcPtr2,
-                             RppPtr_t dstPtr,
-                             Rpp32u tensorDimension,
-                             RppPtr_t tensorDimensionValues,
-                             rppHandle_t rppHandle)
-{
-    tensor_multiply_host<Rpp8u>(static_cast<Rpp8u*>(srcPtr1),
-                                static_cast<Rpp8u*>(srcPtr2),
-                                static_cast<Rpp8u*>(dstPtr),
-                                tensorDimension,
-                                static_cast<Rpp32u*>(tensorDimensionValues));
-
-    return RPP_SUCCESS;
-
-}
+#endif // GPU_SUPPORT

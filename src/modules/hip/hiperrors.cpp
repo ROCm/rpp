@@ -23,8 +23,10 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #include <hip/hip_runtime_api.h>
-#include <hip/rpp/errors.hpp>
+
+#include "rpp/errors.hpp"
 
 namespace rpp {
 

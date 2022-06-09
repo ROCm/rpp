@@ -1,11 +1,29 @@
+# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 project(modules)
 
-if(${BACKEND} MATCHES OCL)
-    file(GLOB RPP_KERNELS cl/kernel/*.cl)
-endif()
-
-if(${BACKEND} MATCHES HIP)
+if( "${BACKEND}" STREQUAL "HIP")
     file(GLOB RPP_KERNELS hip/kernel/*.cpp)
+elseif( "${BACKEND}" STREQUAL "OCL")
+    file(GLOB RPP_KERNELS cl/kernel/*.cl)
 endif()
 
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/rpp_kernels.h)
@@ -77,12 +95,13 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14")
 
     # Add HIP specific preprocessor flags
+    add_definitions(-DGPU_SUPPORT)
     add_definitions(-DHIP_COMPILE)
-    add_definitions(-DRPP_BACKEND_HIP)
 
     # Add HIP specific includes
     set(HIP_INC "/opt/rocm/hip/include")
-    set(INCLUDE_LIST ${HIP_INC} ${INCLUDE_LIST})
+    list(APPEND HIP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    set(INCLUDE_LIST ${HIP_INCLUDE_DIRS} ${HIP_INC} ${INCLUDE_LIST})
     message("-- ${Blue}HIP include directories -- ${INCLUDE_LIST}${ColourReset}")
 
 elseif( "${BACKEND}" STREQUAL "OCL")
@@ -97,16 +116,27 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14 -Wno-deprecated-declarations")
 
     # Add OpenCL specific preprocessor flags
+    add_definitions(-DGPU_SUPPORT)
     add_definitions(-DOCL_COMPILE)
-    add_definitions(-DRPP_BACKEND_OPENCL)
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
     add_definitions(-DMOD_CL_PATH="${CMAKE_CURRENT_LIST_DIR}/cl/kernel/")
 
     # Add OpenCL specific includes
     set(ROCM_INC "/opt/rocm/include")
-    list(APPEND OpenCL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/cl/)
+    list(APPEND OpenCL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST} ${ROCM_INC})
     message("-- ${Blue}OpenCL include directories -- ${INCLUDE_LIST}${ColourReset}")
+
+elseif( "${BACKEND}" STREQUAL "CPU")
+
+    # Set CPU compiler and flags
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14 -Wno-deprecated-declarations")
+
+    # Add CPU specific includes
+    set(ROCM_INC "/opt/rocm/include")
+    set(INCLUDE_LIST ${ROCM_INC} ${CMAKE_SOURCE_DIR}/src/include/common/)
+    message("-- ${Blue}CPU include directories -- ${INCLUDE_LIST}${ColourReset}")
 
 endif()
 
@@ -127,6 +157,20 @@ target_include_directories( ${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/include
         ${HIP_INC}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include
+        ${CMAKE_SOURCE_DIR}/src/include/cpu
+        ${CMAKE_SOURCE_DIR}/src/include/common
+        ${CMAKE_SOURCE_DIR}/src/include/func_specific
         ${INCLUDE_LIST}
 )
+
+if( "${BACKEND}" STREQUAL "HIP")
+    target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
+    )
+elseif( "${BACKEND}" STREQUAL "OCL")
+    target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cl
+    )
+endif()

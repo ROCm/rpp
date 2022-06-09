@@ -1,8 +1,8 @@
 #include <random>
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
-#include "func_specific/spatter_mask.hpp"
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
+#include "spatter_mask.hpp"
 
 RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                                     RpptDescPtr srcDescPtr,

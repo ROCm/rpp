@@ -1,4 +1,25 @@
-#include "hip/hip_runtime_api.h"
+/*
+Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include "hip_declarations.hpp"
 #include "kernel/rpp_hip_host_decls.hpp"
 
@@ -533,7 +554,7 @@ random_shadow_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiC
         Rpp32u row1, row2, column2, column1;
         int x, y;
 
-        hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
+        hipMemcpy(srcPtr1, srcPtr+batchIndex, sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
         hipMemcpy(dstPtr1, srcPtr1,  sizeof(unsigned char) * maxWidth * maxHeight * channel, hipMemcpyDeviceToDevice);
 
         for(x = 0 ; x < handle.GetInitHandle()->mem.mcpu.uintArr[4].uintmem[i]; x++)
@@ -557,7 +578,7 @@ random_shadow_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiC
                 (column2 <= handle.GetInitHandle()->mem.mcpu.uintArr[0].uintmem[i] || column2 >= handle.GetInitHandle()->mem.mcpu.uintArr[2].uintmem[i] ||
                 row2 <= handle.GetInitHandle()->mem.mcpu.uintArr[1].uintmem[i] || row2 >= handle.GetInitHandle()->mem.mcpu.uintArr[3].uintmem[i]) ||
                 (row2 - row1 >= handle.GetInitHandle()->mem.mcpu.uintArr[6].uintmem[i] || column2 - column1 >= handle.GetInitHandle()->mem.mcpu.uintArr[5].uintmem[i]));
-            
+
             if(RPPI_CHN_PACKED == chnFormat)
             {
                 hip_exec_random_shadow_packed(srcPtr1, dstPtr1, handle, channel, column1, row1, column2, row2, i);
@@ -745,7 +766,7 @@ histogram_balance_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, R
         numGroups = gDim3[0] * gDim3[1];
         gDim3[0] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
         gDim3[1] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-        hipMemcpy(srcPtr1, srcPtr+batchIndex , sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
+        hipMemcpy(srcPtr1, srcPtr+batchIndex, sizeof(unsigned char) * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * channel, hipMemcpyDeviceToDevice);
 
         if (chnFormat == RPPI_CHN_PLANAR)
         {
