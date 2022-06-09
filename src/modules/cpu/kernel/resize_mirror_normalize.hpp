@@ -62,8 +62,8 @@ omp_set_dynamic(0);
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
 
-        std::cout<<"mean :"<<mean[0]<<" "<<mean[1]<<" "<<mean[2]<<std::endl;
-        std::cout<<"invStdDev :"<<invStdDev[0]<<" "<<invStdDev[1]<<" "<<invStdDev[2]<<std::endl;
+        // std::cout<<"mean :"<<mean[0]<<" "<<mean[1]<<" "<<mean[2]<<std::endl;
+        // std::cout<<"invStdDev :"<<invStdDev[0]<<" "<<invStdDev[1]<<" "<<invStdDev[2]<<std::endl;
 
         __m256 pRMNParams[6];
         pRMNParams[0] = _mm256_set1_ps(mean[0]);
