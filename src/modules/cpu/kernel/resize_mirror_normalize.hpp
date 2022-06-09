@@ -15,6 +15,13 @@ RppStatus resize_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    //Set non ROI pixels to zero
+    for(int i = 0; i < dstDescPtr->n; i++)
+    {
+        
+        int temp_max_dst_size = dstDescPtr->w * dstDescPtr->w * dstDescPtr->c;
+        memset(dstPtr + i * (temp_max_dst_size), 0, size_t(temp_max_dst_size));
+    }
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -56,7 +63,7 @@ omp_set_dynamic(0);
 
         Rpp32f mean[3] = {0.0f, 0.0f, 0.0f};
         Rpp32f invStdDev[3] = {1.0f, 1.0f, 1.0f};
-
+        
         // Rpp32f mean[3] = {meanTensor[3 * batchCount], meanTensor[3 * batchCount + 1], meanTensor[3 * batchCount + 2]};
         // Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
