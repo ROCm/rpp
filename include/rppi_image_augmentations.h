@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #ifndef RPPI_IMAGE_AUGMENTATIONS_H
 #define RPPI_IMAGE_AUGMENTATIONS_H
 
@@ -23,12 +45,14 @@ extern "C" {
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_brightness_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_brightness_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_brightness_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_brightness_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_brightness_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_brightness_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_brightness_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_brightness_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_brightness_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32f *beta, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** gamma_correction ********************/
 
@@ -45,12 +69,14 @@ RppStatus rppi_brightness_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSiz
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_gamma_correction_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_gamma_correction_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_gamma_correction_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_gamma_correction_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_gamma_correction_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_gamma_correction_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_gamma_correction_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_gamma_correction_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_gamma_correction_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *gamma, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** blend ********************/
 
@@ -68,12 +94,14 @@ RppStatus rppi_gamma_correction_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_blend_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_blend_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_blend_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_blend_u8_pln1_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_blend_u8_pln3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_blend_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_blend_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_blend_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_blend_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *alpha, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** blur ********************/
 
@@ -90,12 +118,14 @@ RppStatus rppi_blend_u8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rp
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_blur_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_blur_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_blur_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_blur_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_blur_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_blur_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_blur_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_blur_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_blur_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** contrast ********************/
 
@@ -113,12 +143,14 @@ RppStatus rppi_blur_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rpp
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_contrast_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_contrast_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_contrast_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_contrast_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_contrast_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_contrast_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_contrast_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_contrast_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_contrast_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *newMin, Rpp32u *newMax, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** pixelate ********************/
 
@@ -134,12 +166,14 @@ RppStatus rppi_contrast_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_pixelate_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_pixelate_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_pixelate_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_pixelate_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_pixelate_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_pixelate_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_pixelate_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_pixelate_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_pixelate_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** jitter ********************/
 
@@ -156,12 +190,14 @@ RppStatus rppi_pixelate_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_jitter_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kenelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_jitter_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kenelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_jitter_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kenelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_jitter_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_jitter_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_jitter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_jitter_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kenelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_jitter_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kenelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_jitter_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kenelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** snow ********************/
 
@@ -178,12 +214,14 @@ RppStatus rppi_jitter_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, R
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_snow_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_snow_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_snow_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_snow_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_snow_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_snow_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_snow_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_snow_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_snow_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *snowValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** noise ********************/
 
@@ -200,12 +238,14 @@ RppStatus rppi_snow_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rpp
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_noise_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_noise_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_noise_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_noise_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_noise_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_noise_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_noise_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_noise_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_noise_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *noiseProbability, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** random_shadow ********************/
 
@@ -228,12 +268,14 @@ RppStatus rppi_noise_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rp
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_random_shadow_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_random_shadow_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_random_shadow_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_random_shadow_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_random_shadow_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_random_shadow_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_random_shadow_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_random_shadow_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_random_shadow_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x1, Rpp32u *y1, Rpp32u *x2, Rpp32u *y2, Rpp32u *numberOfShadows, Rpp32u *maxSizeX, Rpp32u *maxSizeY, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** fog ********************/
 
@@ -250,12 +292,14 @@ RppStatus rppi_random_shadow_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *src
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_fog_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_fog_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_fog_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_fog_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_fog_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_fog_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_fog_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_fog_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_fog_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *fogValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** rain ********************/
 
@@ -275,12 +319,14 @@ RppStatus rppi_fog_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rppi
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_rain_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_rain_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_rain_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_rain_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_rain_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_rain_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_rain_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_rain_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_rain_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *rainPercentage, Rpp32u *rainWidth, Rpp32u *rainHeight, Rpp32f *transperancy, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** random_crop_letterbox ********************/
 
@@ -302,12 +348,14 @@ RppStatus rppi_rain_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, Rpp
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_random_crop_letterbox_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_random_crop_letterbox_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_random_crop_letterbox_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_random_crop_letterbox_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_random_crop_letterbox_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_random_crop_letterbox_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_random_crop_letterbox_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_random_crop_letterbox_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_random_crop_letterbox_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32u *xRoiBegin, Rpp32u *xRoiEnd, Rpp32u *yRoiBegin, Rpp32u *yRoiEnd, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** exposure ********************/
 
@@ -324,12 +372,14 @@ RppStatus rppi_random_crop_letterbox_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiS
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_exposure_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_exposure_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_exposure_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_exposure_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_exposure_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_exposure_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_exposure_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_exposure_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_exposure_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32f *exposureValue, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /******************** histogram_balance ********************/
 
@@ -345,12 +395,14 @@ RppStatus rppi_exposure_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize,
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppi_histogram_balance_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_histogram_balance_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
-RppStatus rppi_histogram_balance_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_histogram_balance_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_histogram_balance_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_histogram_balance_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppi_histogram_balance_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_histogram_balance_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+RppStatus rppi_histogram_balance_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 #ifdef __cplusplus
 }

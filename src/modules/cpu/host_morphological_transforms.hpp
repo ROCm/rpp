@@ -1,6 +1,7 @@
 #ifndef HOST_MORPHOLOGICAL_TRANSFORMS_HPP
 #define HOST_MORPHOLOGICAL_TRANSFORMS_HPP
-#include <cpu/rpp_cpu_common.hpp>
+
+#include "rpp_cpu_common.hpp"
 
 /**************** erode ***************/
 

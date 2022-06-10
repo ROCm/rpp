@@ -25,9 +25,15 @@ THE SOFTWARE.
 #include "rppt_tensor_morphological_operations.h"
 
 #ifdef HIP_COMPILE
-    #include <hip/hip_fp16.h>
-    #include "hip/hip_tensor_morphological_operations.hpp"
+#include <hip/hip_fp16.h>
+#include "hip/hip_tensor_morphological_operations.hpp"
 #endif // HIP_COMPILE
+
+/********************************************************************************************************************/
+/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
+/********************************************************************************************************************/
+
+#ifdef GPU_SUPPORT
 
 /******************** erode ********************/
 
@@ -164,3 +170,5 @@ RppStatus rppt_dilate_gpu(RppPtr_t srcPtr,
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
+
+#endif // GPU_SUPPORT
