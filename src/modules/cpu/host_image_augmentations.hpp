@@ -1,9 +1,11 @@
 #ifndef HOST_IMAGE_AUGMENTATIONS_HPP
 #define HOST_IMAGE_AUGMENTATIONS_HPP
-#include "cpu/rpp_cpu_simd.hpp"
-#include <cpu/rpp_cpu_common.hpp>
+
 #include <stdlib.h>
 #include <time.h>
+
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
 
 /************ brightness ************/
 
@@ -4618,7 +4620,7 @@ RppStatus rain_host(T* srcPtr, RppiSize srcSize,T* dstPtr,
     transparency *= 0.2;
 
     const Rpp32u rainDrops = (Rpp32u)(rainPercentage * srcSize.width * srcSize.height * channel);
-    fast_srand(std::time(0));
+    fast_srand(time(0));
     const unsigned rand_len = srcSize.width;
     unsigned int col_rand[rand_len];
     unsigned int row_rand[rand_len];
