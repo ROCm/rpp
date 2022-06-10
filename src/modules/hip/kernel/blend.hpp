@@ -1,5 +1,5 @@
 #include <hip/hip_runtime.h>
-#include "hip/rpp_hip_common.hpp"
+#include "rpp_hip_common.hpp"
 
 __device__ void blend_hip_compute(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
 {
