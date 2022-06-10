@@ -4364,7 +4364,7 @@ inline void compute_resize_bilinear_src_loc_and_weights(Rpp32s dstLocation, Rpp3
     weight[0] = 1 - weight[1];
 }
 
-inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256 &pMask,__m256 pOffset = avx_p0, bool hasRGBChannels = false)
+inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256i &pxLoc, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
 {
     __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
@@ -4373,10 +4373,8 @@ inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m
     pWeight[0] = _mm256_sub_ps(avx_p1, pWeight[1]);
     if(hasRGBChannels)
         pLoc = _mm256_mul_ps(pLoc, avx_p3);
-    __m256i pxLoc = _mm256_cvtps_epi32(pLoc);
+    pxLoc = _mm256_cvtps_epi32(pLoc);
     _mm256_storeu_si256((__m256i*) srcLoc, pxLoc);
-    if(srcLoc[0] < 0)
-        pMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxLoc)); // Mask set to true if the location is negative
 }
 
 inline Rpp32f compute_kernel_radius(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
@@ -4480,7 +4478,6 @@ inline void set_zeros_avx(__m256 *pVecs, Rpp32s numVecs)
         pVecs[i] = avx_p0;
 }
 
-
 inline void compute_bilinear_coefficients(Rpp32f *weightParams, Rpp32f *bilinearCoeffs)
 {
     bilinearCoeffs[0] = weightParams[1] * weightParams[3];    // (1 - weightedHeight) * (1 - weightedWidth)
@@ -4498,10 +4495,10 @@ inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBi
 }
 
 template <typename T>
-inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtr)
+inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, Rpp32f *bilinearCoeffs, T *dstPtr)
 {
-    Rpp32s loc1 = std::max(loc, 0);
-    Rpp32s loc2 = std::min(loc + 1, limit);
+    Rpp32s loc1 = std::max(loc, minLimit);
+    Rpp32s loc2 = std::min(loc + 1, maxLimit);
     *dstPtr = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
@@ -4509,10 +4506,10 @@ inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s lo
 }
 
 template <typename T>
-inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
-    Rpp32s loc1 = std::max(loc, 0);
-    Rpp32s loc2 = std::min(loc + 3, limit);
+    Rpp32s loc1 = std::max(loc, minLimit);
+    Rpp32s loc2 = std::min(loc + 3, maxLimit);
     *dstPtrR = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
                    ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
                    ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
@@ -4528,11 +4525,11 @@ inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32
 }
 
 template <typename T>
-inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, limit, bilinearCoeffs, dstPtrR);
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, limit, bilinearCoeffs, dstPtrG);
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 4, loc, limit, bilinearCoeffs, dstPtrB);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, minLimit, maxLimit, bilinearCoeffs, dstPtrR);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, minLimit, maxLimit, bilinearCoeffs, dstPtrG);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 4, loc, minLimit, maxLimit, bilinearCoeffs, dstPtrB);
 }
 
 inline void compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 &pDstPixels)
@@ -4549,17 +4546,17 @@ inline void compute_bilinear_interpolation_3c_avx(__m256 *pSrcPixels, __m256 *pB
 }
 
 template <typename T>
-inline void compute_src_row_ptrs_for_bilinear_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
+inline void compute_src_row_ptrs_for_bilinear_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, 0), limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation
-    rowPtrsForInterp[1]  = srcPtr + std::min(std::max(loc + 1, 0), limit) * descPtr->strides.hStride;     // BottomRow for bilinear interpolation
+    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, minLimit), maxLimit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation
+    rowPtrsForInterp[1]  = srcPtr + std::min(std::max(loc + 1, minLimit), maxLimit) * descPtr->strides.hStride;     // BottomRow for bilinear interpolation
 }
 
 template <typename T>
-inline void compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
+inline void compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, 0), limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
-    rowPtrsForInterp[1] = srcPtr + std::min(std::max(loc + 1, 0), limit) * descPtr->strides.hStride;      // BottomRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, minLimit), maxLimit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[1] = srcPtr + std::min(std::max(loc + 1, minLimit), maxLimit) * descPtr->strides.hStride;      // BottomRow for bilinear interpolation (R channel)
     rowPtrsForInterp[2] = rowPtrsForInterp[0] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (G channel)
     rowPtrsForInterp[3] = rowPtrsForInterp[1] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (G channel)
     rowPtrsForInterp[4] = rowPtrsForInterp[2] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (B channel)
