@@ -1,6 +1,7 @@
 #ifndef HOST_COMPUTER_VISION_HPP
 #define HOST_COMPUTER_VISION_HPP
-#include <cpu/rpp_cpu_common.hpp>
+
+#include "rpp_cpu_common.hpp"
 
 /**************** data_object_copy ***************/
 

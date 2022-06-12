@@ -1,5 +1,5 @@
-#ifndef RPP_GUARD_MLOPEN_LOAD_FILE_HPP
-#define RPP_GUARD_MLOPEN_LOAD_FILE_HPP
+#ifndef GUARD_RPP_LOAD_FILE_HPP
+#define GUARD_RPP_LOAD_FILE_HPP
 
 #include <string>
 

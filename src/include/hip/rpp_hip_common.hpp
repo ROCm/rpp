@@ -4,9 +4,11 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_fp16.h>
 #include <half.hpp>
+
 #include "rppdefs.h"
-#include "hip/rpp/handle.hpp"
-#include "hip/rpp_hip_roi_conversion.hpp"
+#include "rpp/handle.hpp"
+#include "rpp_hip_roi_conversion.hpp"
+
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 typedef unsigned char uchar;

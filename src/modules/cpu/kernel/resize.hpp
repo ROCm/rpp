@@ -1,8 +1,8 @@
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
 
-RppStatus resize_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
+RppStatus resize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                             RpptDescPtr srcDescPtr,
                                             Rpp8u *dstPtr,
                                             RpptDescPtr dstDescPtr,
@@ -244,7 +244,7 @@ RppStatus resize_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus resize_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
+RppStatus resize_f32_f32_host_tensor(Rpp32f *srcPtr,
                                               RpptDescPtr srcDescPtr,
                                               Rpp32f *dstPtr,
                                               RpptDescPtr dstDescPtr,
@@ -488,7 +488,7 @@ RppStatus resize_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus resize_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
+RppStatus resize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                               RpptDescPtr srcDescPtr,
                                               Rpp16f *dstPtr,
                                               RpptDescPtr dstDescPtr,
@@ -733,7 +733,7 @@ RppStatus resize_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus resize_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
+RppStatus resize_i8_i8_host_tensor(Rpp8s *srcPtr,
                                             RpptDescPtr srcDescPtr,
                                             Rpp8s *dstPtr,
                                             RpptDescPtr dstDescPtr,

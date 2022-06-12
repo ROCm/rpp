@@ -1,15 +1,15 @@
-# Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
-#
+# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-#
+
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-#
+
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -75,47 +75,79 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 # Set Compilers for HIP and OPENCL backends
 set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
 set(COMPILER_FOR_OPENCL clang++)
+set(COMPILER_FOR_CPU clang++)
 
 # Backend specific settings
 if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
     add_definitions(-DSTATIC) # This line is to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
 
-    # Find package
-    find_package(HIP REQUIRED)
+    find_package(HIP QUIET)    # Find package HIP
+    if(HIP_FOUND)
 
-    # Add modules
-    set(MODULES_LIST modules)
-    foreach(MOD_NAME ${MODULES_LIST})
-        add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
-    endforeach(MOD_NAME)
+        # Add modules
+        set(BACKEND "HIP")
+        set(MODULES_LIST modules)
+        foreach(MOD_NAME ${MODULES_LIST})
+            add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+        endforeach(MOD_NAME)
 
-    # Set compiler and flags
-    set(RPP_BACKEND_HIP 1)
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-    set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
-    link_libraries(stdc++)
+        # Set compiler and flags
+        set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+        set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
+        link_libraries(stdc++)
 
-    message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
+        message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using HIP backend${ColourReset}")
+
+    else()
+        set(BACKEND "CPU")
+        message("-- ${Yellow}HIP not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
+    endif()
+
 elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OpenCL")
-    # Find package
-    find_package(OpenCL REQUIRED)
+
+    find_package(OpenCL QUIET)    # Find package OpenCL
+    if(OpenCL_FOUND)
+
+        # Add modules
+        set(BACKEND "OCL")
+        set(MODULES_LIST modules)
+        foreach(MOD_NAME ${MODULES_LIST})
+            add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+        endforeach(MOD_NAME)
+
+        # Set compiler and flags
+        set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
+        set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
+        set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
+        add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
+
+        message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using OpenCL backend${ColourReset}")
+
+    else()
+        set(BACKEND "CPU")
+        message("-- ${Yellow}OpenCL not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
+    endif()
+
+endif()
+
+# CPU backend specific settings
+if( "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
 
     # Add modules
+    set(BACKEND "CPU")
     set(MODULES_LIST modules)
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
 
     # Set compiler and flags
-    set(RPP_BACKEND_OPENCL 1)
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
-    set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
-    set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
-    add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
 
-    message("-- ${Green}${PROJECT_NAME} set to build with OpenCL backend${ColourReset}")
+    message("-- ${Green}${PROJECT_NAME} set to build for CPU backend${ColourReset}")
+
 endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
@@ -149,9 +181,25 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${ROCM_PATH}/include
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific
         ${INCLUDE_LIST}
 )
+
+if( "${BACKEND}" STREQUAL "HIP")
+    add_definitions(-DGPU_SUPPORT)
+    target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
+    )
+elseif( "${BACKEND}" STREQUAL "OCL")
+    add_definitions(-DGPU_SUPPORT)
+    target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cl
+    )
+endif()
 
 add_subdirectory(addkernels)
 
