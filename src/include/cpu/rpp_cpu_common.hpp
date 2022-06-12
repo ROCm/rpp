@@ -4402,6 +4402,21 @@ inline Rpp32f compute_kernel_radius(RpptInterpolationType interpolationType, Rpp
     }
 }
 
+inline Rpp32f compute_kernel_scale(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
+{
+    switch(interpolationType)
+    {
+    case RpptInterpolationType::LANCZOS:
+        return in_size > out_size ? (1 / scale) : 1.0f;
+    case RpptInterpolationType::GAUSSIAN:
+        return in_size > out_size ? (1 / scale) : 1.0f;
+    case RpptInterpolationType::TRIANGULAR:
+        return in_size > out_size ? (1 / scale) : 1.0f;
+    default:
+        return 1.0f;
+    }
+}
+
 inline void compute_bicubic_coefficient(Rpp32f weight, Rpp32f &coeff)
 {
     Rpp32f x = fabsf(weight);
@@ -4460,13 +4475,13 @@ inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f 
 }
 
 // Computes the row coefficients for separable resampling
-inline void compute_row_coefficients(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f kernelRadius, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_row_coefficients(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f kernelRadius, Rpp32f weight, Rpp32f *coeffs, Rpp32f kernelScale, Rpp32u srcStride = 1)
 {
     Rpp32f sum = 0;
     weight = weight - kernelRadius;
     for(int k = 0; k < kernelSize; k++)
     {
-        compute_coefficient(interpolationType, weight + k, coeffs[k]);
+        compute_coefficient(interpolationType, (weight + k) * kernelScale, coeffs[k]);
         sum += coeffs[k];
     }
     if(sum)
@@ -4478,7 +4493,7 @@ inline void compute_row_coefficients(RpptInterpolationType interpolationType, Rp
 }
 
 // Computes the column coefficients for separable resampling
-inline void compute_col_coefficients(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f kernelRadius, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_col_coefficients(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f kernelRadius, Rpp32f weight, Rpp32f *coeffs, Rpp32f kernelScale, Rpp32u srcStride = 1)
 {
     Rpp32f sum = 0;
     weight = weight - kernelRadius;
@@ -4486,7 +4501,7 @@ inline void compute_col_coefficients(RpptInterpolationType interpolationType, Rp
     // The coefficients are computed for 4 dst locations and stored consecutively for ease of access
     for(int k = 0, kPos = 0; k < kernelSize; k++, kPos += 4)
     {
-        compute_coefficient(interpolationType, weight + k, coeffs[kPos]);
+        compute_coefficient(interpolationType, (weight + k) * kernelScale, coeffs[kPos]);
         sum += coeffs[kPos];
     }
     if(sum)

@@ -1004,11 +1004,13 @@ omp_set_dynamic(0);
         Rpp32u heightLimit = roi.xywhROI.roiHeight - 1;
         Rpp32u widthLimit = roi.xywhROI.roiWidth - 1;
         Rpp32s hKernelSize, wKernelSize;
-        Rpp32f hKernelRadius, wKernelRadius;
+        Rpp32f hKernelRadius, wKernelRadius, hKernelScale, wKernelScale;
         hKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
         wKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);
         hKernelSize = std::ceil(hKernelRadius * 2);
         wKernelSize = std::ceil(wKernelRadius * 2);
+        hKernelScale = compute_kernel_scale(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
+        wKernelScale = compute_kernel_scale(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);
         Rpp32f hOffset = (hRatio - 1) * 0.5f - hKernelRadius;
         Rpp32f wOffset = (wRatio - 1) * 0.5f - wKernelRadius;
 
@@ -1021,7 +1023,7 @@ omp_set_dynamic(0);
         {
             Rpp32f weightParam;
             compute_resize_src_loc(indexCount, hRatio, rowIndex[indexCount], weightParam, hOffset);
-            compute_row_coefficients(interpolationType, hKernelSize, hKernelRadius, weightParam, &rowCoeffs[coeffCount]);
+            compute_row_coefficients(interpolationType, hKernelSize, hKernelRadius, weightParam, &rowCoeffs[coeffCount], hKernelScale);
         }
         // Pre-compute col index and coefficients
         for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].width; indexCount++)
@@ -1029,7 +1031,7 @@ omp_set_dynamic(0);
             Rpp32f weightParam;
             compute_resize_src_loc(indexCount, wRatio, colIndex[indexCount], weightParam, wOffset, srcDescPtr->strides.wStride);
             coeffCount = (indexCount % 4 == 0) ? (indexCount * wKernelSize) : coeffCount + 1; // TODO - Add comment
-            compute_col_coefficients(interpolationType, wKernelSize, wKernelRadius, weightParam, &colCoeffs[coeffCount], srcDescPtr->strides.wStride);
+            compute_col_coefficients(interpolationType, wKernelSize, wKernelRadius, weightParam, &colCoeffs[coeffCount], wKernelScale, srcDescPtr->strides.wStride);
         }
 
         T *srcPtrImage, *dstPtrImage;
