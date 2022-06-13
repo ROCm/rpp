@@ -4368,6 +4368,20 @@ inline void compute_resize_bilinear_src_loc_and_weights(Rpp32s dstLocation, Rpp3
     weight[0] = 1 - weight[1];
 }
 
+inline void compute_resize_src_loc_sse(__m128 &pDstLoc, __m128 &pScale, __m128 &pLimit, Rpp32s *srcLoc, __m128 *pWeight, __m128 pOffset = xmm_p0, bool hasRGBChannels = false)
+{
+    __m128 pLoc = _mm_fmadd_ps(pDstLoc, pScale, pOffset);
+    pDstLoc = _mm_add_ps(pDstLoc, xmm_p4);
+    __m128 pLocFloor = _mm_floor_ps(pLoc);
+    pWeight[0] = _mm_sub_ps(pLoc, pLocFloor);
+    pWeight[1] = _mm_sub_ps(xmm_p1, pWeight[0]);
+    pLocFloor = _mm_max_ps(_mm_min_ps(pLocFloor, pLimit), xmm_p0);
+    if(hasRGBChannels)
+        pLocFloor = _mm_mul_ps(pLocFloor, xmm_p3);
+    __m128i pxLocFloor = _mm_cvtps_epi32(pLocFloor);
+    _mm_storeu_si128((__m128i*) srcLoc, pxLocFloor);
+}
+
 inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256i &pxLoc, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
 {
     __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
