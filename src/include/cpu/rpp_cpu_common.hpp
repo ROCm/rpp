@@ -4497,8 +4497,8 @@ inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBi
 template <typename T>
 inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, Rpp32f *bilinearCoeffs, T *dstPtr)
 {
-    Rpp32s loc1 = std::max(loc, minLimit);
-    Rpp32s loc2 = std::min(loc + 1, maxLimit);
+    Rpp32s loc1 = std::min(std::max(loc, minLimit), maxLimit);
+    Rpp32s loc2 = std::min(std::max(loc + 1, minLimit), maxLimit);
     *dstPtr = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
@@ -4508,8 +4508,8 @@ inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s lo
 template <typename T>
 inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
-    Rpp32s loc1 = std::max(loc, minLimit);
-    Rpp32s loc2 = std::min(loc + 3, maxLimit);
+    Rpp32s loc1 = std::min(std::max(loc, minLimit), maxLimit);
+    Rpp32s loc2 = std::min(std::max(loc + 3, minLimit), maxLimit);
     *dstPtrR = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
                    ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
                    ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
