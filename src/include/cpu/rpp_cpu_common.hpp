@@ -4362,19 +4362,24 @@ inline void compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32s &src
     srcLoc = srcLocation * srcStride;
 }
 
+inline void compute_resize_nn_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u limit, Rpp32s &srcLoc, Rpp32f offset = 0, Rpp32u srcStride = 1)
+{
+    Rpp32f srcLocation = ((Rpp32f) dstLocation) * scale + offset;
+    Rpp32s srcLocationFloor = (Rpp32s) RPPFLOOR(srcLocation);
+    srcLoc = ((srcLocationFloor > limit) ? limit : srcLocationFloor) * srcStride;
+}
+
 inline void compute_resize_bilinear_src_loc_and_weights(Rpp32s dstLocation, Rpp32f scale, Rpp32s &srcLoc, Rpp32f *weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
 {
     compute_resize_src_loc(dstLocation, scale, srcLoc, weight[1], offset, srcStride);
     weight[0] = 1 - weight[1];
 }
 
-inline void compute_resize_src_loc_sse(__m128 &pDstLoc, __m128 &pScale, __m128 &pLimit, Rpp32s *srcLoc, __m128 *pWeight, __m128 pOffset = xmm_p0, bool hasRGBChannels = false)
+inline void compute_resize_nn_src_loc_sse(__m128 &pDstLoc, __m128 &pScale, __m128 &pLimit, Rpp32s *srcLoc, __m128 pOffset = xmm_p0, bool hasRGBChannels = false)
 {
     __m128 pLoc = _mm_fmadd_ps(pDstLoc, pScale, pOffset);
     pDstLoc = _mm_add_ps(pDstLoc, xmm_p4);
     __m128 pLocFloor = _mm_floor_ps(pLoc);
-    pWeight[0] = _mm_sub_ps(pLoc, pLocFloor);
-    pWeight[1] = _mm_sub_ps(xmm_p1, pWeight[0]);
     pLocFloor = _mm_max_ps(_mm_min_ps(pLocFloor, pLimit), xmm_p0);
     if(hasRGBChannels)
         pLocFloor = _mm_mul_ps(pLocFloor, xmm_p3);

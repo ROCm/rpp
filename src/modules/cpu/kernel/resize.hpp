@@ -44,8 +44,7 @@ omp_set_dynamic(0);
         __m128 pWRatio = _mm_set1_ps(wRatio);
         __m128 pWidthLimit = _mm_set1_ps((float)widthLimit);
         __m128 pWOffset = _mm_set1_ps(wOffset);
-        __m128 pDstLoc, pWeightParams[2];
-        Rpp32f weightParams[2];
+        __m128 pDstLoc;
         Rpp32s srcLocationColumnArray[4] = {0};     // Since 4 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
@@ -65,7 +64,7 @@ omp_set_dynamic(0);
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, weightParams, hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcRowPtr + srcLocationRow * srcDescPtr->strides.hStride;
                 pDstLoc = xmm_pDstLocInit;
 
@@ -73,7 +72,7 @@ omp_set_dynamic(0);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m128i pRow;
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset, true);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset, true);
                     rpp_simd_load(rpp_nn_load_u8pkd3, srcPtrTemp, srcLocationColumnArray, pRow);
                     rpp_simd_store(rpp_store4_u8pkd3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -82,7 +81,7 @@ omp_set_dynamic(0);
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, weightParams, wOffset, srcDescPtr->strides.wStride);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset, srcDescPtr->strides.wStride);
                     *dstPtrTempR++ = (Rpp8u)*(srcPtrTemp + srcLocationColumn);
                     *dstPtrTempG++ = (Rpp8u)*(srcPtrTemp + srcLocationColumn + 1);
                     *dstPtrTempB++ = (Rpp8u)*(srcPtrTemp + srcLocationColumn + 2);
@@ -107,7 +106,7 @@ omp_set_dynamic(0);
             {
                 Rpp8u * dstPtrTemp, *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, weightParams, hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTempR = srcPtrRowR + srcLocationRow * srcDescPtr->strides.hStride;
                 srcPtrTempG = srcPtrRowG + srcLocationRow * srcDescPtr->strides.hStride;
                 srcPtrTempB = srcPtrRowB + srcLocationRow * srcDescPtr->strides.hStride;
@@ -117,7 +116,7 @@ omp_set_dynamic(0);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m128i pRow[3];
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset);
                     rpp_simd_load(rpp_nn_load_u8pln1, srcPtrTempR, srcLocationColumnArray, pRow[0]);
                     rpp_simd_load(rpp_nn_load_u8pln1, srcPtrTempG, srcLocationColumnArray, pRow[1]);
                     rpp_simd_load(rpp_nn_load_u8pln1, srcPtrTempB, srcLocationColumnArray, pRow[2]);
@@ -126,7 +125,7 @@ omp_set_dynamic(0);
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, weightParams, wOffset);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset);
                     *dstPtrTemp++ = (Rpp8u)*(srcPtrTempR + srcLocationColumn);
                     *dstPtrTemp++ = (Rpp8u)*(srcPtrTempG + srcLocationColumn);
                     *dstPtrTemp++ = (Rpp8u)*(srcPtrTempB + srcLocationColumn);
@@ -147,7 +146,7 @@ omp_set_dynamic(0);
             {
                 Rpp8u *dstPtrTemp, *srcPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, weightParams, hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcPtrRow + srcLocationRow * srcDescPtr->strides.hStride;
                 pDstLoc = xmm_pDstLocInit;
 
@@ -155,14 +154,14 @@ omp_set_dynamic(0);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m128i pRow;
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset, true);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset, true);
                     rpp_simd_load(rpp_nn_load_u8pkd3, srcPtrTemp, srcLocationColumnArray, pRow);
                     rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTemp, pRow);
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, weightParams, wOffset, srcDescPtr->strides.wStride);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset, srcDescPtr->strides.wStride);
                     *dstPtrTemp++ = (Rpp8u)*(srcPtrTemp + srcLocationColumn);
                     *dstPtrTemp++ = (Rpp8u)*(srcPtrTemp + srcLocationColumn + 1);
                     *dstPtrTemp++ = (Rpp8u)*(srcPtrTemp + srcLocationColumn + 2);
@@ -182,7 +181,7 @@ omp_set_dynamic(0);
             {
                 Rpp8u *srcPtrTemp, *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, weightParams, hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcPtrRow + srcLocationRow * srcDescPtr->strides.hStride;
                 pDstLoc = xmm_pDstLocInit;
 
@@ -192,7 +191,7 @@ omp_set_dynamic(0);
                     Rpp8u *dstPtrTempChn, *srcPtrTempChn;
                     srcPtrTempChn = srcPtrTemp;
                     dstPtrTempChn = dstPtrTemp;
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset);
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m128i pRow;
@@ -208,7 +207,7 @@ omp_set_dynamic(0);
                     Rpp8u *dstPtrTempChn, *srcPtrTempChn;
                     srcPtrTempChn = srcPtrTemp;
                     dstPtrTempChn = dstPtrTemp;
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, weightParams, wOffset);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset);
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         *dstPtrTempChn = (Rpp8u)*(srcPtrTempChn + srcLocationColumn);
@@ -264,8 +263,7 @@ omp_set_dynamic(0);
         __m128 pWRatio = _mm_set1_ps(wRatio);
         __m128 pWidthLimit = _mm_set1_ps((float)widthLimit);
         __m128 pWOffset = _mm_set1_ps(wOffset);
-        __m128 pDstLoc, pWeightParams[2];
-        Rpp32f weightParams[2];
+        __m128 pDstLoc;
         Rpp32s srcLocationColumnArray[4] = {0};     // Since 4 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
@@ -285,7 +283,7 @@ omp_set_dynamic(0);
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcRowPtr + srcLocationRow * srcDescPtr->strides.hStride;
                 pDstLoc = xmm_pDstLocInit;
 
@@ -293,7 +291,7 @@ omp_set_dynamic(0);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m128 pRow[3];
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, &pWeightParams[0], pWOffset, true);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset, true);
                     rpp_simd_load(rpp_nn_load_f32pkd3_to_f32pln3, srcPtrTemp, srcLocationColumnArray, pRow);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -302,7 +300,7 @@ omp_set_dynamic(0);
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, &weightParams[0], wOffset, srcDescPtr->strides.wStride);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset, srcDescPtr->strides.wStride);
                     *dstPtrTempR++ = (Rpp32f)*(srcPtrTemp + srcLocationColumn);
                     *dstPtrTempG++ = (Rpp32f)*(srcPtrTemp + srcLocationColumn + 1);
                     *dstPtrTempB++ = (Rpp32f)*(srcPtrTemp + srcLocationColumn + 2);
@@ -327,7 +325,7 @@ omp_set_dynamic(0);
             {
                 Rpp32f * dstPtrTemp, *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTempR = srcPtrRowR + srcLocationRow * srcDescPtr->strides.hStride;
                 srcPtrTempG = srcPtrRowG + srcLocationRow * srcDescPtr->strides.hStride;
                 srcPtrTempB = srcPtrRowB + srcLocationRow * srcDescPtr->strides.hStride;
@@ -337,7 +335,7 @@ omp_set_dynamic(0);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m128 pRow[4];
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, &pWeightParams[0], pWOffset);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset);
                     rpp_simd_load(rpp_nn_load_f32pln1, srcPtrTempR, srcLocationColumnArray, pRow[0]);
                     rpp_simd_load(rpp_nn_load_f32pln1, srcPtrTempG, srcLocationColumnArray, pRow[1]);
                     rpp_simd_load(rpp_nn_load_f32pln1, srcPtrTempB, srcLocationColumnArray, pRow[2]);
@@ -346,7 +344,7 @@ omp_set_dynamic(0);
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, &weightParams[0], wOffset);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset);
                     *dstPtrTemp++ = (Rpp32f)*(srcPtrTempR + srcLocationColumn);
                     *dstPtrTemp++ = (Rpp32f)*(srcPtrTempG + srcLocationColumn);
                     *dstPtrTemp++ = (Rpp32f)*(srcPtrTempB + srcLocationColumn);
@@ -367,14 +365,14 @@ omp_set_dynamic(0);
             {
                 Rpp32f *dstPtrTemp, *srcPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcPtrRow + srcLocationRow * srcDescPtr->strides.hStride;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
                     __m128 pRow;
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, &weightParams[0], wOffset, srcDescPtr->strides.wStride);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset, srcDescPtr->strides.wStride);
                     rpp_simd_load(rpp_load4_f32_to_f32, (srcPtrTemp + srcLocationColumn), &pRow);
                     rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, &pRow);
                     dstPtrTemp += 3;
@@ -394,7 +392,7 @@ omp_set_dynamic(0);
             {
                 Rpp32f *srcPtrTemp, *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcPtrRow + srcLocationRow * srcDescPtr->strides.hStride;
                 pDstLoc = xmm_pDstLocInit;
 
@@ -404,7 +402,7 @@ omp_set_dynamic(0);
                     Rpp32f *dstPtrTempChn, *srcPtrTempChn;
                     srcPtrTempChn = srcPtrTemp;
                     dstPtrTempChn = dstPtrTemp;
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset);
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m128 pRow;
@@ -420,7 +418,7 @@ omp_set_dynamic(0);
                     Rpp32f *dstPtrTempChn, *srcPtrTempChn;
                     srcPtrTempChn = srcPtrTemp;
                     dstPtrTempChn = dstPtrTemp;
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, &weightParams[0], wOffset);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset);
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         *dstPtrTempChn = (Rpp32f)*(srcPtrTempChn + srcLocationColumn);
@@ -476,8 +474,7 @@ omp_set_dynamic(0);
         __m128 pWRatio = _mm_set1_ps(wRatio);
         __m128 pWidthLimit = _mm_set1_ps((float)widthLimit);
         __m128 pWOffset = _mm_set1_ps(wOffset);
-        __m128 pDstLoc, pWeightParams[2];
-        Rpp32f weightParams[2];
+        __m128 pDstLoc;
         Rpp32s srcLocationColumnArray[4] = {0};     // Since 4 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
@@ -497,7 +494,7 @@ omp_set_dynamic(0);
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, weightParams, hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcRowPtr + srcLocationRow * srcDescPtr->strides.hStride;
                 pDstLoc = xmm_pDstLocInit;
 
@@ -505,7 +502,7 @@ omp_set_dynamic(0);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m128i pRow;
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset, true);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset, true);
                     rpp_simd_load(rpp_nn_load_i8pkd3, srcPtrTemp, srcLocationColumnArray, pRow);
                     rpp_simd_store(rpp_store4_i8pkd3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -514,7 +511,7 @@ omp_set_dynamic(0);
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, weightParams, wOffset, srcDescPtr->strides.wStride);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset, srcDescPtr->strides.wStride);
                     *dstPtrTempR++ = (Rpp8s)*(srcPtrTemp + srcLocationColumn);
                     *dstPtrTempG++ = (Rpp8s)*(srcPtrTemp + srcLocationColumn + 1);
                     *dstPtrTempB++ = (Rpp8s)*(srcPtrTemp + srcLocationColumn + 2);
@@ -539,7 +536,7 @@ omp_set_dynamic(0);
             {
                 Rpp8s * dstPtrTemp, *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, weightParams, hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTempR = srcPtrRowR + srcLocationRow * srcDescPtr->strides.hStride;
                 srcPtrTempG = srcPtrRowG + srcLocationRow * srcDescPtr->strides.hStride;
                 srcPtrTempB = srcPtrRowB + srcLocationRow * srcDescPtr->strides.hStride;
@@ -549,7 +546,7 @@ omp_set_dynamic(0);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m128i pRow[3];
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset);
                     rpp_simd_load(rpp_nn_load_i8pln1, srcPtrTempR, srcLocationColumnArray, pRow[0]);
                     rpp_simd_load(rpp_nn_load_i8pln1, srcPtrTempG, srcLocationColumnArray, pRow[1]);
                     rpp_simd_load(rpp_nn_load_i8pln1, srcPtrTempB, srcLocationColumnArray, pRow[2]);
@@ -558,7 +555,7 @@ omp_set_dynamic(0);
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, weightParams, wOffset);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset);
                     *dstPtrTemp++ = (Rpp8s)*(srcPtrTempR + srcLocationColumn);
                     *dstPtrTemp++ = (Rpp8s)*(srcPtrTempG + srcLocationColumn);
                     *dstPtrTemp++ = (Rpp8s)*(srcPtrTempB + srcLocationColumn);
@@ -579,7 +576,7 @@ omp_set_dynamic(0);
             {
                 Rpp8s *dstPtrTemp, *srcPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, weightParams, hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcPtrRow + srcLocationRow * srcDescPtr->strides.hStride;
                 pDstLoc = xmm_pDstLocInit;
 
@@ -587,14 +584,14 @@ omp_set_dynamic(0);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m128i pRow;
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset, true);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset, true);
                     rpp_simd_load(rpp_nn_load_i8pkd3, srcPtrTemp, srcLocationColumnArray, pRow);
                     rpp_simd_store(rpp_store4_i8_to_i8, dstPtrTemp, pRow);
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, weightParams, wOffset, srcDescPtr->strides.wStride);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset, srcDescPtr->strides.wStride);
                     *dstPtrTemp++ = (Rpp8s)*(srcPtrTemp + srcLocationColumn);
                     *dstPtrTemp++ = (Rpp8s)*(srcPtrTemp + srcLocationColumn + 1);
                     *dstPtrTemp++ = (Rpp8s)*(srcPtrTemp + srcLocationColumn + 2);
@@ -614,7 +611,7 @@ omp_set_dynamic(0);
             {
                 Rpp8s *srcPtrTemp, *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, weightParams, hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcPtrRow + srcLocationRow * srcDescPtr->strides.hStride;
                 pDstLoc = xmm_pDstLocInit;
 
@@ -624,7 +621,7 @@ omp_set_dynamic(0);
                     Rpp8s *dstPtrTempChn, *srcPtrTempChn;
                     srcPtrTempChn = srcPtrTemp;
                     dstPtrTempChn = dstPtrTemp;
-                    compute_resize_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWeightParams, pWOffset);
+                    compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset);
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m128i pRow;
@@ -640,7 +637,7 @@ omp_set_dynamic(0);
                     Rpp8s *dstPtrTempChn, *srcPtrTempChn;
                     srcPtrTempChn = srcPtrTemp;
                     dstPtrTempChn = dstPtrTemp;
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, weightParams, wOffset);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset);
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         *dstPtrTempChn = (Rpp8s)*(srcPtrTempChn + srcLocationColumn);
@@ -691,9 +688,8 @@ omp_set_dynamic(0);
         dstPtrChannel = dstPtrImage;
 
         Rpp32u alignedLength = dstImgSize[batchCount].width & ~3;
-        Rpp32f weightParams[2];
         Rpp32s srcLocationColumnArray[4] = {0};
-         Rpp32s srcLocationRow, srcLocationColumn;
+        Rpp32s srcLocationRow, srcLocationColumn;
 
         // Resize with fused output-layout toggle (NHWC -> NCHW)
         if (srcDescPtr->c == 3)
@@ -713,7 +709,7 @@ omp_set_dynamic(0);
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcLocationRow = srcLocationRow * srcDescPtr->strides.hStride;
                 srcPtrTempR = srcPtrRowR + srcLocationRow;
                 srcPtrTempG = srcPtrRowG + srcLocationRow;
@@ -722,7 +718,7 @@ omp_set_dynamic(0);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, &weightParams[0], wOffset, srcDescPtr->strides.wStride);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset, srcDescPtr->strides.wStride);
                     *dstPtrTempR = (Rpp16f)*(srcPtrTempR + srcLocationColumn);
                     *dstPtrTempG = (Rpp16f)*(srcPtrTempG + srcLocationColumn);
                     *dstPtrTempB = (Rpp16f)*(srcPtrTempB + srcLocationColumn);
@@ -747,13 +743,13 @@ omp_set_dynamic(0);
             {
                 Rpp16f *srcPtrTemp, *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                compute_resize_src_loc(i, hRatio, heightLimit, srcLocationRow, &weightParams[0], hOffset);
+                compute_resize_nn_src_loc(i, hRatio, heightLimit, srcLocationRow, hOffset);
                 srcPtrTemp = srcPtrRow + srcLocationRow * srcDescPtr->strides.hStride;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
                 {
-                    compute_resize_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, &weightParams[0], wOffset);
+                    compute_resize_nn_src_loc(vectorLoopCount, wRatio, widthLimit, srcLocationColumn, wOffset);
                     *dstPtrTemp++ = (Rpp16f)*(srcPtrTemp + srcLocationColumn);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
