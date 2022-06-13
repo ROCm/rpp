@@ -1557,13 +1557,19 @@ int main(int argc, char **argv)
                 dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
             }
 
-            Rpp32f mean[images];
-            Rpp32f stdDev[images];
+            Rpp32f mean[images * 3];
+            Rpp32f stdDev[images * 3];
             Rpp32u mirror[images];
             for (i = 0; i < images; i++)
             {
-                mean[i] = 100.0;
-                stdDev[i] = 1.0;
+                mean[3 * i] = 60.0;
+                stdDev[3 * i] = 1.0;
+
+                mean[3 * i + 1] = 80.0;
+                stdDev[3 * i + 1] = 1.0;
+
+                mean[3 * i + 2] = 100.0;
+                stdDev[3 * i + 2] = 1.0;
                 mirror[i] = 1;
             }
 
