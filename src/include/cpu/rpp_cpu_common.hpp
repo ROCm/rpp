@@ -4436,7 +4436,7 @@ inline void compute_lanczos3_coefficient(Rpp32f weight, Rpp32f &coeff)
 
 inline void compute_gaussian_coefficient(Rpp32f weight, Rpp32f &coeff)
 {
-    coeff = expf(weight * weight * GAUSSCONSTANT1) * GAUSSCONSTANT2;
+    coeff = expf(weight * weight * -4.0f);
 }
 
 inline void compute_triangular_coefficient(Rpp32f weight, Rpp32f &coeff)
