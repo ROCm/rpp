@@ -328,7 +328,7 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
         hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
     //Set non ROI pixels to zero
-    int max_dst_size = dstDescPtr->w * dstDescPtr->w * dstDescPtr->c;
+    int max_dst_size = dstDescPtr->w * dstDescPtr->h * dstDescPtr->c;
     for(int i = 0; i < dstDescPtr->n; i++)
     {
         hipMemset(dstPtr + i * (max_dst_size), (T)0, size_t(max_dst_size));
