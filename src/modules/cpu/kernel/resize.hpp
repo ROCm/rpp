@@ -1808,7 +1808,8 @@ omp_set_dynamic(0);
         tempImgSize.height = dstImgSize[batchCount].height;
 
         // Allocate temproary buffer to store intermediate result of separable resampling
-        Rpp32f tempPtrImage[srcDescPtr->w * dstDescPtr->h * srcDescPtr->c];
+        Rpp32f *tempPtrImage;
+        tempPtrImage = (Rpp32f *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * sizeof(Rpp32f));
 
         // Create description pointer for the temporary buffer
         RpptDesc tempDesc;
@@ -1822,6 +1823,7 @@ omp_set_dynamic(0);
 
         compute_separable_vertical_resample(srcPtrImage, tempPtrImage, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
         compute_separable_horizontal_resample(tempPtrImage, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
+        free(tempPtrImage);
     }
 
     return RPP_SUCCESS;
