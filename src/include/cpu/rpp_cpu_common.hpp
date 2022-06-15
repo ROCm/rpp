@@ -41,6 +41,10 @@ typedef halfhpp Rpp16f;
 #define SIMD_FLOAT_VECTOR_LENGTH        4
 #endif
 
+/*Constants used for Gaussian interpolation*/
+// Here sigma is considered as 0.5f
+#define GAUSSCONSTANT1                 -2.0f          // 1 / (sigma * sigma * -1 * 2);
+#define GAUSSCONSTANT2                  0.7978845608028654f // 1 / ((2 * PI)*(1/2) * sigma)
 static uint16_t wyhash16_x;
 
 alignas(64) const Rpp32f sch_mat[16] = {0.701f, -0.299f, -0.300f, 0.0f, -0.587f, 0.413f, -0.588f, 0.0f, -0.114f, -0.114f, 0.886f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
@@ -4387,6 +4391,25 @@ inline Rpp32f compute_kernel_radius(RpptInterpolationType interpolationType, Rpp
         return 2.0f;
     case RpptInterpolationType::LANCZOS:
         return in_size > out_size ? 3 * scale : 3.0f;
+    case RpptInterpolationType::GAUSSIAN:
+        return in_size > out_size ? scale : 1;
+    case RpptInterpolationType::TRIANGULAR:
+        return in_size > out_size ? scale : 1;
+    default:
+        return 1.0f;
+    }
+}
+
+inline Rpp32f compute_kernel_scale(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scale)
+{
+    switch(interpolationType)
+    {
+    case RpptInterpolationType::LANCZOS:
+        return in_size > out_size ? (1 / scale) : 1.0f;
+    case RpptInterpolationType::GAUSSIAN:
+        return in_size > out_size ? (1 / scale) : 1.0f;
+    case RpptInterpolationType::TRIANGULAR:
+        return in_size > out_size ? (1 / scale) : 1.0f;
     default:
         return 1.0f;
     }
@@ -4409,6 +4432,17 @@ inline void compute_lanczos3_coefficient(Rpp32f weight, Rpp32f &coeff)
     coeff = fabs(weight) >= 3 ? 0.0f : (sinc(weight) * sinc(weight / 3));
 }
 
+inline void compute_gaussian_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+    coeff = expf(weight * weight * -4.0f);
+}
+
+inline void compute_triangular_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+    coeff = 1 - std::fabs(weight);
+    coeff = coeff < 0 ? 0 : coeff;
+}
+
 inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f weight, Rpp32f &coeff)
 {
     switch (interpolationType)
@@ -4423,19 +4457,29 @@ inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f 
         compute_lanczos3_coefficient(weight, coeff);
         break;
     }
+    case RpptInterpolationType::GAUSSIAN:
+    {
+        compute_gaussian_coefficient(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::TRIANGULAR:
+    {
+        compute_triangular_coefficient(weight, coeff);
+        break;
+    }
     default:
         break;
     }
 }
 
 // Computes the row coefficients for separable resampling
-inline void compute_row_coefficients(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f kernelRadius, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_row_coefficients(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f kernelRadius, Rpp32f weight, Rpp32f *coeffs, Rpp32f kernelScale, Rpp32u srcStride = 1)
 {
     Rpp32f sum = 0;
     weight = weight - kernelRadius;
     for(int k = 0; k < kernelSize; k++)
     {
-        compute_coefficient(interpolationType, weight + k, coeffs[k]);
+        compute_coefficient(interpolationType, (weight + k) * kernelScale, coeffs[k]);
         sum += coeffs[k];
     }
     if(sum)
@@ -4447,7 +4491,7 @@ inline void compute_row_coefficients(RpptInterpolationType interpolationType, Rp
 }
 
 // Computes the column coefficients for separable resampling
-inline void compute_col_coefficients(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f kernelRadius, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_col_coefficients(RpptInterpolationType interpolationType, Rpp32s kernelSize, Rpp32f kernelRadius, Rpp32f weight, Rpp32f *coeffs, Rpp32f kernelScale, Rpp32u srcStride = 1)
 {
     Rpp32f sum = 0;
     weight = weight - kernelRadius;
@@ -4455,7 +4499,7 @@ inline void compute_col_coefficients(RpptInterpolationType interpolationType, Rp
     // The coefficients are computed for 4 dst locations and stored consecutively for ease of access
     for(int k = 0, kPos = 0; k < kernelSize; k++, kPos += 4)
     {
-        compute_coefficient(interpolationType, weight + k, coeffs[kPos]);
+        compute_coefficient(interpolationType, (weight + k) * kernelScale, coeffs[kPos]);
         sum += coeffs[kPos];
     }
     if(sum)
