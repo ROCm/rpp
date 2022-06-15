@@ -4648,7 +4648,7 @@ inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, 
                                                 RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, Rpp32s kernelSize)
 {
 
-    static constexpr Rpp32s maxNumLanes = 16;                                  // Maximum number of pixels that can be present in a vector
+    static constexpr Rpp32s maxNumLanes = 16;                                  // Maximum number of pixels that can be present in a vector for U8 type
     static constexpr Rpp32s loadLanes = maxNumLanes / sizeof(T);
     static constexpr Rpp32s storeLanes = maxNumLanes / sizeof(Rpp32f);
     static constexpr Rpp32s numLanes = std::max(loadLanes, storeLanes);        // No of pixels that can be present in a vector wrt data type

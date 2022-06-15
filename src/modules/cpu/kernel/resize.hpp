@@ -990,8 +990,8 @@ omp_set_dynamic(0);
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
         Rpp32s hKernelSize, wKernelSize;
         Rpp32f hKernelRadius, wKernelRadius, hKernelScale, wKernelScale;
-        hKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
-        wKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);
+        hKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio); // Compute filter kernel radius for vertical resampling
+        wKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);   // Compute filter kernel radius for horizontal resampling
         hKernelSize = std::ceil(hKernelRadius * 2);
         wKernelSize = std::ceil(wKernelRadius * 2);
         hKernelScale = compute_kernel_scale(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
@@ -1034,7 +1034,8 @@ omp_set_dynamic(0);
         tempImgSize.height = dstImgSize[batchCount].height;
 
         // Allocate temproary buffer to store intermediate result of separable resampling
-        Rpp32f tempPtrImage[srcDescPtr->w * dstDescPtr->h * srcDescPtr->c];
+        Rpp32f *tempPtrImage;
+        tempPtrImage = malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c);
 
         // Create description pointer for the temporary buffer
         RpptDesc tempDesc;
@@ -1048,6 +1049,7 @@ omp_set_dynamic(0);
 
         compute_separable_vertical_resample(srcPtrImage, tempPtrImage, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
         compute_separable_horizontal_resample(tempPtrImage, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
+        free(tempPtrImage);
     }
 
     return RPP_SUCCESS;
