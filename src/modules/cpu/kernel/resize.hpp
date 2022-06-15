@@ -1035,7 +1035,7 @@ omp_set_dynamic(0);
 
         // Allocate temproary buffer to store intermediate result of separable resampling
         Rpp32f *tempPtrImage;
-        tempPtrImage = malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c);
+        tempPtrImage = (Rpp32f *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * sizeof(Rpp32f));
 
         // Create description pointer for the temporary buffer
         RpptDesc tempDesc;
