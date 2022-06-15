@@ -204,7 +204,7 @@ inline void saturate_pixel(Rpp32f pixel, Rpp8u* dst)
 
 inline void saturate_pixel(Rpp32f pixel, Rpp8s* dst)
 {
-    *dst = RPPPIXELCHECKI8(pixel - 128);
+    *dst = (Rpp8s)RPPPIXELCHECKI8(pixel - 128);
 }
 
 inline void saturate_pixel(Rpp32f pixel, Rpp32f* dst)
@@ -4558,10 +4558,10 @@ inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBi
 }
 
 template <typename T>
-inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, Rpp32f *bilinearCoeffs, T *dstPtr)
+inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtr)
 {
-    Rpp32s loc1 = std::min(std::max(loc, minLimit), maxLimit);
-    Rpp32s loc2 = std::min(std::max(loc + 1, minLimit), maxLimit);
+    Rpp32s loc1 = std::min(std::max(loc, 0), limit);
+    Rpp32s loc2 = std::min(std::max(loc + 1, 0), limit);
     *dstPtr = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
@@ -4569,10 +4569,10 @@ inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s lo
 }
 
 template <typename T>
-inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
-    Rpp32s loc1 = std::min(std::max(loc, minLimit), maxLimit);
-    Rpp32s loc2 = std::min(std::max(loc + 3, minLimit), maxLimit);
+    Rpp32s loc1 = std::min(std::max(loc, 0), limit);
+    Rpp32s loc2 = std::min(std::max(loc + 3, 0), limit);
     *dstPtrR = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
                    ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
                    ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
@@ -4588,11 +4588,11 @@ inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32
 }
 
 template <typename T>
-inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
 {
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, minLimit, maxLimit, bilinearCoeffs, dstPtrR);
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, minLimit, maxLimit, bilinearCoeffs, dstPtrG);
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 4, loc, minLimit, maxLimit, bilinearCoeffs, dstPtrB);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, limit, bilinearCoeffs, dstPtrR);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, limit, bilinearCoeffs, dstPtrG);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 4, loc, limit, bilinearCoeffs, dstPtrB);
 }
 
 inline void compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 &pDstPixels)
@@ -4609,17 +4609,17 @@ inline void compute_bilinear_interpolation_3c_avx(__m256 *pSrcPixels, __m256 *pB
 }
 
 template <typename T>
-inline void compute_src_row_ptrs_for_bilinear_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, RpptDescPtr descPtr)
+inline void compute_src_row_ptrs_for_bilinear_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, minLimit), maxLimit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation
-    rowPtrsForInterp[1]  = srcPtr + std::min(std::max(loc + 1, minLimit), maxLimit) * descPtr->strides.hStride;     // BottomRow for bilinear interpolation
+    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, 0), limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation
+    rowPtrsForInterp[1]  = srcPtr + std::min(std::max(loc + 1, 0), limit) * descPtr->strides.hStride;     // BottomRow for bilinear interpolation
 }
 
 template <typename T>
-inline void compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s minLimit, Rpp32s maxLimit, RpptDescPtr descPtr)
+inline void compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, minLimit), maxLimit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
-    rowPtrsForInterp[1] = srcPtr + std::min(std::max(loc + 1, minLimit), maxLimit) * descPtr->strides.hStride;      // BottomRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, 0), limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[1] = srcPtr + std::min(std::max(loc + 1, 0), limit) * descPtr->strides.hStride;      // BottomRow for bilinear interpolation (R channel)
     rowPtrsForInterp[2] = rowPtrsForInterp[0] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (G channel)
     rowPtrsForInterp[3] = rowPtrsForInterp[1] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (G channel)
     rowPtrsForInterp[4] = rowPtrsForInterp[2] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (B channel)
@@ -4780,7 +4780,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     Rpp32s numOutPixels, kernelStride;
     numOutPixels = kernelStride = 4;
     Rpp32s kernelSizeOverStride = kernelSize % kernelStride;
-    Rpp32s kernelRadius = (Rpp32s)(kernelSize * 0.5f);
+    Rpp32s kernelRadiusStrided = (Rpp32s)(kernelSize * 0.5f) * inputDescPtr->strides.wStride;
 
     Rpp32s inputWidthLimit = (inputImgSize.width - 1) * inputDescPtr->strides.wStride;
     __m128i pxInputWidthLimit = _mm_set1_epi32(inputWidthLimit);
@@ -4864,7 +4864,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                             }
                         }
                     }
-                    else if(index[x + 3] > (inputWidthLimit - (kernelSize / 2)))    // If the index value exceeds the limit, break the loop
+                    else if(index[x + 3] >= (inputWidthLimit - kernelRadiusStrided))    // If the index value exceeds the limit, break the loop
                     {
                         breakLoop = true;
                         break;
@@ -5053,7 +5053,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                                 pOutput[vec] = _mm_fmadd_ps(pCoeffs[l], pInput[l], pOutput[vec]);
                         }
                     }
-                    else if(index[x + 3] >= (inputWidthLimit - (kernelSize / 2)))   // If the index value exceeds the limit, break the loop
+                    else if(index[x + 3] >= (inputWidthLimit - kernelRadiusStrided))   // If the index value exceeds the limit, break the loop
                     {
                         breakLoop = true;
                         break;
