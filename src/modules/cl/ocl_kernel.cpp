@@ -23,9 +23,10 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include <rpp/oclkernel.hpp>
-#include <rpp/handle_lock.hpp>
-#include <rpp/logger.hpp>
+
+#include "rpp/oclkernel.hpp"
+#include "rpp/handle_lock.hpp"
+#include "rpp/logger.hpp"
 
 namespace rpp {
 
@@ -69,7 +70,7 @@ void OCLKernelInvoke::run() const
 
     //std::cerr << "Local Dimension" << local_work_dim[0] << std::endl;
     //std::cerr << "Global Dimension" << global_work_dim[0]  << std::endl;
-    
+
 
     cl_int status =
         clEnqueueNDRangeKernel(queue,

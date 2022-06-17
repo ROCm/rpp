@@ -23,10 +23,13 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #include <algorithm>
 #include <map>
-#include <hip/rpp/kernel.hpp>
-#include <hip/rpp/stringutils.hpp>
+
+#include "rpp/kernel.hpp"
+#include "rpp/stringutils.hpp"
+#include "rpp/errors.hpp"
 
 namespace rpp {
 

@@ -24,17 +24,17 @@
  *
  *******************************************************************************/
 
-#include "hip/rpp/binary_cache.hpp"
-#include "hip/rpp/md5.hpp"
-#include "hip/rpp/errors.hpp"
-#include "hip/rpp/env.hpp"
-#include "hip/rpp/stringutils.hpp"
-#include "hip/rpp/expanduser.hpp"
-#include <rpp.h>
-#include "version.h"
-#include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>
+#include <boost/filesystem.hpp>
+
+#include "rpp.h"
+#include "rppversion.h"
+#include "rpp/binary_cache.hpp"
+#include "rpp/errors.hpp"
+#include "rpp/env.hpp"
+#include "rpp/stringutils.hpp"
+#include "rpp/md5.hpp"
 
 namespace rpp {
 
@@ -68,7 +68,7 @@ boost::filesystem::path GetCachePath()
 
 bool IsCacheDisabled()
 {
-    
+
 #ifdef RPP_CACHE_DIR
     // std::cerr<<"\n Coming to IsCacheDisabled in binary_cache.cpp";
     return rpp::IsEnabled(RPP_DISABLE_CACHE{});

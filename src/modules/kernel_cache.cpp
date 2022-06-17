@@ -39,12 +39,14 @@
  * limitations under the License.
  * ************************************************************************ */
 
-#include <hip/rpp/errors.hpp>
-#include <hip/rpp/kernel_cache.hpp>
-#include <hip/rpp/logger.hpp>
-
 #include <iostream>
 #include <iterator>
+
+#include "rpp/errors.hpp"
+#include "rpp/kernel_cache.hpp"
+#include "rpp/logger.hpp"
+
+#ifdef GPU_SUPPORT
 
 namespace rpp {
 
@@ -233,3 +235,5 @@ void KernelCache::ClearKernels(const std::string& algorithm, const std::string& 
 KernelCache::KernelCache() {}
 
 } // namespace rpp
+
+#endif // GPU_SUPPORT
