@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <cmath>
 #ifdef OCL_COMPILE
 #include <CL/cl.h>
 #endif
