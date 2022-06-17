@@ -988,35 +988,29 @@ omp_set_dynamic(0);
         compute_dst_size_cap_host(&dstImgSize[batchCount], dstDescPtr);
         Rpp32f wRatio = ((Rpp32f)(roi.xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
-        Rpp32s hKernelSize, wKernelSize;
-        Rpp32f hKernelRadius, wKernelRadius, hKernelScale, wKernelScale;
-        hKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio); // Compute filter kernel radius for vertical resampling
-        wKernelRadius = compute_kernel_radius(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);   // Compute filter kernel radius for horizontal resampling
-        hKernelSize = std::ceil(hKernelRadius * 2);
-        wKernelSize = std::ceil(wKernelRadius * 2);
-        hKernelScale = compute_kernel_scale(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
-        wKernelScale = compute_kernel_scale(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);
-        Rpp32f hOffset = (hRatio - 1) * 0.5f - hKernelRadius;
-        Rpp32f wOffset = (wRatio - 1) * 0.5f - wKernelRadius;
+        Filter vFilter(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);
+        Filter hFilter(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);
+        Rpp32f hOffset = (hRatio - 1) * 0.5f - vFilter.radius;
+        Rpp32f wOffset = (wRatio - 1) * 0.5f - hFilter.radius;
 
         Rpp32s rowIndex[dstImgSize[batchCount].height], colIndex[dstImgSize[batchCount].width];
-        Rpp32f rowCoeffs[dstImgSize[batchCount].height * hKernelSize];
-        Rpp32f colCoeffs[((dstImgSize[batchCount].width + 3) & ~3) * wKernelSize]; // Buffer size is made a multiple of 4 inorder to allocate sufficient memory for Horizontal coefficients
+        Rpp32f rowCoeffs[dstImgSize[batchCount].height * vFilter.size];
+        Rpp32f colCoeffs[((dstImgSize[batchCount].width + 3) & ~3) * hFilter.size]; // Buffer size is made a multiple of 4 inorder to allocate sufficient memory for Horizontal coefficients
 
         // Pre-compute row index and coefficients
-        for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].height; indexCount++, coeffCount += hKernelSize)
+        for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].height; indexCount++, coeffCount += vFilter.size)
         {
             Rpp32f weightParam;
             compute_resize_src_loc(indexCount, hRatio, rowIndex[indexCount], weightParam, hOffset);
-            compute_row_coefficients(interpolationType, hKernelSize, hKernelRadius, weightParam, &rowCoeffs[coeffCount], hKernelScale);
+            compute_row_coefficients(interpolationType, vFilter, weightParam, &rowCoeffs[coeffCount]);
         }
         // Pre-compute col index and coefficients
         for(int indexCount = 0, coeffCount = 0; indexCount < dstImgSize[batchCount].width; indexCount++)
         {
             Rpp32f weightParam;
             compute_resize_src_loc(indexCount, wRatio, colIndex[indexCount], weightParam, wOffset, srcDescPtr->strides.wStride);
-            coeffCount = (indexCount % 4 == 0) ? (indexCount * wKernelSize) : coeffCount + 1;
-            compute_col_coefficients(interpolationType, wKernelSize, wKernelRadius, weightParam, &colCoeffs[coeffCount], wKernelScale, srcDescPtr->strides.wStride);
+            coeffCount = (indexCount % 4 == 0) ? (indexCount * hFilter.size) : coeffCount + 1;
+            compute_col_coefficients(interpolationType, hFilter, weightParam, &colCoeffs[coeffCount], srcDescPtr->strides.wStride);
         }
 
         T *srcPtrImage, *dstPtrImage;
@@ -1047,8 +1041,8 @@ omp_set_dynamic(0);
         if(srcDescPtr->layout == RpptLayout::NCHW)
             tempDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
 
-        compute_separable_vertical_resample(srcPtrImage, tempPtrImage, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, hKernelSize);
-        compute_separable_horizontal_resample(tempPtrImage, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, wKernelSize);
+        compute_separable_vertical_resample(srcPtrImage, tempPtrImage, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, vFilter);
+        compute_separable_horizontal_resample(tempPtrImage, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, hFilter);
         free(tempPtrImage);
     }
 
