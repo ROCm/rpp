@@ -1,11 +1,12 @@
 #ifndef HOST_GEOMETRIC_TRASFORMS_HPP
 #define HOST_GEOMETRIC_TRASFORMS_HPP
-#include <cpu/rpp_cpu_common.hpp>
+
+#include "rpp_cpu_common.hpp"
 
 /**************** flip ***************/
 
 template <typename T>
-RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                           Rpp32u *batch_flipAxis, RppiROI *roiPoints,
                           Rpp32u nbatchSize,
                           RppiChnFormat chnFormat, Rpp32u channel)
@@ -36,7 +37,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             Rpp32u remainingElementsAfterROI = (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
 
             Rpp32u flipAxis = batch_flipAxis[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -58,7 +59,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                         T *srcPtrTemp, *dstPtrTemp;
                         srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                         dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        
+
                         if (!((y1 <= i) && (i <= y2)))
                         {
                             memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -103,7 +104,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                         T *srcPtrTemp, *dstPtrTemp;
                         srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                         dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        
+
                         if (!((y1 <= i) && (i <= y2)))
                         {
                             memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -134,7 +135,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                             {
                                 *dstPtrTemp++ = (T) *srcPtrChannelROI--;
                             }
-                            
+
                             srcPtrTemp += roiPoints[batchCount].roiWidth;
                             srcPtrChannelROI += srcROIIncrement;
 
@@ -164,7 +165,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                         T *srcPtrTemp, *dstPtrTemp;
                         srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                         dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
-                        
+
                         if (!((y1 <= i) && (i <= y2)))
                         {
                             memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -195,7 +196,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                             {
                                 *dstPtrTemp++ = (T) *srcPtrChannelROI--;
                             }
-                            
+
                             srcPtrTemp += roiPoints[batchCount].roiWidth;
                             srcPtrChannelROI -= srcROIIncrement;
 
@@ -215,7 +216,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
-            
+
             Rpp32u x1 = roiPoints[batchCount].x;
             Rpp32u y1 = roiPoints[batchCount].y;
             Rpp32u x2 = x1 + roiPoints[batchCount].roiWidth;
@@ -235,7 +236,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             Rpp32u remainingElementsAfterROI = channel * (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
 
             Rpp32u flipAxis = batch_flipAxis[batchCount];
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -245,7 +246,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
             Rpp32u elementsInRowROI = channel * roiPoints[batchCount].roiWidth;
-            
+
             if (flipAxis == RPPI_HORIZONTAL_AXIS)
             {
                 T  *srcPtrROI;
@@ -291,7 +292,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                 Rpp32u alignedLength = (bufferLength / 15) * 15;
 
                 Rpp32u srcROIIncrement = elementsInRowMax + elementsInRowROI;
-                
+
 
                 for(int i = 0; i < batch_srcSize[batchCount].height; i++)
                 {
@@ -350,7 +351,7 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
                 Rpp32u alignedLength = (bufferLength / 15) * 15;
 
                 Rpp32u srcROIIncrement = elementsInRowMax - elementsInRowROI;
-                
+
 
                 for(int i = 0; i < batch_srcSize[batchCount].height; i++)
                 {
@@ -402,19 +403,19 @@ RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
+RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                     Rpp32u flipAxis,
                     RppiChnFormat chnFormat, Rpp32u channel)
 {
     T *srcPtrTemp, *dstPtrTemp;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         if (flipAxis == RPPI_HORIZONTAL_AXIS)
@@ -520,7 +521,7 @@ RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
         {
             Rpp32u bufferLength = channel * srcSize.width;
             Rpp32u alignedLength = (bufferLength / 15) * 15;
-            
+
             srcPtrTemp = srcPtr + (channel * (srcSize.width - 1));
             for (int i = 0; i < srcSize.height; i++)
             {
@@ -577,16 +578,16 @@ RppStatus flip_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 /**************** fisheye ***************/
 
 template <typename T>
-RppStatus fisheye_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTemp, 
-                            Rpp64u j, Rpp32u elementsPerChannel, Rpp32u elements, 
-                            Rpp32f newI, Rpp32f newIsquared, 
+RppStatus fisheye_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTemp,
+                            Rpp64u j, Rpp32u elementsPerChannel, Rpp32u elements,
+                            Rpp32f newI, Rpp32f newIsquared,
                             RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32f newJ, newIsrc, newJsrc, newJsquared, euclideanDistance, newEuclideanDistance, theta;
@@ -711,7 +712,7 @@ RppStatus fisheye_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch
                 y2 = batch_srcSize[batchCount].height - 1;
                 roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
             }
-            
+
             Rpp32u remainingElementsAfterROI = (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
 
             T *srcPtrImage, *dstPtrImage;
@@ -759,7 +760,7 @@ RppStatus fisheye_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtrTemp2 = srcPtrChannel;
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -918,7 +919,7 @@ RppStatus fisheye_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch
 
             Rpp32u elementsBeforeROI = channel * x1;
             Rpp32u remainingElementsAfterROI = channel * (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -956,7 +957,7 @@ RppStatus fisheye_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch
             __m128 pMul4 = _mm_set1_ps(halfWidth);
             __m128 pWidthMax = _mm_set1_ps((Rpp32f) elementsInRowMax);
             __m128i pxSrcPosition = _mm_set1_epi32(0);
-            
+
 
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1105,7 +1106,7 @@ RppStatus fisheye_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -1123,7 +1124,7 @@ RppStatus fisheye_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
     Rpp32f halfHeight = srcSize.height / 2;
     Rpp32f halfWidth = srcSize.width / 2;
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         Rpp32u bufferLength = srcSize.width;
@@ -1155,7 +1156,7 @@ RppStatus fisheye_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
                 __m128 pNewI = _mm_set1_ps(newI);
                 __m128 pNewIsquared = _mm_set1_ps(newIsquared);
-                
+
                 Rpp64u vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
                 {
@@ -1411,9 +1412,9 @@ RppStatus fisheye_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** lens_correction ***************/
 
 template <typename T>
-RppStatus lens_correction_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTemp, 
-                            Rpp64u j, Rpp32u heightLimit, Rpp32u widthLimit, Rpp32f halfHeight, Rpp32f halfWidth, 
-                            Rpp32f newIsquared, Rpp32f newIZoom, Rpp32f invCorrectionRadius, Rpp32f zoom, Rpp32u elementsInRow, 
+RppStatus lens_correction_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTemp,
+                            Rpp64u j, Rpp32u heightLimit, Rpp32u widthLimit, Rpp32f halfHeight, Rpp32f halfWidth,
+                            Rpp32f newIsquared, Rpp32f newIZoom, Rpp32f invCorrectionRadius, Rpp32f zoom, Rpp32u elementsInRow,
                             RppiChnFormat chnFormat, Rpp32u channel)
 {
     Rpp32f newJ, euclideanDistance, correctedDistance, theta;
@@ -1430,8 +1431,8 @@ RppStatus lens_correction_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTe
 
         srcLocationRow = halfHeight + theta * newIZoom;
         srcLocationColumn = halfWidth + theta * newJ * zoom;
-        
-        if ((srcLocationRow >= 0) && (srcLocationColumn >= 0) && 
+
+        if ((srcLocationRow >= 0) && (srcLocationColumn >= 0) &&
             (srcLocationRow < srcSize.height) && (srcLocationColumn < srcSize.width))
         {
             srcLocationRowFloor = (Rpp32u) RPPFLOOR(srcLocationRow);
@@ -1452,9 +1453,9 @@ RppStatus lens_correction_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTe
                 srcLocationColumnFloor = widthLimit;
             }
 
-            *dstPtrTemp = (T) (((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                    + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                    + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+            *dstPtrTemp = (T) (((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                    + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                    + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                     + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth)));
         }
         else
@@ -1471,8 +1472,8 @@ RppStatus lens_correction_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTe
 
         srcLocationRow = halfHeight + theta * newIZoom;
         srcLocationColumn = halfWidth + theta * newJ * zoom;
-        
-        if ((srcLocationRow >= 0) && (srcLocationColumn >= 0) && 
+
+        if ((srcLocationRow >= 0) && (srcLocationColumn >= 0) &&
             (srcLocationRow < srcSize.height) && (srcLocationColumn < srcSize.width))
         {
             srcLocationRowFloor = (Rpp32u) RPPFLOOR(srcLocationRow);
@@ -1497,9 +1498,9 @@ RppStatus lens_correction_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTe
 
             for (int c = 0; c < channel; c++)
             {
-                *dstPtrTemp++ = (T) (((*(srcPtrTopRow + c + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                  + ((*(srcPtrTopRow + c + srcLocationColumnFloor + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                                  + ((*(srcPtrBottomRow + c + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                *dstPtrTemp++ = (T) (((*(srcPtrTopRow + c + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                  + ((*(srcPtrTopRow + c + srcLocationColumnFloor + channel)) * (1 - weightedHeight) * (weightedWidth))
+                                  + ((*(srcPtrBottomRow + c + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                                   + ((*(srcPtrBottomRow + c + srcLocationColumnFloor + channel)) * (weightedHeight) * (weightedWidth)));
             }
         }
@@ -1513,7 +1514,7 @@ RppStatus lens_correction_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTe
 }
 
 template <typename T>
-RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, 
+RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                      Rpp32f *batch_strength, Rpp32f *batch_zoom, RppiROI *roiPoints,
                                      Rpp32u nbatchSize,
                                      RppiChnFormat chnFormat, Rpp32u channel)
@@ -1540,7 +1541,7 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
                 y2 = batch_srcSize[batchCount].height - 1;
                 roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
             }
-            
+
             Rpp32u remainingElementsAfterROI = (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
 
             T *srcPtrImage, *dstPtrImage;
@@ -1566,7 +1567,7 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
             if (strength == 0) strength = 0.000001;
 
             Rpp32f invCorrectionRadius = 1.0 / (sqrt(batch_srcSize[batchCount].height * batch_srcSize[batchCount].height + batch_srcSize[batchCount].width * batch_srcSize[batchCount].width) / strength);
-            
+
             Rpp32u bufferLength = roiPoints[batchCount].roiWidth;
             Rpp32u alignedLength = (bufferLength / 4) * 4;
 
@@ -1602,7 +1603,7 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
                     srcPtrTemp = srcPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     dstPtrTemp = dstPtrChannel + (i * batch_srcSizeMax[batchCount].width);
                     srcPtrTemp2 = srcPtrChannel;
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memcpy(dstPtrTemp, srcPtrTemp, batch_srcSize[batchCount].width * sizeof(T));
@@ -1690,9 +1691,9 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
                                     srcPtrTopRow = srcPtrTemp2 + srcLocRF[pos] * elementsInRowMax;
                                     srcPtrBottomRow  = srcPtrTopRow + elementsInRowMax;
 
-                                    *dstPtrTemp++ = (T) (((*(srcPtrTopRow + srcLocCF[pos])) * param1[pos]) 
-                                                    + ((*(srcPtrTopRow + srcLocCF[pos] + 1)) * param2[pos]) 
-                                                    + ((*(srcPtrBottomRow + srcLocCF[pos])) * param3[pos]) 
+                                    *dstPtrTemp++ = (T) (((*(srcPtrTopRow + srcLocCF[pos])) * param1[pos])
+                                                    + ((*(srcPtrTopRow + srcLocCF[pos] + 1)) * param2[pos])
+                                                    + ((*(srcPtrBottomRow + srcLocCF[pos])) * param3[pos])
                                                     + ((*(srcPtrBottomRow + srcLocCF[pos] + 1)) * param4[pos]));
                                 }
                             }
@@ -1753,7 +1754,7 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
 
             Rpp32u elementsBeforeROI = channel * x1;
             Rpp32u remainingElementsAfterROI = channel * (batch_srcSize[batchCount].width - (roiPoints[batchCount].x + roiPoints[batchCount].roiWidth));
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u loc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &loc, channel);
@@ -1778,7 +1779,7 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
             if (strength == 0) strength = 0.000001;
 
             Rpp32f invCorrectionRadius = 1.0 / (sqrt(batch_srcSize[batchCount].height * batch_srcSize[batchCount].height + batch_srcSize[batchCount].width * batch_srcSize[batchCount].width) / strength);
-            
+
             Rpp32u bufferLength = roiPoints[batchCount].roiWidth;
             Rpp32u alignedLength = (bufferLength / 4) * 4;
 
@@ -1902,9 +1903,9 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
 
                                 for (int c = 0; c < channel; c++)
                                 {
-                                    *dstPtrTemp++ = (T) (((*(srcPtrTopRow + c + srcLocCF[pos])) * param1[pos]) 
-                                                        + ((*(srcPtrTopRow + c + srcLocCF[pos] + channel)) * param2[pos]) 
-                                                        + ((*(srcPtrBottomRow + c + srcLocCF[pos])) * param3[pos]) 
+                                    *dstPtrTemp++ = (T) (((*(srcPtrTopRow + c + srcLocCF[pos])) * param1[pos])
+                                                        + ((*(srcPtrTopRow + c + srcLocCF[pos] + channel)) * param2[pos])
+                                                        + ((*(srcPtrBottomRow + c + srcLocCF[pos])) * param3[pos])
                                                         + ((*(srcPtrBottomRow + c + srcLocCF[pos] + channel)) * param4[pos]));
                                 }
                             }
@@ -1941,13 +1942,13 @@ RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSiz
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T>
-RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr, 
-                               Rpp32f strength, Rpp32f zoom, 
+RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
+                               Rpp32f strength, Rpp32f zoom,
                                RppiChnFormat chnFormat, Rpp32u channel)
 {
     if (strength < 0 || zoom < 1)
@@ -2075,9 +2076,9 @@ RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                             srcPtrTopRow = srcPtrTemp + srcLocRF[pos] * srcSize.width;
                             srcPtrBottomRow  = srcPtrTopRow + srcSize.width;
 
-                            *dstPtrTemp++ = (T) (((*(srcPtrTopRow + srcLocCF[pos])) * param1[pos]) 
-                                              + ((*(srcPtrTopRow + srcLocCF[pos] + 1)) * param2[pos]) 
-                                              + ((*(srcPtrBottomRow + srcLocCF[pos])) * param3[pos]) 
+                            *dstPtrTemp++ = (T) (((*(srcPtrTopRow + srcLocCF[pos])) * param1[pos])
+                                              + ((*(srcPtrTopRow + srcLocCF[pos] + 1)) * param2[pos])
+                                              + ((*(srcPtrBottomRow + srcLocCF[pos])) * param3[pos])
                                               + ((*(srcPtrBottomRow + srcLocCF[pos] + 1)) * param4[pos]));
                         }
                     }
@@ -2187,9 +2188,9 @@ RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 
                         for (int c = 0; c < channel; c++)
                         {
-                            *dstPtrTemp++ = (T) (((*(srcPtrTopRow + c + srcLocCF[pos])) * param1[pos]) 
-                                                + ((*(srcPtrTopRow + c + srcLocCF[pos] + channel)) * param2[pos]) 
-                                                + ((*(srcPtrBottomRow + c + srcLocCF[pos])) * param3[pos]) 
+                            *dstPtrTemp++ = (T) (((*(srcPtrTopRow + c + srcLocCF[pos])) * param1[pos])
+                                                + ((*(srcPtrTopRow + c + srcLocCF[pos] + channel)) * param2[pos])
+                                                + ((*(srcPtrBottomRow + c + srcLocCF[pos])) * param3[pos])
                                                 + ((*(srcPtrBottomRow + c + srcLocCF[pos] + channel)) * param4[pos]));
                         }
                     }
@@ -2225,7 +2226,7 @@ RppStatus lens_correction_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
 /**************** scale ***************/
 
 template <typename T>
-RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                              Rpp32f *batch_percentage, RppiROI *roiPoints,
                              Rpp32u nbatchSize,
                              RppiChnFormat chnFormat, Rpp32u channel)
@@ -2273,11 +2274,11 @@ RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 for(int i = 0; i < batch_dstSize[batchCount].height; i++)
                 {
                     Rpp32f pixel;
-                    
+
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel;
                     dstPtrTemp = dstPtrChannel + (i * batch_dstSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memset(dstPtrTemp, (T) 0, batch_dstSize[batchCount].width * sizeof(T));
@@ -2293,7 +2294,7 @@ RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                         T *srcPtrTopRow, *srcPtrBottomRow;
                         srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * batch_srcSizeMax[batchCount].width;
                         srcPtrBottomRow  = srcPtrTopRow + batch_srcSizeMax[batchCount].width;
-                        
+
                         for(int j = 0; j < batch_dstSize[batchCount].width; j++)
                         {
                             if (!((x1 <= j) && (j <= x2 )))
@@ -2318,11 +2319,11 @@ RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                                 }
                                 else
                                 {
-                                    pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                                    pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                                             + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
-                                    
+
                                     *dstPtrTemp = (T) pixel;
                                 }
                                 dstPtrTemp++;
@@ -2353,7 +2354,7 @@ RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 y2 = batch_srcSize[batchCount].height - 1;
                 roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
             }
-            
+
             Rpp32f percentage = batch_percentage[batchCount] / 100;
 
             T *srcPtrImage, *dstPtrImage;
@@ -2365,14 +2366,14 @@ RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 
             Rpp32u srcElementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
             Rpp32u dstElementsInRowMax = channel * batch_dstSizeMax[batchCount].width;
-            
+
             Rpp32u dstElementsInRow = channel * batch_dstSize[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_dstSize[batchCount].height; i++)
             {
                 Rpp32f pixel;
-                
+
                 T *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrImage;
                 dstPtrTemp = dstPtrImage + (i * dstElementsInRowMax);
@@ -2426,14 +2427,14 @@ RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                             else
                             {
                                 Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
-                                
+
                                 for (int c = 0; c < channel; c++)
                                 {
-                                    pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                            + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                                            + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
+                                    pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                            + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
+                                            + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
-                                    
+
                                     *dstPtrTemp = (T) pixel;
 
                                     dstPtrTemp ++;
@@ -2445,7 +2446,7 @@ RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -2470,20 +2471,20 @@ RppStatus scale_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
     T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
-    
+
     if (chnFormat == RPPI_CHN_PLANAR)
     {
         for (int c = 0; c < channel; c++)
         {
             for (int i = 0; i < dstSize.height; i++)
-            {   
+            {
                 srcLocationRow = ((Rpp32f) i) / percentage;
                 srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
                 Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
 
                 srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcSize.width;
                 srcPtrBottomRow  = srcPtrTopRow + srcSize.width;
-                
+
                 for (int j = 0; j < dstSize.width; j++)
                 {
                     srcLocationColumn = ((Rpp32f) j) / percentage;
@@ -2497,11 +2498,11 @@ RppStatus scale_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                     }
                     else
                     {
-                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                                + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                                + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                                 + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
-                        
+
                         *dstPtrTemp = (T) pixel;
                         dstPtrTemp ++;
                     }
@@ -2523,7 +2524,7 @@ RppStatus scale_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
             srcPtrBottomRow  = srcPtrTopRow + elementsInRow;
 
             for (int j = 0; j < dstSize.width; j++)
-            {   
+            {
                 srcLocationColumn = ((Rpp32f) j) / percentage;
                 srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
                 Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
@@ -2539,14 +2540,14 @@ RppStatus scale_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                 else
                 {
                     Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
-                    
+
                     for (int c = 0; c < channel; c++)
                     {
-                        pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                                + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
+                        pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
+                                + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                                 + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
-                        
+
                         *dstPtrTemp = (T) pixel;
                         dstPtrTemp ++;
                     }
@@ -2561,8 +2562,8 @@ RppStatus scale_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 /**************** rotate ***************/
 
 template <typename T>
-RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
-                             Rpp32f *batch_angleDeg, RppiROI *roiPoints, 
+RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
+                             Rpp32f *batch_angleDeg, RppiROI *roiPoints,
                              Rpp32u outputFormatToggle, Rpp32u nbatchSize,
                              RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -2586,7 +2587,7 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                 y2 = batch_srcSize[batchCount].height - 1;
                 roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
             }
-            
+
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
 
@@ -2628,11 +2629,11 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                 for(int i = 0; i < batch_dstSize[batchCount].height; i++)
                 {
                     Rpp32f pixel;
-                    
+
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel;
                     dstPtrTemp = dstPtrChannel + (i * batch_dstSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memset(dstPtrTemp, (T) 0, batch_dstSize[batchCount].width * sizeof(T));
@@ -2643,7 +2644,7 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                     {
                         Rpp32f srcLocationRowTerm1 = -rotate[3] * i;
                         Rpp32f srcLocationColumnTerm1 = rotate[2] * i;
-                        
+
                         for(int j = 0; j < batch_dstSize[batchCount].width; j++)
                         {
                             if (!((x1 <= j) && (j <= x2 )))
@@ -2656,7 +2657,7 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                             {
                                 Rpp32f srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter2) / divisor;
                                 Rpp32f srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter2) / divisor;
-                                
+
                                 Rpp32s srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
                                 Rpp32s srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
 
@@ -2672,18 +2673,18 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                                 {
                                     Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                                     Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                                    
+
                                     T *srcPtrTopRow, *srcPtrBottomRow;
                                     srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * batch_srcSizeMax[batchCount].width;
                                     srcPtrBottomRow  = srcPtrTopRow + batch_srcSizeMax[batchCount].width;
 
                                     Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
 
-                                    pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                        + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                                        + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                                    pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                        + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                                        + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                                         + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
-                                
+
                                     *dstPtrTemp = (T) pixel;
                                 }
                                 dstPtrTemp++;
@@ -2699,13 +2700,13 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                 T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(T));
 
                 compute_unpadded_from_padded_host(dstPtrImage, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
-                
+
                 memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width * sizeof(T));
 
                 compute_planar_to_packed_host(dstPtrImageUnpaddedCopy, batch_dstSize[batchCount], dstPtrImageUnpadded, channel);
 
                 memset(dstPtrImage, (T) 0, dstImageDimMax * channel * sizeof(T));
-                
+
                 compute_padded_from_unpadded_host(dstPtrImageUnpadded, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImage, RPPI_CHN_PACKED, channel);
 
                 free(dstPtrImageUnpadded);
@@ -2766,12 +2767,12 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             Rpp32u dstElementsInRowMax = channel * batch_dstSizeMax[batchCount].width;
 
             Rpp32u dstElementsInRow = channel * batch_dstSize[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_dstSize[batchCount].height; i++)
             {
                 Rpp32f pixel;
-                
+
                 T *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrImage;
                 dstPtrTemp = dstPtrImage + (i * dstElementsInRowMax);
@@ -2819,7 +2820,7 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                             {
                                 Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                                 Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                                
+
                                 T *srcPtrTopRow, *srcPtrBottomRow;
                                 srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcElementsInRowMax;
                                 srcPtrBottomRow  = srcPtrTopRow + srcElementsInRowMax;
@@ -2828,11 +2829,11 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
                                 for (int c = 0; c < channel; c++)
                                 {
-                                    pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                        + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                                        + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
+                                    pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                        + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
+                                        + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                                         + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
-                                
+
                                     *dstPtrTemp = (T) pixel;
                                     dstPtrTemp ++;
                                 }
@@ -2848,7 +2849,7 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
                 T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width, sizeof(T));
 
                 compute_unpadded_from_padded_host(dstPtrImage, batch_dstSize[batchCount], batch_dstSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
-                
+
                 memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_dstSize[batchCount].height * batch_dstSize[batchCount].width * sizeof(T));
 
                 compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_dstSize[batchCount], dstPtrImageUnpadded, channel);
@@ -2860,7 +2861,7 @@ RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -2879,7 +2880,7 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
     T *srcPtrTemp, *dstPtrTemp, *srcPtrTopRow, *srcPtrBottomRow;
     srcPtrTemp = srcPtr;
     dstPtrTemp = dstPtr;
-    
+
     Rpp32f divisor = (rotate[1] * rotate[2]) - (rotate[0] * rotate[3]);
     Rpp32f srcLocationRow, srcLocationColumn, srcLocationRowTerm1, srcLocationColumnTerm1, pixel;
     Rpp32s srcLocationRowFloor, srcLocationColumnFloor;
@@ -2908,7 +2909,7 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                 {
                     srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter2) / divisor;
                     srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter2) / divisor;
-                    
+
                     if (srcLocationRow < 0 || srcLocationColumn < 0 || srcLocationRow > (srcSize.height - 2) || srcLocationColumn > (srcSize.width - 2))
                     {
                         *dstPtrTemp = 0;
@@ -2920,17 +2921,17 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                         srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
                         Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                         Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                        
+
                         srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcSize.width;
                         srcPtrBottomRow  = srcPtrTopRow + srcSize.width;
 
                         Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
 
-                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                             + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
-                    
+
                         *dstPtrTemp = (T) pixel;
                         dstPtrTemp ++;
                     }
@@ -2950,7 +2951,7 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
             {
                 srcLocationRow = (srcLocationRowTerm1 + (rotate[1] * j) + srcLocationRowParameter2) / divisor;
                 srcLocationColumn = (srcLocationColumnTerm1 + (-rotate[0] * j) + srcLocationColumnParameter2) / divisor;
-                
+
                 if (srcLocationRow < 0 || srcLocationColumn < 0 || srcLocationRow > (srcSize.height - 2) || srcLocationColumn > (srcSize.width - 2))
                 {
                     memset(dstPtrTemp, (T) 0, channel * sizeof(T));
@@ -2962,7 +2963,7 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
                     srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
                     Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                     Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                    
+
                     srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * elementsInRow;
                     srcPtrBottomRow  = srcPtrTopRow + elementsInRow;
 
@@ -2970,11 +2971,11 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 
                     for (int c = 0; c < channel; c++)
                     {
-                        pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                            + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                            + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
+                        pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
+                            + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
+                            + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
-                    
+
                         *dstPtrTemp = (T) pixel;
                         dstPtrTemp ++;
                     }
@@ -2989,7 +2990,7 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 /**************** resize ***************/
 
 template <typename T, typename U>
-RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                             RppiROI *roiPoints, Rpp32u outputFormatToggle, Rpp32u nbatchSize,
                             RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -3016,10 +3017,10 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 
             Rpp64u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp64u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
-            
+
             Rpp32f hRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].height - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].height - 1)));
             Rpp32f wRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].width - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].width - 1)));
-            
+
             T *srcPtrImage;
             U *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
@@ -3033,7 +3034,7 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
             dstSize.height = batch_dstSize[batchCount].height;
             dstSize.width = batch_dstSize[batchCount].width;
-            
+
             T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
             U *dstPtrROI = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
             T *srcPtrImageTemp, *srcPtrROITemp;
@@ -3116,7 +3117,7 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
-            
+
             T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
             U *dstPtrROI = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
             T *srcPtrImageTemp, *srcPtrROITemp;
@@ -3156,12 +3157,12 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
             free(dstPtrROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
 template <typename T, typename U>
-RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                             RppiROI *roiPoints, Rpp32u outputFormatToggle, Rpp32u nbatchSize,
                             RppiChnFormat chnFormat, Rpp32u channel)
 {
@@ -3188,10 +3189,10 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
             Rpp64u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp64u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
-            
+
             Rpp32f hRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].height - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].height - 1)));
             Rpp32f wRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].width - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].width - 1)));
-            
+
             T *srcPtrImage;
             U *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
@@ -3205,7 +3206,7 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             srcSizeROI.width = roiPoints[batchCount].roiWidth;
             dstSize.height = batch_dstSize[batchCount].height;
             dstSize.width = batch_dstSize[batchCount].width;
-            
+
             T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
             T *dstPtrROIipType = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
             U *dstPtrROI = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
@@ -3226,7 +3227,7 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
             T *dstPtrROIipTypeTemp;
             dstPtrROIipTypeTemp = dstPtrROIipType;
-            
+
             U *dstPtrROITemp;
             dstPtrROITemp = dstPtrROI;
 
@@ -3295,7 +3296,7 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
-            
+
             T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
             T *dstPtrROIipType = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
             U *dstPtrROI = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
@@ -3314,7 +3315,7 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
 
             T *dstPtrROIipTypeTemp;
             dstPtrROIipTypeTemp = dstPtrROIipType;
-            
+
             U *dstPtrROITemp;
             dstPtrROITemp = dstPtrROI;
 
@@ -3324,7 +3325,7 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
                 dstPtrROITemp++;
                 dstPtrROIipTypeTemp++;
             }
-            
+
             if (outputFormatToggle == 1)
             {
                 U *dstPtrROI2 = (U *)calloc(dstSize.height * dstSize.width * channel, sizeof(U));
@@ -3342,7 +3343,7 @@ RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *
             free(dstPtrROIipType);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -3358,7 +3359,7 @@ RppStatus resize_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 // /**************** resize_crop ***************/
 
 template <typename T>
-RppStatus resize_crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+RppStatus resize_crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                  Rpp32u *batch_x1, Rpp32u *batch_x2, Rpp32u *batch_y1, Rpp32u *batch_y2,
                                  Rpp32u outputFormatToggle, Rpp32u nbatchSize,
                                  RppiChnFormat chnFormat, Rpp32u channel)
@@ -3376,10 +3377,10 @@ RppStatus resize_crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 
             Rpp64u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp64u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
-            
+
             Rpp32f hRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].height - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].height - 1)));
             Rpp32f wRatio = (((Rpp32f) (batch_dstSizeMax[batchCount].width - 1)) / ((Rpp32f) (batch_srcSizeMax[batchCount].width - 1)));
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
@@ -3392,7 +3393,7 @@ RppStatus resize_crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             srcSizeROI.width = RPPABS(x2 - x1) + 1;
             dstSize.height = batch_dstSize[batchCount].height;
             dstSize.width = batch_dstSize[batchCount].width;
-            
+
             T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
             T *dstPtrROI = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
             T *srcPtrImageTemp, *srcPtrROITemp;
@@ -3456,7 +3457,7 @@ RppStatus resize_crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
             Rpp32u elementsInRowROI = channel * srcSizeROI.width;
-            
+
             T *srcPtrROI = (T *)calloc(srcSizeROI.height * srcSizeROI.width * channel, sizeof(T));
             T *dstPtrROI = (T *)calloc(dstSize.height * dstSize.width * channel, sizeof(T));
             T *srcPtrImageTemp, *srcPtrROITemp;
@@ -3488,7 +3489,7 @@ RppStatus resize_crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             free(dstPtrROI);
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -3500,7 +3501,7 @@ RppStatus resize_crop_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
     resize_crop_kernel_host(srcPtr, srcSize, dstPtr, dstSize, x1, y1, x2, y2, chnFormat, channel);
 
     return RPP_SUCCESS;
-    
+
 }
 
 /**************** warp_affine ***************/
@@ -3540,7 +3541,7 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             {
                 affine[i] = batch_affine[(batchCount * 6) + i];
             }
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
@@ -3558,11 +3559,11 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 for(int i = 0; i < batch_dstSize[batchCount].height; i++)
                 {
                     Rpp32f pixel;
-                    
+
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel;
                     dstPtrTemp = dstPtrChannel + (i * batch_dstSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memset(dstPtrTemp, (T) 0, batch_dstSize[batchCount].width * sizeof(T));
@@ -3572,7 +3573,7 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                     else
                     {
                         Rpp32s iNew = i - (batch_srcSize[batchCount].height / 2);
-                        
+
                         for(int j = 0; j < batch_dstSize[batchCount].width; j++)
                         {
                             if (!((x1 <= j) && (j <= x2 )))
@@ -3584,7 +3585,7 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                             else
                             {
                                 Rpp32s jNew = j - (batch_srcSize[batchCount].width / 2);
-                                
+
                                 Rpp32f srcLocationColumn = (jNew * affine[0]) + (iNew * affine[1]) + affine[2];
                                 Rpp32f srcLocationRow = (jNew * affine[3]) + (iNew * affine[4]) + affine[5];
 
@@ -3606,16 +3607,16 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                                 {
                                     Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                                     Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                                    
+
                                     T *srcPtrTopRow, *srcPtrBottomRow;
                                     srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * batch_srcSizeMax[batchCount].width;
                                     srcPtrBottomRow  = srcPtrTopRow + batch_srcSizeMax[batchCount].width;
 
                                     Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
 
-                                    pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                        + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                                        + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                                    pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                        + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                                        + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                                         + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
 
                                     *dstPtrTemp = (T) pixel;
@@ -3632,7 +3633,7 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
 
                 compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
-                
+
                 memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(T));
 
                 compute_planar_to_packed_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
@@ -3668,13 +3669,13 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             }
 
             Rpp32u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
-            
+
             Rpp32f affine[6] = {0};
             for (int i = 0; i < 6; i++)
             {
                 affine[i] = batch_affine[(batchCount * 6) + i];
             }
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
@@ -3686,12 +3687,12 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             Rpp32u dstElementsInRowMax = channel * batch_dstSizeMax[batchCount].width;
 
             Rpp32u dstElementsInRow = channel * batch_dstSize[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_dstSize[batchCount].height; i++)
             {
                 Rpp32f pixel;
-                
+
                 T *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrImage;
                 dstPtrTemp = dstPtrImage + (i * dstElementsInRowMax);
@@ -3715,7 +3716,7 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                         else
                         {
                             Rpp32s jNew = j - (batch_srcSize[batchCount].width / 2);
-                            
+
                             Rpp32f srcLocationColumn = (jNew * affine[0]) + (iNew * affine[1]) + affine[2];
                             Rpp32f srcLocationRow = (jNew * affine[3]) + (iNew * affine[4]) + affine[5];
 
@@ -3739,7 +3740,7 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                             {
                                 Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                                 Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                                
+
                                 T *srcPtrTopRow, *srcPtrBottomRow;
                                 srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcElementsInRowMax;
                                 srcPtrBottomRow  = srcPtrTopRow + srcElementsInRowMax;
@@ -3748,9 +3749,9 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 
                                 for (int c = 0; c < channel; c++)
                                 {
-                                    pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                        + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                                        + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
+                                    pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                        + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
+                                        + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                                         + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
 
                                     *dstPtrTemp = (T) pixel;
@@ -3768,7 +3769,7 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 T *dstPtrImageUnpaddedCopy = (T*) calloc(channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width, sizeof(T));
 
                 compute_unpadded_from_padded_host(dstPtrImage, batch_srcSize[batchCount], batch_srcSizeMax[batchCount], dstPtrImageUnpadded, chnFormat, channel);
-                
+
                 memcpy(dstPtrImageUnpaddedCopy, dstPtrImageUnpadded, channel * batch_srcSize[batchCount].height * batch_srcSize[batchCount].width * sizeof(T));
 
                 compute_packed_to_planar_host(dstPtrImageUnpaddedCopy, batch_srcSize[batchCount], dstPtrImageUnpadded, channel);
@@ -3782,7 +3783,7 @@ RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -3806,7 +3807,7 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
                 for (int j = 0; j < dstSize.width; j++)
                 {
                     Rpp32s jNew = j - (srcSize.width / 2);
-                    
+
                     srcLocationColumn = (jNew * affine[0]) + (iNew * affine[1]) + affine[2];
                     srcLocationRow = (jNew * affine[3]) + (iNew * affine[4]) + affine[5];
 
@@ -3822,18 +3823,18 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
                     {
                         Rpp32s srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
                         Rpp32s srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
-                        
+
                         Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                         Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                        
+
                         srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcSize.width;
                         srcPtrBottomRow  = srcPtrTopRow + srcSize.width;
 
                         Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
 
-                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                             + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
 
                         *dstPtrTemp = (T) pixel;
@@ -3870,10 +3871,10 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
                 {
                     Rpp32s srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
                     Rpp32s srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
-                    
+
                     Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                     Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                    
+
                     srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * elementsInRow;
                     srcPtrBottomRow  = srcPtrTopRow + elementsInRow;
 
@@ -3881,9 +3882,9 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
 
                     for (int c = 0; c < channel; c++)
                     {
-                        pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                            + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                            + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
+                        pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
+                            + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
+                            + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
 
                         *dstPtrTemp = (T) pixel;
@@ -3900,7 +3901,7 @@ RppStatus warp_affine_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstS
 /**************** warp_perspective ***************/
 
 template <typename T>
-RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, 
+RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                       RppiROI *roiPoints, Rpp32f *batch_perspective,
                                       Rpp32u nbatchSize,
                                       RppiChnFormat chnFormat, Rpp32u channel)
@@ -3926,7 +3927,7 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                 y2 = batch_srcSize[batchCount].height - 1;
                 roiPoints[batchCount].roiHeight = batch_srcSize[batchCount].height;
             }
-            
+
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
             Rpp32u dstImageDimMax = batch_dstSizeMax[batchCount].height * batch_dstSizeMax[batchCount].width;
 
@@ -3935,7 +3936,7 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             {
                 perspective[i] = batch_perspective[(batchCount * 9) + i];
             }
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
@@ -3953,11 +3954,11 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                 for(int i = 0; i < batch_dstSize[batchCount].height; i++)
                 {
                     Rpp32f pixel;
-                    
+
                     T *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrChannel;
                     dstPtrTemp = dstPtrChannel + (i * batch_dstSizeMax[batchCount].width);
-                    
+
                     if (!((y1 <= i) && (i <= y2)))
                     {
                         memset(dstPtrTemp, (T) 0, batch_dstSize[batchCount].width * sizeof(T));
@@ -3967,7 +3968,7 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                     else
                     {
                         Rpp32s iNew = i - (batch_srcSize[batchCount].height / 2);
-                        
+
                         for(int j = 0; j < batch_dstSize[batchCount].width; j++)
                         {
                             if (!((x1 <= j) && (j <= x2 )))
@@ -3979,7 +3980,7 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                             else
                             {
                                 Rpp32s jNew = j - (batch_srcSize[batchCount].width / 2);
-                                
+
                                 Rpp32f srcLocationColumn = ((jNew * perspective[0]) + (iNew * perspective[1]) + perspective[2]) / ((jNew * perspective[6]) + (iNew * perspective[7]) + perspective[8]);
                                 Rpp32f srcLocationRow = ((jNew * perspective[3]) + (iNew * perspective[4]) + perspective[5]) / ((jNew * perspective[6]) + (iNew * perspective[7]) + perspective[8]);
 
@@ -4001,16 +4002,16 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                                 {
                                     Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                                     Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                                    
+
                                     T *srcPtrTopRow, *srcPtrBottomRow;
                                     srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * batch_srcSizeMax[batchCount].width;
                                     srcPtrBottomRow  = srcPtrTopRow + batch_srcSizeMax[batchCount].width;
 
                                     Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
 
-                                    pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                        + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                                        + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                                    pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                        + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                                        + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                                         + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
 
                                     *dstPtrTemp = (T) pixel;
@@ -4049,7 +4050,7 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             {
                 perspective[i] = batch_perspective[(batchCount * 9) + i];
             }
-            
+
             T *srcPtrImage, *dstPtrImage;
             Rpp32u srcLoc = 0, dstLoc = 0;
             compute_image_location_host(batch_srcSizeMax, batchCount, &srcLoc, channel);
@@ -4061,12 +4062,12 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             Rpp32u dstElementsInRowMax = channel * batch_dstSizeMax[batchCount].width;
 
             Rpp32u dstElementsInRow = channel * batch_dstSizeMax[batchCount].width;
-            
+
 
             for(int i = 0; i < batch_dstSize[batchCount].height; i++)
             {
                 Rpp32f pixel;
-                
+
                 T *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrImage;
                 dstPtrTemp = dstPtrImage + (i * dstElementsInRowMax);
@@ -4090,7 +4091,7 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                         else
                         {
                             Rpp32s jNew = j - (batch_srcSize[batchCount].width / 2);
-                            
+
                             Rpp32f srcLocationColumn = ((jNew * perspective[0]) + (iNew * perspective[1]) + perspective[2]) / ((jNew * perspective[6]) + (iNew * perspective[7]) + perspective[8]);
                             Rpp32f srcLocationRow = ((jNew * perspective[3]) + (iNew * perspective[4]) + perspective[5]) / ((jNew * perspective[6]) + (iNew * perspective[7]) + perspective[8]);
 
@@ -4122,7 +4123,7 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
                             {
                                 Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                                 Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                                
+
                                 T *srcPtrTopRow, *srcPtrBottomRow;
                                 srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcElementsInRowMax;
                                 srcPtrBottomRow  = srcPtrTopRow + srcElementsInRowMax;
@@ -4131,9 +4132,9 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
 
                                 for (int c = 0; c < channel; c++)
                                 {
-                                    pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                                        + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                                        + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
+                                    pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
+                                        + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
+                                        + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                                         + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
 
                                     *dstPtrTemp = (T) pixel;
@@ -4147,7 +4148,7 @@ RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSi
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -4171,7 +4172,7 @@ RppStatus warp_perspective_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize
                 for (int j = 0; j < dstSize.width; j++)
                 {
                     Rpp32s jNew = j - (srcSize.width / 2);
-                    
+
                     srcLocationColumn = ((jNew * perspective[0]) + (iNew * perspective[1]) + perspective[2]) / ((jNew * perspective[6]) + (iNew * perspective[7]) + perspective[8]);
                     srcLocationRow = ((jNew * perspective[3]) + (iNew * perspective[4]) + perspective[5]) / ((jNew * perspective[6]) + (iNew * perspective[7]) + perspective[8]);
 
@@ -4187,18 +4188,18 @@ RppStatus warp_perspective_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize
                     {
                         Rpp32s srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
                         Rpp32s srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
-                        
+
                         Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                         Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                        
+
                         srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * srcSize.width;
                         srcPtrBottomRow  = srcPtrTopRow + srcSize.width;
 
                         Rpp32s srcLocColFloorChanneled = channel * srcLocationColumnFloor;
 
-                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth)) 
-                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth)) 
+                        pixel = ((*(srcPtrTopRow + srcLocationColumnFloor)) * (1 - weightedHeight) * (1 - weightedWidth))
+                            + ((*(srcPtrTopRow + srcLocationColumnFloor + 1)) * (1 - weightedHeight) * (weightedWidth))
+                            + ((*(srcPtrBottomRow + srcLocationColumnFloor)) * (weightedHeight) * (1 - weightedWidth))
                             + ((*(srcPtrBottomRow + srcLocationColumnFloor + 1)) * (weightedHeight) * (weightedWidth));
 
                         *dstPtrTemp = (T) pixel;
@@ -4238,10 +4239,10 @@ RppStatus warp_perspective_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize
                 {
                     Rpp32s srcLocationRowFloor = (Rpp32s) RPPFLOOR(srcLocationRow);
                     Rpp32s srcLocationColumnFloor = (Rpp32s) RPPFLOOR(srcLocationColumn);
-                    
+
                     Rpp32f weightedHeight = srcLocationRow - srcLocationRowFloor;
                     Rpp32f weightedWidth = srcLocationColumn - srcLocationColumnFloor;
-                    
+
                     srcPtrTopRow = srcPtrTemp + srcLocationRowFloor * elementsInRow;
                     srcPtrBottomRow  = srcPtrTopRow + elementsInRow;
 
@@ -4249,9 +4250,9 @@ RppStatus warp_perspective_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize
 
                     for (int c = 0; c < channel; c++)
                     {
-                        pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth)) 
-                            + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth)) 
-                            + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth)) 
+                        pixel = ((*(srcPtrTopRow + c + srcLocColFloorChanneled)) * (1 - weightedHeight) * (1 - weightedWidth))
+                            + ((*(srcPtrTopRow + c + srcLocColFloorChanneled + channel)) * (1 - weightedHeight) * (weightedWidth))
+                            + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled)) * (weightedHeight) * (1 - weightedWidth))
                             + ((*(srcPtrBottomRow + c + srcLocColFloorChanneled + channel)) * (weightedHeight) * (weightedWidth));
 
                         *dstPtrTemp = (T) pixel;

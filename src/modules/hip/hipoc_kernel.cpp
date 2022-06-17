@@ -25,16 +25,15 @@
  *******************************************************************************/
 
 #include <chrono>
-#include "hip/rpp/errors.hpp"
-#include <hip/rpp/hipoc_kernel.hpp>
-#include <hip/rpp/hipoc_kernel.hpp>
-#include <hip/rpp/handle_lock.hpp>
 #include <thread>
 #include <hip/hip_ext.h>
 #include <hip/hip_runtime.h>
 
+#include "rpp/errors.hpp"
+#include "rpp/hipoc_kernel.hpp"
+#include "rpp/handle_lock.hpp"
 #if defined(STATIC)
-#include <hip/rpp/hip_kernels.h>
+#include "rpp/hip_kernels.hpp"
 #endif
 
 namespace rpp {

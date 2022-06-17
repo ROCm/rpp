@@ -1,5 +1,5 @@
 #include <hip/hip_runtime.h>
-#include "hip/rpp_hip_common.hpp"
+#include "rpp_hip_common.hpp"
 
 template <typename T>
 __global__ void flip_pkd_tensor(T *srcPtr,
@@ -82,7 +82,7 @@ __global__ void flip_pln_tensor(T *srcPtr,
         srcIdx += ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7);
     else
         srcIdx += ((roiTensorPtrSrc[id_z].ltrbROI.rb.y - id_y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].ltrbROI.lt.x);
-        
+
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     d_float8 pix_f8;
 
@@ -195,7 +195,7 @@ __global__ void flip_pln3_pkd3_tensor(T *srcPtr,
     {
         return;
     }
-    
+
     d_float24 pix_f24;
     uint srcIdx = id_z * srcStridesNCH.x;
     uint horizontalFlag = horizontalTensor[id_z];

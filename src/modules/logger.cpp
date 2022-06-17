@@ -24,14 +24,15 @@
  *
  *******************************************************************************/
 #include <cstdlib>
-#include <hip/rpp/env.hpp>
-#include <hip/rpp/logger.hpp>
 #include <config.h>
 
 #ifdef __linux__
 #include <unistd.h>
 #include <sys/syscall.h> /* For SYS_xxx definitions */
 #endif
+
+#include "rpp/env.hpp"
+#include "rpp/logger.hpp"
 
 namespace rpp {
 
@@ -124,9 +125,9 @@ std::string LoggingPrefix()
         ss << GetProcessAndThreadId() << ' ';
     }
     ss << "RPP";
-#if RPP_BACKEND_OPENCL
+#if OCL_COMPILE
     ss << "(OpenCL)";
-#elif RPP_BACKEND_HIP
+#elif HIP_COMPILE
     ss << "(HIP)";
 #endif
     ss << ": ";

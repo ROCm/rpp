@@ -1,6 +1,6 @@
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
 
 RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        RpptDescPtr srcDescPtr,

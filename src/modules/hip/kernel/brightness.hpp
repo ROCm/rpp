@@ -1,5 +1,5 @@
 #include <hip/hip_runtime.h>
-#include "hip/rpp_hip_common.hpp"
+#include "rpp_hip_common.hpp"
 
 __device__ void brightness_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {
