@@ -95,7 +95,6 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14")
 
     # Add HIP specific preprocessor flags
-    add_definitions(-DGPU_SUPPORT)
     add_definitions(-DHIP_COMPILE)
 
     # Add HIP specific includes
@@ -116,7 +115,6 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14 -Wno-deprecated-declarations")
 
     # Add OpenCL specific preprocessor flags
-    add_definitions(-DGPU_SUPPORT)
     add_definitions(-DOCL_COMPILE)
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
     add_definitions(-DMOD_CL_PATH="${CMAKE_CURRENT_LIST_DIR}/cl/kernel/")
