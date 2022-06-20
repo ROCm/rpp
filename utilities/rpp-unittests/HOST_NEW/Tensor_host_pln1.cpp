@@ -162,6 +162,9 @@ int main(int argc, char **argv)
     case 38:
         strcpy(funcName, "crop_mirror_normalize");
         break;
+    case 70:
+        strcpy(funcName, "copy");
+        break;
     case 81:
         strcpy(funcName, "color_jitter");
         break;
@@ -1087,6 +1090,31 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
             rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
+    case 70:
+    {
+        test_case_name = "copy";
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_copy_host(input, srcDescPtr, output, dstDescPtr, handle);
+        else if (ip_bitDepth == 1)
+            rppt_copy_host(inputf16, srcDescPtr, outputf16, dstDescPtr, handle);
+        else if (ip_bitDepth == 2)
+            rppt_copy_host(inputf32, srcDescPtr, outputf32, dstDescPtr, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_copy_host(inputi8, srcDescPtr, outputi8, dstDescPtr, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
