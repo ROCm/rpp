@@ -24,5 +24,6 @@ THE SOFTWARE.
 #define HIP_TENSOR_DATA_EXCHANGE_OPERATIONS_HPP
 
 #include "kernel/copy.hpp"
+#include "kernel/swap_channels.hpp"
 
 #endif // HIP_TENSOR_DATA_EXCHANGE_OPERATIONS_HPP

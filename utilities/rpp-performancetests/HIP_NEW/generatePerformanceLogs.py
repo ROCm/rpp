@@ -4,8 +4,8 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profiling', type=str, default='NO', help='Run with profiler? - (YES/NO)')
-parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-84)')
-parser.add_argument('--case_end', type=str, default='84', help='Testing range ending case # - (0-84)')
+parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-85)')
+parser.add_argument('--case_end', type=str, default='85', help='Testing range ending case # - (0-85)')
 args = parser.parse_args()
 
 profilingOption = args.profiling
@@ -16,12 +16,12 @@ if caseEnd < caseStart:
     print("Ending case# must be greater than starting case#. Aborting!")
     exit(0)
 
-if caseStart < "0" or caseStart > "84":
-    print("Starting case# must be in the 0-84 range. Aborting!")
+if caseStart < "0" or caseStart > "85":
+    print("Starting case# must be in the 0-85 range. Aborting!")
     exit(0)
 
-if caseEnd < "0" or caseEnd > "84":
-    print("Ending case# must be in the 0-84 range. Aborting!")
+if caseEnd < "0" or caseEnd > "85":
+    print("Ending case# must be in the 0-85 range. Aborting!")
     exit(0)
 
 if profilingOption == "NO":
