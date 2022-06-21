@@ -11,7 +11,15 @@ RppStatus copy_u8_u8_host_tensor(Rpp8u *srcPtr,
     // Copy without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
     if ((srcDescPtr->c == 1) || (srcDescPtr->layout == dstDescPtr->layout))
     {
-        memcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp8u));
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+        for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+        {
+            Rpp8u *srcPtrImage, *dstPtrImage;
+            srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+            dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+            memcpy(dstPtrImage, srcPtrImage, dstDescPtr->strides.nStride * sizeof(Rpp8u));
+        }
     }
 
     // Copy with fused output-layout toggle (NHWC -> NCHW)
@@ -142,7 +150,15 @@ RppStatus copy_f32_f32_host_tensor(Rpp32f *srcPtr,
     // Copy without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
     if ((srcDescPtr->c == 1) || (srcDescPtr->layout == dstDescPtr->layout))
     {
-        memcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp32f));
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+        for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+        {
+            Rpp32f *srcPtrImage, *dstPtrImage;
+            srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+            dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+            memcpy(dstPtrImage, srcPtrImage, dstDescPtr->strides.nStride * sizeof(Rpp32f));
+        }
     }
 
     // Copy with fused output-layout toggle (NHWC -> NCHW)
@@ -275,7 +291,15 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
     // Copy without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
     if ((srcDescPtr->c == 1) || (srcDescPtr->layout == dstDescPtr->layout))
     {
-        memcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp16f));
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+        for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+        {
+            Rpp16f *srcPtrImage, *dstPtrImage;
+            srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+            dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+            memcpy(dstPtrImage, srcPtrImage, dstDescPtr->strides.nStride * sizeof(Rpp16f));
+        }
     }
 
     // Copy with fused output-layout toggle (NHWC -> NCHW)
@@ -440,7 +464,15 @@ RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
     // Copy without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
     if ((srcDescPtr->c == 1) || (srcDescPtr->layout == dstDescPtr->layout))
     {
-        memcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp8s));
+        omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+        for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+        {
+            Rpp8s *srcPtrImage, *dstPtrImage;
+            srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+            dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+            memcpy(dstPtrImage, srcPtrImage, dstDescPtr->strides.nStride * sizeof(Rpp8s));
+        }
     }
 
     // Copy with fused output-layout toggle (NHWC -> NCHW)
