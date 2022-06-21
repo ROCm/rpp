@@ -53,12 +53,16 @@ typedef size_t              RppSize_t;
 
 typedef enum
 {
-    RPP_SUCCESS                  = 0,
-    RPP_ERROR                    = -1,
-    RPP_ERROR_INVALID_ARGUMENTS  = -2,
-    RPP_ERROR_LOW_OFFSET         = -3,
-    RPP_ERROR_HIGH_SRC_DIMENSION = -5,
-    RPP_ERROR_NOT_IMPLEMENTED    = -6
+    RPP_SUCCESS                         = 0,
+    RPP_ERROR                           = -1,
+    RPP_ERROR_INVALID_ARGUMENTS         = -2,
+    RPP_ERROR_LOW_OFFSET                = -3,
+    RPP_ERROR_HIGH_SRC_DIMENSION        = -5,
+    RPP_ERROR_NOT_IMPLEMENTED           = -6,
+    RPP_ERROR_INVALID_SRC_CHANNELS      = -7,
+    RPP_ERROR_INVALID_DST_CHANNELS      = -8,
+    RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
+    RPP_ERROR_INVALID_DST_LAYOUT        = -10
 } RppStatus;
 
 typedef enum

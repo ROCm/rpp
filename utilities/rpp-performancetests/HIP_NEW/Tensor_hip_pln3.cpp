@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:85> <verbosity = 0/1>\n");
+        printf("\nUsage: ./Tensor_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <verbosity = 0/1>\n");
         return -1;
     }
 
@@ -92,6 +92,7 @@ int main(int argc, char **argv)
     bool kernelSizeCase = (test_case == 40 || test_case == 41 || test_case == 49);
     bool interpolationTypeCase = (test_case == 24);
     bool noiseTypeCase = (test_case == 8);
+    bool pln1OutTypeCase = (test_case == 86);
 
     unsigned int verbosity = additionalParamCase ? atoi(argv[7]) : atoi(argv[6]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[6]) : 1;
@@ -103,7 +104,7 @@ int main(int argc, char **argv)
         printf("\nsrc2 = %s", argv[2]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[3]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[4]);
-        printf("\ncase number (0:85) = %s", argv[5]);
+        printf("\ncase number (0:86) = %s", argv[5]);
     }
 
     int ip_channel = 3;
@@ -172,6 +173,9 @@ int main(int argc, char **argv)
     case 85:
         strcpy(funcName, "swap_channels");
         break;
+    case 86:
+        strcpy(funcName, "rgb_to_greyscale");
+        break;
     default:
         strcpy(funcName, "test_case");
         break;
@@ -186,17 +190,24 @@ int main(int argc, char **argv)
 
     // Set src/dst layouts in tensor descriptors
 
-    if (outputFormatToggle == 0)
+    srcDescPtr->layout = RpptLayout::NHWC;
+    if (pln1OutTypeCase)
     {
-        strcat(funcType, "_toPLN3");
-        srcDescPtr->layout = RpptLayout::NCHW;
+        strcat(funcType, "_toPLN1");
         dstDescPtr->layout = RpptLayout::NCHW;
     }
-    else if (outputFormatToggle == 1)
+    else
     {
-        strcat(funcType, "_toPKD3");
-        srcDescPtr->layout = RpptLayout::NCHW;
-        dstDescPtr->layout = RpptLayout::NHWC;
+        if (outputFormatToggle == 0)
+        {
+            strcat(funcType, "_toPKD3");
+            dstDescPtr->layout = RpptLayout::NHWC;
+        }
+        else if (outputFormatToggle == 1)
+        {
+            strcat(funcType, "_toPLN3");
+            dstDescPtr->layout = RpptLayout::NCHW;
+        }
     }
 
     // Set src/dst data types in tensor descriptors
@@ -369,7 +380,7 @@ int main(int argc, char **argv)
     srcDescPtr->w = maxWidth;
 
     dstDescPtr->n = noOfImages;
-    dstDescPtr->c = ip_channel;
+    dstDescPtr->c = (pln1OutTypeCase) ? 1 : ip_channel;
     dstDescPtr->h = maxDstHeight;
     dstDescPtr->w = maxDstWidth;
 
@@ -380,21 +391,21 @@ int main(int argc, char **argv)
 
     // Set n/c/h/w strides for src/dst
 
-    srcDescPtr->strides.nStride = ip_channel * srcDescPtr->w * srcDescPtr->h;
+    srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
     srcDescPtr->strides.cStride = srcDescPtr->w * srcDescPtr->h;
     srcDescPtr->strides.hStride = srcDescPtr->w;
     srcDescPtr->strides.wStride = 1;
 
     if (dstDescPtr->layout == RpptLayout::NHWC)
     {
-        dstDescPtr->strides.nStride = ip_channel * dstDescPtr->w * dstDescPtr->h;
-        dstDescPtr->strides.hStride = ip_channel * dstDescPtr->w;
-        dstDescPtr->strides.wStride = ip_channel;
+        dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+        dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
+        dstDescPtr->strides.wStride = dstDescPtr->c;
         dstDescPtr->strides.cStride = 1;
     }
     else if (dstDescPtr->layout == RpptLayout::NCHW)
     {
-        dstDescPtr->strides.nStride = ip_channel * dstDescPtr->w * dstDescPtr->h;
+        dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
         dstDescPtr->strides.cStride = dstDescPtr->w * dstDescPtr->h;
         dstDescPtr->strides.hStride = dstDescPtr->w;
         dstDescPtr->strides.wStride = 1;
@@ -402,8 +413,8 @@ int main(int argc, char **argv)
 
     // Set buffer sizes in pixels for src/dst
 
-    ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
-    oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
+    ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)noOfImages;
+    oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)noOfImages;
 
     // Set buffer sizes in bytes for src/dst (including offsets)
 
@@ -433,7 +444,7 @@ int main(int argc, char **argv)
     offsetted_input = input + srcDescPtr->offsetInBytes;
     offsetted_input_second = input_second + srcDescPtr->offsetInBytes;
 
-    Rpp32u elementsInRowMax = srcDescPtr->w * ip_channel;
+    Rpp32u elementsInRowMax = srcDescPtr->w * srcDescPtr->c;
 
     while ((de = readdir(dr2)) != NULL)
     {
@@ -458,7 +469,7 @@ int main(int argc, char **argv)
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
 
-        Rpp32u elementsInRow = roiTensorPtrSrc[i].xywhROI.roiWidth * ip_channel;
+        Rpp32u elementsInRow = roiTensorPtrSrc[i].xywhROI.roiWidth * srcDescPtr->c;
 
         for (j = 0; j < roiTensorPtrSrc[i].xywhROI.roiHeight; j++)
         {
@@ -1694,6 +1705,30 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_swap_channels_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
+        case 86:
+        {
+            test_case_name = "rgb_to_greyscale";
+
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_rgb_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+            else if (ip_bitDepth == 1)
+                rppt_rgb_to_greyscale_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, handle);
+            else if (ip_bitDepth == 2)
+                rppt_rgb_to_greyscale_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_rgb_to_greyscale_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
