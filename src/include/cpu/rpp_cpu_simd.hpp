@@ -70,7 +70,7 @@ const __m128i xmm_px2 = _mm_set1_epi32(2);
 const __m128i xmm_px3 = _mm_set1_epi32(3);
 const __m128i xmm_px4 = _mm_set1_epi32(4);
 const __m128i xmm_px5 = _mm_set1_epi32(5);
-const __m128i xmm_pxConvertI8  = _mm_set1_epi8((char)128);
+const __m128i xmm_pxConvertI8 = _mm_set1_epi8((char)128);
 
 const __m256 avx_p0 = _mm256_set1_ps(0.0f);
 const __m256 avx_p1 = _mm256_set1_ps(1.0f);
@@ -89,7 +89,7 @@ const __m256i avx_px2 = _mm256_set1_epi32(2);
 const __m256i avx_px3 = _mm256_set1_epi32(3);
 const __m256i avx_px4 = _mm256_set1_epi32(4);
 const __m256i avx_px5 = _mm256_set1_epi32(5);
-const __m256i avx_pxConvertI8  = _mm256_set1_epi8((char)128);
+const __m256i avx_pxConvertI8 = _mm256_set1_epi8((char)128);
 const __m256 avx_pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
 
 const __m128i xmm_pxMask00To03 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80);
@@ -352,7 +352,7 @@ inline void rpp_store48_u8pln3_to_u8pkd3(Rpp8u *dstPtr, __m128i *px)
 
 inline void rpp_load16_u8_to_f32(Rpp8u *srcPtr, __m128 *p)
 {
-    __m128i px =  _mm_loadu_si128((__m128i *)srcPtr);    /* load pixels 0-15 */
+    __m128i px = _mm_loadu_si128((__m128i *)srcPtr);    /* load pixels 0-15 */
     p[0] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px, xmm_pxMask00To03));    /* pixels 0-3 */
     p[1] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px, xmm_pxMask04To07));    /* pixels 4-7 */
     p[2] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px, xmm_pxMask08To11));    /* pixels 8-11 */
@@ -597,7 +597,7 @@ inline void rpp_store48_i8pln3_to_i8pkd3(Rpp8s *dstPtr, __m128i *px)
 
 inline void rpp_load16_i8_to_f32(Rpp8s *srcPtr, __m128 *p)
 {
-    __m128i px =  _mm_loadu_si128((__m128i *)srcPtr);    /* load pixels 0-15 */
+    __m128i px = _mm_loadu_si128((__m128i *)srcPtr);    /* load pixels 0-15 */
     px = _mm_add_epi8(px, xmm_pxConvertI8);    /* convert to u8 for px compute */
     p[0] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px, xmm_pxMask00To03));    /* pixels 0-3 */
     p[1] = _mm_cvtepi32_ps(_mm_shuffle_epi8(px, xmm_pxMask04To07));    /* pixels 4-7 */
@@ -1458,7 +1458,7 @@ static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
 }
 
 /* Resize loads and stores */
-inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pSrcLoc, __m256i &pMaxSrcLoc, __m256i &pMinSrcLoc, Rpp32s maxSrcLoc, Rpp32s minSrcLoc)
+inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
     __m128i px[8];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|...] - Need RGB 01-02 */
@@ -1513,9 +1513,9 @@ inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp,
     p[10] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(px[2], xmm_pxMask08To11), _mm_shuffle_epi8(px[6], xmm_pxMask08To11))); /* Contains BottomRow B01 for all the dst locations */
     p[11] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(px[3], xmm_pxMask04To07), _mm_shuffle_epi8(px[7], xmm_pxMask04To07))); /* Contains BottomRow B02 for all the dst locations */
 
-    if(loc[0] < minSrcLoc || loc[7] < minSrcLoc) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
+    if(loc[0] < 0 || loc[7] < 0) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pSrcLoc)); // Mask set to true if the location is below min src location
+       __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxSrcLoc)); // Mask set to true if the location is below min src location
         p[0] = _mm256_blendv_ps(p[0], p[1], pLowerBoundMask); 
         p[2] = _mm256_blendv_ps(p[2], p[3], pLowerBoundMask);
         p[4] = _mm256_blendv_ps(p[4], p[5], pLowerBoundMask);
@@ -1525,7 +1525,7 @@ inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp,
     }
     else if(loc[7] > maxSrcLoc || loc[0] > maxSrcLoc) // If any src location beyond max src location -1 is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pUpperBoundMask =  _mm256_castsi256_ps(_mm256_cmpgt_epi32(pSrcLoc, pMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
+        __m256 pUpperBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pxSrcLoc, pxMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
         p[1] = _mm256_blendv_ps(p[1], p[0], pUpperBoundMask);
         p[3] = _mm256_blendv_ps(p[3], p[2], pUpperBoundMask);
         p[5] = _mm256_blendv_ps(p[5], p[4], pUpperBoundMask);
@@ -1535,7 +1535,7 @@ inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp,
     }
 }
 
-inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pSrcLoc, __m256i &pMaxSrcLoc, __m256i &pMinSrcLoc, Rpp32s maxSrcLoc, Rpp32s minSrcLoc)
+inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
     __m128i pxTemp[8];
     pxTemp[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row load LOC0 [R01|R02|R03|R04|R05|R06|R07|...|R16] Need R01-02 */
@@ -1578,15 +1578,15 @@ inline void rpp_bilinear_load_u8pln1_to_f32pln1_avx(Rpp8u **srcRowPtrsForInterp,
     p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(pxTemp[0], xmm_pxMask00To03), _mm_shuffle_epi8(pxTemp[4], xmm_pxMask00To03)));    /* Contains 1st pixels of 8 locations from Bottom row */
     p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(pxTemp[0], xmm_pxMask04To07), _mm_shuffle_epi8(pxTemp[4], xmm_pxMask04To07)));    /* Contains 2nd pixels of 8 locations from Bottom row */
 
-    if(loc[0] < minSrcLoc || loc[7] < minSrcLoc) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
+    if(loc[0] < 0 || loc[7] < 0) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
     {
-         __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pSrcLoc)); // Mask set to true if the location is below min src location
+        __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxSrcLoc)); // Mask set to true if the location is below min src location
         p[0] = _mm256_blendv_ps(p[0], p[1], pLowerBoundMask);
         p[2] = _mm256_blendv_ps(p[2], p[3], pLowerBoundMask);
     }
     else if(loc[7] > maxSrcLoc || loc[0] > maxSrcLoc) // If any src location beyond max src location -1 is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pUpperBoundMask =  _mm256_castsi256_ps(_mm256_cmpgt_epi32(pSrcLoc, pMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
+        __m256 pUpperBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pxSrcLoc, pxMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
         p[1] = _mm256_blendv_ps(p[1], p[0], pUpperBoundMask);
         p[3] = _mm256_blendv_ps(p[3], p[2], pUpperBoundMask);
     }
@@ -1615,7 +1615,7 @@ inline void rpp_store12_f32pln3_to_u8pln3_avx(Rpp8u* dstRPtr, Rpp8u* dstGPtr, Rp
     rpp_store4_f32pln1_to_u8pln1_avx(dstBPtr, p[2]);
 }
 
-inline void rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pSrcLoc, __m256i &pMaxSrcLoc, __m256i &pMinSrcLoc, Rpp32s maxSrcLoc, Rpp32s minSrcLoc)
+inline void rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
     __m128i px[8];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|...] - Need RGB 01-02 */
@@ -1670,9 +1670,9 @@ inline void rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp,
     p[10] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(px[2], xmm_pxMask08To11), _mm_shuffle_epi8(px[6], xmm_pxMask08To11))); /* Contains BottomRow 1st pixels B channel for all the dst locations */
     p[11] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(px[3], xmm_pxMask04To07), _mm_shuffle_epi8(px[7], xmm_pxMask04To07))); /* Contains BottomRow 2nd pixels B channel for all the dst locations */
 
-    if(loc[0] < minSrcLoc || loc[7] < minSrcLoc) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
+    if(loc[0] < 0 || loc[7] < 0) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pSrcLoc)); // Mask set to true if the location is below min src location
+       __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxSrcLoc)); // Mask set to true if the location is below min src location
         p[0] = _mm256_blendv_ps(p[0], p[1], pLowerBoundMask); 
         p[2] = _mm256_blendv_ps(p[2], p[3], pLowerBoundMask);
         p[4] = _mm256_blendv_ps(p[4], p[5], pLowerBoundMask);
@@ -1682,7 +1682,7 @@ inline void rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp,
     }
     else if(loc[7] > maxSrcLoc || loc[0] > maxSrcLoc) // If any src location beyond max src location -1 is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pUpperBoundMask =  _mm256_castsi256_ps(_mm256_cmpgt_epi32(pSrcLoc, pMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
+        __m256 pUpperBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pxSrcLoc, pxMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
         p[1] = _mm256_blendv_ps(p[1], p[0], pUpperBoundMask);
         p[3] = _mm256_blendv_ps(p[3], p[2], pUpperBoundMask);
         p[5] = _mm256_blendv_ps(p[5], p[4], pUpperBoundMask);
@@ -1692,7 +1692,7 @@ inline void rpp_bilinear_load_i8pkd3_to_f32pln3_avx(Rpp8s **srcRowPtrsForInterp,
     }
 }
 
-inline void rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pSrcLoc, __m256i &pMaxSrcLoc, __m256i &pMinSrcLoc, Rpp32s maxSrcLoc, Rpp32s minSrcLoc)
+inline void rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
     __m128i pxTemp[8];
     pxTemp[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp[0] + loc[0]));  /* Top Row load LOC0 [R01|R02|R03|R04|R05|R06|R07|...|R16] Need R01-02 */
@@ -1741,15 +1741,15 @@ inline void rpp_bilinear_load_i8pln1_to_f32pln1_avx(Rpp8s **srcRowPtrsForInterp,
     p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(pxTemp[0], xmm_pxMask00To03), _mm_shuffle_epi8(pxTemp[4], xmm_pxMask00To03)));  /* Contains 1st pixels of 8 locations from Bottom row */
     p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128(_mm_shuffle_epi8(pxTemp[0], xmm_pxMask04To07), _mm_shuffle_epi8(pxTemp[4], xmm_pxMask04To07)));  /* Contains 2nd pixels of 8 locations from Bottom row */
 
-    if(loc[0] < minSrcLoc || loc[7] < minSrcLoc) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
+    if(loc[0] < 0 || loc[7] < 0) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
     {
-         __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pSrcLoc)); // Mask set to true if the location is below min src location
+        __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxSrcLoc)); // Mask set to true if the location is below min src location
         p[0] = _mm256_blendv_ps(p[0], p[1], pLowerBoundMask);
         p[2] = _mm256_blendv_ps(p[2], p[3], pLowerBoundMask);
     }
     else if(loc[7] > maxSrcLoc || loc[0] > maxSrcLoc) // If any src location beyond max src location -1 is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pUpperBoundMask =  _mm256_castsi256_ps(_mm256_cmpgt_epi32(pSrcLoc, pMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
+        __m256 pUpperBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pxSrcLoc, pxMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
         p[1] = _mm256_blendv_ps(p[1], p[0], pUpperBoundMask);
         p[3] = _mm256_blendv_ps(p[3], p[2], pUpperBoundMask);
     }
@@ -1780,7 +1780,7 @@ inline void rpp_store12_f32pln3_to_i8pln3_avx(Rpp8s* dstRPtr, Rpp8s* dstGPtr, Rp
     rpp_store4_f32pln1_to_i8pln1_avx(dstBPtr, p[2]);
 }
 
-inline void rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pSrcLoc, __m256i &pMaxSrcLoc, __m256i &pMinSrcLoc, Rpp32s maxSrcLoc, Rpp32s minSrcLoc)
+inline void rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
     __m256 pTemp[10];
     pTemp[0] = _mm256_loadu_ps(srcRowPtrsForInterp[0] + loc[0]);   /* Top Row load LOC0 [R01|G01|B01|R02|G02|B02|XX|XX] Need RGB 01-02 */
@@ -1861,9 +1861,9 @@ inline void rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInter
     p[7] = _mm256_permute2f128_ps(pTemp[8], pTemp[0], 49);  /* Permute to obtain G02 of 8 dst pixels in Bottom Row*/
     p[11] = _mm256_permute2f128_ps(pTemp[9], pTemp[1], 49); /* Permute to obtain B02 of 8 dst pixels in Bottom Row*/
 
-    if(loc[0] < minSrcLoc || loc[7] < minSrcLoc) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
+    if(loc[0] < 0 || loc[7] < 0) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pSrcLoc)); // Mask set to true if the location is below min src location
+       __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxSrcLoc)); // Mask set to true if the location is below min src location
         p[0] = _mm256_blendv_ps(p[0], p[1], pLowerBoundMask); 
         p[2] = _mm256_blendv_ps(p[2], p[3], pLowerBoundMask);
         p[4] = _mm256_blendv_ps(p[4], p[5], pLowerBoundMask);
@@ -1873,7 +1873,7 @@ inline void rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInter
     }
     else if(loc[7] > maxSrcLoc || loc[0] > maxSrcLoc) // If any src location beyond max src location -1 is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pUpperBoundMask =  _mm256_castsi256_ps(_mm256_cmpgt_epi32(pSrcLoc, pMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
+        __m256 pUpperBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pxSrcLoc, pxMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
         p[1] = _mm256_blendv_ps(p[1], p[0], pUpperBoundMask);
         p[3] = _mm256_blendv_ps(p[3], p[2], pUpperBoundMask);
         p[5] = _mm256_blendv_ps(p[5], p[4], pUpperBoundMask);
@@ -1883,7 +1883,7 @@ inline void rpp_bilinear_load_f32pkd3_to_f32pln3_avx(Rpp32f **srcRowPtrsForInter
     }
 }
 
-inline void rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pSrcLoc, __m256i &pMaxSrcLoc, __m256i &pMinSrcLoc, Rpp32s maxSrcLoc, Rpp32s minSrcLoc)
+inline void rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
     __m128 pTemp[6];
     pTemp[0] = _mm_loadu_ps(srcRowPtrsForInterp[0] + loc[0]);   /* Top Row load LOC0 [R01|R02|R03|R04] Need R01-02 */
@@ -1916,15 +1916,15 @@ inline void rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInter
     p[2] = _mm256_setr_m128(pTemp[0], pTemp[2]);
     p[3] = _mm256_setr_m128(pTemp[1], pTemp[3]);
 
-    if(loc[0] < minSrcLoc || loc[7] < minSrcLoc) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
+    if(loc[0] < 0 || loc[7] < 0) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
     {
-         __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pSrcLoc)); // Mask set to true if the location is below min src location
+        __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxSrcLoc)); // Mask set to true if the location is below min src location
         p[0] = _mm256_blendv_ps(p[0], p[1], pLowerBoundMask);
         p[2] = _mm256_blendv_ps(p[2], p[3], pLowerBoundMask);
     }
     else if(loc[7] > maxSrcLoc || loc[0] > maxSrcLoc) // If any src location beyond max src location -1 is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pUpperBoundMask =  _mm256_castsi256_ps(_mm256_cmpgt_epi32(pSrcLoc, pMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
+        __m256 pUpperBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pxSrcLoc, pxMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
         p[1] = _mm256_blendv_ps(p[1], p[0], pUpperBoundMask);
         p[3] = _mm256_blendv_ps(p[3], p[2], pUpperBoundMask);
     }
@@ -1935,7 +1935,7 @@ inline void rpp_store8_f32pln1_to_f32pln1_avx(Rpp32f* dstPtr, __m256 p)
     _mm256_storeu_ps(dstPtr, p);   /* store the 8 pixels in dst*/
 }
 
-inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pSrcLoc, __m256i &pMaxSrcLoc, __m256i &pMinSrcLoc, Rpp32s maxSrcLoc, Rpp32s minSrcLoc)
+inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
     Rpp32f topRow0[3][8], topRow1[3][8], bottomRow0[3][8], bottomRow1[3][8];
     for(int cnt = 0; cnt < 8; cnt++)
@@ -1971,9 +1971,9 @@ inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInter
     p[7] = _mm256_loadu_ps(bottomRow1[1]);
     p[11] = _mm256_loadu_ps(bottomRow1[2]);
 
-    if(loc[0] < minSrcLoc || loc[7] < minSrcLoc) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
+    if(loc[0] < 0 || loc[7] < 0) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pSrcLoc)); // Mask set to true if the location is below min src location
+       __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxSrcLoc)); // Mask set to true if the location is below min src location
         p[0] = _mm256_blendv_ps(p[0], p[1], pLowerBoundMask); 
         p[2] = _mm256_blendv_ps(p[2], p[3], pLowerBoundMask);
         p[4] = _mm256_blendv_ps(p[4], p[5], pLowerBoundMask);
@@ -1983,7 +1983,7 @@ inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInter
     }
     else if(loc[7] > maxSrcLoc || loc[0] > maxSrcLoc) // If any src location beyond max src location -1 is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pUpperBoundMask =  _mm256_castsi256_ps(_mm256_cmpgt_epi32(pSrcLoc, pMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
+        __m256 pUpperBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pxSrcLoc, pxMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
         p[1] = _mm256_blendv_ps(p[1], p[0], pUpperBoundMask);
         p[3] = _mm256_blendv_ps(p[3], p[2], pUpperBoundMask);
         p[5] = _mm256_blendv_ps(p[5], p[4], pUpperBoundMask);
@@ -1993,7 +1993,7 @@ inline void rpp_bilinear_load_f16pkd3_to_f32pln3_avx(Rpp16f **srcRowPtrsForInter
     }
 }
 
-inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pSrcLoc, __m256i &pMaxSrcLoc, __m256i &pMinSrcLoc, Rpp32s maxSrcLoc, Rpp32s minSrcLoc)
+inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
     Rpp32f topRow0[8], topRow1[8], bottomRow0[8], bottomRow1[8];
     for(int cnt = 0; cnt < 8; cnt++)
@@ -2008,15 +2008,15 @@ inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInter
     p[2] = _mm256_loadu_ps(bottomRow0);
     p[3] = _mm256_loadu_ps(bottomRow1);
 
-    if(loc[0] < minSrcLoc || loc[7] < minSrcLoc) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
+    if(loc[0] < 0 || loc[7] < 0) // If any src location below min src location is encountered replace the source pixel loaded with first pixel of the row
     {
-         __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pMinSrcLoc, pSrcLoc)); // Mask set to true if the location is below min src location
+       __m256 pLowerBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(avx_px0, pxSrcLoc)); // Mask set to true if the location is below min src location
         p[0] = _mm256_blendv_ps(p[0], p[1], pLowerBoundMask);
         p[2] = _mm256_blendv_ps(p[2], p[3], pLowerBoundMask);
     }
     else if(loc[7] > maxSrcLoc || loc[0] > maxSrcLoc) // If any src location beyond max src location -1 is encountered replace the source pixel loaded with first pixel of the row
     {
-        __m256 pUpperBoundMask =  _mm256_castsi256_ps(_mm256_cmpgt_epi32(pSrcLoc, pMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
+        __m256 pUpperBoundMask = _mm256_castsi256_ps(_mm256_cmpgt_epi32(pxSrcLoc, pxMaxSrcLoc)); // Mask set to true if the location is beyond max src location - 1
         p[1] = _mm256_blendv_ps(p[1], p[0], pUpperBoundMask);
         p[3] = _mm256_blendv_ps(p[3], p[2], pUpperBoundMask);
     }
