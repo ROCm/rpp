@@ -925,7 +925,7 @@ int main(int argc, char **argv)
         {
             test_case_name = "resize";
 
-            if (interpolationType -= RpptInterpolationType::NEAREST_NEIGHBOR)
+            if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
             {
                 missingFuncFlag = 1;
                 break;
