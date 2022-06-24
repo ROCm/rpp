@@ -310,7 +310,7 @@ typedef struct Filter
     Rpp32f scale = 1.0f;
     Rpp32f radius = 1.0f;
     Rpp32s size;
-    Filter(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32s scaleRatio)
+    Filter(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scaleRatio)
     {
         switch(interpolationType)
         {
