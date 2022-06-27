@@ -1081,16 +1081,16 @@ int main(int argc, char **argv)
     {
         test_case_name = "resize";
 
-        if (interpolationType != RpptInterpolationType::BILINEAR)
-        {
-            missingFuncFlag = 1;
-            break;
-        }
+        // if (interpolationType != RpptInterpolationType::BILINEAR)
+        // {
+        //     missingFuncFlag = 1;
+        //     break;
+        // }
 
         for (i = 0; i < images; i++)
         {
-            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
-            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 100;//roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
         }
 
         // Uncomment to run test case with an xywhROI override
