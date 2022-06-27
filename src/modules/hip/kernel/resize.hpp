@@ -1,6 +1,16 @@
 #include <hip/hip_runtime.h>
 #include "hip/rpp_hip_common.hpp"
 
+__device__ void compute_test_interpolation(d_float24 *dst_f24, float norm)
+{
+    dst_f24->f8[0].f4[0] = ((float4)norm * dst_f24->f8[0].f4[0]);
+    dst_f24->f8[0].f4[1] = ((float4)norm * dst_f24->f8[0].f4[1]);
+    dst_f24->f8[1].f4[0] = ((float4)norm * dst_f24->f8[1].f4[0]);
+    dst_f24->f8[1].f4[1] = ((float4)norm * dst_f24->f8[1].f4[1]);
+    dst_f24->f8[2].f4[0] = ((float4)norm * dst_f24->f8[2].f4[0]); 
+    dst_f24->f8[2].f4[1] = ((float4)norm * dst_f24->f8[2].f4[1]);
+}
+
 // -------------------- Set 1 - Vertical Resampling --------------------
 
 template <typename T>
@@ -11,7 +21,7 @@ __global__ void resample_vertical_tensor(T *srcPtr,
                                          RpptImagePatchPtr dstImgSize,
                                          RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
@@ -29,8 +39,8 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     uint2 srcDimsWH;
     srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
     srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
+    int heightLimit = srcDimsWH.y - 1;
 
-    float coeffs[2];
     float vRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float vRadius = 1.0f;
     float vScale = 1.0f;
@@ -46,32 +56,43 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     float vOffset = (vRatio - 1) * 0.5f - vRadius;
     float dstLoc = id_y;
     float srcLoc = dstLoc * vRatio + vOffset;
-    int srcLocFloor = floorf(srcLoc);
-    if(srcLocFloor < 0)
-        srcLocFloor = 0;
+    float srcLocFloor = floorf(srcLoc);
+
     int srcStride = 1;
     float weight = (srcLoc - srcLocFloor) * srcStride;
+    weight -= vRadius;
 
     //Compute coefficients for Traingular
     float norm = 0;
-    for(int k = 0; k < 2; k++)
+    float coeffs[7]; //Size set to 7. Temporary fix to avoid build error
+    uint srcIdx;
+    d_float24 pix_f24, dst_f24 = {0.0};
+    for(int k = 0; k < vSize; k++)
     {
+        //Compute coefficients
         float temp = 1 - fabs(weight + k * vScale);
         temp = temp < 0 ? 0 : temp;
         coeffs[k] = temp;
         norm += coeffs[k];
+        
+        //Compute src row pointers 
+        int outLocRow = min(max((int)srcLocFloor + k, 0), heightLimit); 
+        srcIdx = (id_z * srcStridesNH.x) + (outLocRow * srcStridesNH.y) + id_x * 3;
+        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+
+        //Multiply by coefficients and add
+        dst_f24.f8[0].f4[0] += ((float4)coeffs[k] * pix_f24.f8[0].f4[0]);
+        dst_f24.f8[0].f4[1] += ((float4)coeffs[k] * pix_f24.f8[0].f4[1]);
+        dst_f24.f8[1].f4[0] += ((float4)coeffs[k] * pix_f24.f8[1].f4[0]);
+        dst_f24.f8[1].f4[1] += ((float4)coeffs[k] * pix_f24.f8[1].f4[1]);
+        dst_f24.f8[2].f4[0] += ((float4)coeffs[k] * pix_f24.f8[2].f4[0]); 
+        dst_f24.f8[2].f4[1] += ((float4)coeffs[k] * pix_f24.f8[2].f4[1]);
     }                    
     
     //Normalize coefficients
     norm = 1.0f / norm;
-    uint srcIdx = (id_z * srcStridesNH.x) + (srcLocFloor * srcStridesNH.y) + id_x * 3;
-    for (int k = 0; k < 2; k++) 
-    {
-        //Load RGB values for given pixel
-        *(dstPtr + dstIdx) +=  T(coeffs[k] * (float)srcPtr[srcIdx] * norm);
-        *(dstPtr + dstIdx + 1) += T(coeffs[k] * (float)srcPtr[srcIdx + 1] * norm);
-        *(dstPtr + dstIdx + 2) += T(coeffs[k] * (float)srcPtr[srcIdx + 2] * norm);
-    }
+    compute_test_interpolation(&dst_f24, norm);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);   
 }
 
 // -------------------- Set 3 - Kernel Executors --------------------
@@ -93,7 +114,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
     int localThreads_x = 16;
     int localThreads_y = 16;
     int localThreads_z = 1;
-    int globalThreads_x = dstDescPtr->strides.hStride;
+    int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
