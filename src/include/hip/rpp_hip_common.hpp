@@ -21,7 +21,7 @@ typedef struct { schar  data[24]; } d_schar24sc1s_s;
 
 // float
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
-typedef union { float f1[8];    float4 f4[2];                                                   }   d_float8;
+typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;
 typedef union { float f1[12];   float4 f4[3];                                                   }   d_float12;
 typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;
 typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   d_float8 f8[3]; }   d_float24;
@@ -84,9 +84,15 @@ struct RPPTensorFunctionMetaData
 #define LOCAL_THREADS_Y                 16
 #define LOCAL_THREADS_Z                 1
 #define ONE_OVER_255                    0.00392157f
+#define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
-#define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
-#define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+#define XORWOW_COUNTER_INC              0x587C5             // Hex 0x587C5 = Dec 362437U - xorwow counter increment
+#define XORWOW_EXPONENT_MASK            0x3F800000          // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+#define NEWTON_METHOD_INITIAL_GUESS     0x5f3759df          // Initial guess for Newton Raphson Inverse Square Root
+#define RPP_2POW32_INV                  2.3283064e-10f      // (1 / 2^32)
+#define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
+#define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
+#define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
@@ -1413,9 +1419,85 @@ __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24
     dst_f24->f4[5] = src_f24->f4[5] - subtrahend_f4;
 }
 
+__device__ __forceinline__ float rpp_hip_math_inverse_sqrt1_const(float x)
+{
+    float xHalf = 0.5f * x;
+    int i = *(int*)&x;                              // float bits in int
+    i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);     // initial guess for Newton's method
+    x = *(float*)&i;                                // new bits to float
+    x = x * (1.5f - xHalf * x * x);                 // One round of Newton's method
+
+    return x;
+}
+
+__device__ __forceinline__ float rpp_hip_math_exp_lim256approx(float x)
+{
+  x = 1.0 + x * ONE_OVER_256;
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x; x *= x; x *= x;
+
+  return x;
+}
+
+// __device__ __forceinline__ float rpp_hip_math_exp_lim1024approx(float x)
+// {
+//   x = 1.0 + x / 1024.0;
+//   x *= x; x *= x; x *= x; x *= x; x *= x;
+//   x *= x; x *= x; x *= x; x *= x; x *= x;
+//   return x;
+// }
+
+// __device__ __forceinline__ float rpp_hip_math_exp_approx(float x)
+// {
+//     float t, f, e, p, r;
+//     int i, j;
+//     float logBase2e = 1.442695041f;
+//     float c0 = 0.3371894346f;
+//     float c1 = 0.657636276f;
+//     float c2 = 1.00172476f;
+
+//     t = x * logBase2e;
+//     e = floorf(t);
+//     i = (int) e;
+//     f = t - e;
+
+//     // p = ((c0 * f) + c1) * f + c2
+//     p = c0;
+//     p *= f;
+//     p += c1;
+//     p *= f;
+//     p += c2;
+//     j = i << 23;
+//     r = j + p;
+//     return r;
+// }
+
 // /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
 
-__device__ __forceinline__ float rpp_hip_rng_xorwow_f32(RpptXorwowState *xorwowState)
+template<typename T>
+__device__ __forceinline__ uint rpp_hip_rng_xorwow_u32(T *xorwowState)
+{
+    // Save current first and last x-params of xorwow state and compute t
+    uint t  = xorwowState->x[0];
+    uint s  = xorwowState->x[4];
+    t ^= t >> 2;
+    t ^= t << 1;
+    t ^= s ^ (s << 4);
+
+    // Update all 6 xorwow state params
+    xorwowState->x[0] = xorwowState->x[1];                                              // set new state param x[0]
+    xorwowState->x[1] = xorwowState->x[2];                                              // set new state param x[1]
+    xorwowState->x[2] = xorwowState->x[3];                                              // set new state param x[2]
+    xorwowState->x[3] = xorwowState->x[4];                                              // set new state param x[3]
+    xorwowState->x[4] = t;                                                              // set new state param x[4]
+    xorwowState->counter = xorwowState->counter + XORWOW_COUNTER_INC;                   // set new state param counter
+
+    // Return u32 random number
+    return  t + xorwowState->counter;                                                   // return x[4] + counter
+}
+
+template<typename T>
+__device__ __forceinline__ float rpp_hip_rng_xorwow_f32(T *xorwowState)
 {
     // Save current first and last x-params of xorwow state and compute t
     uint t  = xorwowState->x[0];
@@ -1448,6 +1530,60 @@ __device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(RpptXorwowState *xorwow
     randomNumbersPtr_f8->f1[5] = rpp_hip_rng_xorwow_f32(xorwowState);
     randomNumbersPtr_f8->f1[6] = rpp_hip_rng_xorwow_f32(xorwowState);
     randomNumbersPtr_f8->f1[7] = rpp_hip_rng_xorwow_f32(xorwowState);
+}
+
+__device__ __forceinline__ float2 rpp_hip_rng_2_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
+{
+    float2 result_f2;
+    uint x = rpp_hip_rng_xorwow_u32(xorwowState);
+    uint y = rpp_hip_rng_xorwow_u32(xorwowState);
+    float u = x * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
+    float v = y * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
+    float s = 1 / rpp_hip_math_inverse_sqrt1_const(-2.0f * __logf(u));
+    __sincosf(v, &result_f2.x, &result_f2.y);
+    result_f2 *= (float2)s;
+
+    return result_f2;
+}
+
+__device__ __forceinline__ float rpp_hip_rng_1_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
+{
+    if(xorwowState->boxMullerFlag == 0)
+    {
+        float2 result_f2;
+        uint x = rpp_hip_rng_xorwow_u32(xorwowState);
+        uint y = rpp_hip_rng_xorwow_u32(xorwowState);
+        float u = x * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
+        float v = y * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
+        float s = 1 / rpp_hip_math_inverse_sqrt1_const(-2.0f * __logf(u));
+        __sincosf(v, &result_f2.x, &result_f2.y);
+        result_f2 *= (float2)s;
+        xorwowState->boxMullerExtra = result_f2.y;
+        xorwowState->boxMullerFlag = 1;
+        return result_f2.x;
+    }
+    xorwowState->boxMullerFlag = 0;
+    return xorwowState->boxMullerExtra;
+}
+
+__device__ __forceinline__ float rpp_hip_rng_1_inverse_transform_sampling_f32(float lambdaValue, RpptXorwowStateBoxMuller *xorwowState)
+{
+    float shotNoiseValue = 0;
+    float factValue = rpp_hip_math_exp_lim256approx(-lambdaValue);
+    float sumValue = factValue;
+    float randomNumber;
+    do
+    {
+        randomNumber = rpp_hip_rng_xorwow_f32(xorwowState);
+    } while(randomNumber > 0.95f);
+    while (randomNumber > sumValue)
+    {
+        shotNoiseValue += 1;
+        factValue *= (lambdaValue / shotNoiseValue);
+        sumValue += factValue;
+    }
+
+    return shotNoiseValue;
 }
 
 // /******************** DEVICE INTERPOLATION HELPER FUNCTIONS ********************/

@@ -545,29 +545,31 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr,
     Rpp32u paramIndex = 0;
     copy_param_float(shotNoiseFactorTensor, rpp::deref(rppHandle), paramIndex++);
 
-    RpptXorwowState xorwowInitialState;
+    RpptXorwowStateBoxMuller xorwowInitialState;
     xorwowInitialState.x[0] = 0x75BCD15 + seed;
     xorwowInitialState.x[1] = 0x159A55E5 + seed;
     xorwowInitialState.x[2] = 0x1F123BB5 + seed;
     xorwowInitialState.x[3] = 0x5491333 + seed;
     xorwowInitialState.x[4] = 0x583F19 + seed;
     xorwowInitialState.counter = 0x64F0C9 + seed;
+    xorwowInitialState.boxMullerFlag = 0;
+    xorwowInitialState.boxMullerExtra = 0.0f;
 
-    RpptXorwowState *d_xorwowInitialStatePtr;
-    d_xorwowInitialStatePtr = (RpptXorwowState *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.maskArr.floatmem;
-    hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowState), hipMemcpyHostToDevice);
+    RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
+    d_xorwowInitialStatePtr = (RpptXorwowStateBoxMuller *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice);
 
-    // if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-    // {
-    //     hip_exec_shot_noise_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-    //                                srcDescPtr,
-    //                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-    //                                dstDescPtr,
-    //                                d_xorwowInitialStatePtr,
-    //                                roiTensorPtrSrc,
-    //                                roiType,
-    //                                rpp::deref(rppHandle));
-    // }
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_shot_noise_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                   srcDescPtr,
+                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                   dstDescPtr,
+                                   d_xorwowInitialStatePtr,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   rpp::deref(rppHandle));
+    }
     // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     // {
     //     hip_exec_shot_noise_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
