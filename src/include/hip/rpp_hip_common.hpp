@@ -40,10 +40,12 @@ typedef union { half h1[12];    half2 h2[6];    d_half3_s h3[4];                
 typedef union { half h1[24];    half2 h2[12];   d_half3_s h3[8];    d_half8 h8[3];              }   d_half24;
 
 // uchar
+typedef struct { uchar uc1[3];                                                                  }   d_uchar3;
 typedef union { uchar uc1[8];   uchar4 uc4[2];                                                  }   d_uchar8;
 typedef union { uchar uc1[24];  uchar3 uc3[8];  d_uchar8 uc8[3];                                }   d_uchar24;
 
 // schar
+typedef struct { schar sc1[3];                                                                  }   d_schar3;
 typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
 typedef struct { d_schar8_s sc8[3];                                                             }   d_schar24_s;
 
@@ -1562,7 +1564,7 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(half *sr
 
 __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *srcPtr, uint srcStrideH, float2 *locSrcFloor_f2, int4 *roiPtrSrc_i4, d_float12 *srcNeighborhood_f12)
 {
-    uint2 src_u2;
+    d_uchar3 src1, src2;
     int2 locSrc1_i2, locSrc2_i2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1_i2);
     *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
@@ -1575,24 +1577,24 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
 
     int srcIdx1 = srcInterRowLoc_i2.x + srcInterColLoc_i2.x;   // Top Left
     int srcIdx2 = srcInterRowLoc_i2.x + srcInterColLoc_i2.y;   // Top Right
-    src_u2.x = *(uint *)&srcPtr[srcIdx1];
-    src_u2.y = *(uint *)&srcPtr[srcIdx2];
-    srcNeighborhood_f12->f1[0] = rpp_hip_unpack0(src_u2.x);
-    srcNeighborhood_f12->f1[1] = rpp_hip_unpack0(src_u2.y);
-    srcNeighborhood_f12->f1[4] = rpp_hip_unpack1(src_u2.x);
-    srcNeighborhood_f12->f1[5] = rpp_hip_unpack1(src_u2.y);
-    srcNeighborhood_f12->f1[8] = rpp_hip_unpack2(src_u2.x);
-    srcNeighborhood_f12->f1[9] = rpp_hip_unpack2(src_u2.y);
+    src1 = *(d_uchar3 *)&srcPtr[srcIdx1];
+    src2 = *(d_uchar3 *)&srcPtr[srcIdx2];
+    srcNeighborhood_f12->f1[0] = (float)(src1.uc1[0]);
+    srcNeighborhood_f12->f1[1] = (float)(src2.uc1[0]);
+    srcNeighborhood_f12->f1[4] = (float)(src1.uc1[1]);
+    srcNeighborhood_f12->f1[5] = (float)(src2.uc1[1]);
+    srcNeighborhood_f12->f1[8] = (float)(src1.uc1[2]);
+    srcNeighborhood_f12->f1[9] = (float)(src2.uc1[2]);
     srcIdx1 = srcInterRowLoc_i2.y + srcInterColLoc_i2.x;   // Bottom left
     srcIdx2 = srcInterRowLoc_i2.y + srcInterColLoc_i2.y;   // Bottom right
-    src_u2.x = *(uint *)&srcPtr[srcIdx1];
-    src_u2.y = *(uint *)&srcPtr[srcIdx2];
-    srcNeighborhood_f12->f1[ 2] = rpp_hip_unpack0(src_u2.x);
-    srcNeighborhood_f12->f1[ 3] = rpp_hip_unpack0(src_u2.y);
-    srcNeighborhood_f12->f1[ 6] = rpp_hip_unpack1(src_u2.x);
-    srcNeighborhood_f12->f1[ 7] = rpp_hip_unpack1(src_u2.y);
-    srcNeighborhood_f12->f1[10] = rpp_hip_unpack2(src_u2.x);
-    srcNeighborhood_f12->f1[11] = rpp_hip_unpack2(src_u2.y);
+    src1 = *(d_uchar3 *)&srcPtr[srcIdx1];
+    src2 = *(d_uchar3 *)&srcPtr[srcIdx2];
+    srcNeighborhood_f12->f1[ 2] = (float)(src1.uc1[0]);
+    srcNeighborhood_f12->f1[ 3] = (float)(src2.uc1[0]);
+    srcNeighborhood_f12->f1[ 6] = (float)(src1.uc1[1]);
+    srcNeighborhood_f12->f1[ 7] = (float)(src2.uc1[1]);
+    srcNeighborhood_f12->f1[10] = (float)(src1.uc1[2]);
+    srcNeighborhood_f12->f1[11] = (float)(src2.uc1[2]);
 }
 
 // F32 loads for bilinear interpolation (12 F32 pixels)
