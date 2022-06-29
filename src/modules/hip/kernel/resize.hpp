@@ -62,15 +62,9 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     float weight = (srcLoc - srcLocFloat) * srcStride;
     weight -= vRadius;
 
-    if(id_x == 0 && id_y==0 && id_z == 2)
-    {
-        printf("srcLocFloat: %f, srcLoc: %d\n" , srcLocFloat, srcLoc);
-        printf("vOffset: %f, vRadius: %f, vSize: %d, weight: %f\n" , vOffset, vRadius, vSize, weight);
-    }
-
     //Compute coefficients for Traingular
     float norm = 0;
-    float coeffs[7]; //Size set to 7. Temporary fix to avoid build error
+    float coeff = 0;
     uint srcIdx;
     d_float24 pix_f24, dst_f24 = {0.0};
     for(int k = 0; k < vSize; k++)
@@ -78,12 +72,8 @@ __global__ void resample_vertical_tensor(T *srcPtr,
         //Compute coefficients
         float temp = 1 - fabs((weight + k) * vScale);
         temp = temp < 0 ? 0 : temp;
-        coeffs[k] = temp;
-        norm += coeffs[k];
-        if(id_x == 0 && id_y==0 && id_z == 2)
-        {
-            printf("vertical coeff[%d]: %f\n", k, coeffs[k]);   
-        }
+        coeff = temp;
+        norm += coeff;
         
         //Compute src row pointers 
         int outLocRow = min(max(srcLoc + k, 0), heightLimit); 
@@ -91,21 +81,16 @@ __global__ void resample_vertical_tensor(T *srcPtr,
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
 
         //Multiply by coefficients and add
-        dst_f24.f8[0].f4[0] += ((float4)coeffs[k] * pix_f24.f8[0].f4[0]);
-        dst_f24.f8[0].f4[1] += ((float4)coeffs[k] * pix_f24.f8[0].f4[1]);
-        dst_f24.f8[1].f4[0] += ((float4)coeffs[k] * pix_f24.f8[1].f4[0]);
-        dst_f24.f8[1].f4[1] += ((float4)coeffs[k] * pix_f24.f8[1].f4[1]);
-        dst_f24.f8[2].f4[0] += ((float4)coeffs[k] * pix_f24.f8[2].f4[0]); 
-        dst_f24.f8[2].f4[1] += ((float4)coeffs[k] * pix_f24.f8[2].f4[1]);
+        dst_f24.f8[0].f4[0] += ((float4)coeff * pix_f24.f8[0].f4[0]);
+        dst_f24.f8[0].f4[1] += ((float4)coeff * pix_f24.f8[0].f4[1]);
+        dst_f24.f8[1].f4[0] += ((float4)coeff * pix_f24.f8[1].f4[0]);
+        dst_f24.f8[1].f4[1] += ((float4)coeff * pix_f24.f8[1].f4[1]);
+        dst_f24.f8[2].f4[0] += ((float4)coeff * pix_f24.f8[2].f4[0]); 
+        dst_f24.f8[2].f4[1] += ((float4)coeff * pix_f24.f8[2].f4[1]);
     }                    
     
     //Normalize coefficients
     norm = 1.0f / norm;
-    if(id_x == 0 && id_y==0 && id_z == 2)
-    {
-        printf("norm is %f\n", norm);   
-    }
-
     compute_test_interpolation(&dst_f24, norm);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);   
 }
@@ -159,15 +144,9 @@ __global__ void resample_horizontal_tensor(T *srcPtr,
     float weight = (srcLoc - srcLocFloat) * srcStride;
     weight -= hRadius;
 
-    if(id_x == 0 && id_y == 0 && id_z == 2)
-    {
-        printf("srcLocFloat: %f, srcLoc: %d\n" , srcLocFloat, srcLoc);
-        printf("wOffset: %f, hSize: %d, weight: %f\n" , wOffset, hSize, weight);
-    }
-
     //Compute coefficients for Traingular
     float norm = 0;
-    float coeffs[7]; //Size set to 7. Temporary fix to avoid build error
+    float coeff;
     uint srcIdx;
     d_float24 pix_f24, dst_f24 = {0.0};
     float dst_pixR = 0;
@@ -178,30 +157,19 @@ __global__ void resample_horizontal_tensor(T *srcPtr,
         //Compute coefficients
         float temp = 1 - fabs((weight + k) * hScale);
         temp = temp < 0 ? 0 : temp;
-        coeffs[k] = temp;
-        norm += coeffs[k];
-
-        if(id_x == 0 && id_y == 0 && id_z == 2)
-        {
-            printf("horizontal coeff[%d]: %f\n", k, coeffs[k]);   
-        }
+        coeff = temp;
+        norm += coeff;
 
         //Compute src col locations
         int outLocCol = min(max((srcLoc + k) * 3, 0), widthLimit); 
         srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + outLocCol;
-        dst_pixR += (coeffs[k] * (float)srcPtr[srcIdx]);
-        dst_pixG += (coeffs[k] * (float)srcPtr[srcIdx + 1]);
-        dst_pixB += (coeffs[k] * (float)srcPtr[srcIdx + 2]);
+        dst_pixR += (coeff * (float)srcPtr[srcIdx]);
+        dst_pixG += (coeff * (float)srcPtr[srcIdx + 1]);
+        dst_pixB += (coeff * (float)srcPtr[srcIdx + 2]);
     }
 
     //Normalize coefficients
     norm = 1.0f / norm;
-
-    if(id_x == 0 && id_y==0 && id_z == 2)
-    {
-        printf("norm is %f\n", norm);   
-    }
-
     dst_pixR *= norm;
     dst_pixG *= norm;
     dst_pixB *= norm;
@@ -240,7 +208,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {       
-            globalThreads_x = (srcDescPtr->strides.hStride + 7)>>3;
+            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
             hipLaunchKernelGGL(resample_vertical_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -249,11 +217,9 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                tempPtr,
-                               make_uint2(dstDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               make_uint2(srcDescPtr->w * dstDescPtr->h * 3, srcDescPtr->strides.hStride),
                                dstImgSize,
                                roiTensorPtrSrc);
-
-            std::cout<<"completed vertical resampling"<<std::endl;
 
             globalThreads_x = dstDescPtr->strides.hStride;
             hipLaunchKernelGGL(resample_horizontal_tensor,
@@ -262,13 +228,11 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                0,
                                handle.GetStream(),
                                tempPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               make_uint2(srcDescPtr->w * dstDescPtr->h * 3, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                dstImgSize,
                                roiTensorPtrSrc);
-
-            std::cout<<"completed horizontal resampling"<<std::endl;
         }
     }
 
