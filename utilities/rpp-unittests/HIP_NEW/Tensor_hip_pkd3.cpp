@@ -520,7 +520,6 @@ int main(int argc, char **argv)
         hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
         hipMemcpy(d_output, output, oBufferSizeInBytes_u8, hipMemcpyHostToDevice);
 
-        
         unsigned long long tempBufferSizeInBytes_u8 = tempBufferSize + srcDescPtr->offsetInBytes;
         hipMalloc(&d_temp, tempBufferSizeInBytes_u8);
     }

@@ -1,7 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "hip/rpp_hip_common.hpp"
 
-__device__ void compute_test_interpolation(d_float24 *dst_f24, float norm)
+__device__ void divide_by_coeff_sum(d_float24 *dst_f24, float norm)
 {
     dst_f24->f8[0].f4[0] = ((float4)norm * dst_f24->f8[0].f4[0]);
     dst_f24->f8[0].f4[1] = ((float4)norm * dst_f24->f8[0].f4[1]);
@@ -10,8 +10,6 @@ __device__ void compute_test_interpolation(d_float24 *dst_f24, float norm)
     dst_f24->f8[2].f4[0] = ((float4)norm * dst_f24->f8[2].f4[0]); 
     dst_f24->f8[2].f4[1] = ((float4)norm * dst_f24->f8[2].f4[1]);
 }
-
-// -------------------- Set 1 - Vertical Resampling --------------------
 
 template <typename T>
 __global__ void resample_vertical_tensor(T *srcPtr,
@@ -91,7 +89,7 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     
     //Normalize coefficients
     norm = 1.0f / norm;
-    compute_test_interpolation(&dst_f24, norm);
+    divide_by_coeff_sum(&dst_f24, norm);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);   
 }
 
@@ -148,7 +146,7 @@ __global__ void resample_horizontal_tensor(T *srcPtr,
     float norm = 0;
     float coeff;
     uint srcIdx;
-    d_float24 pix_f24, dst_f24 = {0.0};
+
     float dst_pixR = 0;
     float dst_pixG = 0;
     float dst_pixB = 0;
