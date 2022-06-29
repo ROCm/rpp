@@ -28,19 +28,19 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     uint2 dstDimsWH;
     dstDimsWH.x = dstImgSize[id_z].width;
     dstDimsWH.y = dstImgSize[id_z].height;
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
-        return;
-    }
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     uint2 srcDimsWH;
     srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
     srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
-    int heightLimit = srcDimsWH.y - 1;
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    
+    if ((id_y >= dstDimsWH.y) || (id_x >= srcDimsWH.x))
+    {
+        return;
+    }
 
+    int heightLimit = srcDimsWH.y - 1;
     float vRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float vRadius = 1.0f;
     float vScale = 1.0f;
@@ -52,15 +52,21 @@ __global__ void resample_vertical_tensor(T *srcPtr,
         vScale = 1 / vRatio;
     }
 
-    int vSize = ceilf(2 * vRadius);
+    int vSize = ceil(2 * vRadius);
     float vOffset = (vRatio - 1) * 0.5f - vRadius;
     float dstLoc = id_y;
-    float srcLoc = dstLoc * vRatio + vOffset;
-    float srcLocFloor = floorf(srcLoc);
+    float srcLocFloat = dstLoc * vRatio + vOffset;
+    int srcLoc = (int)ceilf(srcLocFloat);
 
     int srcStride = 1;
-    float weight = (srcLoc - srcLocFloor) * srcStride;
+    float weight = (srcLoc - srcLocFloat) * srcStride;
     weight -= vRadius;
+
+    if(id_x == 0 && id_y==0 && id_z == 2)
+    {
+        printf("srcLocFloat: %f, srcLoc: %d\n" , srcLocFloat, srcLoc);
+        printf("vOffset: %f, vRadius: %f, vSize: %d, weight: %f\n" , vOffset, vRadius, vSize, weight);
+    }
 
     //Compute coefficients for Traingular
     float norm = 0;
@@ -70,13 +76,17 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     for(int k = 0; k < vSize; k++)
     {
         //Compute coefficients
-        float temp = 1 - fabs(weight + k * vScale);
+        float temp = 1 - fabs((weight + k) * vScale);
         temp = temp < 0 ? 0 : temp;
         coeffs[k] = temp;
         norm += coeffs[k];
+        if(id_x == 0 && id_y==0 && id_z == 2)
+        {
+            printf("vertical coeff[%d]: %f\n", k, coeffs[k]);   
+        }
         
         //Compute src row pointers 
-        int outLocRow = min(max((int)srcLocFloor + k, 0), heightLimit); 
+        int outLocRow = min(max(srcLoc + k, 0), heightLimit); 
         srcIdx = (id_z * srcStridesNH.x) + (outLocRow * srcStridesNH.y) + id_x * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
 
@@ -91,6 +101,11 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     
     //Normalize coefficients
     norm = 1.0f / norm;
+    if(id_x == 0 && id_y==0 && id_z == 2)
+    {
+        printf("norm is %f\n", norm);   
+    }
+
     compute_test_interpolation(&dst_f24, norm);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);   
 }
@@ -137,12 +152,18 @@ __global__ void resample_horizontal_tensor(T *srcPtr,
     int hSize = ceilf(2 * hRadius);
     float wOffset = (wRatio - 1) * 0.5f - hRadius;
     float dstLoc = id_x;
-    float srcLoc = dstLoc * wRatio + wOffset;
-    float srcLocFloor = floorf(srcLoc);
+    float srcLocFloat = dstLoc * wRatio + wOffset;
+    int srcLoc = (int)ceilf(srcLocFloat);
 
     int srcStride = 1;
-    float weight = (srcLoc - srcLocFloor) * srcStride;
+    float weight = (srcLoc - srcLocFloat) * srcStride;
     weight -= hRadius;
+
+    if(id_x == 0 && id_y == 0 && id_z == 2)
+    {
+        printf("srcLocFloat: %f, srcLoc: %d\n" , srcLocFloat, srcLoc);
+        printf("wOffset: %f, hSize: %d, weight: %f\n" , wOffset, hSize, weight);
+    }
 
     //Compute coefficients for Traingular
     float norm = 0;
@@ -155,13 +176,18 @@ __global__ void resample_horizontal_tensor(T *srcPtr,
     for(int k = 0; k < hSize; k++)
     {
         //Compute coefficients
-        float temp = 1 - fabs(weight + k * hScale);
+        float temp = 1 - fabs((weight + k) * hScale);
         temp = temp < 0 ? 0 : temp;
         coeffs[k] = temp;
         norm += coeffs[k];
 
+        if(id_x == 0 && id_y == 0 && id_z == 2)
+        {
+            printf("horizontal coeff[%d]: %f\n", k, coeffs[k]);   
+        }
+
         //Compute src col locations
-        int outLocCol = min(max(((int)srcLocFloor + k) * 3, 0), widthLimit); 
+        int outLocCol = min(max((srcLoc + k) * 3, 0), widthLimit); 
         srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + outLocCol;
         dst_pixR += (coeffs[k] * (float)srcPtr[srcIdx]);
         dst_pixG += (coeffs[k] * (float)srcPtr[srcIdx + 1]);
@@ -170,6 +196,11 @@ __global__ void resample_horizontal_tensor(T *srcPtr,
 
     //Normalize coefficients
     norm = 1.0f / norm;
+
+    if(id_x == 0 && id_y==0 && id_z == 2)
+    {
+        printf("norm is %f\n", norm);   
+    }
 
     dst_pixR *= norm;
     dst_pixG *= norm;
@@ -188,6 +219,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  T *dstPtr,
                                  RpptDescPtr dstDescPtr,
+                                 T *tempPtr,
                                  RpptImagePatchPtr dstImgSize,
                                  RpptInterpolationType interpolationType,
                                  RpptROIPtr roiTensorPtrSrc,
@@ -200,14 +232,15 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
     int localThreads_x = 16;
     int localThreads_y = 16;
     int localThreads_z = 1;
-    int globalThreads_x = dstDescPtr->strides.hStride;
+    int globalThreads_x = (dstDescPtr->strides.hStride + 7)>>3;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
     if (interpolationType == RpptInterpolationType::TRIANGULAR)
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
-        {
+        {       
+            globalThreads_x = (srcDescPtr->strides.hStride + 7)>>3;
             hipLaunchKernelGGL(resample_vertical_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -215,21 +248,27 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                handle.GetStream(),
                                srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               tempPtr,
+                               make_uint2(dstDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstImgSize,
                                roiTensorPtrSrc);
+
+            std::cout<<"completed vertical resampling"<<std::endl;
+
+            globalThreads_x = dstDescPtr->strides.hStride;
             hipLaunchKernelGGL(resample_horizontal_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
                                handle.GetStream(),
-                               srcPtr,
+                               tempPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                dstImgSize,
                                roiTensorPtrSrc);
+
+            std::cout<<"completed horizontal resampling"<<std::endl;
         }
     }
 
