@@ -49,13 +49,10 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTempB = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempR = srcPtrTemp[2];
+                    *dstPtrTempB++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempR++ = srcPtrTemp[2];
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -95,12 +92,9 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempB;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempR;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    dstPtrTemp[0] = *srcPtrTempB++;
+                    dstPtrTemp[1] = *srcPtrTempG++;
+                    dstPtrTemp[2] = *srcPtrTempR++;
                     dstPtrTemp += 3;
                 }
 
@@ -186,15 +180,9 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR = *srcPtrTempB;
-                    *dstPtrTempG = *srcPtrTempG;
-                    *dstPtrTempB = *srcPtrTempR;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
+                    *dstPtrTempR++ = *srcPtrTempB++;
+                    *dstPtrTempG++ = *srcPtrTempG++;
+                    *dstPtrTempB++ = *srcPtrTempR++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -257,13 +245,10 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempB = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempR = srcPtrTemp[2];
+                    *dstPtrTempB++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempR++ = srcPtrTemp[2];
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -303,12 +288,9 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempB;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempR;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    dstPtrTemp[0] = *srcPtrTempB++;
+                    dstPtrTemp[1] = *srcPtrTempG++;
+                    dstPtrTemp[2] = *srcPtrTempR++;
                     dstPtrTemp += 3;
                 }
 
@@ -394,15 +376,9 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR = *srcPtrTempB;
-                    *dstPtrTempG = *srcPtrTempG;
-                    *dstPtrTempB = *srcPtrTempR;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
+                    *dstPtrTempR++ = *srcPtrTempB++;
+                    *dstPtrTempG++ = *srcPtrTempG++;
+                    *dstPtrTempB++ = *srcPtrTempR++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -475,13 +451,10 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempB = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempR = srcPtrTemp[2];
+                    *dstPtrTempB++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempR++ = srcPtrTemp[2];
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -531,12 +504,9 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempB;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempR;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    dstPtrTemp[0] = *srcPtrTempB++;
+                    dstPtrTemp[1] = *srcPtrTempG++;
+                    dstPtrTemp[2] = *srcPtrTempR++;
                     dstPtrTemp += 3;
                 }
 
@@ -642,15 +612,9 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR = *srcPtrTempB;
-                    *dstPtrTempG = *srcPtrTempG;
-                    *dstPtrTempB = *srcPtrTempR;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
+                    *dstPtrTempR++ = *srcPtrTempB++;
+                    *dstPtrTempG++ = *srcPtrTempG++;
+                    *dstPtrTempB++ = *srcPtrTempR++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -713,13 +677,10 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTempB = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempR = srcPtrTemp[2];
+                    *dstPtrTempB++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempR++ = srcPtrTemp[2];
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -759,12 +720,9 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempB;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempR;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    dstPtrTemp[0] = *srcPtrTempB++;
+                    dstPtrTemp[1] = *srcPtrTempG++;
+                    dstPtrTemp[2] = *srcPtrTempR++;
                     dstPtrTemp += 3;
                 }
 
@@ -850,15 +808,9 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR = *srcPtrTempB;
-                    *dstPtrTempG = *srcPtrTempG;
-                    *dstPtrTempB = *srcPtrTempR;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
+                    *dstPtrTempR++ = *srcPtrTempB++;
+                    *dstPtrTempG++ = *srcPtrTempG++;
+                    *dstPtrTempB++ = *srcPtrTempR++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;

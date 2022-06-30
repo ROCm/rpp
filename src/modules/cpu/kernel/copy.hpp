@@ -63,13 +63,10 @@ RppStatus copy_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTempR = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempB = srcPtrTemp[2];
+                    *dstPtrTempR++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempB++ = srcPtrTemp[2];
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -121,12 +118,9 @@ RppStatus copy_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempR;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempB;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    dstPtrTemp[0] = *srcPtrTempR++;
+                    dstPtrTemp[1] = *srcPtrTempG++;
+                    dstPtrTemp[2] = *srcPtrTempB++;
                     dstPtrTemp += 3;
                 }
 
@@ -202,13 +196,10 @@ RppStatus copy_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTempR = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempB = srcPtrTemp[2];
+                    *dstPtrTempR++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempB++ = srcPtrTemp[2];
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -261,12 +252,9 @@ RppStatus copy_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempR;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempB;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    dstPtrTemp[0] = *srcPtrTempR++;
+                    dstPtrTemp[1] = *srcPtrTempG++;
+                    dstPtrTemp[2] = *srcPtrTempB++;
                     dstPtrTemp += 3;
                 }
 
@@ -359,13 +347,10 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTempR = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempB = srcPtrTemp[2];
+                    *dstPtrTempR++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempB++ = srcPtrTemp[2];
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -434,12 +419,9 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempR;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempB;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    dstPtrTemp[0] = *srcPtrTempR++;
+                    dstPtrTemp[1] = *srcPtrTempG++;
+                    dstPtrTemp[2] = *srcPtrTempB++;
                     dstPtrTemp += 3;
                 }
 
@@ -516,13 +498,10 @@ RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTempR = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempB = srcPtrTemp[2];
+                    *dstPtrTempR++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempB++ = srcPtrTemp[2];
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -574,12 +553,9 @@ RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempR;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempB;
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    dstPtrTemp[0] = *srcPtrTempR++;
+                    dstPtrTemp[1] = *srcPtrTempG++;
+                    dstPtrTemp[2] = *srcPtrTempB++;
                     dstPtrTemp += 3;
                 }
 
