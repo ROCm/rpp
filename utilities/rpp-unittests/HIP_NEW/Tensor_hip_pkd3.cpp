@@ -377,8 +377,8 @@ int main(int argc, char **argv)
 
         count++;
     }
-    maxDstWidth = 800;
-    maxDstHeight = 920;
+    // maxDstWidth = 800;
+    // maxDstHeight = 920;
     closedir(dr1);
 
     // Set numDims, offset, n/c/h/w values for src/dst
@@ -506,10 +506,6 @@ int main(int argc, char **argv)
     Rpp8s *inputi8, *inputi8_second, *outputi8;
     int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
     int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
-    int *d_temp, *d_tempf16, *d_tempf32, *d_tempi8;
-
-    // Allocate temproary buffer to store intermediate result of separable resampling
-    unsigned long long tempBufferSize = (unsigned long long)srcDescPtr->w * (unsigned long long)dstDescPtr->h * (unsigned long long)ip_channel * (unsigned long long)noOfImages;
 
     if (ip_bitDepth == 0)
     {
@@ -519,9 +515,6 @@ int main(int argc, char **argv)
         hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
         hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
         hipMemcpy(d_output, output, oBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-
-        unsigned long long tempBufferSizeInBytes_u8 = tempBufferSize + srcDescPtr->offsetInBytes;
-        hipMalloc(&d_temp, tempBufferSizeInBytes_u8);
     }
     else if (ip_bitDepth == 1)
     {
@@ -554,9 +547,6 @@ int main(int argc, char **argv)
         hipMemcpy(d_inputf16, inputf16, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
         hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
         hipMemcpy(d_outputf16, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
-
-        unsigned long long tempBufferSizeInBytes_f16 = (tempBufferSize * 2) + srcDescPtr->offsetInBytes;
-        hipMalloc(&d_tempf16, tempBufferSizeInBytes_f16);
     }
     else if (ip_bitDepth == 2)
     {
@@ -589,9 +579,6 @@ int main(int argc, char **argv)
         hipMemcpy(d_inputf32, inputf32, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
         hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
         hipMemcpy(d_outputf32, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
-
-        unsigned long long tempBufferSizeInBytes_f32 = (tempBufferSize * 4) + srcDescPtr->offsetInBytes;
-        hipMalloc(&d_tempf32, tempBufferSizeInBytes_f32);
     }
     else if (ip_bitDepth == 3)
     {
@@ -644,9 +631,6 @@ int main(int argc, char **argv)
         hipMemcpy(d_inputi8, inputi8, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
         hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
         hipMemcpy(d_outputi8, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
-
-        unsigned long long tempBufferSizeInBytes_i8 = tempBufferSize + srcDescPtr->offsetInBytes;
-        hipMalloc(&d_tempi8, tempBufferSizeInBytes_i8);
     }
     else if (ip_bitDepth == 6)
     {
@@ -1099,16 +1083,16 @@ int main(int argc, char **argv)
     {
         test_case_name = "resize";
 
-        // if (interpolationType != RpptInterpolationType::BILINEAR)
-        // {
-        //     missingFuncFlag = 1;
-        //     break;
-        // }
+        if (interpolationType != RpptInterpolationType::BILINEAR && interpolationType != RpptInterpolationType::TRIANGULAR)
+        {
+            missingFuncFlag = 1;
+            break;
+        }
 
         for (i = 0; i < images; i++)
         {
-            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 800;//roiTensorPtrSrc[i].xywhROI.roiWidth;
-            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 920;//roiTensorPtrSrc[i].xywhROI.roiHeight;
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 100;//roiTensorPtrSrc[i].xywhROI.roiWidth;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 145;//roiTensorPtrSrc[i].xywhROI.roiHeight;
         }
 
         // Uncomment to run test case with an xywhROI override
@@ -1139,17 +1123,17 @@ int main(int argc, char **argv)
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_temp, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_resize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_tempf16, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_resize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_tempf32, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_resize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_tempi8, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1973,7 +1957,6 @@ int main(int argc, char **argv)
         hipFree(d_input);
         hipFree(d_input_second);
         hipFree(d_output);
-        hipFree(d_temp);
     }
     else if (ip_bitDepth == 1)
     {
@@ -1983,7 +1966,6 @@ int main(int argc, char **argv)
         hipFree(d_inputf16);
         hipFree(d_inputf16_second);
         hipFree(d_outputf16);
-        hipFree(d_tempf16);
     }
     else if (ip_bitDepth == 2)
     {
@@ -1993,7 +1975,6 @@ int main(int argc, char **argv)
         hipFree(d_inputf32);
         hipFree(d_inputf32_second);
         hipFree(d_outputf32);
-        hipFree(d_tempf32);
     }
     else if (ip_bitDepth == 3)
     {
@@ -2017,7 +1998,6 @@ int main(int argc, char **argv)
         hipFree(d_inputi8);
         hipFree(d_inputi8_second);
         hipFree(d_outputi8);
-        hipFree(d_tempi8);
     }
     else if (ip_bitDepth == 6)
     {
