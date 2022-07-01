@@ -304,7 +304,7 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
     uint2 srcDimsWH;
     srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
     srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
-    int widthLimit = (srcDimsWH.x - 1) * 3;
+    int widthLimit = (srcDimsWH.x - 2) * 3;
 
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRadius = 1.0f;
