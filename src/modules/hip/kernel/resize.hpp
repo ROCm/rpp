@@ -487,6 +487,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                dstImgSize,
                                roiTensorPtrSrc);
         }
+        hipFree(d_temp);
     }
 
     return RPP_SUCCESS;
