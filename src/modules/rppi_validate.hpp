@@ -174,7 +174,7 @@ inline void copy_param_float(float *param, rpp::Handle& handle, Rpp32u paramInde
 inline void copy_param_float3(float *param, rpp::Handle& handle, Rpp32u paramIndex)
 {
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, param, sizeof(Rpp32f) * handle.GetBatchSize() * 3, hipMemcpyHostToDevice);
+    hipMemcpy(handle.GetInitHandle()->mem.mgpu.float3Arr[paramIndex].floatmem, param, sizeof(Rpp32f) * handle.GetBatchSize() * 3, hipMemcpyHostToDevice);
 #endif
 }
 
