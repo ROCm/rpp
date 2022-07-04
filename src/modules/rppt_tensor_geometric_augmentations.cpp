@@ -694,6 +694,30 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                                 roiType,
                                                 rpp::deref(rppHandle));
     }
+    else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_resize_mirror_normalize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                (Rpp32f *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                dstDescPtr,
+                                                dstImgSizes,
+                                                interpolationType,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_resize_mirror_normalize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                (half *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                dstDescPtr,
+                                                dstImgSizes,
+                                                interpolationType,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                rpp::deref(rppHandle));
+    }
     
 return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
