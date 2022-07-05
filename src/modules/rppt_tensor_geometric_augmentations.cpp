@@ -355,6 +355,34 @@ RppStatus rppt_resize_mirror_normalize_host(RppPtr_t srcPtr,
                                                   roiType,
                                                   srcLayoutParams);
     }
+    else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        resize_mirror_normalize_u8_f32_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                   srcDescPtr,
+                                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                   dstDescPtr,
+                                                   dstImgSizes,
+                                                   meanTensor,
+                                                   stdDevTensor,
+                                                   mirrorTensor,
+                                                   roiTensorPtrSrc,
+                                                   roiType,
+                                                   srcLayoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        resize_mirror_normalize_u8_f16_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                   srcDescPtr,
+                                                   (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                   dstDescPtr,
+                                                   dstImgSizes,
+                                                   meanTensor,
+                                                   stdDevTensor,
+                                                   mirrorTensor,
+                                                   roiTensorPtrSrc,
+                                                   roiType,
+                                                   srcLayoutParams);
+    }
 
     return RPP_SUCCESS;
 }
@@ -718,7 +746,7 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                                 roiType,
                                                 rpp::deref(rppHandle));
     }
-    
+
 return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;

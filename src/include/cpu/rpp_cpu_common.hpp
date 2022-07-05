@@ -4584,38 +4584,38 @@ inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBi
     pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);    // weightedHeight * weightedWidth
 }
 
-template <typename T>
-inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtr)
+template <typename T, typename U>
+inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, U *dstPtr)
 {
     Rpp32s loc1 = std::max(loc, 0);
     Rpp32s loc2 = std::min(loc + 1, limit);
-    *dstPtr = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
+    *dstPtr = (U)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
                   ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3]));     // BottomRow 2nd Pixel * coeff3
 }
 
-template <typename T>
-inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+template <typename T, typename U>
+inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, U *dstPtrR, U *dstPtrG, U *dstPtrB)
 {
     Rpp32s loc1 = std::max(loc, 0);
     Rpp32s loc2 = std::min(loc + 3, limit);
-    *dstPtrR = (T)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
+    *dstPtrR = (U)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
                    ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
                    ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
                    ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3]));        // BottomRow R02 Pixel * coeff3
-    *dstPtrG = (T)(((*(srcRowPtrsForInterp[0] + loc1 + 1)) * bilinearCoeffs[0]) +    // TopRow G01 Pixel * coeff0
+    *dstPtrG = (U)(((*(srcRowPtrsForInterp[0] + loc1 + 1)) * bilinearCoeffs[0]) +    // TopRow G01 Pixel * coeff0
                    ((*(srcRowPtrsForInterp[0] + loc2 + 1)) * bilinearCoeffs[1]) +    // TopRow G02 Pixel * coeff1
                    ((*(srcRowPtrsForInterp[1] + loc1 + 1)) * bilinearCoeffs[2]) +    // BottomRow G01 Pixel * coeff2
                    ((*(srcRowPtrsForInterp[1] + loc2 + 1)) * bilinearCoeffs[3]));    // BottomRow G02 Pixel * coeff3
-    *dstPtrB = (T)(((*(srcRowPtrsForInterp[0] + loc1 + 2)) * bilinearCoeffs[0]) +    // TopRow B01 Pixel * coeff0
+    *dstPtrB = (U)(((*(srcRowPtrsForInterp[0] + loc1 + 2)) * bilinearCoeffs[0]) +    // TopRow B01 Pixel * coeff0
                    ((*(srcRowPtrsForInterp[0] + loc2 + 2)) * bilinearCoeffs[1]) +    // TopRow B02 Pixel * coeff1
                    ((*(srcRowPtrsForInterp[1] + loc1 + 2)) * bilinearCoeffs[2]) +    // BottomRow B01 Pixel * coeff2
                    ((*(srcRowPtrsForInterp[1] + loc2 + 2)) * bilinearCoeffs[3]));    // BottomRow B02 Pixel * coeff3
 }
 
-template <typename T>
-inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+template <typename T, typename U>
+inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, U *dstPtrR, U *dstPtrG, U *dstPtrB)
 {
     compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, limit, bilinearCoeffs, dstPtrR);
     compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, limit, bilinearCoeffs, dstPtrG);
