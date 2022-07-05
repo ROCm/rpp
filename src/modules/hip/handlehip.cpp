@@ -193,6 +193,7 @@ struct HandleImpl
         }
 
         this->initHandle->mem.mcpu.rgbArr.rgbmem = (RpptRGB *)malloc(sizeof(RpptRGB) * this->nBatchSize);
+        this->initHandle->mem.mcpu.tempFloatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
     }
 
     void PreInitializeBuffer()
@@ -374,6 +375,7 @@ void Handle::rpp_destroy_object_host()
     }
 
     free(this->GetInitHandle()->mem.mcpu.rgbArr.rgbmem);
+    free(this->GetInitHandle()->mem.mcpu.tempFloatmem);
 }
 
 size_t Handle::GetBatchSize() const

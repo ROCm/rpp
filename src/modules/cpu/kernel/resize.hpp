@@ -969,6 +969,8 @@ RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        T *dstPtr,
                                        RpptDescPtr dstDescPtr,
+                                       Rpp32f * tempPtr,
+                                       RpptDescPtr tempDescPtr,
                                        RpptImagePatchPtr dstImgSize,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
@@ -1016,6 +1018,7 @@ omp_set_dynamic(0);
         T *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        Rpp32f * tempPtrImage = tempPtr + batchCount * tempDescPtr->strides.nStride;
         srcPtrImage = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
 
         RpptImagePatch srcImgSize;
@@ -1027,23 +1030,8 @@ omp_set_dynamic(0);
         tempImgSize.width = roi.xywhROI.roiWidth;
         tempImgSize.height = dstImgSize[batchCount].height;
 
-        // Allocate temproary buffer to store intermediate result of separable resampling
-        Rpp32f *tempPtrImage;
-        tempPtrImage = (Rpp32f *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * sizeof(Rpp32f));
-
-        // Create description pointer for the temporary buffer
-        RpptDesc tempDesc;
-        tempDesc = *srcDescPtr;
-        RpptDescPtr tempDescPtr = &tempDesc;
-        tempDescPtr->h = dstDescPtr->h;
-
-        // The channel stride changes with the change in the height for PLN images
-        if(srcDescPtr->layout == RpptLayout::NCHW)
-            tempDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
-
         compute_separable_vertical_resample(srcPtrImage, tempPtrImage, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, vFilter);
         compute_separable_horizontal_resample(tempPtrImage, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, hFilter);
-        free(tempPtrImage);
     }
 
     return RPP_SUCCESS;

@@ -286,12 +286,24 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
     }
     else
     {
+        RpptDesc tempDesc;
+        tempDesc = *srcDescPtr;
+        RpptDescPtr tempDescPtr = &tempDesc;
+        tempDescPtr->h = dstDescPtr->h;
+        tempDescPtr->strides.nStride = srcDescPtr->w * dstDescPtr->h * srcDescPtr->c;
+
+        // The channel stride changes with the change in the height for PLN images
+        if(srcDescPtr->layout == RpptLayout::NCHW)
+            tempDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
+
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
             resize_separable_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                          srcDescPtr,
                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
@@ -304,6 +316,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
@@ -316,6 +330,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
@@ -328,6 +344,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
