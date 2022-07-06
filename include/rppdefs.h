@@ -540,6 +540,7 @@ typedef struct
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;
     Rpp32u* dstInc;
+    Rpp32f *tempFloatmem;
 } memGPU;
 
 typedef struct

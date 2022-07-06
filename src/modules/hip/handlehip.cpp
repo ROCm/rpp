@@ -101,7 +101,7 @@ void set_device(int id)
 
 void set_ctx(hipCtx_t ctx)
 {
-    auto status =  0; 
+    auto status =  0;
     if(status != hipSuccess)
         RPP_THROW("Error setting context");
 }
@@ -248,6 +248,7 @@ struct HandleImpl
 	    }
         hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem) , sizeof(RpptRGB) * this->nBatchSize);
         hipMalloc(&(this->initHandle->mem.mgpu.maskArr.floatmem) , sizeof(Rpp32f) * 8294400);    // 3840 x 2160
+        hipMalloc(&(this->initHandle->mem.mgpu.tempFloatmem) , sizeof(Rpp32f) * 24883200 * this->nBatchSize);
     }
 
     bool enable_profiling  = false;
@@ -279,14 +280,14 @@ Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
         this->impl->stream = HandleImpl::reference_stream(stream);
 
     this->SetAllocator(nullptr, nullptr, nullptr);
-    
+
     impl->PreInitializeBuffer();
 
 #if RPP_USE_ROCBLAS
     rhandle_ = CreateRocblasHandle();
 #endif
     // RPP_LOG_I(*this);
-    
+
 }
 
 
@@ -309,7 +310,7 @@ Handle::Handle(rppAcceleratorQueue_t stream, size_t batchSize) : impl(new Handle
     rhandle_ = CreateRocblasHandle();
 #endif
     RPP_LOG_I(*this);
-    
+
 }
 
 Handle::Handle() : impl(new HandleImpl())
@@ -386,7 +387,10 @@ void Handle::rpp_destroy_object_gpu()
         hipFree(this->GetInitHandle()->mem.mgpu.intArr[i].intmem);
         hipFree(this->GetInitHandle()->mem.mgpu.ucharArr[i].ucharmem);
         hipFree(this->GetInitHandle()->mem.mgpu.charArr[i].charmem);
-	    }
+	}
+    hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem);
+    hipFree(this->GetInitHandle()->mem.mgpu.maskArr.floatmem);
+    hipFree(this->GetInitHandle()->mem.mgpu.tempFloatmem);
 }
 
 void Handle::rpp_destroy_object_host()

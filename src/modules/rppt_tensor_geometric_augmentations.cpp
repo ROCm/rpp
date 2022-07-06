@@ -490,6 +490,8 @@ RppStatus rppt_resize_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     Rpp32u paramIndex = 0;
 
+if (interpolationType == RpptInterpolationType::BILINEAR)
+{
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_resize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -538,6 +540,23 @@ RppStatus rppt_resize_gpu(RppPtr_t srcPtr,
                                roiType,
                                rpp::deref(rppHandle));
     }
+}
+else if (interpolationType == RpptInterpolationType::TRIANGULAR)
+{
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_resize_separable_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                         srcDescPtr,
+                                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                         dstDescPtr,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.tempFloatmem,
+                                         dstImgSizes,
+                                         interpolationType,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         rpp::deref(rppHandle));
+    }
+}
 
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
