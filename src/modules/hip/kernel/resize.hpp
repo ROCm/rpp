@@ -186,14 +186,14 @@ __global__ void resize_bilinear_pln3_pkd3_tensor(T *srcPtr,
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
-__device__ void divide_by_coeff_sum(d_float24 *dst_f24, float norm)
+__device__ void divide_by_coeff_sum(d_float24 *dst_f24, float invNorm)
 {
-    dst_f24->f8[0].f4[0] = ((float4)norm * dst_f24->f8[0].f4[0]);
-    dst_f24->f8[0].f4[1] = ((float4)norm * dst_f24->f8[0].f4[1]);
-    dst_f24->f8[1].f4[0] = ((float4)norm * dst_f24->f8[1].f4[0]);
-    dst_f24->f8[1].f4[1] = ((float4)norm * dst_f24->f8[1].f4[1]);
-    dst_f24->f8[2].f4[0] = ((float4)norm * dst_f24->f8[2].f4[0]);
-    dst_f24->f8[2].f4[1] = ((float4)norm * dst_f24->f8[2].f4[1]);
+    dst_f24->f4[0] = (float4)invNorm * dst_f24->f4[0];
+    dst_f24->f4[1] = (float4)invNorm * dst_f24->f4[1];
+    dst_f24->f4[2] = (float4)invNorm * dst_f24->f4[2];
+    dst_f24->f4[3] = (float4)invNorm * dst_f24->f4[3];
+    dst_f24->f4[4] = (float4)invNorm * dst_f24->f4[4];
+    dst_f24->f4[5] = (float4)invNorm * dst_f24->f4[5];
 }
 
 template <typename T>
@@ -228,7 +228,7 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     float vRadius = 1.0f;
     float vScale = 1.0f;
 
-    //Traingular interpolation
+    // Traingular interpolation
     if(srcDimsWH.y > dstDimsWH.y)
     {
         vRadius = vRatio;
@@ -245,34 +245,43 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     float weight = (srcLoc - srcLocFloat) * srcStride;
     weight -= vRadius;
 
-    //Compute coefficients for Traingular
+    // Compute coefficients for Traingular
     float norm = 0;
     float coeff = 0;
     uint srcIdx;
-    d_float24 pix_f24, dst_f24 = {0.0};
+    d_float24 pix_f24, dst_f24;
+
+    // Fill Zeros for temporary dst buffer
+    float4 zero_f4 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    dst_f24.f4[0] = zero_f4;
+    dst_f24.f4[1] = zero_f4;
+    dst_f24.f4[2] = zero_f4;
+    dst_f24.f4[3] = zero_f4;
+    dst_f24.f4[4] = zero_f4;
+    dst_f24.f4[5] = zero_f4;
     for(int k = 0; k < vSize; k++)
     {
-        //Compute coefficients
+        // Compute coefficients
         float temp = 1 - fabs((weight + k) * vScale);
         temp = temp < 0 ? 0 : temp;
         coeff = temp;
         norm += coeff;
 
-        //Compute src row pointers
+        // Compute src row pointers
         int outLocRow = min(max(srcLoc + k, 0), heightLimit);
         srcIdx = (id_z * srcStridesNH.x) + (outLocRow * srcStridesNH.y) + id_x * 3;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
 
-        //Multiply by coefficients and add
-        dst_f24.f8[0].f4[0] += ((float4)coeff * pix_f24.f8[0].f4[0]);
-        dst_f24.f8[0].f4[1] += ((float4)coeff * pix_f24.f8[0].f4[1]);
-        dst_f24.f8[1].f4[0] += ((float4)coeff * pix_f24.f8[1].f4[0]);
-        dst_f24.f8[1].f4[1] += ((float4)coeff * pix_f24.f8[1].f4[1]);
-        dst_f24.f8[2].f4[0] += ((float4)coeff * pix_f24.f8[2].f4[0]);
-        dst_f24.f8[2].f4[1] += ((float4)coeff * pix_f24.f8[2].f4[1]);
+        // Multiply by coefficients and add
+        dst_f24.f4[0] += ((float4)coeff * pix_f24.f4[0]);
+        dst_f24.f4[1] += ((float4)coeff * pix_f24.f4[1]);
+        dst_f24.f4[2] += ((float4)coeff * pix_f24.f4[2]);
+        dst_f24.f4[3] += ((float4)coeff * pix_f24.f4[3]);
+        dst_f24.f4[4] += ((float4)coeff * pix_f24.f4[4]);
+        dst_f24.f4[5] += ((float4)coeff * pix_f24.f4[5]);
     }
 
-    //Normalize coefficients
+    // Normalize coefficients
     norm = 1.0f / norm;
     divide_by_coeff_sum(&dst_f24, norm);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
@@ -310,7 +319,7 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
     float hRadius = 1.0f;
     float hScale = 1.0f;
 
-    //Traingular interpolation
+    // Traingular interpolation
     if(srcDimsWH.x > dstDimsWH.x)
     {
         hRadius = wRatio;
@@ -327,7 +336,7 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
     float weight = (srcLoc - srcLocFloat) * srcStride;
     weight -= hRadius;
 
-    //Compute coefficients for Traingular
+    // Compute coefficients for Traingular
     float norm = 0;
     float coeff;
     uint srcIdx;
@@ -337,13 +346,13 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
     float dst_pixB = 0;
     for(int k = 0; k < hSize; k++)
     {
-        //Compute coefficients
+        // Compute coefficients
         float temp = 1 - fabs((weight + k) * hScale);
         temp = temp < 0 ? 0 : temp;
         coeff = temp;
         norm += coeff;
 
-        //Compute src col locations
+        // Compute src col locations
         int outLocCol = min(max((srcLoc + k) * 3, 0), widthLimit);
         srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + outLocCol;
         dst_pixR += (coeff * (float)srcPtr[srcIdx]);
@@ -351,7 +360,7 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
         dst_pixB += (coeff * (float)srcPtr[srcIdx + 2]);
     }
 
-    //Normalize coefficients
+    // Normalize coefficients
     norm = 1.0f / norm;
     dst_pixR *= norm;
     dst_pixG *= norm;
@@ -363,7 +372,7 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
 }
 
 
-// -------------------- Set 3 - Kernel Executors --------------------
+//  -------------------- Set 3 - Kernel Executors --------------------
 
 template <typename T>
 RppStatus hip_exec_resize_tensor(T *srcPtr,
@@ -477,13 +486,13 @@ RppStatus hip_exec_resize_separable_tensor(T *srcPtr,
 
     if (interpolationType == RpptInterpolationType::TRIANGULAR)
     {
-    //    int *d_temp;
+        // int *d_temp;
 
-       // Allocate temproary buffer to store intermediate result from vertical resampling
-    //    unsigned long long tempBufferSize = (unsigned long long)srcDescPtr->w * (unsigned long long)dstDescPtr->h * (unsigned long long)srcDescPtr->c * (unsigned long long)globalThreads_z;
-    //    unsigned long long tempBufferSizeInBytes_f32 = (tempBufferSize * 4) + srcDescPtr->offsetInBytes;
-    //    hipMalloc(&d_temp, tempBufferSizeInBytes_f32);
-        // Rpp32f *tempPtr = rpp::deref(handle).GetInitHandle()->mem.mcpu.tempFloatmem;
+        // Allocate temproary buffer to store intermediate result from vertical resampling
+        // unsigned long long tempBufferSize = (unsigned long long)srcDescPtr->w * (unsigned long long)dstDescPtr->h * (unsigned long long)srcDescPtr->c * (unsigned long long)globalThreads_z;
+        // unsigned long long tempBufferSizeInBytes_f32 = (tempBufferSize * 4) + srcDescPtr->offsetInBytes;
+        // hipMalloc(&d_temp, tempBufferSizeInBytes_f32);
+        //  Rpp32f *tempPtr = rpp::deref(handle).GetInitHandle()->mem.mcpu.tempFloatmem;
 
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -513,7 +522,7 @@ RppStatus hip_exec_resize_separable_tensor(T *srcPtr,
                                dstImgSize,
                                roiTensorPtrSrc);
         }
-        // hipFree(d_temp);
+        //  hipFree(d_temp);
     }
 
     return RPP_SUCCESS;

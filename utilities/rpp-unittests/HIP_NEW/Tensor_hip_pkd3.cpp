@@ -1091,8 +1091,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 100;//roiTensorPtrSrc[i].xywhROI.roiWidth;
-            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 145;//roiTensorPtrSrc[i].xywhROI.roiHeight;
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 300;//roiTensorPtrSrc[i].xywhROI.roiWidth;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 300;//roiTensorPtrSrc[i].xywhROI.roiHeight;
         }
 
         // Uncomment to run test case with an xywhROI override
