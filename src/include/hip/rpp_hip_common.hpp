@@ -160,6 +160,22 @@ __device__ __forceinline__ float4 rpp_hip_pixel_check_0to1(float4 src_f4)
                        fminf(fmaxf(src_f4.w, 0), 1));
 }
 
+// d_float8 pixel check for 0-255 range
+
+__device__ __forceinline__ void rpp_hip_pixel_check_0to255(d_float8 *pix_f8)
+{
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(pix_f8->f4[0]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(pix_f8->f4[1]);
+}
+
+// d_float8 pixel check for 0-1 range
+
+__device__ __forceinline__ void rpp_hip_pixel_check_0to1(d_float8 *pix_f8)
+{
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1(pix_f8->f4[0]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1(pix_f8->f4[1]);
+}
+
 // d_float24 pixel check for 0-255 range
 
 __device__ __forceinline__ void rpp_hip_pixel_check_0to255(d_float24 *pix_f24)
@@ -1373,26 +1389,32 @@ __device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *srcPtr_f16, d_fl
     dstPtr_f16->f1[15] = floorf(srcPtr_f16->f1[15]);
 }
 
-// d_float16 subtract
+// d_float8 add
 
-__device__ __forceinline__ void rpp_hip_math_subtract16(d_float16 *src1Ptr_f16, d_float16 *src2Ptr_f16, d_float16 *dstPtr_f16)
+__device__ __forceinline__ void rpp_hip_math_add8(d_float8 *src1Ptr_f8, d_float8 *src2Ptr_f8, d_float8 *dstPtr_f8)
 {
-    dstPtr_f16->f4[0] = src1Ptr_f16->f4[0] - src2Ptr_f16->f4[0];
-    dstPtr_f16->f4[1] = src1Ptr_f16->f4[1] - src2Ptr_f16->f4[1];
-    dstPtr_f16->f4[2] = src1Ptr_f16->f4[2] - src2Ptr_f16->f4[2];
-    dstPtr_f16->f4[3] = src1Ptr_f16->f4[3] - src2Ptr_f16->f4[3];
+    dstPtr_f8->f4[0] = src1Ptr_f8->f4[0] + src2Ptr_f8->f4[0];
+    dstPtr_f8->f4[1] = src1Ptr_f8->f4[1] + src2Ptr_f8->f4[1];
 }
 
-// d_float24 multiply with constant
+// d_float24 add
 
-__device__ __forceinline__ void rpp_hip_math_multiply24_const(d_float24 *src_f24, d_float24 *dst_f24, float4 multiplier_f4)
+__device__ __forceinline__ void rpp_hip_math_add24(d_float24 *src1Ptr_f24, d_float24 *src2Ptr_f24, d_float24 *dstPtr_f24)
 {
-    dst_f24->f4[0] = src_f24->f4[0] * multiplier_f4;
-    dst_f24->f4[1] = src_f24->f4[1] * multiplier_f4;
-    dst_f24->f4[2] = src_f24->f4[2] * multiplier_f4;
-    dst_f24->f4[3] = src_f24->f4[3] * multiplier_f4;
-    dst_f24->f4[4] = src_f24->f4[4] * multiplier_f4;
-    dst_f24->f4[5] = src_f24->f4[5] * multiplier_f4;
+    dstPtr_f24->f4[0] = src1Ptr_f24->f4[0] + src2Ptr_f24->f4[0];
+    dstPtr_f24->f4[1] = src1Ptr_f24->f4[1] + src2Ptr_f24->f4[1];
+    dstPtr_f24->f4[2] = src1Ptr_f24->f4[2] + src2Ptr_f24->f4[2];
+    dstPtr_f24->f4[3] = src1Ptr_f24->f4[3] + src2Ptr_f24->f4[3];
+    dstPtr_f24->f4[4] = src1Ptr_f24->f4[4] + src2Ptr_f24->f4[4];
+    dstPtr_f24->f4[5] = src1Ptr_f24->f4[5] + src2Ptr_f24->f4[5];
+}
+
+// d_float8 add with constant
+
+__device__ __forceinline__ void rpp_hip_math_add8_const(d_float8 *src_f8, d_float8 *dst_f8, float4 addend_f4)
+{
+    dst_f8->f4[0] = src_f8->f4[0] + addend_f4;
+    dst_f8->f4[1] = src_f8->f4[1] + addend_f4;
 }
 
 // d_float24 add with constant
@@ -1407,6 +1429,24 @@ __device__ __forceinline__ void rpp_hip_math_add24_const(d_float24 *src_f24, d_f
     dst_f24->f4[5] = src_f24->f4[5] + addend_f4;
 }
 
+// d_float16 subtract
+
+__device__ __forceinline__ void rpp_hip_math_subtract16(d_float16 *src1Ptr_f16, d_float16 *src2Ptr_f16, d_float16 *dstPtr_f16)
+{
+    dstPtr_f16->f4[0] = src1Ptr_f16->f4[0] - src2Ptr_f16->f4[0];
+    dstPtr_f16->f4[1] = src1Ptr_f16->f4[1] - src2Ptr_f16->f4[1];
+    dstPtr_f16->f4[2] = src1Ptr_f16->f4[2] - src2Ptr_f16->f4[2];
+    dstPtr_f16->f4[3] = src1Ptr_f16->f4[3] - src2Ptr_f16->f4[3];
+}
+
+// d_float8 subtract with constant
+
+__device__ __forceinline__ void rpp_hip_math_subtract8_const(d_float8 *src_f8, d_float8 *dst_f8, float4 subtrahend_f4)
+{
+    dst_f8->f4[0] = src_f8->f4[0] + subtrahend_f4;
+    dst_f8->f4[1] = src_f8->f4[1] + subtrahend_f4;
+}
+
 // d_float24 subtract with constant
 
 __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24, d_float24 *dst_f24, float4 subtrahend_f4)
@@ -1419,7 +1459,47 @@ __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24
     dst_f24->f4[5] = src_f24->f4[5] - subtrahend_f4;
 }
 
-__device__ __forceinline__ float rpp_hip_math_inverse_sqrt1_const(float x)
+// d_float8 multiply
+
+__device__ __forceinline__ void rpp_hip_math_multiply8(d_float8 *src1Ptr_f8, d_float8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f4[0] = src1Ptr_f8->f4[0] * src2Ptr_f8->f4[0];
+    dstPtr_f8->f4[1] = src1Ptr_f8->f4[1] * src2Ptr_f8->f4[1];
+}
+
+// d_float24 multiply
+
+__device__ __forceinline__ void rpp_hip_math_multiply24(d_float24 *src1Ptr_f24, d_float24 *src2Ptr_f24, d_float24 *dstPtr_f24)
+{
+    dstPtr_f24->f4[0] = src1Ptr_f24->f4[0] * src2Ptr_f24->f4[0];
+    dstPtr_f24->f4[1] = src1Ptr_f24->f4[1] * src2Ptr_f24->f4[1];
+    dstPtr_f24->f4[2] = src1Ptr_f24->f4[2] * src2Ptr_f24->f4[2];
+    dstPtr_f24->f4[3] = src1Ptr_f24->f4[3] * src2Ptr_f24->f4[3];
+    dstPtr_f24->f4[4] = src1Ptr_f24->f4[4] * src2Ptr_f24->f4[4];
+    dstPtr_f24->f4[5] = src1Ptr_f24->f4[5] * src2Ptr_f24->f4[5];
+}
+
+// d_float8 multiply with constant
+
+__device__ __forceinline__ void rpp_hip_math_multiply8_const(d_float8 *src_f8, d_float8 *dst_f8, float4 multiplier_f4)
+{
+    dst_f8->f4[0] = src_f8->f4[0] * multiplier_f4;
+    dst_f8->f4[1] = src_f8->f4[1] * multiplier_f4;
+}
+
+// d_float24 multiply with constant
+
+__device__ __forceinline__ void rpp_hip_math_multiply24_const(d_float24 *src_f24, d_float24 *dst_f24, float4 multiplier_f4)
+{
+    dst_f24->f4[0] = src_f24->f4[0] * multiplier_f4;
+    dst_f24->f4[1] = src_f24->f4[1] * multiplier_f4;
+    dst_f24->f4[2] = src_f24->f4[2] * multiplier_f4;
+    dst_f24->f4[3] = src_f24->f4[3] * multiplier_f4;
+    dst_f24->f4[4] = src_f24->f4[4] * multiplier_f4;
+    dst_f24->f4[5] = src_f24->f4[5] * multiplier_f4;
+}
+
+__device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
 {
     float xHalf = 0.5f * x;
     int i = *(int*)&x;                              // float bits in int
@@ -1428,6 +1508,45 @@ __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1_const(float x)
     x = x * (1.5f - xHalf * x * x);                 // One round of Newton's method
 
     return x;
+}
+
+__device__ __forceinline__ float4 rpp_hip_math_inverse_sqrt4(float4 x_f4)
+{
+    float4 xHalf_f4 = (float4)0.5f * x_f4;
+    int4 i_i4 = *(int4 *)&x_f4;                                     // float bits in int
+    i_i4 = (int4) NEWTON_METHOD_INITIAL_GUESS - (i_i4 >> (int4)1);  // initial guess for Newton's method
+    x_f4 = *(float4 *)&i_i4;                                        // new bits to float
+    x_f4 = x_f4 * ((float4)1.5f - xHalf_f4 * x_f4 * x_f4);          // One round of Newton's method
+
+    return x_f4;
+}
+
+__device__ __forceinline__ void rpp_hip_math_sqrt8(d_float8 *pix_f8, d_float8 *pixSqrt_f8)
+{
+    pixSqrt_f8->f4[0] = rpp_hip_math_inverse_sqrt4(pix_f8->f4[0]);
+    pixSqrt_f8->f4[1] = rpp_hip_math_inverse_sqrt4(pix_f8->f4[1]);
+
+    float4 one_f4 = (float4)1.0f;
+    pixSqrt_f8->f4[0] = one_f4 / pixSqrt_f8->f4[0];
+    pixSqrt_f8->f4[1] = one_f4 / pixSqrt_f8->f4[1];
+}
+
+__device__ __forceinline__ void rpp_hip_math_sqrt24(d_float24 *pix_f24, d_float24 *pixSqrt_f24)
+{
+    pixSqrt_f24->f4[0] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[0]);
+    pixSqrt_f24->f4[1] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[1]);
+    pixSqrt_f24->f4[2] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[2]);
+    pixSqrt_f24->f4[3] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[3]);
+    pixSqrt_f24->f4[4] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[4]);
+    pixSqrt_f24->f4[5] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[5]);
+
+    float4 one_f4 = (float4)1.0f;
+    pixSqrt_f24->f4[0] = one_f4 / pixSqrt_f24->f4[0];
+    pixSqrt_f24->f4[1] = one_f4 / pixSqrt_f24->f4[1];
+    pixSqrt_f24->f4[2] = one_f4 / pixSqrt_f24->f4[2];
+    pixSqrt_f24->f4[3] = one_f4 / pixSqrt_f24->f4[3];
+    pixSqrt_f24->f4[4] = one_f4 / pixSqrt_f24->f4[4];
+    pixSqrt_f24->f4[5] = one_f4 / pixSqrt_f24->f4[5];
 }
 
 __device__ __forceinline__ float rpp_hip_math_exp_lim256approx(float x)
@@ -1439,43 +1558,10 @@ __device__ __forceinline__ float rpp_hip_math_exp_lim256approx(float x)
   return x;
 }
 
-// __device__ __forceinline__ float rpp_hip_math_exp_lim1024approx(float x)
-// {
-//   x = 1.0 + x / 1024.0;
-//   x *= x; x *= x; x *= x; x *= x; x *= x;
-//   x *= x; x *= x; x *= x; x *= x; x *= x;
-//   return x;
-// }
-
-// __device__ __forceinline__ float rpp_hip_math_exp_approx(float x)
-// {
-//     float t, f, e, p, r;
-//     int i, j;
-//     float logBase2e = 1.442695041f;
-//     float c0 = 0.3371894346f;
-//     float c1 = 0.657636276f;
-//     float c2 = 1.00172476f;
-
-//     t = x * logBase2e;
-//     e = floorf(t);
-//     i = (int) e;
-//     f = t - e;
-
-//     // p = ((c0 * f) + c1) * f + c2
-//     p = c0;
-//     p *= f;
-//     p += c1;
-//     p *= f;
-//     p += c2;
-//     j = i << 23;
-//     r = j + p;
-//     return r;
-// }
-
 // /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
 
 template<typename T>
-__device__ __forceinline__ uint rpp_hip_rng_xorwow_u32(T *xorwowState)
+__device__ __forceinline__ void rpp_hip_rng_xorwow_state_update(T *xorwowState)
 {
     // Save current first and last x-params of xorwow state and compute t
     uint t  = xorwowState->x[0];
@@ -1485,39 +1571,35 @@ __device__ __forceinline__ uint rpp_hip_rng_xorwow_u32(T *xorwowState)
     t ^= s ^ (s << 4);
 
     // Update all 6 xorwow state params
-    xorwowState->x[0] = xorwowState->x[1];                                              // set new state param x[0]
-    xorwowState->x[1] = xorwowState->x[2];                                              // set new state param x[1]
-    xorwowState->x[2] = xorwowState->x[3];                                              // set new state param x[2]
-    xorwowState->x[3] = xorwowState->x[4];                                              // set new state param x[3]
-    xorwowState->x[4] = t;                                                              // set new state param x[4]
-    xorwowState->counter = xorwowState->counter + XORWOW_COUNTER_INC;                   // set new state param counter
+    xorwowState->x[0] = xorwowState->x[1];                              // set new state param x[0]
+    xorwowState->x[1] = xorwowState->x[2];                              // set new state param x[1]
+    xorwowState->x[2] = xorwowState->x[3];                              // set new state param x[2]
+    xorwowState->x[3] = xorwowState->x[4];                              // set new state param x[3]
+    xorwowState->x[4] = t;                                              // set new state param x[4]
+    xorwowState->counter = xorwowState->counter + XORWOW_COUNTER_INC;   // set new state param counter
+}
+
+template<typename T>
+__device__ __forceinline__ uint rpp_hip_rng_xorwow_u32(T *xorwowState)
+{
+    // Update xorwow state
+    rpp_hip_rng_xorwow_state_update(xorwowState);
 
     // Return u32 random number
-    return  t + xorwowState->counter;                                                   // return x[4] + counter
+    return  xorwowState->x[4] + xorwowState->counter;   // return x[4] + counter
 }
 
 template<typename T>
 __device__ __forceinline__ float rpp_hip_rng_xorwow_f32(T *xorwowState)
 {
-    // Save current first and last x-params of xorwow state and compute t
-    uint t  = xorwowState->x[0];
-    uint s  = xorwowState->x[4];
-    t ^= t >> 2;
-    t ^= t << 1;
-    t ^= s ^ (s << 4);
-
-    // Update all 6 xorwow state params
-    xorwowState->x[0] = xorwowState->x[1];                                              // set new state param x[0]
-    xorwowState->x[1] = xorwowState->x[2];                                              // set new state param x[1]
-    xorwowState->x[2] = xorwowState->x[3];                                              // set new state param x[2]
-    xorwowState->x[3] = xorwowState->x[4];                                              // set new state param x[3]
-    xorwowState->x[4] = t;                                                              // set new state param x[4]
-    xorwowState->counter = (xorwowState->counter + XORWOW_COUNTER_INC) & 0xFFFFFFFF;    // set new state param counter
+    // Update xorwow state
+    rpp_hip_rng_xorwow_state_update(xorwowState);
 
     // Create float representation and return 0 <= outFloat < 1
-    uint out = (XORWOW_EXPONENT_MASK | ((t + xorwowState->counter) & 0x7FFFFF));        // bitmask 23 mantissa bits, OR with exponent
-    float outFloat = *(float *)&out;                                                    // reinterpret out as float
-    return  outFloat - 1;                                                               // return 0 <= outFloat < 1
+    xorwowState->counter &= 0xFFFFFFFF;                                                             // set new state param counter
+    uint out = (XORWOW_EXPONENT_MASK | ((xorwowState->x[4] + xorwowState->counter) & 0x7FFFFF));    // bitmask 23 mantissa bits, OR with exponent
+    float outFloat = *(float *)&out;                                                                // reinterpret out as float
+    return  outFloat - 1;                                                                           // return 0 <= outFloat < 1
 }
 
 __device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(RpptXorwowState *xorwowState, d_float8 *randomNumbersPtr_f8)
@@ -1532,20 +1614,6 @@ __device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(RpptXorwowState *xorwow
     randomNumbersPtr_f8->f1[7] = rpp_hip_rng_xorwow_f32(xorwowState);
 }
 
-__device__ __forceinline__ float2 rpp_hip_rng_2_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
-{
-    float2 result_f2;
-    uint x = rpp_hip_rng_xorwow_u32(xorwowState);
-    uint y = rpp_hip_rng_xorwow_u32(xorwowState);
-    float u = x * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
-    float v = y * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
-    float s = 1 / rpp_hip_math_inverse_sqrt1_const(-2.0f * __logf(u));
-    __sincosf(v, &result_f2.x, &result_f2.y);
-    result_f2 *= (float2)s;
-
-    return result_f2;
-}
-
 __device__ __forceinline__ float rpp_hip_rng_1_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
 {
     if(xorwowState->boxMullerFlag == 0)
@@ -1555,7 +1623,7 @@ __device__ __forceinline__ float rpp_hip_rng_1_gaussian_f32(RpptXorwowStateBoxMu
         uint y = rpp_hip_rng_xorwow_u32(xorwowState);
         float u = x * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
         float v = y * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
-        float s = 1 / rpp_hip_math_inverse_sqrt1_const(-2.0f * __logf(u));
+        float s = 1 / rpp_hip_math_inverse_sqrt1(-2.0f * __logf(u));
         __sincosf(v, &result_f2.x, &result_f2.y);
         result_f2 *= (float2)s;
         xorwowState->boxMullerExtra = result_f2.y;
@@ -1564,6 +1632,28 @@ __device__ __forceinline__ float rpp_hip_rng_1_gaussian_f32(RpptXorwowStateBoxMu
     }
     xorwowState->boxMullerFlag = 0;
     return xorwowState->boxMullerExtra;
+}
+
+__device__ __forceinline__ float2 rpp_hip_rng_2_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
+{
+    float2 result_f2;
+    uint x = rpp_hip_rng_xorwow_u32(xorwowState);
+    uint y = rpp_hip_rng_xorwow_u32(xorwowState);
+    float u = x * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
+    float v = y * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
+    float s = 1 / rpp_hip_math_inverse_sqrt1(-2.0f * __logf(u));
+    __sincosf(v, &result_f2.x, &result_f2.y);
+    result_f2 *= (float2)s;
+
+    return result_f2;
+}
+
+__device__ void rpp_hip_rng_8_gaussian_f32(d_float8 *rngVals_f8, RpptXorwowStateBoxMuller *xorwowState)
+{
+    rngVals_f8->f2[0] = rpp_hip_rng_2_gaussian_f32(xorwowState);
+    rngVals_f8->f2[1] = rpp_hip_rng_2_gaussian_f32(xorwowState);
+    rngVals_f8->f2[2] = rpp_hip_rng_2_gaussian_f32(xorwowState);
+    rngVals_f8->f2[3] = rpp_hip_rng_2_gaussian_f32(xorwowState);
 }
 
 __device__ __forceinline__ float rpp_hip_rng_1_inverse_transform_sampling_f32(float lambdaValue, RpptXorwowStateBoxMuller *xorwowState)
