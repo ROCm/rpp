@@ -248,7 +248,7 @@ struct HandleImpl
 	    }
         hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem) , sizeof(RpptRGB) * this->nBatchSize);
         hipMalloc(&(this->initHandle->mem.mgpu.maskArr.floatmem) , sizeof(Rpp32f) * 8294400);    // 3840 x 2160
-        hipMalloc(&(this->initHandle->mem.mgpu.tempFloatmem) , sizeof(Rpp32f) * 24883200 * this->nBatchSize);
+        std::cerr<<std::endl<<"tempFloatmem: "<<hipGetErrorString(hipMalloc(&(this->initHandle->mem.mgpu.tempFloatmem) , sizeof(Rpp32f) * 99532800 * 8)); // 7680 * 4320 * 3
     }
 
     bool enable_profiling  = false;

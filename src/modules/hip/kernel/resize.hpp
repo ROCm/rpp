@@ -202,11 +202,14 @@ __global__ void resample_vertical_tensor(T *srcPtr,
                                          Rpp32f *dstPtr,
                                          uint2 dstStridesNH,
                                          RpptImagePatchPtr dstImgSize,
-                                         RpptROIPtr roiTensorPtrSrc)
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         int batchIndex)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    int tempId_z = id_z;
+    id_z += batchIndex;
 
     uint2 dstDimsWH;
     dstDimsWH.x = dstImgSize[id_z].width;
@@ -216,7 +219,7 @@ __global__ void resample_vertical_tensor(T *srcPtr,
     uint2 srcDimsWH;
     srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
     srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    uint dstIdx = (tempId_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= srcDimsWH.x))
     {
@@ -293,11 +296,15 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
                                            T *dstPtr,
                                            uint2 dstStridesNH,
                                            RpptImagePatchPtr dstImgSize,
-                                           RpptROIPtr roiTensorPtrSrc)
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           int batchIndex)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    int tempId_z = id_z;
+    id_z += batchIndex;
 
     uint2 dstDimsWH;
     dstDimsWH.x = dstImgSize[id_z].width;
@@ -354,7 +361,7 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
 
         // Compute src col locations
         int outLocCol = min(max((srcLoc + k) * 3, 0), widthLimit);
-        srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + outLocCol;
+        srcIdx = (tempId_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + outLocCol;
         dst_pixR += (coeff * (float)srcPtr[srcIdx]);
         dst_pixG += (coeff * (float)srcPtr[srcIdx + 1]);
         dst_pixB += (coeff * (float)srcPtr[srcIdx + 2]);
@@ -476,53 +483,56 @@ RppStatus hip_exec_resize_separable_tensor(T *srcPtr,
     if (roiType == RpptRoiType::XYWH)
         hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
+
+    int internalBatchSize = 8;
+    int batchSize = handle.GetBatchSize();
     int localThreads_x = 16;
     int localThreads_y = 16;
     int localThreads_z = 1;
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
-    int globalThreads_z = handle.GetBatchSize();
+    int globalThreads_z = internalBatchSize; //handle.GetBatchSize();
 
 
     if (interpolationType == RpptInterpolationType::TRIANGULAR)
     {
-        // int *d_temp;
-
-        // Allocate temproary buffer to store intermediate result from vertical resampling
-        // unsigned long long tempBufferSize = (unsigned long long)srcDescPtr->w * (unsigned long long)dstDescPtr->h * (unsigned long long)srcDescPtr->c * (unsigned long long)globalThreads_z;
-        // unsigned long long tempBufferSizeInBytes_f32 = (tempBufferSize * 4) + srcDescPtr->offsetInBytes;
-        // hipMalloc(&d_temp, tempBufferSizeInBytes_f32);
-        //  Rpp32f *tempPtr = rpp::deref(handle).GetInitHandle()->mem.mcpu.tempFloatmem;
-
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(resample_vertical_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               tempPtr,
-                               make_uint2(srcDescPtr->w * dstDescPtr->h * 3, srcDescPtr->strides.hStride),
-                               dstImgSize,
-                               roiTensorPtrSrc);
 
-            globalThreads_x = dstDescPtr->strides.hStride;
-            hipLaunchKernelGGL(resample_horizontal_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
-                               0,
-                               handle.GetStream(),
-                               tempPtr,
-                               make_uint2(srcDescPtr->w * dstDescPtr->h * 3, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               dstImgSize,
-                               roiTensorPtrSrc);
+            for(int miniBatchCount = 0; miniBatchCount < batchSize ; miniBatchCount += internalBatchSize)
+            {
+                // std::cerr<<"miniBatchCount: "<<miniBatchCount<<std::endl;
+                globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+                hipLaunchKernelGGL(resample_vertical_tensor,
+                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                   tempPtr,
+                                   make_uint2(srcDescPtr->w * dstDescPtr->h * 3, srcDescPtr->strides.hStride),
+                                   dstImgSize,
+                                   roiTensorPtrSrc,
+                                   miniBatchCount);
+
+                hipDeviceSynchronize();
+                globalThreads_x = dstDescPtr->strides.hStride;
+                hipLaunchKernelGGL(resample_horizontal_tensor,
+                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   0,
+                                   handle.GetStream(),
+                                   tempPtr,
+                                   make_uint2(srcDescPtr->w * dstDescPtr->h * 3, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                   dstImgSize,
+                                   roiTensorPtrSrc,
+                                   miniBatchCount);
+                hipDeviceSynchronize();
+            }
         }
-        //  hipFree(d_temp);
     }
 
     return RPP_SUCCESS;
