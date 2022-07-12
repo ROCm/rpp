@@ -2146,28 +2146,28 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
-inline void compute_rgb_48_to_greyscale_16_host(__m256 *p, __m256 *pWeightsRGB)
+inline void compute_color_48_to_greyscale_16_host(__m256 *p, __m256 *pChannelWeights)
 {
-    p[0] = _mm256_fmadd_ps(p[0], pWeightsRGB[0], _mm256_fmadd_ps(p[2], pWeightsRGB[1], _mm256_mul_ps(p[4], pWeightsRGB[2])));
-    p[1] = _mm256_fmadd_ps(p[1], pWeightsRGB[0], _mm256_fmadd_ps(p[3], pWeightsRGB[1], _mm256_mul_ps(p[5], pWeightsRGB[2])));
+    p[0] = _mm256_fmadd_ps(p[0], pChannelWeights[0], _mm256_fmadd_ps(p[2], pChannelWeights[1], _mm256_mul_ps(p[4], pChannelWeights[2])));
+    p[1] = _mm256_fmadd_ps(p[1], pChannelWeights[0], _mm256_fmadd_ps(p[3], pChannelWeights[1], _mm256_mul_ps(p[5], pChannelWeights[2])));
 }
 
-inline void compute_rgb_48_to_greyscale_16_host(__m128 *p, __m128 *pWeightsRGB)
+inline void compute_color_48_to_greyscale_16_host(__m128 *p, __m128 *pChannelWeights)
 {
-    p[0] = _mm_fmadd_ps(p[0], pWeightsRGB[0], _mm_fmadd_ps(p[4], pWeightsRGB[1], _mm_mul_ps(p[8], pWeightsRGB[2])));
-    p[1] = _mm_fmadd_ps(p[1], pWeightsRGB[0], _mm_fmadd_ps(p[5], pWeightsRGB[1], _mm_mul_ps(p[9], pWeightsRGB[2])));
-    p[2] = _mm_fmadd_ps(p[2], pWeightsRGB[0], _mm_fmadd_ps(p[6], pWeightsRGB[1], _mm_mul_ps(p[10], pWeightsRGB[2])));
-    p[3] = _mm_fmadd_ps(p[3], pWeightsRGB[0], _mm_fmadd_ps(p[7], pWeightsRGB[1], _mm_mul_ps(p[11], pWeightsRGB[2])));
+    p[0] = _mm_fmadd_ps(p[0], pChannelWeights[0], _mm_fmadd_ps(p[4], pChannelWeights[1], _mm_mul_ps(p[8], pChannelWeights[2])));
+    p[1] = _mm_fmadd_ps(p[1], pChannelWeights[0], _mm_fmadd_ps(p[5], pChannelWeights[1], _mm_mul_ps(p[9], pChannelWeights[2])));
+    p[2] = _mm_fmadd_ps(p[2], pChannelWeights[0], _mm_fmadd_ps(p[6], pChannelWeights[1], _mm_mul_ps(p[10], pChannelWeights[2])));
+    p[3] = _mm_fmadd_ps(p[3], pChannelWeights[0], _mm_fmadd_ps(p[7], pChannelWeights[1], _mm_mul_ps(p[11], pChannelWeights[2])));
 }
 
-inline void compute_rgb_24_to_greyscale_8_host(__m256 *p, __m256 *pWeightsRGB)
+inline void compute_color_24_to_greyscale_8_host(__m256 *p, __m256 *pChannelWeights)
 {
-    p[0] = _mm256_fmadd_ps(p[0], pWeightsRGB[0], _mm256_fmadd_ps(p[1], pWeightsRGB[1], _mm256_mul_ps(p[2], pWeightsRGB[2])));
+    p[0] = _mm256_fmadd_ps(p[0], pChannelWeights[0], _mm256_fmadd_ps(p[1], pChannelWeights[1], _mm256_mul_ps(p[2], pChannelWeights[2])));
 }
 
-inline void compute_rgb_12_to_greyscale_4_host(__m128 *p, __m128 *pWeightsRGB)
+inline void compute_color_12_to_greyscale_4_host(__m128 *p, __m128 *pChannelWeights)
 {
-    p[0] = _mm_fmadd_ps(p[0], pWeightsRGB[0], _mm_fmadd_ps(p[1], pWeightsRGB[1], _mm_mul_ps(p[2], pWeightsRGB[2])));
+    p[0] = _mm_fmadd_ps(p[0], pChannelWeights[0], _mm_fmadd_ps(p[1], pChannelWeights[1], _mm_mul_ps(p[2], pChannelWeights[2])));
 }
 
 inline void compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
