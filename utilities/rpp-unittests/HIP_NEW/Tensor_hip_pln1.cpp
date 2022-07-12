@@ -200,7 +200,7 @@ int main(int argc, char **argv)
         outputFormatToggle = 0;
         break;
     case 86:
-        strcpy(funcName, "rgb_to_greyscale");
+        strcpy(funcName, "color_to_greyscale");
         outputFormatToggle = 0;
         break;
     default:
