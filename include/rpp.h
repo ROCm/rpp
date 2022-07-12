@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #include <export.h>
 
-#if OCL_COMPILE
+#if RPP_BACKEND_OPENCL
 
 #define CL_TARGET_OPENCL_VERSION 220
 #if defined(__APPLE__) || defined(__MACOSX)
@@ -35,7 +35,7 @@ THE SOFTWARE.
 #endif
 typedef cl_command_queue rppAcceleratorQueue_t;
 
-#elif HIP_COMPILE
+#elif RPP_BACKEND_HIP
 
 #include <hip/hip_runtime_api.h>
 typedef hipStream_t rppAcceleratorQueue_t;

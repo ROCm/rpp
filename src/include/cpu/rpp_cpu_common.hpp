@@ -34,6 +34,9 @@ typedef halfhpp Rpp16f;
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 #define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
 #define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+#define RGB_TO_GREY_WEIGHT_RED          0.299f
+#define RGB_TO_GREY_WEIGHT_GREEN        0.587f
+#define RGB_TO_GREY_WEIGHT_BLUE         0.114f
 #define INTERP_BILINEAR_KERNEL_SIZE     2           // Kernel size needed for Bilinear Interpolation
 #define INTERP_BILINEAR_KERNEL_RADIUS   1.0f        // Kernel radius needed for Bilinear Interpolation
 #define INTERP_BILINEAR_NUM_COEFFS      4           // Number of coefficents needed for Bilinear Interpolation
@@ -2177,6 +2180,30 @@ inline void compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
 inline void compute_rmn_8_host(__m256 *p, __m256 *pRMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
+}
+
+inline void compute_rgb_48_to_greyscale_16_host(__m256 *p, __m256 *pWeightsRGB)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pWeightsRGB[0], _mm256_fmadd_ps(p[2], pWeightsRGB[1], _mm256_mul_ps(p[4], pWeightsRGB[2])));
+    p[1] = _mm256_fmadd_ps(p[1], pWeightsRGB[0], _mm256_fmadd_ps(p[3], pWeightsRGB[1], _mm256_mul_ps(p[5], pWeightsRGB[2])));
+}
+
+inline void compute_rgb_48_to_greyscale_16_host(__m128 *p, __m128 *pWeightsRGB)
+{
+    p[0] = _mm_fmadd_ps(p[0], pWeightsRGB[0], _mm_fmadd_ps(p[4], pWeightsRGB[1], _mm_mul_ps(p[8], pWeightsRGB[2])));
+    p[1] = _mm_fmadd_ps(p[1], pWeightsRGB[0], _mm_fmadd_ps(p[5], pWeightsRGB[1], _mm_mul_ps(p[9], pWeightsRGB[2])));
+    p[2] = _mm_fmadd_ps(p[2], pWeightsRGB[0], _mm_fmadd_ps(p[6], pWeightsRGB[1], _mm_mul_ps(p[10], pWeightsRGB[2])));
+    p[3] = _mm_fmadd_ps(p[3], pWeightsRGB[0], _mm_fmadd_ps(p[7], pWeightsRGB[1], _mm_mul_ps(p[11], pWeightsRGB[2])));
+}
+
+inline void compute_rgb_24_to_greyscale_8_host(__m256 *p, __m256 *pWeightsRGB)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pWeightsRGB[0], _mm256_fmadd_ps(p[1], pWeightsRGB[1], _mm256_mul_ps(p[2], pWeightsRGB[2])));
+}
+
+inline void compute_rgb_12_to_greyscale_4_host(__m128 *p, __m128 *pWeightsRGB)
+{
+    p[0] = _mm_fmadd_ps(p[0], pWeightsRGB[0], _mm_fmadd_ps(p[1], pWeightsRGB[1], _mm_mul_ps(p[2], pWeightsRGB[2])));
 }
 
 inline void compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
