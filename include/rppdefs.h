@@ -220,8 +220,13 @@ typedef enum
 {
     LTRB,
     XYWH
-
 } RpptRoiType;
+
+typedef enum
+{
+    RGBtype,
+    BGRtype
+} RpptSubpixelLayout;
 
 typedef enum
 {

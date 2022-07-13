@@ -178,7 +178,7 @@ int main(int argc, char **argv)
         strcpy(funcName, "swap_channels");
         break;
     case 86:
-        strcpy(funcName, "rgb_to_greyscale");
+        strcpy(funcName, "color_to_greyscale");
         break;
     default:
         strcpy(funcName, "test_case");
