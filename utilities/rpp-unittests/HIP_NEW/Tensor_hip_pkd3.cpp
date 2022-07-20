@@ -176,7 +176,7 @@ int main(int argc, char **argv)
         strcpy(funcName, "swap_channels");
         break;
     case 86:
-        strcpy(funcName, "rgb_to_greyscale");
+        strcpy(funcName, "color_to_greyscale");
         break;
     default:
         strcpy(funcName, "test_case");
@@ -1649,21 +1649,23 @@ int main(int argc, char **argv)
     }
     case 86:
     {
-        test_case_name = "rgb_to_greyscale";
+        test_case_name = "color_to_greyscale";
+
+        RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
 
         start = clock();
         if (ip_bitDepth == 0)
-            rppt_rgb_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+            rppt_color_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, srcSubpixelLayout, handle);
         else if (ip_bitDepth == 1)
-            rppt_rgb_to_greyscale_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, handle);
+            rppt_color_to_greyscale_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, srcSubpixelLayout, handle);
         else if (ip_bitDepth == 2)
-            rppt_rgb_to_greyscale_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, handle);
+            rppt_color_to_greyscale_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcSubpixelLayout, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_rgb_to_greyscale_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, handle);
+            rppt_color_to_greyscale_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, srcSubpixelLayout, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
