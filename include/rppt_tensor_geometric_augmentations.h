@@ -50,7 +50,7 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
 
 /******************** crop_mirror_normalize ********************/
 
-// crop mirror normalize augmentation for a NCHW/NHWC layout tensor
+// Crop Mirror Normalize augmentation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDescPtr source tensor descriptor
