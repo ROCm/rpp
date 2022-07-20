@@ -200,8 +200,8 @@ __global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
 
         // Get Params for B channel
-        rmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];
-        rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);
+        rmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];
+        rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);
 
         rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
         rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParams_f8);
@@ -338,13 +338,6 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
     if (roiType == RpptRoiType::XYWH)
         hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
-    // Set non ROI pixels to zero
-    int max_dst_size = dstDescPtr->w * dstDescPtr->h * dstDescPtr->c;
-    for(int i = 0; i < dstDescPtr->n; i++)
-    {
-        hipMemset(dstPtr + i * (max_dst_size), (T)0, size_t(max_dst_size));
-    }
-
     int localThreads_x = 16;
     int localThreads_y = 16;
     int localThreads_z = 1;
@@ -355,7 +348,7 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
     // Set non ROI pixels to zero
     for(int i = 0; i < dstDescPtr->n; i++)
     {
-        memset(dstPtr + i * dstDescPtr->strides.nStride, 0, (size_t)dstDescPtr->strides.nStride);
+        hipMemset(dstPtr + i * dstDescPtr->strides.nStride, 0, (size_t)dstDescPtr->strides.nStride);
     }
 
     if (interpolationType == RpptInterpolationType::BILINEAR)

@@ -1135,6 +1135,7 @@ int main(int argc, char **argv)
             {
                 mean[i] = 100.0;
                 stdDev[i] = 1.0;
+                mirror[i] = 1;
             }
 
             // Uncomment to run test case with an xywhROI override
