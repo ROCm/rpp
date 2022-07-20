@@ -27,5 +27,6 @@ THE SOFTWARE.
 #include "kernel/spatter.hpp"
 #include "kernel/noise_salt_and_pepper.hpp"
 #include "kernel/noise_shot.hpp"
+#include "kernel/noise_gaussian.hpp"
 
 #endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP

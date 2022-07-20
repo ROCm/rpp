@@ -293,13 +293,13 @@ typedef struct
 } RpptImagePatch, *RpptImagePatchPtr;
 
 typedef struct
-{   Rpp32u x[5];
-    Rpp32u counter;
+{   Rpp32s x[5];
+    Rpp32s counter;
 } RpptXorwowState;
 
 typedef struct
-{   Rpp32u x[5];
-    Rpp32u counter;
+{   Rpp32s x[5];
+    Rpp32s counter;
     int boxMullerFlag;
     float boxMullerExtra;
 } RpptXorwowStateBoxMuller;

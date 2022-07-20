@@ -764,35 +764,33 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr,
 }
 
 RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               Rpp32f *shotNoiseFactorTensor,
-                               Rpp32u seed,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
+                                   RpptDescPtr srcDescPtr,
+                                   RppPtr_t dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32f *meanTensor,
+                                   Rpp32f *stdDevTensor,
+                                   Rpp32u seed,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rppHandle_t rppHandle)
 {
-    for(int i = 0; i < srcDescPtr->n; i++)
-        if (RPPISLESSER(shotNoiseFactorTensor[i], 0))
-            return RPP_ERROR_INVALID_ARGUMENTS;
-
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-    RpptXorwowState xorwowInitialState[SIMD_FLOAT_VECTOR_LENGTH];
-    rpp_host_rng_xorwow_f32_initialize_multiseed_stream<SIMD_FLOAT_VECTOR_LENGTH>(xorwowInitialState, seed);
+    RpptXorwowStateBoxMuller xorwowInitialState[SIMD_FLOAT_VECTOR_LENGTH];
+    rpp_host_rng_xorwow_f32_initialize_multiseed_stream_boxmuller<SIMD_FLOAT_VECTOR_LENGTH>(xorwowInitialState, seed);
 
-    // if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-    // {
-    //     gaussian_noise_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-    //                                  srcDescPtr,
-    //                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-    //                                  dstDescPtr,
-    //                                  shotNoiseFactorTensor,
-    //                                  xorwowInitialState,
-    //                                  roiTensorPtrSrc,
-    //                                  roiType,
-    //                                  layoutParams);
-    // }
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        gaussian_noise_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                         srcDescPtr,
+                                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                         dstDescPtr,
+                                         meanTensor,
+                                         stdDevTensor,
+                                         xorwowInitialState,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         layoutParams);
+    }
     // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     // {
     //     gaussian_noise_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
