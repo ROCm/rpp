@@ -1263,6 +1263,24 @@ inline RppStatus rpp_multiply48_constant(__m128 *p, __m128 pMultiplier)
     return RPP_SUCCESS;
 }
 
+inline RppStatus rpp_multiply16_constant(__m256 *p, __m256 pMultiplier)
+{
+    p[0] = _mm256_mul_ps(p[0], pMultiplier);
+    p[1] = _mm256_mul_ps(p[1], pMultiplier);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_multiply16_constant(__m128 *p, __m128 pMultiplier)
+{
+    p[0] = _mm_mul_ps(p[0], pMultiplier);
+    p[1] = _mm_mul_ps(p[1], pMultiplier);
+    p[2] = _mm_mul_ps(p[2], pMultiplier);
+    p[3] = _mm_mul_ps(p[3], pMultiplier);
+
+    return RPP_SUCCESS;
+}
+
 inline RppStatus rpp_add48_constant(__m256 *p, __m256 pAddend)
 {
     p[0] = _mm256_add_ps(p[0], pAddend);
@@ -1289,6 +1307,24 @@ inline RppStatus rpp_add48_constant(__m128 *p, __m128 pAddend)
     p[9] = _mm_add_ps(p[9], pAddend);
     p[10] = _mm_add_ps(p[10], pAddend);
     p[11] = _mm_add_ps(p[11], pAddend);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_add16_constant(__m256 *p, __m256 pAddend)
+{
+    p[0] = _mm256_add_ps(p[0], pAddend);
+    p[1] = _mm256_add_ps(p[1], pAddend);
+
+    return RPP_SUCCESS;
+}
+
+inline RppStatus rpp_add16_constant(__m128 *p, __m128 pAddend)
+{
+    p[0] = _mm_add_ps(p[0], pAddend);
+    p[1] = _mm_add_ps(p[1], pAddend);
+    p[2] = _mm_add_ps(p[2], pAddend);
+    p[3] = _mm_add_ps(p[3], pAddend);
 
     return RPP_SUCCESS;
 }
