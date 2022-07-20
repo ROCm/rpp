@@ -165,18 +165,12 @@ __global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
-    d_float8 rmnParamsR_f8, rmnParamsG_f8, rmnParamsB_f8;
+    d_float8 rmnParams_f8;
+
+    int incrementPerImage = id_z * channelsDst;
     // Get Params for R channel
-    rmnParamsR_f8.f4[0] = (float4)meanTensor[id_z * 3];
-    rmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3]);
-
-    // Get Params for G channel
-    rmnParamsG_f8.f4[0] = (float4)meanTensor[id_z * 3 + 1];
-    rmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 1]);
-
-    // Get Params for B channel
-    rmnParamsB_f8.f4[0] = (float4)meanTensor[id_z * 3 + 2];
-    rmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[id_z * 3 + 2]);
+    rmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage];
+    rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);
 
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)
@@ -186,7 +180,7 @@ __global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
 
     d_float8 dst_f8;
     rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
-    rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParamsR_f8);
+    rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParams_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
@@ -194,15 +188,23 @@ __global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
+        // Get Params for G channel
+        rmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];
+        rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);
+
         rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
-        rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParamsG_f8);
+        rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParams_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
+        // Get Params for B channel
+        rmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];
+        rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);
+
         rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
-        rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParamsB_f8);
+        rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParams_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -377,21 +379,42 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstImgSizes,
-                               dstDescPtr->c,
-                               handle.GetInitHandle()->mem.mgpu.float3Arr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.float3Arr[1].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                               roiTensorPtrSrc);
+            if(srcDescPtr->c == 3)
+            {
+                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln_tensor,
+                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   dstImgSizes,
+                                   dstDescPtr->c,
+                                   handle.GetInitHandle()->mem.mgpu.float3Arr[0].floatmem,
+                                   handle.GetInitHandle()->mem.mgpu.float3Arr[1].floatmem,
+                                   handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                                   roiTensorPtrSrc);
+            }
+            else if(srcDescPtr->c == 1)
+            {
+                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln_tensor,
+                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   dstImgSizes,
+                                   dstDescPtr->c,
+                                   handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                   handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                                   handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                                   roiTensorPtrSrc);
+            }
         }
         else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
         {

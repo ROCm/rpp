@@ -53,18 +53,18 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount], meanTensor[3 * batchCount + 1], meanTensor[3 * batchCount + 2]};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        std::vector<float> mean(srcDescPtr->c), invStdDev(srcDescPtr->c);
+        Rpp32u incrementPerImage = srcDescPtr->c * batchCount;
+        __m256 pRMNParams[2 * srcDescPtr->c];
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            mean[c] = meanTensor[incrementPerImage + c];
+            invStdDev[c] = 1.0 / stdDevTensor[incrementPerImage + c];
+            pRMNParams[2 * c] = _mm256_set1_ps(mean[c]);
+            pRMNParams[2 * c + 1] = _mm256_set1_ps(invStdDev[c]);
+        }
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
-
-        __m256 pRMNParams[6];
-        pRMNParams[0] = _mm256_set1_ps(mean[0]);
-        pRMNParams[1] = _mm256_set1_ps(invStdDev[0]);
-        pRMNParams[2] = _mm256_set1_ps(mean[1]);
-        pRMNParams[3] = _mm256_set1_ps(invStdDev[1]);
-        pRMNParams[4] = _mm256_set1_ps(mean[2]);
-        pRMNParams[5] = _mm256_set1_ps(invStdDev[2]);
 
         __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_bilinear_src_loc_and_weights_avx;
@@ -333,18 +333,18 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount] * ONE_OVER_255, meanTensor[3 * batchCount + 1] * ONE_OVER_255, meanTensor[3 * batchCount + 2] * ONE_OVER_255};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        std::vector<float> mean(srcDescPtr->c), invStdDev(srcDescPtr->c);
+        Rpp32u incrementPerImage = srcDescPtr->c * batchCount;
+        __m256 pRMNParams[2 * srcDescPtr->c];
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            mean[c] = meanTensor[incrementPerImage + c] * ONE_OVER_255;
+            invStdDev[c] = 1.0 / stdDevTensor[incrementPerImage + c];
+            pRMNParams[2 * c] = _mm256_set1_ps(mean[c]);
+            pRMNParams[2 * c + 1] = _mm256_set1_ps(invStdDev[c]);
+        }
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
-
-        __m256 pRMNParams[6];
-        pRMNParams[0] = _mm256_set1_ps(mean[0]);
-        pRMNParams[1] = _mm256_set1_ps(invStdDev[0]);
-        pRMNParams[2] = _mm256_set1_ps(mean[1]);
-        pRMNParams[3] = _mm256_set1_ps(invStdDev[1]);
-        pRMNParams[4] = _mm256_set1_ps(mean[2]);
-        pRMNParams[5] = _mm256_set1_ps(invStdDev[2]);
 
         __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_bilinear_src_loc_and_weights_avx;
@@ -617,18 +617,18 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount] * ONE_OVER_255, meanTensor[3 * batchCount + 1] * ONE_OVER_255, meanTensor[3 * batchCount + 2] * ONE_OVER_255};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        std::vector<float> mean(srcDescPtr->c), invStdDev(srcDescPtr->c);
+        Rpp32u incrementPerImage = srcDescPtr->c * batchCount;
+        __m256 pRMNParams[2 * srcDescPtr->c];
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            mean[c] = meanTensor[incrementPerImage + c] * ONE_OVER_255;
+            invStdDev[c] = 1.0 / stdDevTensor[incrementPerImage + c];
+            pRMNParams[2 * c] = _mm256_set1_ps(mean[c]);
+            pRMNParams[2 * c + 1] = _mm256_set1_ps(invStdDev[c]);
+        }
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
-
-        __m256 pRMNParams[6];
-        pRMNParams[0] = _mm256_set1_ps(mean[0]);
-        pRMNParams[1] = _mm256_set1_ps(invStdDev[0]);
-        pRMNParams[2] = _mm256_set1_ps(mean[1]);
-        pRMNParams[3] = _mm256_set1_ps(invStdDev[1]);
-        pRMNParams[4] = _mm256_set1_ps(mean[2]);
-        pRMNParams[5] = _mm256_set1_ps(invStdDev[2]);
 
         __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_bilinear_src_loc_and_weights_avx;
@@ -902,18 +902,18 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount], meanTensor[3 * batchCount + 1], meanTensor[3 * batchCount + 2]};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        std::vector<float> mean(srcDescPtr->c), invStdDev(srcDescPtr->c);
+        Rpp32u incrementPerImage = srcDescPtr->c * batchCount;
+        __m256 pRMNParams[2 * srcDescPtr->c];
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            mean[c] = meanTensor[incrementPerImage + c];
+            invStdDev[c] = 1.0 / stdDevTensor[incrementPerImage + c];
+            pRMNParams[2 * c] = _mm256_set1_ps(mean[c]);
+            pRMNParams[2 * c + 1] = _mm256_set1_ps(invStdDev[c]);
+        }
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
-
-        __m256 pRMNParams[6];
-        pRMNParams[0] = _mm256_set1_ps(mean[0]);
-        pRMNParams[1] = _mm256_set1_ps(invStdDev[0]);
-        pRMNParams[2] = _mm256_set1_ps(mean[1]);
-        pRMNParams[3] = _mm256_set1_ps(invStdDev[1]);
-        pRMNParams[4] = _mm256_set1_ps(mean[2]);
-        pRMNParams[5] = _mm256_set1_ps(invStdDev[2]);
 
         __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_bilinear_src_loc_and_weights_avx;
@@ -1186,18 +1186,18 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount] * ONE_OVER_255, meanTensor[3 * batchCount + 1] * ONE_OVER_255, meanTensor[3 * batchCount + 2] * ONE_OVER_255};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        std::vector<float> mean(srcDescPtr->c), invStdDev(srcDescPtr->c);
+        Rpp32u incrementPerImage = srcDescPtr->c * batchCount;
+        __m256 pRMNParams[2 * srcDescPtr->c];
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            mean[c] = meanTensor[incrementPerImage + c];
+            invStdDev[c] = 1.0 / (255.0 * stdDevTensor[incrementPerImage + c]);
+            pRMNParams[2 * c] = _mm256_set1_ps(mean[c]);
+            pRMNParams[2 * c + 1] = _mm256_set1_ps(invStdDev[c]);
+        }
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
-
-        __m256 pRMNParams[6];
-        pRMNParams[0] = _mm256_set1_ps(mean[0]);
-        pRMNParams[1] = _mm256_set1_ps(invStdDev[0]);
-        pRMNParams[2] = _mm256_set1_ps(mean[1]);
-        pRMNParams[3] = _mm256_set1_ps(invStdDev[1]);
-        pRMNParams[4] = _mm256_set1_ps(mean[2]);
-        pRMNParams[5] = _mm256_set1_ps(invStdDev[2]);
 
         __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_bilinear_src_loc_and_weights_avx;
@@ -1467,18 +1467,18 @@ omp_set_dynamic(0);
         Rpp32s srcLocationColumnArray[8] = {0};     // Since 8 dst pixels are processed per iteration
         Rpp32s srcLocationRow, srcLocationColumn;
 
-        Rpp32f mean[3] = {meanTensor[3 * batchCount] * ONE_OVER_255, meanTensor[3 * batchCount + 1] * ONE_OVER_255, meanTensor[3 * batchCount + 2] * ONE_OVER_255};
-        Rpp32f invStdDev[3] = {1.0f / stdDevTensor[3 * batchCount], 1.0f / stdDevTensor[3 * batchCount + 1], 1.0f / stdDevTensor[3 * batchCount + 2]};
+        std::vector<float> mean(srcDescPtr->c), invStdDev(srcDescPtr->c);
+        Rpp32u incrementPerImage = srcDescPtr->c * batchCount;
+        __m256 pRMNParams[2 * srcDescPtr->c];
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            mean[c] = meanTensor[incrementPerImage + c];
+            invStdDev[c] = 1.0 / (255.0 * stdDevTensor[incrementPerImage + c]);
+            pRMNParams[2 * c] = _mm256_set1_ps(mean[c]);
+            pRMNParams[2 * c + 1] = _mm256_set1_ps(invStdDev[c]);
+        }
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
-
-        __m256 pRMNParams[6];
-        pRMNParams[0] = _mm256_set1_ps(mean[0]);
-        pRMNParams[1] = _mm256_set1_ps(invStdDev[0]);
-        pRMNParams[2] = _mm256_set1_ps(mean[1]);
-        pRMNParams[3] = _mm256_set1_ps(invStdDev[1]);
-        pRMNParams[4] = _mm256_set1_ps(mean[2]);
-        pRMNParams[5] = _mm256_set1_ps(invStdDev[2]);
 
         __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_bilinear_src_loc_and_weights_avx;
