@@ -140,8 +140,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
 // *param[in] dstDescPtr destination tensor descriptor
 // *param[in] dstImgSizes destination image size
 // *param[in] interpolationType resize interpolation type
-// *param[in] meanTensor mean value for each image in the batch (meanTensor[n] >= 0)
-// *param[in] stdDevTensor standard deviation value for each image in the batch (stdDevTensor[n] >= 0)
+// *param[in] meanTensor mean value for each image in the batch (meanTensor[n] >= 0, 1D tensor of size = batchSize for greyscale images, size = batchSize * 3 for RGB images))
+// *param[in] stdDevTensor standard deviation value for each image in the batch (stdDevTensor[n] >= 0, 1D tensor of size = batchSize for greyscale images, size = batchSize * 3 for RGB images)
 // *param[in] mirrorTensor mirror flag value to set mirroring on/off for each image in the batch (mirrorTensor[n] = 0/1)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
