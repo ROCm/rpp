@@ -2,11 +2,12 @@
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-RppStatus rgb_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                             RpptDescPtr srcDescPtr,
-                                             Rpp8u *dstPtr,
-                                             RpptDescPtr dstDescPtr,
-                                             RppLayoutParams layoutParams)
+RppStatus color_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp8u *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f *channelWeights,
+                                               RppLayoutParams layoutParams)
 {
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -22,18 +23,18 @@ RppStatus rgb_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
 
 #if __AVX2__
-        __m256 pWeightsRGB[3];
-        pWeightsRGB[0] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_RED);
-        pWeightsRGB[1] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
-        pWeightsRGB[2] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
+        __m256 pChannelWeights[3];
+        pChannelWeights[0] = _mm256_set1_ps(channelWeights[0]);
+        pChannelWeights[1] = _mm256_set1_ps(channelWeights[1]);
+        pChannelWeights[2] = _mm256_set1_ps(channelWeights[2]);
 #else
-        __m128 pWeightsRGB[3];
-        pWeightsRGB[0] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_RED);
-        pWeightsRGB[1] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
-        pWeightsRGB[2] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
+        __m128 pChannelWeights[3];
+        pChannelWeights[0] = _mm_set1_ps(channelWeights[0]);
+        pChannelWeights[1] = _mm_set1_ps(channelWeights[1]);
+        pChannelWeights[2] = _mm_set1_ps(channelWeights[2]);
 #endif
 
-        // NHWC RGB to greyscale
+        // NHWC color to greyscale
         if (srcDescPtr->layout == RpptLayout::NHWC)
         {
             Rpp8u *srcPtrRow, *dstPtrRow;
@@ -51,14 +52,14 @@ RppStatus rgb_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
 #if __AVX2__
                     __m256 p[6];
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);
-                    compute_rgb_48_to_greyscale_16_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p); // simd loads
+                    compute_color_48_to_greyscale_16_host(p, pChannelWeights);       // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);       // simd stores
 #else
                     __m128 p[12];
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_rgb_48_to_greyscale_16_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p); // simd loads
+                    compute_color_48_to_greyscale_16_host(p, pChannelWeights);   // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);       // simd stores
 #endif
 
                     srcPtrTemp += vectorIncrement;
@@ -66,7 +67,7 @@ RppStatus rgb_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::fma((Rpp32f)srcPtrTemp[0], RGB_TO_GREY_WEIGHT_RED, std::fma((Rpp32f)srcPtrTemp[1], RGB_TO_GREY_WEIGHT_GREEN, (Rpp32f)srcPtrTemp[2] * RGB_TO_GREY_WEIGHT_BLUE)));
+                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::fma((Rpp32f)srcPtrTemp[0], channelWeights[0], std::fma((Rpp32f)srcPtrTemp[1], channelWeights[1], (Rpp32f)srcPtrTemp[2] * channelWeights[2])));
                     srcPtrTemp += 3;
                     dstPtrTemp++;
                 }
@@ -76,7 +77,7 @@ RppStatus rgb_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // NCHW RGB to greyscale
+        // NCHW color to greyscale
         else if (srcDescPtr->layout == RpptLayout::NCHW)
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -98,14 +99,14 @@ RppStatus rgb_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
 #if __AVX2__
                     __m256 p[6];
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_rgb_48_to_greyscale_16_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
+                    compute_color_48_to_greyscale_16_host(p, pChannelWeights);                                   // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);                                   // simd stores
 #else
                     __m128 p[12];
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_rgb_48_to_greyscale_16_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
+                    compute_color_48_to_greyscale_16_host(p, pChannelWeights);                               // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);                                   // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -114,7 +115,7 @@ RppStatus rgb_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::fma((Rpp32f)*srcPtrTempR, RGB_TO_GREY_WEIGHT_RED, std::fma((Rpp32f)*srcPtrTempG, RGB_TO_GREY_WEIGHT_GREEN, (Rpp32f)*srcPtrTempB * RGB_TO_GREY_WEIGHT_BLUE)));
+                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::fma((Rpp32f)*srcPtrTempR, channelWeights[0], std::fma((Rpp32f)*srcPtrTempG, channelWeights[1], (Rpp32f)*srcPtrTempB * channelWeights[2])));
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -132,11 +133,12 @@ RppStatus rgb_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus rgb_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                               RpptDescPtr srcDescPtr,
-                                               Rpp32f *dstPtr,
-                                               RpptDescPtr dstDescPtr,
-                                               RppLayoutParams layoutParams)
+RppStatus color_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                                 RpptDescPtr srcDescPtr,
+                                                 Rpp32f *dstPtr,
+                                                 RpptDescPtr dstDescPtr,
+                                                 Rpp32f *channelWeights,
+                                                 RppLayoutParams layoutParams)
 {
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -153,22 +155,22 @@ RppStatus rgb_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
-        __m256 pWeightsRGB[3];
-        pWeightsRGB[0] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_RED);
-        pWeightsRGB[1] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
-        pWeightsRGB[2] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
+        __m256 pChannelWeights[3];
+        pChannelWeights[0] = _mm256_set1_ps(channelWeights[0]);
+        pChannelWeights[1] = _mm256_set1_ps(channelWeights[1]);
+        pChannelWeights[2] = _mm256_set1_ps(channelWeights[2]);
 #else
         Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
-        __m128 pWeightsRGB[3];
-        pWeightsRGB[0] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_RED);
-        pWeightsRGB[1] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
-        pWeightsRGB[2] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
+        __m128 pChannelWeights[3];
+        pChannelWeights[0] = _mm_set1_ps(channelWeights[0]);
+        pChannelWeights[1] = _mm_set1_ps(channelWeights[1]);
+        pChannelWeights[2] = _mm_set1_ps(channelWeights[2]);
 #endif
 
-        // NHWC RGB to greyscale
+        // NHWC color to greyscale
         if (srcDescPtr->layout == RpptLayout::NHWC)
         {
             Rpp32f *srcPtrRow, *dstPtrRow;
@@ -187,20 +189,20 @@ RppStatus rgb_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_rgb_24_to_greyscale_8_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
+                    compute_color_24_to_greyscale_8_host(p, pChannelWeights);            // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);           // simd stores
 #else
                     __m128 p[3];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_rgb_12_to_greyscale_4_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);    // simd stores
+                    compute_color_12_to_greyscale_4_host(p, pChannelWeights);        // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);           // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp = std::fma((Rpp32f)srcPtrTemp[0], RGB_TO_GREY_WEIGHT_RED, std::fma((Rpp32f)srcPtrTemp[1], RGB_TO_GREY_WEIGHT_GREEN, (Rpp32f)srcPtrTemp[2] * RGB_TO_GREY_WEIGHT_BLUE));
+                    *dstPtrTemp = std::fma((Rpp32f)srcPtrTemp[0], channelWeights[0], std::fma((Rpp32f)srcPtrTemp[1], channelWeights[1], (Rpp32f)srcPtrTemp[2] * channelWeights[2]));
                     srcPtrTemp += 3;
                     dstPtrTemp++;
                 }
@@ -210,7 +212,7 @@ RppStatus rgb_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // NCHW RGB to greyscale
+        // NCHW color to greyscale
         else if (srcDescPtr->layout == RpptLayout::NCHW)
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -232,14 +234,14 @@ RppStatus rgb_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
                 {
 #if __AVX2__
                     __m256 p[3];
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_rgb_24_to_greyscale_8_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p); // simd loads
+                    compute_color_24_to_greyscale_8_host(p, pChannelWeights);                                    // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);                                   // simd stores
 #else
                     __m128 p[4];
-                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_rgb_12_to_greyscale_4_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p); // simd loads
+                    compute_color_12_to_greyscale_4_host(p, pChannelWeights);                                // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);                                   // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -248,7 +250,7 @@ RppStatus rgb_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = std::fma((Rpp32f)*srcPtrTempR, RGB_TO_GREY_WEIGHT_RED, std::fma((Rpp32f)*srcPtrTempG, RGB_TO_GREY_WEIGHT_GREEN, (Rpp32f)*srcPtrTempB * RGB_TO_GREY_WEIGHT_BLUE));
+                    *dstPtrTemp = std::fma((Rpp32f)*srcPtrTempR, channelWeights[0], std::fma((Rpp32f)*srcPtrTempG, channelWeights[1], (Rpp32f)*srcPtrTempB * channelWeights[2]));
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -266,11 +268,12 @@ RppStatus rgb_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus rgb_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                               RpptDescPtr srcDescPtr,
-                                               Rpp16f *dstPtr,
-                                               RpptDescPtr dstDescPtr,
-                                               RppLayoutParams layoutParams)
+RppStatus color_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                                 RpptDescPtr srcDescPtr,
+                                                 Rpp16f *dstPtr,
+                                                 RpptDescPtr dstDescPtr,
+                                                 Rpp32f *channelWeights,
+                                                 RppLayoutParams layoutParams)
 {
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -287,22 +290,22 @@ RppStatus rgb_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
-        __m256 pWeightsRGB[3];
-        pWeightsRGB[0] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_RED);
-        pWeightsRGB[1] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
-        pWeightsRGB[2] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
+        __m256 pChannelWeights[3];
+        pChannelWeights[0] = _mm256_set1_ps(channelWeights[0]);
+        pChannelWeights[1] = _mm256_set1_ps(channelWeights[1]);
+        pChannelWeights[2] = _mm256_set1_ps(channelWeights[2]);
 #else
         Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
-        __m128 pWeightsRGB[3];
-        pWeightsRGB[0] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_RED);
-        pWeightsRGB[1] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
-        pWeightsRGB[2] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
+        __m128 pChannelWeights[3];
+        pChannelWeights[0] = _mm_set1_ps(channelWeights[0]);
+        pChannelWeights[1] = _mm_set1_ps(channelWeights[1]);
+        pChannelWeights[2] = _mm_set1_ps(channelWeights[2]);
 #endif
 
-        // NHWC RGB to greyscale
+        // NHWC color to greyscale
         if (srcDescPtr->layout == RpptLayout::NHWC)
         {
             Rpp16f *srcPtrRow, *dstPtrRow;
@@ -323,14 +326,14 @@ RppStatus rgb_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
 #if __AVX2__
                     __m256 p[3];
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
-                    compute_rgb_24_to_greyscale_8_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);    // simd stores
+                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p); // simd loads
+                    compute_color_24_to_greyscale_8_host(p, pChannelWeights);            // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);        // simd stores
 #else
                     __m128 p[3];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_rgb_12_to_greyscale_4_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);    // simd stores
+                    compute_color_12_to_greyscale_4_host(p, pChannelWeights);        // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);           // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
@@ -339,7 +342,7 @@ RppStatus rgb_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp = (Rpp16f) std::fma((Rpp32f)srcPtrTemp[0], RGB_TO_GREY_WEIGHT_RED, std::fma((Rpp32f)srcPtrTemp[1], RGB_TO_GREY_WEIGHT_GREEN, (Rpp32f)srcPtrTemp[2] * RGB_TO_GREY_WEIGHT_BLUE));
+                    *dstPtrTemp = (Rpp16f) std::fma((Rpp32f)srcPtrTemp[0], channelWeights[0], std::fma((Rpp32f)srcPtrTemp[1], channelWeights[1], (Rpp32f)srcPtrTemp[2] * channelWeights[2]));
                     srcPtrTemp += 3;
                     dstPtrTemp++;
                 }
@@ -349,7 +352,7 @@ RppStatus rgb_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // NCHW RGB to greyscale
+        // NCHW color to greyscale
         else if (srcDescPtr->layout == RpptLayout::NCHW)
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -380,13 +383,13 @@ RppStatus rgb_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_rgb_24_to_greyscale_8_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);    // simd stores
+                    compute_color_24_to_greyscale_8_host(p, pChannelWeights);                                                // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);                                            // simd stores
 #else
                     __m128 p[4];
-                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_rgb_12_to_greyscale_4_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p); // simd loads
+                    compute_color_12_to_greyscale_4_host(p, pChannelWeights);                                // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);                                   // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
@@ -397,7 +400,7 @@ RppStatus rgb_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = (Rpp16f) std::fma((Rpp32f)*srcPtrTempR, RGB_TO_GREY_WEIGHT_RED, std::fma((Rpp32f)*srcPtrTempG, RGB_TO_GREY_WEIGHT_GREEN, (Rpp32f)*srcPtrTempB * RGB_TO_GREY_WEIGHT_BLUE));
+                    *dstPtrTemp = (Rpp16f) std::fma((Rpp32f)*srcPtrTempR, channelWeights[0], std::fma((Rpp32f)*srcPtrTempG, channelWeights[1], (Rpp32f)*srcPtrTempB * channelWeights[2]));
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -415,11 +418,12 @@ RppStatus rgb_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus rgb_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                             RpptDescPtr srcDescPtr,
-                                             Rpp8s *dstPtr,
-                                             RpptDescPtr dstDescPtr,
-                                             RppLayoutParams layoutParams)
+RppStatus color_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp8s *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f *channelWeights,
+                                               RppLayoutParams layoutParams)
 {
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -435,18 +439,18 @@ RppStatus rgb_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
 
 #if __AVX2__
-        __m256 pWeightsRGB[3];
-        pWeightsRGB[0] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_RED);
-        pWeightsRGB[1] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
-        pWeightsRGB[2] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
+        __m256 pChannelWeights[3];
+        pChannelWeights[0] = _mm256_set1_ps(channelWeights[0]);
+        pChannelWeights[1] = _mm256_set1_ps(channelWeights[1]);
+        pChannelWeights[2] = _mm256_set1_ps(channelWeights[2]);
 #else
-        __m128 pWeightsRGB[3];
-        pWeightsRGB[0] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_RED);
-        pWeightsRGB[1] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
-        pWeightsRGB[2] = _mm_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
+        __m128 pChannelWeights[3];
+        pChannelWeights[0] = _mm_set1_ps(channelWeights[0]);
+        pChannelWeights[1] = _mm_set1_ps(channelWeights[1]);
+        pChannelWeights[2] = _mm_set1_ps(channelWeights[2]);
 #endif
 
-        // NHWC RGB to greyscale
+        // NHWC color to greyscale
         if (srcDescPtr->layout == RpptLayout::NHWC)
         {
             Rpp8s *srcPtrRow, *dstPtrRow;
@@ -464,14 +468,14 @@ RppStatus rgb_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
 #if __AVX2__
                     __m256 p[6];
-                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);
-                    compute_rgb_48_to_greyscale_16_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p); // simd loads
+                    compute_color_48_to_greyscale_16_host(p, pChannelWeights);       // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);       // simd stores
 #else
                     __m128 p[12];
-                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_rgb_48_to_greyscale_16_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store16_f32_to_i8, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p); // simd loads
+                    compute_color_48_to_greyscale_16_host(p, pChannelWeights);   // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store16_f32_to_i8, dstPtrTemp, p);       // simd stores
 #endif
 
                     srcPtrTemp += vectorIncrement;
@@ -479,7 +483,7 @@ RppStatus rgb_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp = (Rpp8s) RPPPIXELCHECKI8(std::fma(((Rpp32f)srcPtrTemp[0] + 128), RGB_TO_GREY_WEIGHT_RED, std::fma(((Rpp32f)srcPtrTemp[1] + 128), RGB_TO_GREY_WEIGHT_GREEN, ((Rpp32f)srcPtrTemp[2] + 128) * RGB_TO_GREY_WEIGHT_BLUE)) - 128);
+                    *dstPtrTemp = (Rpp8s) RPPPIXELCHECKI8(std::fma(((Rpp32f)srcPtrTemp[0] + 128), channelWeights[0], std::fma(((Rpp32f)srcPtrTemp[1] + 128), channelWeights[1], ((Rpp32f)srcPtrTemp[2] + 128) * channelWeights[2])) - 128);
                     srcPtrTemp += 3;
                     dstPtrTemp++;
                 }
@@ -489,7 +493,7 @@ RppStatus rgb_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // NCHW RGB to greyscale
+        // NCHW color to greyscale
         else if (srcDescPtr->layout == RpptLayout::NCHW)
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -511,14 +515,14 @@ RppStatus rgb_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
 #if __AVX2__
                     __m256 p[6];
-                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_rgb_48_to_greyscale_16_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
+                    compute_color_48_to_greyscale_16_host(p, pChannelWeights);                                   // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);                                   // simd stores
 #else
                     __m128 p[12];
-                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_rgb_48_to_greyscale_16_host(p, pWeightsRGB);  // rgb to greyscale adjustment
-                    rpp_simd_store(rpp_store16_f32_to_i8, dstPtrTemp, p);    // simd stores
+                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
+                    compute_color_48_to_greyscale_16_host(p, pChannelWeights);                               // color_to_greyscale adjustment
+                    rpp_simd_store(rpp_store16_f32_to_i8, dstPtrTemp, p);                                   // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -527,7 +531,7 @@ RppStatus rgb_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = (Rpp8s) RPPPIXELCHECKI8(std::fma(((Rpp32f)*srcPtrTempR + 128), RGB_TO_GREY_WEIGHT_RED, std::fma(((Rpp32f)*srcPtrTempG + 128), RGB_TO_GREY_WEIGHT_GREEN, ((Rpp32f)*srcPtrTempB + 128) * RGB_TO_GREY_WEIGHT_BLUE)) - 128);
+                    *dstPtrTemp = (Rpp8s) RPPPIXELCHECKI8(std::fma(((Rpp32f)*srcPtrTempR + 128), channelWeights[0], std::fma(((Rpp32f)*srcPtrTempG + 128), channelWeights[1], ((Rpp32f)*srcPtrTempB + 128) * channelWeights[2])) - 128);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
