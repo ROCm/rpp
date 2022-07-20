@@ -3321,7 +3321,7 @@ inline void compute_gaussian_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, _
     p[1] = _mm256_fmadd_ps(pSqrt[1], pRngVals[1], p[1]);                                            // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
 
-inline void compute_gaussian_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
+inline void compute_gaussian_noise_8_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
 {
     __m128 pRngVals[2], pSqrt[2];
 
@@ -3332,14 +3332,12 @@ inline void compute_gaussian_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, _
     pSqrt[1] = _mm_div_ps(xmm_p1, rpp_host_math_inverse_sqrt_4_sse(p[1]));                      // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
     p[0] = _mm_fmadd_ps(pSqrt[0], pRngVals[0], p[0]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
     p[1] = _mm_fmadd_ps(pSqrt[1], pRngVals[1], p[1]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+}
 
-    rpp_host_rng_8_gaussian_f32_sse(pRngVals, pxXorwowStateX, pxXorwowStateCounter);            // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
-    pRngVals[0] = _mm_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
-    pRngVals[1] = _mm_fmadd_ps(pRngVals[1], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
-    pSqrt[0] = _mm_div_ps(xmm_p1, rpp_host_math_inverse_sqrt_4_sse(p[2]));                      // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
-    pSqrt[1] = _mm_div_ps(xmm_p1, rpp_host_math_inverse_sqrt_4_sse(p[3]));                      // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
-    p[2] = _mm_fmadd_ps(pSqrt[0], pRngVals[0], p[2]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
-    p[3] = _mm_fmadd_ps(pSqrt[1], pRngVals[1], p[3]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+inline void compute_gaussian_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
+{
+    compute_gaussian_noise_8_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+    compute_gaussian_noise_8_host(&p[2], pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
 }
 
 inline void compute_gaussian_noise_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pGaussianNoiseParams)
@@ -3354,6 +3352,28 @@ inline void compute_gaussian_noise_48_host(__m128 *p, __m128i *pxXorwowStateX, _
     compute_gaussian_noise_16_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
     compute_gaussian_noise_16_host(&p[4], pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
     compute_gaussian_noise_16_host(&p[8], pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+}
+
+inline void compute_gaussian_noise_24_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pGaussianNoiseParams)
+{
+    compute_gaussian_noise_16_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+
+    __m256 pRngVals[2], pSqrt[2];
+    rpp_host_rng_16_gaussian_f32_avx(pRngVals, pxXorwowStateX, pxXorwowStateCounter);               // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
+    pRngVals[0] = _mm256_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);   // rngVal = rngVal * stdDev + mean;
+    pSqrt[0] = _mm256_div_ps(avx_p1, rpp_host_math_inverse_sqrt_8_avx(p[2]));                       // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
+    p[2] = _mm256_fmadd_ps(pSqrt[0], pRngVals[0], p[2]);                                            // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+}
+
+inline void compute_gaussian_noise_12_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
+{
+    compute_gaussian_noise_8_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+
+    __m128 pRngVals[2], pSqrt[2];
+    rpp_host_rng_8_gaussian_f32_sse(pRngVals, pxXorwowStateX, pxXorwowStateCounter);            // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
+    pRngVals[0] = _mm_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
+    pSqrt[0] = _mm_div_ps(xmm_p1, rpp_host_math_inverse_sqrt_4_sse(p[2]));                      // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
+    p[2] = _mm_fmadd_ps(pSqrt[0], pRngVals[0], p[2]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
 
 inline Rpp32f compute_gaussian_noise_1_host(Rpp32f pixVal, RpptXorwowStateBoxMuller *xorwowStatePtr, Rpp32f mean, Rpp32f stdDev)
