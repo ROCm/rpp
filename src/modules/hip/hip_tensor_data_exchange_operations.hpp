@@ -20,22 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef RPPT_H
-#define RPPT_H
+#ifndef HIP_TENSOR_DATA_EXCHANGE_OPERATIONS_HPP
+#define HIP_TENSOR_DATA_EXCHANGE_OPERATIONS_HPP
 
-#include "rpp.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "kernel/copy.hpp"
+#include "kernel/swap_channels.hpp"
+#include "kernel/color_to_greyscale.hpp"
 
-#include "rppt_tensor_color_augmentations.h"
-#include "rppt_tensor_data_exchange_operations.h"
-#include "rppt_tensor_effects_augmentations.h"
-#include "rppt_tensor_filter_augmentations.h"
-#include "rppt_tensor_geometric_augmentations.h"
-#include "rppt_tensor_morphological_operations.h"
-
-#ifdef __cplusplus
-}
-#endif
-#endif // RPPT_H
+#endif // HIP_TENSOR_DATA_EXCHANGE_OPERATIONS_HPP

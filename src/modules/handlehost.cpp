@@ -50,6 +50,7 @@ struct HandleImpl
         this->initHandle->mem.mcpu.maxSrcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
         this->initHandle->mem.mcpu.maxDstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
         this->initHandle->mem.mcpu.roiPoints = (RppiROI *)malloc(sizeof(RppiROI) * this->nBatchSize);
+        this->initHandle->mem.mcpu.tempFloatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
     }
 };
 
@@ -72,6 +73,7 @@ void Handle::rpp_destroy_object_host()
     free(this->GetInitHandle()->mem.mcpu.maxSrcSize);
     free(this->GetInitHandle()->mem.mcpu.maxDstSize);
     free(this->GetInitHandle()->mem.mcpu.roiPoints);
+    free(this->GetInitHandle()->mem.mcpu.tempFloatmem);
 }
 
 size_t Handle::GetBatchSize() const

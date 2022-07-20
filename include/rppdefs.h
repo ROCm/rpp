@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <cmath>
 #ifdef OCL_COMPILE
 #include <CL/cl.h>
 #endif
@@ -53,12 +54,16 @@ typedef size_t              RppSize_t;
 
 typedef enum
 {
-    RPP_SUCCESS                  = 0,
-    RPP_ERROR                    = -1,
-    RPP_ERROR_INVALID_ARGUMENTS  = -2,
-    RPP_ERROR_LOW_OFFSET         = -3,
-    RPP_ERROR_HIGH_SRC_DIMENSION = -5,
-    RPP_ERROR_NOT_IMPLEMENTED    = -6
+    RPP_SUCCESS                         = 0,
+    RPP_ERROR                           = -1,
+    RPP_ERROR_INVALID_ARGUMENTS         = -2,
+    RPP_ERROR_LOW_OFFSET                = -3,
+    RPP_ERROR_HIGH_SRC_DIMENSION        = -5,
+    RPP_ERROR_NOT_IMPLEMENTED           = -6,
+    RPP_ERROR_INVALID_SRC_CHANNELS      = -7,
+    RPP_ERROR_INVALID_DST_CHANNELS      = -8,
+    RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
+    RPP_ERROR_INVALID_DST_LAYOUT        = -10
 } RppStatus;
 
 typedef enum
@@ -216,8 +221,13 @@ typedef enum
 {
     LTRB,
     XYWH
-
 } RpptRoiType;
+
+typedef enum
+{
+    RGBtype,
+    BGRtype
+} RpptSubpixelLayout;
 
 typedef enum
 {
@@ -304,7 +314,59 @@ typedef struct
     Rpp32u counter;
 } RpptXorwowState;
 
-
+typedef struct Filter
+{
+    Rpp32f scale = 1.0f;
+    Rpp32f radius = 1.0f;
+    Rpp32s size;
+    Filter(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scaleRatio)
+    {
+        switch(interpolationType)
+        {
+        case RpptInterpolationType::BICUBIC:
+        {
+            this->radius = 2.0f;
+            break;
+        }
+        case RpptInterpolationType::LANCZOS:
+        {
+            if(in_size > out_size)
+            {
+                this->radius = 3.0f * scaleRatio;
+                this->scale = (1 / scaleRatio);
+            }
+            else
+                this->radius = 3.0f;
+            break;
+        }
+        case RpptInterpolationType::GAUSSIAN:
+        {
+            if(in_size > out_size)
+            {
+                this->radius = scaleRatio;
+                this->scale = (1 / scaleRatio);
+            }
+            break;
+        }
+        case RpptInterpolationType::TRIANGULAR:
+        {
+            if(in_size > out_size)
+            {
+                this->radius = scaleRatio;
+                this->scale = (1 / scaleRatio);
+            }
+            break;
+        }
+        default:
+        {
+            this->radius = 1.0f;
+            this->scale = 1.0f;
+            break;
+        }
+        }
+        this->size = std::ceil(2 * this->radius);
+    }
+}Filter;
 
 /******************** HOST memory typedefs ********************/
 
@@ -374,6 +436,7 @@ typedef struct {
     Rpp64u *dstBatchIndex;
     Rpp32u *inc;
     Rpp32u *dstInc;
+    Rpp32f *tempFloatmem;
 } memCPU;
 
 #ifdef OCL_COMPILE
