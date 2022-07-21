@@ -295,8 +295,7 @@ __global__ void resize_mirror_normalize_bilinear_pln3_pkd3_tensor(T *srcPtr,
     else
         resize_mirror_normalize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
-    d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_float24_s *)&dst_f24);
     rmn_hip_compute(srcPtr, dstPtr, &dst_f24.f8[0], &rmnParamsR_f8);
     rmn_hip_compute(srcPtr, dstPtr, &dst_f24.f8[1], &rmnParamsG_f8);
     rmn_hip_compute(srcPtr, dstPtr, &dst_f24.f8[2], &rmnParamsB_f8);

@@ -1711,16 +1711,6 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *sr
     srcNeighborhood_f12->f1[11] = __half2float(src2_h3.h1[2]);
 }
 
-__device__ __forceinline__ void rpp_hip_pack_float24_pkd3_to_pln3(d_float24 *dstPtr_f24, d_float24 *pix_f24)
-{
-    pix_f24->f8[0].f4[0] = make_float4(dstPtr_f24->f1[ 0], dstPtr_f24->f1[ 3], dstPtr_f24->f1[ 6], dstPtr_f24->f1[ 9]);    // write R00-R03
-    pix_f24->f8[0].f4[1] = make_float4(dstPtr_f24->f1[12], dstPtr_f24->f1[15], dstPtr_f24->f1[18], dstPtr_f24->f1[21]);    // write R04-R07
-    pix_f24->f8[1].f4[0] = make_float4(dstPtr_f24->f1[ 1], dstPtr_f24->f1[ 4], dstPtr_f24->f1[ 7], dstPtr_f24->f1[10]);    // write G00-G03
-    pix_f24->f8[1].f4[1] = make_float4(dstPtr_f24->f1[13], dstPtr_f24->f1[16], dstPtr_f24->f1[19], dstPtr_f24->f1[22]);    // write G04-G07
-    pix_f24->f8[2].f4[0] = make_float4(dstPtr_f24->f1[ 2], dstPtr_f24->f1[ 5], dstPtr_f24->f1[ 8], dstPtr_f24->f1[11]);    // write B00-B03
-    pix_f24->f8[2].f4[1] = make_float4(dstPtr_f24->f1[14], dstPtr_f24->f1[17], dstPtr_f24->f1[20], dstPtr_f24->f1[23]);    // write B04-B07
-}
-
 // BILINEAR INTERPOLATION EXECUTION HELPERS (templated execution routines for all bit depths)
 
 // float bilinear interpolation computation
