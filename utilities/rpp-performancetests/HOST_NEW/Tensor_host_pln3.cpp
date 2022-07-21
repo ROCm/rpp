@@ -896,7 +896,53 @@ int main(int argc, char **argv)
                 }
                 case 1:
                 {
-                    missingFuncFlag = 1;
+                    Rpp32f meanTensor[images];
+                    Rpp32f stdDevTensor[images];
+                    Rpp32u seed = 1255459;
+                    for (i = 0; i < images; i++)
+                    {
+                        meanTensor[i] = 0.0f;
+                        stdDevTensor[i] = 0.4f;
+                    }
+
+                    // Uncomment to run test case with an xywhROI override
+                    /*for (i = 0; i < images; i++)
+                    {
+                        roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                        roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                        roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                        roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                    }*/
+
+                    // Uncomment to run test case with an ltrbROI override
+                    /*for (i = 0; i < images; i++)
+                        roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                        roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                        roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                        roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                    }
+                    roiTypeSrc = RpptRoiType::LTRB;
+                    roiTypeDst = RpptRoiType::LTRB;*/
+
+                    start_omp = omp_get_wtime();
+                    start = clock();
+                    if (ip_bitDepth == 0)
+                        rppt_gaussian_noise_host(input, srcDescPtr, output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (ip_bitDepth == 1)
+                        rppt_gaussian_noise_host(inputf16, srcDescPtr, outputf16, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (ip_bitDepth == 2)
+                        rppt_gaussian_noise_host(inputf32, srcDescPtr, outputf32, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (ip_bitDepth == 3)
+                        missingFuncFlag = 1;
+                    else if (ip_bitDepth == 4)
+                        missingFuncFlag = 1;
+                    else if (ip_bitDepth == 5)
+                        rppt_gaussian_noise_host(inputi8, srcDescPtr, outputi8, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (ip_bitDepth == 6)
+                        missingFuncFlag = 1;
+                    else
+                        missingFuncFlag = 1;
+
                     break;
                 }
                 case 2:
@@ -1452,11 +1498,11 @@ int main(int argc, char **argv)
 
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
         omp_time_used = end_omp - start_omp;
-        if (cpu_time_used > max_time_used)
-            max_time_used = cpu_time_used;
-        if (cpu_time_used < min_time_used)
-            min_time_used = cpu_time_used;
-        avg_time_used += cpu_time_used;
+        if (omp_time_used > max_time_used)
+            max_time_used = omp_time_used;
+        if (omp_time_used < min_time_used)
+            min_time_used = omp_time_used;
+        avg_time_used += omp_time_used;
     }
 
     avg_time_used /= 100;
