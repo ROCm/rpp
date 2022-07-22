@@ -792,6 +792,8 @@ omp_set_dynamic(0);
         Rpp32f hOffset = (hRatio - 1) * 0.5f - kernelRadius;
         Rpp32f wOffset = (wRatio - 1) * 0.5f - kernelRadius;
         Rpp32s vectorIncrementPerChannel = 8;
+        Rpp32s vectorIncrementPkd = 24;
+
         Rpp8u *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;

@@ -364,8 +364,10 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
+                                         roiType,
                                          srcLayoutParams,
                                          interpolationType);
         }
