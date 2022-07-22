@@ -2191,12 +2191,12 @@ inline void rpp_resize_store_pkd3(Rpp8s *dstPtr, __m128 *p)
 inline RppStatus rpp_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
-    px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-02 */
-    px[1] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[1]));  /* Top Row LOC1 load [R11|G11|B11|R12|G12|B12|R13|G13|B13|R14|G14|B14|R15|G15|B15|R16] - Need RGB 01-02 */
-    px[2] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[2]));  /* Top Row LOC2 load [R21|G21|B21|R22|G22|B22|R23|G23|B23|R24|G24|B24|R25|G25|B25|R26] - Need RGB 01-02 */
-    px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  /* Top Row LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 01-02 */
-    px[0] = _mm_unpacklo_epi64(_mm_unpacklo_epi32(px[0], px[1]), _mm_unpacklo_epi32(px[2], px[3]));    /* Unpack to obtain [R01|G01|B01|R02|R11|G11|B11|R12|R21|G21|B21|R22|R31|G31|B31|R32] */
-    p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    /* Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00] */
+    px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01
+    px[1] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[1]));  // LOC1 load [R11|G11|B11|R12|G12|B12|R13|G13|B13|R14|G14|B14|R15|G15|B15|R16] - Need RGB 11
+    px[2] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[2]));  // LOC2 load [R21|G21|B21|R22|G22|B22|R23|G23|B23|R24|G24|B24|R25|G25|B25|R26] - Need RGB 21
+    px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  // LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 31
+    px[0] = _mm_unpacklo_epi64(_mm_unpacklo_epi32(px[0], px[1]), _mm_unpacklo_epi32(px[2], px[3]));    // Unpack to obtain [R01|G01|B01|R02|R11|G11|B11|R12|R21|G21|B21|R22|R31|G31|B31|R32]
+    p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    // Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00]
 
     return RPP_SUCCESS;
 }
@@ -2204,24 +2204,24 @@ inline RppStatus rpp_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m
 inline RppStatus rpp_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
-    px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  /* Top Row LOC0 load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] - Need RGB 01 */
-    px[1] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[1]));  /* Top Row LOC1 load [R11|G11|B11|R12|G12|B12|R13|G13|B13|R14|G14|B14|R15|G15|B15|R16] - Need RGB 11 */
-    px[2] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[2]));  /* Top Row LOC2 load [R21|G21|B21|R22|G22|B22|R23|G23|B23|R24|G24|B24|R25|G25|B25|R26] - Need RGB 21 */
-    px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  /* Top Row LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 31 */
-    px[0] = _mm_unpacklo_epi8(px[0], px[2]);    /* unpack 8 lo-pixels of px[0] and px[2] */
-    px[1] = _mm_unpacklo_epi8(px[1], px[3]);    /* unpack 8 lo-pixels of px[1] and px[3] */
-    p = _mm_unpacklo_epi8(px[0], px[1]);    /* unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00] */
+    px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
+    px[1] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[1]));  // LOC1 load [R11|R12|R13|R14|R15|R16...] - Need R11
+    px[2] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[2]));  // LOC2 load [R21|R22|R23|R24|R25|R26...] - Need R21
+    px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  // LOC3 load [R31|R32|R33|R34|R35|R36...] - Need R31
+    px[0] = _mm_unpacklo_epi8(px[0], px[2]);    // unpack 8 lo-pixels of px[0] and px[2]
+    px[1] = _mm_unpacklo_epi8(px[1], px[3]);    // unpack 8 lo-pixels of px[1] and px[3]
+    p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
 
     return RPP_SUCCESS;
 }
 
 inline RppStatus rpp_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 *p)
 {
-    p[0] = _mm_loadu_ps(srcRowPtrsForInterp + loc[0]);
-    p[1] = _mm_loadu_ps(srcRowPtrsForInterp + loc[1]);
-    p[2] = _mm_loadu_ps(srcRowPtrsForInterp + loc[2]);
-    __m128 pTemp = _mm_loadu_ps(srcRowPtrsForInterp + loc[3]);
-    _MM_TRANSPOSE4_PS(p[0], p[1], p[2], pTemp);
+    p[0] = _mm_loadu_ps(srcRowPtrsForInterp + loc[0]);  // LOC0 load [R01|G01|B01|R02] - Need RGB 01
+    p[1] = _mm_loadu_ps(srcRowPtrsForInterp + loc[1]);  // LOC1 load [R11|G11|B11|R12] - Need RGB 11
+    p[2] = _mm_loadu_ps(srcRowPtrsForInterp + loc[2]);  // LOC2 load [R21|G21|B21|R22] - Need RGB 21
+    __m128 pTemp = _mm_loadu_ps(srcRowPtrsForInterp + loc[3]);  // LOC2 load [R31|G31|B31|R32]  - Need RGB 31
+    _MM_TRANSPOSE4_PS(p[0], p[1], p[2], pTemp); // Transpose to obtain RGB in each vector
 
     return RPP_SUCCESS;
 }
@@ -2229,13 +2229,13 @@ inline RppStatus rpp_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcRowPtrsForInterp, Rpp
 inline RppStatus rpp_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 &p)
 {
     __m128 pTemp[4];
-    pTemp[0] = _mm_loadu_ps(srcRowPtrsForInterp + loc[0]);
-    pTemp[1] = _mm_loadu_ps(srcRowPtrsForInterp + loc[1]);
-    pTemp[2] = _mm_loadu_ps(srcRowPtrsForInterp + loc[2]);
-    pTemp[3] = _mm_loadu_ps(srcRowPtrsForInterp + loc[3]);
+    pTemp[0] = _mm_loadu_ps(srcRowPtrsForInterp + loc[0]);  // LOC0 load [R01|R02|R03|R04] - Need R01
+    pTemp[1] = _mm_loadu_ps(srcRowPtrsForInterp + loc[1]);  // LOC1 load [R11|R12|R13|R14] - Need R11
+    pTemp[2] = _mm_loadu_ps(srcRowPtrsForInterp + loc[2]);  // LOC2 load [R21|R22|R23|R24] - Need R21
+    pTemp[3] = _mm_loadu_ps(srcRowPtrsForInterp + loc[3]);  // LOC3 load [R31|R32|R33|R34] - Need R31
     pTemp[0] = _mm_unpacklo_ps(pTemp[0], pTemp[2]);
     pTemp[1] = _mm_unpacklo_ps(pTemp[1], pTemp[3]);
-    p = _mm_unpacklo_ps(pTemp[0], pTemp[1]);
+    p = _mm_unpacklo_ps(pTemp[0], pTemp[1]);    // Unpack to obtain [R01|R11|R21|R31]
 
     return RPP_SUCCESS;
 }
@@ -2243,12 +2243,12 @@ inline RppStatus rpp_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, _
 inline RppStatus rpp_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
-    px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  /* Top Row LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-02 */
-    px[1] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[1]));  /* Top Row LOC1 load [R11|G11|B11|R12|G12|B12|R13|G13|B13|R14|G14|B14|R15|G15|B15|R16] - Need RGB 01-02 */
-    px[2] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[2]));  /* Top Row LOC2 load [R21|G21|B21|R22|G22|B22|R23|G23|B23|R24|G24|B24|R25|G25|B25|R26] - Need RGB 01-02 */
-    px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  /* Top Row LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 01-02 */
-    px[0] = _mm_unpacklo_epi64(_mm_unpacklo_epi32(px[0], px[1]), _mm_unpacklo_epi32(px[2], px[3]));    /* Unpack to obtain [R01|G01|B01|R02|R11|G11|B11|R12|R21|G21|B21|R22|R31|G31|B31|R32] */
-    p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    /* Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00] */
+    px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01
+    px[1] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[1]));  // LOC1 load [R11|G11|B11|R12|G12|B12|R13|G13|B13|R14|G14|B14|R15|G15|B15|R16] - Need RGB 11
+    px[2] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[2]));  // LOC2 load [R21|G21|B21|R22|G22|B22|R23|G23|B23|R24|G24|B24|R25|G25|B25|R26] - Need RGB 21
+    px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  // LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 31
+    px[0] = _mm_unpacklo_epi64(_mm_unpacklo_epi32(px[0], px[1]), _mm_unpacklo_epi32(px[2], px[3]));    // Unpack to obtain [R01|G01|B01|R02|R11|G11|B11|R12|R21|G21|B21|R22|R31|G31|B31|R32]
+    p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    // Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00]
 
     return RPP_SUCCESS;
 }
@@ -2256,13 +2256,13 @@ inline RppStatus rpp_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m
 inline RppStatus rpp_nn_load_i8pln1(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
-    px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  /* Top Row LOC0 load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] - Need RGB 01 */
-    px[1] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[1]));  /* Top Row LOC1 load [R11|G11|B11|R12|G12|B12|R13|G13|B13|R14|G14|B14|R15|G15|B15|R16] - Need RGB 11 */
-    px[2] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[2]));  /* Top Row LOC2 load [R21|G21|B21|R22|G22|B22|R23|G23|B23|R24|G24|B24|R25|G25|B25|R26] - Need RGB 21 */
-    px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  /* Top Row LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 31 */
-    px[0] = _mm_unpacklo_epi8(px[0], px[2]);    /* unpack 8 lo-pixels of px[0] and px[2] */
-    px[1] = _mm_unpacklo_epi8(px[1], px[3]);    /* unpack 8 lo-pixels of px[1] and px[3] */
-    p = _mm_unpacklo_epi8(px[0], px[1]);    /* unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00] */
+    px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
+    px[1] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[1]));  // LOC1 load [R11|R12|R13|R14|R15|R16...] - Need R11
+    px[2] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[2]));  // LOC2 load [R21|R22|R23|R24|R25|R26...] - Need R21
+    px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  // LOC3 load [R31|R32|R33|R34|R35|R36...] - Need R31
+    px[0] = _mm_unpacklo_epi8(px[0], px[2]);    // unpack 8 lo-pixels of px[0] and px[2]
+    px[1] = _mm_unpacklo_epi8(px[1], px[3]);    // unpack 8 lo-pixels of px[1] and px[3]
+    p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
 
     return RPP_SUCCESS;
 }
