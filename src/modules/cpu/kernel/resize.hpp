@@ -37,6 +37,7 @@ omp_set_dynamic(0);
         Rpp8u *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         Rpp32u alignedLength = dstImgSize[batchCount].width & ~3;   // Align dst width to process 4 dst pixels per iteration
@@ -689,9 +690,9 @@ omp_set_dynamic(0);
         Rpp32u alignedLength = dstImgSize[batchCount].width & ~3;
         Rpp32s srcLocationColumnArray[4] = {0};
         Rpp32s srcLocationRow, srcLocationColumn;
-
-        // Resize with fused output-layout toggle (NHWC -> NCHW)
-        if (srcDescPtr->c == 3)
+        
+        // Resize with 3 channel inputs and outputs
+        if (srcDescPtr->c == 3 && dstDescPtr->c == 3)
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
@@ -731,7 +732,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Resize with fused output-layout toggle (NCHW -> NCHW)
+        // Resize with single channel inputs and outputs
         else
         {
             Rpp16f *srcPtrRow, *dstPtrRow;
