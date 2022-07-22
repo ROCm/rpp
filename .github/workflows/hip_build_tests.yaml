@@ -4,7 +4,7 @@ name: CICD RPP HIP
 
 on:
   pull_request:
-    branches: [ ar/opt_resize_bicubic_lanczos_host ]
+    branches: [ ar/opt_resize_nearest_neighbor_host ]
 
 jobs:
 
@@ -21,7 +21,7 @@ jobs:
         sudo rm -rf *
         git clone git@github.com:r-abishek/rpp.git
         cd rpp
-        git checkout ar/opt_resize_bicubic_lanczos_host
+        git checkout ar/opt_resize_nearest_neighbor_host
         git fetch origin pull/$PR_NUMBER/head:ar/pr
         git checkout ar/pr
         git log -3

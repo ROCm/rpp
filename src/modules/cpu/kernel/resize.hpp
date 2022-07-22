@@ -37,7 +37,6 @@ omp_set_dynamic(0);
         Rpp8u *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         Rpp32u alignedLength = dstImgSize[batchCount].width & ~3;   // Align dst width to process 4 dst pixels per iteration
@@ -793,8 +792,6 @@ omp_set_dynamic(0);
         Rpp32f hOffset = (hRatio - 1) * 0.5f - kernelRadius;
         Rpp32f wOffset = (wRatio - 1) * 0.5f - kernelRadius;
         Rpp32s vectorIncrementPerChannel = 8;
-        Rpp32s vectorIncrementPkd = 24;
-
         Rpp8u *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
@@ -841,7 +838,7 @@ omp_set_dynamic(0);
                     compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);  // Compute Bilinear coefficients
                     rpp_simd_load(rpp_bilinear_load_u8pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc, pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
-                    rpp_simd_store(rpp_store12_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
@@ -890,7 +887,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_u8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[2], srcLocationColumnArray, &pSrc[4], pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride);
                     rpp_simd_load(rpp_bilinear_load_u8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[4], srcLocationColumnArray, &pSrc[8], pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride);
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
-                    rpp_simd_store(rpp_store12_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst);    // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst);    // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
@@ -930,7 +927,7 @@ omp_set_dynamic(0);
                     compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);      // Compute Bilinear coefficients
                     rpp_simd_load(rpp_bilinear_load_u8pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc, pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
-                    rpp_simd_store(rpp_store12_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
@@ -975,7 +972,7 @@ omp_set_dynamic(0);
                     {
                         rpp_simd_load(rpp_bilinear_load_u8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[c * kernelSize], srcLocationColumnArray, pSrc, pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride); // Load input pixels required for bilinear interpolation
                         compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
-                        rpp_simd_store(rpp_store4_f32pln1_to_u8pln1_avx, dstPtrTempChn, pDst);  // Store dst pixels
+                        rpp_simd_store(rpp_store8_f32pln1_to_u8pln1_avx, dstPtrTempChn, pDst);  // Store dst pixels
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp += vectorIncrementPerChannel;
@@ -1563,7 +1560,7 @@ omp_set_dynamic(0);
                     compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);                              // Compute Bilinear coefficients
                     rpp_simd_load(rpp_bilinear_load_i8pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc, pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);                             // Compute Bilinear interpolation
-                    rpp_simd_store(rpp_store12_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
@@ -1612,7 +1609,7 @@ omp_set_dynamic(0);
                     rpp_simd_load(rpp_bilinear_load_i8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[2], srcLocationColumnArray, &pSrc[4], pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride);
                     rpp_simd_load(rpp_bilinear_load_i8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[4], srcLocationColumnArray, &pSrc[8], pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride);
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
-                    rpp_simd_store(rpp_store12_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst);    // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst);    // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
@@ -1652,7 +1649,7 @@ omp_set_dynamic(0);
                     compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);      // Compute Bilinear coefficients
                     rpp_simd_load(rpp_bilinear_load_i8pkd3_to_f32pln3_avx, srcRowPtrsForInterp, srcLocationColumnArray, pSrc, pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
-                    rpp_simd_store(rpp_store12_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst);    // Store dst pixels
+                    rpp_simd_store(rpp_store24_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst);    // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
@@ -1698,7 +1695,7 @@ omp_set_dynamic(0);
                     {
                         rpp_simd_load(rpp_bilinear_load_i8pln1_to_f32pln1_avx, &srcRowPtrsForInterp[c * kernelSize], srcLocationColumnArray, pSrc, pxSrcLoc, pxMaxSrcLoc, maxWidthLimitMinusStride); // Load input pixels required for bilinear interpolation
                         compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst);     // Compute Bilinear interpolation
-                        rpp_simd_store(rpp_store4_f32pln1_to_i8pln1_avx, dstPtrTempChn, pDst);  // Store dst pixels
+                        rpp_simd_store(rpp_store8_f32pln1_to_i8pln1_avx, dstPtrTempChn, pDst);  // Store dst pixels
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp += vectorIncrementPerChannel;
@@ -1729,6 +1726,8 @@ RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        T *dstPtr,
                                        RpptDescPtr dstDescPtr,
+                                       Rpp32f * tempPtr,
+                                       RpptDescPtr tempDescPtr,
                                        RpptImagePatchPtr dstImgSize,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
@@ -1776,6 +1775,7 @@ omp_set_dynamic(0);
         T *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        Rpp32f * tempPtrImage = tempPtr + batchCount * tempDescPtr->strides.nStride;
         srcPtrImage = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
 
         RpptImagePatch srcImgSize;
@@ -1787,23 +1787,8 @@ omp_set_dynamic(0);
         tempImgSize.width = roi.xywhROI.roiWidth;
         tempImgSize.height = dstImgSize[batchCount].height;
 
-        // Allocate temproary buffer to store intermediate result of separable resampling
-        Rpp32f *tempPtrImage;
-        tempPtrImage = (Rpp32f *)malloc(srcDescPtr->w * dstDescPtr->h * srcDescPtr->c * sizeof(Rpp32f));
-
-        // Create description pointer for the temporary buffer
-        RpptDesc tempDesc;
-        tempDesc = *srcDescPtr;
-        RpptDescPtr tempDescPtr = &tempDesc;
-        tempDescPtr->h = dstDescPtr->h;
-
-        // The channel stride changes with the change in the height for PLN images
-        if(srcDescPtr->layout == RpptLayout::NCHW)
-            tempDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
-
         compute_separable_vertical_resample(srcPtrImage, tempPtrImage, srcDescPtr, tempDescPtr, srcImgSize, tempImgSize, rowIndex, rowCoeffs, vFilter);
         compute_separable_horizontal_resample(tempPtrImage, dstPtrImage, tempDescPtr, dstDescPtr, tempImgSize, dstImgSize[batchCount], colIndex, colCoeffs, hFilter);
-        free(tempPtrImage);
     }
 
     return RPP_SUCCESS;

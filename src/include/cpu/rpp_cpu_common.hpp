@@ -34,6 +34,9 @@ typedef halfhpp Rpp16f;
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 #define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
 #define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+#define RGB_TO_GREY_WEIGHT_RED          0.299f
+#define RGB_TO_GREY_WEIGHT_GREEN        0.587f
+#define RGB_TO_GREY_WEIGHT_BLUE         0.114f
 
 #if __AVX2__
 #define SIMD_FLOAT_VECTOR_LENGTH        8
@@ -2167,6 +2170,30 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 }
 
 // Compute Functions for RPP Tensor API
+
+inline void compute_color_48_to_greyscale_16_host(__m256 *p, __m256 *pChannelWeights)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pChannelWeights[0], _mm256_fmadd_ps(p[2], pChannelWeights[1], _mm256_mul_ps(p[4], pChannelWeights[2])));
+    p[1] = _mm256_fmadd_ps(p[1], pChannelWeights[0], _mm256_fmadd_ps(p[3], pChannelWeights[1], _mm256_mul_ps(p[5], pChannelWeights[2])));
+}
+
+inline void compute_color_48_to_greyscale_16_host(__m128 *p, __m128 *pChannelWeights)
+{
+    p[0] = _mm_fmadd_ps(p[0], pChannelWeights[0], _mm_fmadd_ps(p[4], pChannelWeights[1], _mm_mul_ps(p[8], pChannelWeights[2])));
+    p[1] = _mm_fmadd_ps(p[1], pChannelWeights[0], _mm_fmadd_ps(p[5], pChannelWeights[1], _mm_mul_ps(p[9], pChannelWeights[2])));
+    p[2] = _mm_fmadd_ps(p[2], pChannelWeights[0], _mm_fmadd_ps(p[6], pChannelWeights[1], _mm_mul_ps(p[10], pChannelWeights[2])));
+    p[3] = _mm_fmadd_ps(p[3], pChannelWeights[0], _mm_fmadd_ps(p[7], pChannelWeights[1], _mm_mul_ps(p[11], pChannelWeights[2])));
+}
+
+inline void compute_color_24_to_greyscale_8_host(__m256 *p, __m256 *pChannelWeights)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pChannelWeights[0], _mm256_fmadd_ps(p[1], pChannelWeights[1], _mm256_mul_ps(p[2], pChannelWeights[2])));
+}
+
+inline void compute_color_12_to_greyscale_4_host(__m128 *p, __m128 *pChannelWeights)
+{
+    p[0] = _mm_fmadd_ps(p[0], pChannelWeights[0], _mm_fmadd_ps(p[1], pChannelWeights[1], _mm_mul_ps(p[2], pChannelWeights[2])));
+}
 
 inline void compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
 {
