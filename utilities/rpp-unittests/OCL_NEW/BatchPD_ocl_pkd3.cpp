@@ -14,7 +14,7 @@
 #include <fstream>
 #include <algorithm>
 #include <iterator>
-#include </opt/rocm/opencl/include/CL/cl.h>
+#include <CL/cl.h>
 
 using namespace cv;
 using namespace std;
