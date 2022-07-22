@@ -195,9 +195,6 @@ __global__ void resample_horizontal_tensor(Rpp32f *srcPtr,
     dstPtr[dstIdx + 2] = (T) dst_pixB;
 }
 
-
-// #define RPPPIXELCHECK(pixel)  ((pixel < 0) ? 0 : ((pixel < 255) ? pixel : 255))
-
 __device__ void saturate_pixel(float pixel, uchar* dst)
 {
     *dst = RPPPIXELCHECK(pixel);
@@ -205,7 +202,7 @@ __device__ void saturate_pixel(float pixel, uchar* dst)
 
 __device__ void saturate_pixel(float pixel, schar* dst)
 {
-    // *dst = RPPPIXELCHECKI8(pixel);
+    *dst = RPPPIXELCHECKI8(pixel);
 }
 
 __device__ void saturate_pixel(float pixel, float* dst)
@@ -246,7 +243,15 @@ __device__ void compute_index_and_weights(int loc, float weight, int kernelSize,
         compute_triangular_coefficient(weight - k + kernelSize2 , &coeffs[k]);
         sum += coeffs[k];
     }
+    if(sum)
+    {
+        sum = 1 / sum;
+        for(int k = 0; k < kernelSize; k++)
+            coeffs[k] = coeffs[k] * sum;
+    }
 }
+
+#define MAX_KERNEL_SIZE 256
 
 template <typename T>
 __global__ void resize_triangular_pkd_tensor(T *srcPtr,
@@ -283,26 +288,18 @@ __global__ void resize_triangular_pkd_tensor(T *srcPtr,
     int wKernelSize = ceil((wRatio < 1 ? 1 : wRatio) * 2);
     int hKernelSize = ceil((hRatio < 1 ? 1 : hRatio) * 2);
 
-    float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[4], rowWeightParams[4];
-    int colIndices[4], rowIndices[4], srcLocationRowFloor, srcLocationColumnFloor;
+    float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
+    int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
     compute_resize_src_loc(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset);
     compute_index_and_weights(srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1);
 
-    T *srcPtrTemp[3];
-    srcPtrTemp[0] = srcPtr + (id_z * srcStridesNH.x);
-    srcPtrTemp[1] = srcPtr + (id_z * srcStridesNH.x) + 1;
-    srcPtrTemp[2] = srcPtr + (id_z * srcStridesNH.x) + 2;
-
-    T *srcRowPtrsForInterp[3][4];
+    T *srcPtrTemp = srcPtr + (id_z * srcStridesNH.x);
+    T *srcRowPtrsForInterp[MAX_KERNEL_SIZE];
     compute_resize_src_loc(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset);
     compute_index_and_weights(srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1);
 
     for(int k = 0; k < hKernelSize; k++)
-    {
-        srcRowPtrsForInterp[0][k] = srcPtrTemp[0] + rowIndices[k] * srcStridesNH.y;
-        srcRowPtrsForInterp[1][k] = srcPtrTemp[1] + rowIndices[k] * srcStridesNH.y;
-        srcRowPtrsForInterp[2][k] = srcPtrTemp[2] + rowIndices[k] * srcStridesNH.y;
-    }
+        srcRowPtrsForInterp[k] = srcPtrTemp + rowIndices[k] * srcStridesNH.y;
 
     float tempPixelR = 0, tempPixelG = 0, tempPixelB = 0;
     for(int j = 0; j < hKernelSize; j++)
@@ -310,9 +307,9 @@ __global__ void resize_triangular_pkd_tensor(T *srcPtr,
         for(int k = 0; k < wKernelSize; k++)
         {
             Rpp32f coeff = colWeightParams[k] * rowWeightParams[j];
-            tempPixelR += (float)*(srcRowPtrsForInterp[0][j] + colIndices[k]) * coeff;
-            tempPixelG += (((float)*(srcRowPtrsForInterp[1][j] + colIndices[k]))) * coeff;
-            tempPixelB += (((float)*(srcRowPtrsForInterp[2][j] + colIndices[k]))) * coeff;
+            tempPixelR += (float) *(srcRowPtrsForInterp[j] + colIndices[k]) * coeff;
+            tempPixelG += (float) *(srcRowPtrsForInterp[j] + 1 + colIndices[k]) * coeff;
+            tempPixelB += (float) *(srcRowPtrsForInterp[j] + 2 + colIndices[k]) * coeff;
         }
     }
 
@@ -320,9 +317,6 @@ __global__ void resize_triangular_pkd_tensor(T *srcPtr,
     saturate_pixel(tempPixelR, &dstPtr[dstIdx]);
     saturate_pixel(tempPixelG, &dstPtr[dstIdx + 1]);
     saturate_pixel(tempPixelB, &dstPtr[dstIdx + 2]);
-    // dstPtr[dstIdx] = (T)tempPixelR;
-    // dstPtr[dstIdx + 1] = (T)tempPixelG;
-    // dstPtr[dstIdx + 2] = (T)tempPixelB;
 }
 
 template <typename T>
@@ -352,7 +346,6 @@ RppStatus hip_exec_resize_separable_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            std::cerr<<"launching traingular pkd kernel"<<std::endl;
             hipLaunchKernelGGL(resize_triangular_pkd_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
