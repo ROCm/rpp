@@ -8,6 +8,9 @@
 #include "hip/rpp/handle.hpp"
 #include "hip/rpp_hip_roi_conversion.hpp"
 using halfhpp = half_float::half;
+#define PI                              3.14159265
+#define ONE_OVER_6                      0.1666666f
+
 typedef halfhpp Rpp16f;
 typedef unsigned char uchar;
 typedef signed char schar;
@@ -131,6 +134,93 @@ inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u k
 /******************** DEVICE FUNCTIONS ********************/
 
 // -------------------- Set 0 - Range checks and Range adjustment --------------------
+
+// float pixel check for 0-255 range
+
+__device__ __forceinline__ void saturate_hip_pixel(float pixel, uchar* dst)
+{
+    pixel = fmax(fminf(pixel, 255), 0);
+    *dst = (uchar)pixel;
+}
+
+// float pixel check for 0-128 range
+
+__device__ __forceinline__ void saturate_hip_pixel(float pixel, schar* dst)
+{
+    pixel = fmax(fminf(pixel, 128), 0);
+    *dst = schar(pixel);
+}
+
+// float pixel check for 0-1 range
+
+__device__ __forceinline__ void saturate_hip_pixel(float pixel, float* dst)
+{
+    pixel = fmax(fminf(pixel, 1), 0);
+    *dst = pixel;
+}
+
+__device__ __forceinline__ void saturate_hip_pixel(float pixel, half* dst)
+{
+    pixel = fmax(fminf(pixel, 1), 0);
+    *dst = (half)pixel;
+}
+
+__device__ __forceinline__ void bicubic_coefficient_hip_compute(float weight, float *coeff)
+{
+    Rpp32f x = fabsf(weight);
+    *coeff = (x >= 2) ? 0 : ((x > 1) ? (x * x * (-0.5f * x + 2.5f) - 4.0f * x + 2.0f) : (x * x * (1.5f * x - 2.5f) + 1.0f));
+}
+
+__device__ __forceinline__ float sinc_hip(float x)
+{
+    x *= PI;
+    return (fabs(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sin(x) / x;
+}
+
+__device__ __forceinline__ void lanczos3_coefficient_hip_compute(float weight, float *coeff)
+{
+    *coeff = fabs(weight) >= 3 ? 0.0f : (sinc_hip(weight) * sinc_hip(weight / 3));
+}
+
+__device__ __forceinline__ void gaussian_coefficient_hip_compute(float weight, float *coeff)
+{
+    *coeff = expf(weight * weight * -4.0f);
+}
+
+__device__ __forceinline__ void triangular_coefficient_hip_compute(float weight, float *coeff)
+{
+    *coeff = 1 - std::fabs(weight);
+    *coeff = *coeff < 0 ? 0 : *coeff;
+}
+
+__device__ __forceinline__ void compute_interpolation_coefficient(RpptInterpolationType interpolationType, float weight, float *coeff)
+{
+    switch (interpolationType)
+    {
+    case RpptInterpolationType::BICUBIC:
+    {
+        bicubic_coefficient_hip_compute(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::LANCZOS:
+    {
+        lanczos3_coefficient_hip_compute(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::GAUSSIAN:
+    {
+        gaussian_coefficient_hip_compute(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::TRIANGULAR:
+    {
+        triangular_coefficient_hip_compute(weight, coeff);
+        break;
+    }
+    default:
+        break;
+    }
+}
 
 // float4 pixel check for 0-255 range
 
