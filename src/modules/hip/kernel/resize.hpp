@@ -5,25 +5,23 @@
 
 __device__ void resize_generic_srclocs_hip_compute(int dstLocation, float scale, int limit, int *srcLoc, float *weight, float offset, int srcStride)
 {
-    float srcLocation = ((float) dstLocation) * scale + offset;
-    int srcLocationFloor = (int)floorf(srcLocation);
-    weight[0] = srcLocation - srcLocationFloor;
+    float srcLocationFloat = ((float) dstLocation) * scale + offset;
+    int srcLocation = (int)ceilf(srcLocationFloat);
+    weight[0] = srcLocation - srcLocationFloat;
     weight[1] = 1 - weight[0];
-    *srcLoc = ((srcLocationFloor > limit) ? limit : srcLocationFloor) * srcStride;
+    *srcLoc = ((srcLocation > limit) ? limit : srcLocation) * srcStride;
 }
 
 __device__ void compute_index_and_weights(RpptInterpolationType interpolationType, int loc, float weight, int kernelSize,
-                                            int limit, int *index, float *coeffs, int srcStride, float scale)
+                                            int limit, int *index, float *coeffs, int srcStride, float scale, float radius)
 {
-    float kernelSize2 = kernelSize / 2;
-    float kernelSize2Channel = kernelSize2 * srcStride;
+    weight -= radius;
     limit = limit * srcStride;
     float sum = 0;
-
     for(int k = 0; k < kernelSize; k++)
     {
-        index[k] = min(max((int)(loc + (k * srcStride) - kernelSize2Channel), 0), limit);
-        compute_interpolation_coefficient(interpolationType, (weight - k + kernelSize2) * scale , &coeffs[k]);
+        index[k] = min(max((int)(loc + (k * srcStride)), 0), limit);
+        compute_interpolation_coefficient(interpolationType, (weight + k) * scale , &coeffs[k]);
         sum += coeffs[k];
     }
     if(sum)
@@ -69,25 +67,31 @@ __global__ void resize_triangular_pkd_tensor(T *srcPtr,
     float hRadius = 1.0f, wRadius = 1.0f;
 
     if(srcDimsWH.y > dstDimsWH.y)
+    {
         hScale = 1 / hRatio;
+        hRadius = hRatio;
+    }
 
     if(srcDimsWH.x > dstDimsWH.x)
+    {
         wScale = 1 / wRatio;
+        wRadius = wRatio;
+    }
 
-    float wOffset = (wRatio - 1) * 0.5f;
-    float hOffset = (hRatio - 1) * 0.5f;
+    float wOffset = (wRatio - 1) * 0.5f - wRadius;
+    float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceilf((wRatio < 1 ? 1 : wRatio) * 2);
     int hKernelSize = ceilf((hRatio < 1 ? 1 : hRatio) * 2);
 
     float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
     int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
     resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 3);
-    compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 3, wScale);
+    compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 3, wScale, wRadius);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNH.x);
     T *srcRowPtrsForInterp[MAX_KERNEL_SIZE];
     resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale);
+    compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
 
     for(int k = 0; k < hKernelSize; k++)
         srcRowPtrsForInterp[k] = srcPtrTemp + rowIndices[k] * srcStridesNH.y;

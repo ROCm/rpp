@@ -377,8 +377,8 @@ int main(int argc, char **argv)
 
         count++;
     }
-    maxDstWidth = 650;
-    maxDstHeight = 490;
+    maxDstWidth = 640;
+    maxDstHeight = 480;
     closedir(dr1);
 
     // Set numDims, offset, n/c/h/w values for src/dst
@@ -1091,8 +1091,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 100;//roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 150;//roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 640;//roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 480;//roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
         }
 
         // Uncomment to run test case with an xywhROI override
