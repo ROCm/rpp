@@ -13,7 +13,7 @@ __device__ void resize_generic_srclocs_hip_compute(int dstLocation, float scale,
 }
 
 __device__ void compute_index_and_weights(RpptInterpolationType interpolationType, int loc, float weight, int kernelSize,
-                                            int limit, int *index, float *coeffs, int srcStride, float scale, float radius)
+                                          int limit, int *index, float *coeffs, int srcStride, float scale, float radius)
 {
     weight -= radius;
     limit = limit * srcStride;
@@ -33,13 +33,13 @@ __device__ void compute_index_and_weights(RpptInterpolationType interpolationTyp
 }
 
 template <typename T>
-__global__ void resize_triangular_pkd_tensor(T *srcPtr,
-                                             uint2 srcStridesNH,
-                                             T *dstPtr,
-                                             uint2 dstStridesNH,
-                                             RpptImagePatchPtr dstImgSize,
-                                             RpptROIPtr roiTensorPtrSrc,
-                                             RpptInterpolationType interpolationType)
+__global__ void resize_generic_pkd_tensor(T *srcPtr,
+                                          uint2 srcStridesNH,
+                                          T *dstPtr,
+                                          uint2 dstStridesNH,
+                                          RpptImagePatchPtr dstImgSize,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptInterpolationType interpolationType)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -115,16 +115,15 @@ __global__ void resize_triangular_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-RppStatus hip_exec_resize_separable_tensor(T *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           T *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *tempPtr,
-                                           RpptImagePatchPtr dstImgSize,
-                                           RpptInterpolationType interpolationType,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           rpp::Handle& handle)
+RppStatus hip_exec_resize_generic_tensor(T *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         T *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptImagePatchPtr dstImgSize,
+                                         RpptInterpolationType interpolationType,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::XYWH)
         hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
@@ -141,7 +140,7 @@ RppStatus hip_exec_resize_separable_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(resize_triangular_pkd_tensor,
+            hipLaunchKernelGGL(resize_generic_pkd_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
