@@ -1,8 +1,8 @@
 #ifndef HOST_FUSED_FUNCTIONS_H
 #define HOST_FUSED_FUNCTIONS_H
 
-#include "cpu/rpp_cpu_simd.hpp"
-#include <cpu/rpp_cpu_common.hpp>
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
 
 /**************** color_twist ***************/
 

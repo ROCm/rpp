@@ -4,9 +4,11 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_fp16.h>
 #include <half.hpp>
+
 #include "rppdefs.h"
-#include "hip/rpp/handle.hpp"
-#include "hip/rpp_hip_roi_conversion.hpp"
+#include "rpp/handle.hpp"
+#include "rpp_hip_roi_conversion.hpp"
+
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 typedef unsigned char uchar;
@@ -87,6 +89,9 @@ struct RPPTensorFunctionMetaData
 #define SIX_OVER_360                    0.01666667f
 #define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
 #define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+#define RGB_TO_GREY_WEIGHT_RED          0.299f
+#define RGB_TO_GREY_WEIGHT_GREEN        0.587f
+#define RGB_TO_GREY_WEIGHT_BLUE         0.114f
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \

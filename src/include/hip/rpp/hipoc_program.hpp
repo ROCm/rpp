@@ -26,10 +26,11 @@
 #ifndef GUARD_RPP_HIPOC_PROGRAM_HPP
 #define GUARD_RPP_HIPOC_PROGRAM_HPP
 
-#include <hip/hip_runtime_api.h>
-#include <hip/rpp/manage_ptr.hpp>
-#include <boost/filesystem/path.hpp>
 #include <string>
+#include <boost/filesystem/path.hpp>
+#include <hip/hip_runtime_api.h>
+
+#include "rpp/manage_ptr.hpp"
 
 namespace rpp {
 

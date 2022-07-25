@@ -23,19 +23,22 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include <hip/rpp/errors.hpp>
-#include <hip/rpp/gcn_asm_utils.hpp>
-#include <hip/rpp/hip_build_utils.hpp>
-#include <hip/rpp/hipoc_program.hpp>
-#include <hip/rpp/kernel.hpp>
-#include <hip/rpp/kernel_warnings.hpp>
-#include <hip/rpp/stringutils.hpp>
-#include <hip/rpp/tmp_dir.hpp>
-#include <hip/rpp/write_file.hpp>
-#include <boost/optional.hpp>
+
 #include <sstream>
 #include <unistd.h>
 #include <hip/hiprtc.h>
+#include <boost/optional.hpp>
+
+#include "rpp/errors.hpp"
+#include "rpp/gcn_asm_utils.hpp"
+#include "rpp/hip_build_utils.hpp"
+#include "rpp/hipoc_program.hpp"
+#include "rpp/kernel.hpp"
+#include "rpp/kernel_warnings.hpp"
+#include "rpp/stringutils.hpp"
+#include "rpp/tmp_dir.hpp"
+#include "rpp/write_file.hpp"
+
 namespace rpp {
 
 std::string remove_extension(const std::string& filename) {

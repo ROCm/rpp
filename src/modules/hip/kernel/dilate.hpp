@@ -1,5 +1,5 @@
 #include <hip/hip_runtime.h>
-#include "hip/rpp_hip_common.hpp"
+#include "rpp_hip_common.hpp"
 
 // -------------------- Set 0 - dilate device helpers --------------------
 

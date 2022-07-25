@@ -1,6 +1,6 @@
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
 
 RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
                                  RpptDescPtr srcDescPtr,
@@ -24,7 +24,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         Rpp32u horizontalFlag = horizontalTensor[batchCount];
         Rpp32u verticalFlag = verticalTensor[batchCount];
-        
+
         Rpp8u *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
@@ -42,7 +42,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vFactor = roi.xywhROI.xy.y * srcDescPtr->strides.hStride;
         Rpp32s hStrideSrcIncrement = srcDescPtr->strides.hStride;
 
-        //Initialize load functions with default values 
+        //Initialize load functions with default values
         auto load48FnPkdPln = &rpp_load48_u8pkd3_to_f32pln3_avx;
         auto load48FnPlnPln = &rpp_load48_u8pln3_to_f32pln3_avx;
         auto load16Fn = &rpp_load16_u8_to_f32_avx;
@@ -69,7 +69,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u hFlipFactorPerChannel = (vectorIncrementPerChannel - 1) * horizontalFlag;
         Rpp32s srcPtrIncrementPerRGB = (horizontalFlag) ? -3 : 3;
         Rpp32s srcPtrIncrementPerPixel = (horizontalFlag) ? -1 : 1;
-        
+
         // flip without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW and  horizontalflag = 0 and verticalflag = 0)
         if (!(horizontalFlag | verticalFlag) && (srcDescPtr->layout == dstDescPtr->layout))
         {
@@ -112,10 +112,10 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p[6];
-                   
+
                     rpp_simd_load(load48FnPkdPln, srcPtrTemp, p);     // simd loads
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-                    
+
                     srcPtrTemp += srcPtrIncrement;
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
@@ -162,7 +162,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
-            
+
                     rpp_simd_load(load48FnPlnPln, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 
@@ -187,7 +187,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrTempB += srcPtrIncrementPerPixel;
                     dstPtrTemp += 3;
                 }
-                
+
                 srcPtrRowR += hStrideSrcIncrement;;
                 srcPtrRowG += hStrideSrcIncrement;
                 srcPtrRowB += hStrideSrcIncrement;
@@ -300,7 +300,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         Rpp32u horizontalFlag = horizontalTensor[batchCount];
         Rpp32u verticalFlag = verticalTensor[batchCount];
-        
+
         Rpp32f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
@@ -318,7 +318,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vFactor = roi.xywhROI.xy.y * srcDescPtr->strides.hStride;
         Rpp32s hStrideSrcIncrement = srcDescPtr->strides.hStride;
 
-        // Initialize load functions with default values 
+        // Initialize load functions with default values
         auto load24FnPkdPln = &rpp_load24_f32pkd3_to_f32pln3_avx;
         auto load24FnPlnPln = &rpp_load24_f32pln3_to_f32pln3_avx;
         auto load8Fn = &rpp_load8_f32_to_f32_avx;
@@ -337,7 +337,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
             hStrideSrcIncrement = -srcDescPtr->strides.hStride;
         }
         srcPtrChannel = srcPtrImage + vFactor + hFactor;
-        
+
         //Compute constant increment, Decrement factors used in source pointer updation
         Rpp32s srcPtrIncrement = (horizontalFlag)? -vectorIncrement : vectorIncrement;
         Rpp32u hFlipFactor = (vectorIncrement - 1) * horizontalFlag;
@@ -389,10 +389,10 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p[6];
-                    
+
                     rpp_simd_load(load24FnPkdPln, srcPtrTemp, p);     // simd loads
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-                    
+
                     srcPtrTemp += srcPtrIncrement;
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
@@ -439,7 +439,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
-                    
+
                     rpp_simd_load(load24FnPlnPln, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 
@@ -541,7 +541,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                         srcPtrTemp += srcPtrIncrementPerPixel;
                         dstPtrTemp++;
                     }
-                   
+
                     srcPtrRow += hStrideSrcIncrement;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -551,7 +551,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -577,7 +577,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         Rpp32u horizontalFlag = horizontalTensor[batchCount];
         Rpp32u verticalFlag = verticalTensor[batchCount];
-        
+
         Rpp16f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
@@ -595,7 +595,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vFactor = roi.xywhROI.xy.y * srcDescPtr->strides.hStride;
         Rpp32s hStrideSrcIncrement = srcDescPtr->strides.hStride;
 
-        // Initialize load functions with default values 
+        // Initialize load functions with default values
         auto load24FnPkdPln = &rpp_load24_f32pkd3_to_f32pln3_avx;
         auto load24FnPlnPln = &rpp_load24_f32pln3_to_f32pln3_avx;
         auto load8Fn = &rpp_load8_f32_to_f32_avx;
@@ -614,7 +614,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
             hStrideSrcIncrement = -srcDescPtr->strides.hStride;
         }
         srcPtrChannel = srcPtrImage + vFactor + hFactor;
-        
+
         //Compute constant increment, Decrement factors used in source pointer updation
         Rpp32s srcPtrIncrement = (horizontalFlag)? -vectorIncrement : vectorIncrement;
         Rpp32u hFlipFactor = (vectorIncrement - 1) * horizontalFlag;
@@ -622,7 +622,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u hFlipFactorPerChannel = (vectorIncrementPerChannel - 1) * horizontalFlag;
         Rpp32s srcPtrIncrementPerRGB = (horizontalFlag) ? -3 : 3;
         Rpp32s srcPtrIncrementPerPixel = (horizontalFlag) ? -1 : 1;
-        
+
         // flip without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW and  horizontalflag = 0 and verticalflag = 0)
         if (!(horizontalFlag | verticalFlag) && (srcDescPtr->layout == dstDescPtr->layout))
         {
@@ -674,7 +674,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                     rpp_simd_load(load24FnPkdPln, srcPtrTemp_ps, p);     // simd loads
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
-                    
+
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
                         dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
@@ -728,7 +728,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
-                    
+
                     Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
                     Rpp32f dstPtrTemp_ps[25];
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
@@ -789,7 +789,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p[6];
-                    
+
                     Rpp32f srcPtrTemp_ps[24], dstPtrTemp_ps[25];
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
@@ -798,7 +798,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
 
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];                    
+                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
                     srcPtrTemp += srcPtrIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -858,7 +858,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTemp += srcPtrIncrementPerPixel;
                         dstPtrTemp++;
                     }
-                    
+
                     srcPtrRow += hStrideSrcIncrement;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -894,7 +894,7 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
 
         Rpp32u horizontalFlag = horizontalTensor[batchCount];
         Rpp32u verticalFlag = verticalTensor[batchCount];
-        
+
         Rpp8s *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
@@ -912,7 +912,7 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vFactor = roi.xywhROI.xy.y * srcDescPtr->strides.hStride;
         Rpp32s hStrideSrcIncrement = srcDescPtr->strides.hStride;
 
-        //Initialize load functions with default values 
+        //Initialize load functions with default values
         auto load48FnPkdPln = &rpp_load48_i8pkd3_to_f32pln3_avx;
         auto load48FnPlnPln = &rpp_load48_i8pln3_to_f32pln3_avx;
         auto load16Fn = &rpp_load16_i8_to_f32_avx;
@@ -939,7 +939,7 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u hFlipFactorPerChannel = (vectorIncrementPerChannel - 1) * horizontalFlag;
         Rpp32s srcPtrIncrementPerRGB = (horizontalFlag) ? -3 : 3;
         Rpp32s srcPtrIncrementPerPixel = (horizontalFlag) ? -1 : 1;
-        
+
         // flip without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW and  horizontalflag = 0 and verticalflag = 0)
         if (!(horizontalFlag | verticalFlag) && (srcDescPtr->layout == dstDescPtr->layout))
         {
@@ -982,10 +982,10 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p[6];
-                   
+
                     rpp_simd_load(load48FnPkdPln, srcPtrTemp, p);     // simd loads
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-                    
+
                     srcPtrTemp += srcPtrIncrement;
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
@@ -1032,7 +1032,7 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
-            
+
                     rpp_simd_load(load48FnPlnPln, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
 
