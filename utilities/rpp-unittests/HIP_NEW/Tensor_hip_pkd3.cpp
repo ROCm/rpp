@@ -1083,7 +1083,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "resize";
 
-        if (interpolationType != RpptInterpolationType::BILINEAR && interpolationType != RpptInterpolationType::TRIANGULAR)
+        if (interpolationType == RpptInterpolationType::BILINEAR || interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
         {
             missingFuncFlag = 1;
             break;
@@ -1923,7 +1923,7 @@ int main(int argc, char **argv)
         {
             memcpy(temp_output_row, (output_row), elementsInRow * sizeof (Rpp8u));
             temp_output_row += elementsInRow;
-            output_row += dstDescPtr->strides.hStride;
+            output_row += dstDescPtr->c * dstDescPtr->w;
         }
         count += dstDescPtr->strides.nStride;
 

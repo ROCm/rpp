@@ -143,11 +143,11 @@ __device__ __forceinline__ void saturate_hip_pixel(float pixel, uchar* dst)
     *dst = (uchar)pixel;
 }
 
-// float pixel check for 0-128 range
+// float pixel check for -127 - 128 range
 
 __device__ __forceinline__ void saturate_hip_pixel(float pixel, schar* dst)
 {
-    pixel = fmax(fminf(pixel, 127), 0);
+    pixel = fmax(fminf(pixel, 127), -128);
     *dst = (schar)pixel;
 }
 

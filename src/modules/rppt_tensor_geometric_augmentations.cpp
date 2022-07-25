@@ -541,7 +541,7 @@ if (interpolationType == RpptInterpolationType::BILINEAR)
     //                            rpp::deref(rppHandle));
     // }
 }
-else if (interpolationType == RpptInterpolationType::TRIANGULAR)
+else
 {
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
