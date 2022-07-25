@@ -377,6 +377,8 @@ int main(int argc, char **argv)
 
         count++;
     }
+    maxDstWidth = 640;
+    maxDstHeight = 480;
     closedir(dr1);
 
     // Set numDims, offset, n/c/h/w values, n/c/h/w strides for src/dst
@@ -1150,7 +1152,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "resize";
 
-        if (interpolationType != RpptInterpolationType::BILINEAR)
+        if (interpolationType != RpptInterpolationType::BILINEAR && interpolationType != RpptInterpolationType::TRIANGULAR)
         {
             missingFuncFlag = 1;
             break;
@@ -1158,8 +1160,8 @@ int main(int argc, char **argv)
 
         for (i = 0; i < images; i++)
         {
-            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
-            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = 640;//roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = 480;//roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
         }
 
         // Uncomment to run test case with an xywhROI override
