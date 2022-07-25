@@ -1345,16 +1345,16 @@ int main(int argc, char **argv)
         Rpp32f mean[images * 3];
         Rpp32f stdDev[images * 3];
         Rpp32u mirror[images];
-        for (i = 0; i < images; i++)
+        for (i = 0, j = 0; i < images; i++, j += 3)
         {
-            mean[3 * i] = 100.0;
-            stdDev[3 * i] = 1.0;
+            mean[j] = 0.0;
+            stdDev[j] = 1.0;
 
-            mean[3 * i + 1] = 100.0;
-            stdDev[3 * i + 1] = 1.0;
+            mean[j + 1] = 0.0;
+            stdDev[j + 1] = 1.0;
 
-            mean[3 * i + 2] = 100.0;
-            stdDev[3 * i + 2] = 1.0;
+            mean[j + 2] = 0.0;
+            stdDev[j + 2] = 1.0;
             mirror[i] = 1;
         }
 
