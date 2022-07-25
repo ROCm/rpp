@@ -1,4 +1,4 @@
-#include <cl/rpp_cl_common.hpp>
+#include "rpp_cl_common.hpp"
 #include "cl_declarations.hpp"
 /********************** Blur ************************/
 float box_3x3[] = {

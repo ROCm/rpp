@@ -4,9 +4,11 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_fp16.h>
 #include <half.hpp>
+
 #include "rppdefs.h"
-#include "hip/rpp/handle.hpp"
-#include "hip/rpp_hip_roi_conversion.hpp"
+#include "rpp/handle.hpp"
+#include "rpp_hip_roi_conversion.hpp"
+
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 typedef unsigned char uchar;
@@ -86,6 +88,9 @@ struct RPPTensorFunctionMetaData
 #define ONE_OVER_255                    0.00392157f
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
+#define RGB_TO_GREY_WEIGHT_RED          0.299f
+#define RGB_TO_GREY_WEIGHT_GREEN        0.587f
+#define RGB_TO_GREY_WEIGHT_BLUE         0.114f
 #define XORWOW_COUNTER_INC              0x587C5             // Hex 0x587C5 = Dec 362437U - xorwow counter increment
 #define XORWOW_EXPONENT_MASK            0x3F800000          // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
 #define NEWTON_METHOD_INITIAL_GUESS     0x5f3759df          // Initial guess for Newton Raphson Inverse Square Root
@@ -112,7 +117,7 @@ inline int getplnpkdind(RppiChnFormat &format)
     return format == RPPI_CHN_PLANAR ? 1 : 3;
 }
 
-inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSize)
+inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u kernelSize)
 {
     Rpp32f s, sum = 0.0, multiplier;
     int bound = ((kernelSize - 1) / 2);
@@ -132,8 +137,6 @@ inline RppStatus generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp
     {
         kernel[i] /= sum;
     }
-
-    return RPP_SUCCESS;
 }
 
 /******************** DEVICE FUNCTIONS ********************/

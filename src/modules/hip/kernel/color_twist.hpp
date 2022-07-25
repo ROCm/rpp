@@ -1,6 +1,6 @@
 #include <hip/hip_runtime.h>
-#include "hip/rpp_hip_common.hpp"
-#include "cpu/rpp_cpu_common.hpp"
+#include "rpp_hip_common.hpp"
+#include "rpp_cpu_common.hpp"
 
 __device__ void color_twist_1RGB_hip_compute(float *pixelR, float *pixelG, float *pixelB, float4 *colorTwistParams_f4)
 {
