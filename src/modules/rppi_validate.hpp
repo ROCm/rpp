@@ -164,37 +164,18 @@ inline void copy_param_float(float *param, rpp::Handle& handle, Rpp32u paramInde
     {
         handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem[i] = param[i];
     }
-#ifdef OCL_COMPILE
-    {
-        clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, CL_FALSE, 0, sizeof(Rpp32f) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, 0, NULL, NULL);
-    }
-#elif defined(HIP_COMPILE)
-    {
-        hipMemcpy(handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, sizeof(Rpp32f) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    }
-#endif
-}
-
-inline void copy_param_float3(float *param, rpp::Handle& handle, Rpp32u paramIndex)
-{
-#ifdef HIP_COMPILE
-    {
-        hipMemcpy(handle.GetInitHandle()->mem.mgpu.float3Arr[paramIndex].floatmem, param, sizeof(Rpp32f) * handle.GetBatchSize() * 3, hipMemcpyHostToDevice);
-    }
-#endif
-}
-
-inline void copy_param_uint(uint param, rpp::Handle& handle, Rpp32u paramIndex)
-{
-    for(int i = 0; i < handle.GetBatchSize() ; i++)
-    {
-        handle.GetInitHandle()->mem.mcpu.uintArr[paramIndex].uintmem[i] = param;
-    }
 #ifdef HIP_COMPILE
     hipMemcpy(handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, sizeof(Rpp32f) * handle.GetBatchSize(), hipMemcpyHostToDevice);
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, CL_FALSE, 0, sizeof(Rpp32f) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, 0, NULL, NULL);
 #endif // backend
+}
+
+inline void copy_param_float3(float *param, rpp::Handle& handle, Rpp32u paramIndex)
+{
+#ifdef HIP_COMPILE
+    hipMemcpy(handle.GetInitHandle()->mem.mgpu.float3Arr[paramIndex].floatmem, param, sizeof(Rpp32f) * handle.GetBatchSize() * 3, hipMemcpyHostToDevice);
+#endif
 }
 
 inline void copy_param_uint(uint *param, rpp::Handle& handle, Rpp32u paramIndex)
