@@ -1089,7 +1089,7 @@ int main(int argc, char **argv)
         {
             test_case_name = "resize";
 
-            if (interpolationType != RpptInterpolationType::BILINEAR && interpolationType != RpptInterpolationType::TRIANGULAR)
+            if (interpolationType == RpptInterpolationType::BILINEAR || interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
             {
                 missingFuncFlag = 1;
                 break;
