@@ -942,12 +942,6 @@ int main(int argc, char **argv)
         {
             test_case_name = "resize";
 
-            if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
-            {
-                missingFuncFlag = 1;
-                break;
-            }
-
             for (i = 0; i < images; i++)
             {
                 dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
