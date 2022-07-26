@@ -29,9 +29,10 @@ extern "C" {
 #endif
 
 #include "rppt_tensor_color_augmentations.h"
+#include "rppt_tensor_data_exchange_operations.h"
 #include "rppt_tensor_effects_augmentations.h"
-#include "rppt_tensor_geometric_augmentations.h"
 #include "rppt_tensor_filter_augmentations.h"
+#include "rppt_tensor_geometric_augmentations.h"
 #include "rppt_tensor_morphological_operations.h"
 
 #ifdef __cplusplus
