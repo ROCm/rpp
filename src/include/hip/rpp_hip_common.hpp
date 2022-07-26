@@ -8,9 +8,6 @@
 #include "hip/rpp/handle.hpp"
 #include "hip/rpp_hip_roi_conversion.hpp"
 using halfhpp = half_float::half;
-#define PI                              3.14159265
-#define ONE_OVER_6                      0.1666666f
-
 typedef halfhpp Rpp16f;
 typedef unsigned char uchar;
 typedef signed char schar;
@@ -88,6 +85,8 @@ struct RPPTensorFunctionMetaData
 #define LOCAL_THREADS_Z                 1
 #define ONE_OVER_255                    0.00392157f
 #define SIX_OVER_360                    0.01666667f
+#define ONE_OVER_6                      0.1666666f
+#define PI                              3.14159265
 #define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
 #define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
 
@@ -137,15 +136,15 @@ inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u k
 
 // float pixel check for 0-255 range
 
-__device__ __forceinline__ void saturate_hip_pixel(float pixel, uchar* dst)
+__device__ __forceinline__ void rpp_hip_pixel_check(float pixel, uchar* dst)
 {
     pixel = fmax(fminf(pixel, 255), 0);
     *dst = (uchar)pixel;
 }
 
-// float pixel check for -127 - 128 range
+// float pixel check for -127-128 range
 
-__device__ __forceinline__ void saturate_hip_pixel(float pixel, schar* dst)
+__device__ __forceinline__ void rpp_hip_pixel_check(float pixel, schar* dst)
 {
     pixel = fmax(fminf(pixel, 127), -128);
     *dst = (schar)pixel;
@@ -153,73 +152,16 @@ __device__ __forceinline__ void saturate_hip_pixel(float pixel, schar* dst)
 
 // float pixel check for 0-1 range
 
-__device__ __forceinline__ void saturate_hip_pixel(float pixel, float* dst)
+__device__ __forceinline__ void rpp_hip_pixel_check(float pixel, float* dst)
 {
     pixel = fmax(fminf(pixel, 1), 0);
     *dst = pixel;
 }
 
-__device__ __forceinline__ void saturate_hip_pixel(float pixel, half* dst)
+__device__ __forceinline__ void rpp_hip_pixel_check(float pixel, half* dst)
 {
     pixel = fmax(fminf(pixel, 1), 0);
     *dst = (half)pixel;
-}
-
-__device__ __forceinline__ void bicubic_coefficient_hip_compute(float weight, float *coeff)
-{
-    Rpp32f x = fabsf(weight);
-    *coeff = (x >= 2) ? 0 : ((x > 1) ? (x * x * (-0.5f * x + 2.5f) - 4.0f * x + 2.0f) : (x * x * (1.5f * x - 2.5f) + 1.0f));
-}
-
-__device__ __forceinline__ float sinc_hip(float x)
-{
-    x *= PI;
-    return (fabs(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sin(x) / x;
-}
-
-__device__ __forceinline__ void lanczos3_coefficient_hip_compute(float weight, float *coeff)
-{
-    *coeff = fabs(weight) >= 3 ? 0.0f : (sinc_hip(weight) * sinc_hip(weight / 3));
-}
-
-__device__ __forceinline__ void gaussian_coefficient_hip_compute(float weight, float *coeff)
-{
-    *coeff = expf(weight * weight * -4.0f);
-}
-
-__device__ __forceinline__ void triangular_coefficient_hip_compute(float weight, float *coeff)
-{
-    *coeff = 1 - std::fabs(weight);
-    *coeff = *coeff < 0 ? 0 : *coeff;
-}
-
-__device__ __forceinline__ void compute_interpolation_coefficient(RpptInterpolationType interpolationType, float weight, float *coeff)
-{
-    switch (interpolationType)
-    {
-    case RpptInterpolationType::BICUBIC:
-    {
-        bicubic_coefficient_hip_compute(weight, coeff);
-        break;
-    }
-    case RpptInterpolationType::LANCZOS:
-    {
-        lanczos3_coefficient_hip_compute(weight, coeff);
-        break;
-    }
-    case RpptInterpolationType::GAUSSIAN:
-    {
-        gaussian_coefficient_hip_compute(weight, coeff);
-        break;
-    }
-    case RpptInterpolationType::TRIANGULAR:
-    {
-        triangular_coefficient_hip_compute(weight, coeff);
-        break;
-    }
-    default:
-        break;
-    }
 }
 
 // float4 pixel check for 0-255 range
@@ -1539,6 +1481,130 @@ __device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(RpptXorwowState *xorwow
 }
 
 // /******************** DEVICE INTERPOLATION HELPER FUNCTIONS ********************/
+
+__device__ __forceinline__ void rpp_hip_compute_bicubic_coefficient(float weight, float *coeff)
+{
+    Rpp32f x = fabsf(weight);
+    *coeff = (x >= 2) ? 0 : ((x > 1) ? (x * x * (-0.5f * x + 2.5f) - 4.0f * x + 2.0f) : (x * x * (1.5f * x - 2.5f) + 1.0f));
+}
+
+__device__ __forceinline__ float rpp_hip_sinc(float x)
+{
+    x *= PI;
+    return (fabs(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sin(x) / x;
+}
+
+__device__ __forceinline__ void rpp_hip_compute_lanczos3_coefficient(float weight, float *coeff)
+{
+    *coeff = fabs(weight) >= 3 ? 0.0f : (rpp_hip_sinc(weight) * rpp_hip_sinc(weight / 3));
+}
+
+__device__ __forceinline__ void rpp_hip_compute_gaussian_coefficient(float weight, float *coeff)
+{
+    *coeff = expf(weight * weight * -4.0f);
+}
+
+__device__ __forceinline__ void rpp_hip_compute_triangular_coefficient(float weight, float *coeff)
+{
+    *coeff = 1 - std::fabs(weight);
+    *coeff = *coeff < 0 ? 0 : *coeff;
+}
+
+__device__ __forceinline__ void rpp_hip_compute_interpolation_coefficient(RpptInterpolationType interpolationType, float weight, float *coeff)
+{
+    switch (interpolationType)
+    {
+        case RpptInterpolationType::BICUBIC:
+        {
+            rpp_hip_compute_bicubic_coefficient(weight, coeff);
+            break;
+        }
+        case RpptInterpolationType::LANCZOS:
+        {
+            rpp_hip_compute_lanczos3_coefficient(weight, coeff);
+            break;
+        }
+        case RpptInterpolationType::GAUSSIAN:
+        {
+            rpp_hip_compute_gaussian_coefficient(weight, coeff);
+            break;
+        }
+        case RpptInterpolationType::TRIANGULAR:
+        {
+            rpp_hip_compute_triangular_coefficient(weight, coeff);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+__device__ __forceinline__ void rpp_hip_compute_index_and_weights(RpptInterpolationType interpolationType, int loc, float weight, int kernelSize,
+                                                                  int limit, int *index, float *coeffs, int srcStride, float scale, float radius)
+{
+    weight -= radius;
+    limit *= srcStride;
+    float sum = 0;
+    for(int k = 0; k < kernelSize; k++)
+    {
+        index[k] = min(max((int)(loc + (k * srcStride)), 0), limit);
+        rpp_hip_compute_interpolation_coefficient(interpolationType, (weight + k) * scale , &coeffs[k]);
+        sum += coeffs[k];
+    }
+    if(sum)
+    {
+        sum = 1 / sum;
+        for(int k = 0; k < kernelSize; k++)
+            coeffs[k] = coeffs[k] * sum;
+    }
+}
+
+__device__ void rpp_hip_compute_scale_and_radius(RpptInterpolationType interpolationType, uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
+{
+    switch(interpolationType)
+    {
+        case RpptInterpolationType::BICUBIC:
+        {
+            *radius = 2.0f;
+            break;
+        }
+        case RpptInterpolationType::LANCZOS:
+        {
+            if(inSize > outSize)
+            {
+                *radius = 3.0f * scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
+            else
+                *radius = 3.0f;
+            break;
+        }
+        case RpptInterpolationType::GAUSSIAN:
+        {
+            if(inSize > outSize)
+            {
+                *radius = scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
+            break;
+        }
+        case RpptInterpolationType::TRIANGULAR:
+        {
+            if(inSize > outSize)
+            {
+                *radius = scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
+            break;
+        }
+        default:
+        {
+            *radius = 1.0f;
+            *scale = 1.0f;
+            break;
+        }
+    }
+}
 
 // BILINEAR INTERPOLATION LOAD HELPERS (separate load routines for each bit depth)
 

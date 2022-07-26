@@ -12,73 +12,6 @@ __device__ void resize_generic_srclocs_hip_compute(int dstLocation, float scale,
     *srcLoc = ((srcLocation > limit) ? limit : srcLocation) * srcStride;
 }
 
-__device__ void compute_index_and_weights(RpptInterpolationType interpolationType, int loc, float weight, int kernelSize,
-                                          int limit, int *index, float *coeffs, int srcStride, float scale, float radius)
-{
-    weight -= radius;
-    limit = limit * srcStride;
-    float sum = 0;
-    for(int k = 0; k < kernelSize; k++)
-    {
-        index[k] = min(max((int)(loc + (k * srcStride)), 0), limit);
-        compute_interpolation_coefficient(interpolationType, (weight + k) * scale , &coeffs[k]);
-        sum += coeffs[k];
-    }
-    if(sum)
-    {
-        sum = 1 / sum;
-        for(int k = 0; k < kernelSize; k++)
-            coeffs[k] = coeffs[k] * sum;
-    }
-}
-
-__device__ void compute_scale_and_radius(RpptInterpolationType interpolationType, uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
-{
-    switch(interpolationType)
-    {
-        case RpptInterpolationType::BICUBIC:
-        {
-            *radius = 2.0f;
-            break;
-        }
-        case RpptInterpolationType::LANCZOS:
-        {
-            if(inSize > outSize)
-            {
-                *radius = 3.0f * scaleRatio;
-                *scale = (1 / scaleRatio);
-            }
-            else
-                *radius = 3.0f;
-            break;
-        }
-        case RpptInterpolationType::GAUSSIAN:
-        {
-            if(inSize > outSize)
-            {
-                *radius = scaleRatio;
-                *scale = (1 / scaleRatio);
-            }
-            break;
-        }
-        case RpptInterpolationType::TRIANGULAR:
-        {
-            if(inSize > outSize)
-            {
-                *radius = scaleRatio;
-                *scale = (1 / scaleRatio);
-            }
-            break;
-        }
-        default:
-        {
-            *radius = 1.0f;
-            *scale = 1.0f;
-            break;
-        }
-    }
-}
-
 template <typename T>
 __global__ void resize_generic_pkd_tensor(T *srcPtr,
                                           uint2 srcStridesNH,
@@ -110,22 +43,22 @@ __global__ void resize_generic_pkd_tensor(T *srcPtr,
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
-    compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
-    int wKernelSize = ceilf((wRatio < 1 ? 1 : wRatio) * 2);
-    int hKernelSize = ceilf((hRatio < 1 ? 1 : hRatio) * 2);
+    int wKernelSize = ceil(wRadius * 2);
+    int hKernelSize = ceil(hRadius * 2);
 
     float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
     int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
     resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 3);
-    compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 3, wScale, wRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 3, wScale, wRadius);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNH.x);
     T *srcRowPtrsForInterp[MAX_KERNEL_SIZE];
     resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
 
     for(int k = 0; k < hKernelSize; k++)
         srcRowPtrsForInterp[k] = srcPtrTemp + rowIndices[k] * srcStridesNH.y;
@@ -143,9 +76,9 @@ __global__ void resize_generic_pkd_tensor(T *srcPtr,
     }
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    saturate_hip_pixel(tempPixelR, &dstPtr[dstIdx]);
-    saturate_hip_pixel(tempPixelG, &dstPtr[dstIdx + 1]);
-    saturate_hip_pixel(tempPixelB, &dstPtr[dstIdx + 2]);
+    rpp_hip_pixel_check(tempPixelR, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check(tempPixelG, &dstPtr[dstIdx + 1]);
+    rpp_hip_pixel_check(tempPixelB, &dstPtr[dstIdx + 2]);
 }
 
 template <typename T>
@@ -180,17 +113,17 @@ __global__ void resize_generic_pln3_tensor(T *srcPtr,
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
-    compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
-    int wKernelSize = ceilf((wRatio < 1 ? 1 : wRatio) * 2);
-    int hKernelSize = ceilf((hRatio < 1 ? 1 : hRatio) * 2);
+    int wKernelSize = ceil(wRadius * 2);
+    int hKernelSize = ceil(hRadius * 2);
 
     float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
     int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
     resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
 
     T *srcPtrTemp[3];
     srcPtrTemp[0] = srcPtr + (id_z * srcStridesNCH.x);
@@ -199,7 +132,7 @@ __global__ void resize_generic_pln3_tensor(T *srcPtr,
 
     T *srcRowPtrsForInterp[3][MAX_KERNEL_SIZE];
     resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
 
     for(int k = 0; k < hKernelSize; k++)
     {
@@ -221,9 +154,9 @@ __global__ void resize_generic_pln3_tensor(T *srcPtr,
     }
 
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    saturate_hip_pixel(tempPixelR, &dstPtr[dstIdx]);
-    saturate_hip_pixel(tempPixelG, &dstPtr[dstIdx + dstStridesNCH.y]);
-    saturate_hip_pixel(tempPixelB, &dstPtr[dstIdx + 2 * dstStridesNCH.y]);
+    rpp_hip_pixel_check(tempPixelR, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check(tempPixelG, &dstPtr[dstIdx + dstStridesNCH.y]);
+    rpp_hip_pixel_check(tempPixelB, &dstPtr[dstIdx + 2 * dstStridesNCH.y]);
 }
 
 template <typename T>
@@ -258,19 +191,19 @@ __global__ void resize_generic_pln1_tensor(T *srcPtr,
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
-    compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
-    int wKernelSize = ceilf((wRatio < 1 ? 1 : wRatio) * 2);
-    int hKernelSize = ceilf((hRatio < 1 ? 1 : hRatio) * 2);
+    int wKernelSize = ceil(wRadius * 2);
+    int hKernelSize = ceil(hRadius * 2);
 
     float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
     int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
     resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
     resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNCH.x);
 
@@ -289,7 +222,7 @@ __global__ void resize_generic_pln1_tensor(T *srcPtr,
     }
 
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    saturate_hip_pixel(tempPixel, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check(tempPixel, &dstPtr[dstIdx]);
 }
 
 template <typename T>
@@ -324,22 +257,22 @@ __global__ void resize_generic_pkd3_pln3_tensor(T *srcPtr,
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
-    compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
-    int wKernelSize = ceilf((wRatio < 1 ? 1 : wRatio) * 2);
-    int hKernelSize = ceilf((hRatio < 1 ? 1 : hRatio) * 2);
+    int wKernelSize = ceil(wRadius * 2);
+    int hKernelSize = ceil(hRadius * 2);
 
     float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
     int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
     resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 3);
-    compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 3, wScale, wRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 3, wScale, wRadius);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNH.x);
     T *srcRowPtrsForInterp[MAX_KERNEL_SIZE];
     resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
 
     for(int k = 0; k < hKernelSize; k++)
         srcRowPtrsForInterp[k] = srcPtrTemp + rowIndices[k] * srcStridesNH.y;
@@ -357,9 +290,9 @@ __global__ void resize_generic_pkd3_pln3_tensor(T *srcPtr,
     }
 
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    saturate_hip_pixel(tempPixelR, &dstPtr[dstIdx]);
-    saturate_hip_pixel(tempPixelG, &dstPtr[dstIdx + dstStridesNCH.y]);
-    saturate_hip_pixel(tempPixelB, &dstPtr[dstIdx + 2 * dstStridesNCH.y]);
+    rpp_hip_pixel_check(tempPixelR, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check(tempPixelG, &dstPtr[dstIdx + dstStridesNCH.y]);
+    rpp_hip_pixel_check(tempPixelB, &dstPtr[dstIdx + 2 * dstStridesNCH.y]);
 }
 
 template <typename T>
@@ -394,17 +327,17 @@ __global__ void resize_generic_pln3_pkd3_tensor(T *srcPtr,
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
-    compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
+    rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
-    int wKernelSize = ceilf((wRatio < 1 ? 1 : wRatio) * 2);
-    int hKernelSize = ceilf((hRatio < 1 ? 1 : hRatio) * 2);
+    int wKernelSize = ceil(wRadius * 2);
+    int hKernelSize = ceil(hRadius * 2);
 
     float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
     int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
     resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
 
     T *srcPtrTemp[3];
     srcPtrTemp[0] = srcPtr + (id_z * srcStridesNCH.x);
@@ -413,7 +346,7 @@ __global__ void resize_generic_pln3_pkd3_tensor(T *srcPtr,
 
     T *srcRowPtrsForInterp[3][MAX_KERNEL_SIZE];
     resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
+    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
 
     for(int k = 0; k < hKernelSize; k++)
     {
@@ -435,9 +368,9 @@ __global__ void resize_generic_pln3_pkd3_tensor(T *srcPtr,
     }
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    saturate_hip_pixel(tempPixelR, &dstPtr[dstIdx]);
-    saturate_hip_pixel(tempPixelG, &dstPtr[dstIdx + 1]);
-    saturate_hip_pixel(tempPixelB, &dstPtr[dstIdx + 2]);
+    rpp_hip_pixel_check(tempPixelR, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check(tempPixelG, &dstPtr[dstIdx + 1]);
+    rpp_hip_pixel_check(tempPixelB, &dstPtr[dstIdx + 2]);
 }
 
 template <typename T>
@@ -461,90 +394,87 @@ RppStatus hip_exec_resize_generic_tensor(T *srcPtr,
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
-    // if (interpolationType == RpptInterpolationType::TRIANGULAR)
-    // {
-        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        hipLaunchKernelGGL(resize_generic_pkd_tensor,
+                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                            dim3(localThreads_x, localThreads_y, localThreads_z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                            dstImgSize,
+                            roiTensorPtrSrc,
+                            interpolationType);
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        if (srcDescPtr->c == 3)
         {
-            hipLaunchKernelGGL(resize_generic_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               dstImgSize,
-                               roiTensorPtrSrc,
-                               interpolationType);
+            hipLaunchKernelGGL(resize_generic_pln3_tensor,
+                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                dim3(localThreads_x, localThreads_y, localThreads_z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiTensorPtrSrc,
+                                interpolationType);
         }
-        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        else if (srcDescPtr->c == 1)
         {
-            if (srcDescPtr->c == 3)
-            {
-                hipLaunchKernelGGL(resize_generic_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstImgSize,
-                                   roiTensorPtrSrc,
-                                   interpolationType);
-            }
-            else if (srcDescPtr->c == 1)
-            {
-                hipLaunchKernelGGL(resize_generic_pln1_tensor,
-                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstImgSize,
-                                   roiTensorPtrSrc,
-                                   interpolationType);
-            }
+            hipLaunchKernelGGL(resize_generic_pln1_tensor,
+                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                dim3(localThreads_x, localThreads_y, localThreads_z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiTensorPtrSrc,
+                                interpolationType);
         }
-        else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    }
+    else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
-            {
-                hipLaunchKernelGGL(resize_generic_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstImgSize,
-                                   roiTensorPtrSrc,
-                                   interpolationType);
-            }
-            else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
-            {
-                hipLaunchKernelGGL(resize_generic_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   dstImgSize,
-                                   roiTensorPtrSrc,
-                                   interpolationType);
-            }
+            hipLaunchKernelGGL(resize_generic_pkd3_pln3_tensor,
+                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                dim3(localThreads_x, localThreads_y, localThreads_z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiTensorPtrSrc,
+                                interpolationType);
         }
-    // }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            hipLaunchKernelGGL(resize_generic_pln3_pkd3_tensor,
+                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                dim3(localThreads_x, localThreads_y, localThreads_z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiTensorPtrSrc,
+                                interpolationType);
+        }
+    }
 
     return RPP_SUCCESS;
 }
