@@ -1,6 +1,6 @@
 #include <hip/hip_runtime.h>
-#include "hip/rpp_hip_common.hpp"
-#include "func_specific/rng_seed_stream.hpp"
+#include "rpp_hip_common.hpp"
+#include "rng_seed_stream.hpp"
 
 __device__ void gaussian_noise_8_hip_compute(d_float8 *pix_f8, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
 {
