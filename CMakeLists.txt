@@ -130,7 +130,8 @@ elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKE
         set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
         set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
-        set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})
+        # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})  # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
+        set(INCLUDE_LIST ${INCLUDE_LIST})
         add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
 
         message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using OpenCL backend${ColourReset}")
