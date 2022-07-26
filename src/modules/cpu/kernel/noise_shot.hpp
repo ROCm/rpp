@@ -1,6 +1,6 @@
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
 
 RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        RpptDescPtr srcDescPtr,
@@ -74,7 +74,7 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
         pShotNoiseFactorInv = _mm_set1_ps(shotNoiseFactorInv);
 #endif
 
-        // Salt and Pepper Noise with fused output-layout toggle (NHWC -> NCHW)
+        // Shot Noise with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -144,7 +144,7 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise with fused output-layout toggle (NCHW -> NHWC)
+        // Shot Noise with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -212,7 +212,7 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle (NHWC -> NHWC)
+        // Shot Noise without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRow, *dstPtrRow;
@@ -268,7 +268,7 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle (NCHW -> NCHW)
+        // Shot Noise without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -348,7 +348,7 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle single channel (NCHW -> NCHW)
+        // Shot Noise without fused output-layout toggle single channel (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~15;
@@ -401,7 +401,7 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
 
     return RPP_SUCCESS;
 }
-/*
+
 RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          RpptDescPtr srcDescPtr,
                                          Rpp32f *dstPtr,
@@ -422,7 +422,8 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f noiseFactor = shotNoiseFactorTensor[batchCount];
+        Rpp32f shotNoiseFactor = shotNoiseFactorTensor[batchCount] * ONE_OVER_255;
+        Rpp32f shotNoiseFactorInv = 255.0f / shotNoiseFactorTensor[batchCount];
         Rpp32u offset = batchCount * srcDescPtr->strides.nStride;
 
         Rpp32f *srcPtrImage, *dstPtrImage;
@@ -456,11 +457,9 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
         pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset, xorwowInitialStatePtr[4].x[4] + offset, xorwowInitialStatePtr[5].x[4] + offset, xorwowInitialStatePtr[6].x[4] + offset, xorwowInitialStatePtr[7].x[4] + offset);
         pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset, xorwowInitialStatePtr[4].counter + offset, xorwowInitialStatePtr[5].counter + offset, xorwowInitialStatePtr[6].counter + offset, xorwowInitialStatePtr[7].counter + offset);
 
-        __m256 pSaltAndPepperNoiseParams[4];
-        pSaltAndPepperNoiseParams[0] = _mm256_set1_ps(noiseProbability);
-        pSaltAndPepperNoiseParams[1] = _mm256_set1_ps(saltProbability);
-        pSaltAndPepperNoiseParams[2] = _mm256_set1_ps(salt);
-        pSaltAndPepperNoiseParams[3] = _mm256_set1_ps(pepper);
+        __m256 pShotNoiseFactor, pShotNoiseFactorInv;
+        pShotNoiseFactor = _mm256_set1_ps(shotNoiseFactor);
+        pShotNoiseFactorInv = _mm256_set1_ps(shotNoiseFactorInv);
 #else
         Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
@@ -474,14 +473,12 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
         pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset);
         pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset);
 
-        __m128 pSaltAndPepperNoiseParams[4];
-        pSaltAndPepperNoiseParams[0] = _mm_set1_ps(noiseProbability);
-        pSaltAndPepperNoiseParams[1] = _mm_set1_ps(saltProbability);
-        pSaltAndPepperNoiseParams[2] = _mm_set1_ps(salt);
-        pSaltAndPepperNoiseParams[3] = _mm_set1_ps(pepper);
+        __m128 pShotNoiseFactor, pShotNoiseFactorInv;
+        pShotNoiseFactor = _mm_set1_ps(shotNoiseFactor);
+        pShotNoiseFactorInv = _mm_set1_ps(shotNoiseFactorInv);
 #endif
 
-        // Salt and Pepper Noise with fused output-layout toggle (NHWC -> NCHW)
+        // Shot Noise with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -504,12 +501,14 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_24_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_12_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -519,18 +518,22 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp32f dst[3];
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dst, srcPtrTemp, 12);
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = (Rpp32f) srcPtrTemp[0] * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = (Rpp32f) srcPtrTemp[1] * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = (Rpp32f) srcPtrTemp[2] * shotNoiseFactorInv;
+                        *dstPtrTempR = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
+                        *dstPtrTempG = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
+                        *dstPtrTempB = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            std::fill_n(dst, 3, salt);
-                        else
-                            std::fill_n(dst, 3, pepper);
-                    *dstPtrTempR = dst[0];
-                    *dstPtrTempG = dst[1];
-                    *dstPtrTempB = dst[2];
+                    {
+                        *dstPtrTempR = srcPtrTemp[0];
+                        *dstPtrTempG = srcPtrTemp[1];
+                        *dstPtrTempB = srcPtrTemp[2];
+                    }
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -545,7 +548,7 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise with fused output-layout toggle (NCHW -> NHWC)
+        // Shot Noise with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -568,12 +571,14 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_shot_noise_24_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_shot_noise_12_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -583,15 +588,22 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f src[3] = {*srcPtrTempR, *srcPtrTempG, *srcPtrTempB};
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dstPtrTemp, src, 12);
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = (Rpp32f) *srcPtrTempR * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = (Rpp32f) *srcPtrTempG * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = (Rpp32f) *srcPtrTempB * shotNoiseFactorInv;
+                        dstPtrTemp[0] = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
+                        dstPtrTemp[1] = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
+                        dstPtrTemp[2] = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            std::fill_n(dstPtrTemp, 3, salt);
-                        else
-                            std::fill_n(dstPtrTemp, 3, pepper);
+                    {
+                        dstPtrTemp[0] = *srcPtrTempR;
+                        dstPtrTemp[1] = *srcPtrTempG;
+                        dstPtrTemp[2] = *srcPtrTempB;
+                    }
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -606,7 +618,7 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle (NHWC -> NHWC)
+        // Shot Noise without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *srcPtrRow, *dstPtrRow;
@@ -625,12 +637,14 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_24_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_12_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -638,14 +652,22 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dstPtrTemp, srcPtrTemp, 12);
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = (Rpp32f) srcPtrTemp[0] * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = (Rpp32f) srcPtrTemp[1] * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = (Rpp32f) srcPtrTemp[2] * shotNoiseFactorInv;
+                        dstPtrTemp[0] = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
+                        dstPtrTemp[1] = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
+                        dstPtrTemp[2] = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            std::fill_n(dstPtrTemp, 3, salt);
-                        else
-                            std::fill_n(dstPtrTemp, 3, pepper);
+                    {
+                        dstPtrTemp[0] = srcPtrTemp[0];
+                        dstPtrTemp[1] = srcPtrTemp[1];
+                        dstPtrTemp[2] = srcPtrTemp[2];
+                    }
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -656,7 +678,7 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle (NCHW -> NCHW)
+        // Shot Noise without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -683,12 +705,14 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_shot_noise_24_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_shot_noise_12_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -700,35 +724,22 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
+                    if (shotNoiseFactor != 0.0f)
                     {
-                        *dstPtrTempR = *srcPtrTempR;
-                        *dstPtrTempG = *srcPtrTempG;
-                        *dstPtrTempB = *srcPtrTempB;
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = (Rpp32f) *srcPtrTempR++ * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = (Rpp32f) *srcPtrTempG++ * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = (Rpp32f) *srcPtrTempB++ * shotNoiseFactorInv;
+                        *dstPtrTempR++ = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
+                        *dstPtrTempG++ = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
+                        *dstPtrTempB++ = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
                     }
                     else
                     {
-                        if(randomNumberFloat <= saltProbability)
-                        {
-                            *dstPtrTempR = salt;
-                            *dstPtrTempG = salt;
-                            *dstPtrTempB = salt;
-                        }
-                        else
-                        {
-                            *dstPtrTempR = pepper;
-                            *dstPtrTempG = pepper;
-                            *dstPtrTempB = pepper;
-                        }
+                        *dstPtrTempR++ = *srcPtrTempR++;
+                        *dstPtrTempG++ = *srcPtrTempG++;
+                        *dstPtrTempB++ = *srcPtrTempB++;
                     }
-
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -740,7 +751,7 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle single channel (NCHW -> NCHW)
+        // Shot Noise without fused output-layout toggle single channel (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
 #if __AVX2__
@@ -764,12 +775,14 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p;
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, &p);    // simd loads
-                    compute_shot_noise_8_host(&p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_8_host(&p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, &p);    // simd stores
 #else
                     __m128 p;
                     rpp_simd_load(rpp_load4_f32_to_f32, srcPtrTemp, &p);    // simd loads
-                    compute_shot_noise_4_host(&p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_4_host(&p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, &p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrementPerChannel;
@@ -777,17 +790,16 @@ RppStatus shot_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        *dstPtrTemp = *srcPtrTemp;
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda;
+                        poissonDistribLambda = (Rpp32f) *srcPtrTemp++ * shotNoiseFactorInv;
+                        *dstPtrTemp++ = RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda) * shotNoiseFactor);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            *dstPtrTemp = salt;
-                        else
-                            *dstPtrTemp = pepper;
-
-                    srcPtrTemp++;
-                    dstPtrTemp++;
+                    {
+                        *dstPtrTemp++ = *srcPtrTemp++;
+                    }
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -819,7 +831,8 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f noiseFactor = shotNoiseFactorTensor[batchCount];
+        Rpp32f shotNoiseFactor = shotNoiseFactorTensor[batchCount] * ONE_OVER_255;
+        Rpp32f shotNoiseFactorInv = 255.0f / shotNoiseFactorTensor[batchCount];
         Rpp32u offset = batchCount * srcDescPtr->strides.nStride;
 
         Rpp16f *srcPtrImage, *dstPtrImage;
@@ -853,11 +866,9 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
         pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset, xorwowInitialStatePtr[4].x[4] + offset, xorwowInitialStatePtr[5].x[4] + offset, xorwowInitialStatePtr[6].x[4] + offset, xorwowInitialStatePtr[7].x[4] + offset);
         pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset, xorwowInitialStatePtr[4].counter + offset, xorwowInitialStatePtr[5].counter + offset, xorwowInitialStatePtr[6].counter + offset, xorwowInitialStatePtr[7].counter + offset);
 
-        __m256 pSaltAndPepperNoiseParams[4];
-        pSaltAndPepperNoiseParams[0] = _mm256_set1_ps(noiseProbability);
-        pSaltAndPepperNoiseParams[1] = _mm256_set1_ps(saltProbability);
-        pSaltAndPepperNoiseParams[2] = _mm256_set1_ps(salt);
-        pSaltAndPepperNoiseParams[3] = _mm256_set1_ps(pepper);
+        __m256 pShotNoiseFactor, pShotNoiseFactorInv;
+        pShotNoiseFactor = _mm256_set1_ps(shotNoiseFactor);
+        pShotNoiseFactorInv = _mm256_set1_ps(shotNoiseFactorInv);
 #else
         Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
@@ -871,14 +882,12 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
         pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset);
         pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset);
 
-        __m128 pSaltAndPepperNoiseParams[4];
-        pSaltAndPepperNoiseParams[0] = _mm_set1_ps(noiseProbability);
-        pSaltAndPepperNoiseParams[1] = _mm_set1_ps(saltProbability);
-        pSaltAndPepperNoiseParams[2] = _mm_set1_ps(salt);
-        pSaltAndPepperNoiseParams[3] = _mm_set1_ps(pepper);
+        __m128 pShotNoiseFactor, pShotNoiseFactorInv;
+        pShotNoiseFactor = _mm_set1_ps(shotNoiseFactor);
+        pShotNoiseFactorInv = _mm_set1_ps(shotNoiseFactorInv);
 #endif
 
-        // Salt and Pepper Noise with fused output-layout toggle (NHWC -> NCHW)
+        // Shot Noise with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -905,12 +914,14 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
-                    compute_shot_noise_24_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
-                    compute_shot_noise_12_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
@@ -926,18 +937,22 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp16f dst[3];
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dst, srcPtrTemp, 6);
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = (Rpp32f) srcPtrTemp[0] * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = (Rpp32f) srcPtrTemp[1] * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = (Rpp32f) srcPtrTemp[2] * shotNoiseFactorInv;
+                        *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
+                        *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
+                        *dstPtrTempB = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            std::fill_n(dst, 3, salt);
-                        else
-                            std::fill_n(dst, 3, pepper);
-                    *dstPtrTempR = dst[0];
-                    *dstPtrTempG = dst[1];
-                    *dstPtrTempB = dst[2];
+                    {
+                        *dstPtrTempR = srcPtrTemp[0];
+                        *dstPtrTempG = srcPtrTemp[1];
+                        *dstPtrTempB = srcPtrTemp[2];
+                    }
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -952,7 +967,7 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise with fused output-layout toggle (NCHW -> NHWC)
+        // Shot Noise with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -983,12 +998,14 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_shot_noise_24_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_shot_noise_12_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
@@ -1000,15 +1017,22 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp16f src[3] = {*srcPtrTempR, *srcPtrTempG, *srcPtrTempB};
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dstPtrTemp, src, 6);
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = (Rpp32f) *srcPtrTempR * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = (Rpp32f) *srcPtrTempG * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = (Rpp32f) *srcPtrTempB * shotNoiseFactorInv;
+                        dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
+                        dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
+                        dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            std::fill_n(dstPtrTemp, 3, salt);
-                        else
-                            std::fill_n(dstPtrTemp, 3, pepper);
+                    {
+                        dstPtrTemp[0] = *srcPtrTempR;
+                        dstPtrTemp[1] = *srcPtrTempG;
+                        dstPtrTemp[2] = *srcPtrTempB;
+                    }
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -1023,7 +1047,7 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle (NHWC -> NHWC)
+        // Shot Noise without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *srcPtrRow, *dstPtrRow;
@@ -1046,12 +1070,14 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
-                    compute_shot_noise_24_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
-                    compute_shot_noise_12_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
@@ -1061,14 +1087,22 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dstPtrTemp, srcPtrTemp, 6);
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = (Rpp32f) srcPtrTemp[0] * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = (Rpp32f) srcPtrTemp[1] * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = (Rpp32f) srcPtrTemp[2] * shotNoiseFactorInv;
+                        dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
+                        dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
+                        dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            std::fill_n(dstPtrTemp, 3, salt);
-                        else
-                            std::fill_n(dstPtrTemp, 3, pepper);
+                    {
+                        dstPtrTemp[0] = srcPtrTemp[0];
+                        dstPtrTemp[1] = srcPtrTemp[1];
+                        dstPtrTemp[2] = srcPtrTemp[2];
+                    }
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -1079,7 +1113,7 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle (NCHW -> NCHW)
+        // Shot Noise without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1114,12 +1148,14 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_shot_noise_24_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_shot_noise_12_host(p, p + 1, p + 2, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
@@ -1137,35 +1173,22 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
+                    if (shotNoiseFactor != 0.0f)
                     {
-                        *dstPtrTempR = *srcPtrTempR;
-                        *dstPtrTempG = *srcPtrTempG;
-                        *dstPtrTempB = *srcPtrTempB;
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = (Rpp32f) *srcPtrTempR++ * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = (Rpp32f) *srcPtrTempG++ * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = (Rpp32f) *srcPtrTempB++ * shotNoiseFactorInv;
+                        *dstPtrTempR++ = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
+                        *dstPtrTempG++ = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
+                        *dstPtrTempB++ = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
                     }
                     else
                     {
-                        if(randomNumberFloat <= saltProbability)
-                        {
-                            *dstPtrTempR = salt;
-                            *dstPtrTempG = salt;
-                            *dstPtrTempB = salt;
-                        }
-                        else
-                        {
-                            *dstPtrTempR = pepper;
-                            *dstPtrTempG = pepper;
-                            *dstPtrTempB = pepper;
-                        }
+                        *dstPtrTempR++ = *srcPtrTempR++;
+                        *dstPtrTempG++ = *srcPtrTempG++;
+                        *dstPtrTempB++ = *srcPtrTempB++;
                     }
-
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -1177,7 +1200,7 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle single channel (NCHW -> NCHW)
+        // Shot Noise without fused output-layout toggle single channel (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
 #if __AVX2__
@@ -1204,12 +1227,14 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p;
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, &p);    // simd loads
-                    compute_shot_noise_8_host(&p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_8_host(&p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, &p);    // simd stores
 #else
                     __m128 p;
                     rpp_simd_load(rpp_load4_f32_to_f32, srcPtrTemp_ps, &p);    // simd loads
-                    compute_shot_noise_4_host(&p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_4_host(&p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp_ps, &p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
@@ -1219,17 +1244,16 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        *dstPtrTemp = *srcPtrTemp;
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda;
+                        poissonDistribLambda = (Rpp32f) *srcPtrTemp++ * shotNoiseFactorInv;
+                        *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda) * shotNoiseFactor);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            *dstPtrTemp = salt;
-                        else
-                            *dstPtrTemp = pepper;
-
-                    srcPtrTemp++;
-                    dstPtrTemp++;
+                    {
+                        *dstPtrTemp++ = *srcPtrTemp++;
+                    }
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -1261,7 +1285,8 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f noiseFactor = shotNoiseFactorTensor[batchCount];
+        Rpp32f shotNoiseFactor = shotNoiseFactorTensor[batchCount];
+        Rpp32f shotNoiseFactorInv = 1 / shotNoiseFactor;
         Rpp32u offset = batchCount * srcDescPtr->strides.nStride;
 
         Rpp8s *srcPtrImage, *dstPtrImage;
@@ -1295,11 +1320,9 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
         pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset, xorwowInitialStatePtr[4].x[4] + offset, xorwowInitialStatePtr[5].x[4] + offset, xorwowInitialStatePtr[6].x[4] + offset, xorwowInitialStatePtr[7].x[4] + offset);
         pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset, xorwowInitialStatePtr[4].counter + offset, xorwowInitialStatePtr[5].counter + offset, xorwowInitialStatePtr[6].counter + offset, xorwowInitialStatePtr[7].counter + offset);
 
-        __m256 pSaltAndPepperNoiseParams[4];
-        pSaltAndPepperNoiseParams[0] = _mm256_set1_ps(noiseProbability);
-        pSaltAndPepperNoiseParams[1] = _mm256_set1_ps(saltProbability);
-        pSaltAndPepperNoiseParams[2] = _mm256_set1_ps((Rpp32s)salt + 128);
-        pSaltAndPepperNoiseParams[3] = _mm256_set1_ps((Rpp32s)pepper + 128);
+        __m256 pShotNoiseFactor, pShotNoiseFactorInv;
+        pShotNoiseFactor = _mm256_set1_ps(shotNoiseFactor);
+        pShotNoiseFactorInv = _mm256_set1_ps(shotNoiseFactorInv);
 #else
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
         pxXorwowStateX[0] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset);
@@ -1309,14 +1332,12 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
         pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset);
         pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset);
 
-        __m128 pSaltAndPepperNoiseParams[4];
-        pSaltAndPepperNoiseParams[0] = _mm_set1_ps(noiseProbability);
-        pSaltAndPepperNoiseParams[1] = _mm_set1_ps(saltProbability);
-        pSaltAndPepperNoiseParams[2] = _mm_set1_ps((Rpp32s)salt + 128);
-        pSaltAndPepperNoiseParams[3] = _mm_set1_ps((Rpp32s)pepper + 128);
+        __m128 pShotNoiseFactor, pShotNoiseFactorInv;
+        pShotNoiseFactor = _mm_set1_ps(shotNoiseFactor);
+        pShotNoiseFactorInv = _mm_set1_ps(shotNoiseFactorInv);
 #endif
 
-        // Salt and Pepper Noise with fused output-layout toggle (NHWC -> NCHW)
+        // Shot Noise with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1339,12 +1360,14 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -1354,18 +1377,22 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp8s dst[3];
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dst, srcPtrTemp, 3);
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = ((Rpp32f) srcPtrTemp[0] + 128.0f) * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = ((Rpp32f) srcPtrTemp[1] + 128.0f) * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = ((Rpp32f) srcPtrTemp[2] + 128.0f) * shotNoiseFactorInv;
+                        *dstPtrTempR = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor) - 128);
+                        *dstPtrTempG = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor) - 128);
+                        *dstPtrTempB = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor) - 128);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            memset(dst, salt, 3);
-                        else
-                            memset(dst, pepper, 3);
-                    *dstPtrTempR = dst[0];
-                    *dstPtrTempG = dst[1];
-                    *dstPtrTempB = dst[2];
+                    {
+                        *dstPtrTempR = srcPtrTemp[0];
+                        *dstPtrTempG = srcPtrTemp[1];
+                        *dstPtrTempB = srcPtrTemp[2];
+                    }
 
                     srcPtrTemp+=3;
                     dstPtrTempR++;
@@ -1380,7 +1407,7 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise with fused output-layout toggle (NCHW -> NHWC)
+        // Shot Noise with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -1403,12 +1430,14 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -1419,14 +1448,19 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp8s src[3] = {*srcPtrTempR, *srcPtrTempG, *srcPtrTempB};
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dstPtrTemp, src, 3);
+
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = ((Rpp32f) src[0] + 128.0f) * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = ((Rpp32f) src[1] + 128.0f) * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = ((Rpp32f) src[2] + 128.0f) * shotNoiseFactorInv;
+                        dstPtrTemp[0] = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor) - 128);
+                        dstPtrTemp[1] = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor) - 128);
+                        dstPtrTemp[2] = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor) - 128);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            memset(dstPtrTemp, salt, 3);
-                        else
-                            memset(dstPtrTemp, pepper, 3);
+                        memcpy(dstPtrTemp, src, 3);
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -1441,7 +1475,7 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle (NHWC -> NHWC)
+        // Shot Noise without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtrRow, *dstPtrRow;
@@ -1460,12 +1494,14 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -1473,14 +1509,18 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        memcpy(dstPtrTemp, srcPtrTemp, 3);
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = ((Rpp32f) srcPtrTemp[0] + 128.0f) * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = ((Rpp32f) srcPtrTemp[1] + 128.0f) * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = ((Rpp32f) srcPtrTemp[2] + 128.0f) * shotNoiseFactorInv;
+                        dstPtrTemp[0] = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor) - 128);
+                        dstPtrTemp[1] = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor) - 128);
+                        dstPtrTemp[2] = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor) - 128);
+                    }
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            memset(dstPtrTemp, salt, 3);
-                        else
-                            memset(dstPtrTemp, pepper, 3);
+                        memcpy(dstPtrTemp, srcPtrTemp, 3);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -1491,7 +1531,7 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle (NCHW -> NCHW)
+        // Shot Noise without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1518,12 +1558,14 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -1535,27 +1577,21 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
+                    if (shotNoiseFactor != 0.0f)
+                    {
+                        Rpp32f poissonDistribLambda[3];
+                        poissonDistribLambda[0] = ((Rpp32f) *srcPtrTempR + 128.0f) * shotNoiseFactorInv;
+                        poissonDistribLambda[1] = ((Rpp32f) *srcPtrTempG + 128.0f) * shotNoiseFactorInv;
+                        poissonDistribLambda[2] = ((Rpp32f) *srcPtrTempB + 128.0f) * shotNoiseFactorInv;
+                        *dstPtrTempR = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor) - 128);
+                        *dstPtrTempG = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor) - 128);
+                        *dstPtrTempB = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor) - 128);
+                    }
+                    else
                     {
                         *dstPtrTempR = *srcPtrTempR;
                         *dstPtrTempG = *srcPtrTempG;
                         *dstPtrTempB = *srcPtrTempB;
-                    }
-                    else
-                    {
-                        if(randomNumberFloat <= saltProbability)
-                        {
-                            *dstPtrTempR = salt;
-                            *dstPtrTempG = salt;
-                            *dstPtrTempB = salt;
-                        }
-                        else
-                        {
-                            *dstPtrTempR = pepper;
-                            *dstPtrTempG = pepper;
-                            *dstPtrTempB = pepper;
-                        }
                     }
 
                     srcPtrTempR++;
@@ -1575,7 +1611,7 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Salt and Pepper Noise without fused output-layout toggle single channel (NCHW -> NCHW)
+        // Shot Noise without fused output-layout toggle single channel (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~15;
@@ -1596,12 +1632,14 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                     __m256 p[2];
                     rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load16_i8_to_f32, srcPtrTemp, p);    // simd loads
-                    compute_shot_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, pSaltAndPepperNoiseParams);    // shot_noise adjustment
+                    if (shotNoiseFactor != 0.0f)
+                        compute_shot_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store16_f32_to_i8, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrementPerChannel;
@@ -1609,14 +1647,10 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    if (randomNumberFloat > noiseProbability)
-                        *dstPtrTemp = *srcPtrTemp;
+                    if (shotNoiseFactor != 0.0f)
+                        *dstPtrTemp = (Rpp8s) (RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, (((Rpp32f) *srcPtrTemp + 128.0f) * shotNoiseFactorInv)) * shotNoiseFactor) - 128);
                     else
-                        if(randomNumberFloat <= saltProbability)
-                            *dstPtrTemp = salt;
-                        else
-                            *dstPtrTemp = pepper;
+                        *dstPtrTemp = *srcPtrTemp;
 
                     srcPtrTemp++;
                     dstPtrTemp++;
@@ -1630,4 +1664,3 @@ RppStatus shot_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
 
     return RPP_SUCCESS;
 }
-*/
