@@ -1,8 +1,6 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-#define MAX_KERNEL_SIZE 256
-
 __device__ void resize_generic_srclocs_hip_compute(int dstLocation, float scale, int limit, int *srcLoc, float *weight, float offset, int srcStride)
 {
     float srcLocationFloat = ((float) dstLocation) * scale + offset;
@@ -42,8 +40,10 @@ __global__ void resize_generic_pkd_tensor(T *srcPtr,
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
+
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceil(wRadius * 2);
@@ -53,45 +53,46 @@ __global__ void resize_generic_pkd_tensor(T *srcPtr,
     float rowWeightParam, colWeightParam, rowWeight, colWeight;
     int colIndex, rowIndex, srcLocationRowFloor, srcLocationColumnFloor;
     resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, &colWeightParam, wOffset, 3);
+    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeightParam, hOffset, 1);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNH.x);
     T *srcRowPtrsForInterp;
-    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeightParam, hOffset, 1);
 
-    float tempPixelR = 0, tempPixelG = 0, tempPixelB = 0;
-    float rowSum = 0.0, colSum = 0.0;
-    float totalSum = 0.0;
+    float outPixelR = 0.0, outPixelG = 0.0, outPixelB = 0.0;
+    float rowCoeffSum = 0.0, colCoeffSum = 0.0;
+    float invCoeffSum = 0.0;
     for(int j = 0; j < hKernelSize; j++)
     {
         rowIndex = min(max((int)(srcLocationRowFloor + (j * 1)), 0), heightLimit);
         rpp_hip_compute_weight(interpolationType, rowWeightParam, j, &rowWeight, hScale, hRadius);
         srcRowPtrsForInterp = srcPtrTemp + rowIndex * srcStridesNH.y;
-        rowSum += rowWeight;
-        colSum = 0;
+        rowCoeffSum += rowWeight;
+
+        colCoeffSum = 0;
         for(int k = 0; k < wKernelSize; k++)
         {
             colIndex = min(max((int)(srcLocationColumnFloor + (k * 3)), 0), widthLimit);
             rpp_hip_compute_weight(interpolationType, colWeightParam, k, &colWeight, wScale, wRadius);
-            colSum += colWeight;
+            colCoeffSum += colWeight;
             float coeff = colWeight * rowWeight;
-            tempPixelR += (float) *(srcRowPtrsForInterp + colIndex) * coeff;
-            tempPixelG += (float) *(srcRowPtrsForInterp + 1 + colIndex) * coeff;
-            tempPixelB += (float) *(srcRowPtrsForInterp + 2 + colIndex) * coeff;
+            outPixelR += (float) *(srcRowPtrsForInterp + colIndex) * coeff;
+            outPixelG += (float) *(srcRowPtrsForInterp + 1 + colIndex) * coeff;
+            outPixelB += (float) *(srcRowPtrsForInterp + 2 + colIndex) * coeff;
         }
     }
 
-    rowSum = 1 / rowSum;
-    colSum = 1 / colSum;
-    totalSum = rowSum * colSum;
+    rowCoeffSum = 1 / rowCoeffSum;
+    colCoeffSum = 1 / colCoeffSum;
+    invCoeffSum = rowCoeffSum * colCoeffSum;
 
-    tempPixelR *= totalSum;
-    tempPixelG *= totalSum;
-    tempPixelB *= totalSum;
+    outPixelR *= invCoeffSum;
+    outPixelG *= invCoeffSum;
+    outPixelB *= invCoeffSum;
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    rpp_hip_pixel_check(tempPixelR, &dstPtr[dstIdx]);
-    rpp_hip_pixel_check(tempPixelG, &dstPtr[dstIdx + 1]);
-    rpp_hip_pixel_check(tempPixelB, &dstPtr[dstIdx + 2]);
+    rpp_hip_pixel_check_and_store(outPixelR, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check_and_store(outPixelG, &dstPtr[dstIdx + 1]);
+    rpp_hip_pixel_check_and_store(outPixelB, &dstPtr[dstIdx + 2]);
 }
 
 template <typename T>
@@ -120,56 +121,69 @@ __global__ void resize_generic_pln3_tensor(T *srcPtr,
     uint2 srcDimsWH;
     srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
     srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
-
-    int widthLimit = srcDimsWH.x - 1;
+    int widthLimit = (srcDimsWH.x - 1);
     int heightLimit = srcDimsWH.y - 1;
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
+
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceil(wRadius * 2);
     int hKernelSize = ceil(hRadius * 2);
 
-    float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
-    int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
-    resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 1);
-    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
+    float srcLocationRow, srcLocationColumn;
+    float rowWeightParam, colWeightParam, rowWeight, colWeight;
+    int colIndex, rowIndex, srcLocationRowFloor, srcLocationColumnFloor;
+    resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, &colWeightParam, wOffset, 1);
+    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeightParam, hOffset, 1);
 
     T *srcPtrTemp[3];
     srcPtrTemp[0] = srcPtr + (id_z * srcStridesNCH.x);
     srcPtrTemp[1] = srcPtrTemp[0] + srcStridesNCH.y;
     srcPtrTemp[2] = srcPtrTemp[1] + srcStridesNCH.y;
 
-    T *srcRowPtrsForInterp[3][MAX_KERNEL_SIZE];
-    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
-
-    for(int k = 0; k < hKernelSize; k++)
-    {
-        srcRowPtrsForInterp[0][k] = srcPtrTemp[0] + rowIndices[k] * srcStridesNCH.z;
-        srcRowPtrsForInterp[1][k] = srcPtrTemp[1] + rowIndices[k] * srcStridesNCH.z;
-        srcRowPtrsForInterp[2][k] = srcPtrTemp[2] + rowIndices[k] * srcStridesNCH.z;
-    }
-
-    float tempPixelR = 0, tempPixelG = 0, tempPixelB = 0;
+    T *srcRowPtrsForInterp[3];
+    float outPixelR = 0.0, outPixelG = 0.0, outPixelB = 0.0;
+    float rowCoeffSum = 0.0, colCoeffSum = 0.0;
+    float invCoeffSum = 0.0;
     for(int j = 0; j < hKernelSize; j++)
     {
+        rowIndex = min(max((int)(srcLocationRowFloor + (j * 1)), 0), heightLimit);
+        rpp_hip_compute_weight(interpolationType, rowWeightParam, j, &rowWeight, hScale, hRadius);
+        srcRowPtrsForInterp[0] = srcPtrTemp[0] + rowIndex * srcStridesNCH.z;
+        srcRowPtrsForInterp[1] = srcPtrTemp[1] + rowIndex * srcStridesNCH.z;
+        srcRowPtrsForInterp[2] = srcPtrTemp[2] + rowIndex * srcStridesNCH.z;
+        rowCoeffSum += rowWeight;
+
+        colCoeffSum = 0;
         for(int k = 0; k < wKernelSize; k++)
         {
-            Rpp32f coeff = colWeightParams[k] * rowWeightParams[j];
-            tempPixelR += (float) *(srcRowPtrsForInterp[0][j] + colIndices[k]) * coeff;
-            tempPixelG += (float) *(srcRowPtrsForInterp[1][j] + colIndices[k]) * coeff;
-            tempPixelB += (float) *(srcRowPtrsForInterp[2][j] + colIndices[k]) * coeff;
+            colIndex = min(max((int)(srcLocationColumnFloor + (k * 1)), 0), widthLimit);
+            rpp_hip_compute_weight(interpolationType, colWeightParam, k, &colWeight, wScale, wRadius);
+            colCoeffSum += colWeight;
+            float coeff = colWeight * rowWeight;
+            outPixelR += (float) *(srcRowPtrsForInterp[0] + colIndex) * coeff;
+            outPixelG += (float) *(srcRowPtrsForInterp[1] + colIndex) * coeff;
+            outPixelB += (float) *(srcRowPtrsForInterp[2] + colIndex) * coeff;
         }
     }
 
+    rowCoeffSum = 1 / rowCoeffSum;
+    colCoeffSum = 1 / colCoeffSum;
+    invCoeffSum = rowCoeffSum * colCoeffSum;
+
+    outPixelR *= invCoeffSum;
+    outPixelG *= invCoeffSum;
+    outPixelB *= invCoeffSum;
+
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    rpp_hip_pixel_check(tempPixelR, &dstPtr[dstIdx]);
-    rpp_hip_pixel_check(tempPixelG, &dstPtr[dstIdx + dstStridesNCH.y]);
-    rpp_hip_pixel_check(tempPixelB, &dstPtr[dstIdx + 2 * dstStridesNCH.y]);
+    rpp_hip_pixel_check_and_store(outPixelR, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check_and_store(outPixelG, &dstPtr[dstIdx + dstStridesNCH.y]);
+    rpp_hip_pixel_check_and_store(outPixelB, &dstPtr[dstIdx + 2 * dstStridesNCH.y]);
 }
 
 template <typename T>
@@ -198,44 +212,56 @@ __global__ void resize_generic_pln1_tensor(T *srcPtr,
     uint2 srcDimsWH;
     srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
     srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
-
-    int widthLimit = srcDimsWH.x - 1;
+    int widthLimit = (srcDimsWH.x - 1);
     int heightLimit = srcDimsWH.y - 1;
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
+
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceil(wRadius * 2);
     int hKernelSize = ceil(hRadius * 2);
 
-    float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
-    int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
-    resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 1);
-    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
-    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
+    float srcLocationRow, srcLocationColumn;
+    float rowWeightParam, colWeightParam, rowWeight, colWeight;
+    int colIndex, rowIndex, srcLocationRowFloor, srcLocationColumnFloor;
+    resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, &colWeightParam, wOffset, 1);
+    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeightParam, hOffset, 1);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNCH.x);
-
-    T *srcRowPtrsForInterp[MAX_KERNEL_SIZE];
-    for(int k = 0; k < hKernelSize; k++)
-        srcRowPtrsForInterp[k] = srcPtrTemp + rowIndices[k] * srcStridesNCH.z;
-
-    float tempPixel = 0;
+    T *srcRowPtrsForInterp;
+    float outPixel = 0;
+    float rowCoeffSum = 0.0, colCoeffSum = 0.0;
+    float invCoeffSum = 0.0;
     for(int j = 0; j < hKernelSize; j++)
     {
+        rowIndex = min(max((int)(srcLocationRowFloor + (j * 1)), 0), heightLimit);
+        rpp_hip_compute_weight(interpolationType, rowWeightParam, j, &rowWeight, hScale, hRadius);
+        srcRowPtrsForInterp = srcPtrTemp + rowIndex * srcStridesNCH.z;
+        rowCoeffSum += rowWeight;
+
+        colCoeffSum = 0;
         for(int k = 0; k < wKernelSize; k++)
         {
-            Rpp32f coeff = colWeightParams[k] * rowWeightParams[j];
-            tempPixel += (float) *(srcRowPtrsForInterp[j] + colIndices[k]) * coeff;
+            colIndex = min(max((int)(srcLocationColumnFloor + (k * 1)), 0), widthLimit);
+            rpp_hip_compute_weight(interpolationType, colWeightParam, k, &colWeight, wScale, wRadius);
+            colCoeffSum += colWeight;
+            float coeff = colWeight * rowWeight;
+            outPixel += (float) *(srcRowPtrsForInterp + colIndex) * coeff;
         }
     }
 
+    rowCoeffSum = 1 / rowCoeffSum;
+    colCoeffSum = 1 / colCoeffSum;
+    invCoeffSum = rowCoeffSum * colCoeffSum;
+
+    outPixel *= invCoeffSum;
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    rpp_hip_pixel_check(tempPixel, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check_and_store(outPixel, &dstPtr[dstIdx]);
 }
 
 template <typename T>
@@ -264,48 +290,64 @@ __global__ void resize_generic_pkd3_pln3_tensor(T *srcPtr,
     uint2 srcDimsWH;
     srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
     srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
-
-    int widthLimit = srcDimsWH.x - 1;
+    int widthLimit = (srcDimsWH.x - 1) * 3;
     int heightLimit = srcDimsWH.y - 1;
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
+
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceil(wRadius * 2);
     int hKernelSize = ceil(hRadius * 2);
 
-    float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
-    int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
-    resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 3);
-    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 3, wScale, wRadius);
+    float srcLocationRow, srcLocationColumn;
+    float rowWeightParam, colWeightParam, rowWeight, colWeight;
+    int colIndex, rowIndex, srcLocationRowFloor, srcLocationColumnFloor;
+    resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, &colWeightParam, wOffset, 3);
+    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeightParam, hOffset, 1);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNH.x);
-    T *srcRowPtrsForInterp[MAX_KERNEL_SIZE];
-    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
+    T *srcRowPtrsForInterp;
 
-    for(int k = 0; k < hKernelSize; k++)
-        srcRowPtrsForInterp[k] = srcPtrTemp + rowIndices[k] * srcStridesNH.y;
-
-    float tempPixelR = 0, tempPixelG = 0, tempPixelB = 0;
+    float outPixelR = 0.0, outPixelG = 0.0, outPixelB = 0.0;
+    float rowCoeffSum = 0.0, colCoeffSum = 0.0;
+    float invCoeffSum = 0.0;
     for(int j = 0; j < hKernelSize; j++)
     {
+        rowIndex = min(max((int)(srcLocationRowFloor + (j * 1)), 0), heightLimit);
+        rpp_hip_compute_weight(interpolationType, rowWeightParam, j, &rowWeight, hScale, hRadius);
+        srcRowPtrsForInterp = srcPtrTemp + rowIndex * srcStridesNH.y;
+        rowCoeffSum += rowWeight;
+
+        colCoeffSum = 0;
         for(int k = 0; k < wKernelSize; k++)
         {
-            Rpp32f coeff = colWeightParams[k] * rowWeightParams[j];
-            tempPixelR += (float) *(srcRowPtrsForInterp[j] + colIndices[k]) * coeff;
-            tempPixelG += (float) *(srcRowPtrsForInterp[j] + 1 + colIndices[k]) * coeff;
-            tempPixelB += (float) *(srcRowPtrsForInterp[j] + 2 + colIndices[k]) * coeff;
+            colIndex = min(max((int)(srcLocationColumnFloor + (k * 3)), 0), widthLimit);
+            rpp_hip_compute_weight(interpolationType, colWeightParam, k, &colWeight, wScale, wRadius);
+            colCoeffSum += colWeight;
+            float coeff = colWeight * rowWeight;
+            outPixelR += (float) *(srcRowPtrsForInterp + colIndex) * coeff;
+            outPixelG += (float) *(srcRowPtrsForInterp + 1 + colIndex) * coeff;
+            outPixelB += (float) *(srcRowPtrsForInterp + 2 + colIndex) * coeff;
         }
     }
 
+    rowCoeffSum = 1 / rowCoeffSum;
+    colCoeffSum = 1 / colCoeffSum;
+    invCoeffSum = rowCoeffSum * colCoeffSum;
+
+    outPixelR *= invCoeffSum;
+    outPixelG *= invCoeffSum;
+    outPixelB *= invCoeffSum;
+
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    rpp_hip_pixel_check(tempPixelR, &dstPtr[dstIdx]);
-    rpp_hip_pixel_check(tempPixelG, &dstPtr[dstIdx + dstStridesNCH.y]);
-    rpp_hip_pixel_check(tempPixelB, &dstPtr[dstIdx + 2 * dstStridesNCH.y]);
+    rpp_hip_pixel_check_and_store(outPixelR, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check_and_store(outPixelG, &dstPtr[dstIdx + dstStridesNCH.y]);
+    rpp_hip_pixel_check_and_store(outPixelB, &dstPtr[dstIdx + 2 * dstStridesNCH.y]);
 }
 
 template <typename T>
@@ -334,56 +376,69 @@ __global__ void resize_generic_pln3_pkd3_tensor(T *srcPtr,
     uint2 srcDimsWH;
     srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
     srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
-
-    int widthLimit = srcDimsWH.x - 1;
+    int widthLimit = (srcDimsWH.x - 1);
     int heightLimit = srcDimsWH.y - 1;
     float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
+
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
     rpp_hip_compute_scale_and_radius(interpolationType, srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceil(wRadius * 2);
     int hKernelSize = ceil(hRadius * 2);
 
-    float srcLocationRow, srcLocationColumn, weightParams[2], colWeightParams[MAX_KERNEL_SIZE], rowWeightParams[MAX_KERNEL_SIZE];
-    int colIndices[MAX_KERNEL_SIZE], rowIndices[MAX_KERNEL_SIZE], srcLocationRowFloor, srcLocationColumnFloor;
-    resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, weightParams, wOffset, 1);
-    rpp_hip_compute_index_and_weights(interpolationType, srcLocationColumnFloor, weightParams[0], wKernelSize, widthLimit, colIndices, colWeightParams, 1, wScale, wRadius);
+    float srcLocationRow, srcLocationColumn;
+    float rowWeightParam, colWeightParam, rowWeight, colWeight;
+    int colIndex, rowIndex, srcLocationRowFloor, srcLocationColumnFloor;
+    resize_generic_srclocs_hip_compute(id_x, wRatio, widthLimit, &srcLocationColumnFloor, &colWeightParam, wOffset, 1);
+    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeightParam, hOffset, 1);
 
     T *srcPtrTemp[3];
     srcPtrTemp[0] = srcPtr + (id_z * srcStridesNCH.x);
     srcPtrTemp[1] = srcPtrTemp[0] + srcStridesNCH.y;
     srcPtrTemp[2] = srcPtrTemp[1] + srcStridesNCH.y;
 
-    T *srcRowPtrsForInterp[3][MAX_KERNEL_SIZE];
-    resize_generic_srclocs_hip_compute(id_y, hRatio, heightLimit, &srcLocationRowFloor, weightParams, hOffset, 1);
-    rpp_hip_compute_index_and_weights(interpolationType, srcLocationRowFloor, weightParams[0], hKernelSize, heightLimit, rowIndices, rowWeightParams, 1, hScale, hRadius);
-
-    for(int k = 0; k < hKernelSize; k++)
-    {
-        srcRowPtrsForInterp[0][k] = srcPtrTemp[0] + rowIndices[k] * srcStridesNCH.z;
-        srcRowPtrsForInterp[1][k] = srcPtrTemp[1] + rowIndices[k] * srcStridesNCH.z;
-        srcRowPtrsForInterp[2][k] = srcPtrTemp[2] + rowIndices[k] * srcStridesNCH.z;
-    }
-
-    float tempPixelR = 0, tempPixelG = 0, tempPixelB = 0;
+    T *srcRowPtrsForInterp[3];
+    float outPixelR = 0.0, outPixelG = 0.0, outPixelB = 0.0;
+    float rowCoeffSum = 0.0, colCoeffSum = 0.0;
+    float invCoeffSum = 0.0;
     for(int j = 0; j < hKernelSize; j++)
     {
+        rowIndex = min(max((int)(srcLocationRowFloor + (j * 1)), 0), heightLimit);
+        rpp_hip_compute_weight(interpolationType, rowWeightParam, j, &rowWeight, hScale, hRadius);
+        srcRowPtrsForInterp[0] = srcPtrTemp[0] + rowIndex * srcStridesNCH.z;
+        srcRowPtrsForInterp[1] = srcPtrTemp[1] + rowIndex * srcStridesNCH.z;
+        srcRowPtrsForInterp[2] = srcPtrTemp[2] + rowIndex * srcStridesNCH.z;
+        rowCoeffSum += rowWeight;
+
+        colCoeffSum = 0;
         for(int k = 0; k < wKernelSize; k++)
         {
-            Rpp32f coeff = colWeightParams[k] * rowWeightParams[j];
-            tempPixelR += (float) *(srcRowPtrsForInterp[0][j] + colIndices[k]) * coeff;
-            tempPixelG += (float) *(srcRowPtrsForInterp[1][j] + colIndices[k]) * coeff;
-            tempPixelB += (float) *(srcRowPtrsForInterp[2][j] + colIndices[k]) * coeff;
+            colIndex = min(max((int)(srcLocationColumnFloor + (k * 1)), 0), widthLimit);
+            rpp_hip_compute_weight(interpolationType, colWeightParam, k, &colWeight, wScale, wRadius);
+            colCoeffSum += colWeight;
+            float coeff = colWeight * rowWeight;
+            outPixelR += (float) *(srcRowPtrsForInterp[0] + colIndex) * coeff;
+            outPixelG += (float) *(srcRowPtrsForInterp[1] + colIndex) * coeff;
+            outPixelB += (float) *(srcRowPtrsForInterp[2] + colIndex) * coeff;
         }
     }
 
+    rowCoeffSum = 1 / rowCoeffSum;
+    colCoeffSum = 1 / colCoeffSum;
+    invCoeffSum = rowCoeffSum * colCoeffSum;
+
+    outPixelR *= invCoeffSum;
+    outPixelG *= invCoeffSum;
+    outPixelB *= invCoeffSum;
+
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    rpp_hip_pixel_check(tempPixelR, &dstPtr[dstIdx]);
-    rpp_hip_pixel_check(tempPixelG, &dstPtr[dstIdx + 1]);
-    rpp_hip_pixel_check(tempPixelB, &dstPtr[dstIdx + 2]);
+    rpp_hip_pixel_check_and_store(outPixelR, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check_and_store(outPixelG, &dstPtr[dstIdx + 1]);
+    rpp_hip_pixel_check_and_store(outPixelB, &dstPtr[dstIdx + 2]);
 }
 
 template <typename T>

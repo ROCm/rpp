@@ -141,7 +141,7 @@ inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u k
 
 // float pixel check for 0-255 range
 
-__device__ __forceinline__ void rpp_hip_pixel_check(float pixel, uchar* dst)
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, uchar* dst)
 {
     pixel = fmax(fminf(pixel, 255), 0);
     *dst = (uchar)pixel;
@@ -149,21 +149,21 @@ __device__ __forceinline__ void rpp_hip_pixel_check(float pixel, uchar* dst)
 
 // float pixel check for -127-128 range
 
-__device__ __forceinline__ void rpp_hip_pixel_check(float pixel, schar* dst)
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, schar* dst)
 {
-    pixel = fmax(fminf(pixel, 127), -128);
+    pixel = fmax(fminf(pixel - 128, 127), -128);
     *dst = (schar)pixel;
 }
 
 // float pixel check for 0-1 range
 
-__device__ __forceinline__ void rpp_hip_pixel_check(float pixel, float* dst)
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, float* dst)
 {
     pixel = fmax(fminf(pixel, 1), 0);
     *dst = pixel;
 }
 
-__device__ __forceinline__ void rpp_hip_pixel_check(float pixel, half* dst)
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, half* dst)
 {
     pixel = fmax(fminf(pixel, 1), 0);
     *dst = (half)pixel;
@@ -1541,26 +1541,6 @@ __device__ __forceinline__ void rpp_hip_compute_interpolation_coefficient(RpptIn
         }
         default:
             break;
-    }
-}
-
-__device__ __forceinline__ void rpp_hip_compute_index_and_weights(RpptInterpolationType interpolationType, int loc, float weight, int kernelSize,
-                                                                  int limit, int *index, float *coeffs, int srcStride, float scale, float radius)
-{
-    weight -= radius;
-    limit *= srcStride;
-    float sum = 0;
-    for(int k = 0; k < kernelSize; k++)
-    {
-        index[k] = min(max((int)(loc + (k * srcStride)), 0), limit);
-        rpp_hip_compute_interpolation_coefficient(interpolationType, (weight + k) * scale , &coeffs[k]);
-        sum += coeffs[k];
-    }
-    if(sum)
-    {
-        sum = 1 / sum;
-        for(int k = 0; k < kernelSize; k++)
-            coeffs[k] = coeffs[k] * sum;
     }
 }
 
