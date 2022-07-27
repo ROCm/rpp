@@ -166,6 +166,9 @@ int main(int argc, char **argv)
     case 70:
         strcpy(funcName, "copy");
         break;
+    case 80:
+        strcpy(funcName, "resize_mirror_normalize");
+        break;
     case 83:
         strcpy(funcName, "gridmask");
         break;
@@ -337,6 +340,15 @@ int main(int argc, char **argv)
     hipMalloc(&d_roiTensorPtrSrc, noOfImages * sizeof(RpptROI));
     hipMalloc(&d_roiTensorPtrDst, noOfImages * sizeof(RpptROI));
 
+    // Initialize the ImagePatch for source and destination
+
+    RpptImagePatch *srcImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
+    RpptImagePatch *dstImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
+
+    RpptImagePatch *d_srcImgSizes, *d_dstImgSizes;
+    hipMalloc(&d_srcImgSizes, noOfImages * sizeof(RpptImagePatch));
+    hipMalloc(&d_dstImgSizes, noOfImages * sizeof(RpptImagePatch));
+
     // Set ROI tensors types for src/dst
 
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -369,6 +381,11 @@ int main(int argc, char **argv)
         roiTensorPtrDst[count].xywhROI.xy.y = 0;
         roiTensorPtrDst[count].xywhROI.roiWidth = image.cols;
         roiTensorPtrDst[count].xywhROI.roiHeight = image.rows;
+
+        srcImgSizes[count].width = roiTensorPtrSrc[count].xywhROI.roiWidth;
+        srcImgSizes[count].height = roiTensorPtrSrc[count].xywhROI.roiHeight;
+        dstImgSizes[count].width = roiTensorPtrDst[count].xywhROI.roiWidth;
+        dstImgSizes[count].height = roiTensorPtrDst[count].xywhROI.roiHeight;
 
         maxHeight = RPPMAX2(maxHeight, roiTensorPtrSrc[count].xywhROI.roiHeight);
         maxWidth = RPPMAX2(maxWidth, roiTensorPtrSrc[count].xywhROI.roiWidth);
@@ -1505,6 +1522,83 @@ int main(int argc, char **argv)
 
         break;
     }
+    case 80:
+    {
+        test_case_name = "resize_mirror_normalize";
+
+        if (interpolationType != RpptInterpolationType::BILINEAR)
+        {
+            missingFuncFlag = 1;
+            break;
+        }
+
+        for (i = 0; i < images; i++)
+        {
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+        }
+
+        Rpp32f mean[images * 3];
+        Rpp32f stdDev[images * 3];
+        Rpp32u mirror[images];
+        for (i = 0, j = 0; i < images; i++, j += 3)
+        {
+            mean[j] = 60.0;
+            stdDev[j] = 1.0;
+
+            mean[j + 1] = 80.0;
+            stdDev[j + 1] = 1.0;
+
+            mean[j + 2] = 100.0;
+            stdDev[j + 2] = 1.0;
+            mirror[i] = 1;
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        // for (i = 0; i < images; i++)
+        // {
+        //     roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+        //     roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+        //     dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+        //     dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        // }
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+        hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_resize_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_resize_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 4)
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 5)
+            rppt_resize_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
     case 83:
     {
         test_case_name = "gridmask";
@@ -1872,8 +1966,8 @@ int main(int argc, char **argv)
 
     for (j = 0; j < dstDescPtr->n; j++)
     {
-        int height = roiTensorPtrSrc[j].xywhROI.roiHeight;
-        int width = roiTensorPtrSrc[j].xywhROI.roiWidth;
+        int height = dstImgSizes[j].height;
+        int width = dstImgSizes[j].width;
 
         int op_size = height * width * dstDescPtr->c;
         Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
@@ -1907,6 +2001,10 @@ int main(int argc, char **argv)
     free(roiTensorPtrDst);
     hipFree(d_roiTensorPtrSrc);
     hipFree(d_roiTensorPtrDst);
+    free(srcImgSizes);
+    free(dstImgSizes);
+    hipFree(d_srcImgSizes);
+    hipFree(d_dstImgSizes);
     free(input);
     free(input_second);
     free(output);
