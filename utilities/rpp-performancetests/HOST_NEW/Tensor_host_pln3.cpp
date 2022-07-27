@@ -870,7 +870,7 @@ int main(int argc, char **argv)
                     {
                         noiseProbabilityTensor[i] = 0.1f;
                         saltProbabilityTensor[i] = 0.5f;
-                        saltValueTensor[i] = 0.6f;
+                        saltValueTensor[i] = 1.0f;
                         pepperValueTensor[i] = 0.0f;
                     }
 

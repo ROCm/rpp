@@ -984,7 +984,7 @@ int main(int argc, char **argv)
                 Rpp32u seed = 1255459;
                 for (i = 0; i < images; i++)
                 {
-                    shotNoiseFactorTensor[i] = 20.0f;
+                    shotNoiseFactorTensor[i] = 80.0f;
                 }
 
                 // Uncomment to run test case with an xywhROI override
