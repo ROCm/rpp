@@ -257,7 +257,7 @@ add_subdirectory(addkernels)
 # install RPP libs -- {ROCM_PATH}/lib
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 # install RPP include files -- {ROCM_PATH}/include/rpp/
-install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
 install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp)
 
 # Set package information
