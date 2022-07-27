@@ -20,7 +20,14 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(amd_rpp)
-set(VERSION "0.95")
+set(VERSION "0.96")
+
+set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
+include(GNUInstallDirs)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 find_program(MAKE_NSIS_EXE makensis)
 find_program(RPMBUILD_EXE rpmbuild)
@@ -30,9 +37,12 @@ find_program(DPKG_EXE dpkg)
 set(ROCM_PATH /opt/rocm CACHE PATH "RPP default ROCm installation path")
 # Avoid setting the default path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH}/rpp CACHE PATH "RPP default ROCm installation path" FORCE)
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# RPP Default Options
+set(DEFAULT_BUILD_TYPE "Release")
 
 # Set message options
 if(NOT WIN32)
@@ -53,12 +63,43 @@ message("-- ${BoldBlue}RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${Colou
 message("-- ${Yellow}CMake minimum version required: ${CMAKE_MINIMUM_REQUIRED_VERSION}${ColourReset}")
 message("-- ${Green}CMake version found: ${CMAKE_VERSION}${ColourReset}")
 
+if(APPLE)
+  set(CMAKE_MACOSX_RPATH 1)
+  set(BACKEND "CPU")
+  message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
+endif()
+
 include(CheckCXXCompilerFlag)
 
-# Set defaults
-if (NOT DEFINED BACKEND)
-    SET(BACKEND "HIP")
+if(NOT DEFINED BACKEND)
+  set(BACKEND "HIP")   # set default backend to HIP
+else()
+  if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
+    set(BACKEND "OCL")
+  elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
+    set(BACKEND "HIP")
+  elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
+    set(BACKEND "CPU")
+  else()
+    message("-- ${Red}Warning: RPP backend option unknown -- ${BACKEND}${ColourReset}")
+    message("-- ${Red}Warning: RPP default backend will enforced${ColourReset}")
+    set(BACKEND "HIP")
+  endif()
 endif()
+
+# RPP Build Type
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "RPP Default Build Type" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
+endif()
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    # -O0  -- Don't Optimize output file; -g -- generate debugging information; -Og -- Optimize for debugging experience rather than speed or size
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -Og")
+else()
+    # -O3 -- Optimize output file; TBD:CHECK -Ofast - Optimize for speed disregarding exact standards compliance; -DNDEBUG -- turn off asserts 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -DNDEBUG")
+endif()
+message("-- ${BoldBlue}MIVisionX Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
 
 if(WIN32 AND CMAKE_CROSSCOMPILING)
     set(WINE_CMD "wine")
@@ -78,7 +119,7 @@ set(COMPILER_FOR_OPENCL clang++)
 set(COMPILER_FOR_CPU clang++)
 
 # Backend specific settings
-if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
+if("${BACKEND}" STREQUAL "HIP")
     add_definitions(-DSTATIC) # This line is to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
 
     find_package(HIP QUIET)    # Find package HIP
@@ -90,7 +131,6 @@ if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP}) # To use RPP_BACKEND_HIP
 
         # Add modules
-        set(BACKEND "HIP")
         set(MODULES_LIST modules)
         foreach(MOD_NAME ${MODULES_LIST})
             add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
@@ -99,7 +139,7 @@ if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         # Set compiler and flags
         set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
         set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
         link_libraries(stdc++)
 
         message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using HIP backend${ColourReset}")
@@ -108,9 +148,7 @@ if( "${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         set(BACKEND "CPU")
         message("-- ${Yellow}HIP not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
     endif()
-
-elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OpenCL")
-
+elseif("${BACKEND}" STREQUAL "OPENCL")
     find_package(OpenCL QUIET)    # Find package OpenCL
     if(OpenCL_FOUND)
 
@@ -120,7 +158,6 @@ elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKE
         add_definitions(-DRPP_BACKEND_OPENCL=${RPP_BACKEND_OPENCL}) # To use RPP_BACKEND_HIP
 
         # Add modules
-        set(BACKEND "OCL")
         set(MODULES_LIST modules)
         foreach(MOD_NAME ${MODULES_LIST})
             add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
@@ -128,7 +165,6 @@ elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKE
 
         # Set compiler and flags
         set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
         set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
         # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})  # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
         set(INCLUDE_LIST ${INCLUDE_LIST})
@@ -142,24 +178,15 @@ elseif("${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OPENCL" OR "${BACKE
     endif()
 
 endif()
-
 # CPU backend specific settings
-if( "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
-
+if("${BACKEND}" STREQUAL "CPU")
     # Add modules
-    set(BACKEND "CPU")
     set(MODULES_LIST modules)
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
-
-    # Set compiler and flags
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma")
-
-    message("-- ${Green}${PROJECT_NAME} set to build for CPU backend${ColourReset}")
-
 endif()
+message("-- ${BoldBlue}RPP Backend set to -- ${BACKEND}${ColourReset}")
 
 configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
 
@@ -213,10 +240,11 @@ endif()
 add_subdirectory(addkernels)
 
 # Installation
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*.h.in" EXCLUDE)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-
+# install RPP libs -- {ROCM_PATH}/lib
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# install RPP include files -- {ROCM_PATH}/include/rpp/
+install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
+install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp)
 
 # Set package information
 set(CPACK_PACKAGE_VERSION       ${VERSION})
@@ -224,7 +252,6 @@ set(CPACK_PACKAGE_NAME          "rpp")
 set(CPACK_PACKAGE_LICENSE       "MIT")
 set(CPACK_PACKAGE_CONTACT       "mivisionx support <mivisionx.support@amd.com>")
 set(CPACK_PACKAGE_VENDOR        "AMD Radeon")
-set(CPACK_PACKAGE_ICON          "${CMAKE_SOURCE_DIR}/docs/images/MIVisionX.bmp")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://gpuopen-professionalcompute-libraries.github.io/rpp/")
 
