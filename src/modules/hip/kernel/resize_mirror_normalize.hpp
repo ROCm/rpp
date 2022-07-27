@@ -315,21 +315,21 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
                                                   RpptRoiType roiType,
                                                   rpp::Handle& handle)
 {
-    if (roiType == RpptRoiType::XYWH)
-        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
-
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
-    int globalThreads_y = dstDescPtr->h;
-    int globalThreads_z = handle.GetBatchSize();
-
-    // Set non ROI pixels to zero
-    hipMemset(dstPtr, 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(U));
-
     if (interpolationType == RpptInterpolationType::BILINEAR)
     {
+        if (roiType == RpptRoiType::XYWH)
+        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
+
+        int localThreads_x = 16;
+        int localThreads_y = 16;
+        int localThreads_z = 1;
+        int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+        int globalThreads_y = dstDescPtr->h;
+        int globalThreads_z = handle.GetBatchSize();
+
+        // Set non ROI pixels to zero
+        hipMemset(dstPtr, 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(U));
+
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pkd_tensor,
