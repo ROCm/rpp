@@ -122,28 +122,42 @@ set(COMPILER_FOR_CPU clang++)
 if("${BACKEND}" STREQUAL "HIP")
     add_definitions(-DSTATIC) # This line is to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
 
-    find_package(HIP QUIET)    # Find package HIP
+    if(NOT DEFINED HIP_PATH)
+        if(NOT DEFINED ENV{HIP_PATH})
+            set(HIP_PATH ${ROCM_PATH}/hip CACHE PATH "Path to which HIP has been installed")
+        else()
+            set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
+        endif()
+    endif()
+    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/lib/cmake/hip ${HIP_PATH}/cmake)
+    find_package(HIP QUIET)
     if(HIP_FOUND)
-
-        # Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
-        add_definitions(-DGPU_SUPPORT)
-        set(RPP_BACKEND_HIP 1) # For cmakedefine01 in rpp_backend.h.in
-        add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP}) # To use RPP_BACKEND_HIP
-
-        # Add modules
-        set(MODULES_LIST modules)
-        foreach(MOD_NAME ${MODULES_LIST})
-            add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
-        endforeach(MOD_NAME)
-
-        # Set compiler and flags
-        set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-        set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
-        link_libraries(stdc++)
-
-        message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using HIP backend${ColourReset}")
-
+        message(STATUS "Using HIP -- Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION})
+        if(HIP_COMPILER STREQUAL clang)
+             # Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
+            add_definitions(-DGPU_SUPPORT)
+            set(RPP_BACKEND_HIP 1) # For cmakedefine01 in rpp_backend.h.in
+            add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP}) # To use RPP_BACKEND_HIP
+            set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+            set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+            include_directories(${ROCM_PATH}/include)
+            link_directories(${HIP_PATH}/lib)
+            target_link_libraries(${PROJECT_NAME} ${HIP_PATH}/lib/libamdhip64.so)
+            # Add modules
+            set(MODULES_LIST modules)
+            foreach(MOD_NAME ${MODULES_LIST})
+                add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+            endforeach(MOD_NAME)
+            # Set compiler and flags
+            set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+            set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
+            link_libraries(stdc++)
+            message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using HIP backend${ColourReset}")
+        else()
+            set(BACKEND "CPU")
+            message("-- ${Yellow}HIP not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
+        endif()
     else()
         set(BACKEND "CPU")
         message("-- ${Yellow}HIP not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
