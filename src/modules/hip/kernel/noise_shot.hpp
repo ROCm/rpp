@@ -1,6 +1,6 @@
 #include <hip/hip_runtime.h>
-#include "hip/rpp_hip_common.hpp"
-#include "func_specific/rng_seed_stream.hpp"
+#include "rpp_hip_common.hpp"
+#include "rng_seed_stream.hpp"
 
 __device__ void shot_noise_1_hip_compute(float *pix, RpptXorwowStateBoxMuller *xorwowState)
 {
