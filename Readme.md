@@ -47,7 +47,8 @@ RPP is developed for **Linux** operating system.
 
         wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
         unzip half-1.12.0.zip -d half-files
-        sudo cp half-files/include/half.hpp /usr/local/include/
+        sudo mkdir /usr/local/include/half
+        sudo cp half-files/include/half.hpp /usr/local/include/half
 
 ## Prerequisites for Test Suite
 -   OpenCV 3.4.0 or OpenCV 4.5.5 pre-requisites

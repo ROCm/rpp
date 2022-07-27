@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include <fstream>
 #include "helpers/testSuite_helper.hpp"
 

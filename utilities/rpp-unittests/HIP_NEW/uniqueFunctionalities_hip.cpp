@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include <fstream>
 
 using namespace cv;
