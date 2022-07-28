@@ -112,6 +112,13 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+# BOOST
+option(Boost_USE_STATIC_LIBS "Use boost static libraries" OFF)
+set(BOOST_COMPONENTS filesystem system)
+add_definitions(-DBOOST_ALL_NO_LIB=1)
+find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
     # TBD: to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
@@ -211,12 +218,8 @@ else()
     message("-- ${Red}${PROJECT_NAME} set to build without ENABLE_SIMD_INTRINSICS${ColourReset}")
 endif()
 
-# Target setting
-option(Boost_USE_STATIC_LIBS "Use boost static libraries" OFF)
-set(BOOST_COMPONENTS filesystem system)
-add_definitions(-DBOOST_ALL_NO_LIB=1)
-find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
+target_link_libraries(${PROJECT_NAME} stdc++ ${Boost_FILESYSTEM_LIBRARY})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 find_package(OpenMP)
@@ -233,7 +236,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 if( "${BACKEND}" STREQUAL "HIP")
-    target_link_libraries(${PROJECT_NAME} stdc++ ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
+    target_link_libraries(${PROJECT_NAME} ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
