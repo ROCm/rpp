@@ -92,7 +92,7 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Set HIP compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -Wno-deprecated-declarations -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -mavx2 -mfma -std=gnu++14")
 
     # Add HIP specific preprocessor flags
     add_definitions(-DHIP_COMPILE)
@@ -112,7 +112,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 
     # Set OpenCL compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -Wno-deprecated-declarations -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -mavx2 -mfma -std=gnu++14")
 
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
@@ -149,9 +149,9 @@ elseif( "${BACKEND}" STREQUAL "CPU")
             set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
         endif()
     else()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp ")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -Wno-deprecated-declarations -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -std=gnu++14")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
     message("-- ${White}CPU include directories -- ${INCLUDE_LIST}${ColourReset}")

@@ -19,8 +19,10 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-project(amd_rpp)
+project(amd_rpp CXX)
 set(VERSION "0.96")
+
+set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -58,10 +60,8 @@ if(NOT WIN32)
     set(White       "${Esc}[37m")
 endif()
 
-message("-- ${BoldBlue}Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
-message("-- ${BoldBlue}RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
-message("-- ${Yellow}CMake minimum version required: ${CMAKE_MINIMUM_REQUIRED_VERSION}${ColourReset}")
-message("-- ${Green}CMake version found: ${CMAKE_VERSION}${ColourReset}")
+message("-- ${BoldBlue}AMD Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
+message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
 
 if(APPLE)
   set(CMAKE_MACOSX_RPATH 1)
@@ -69,23 +69,22 @@ if(APPLE)
   message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
 endif()
 
-include(CheckCXXCompilerFlag)
-
 if(NOT DEFINED BACKEND)
-  set(BACKEND "HIP")   # set default backend to HIP
+    set(BACKEND "HIP")   # set default backend to HIP
 else()
-  if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
-    set(BACKEND "OCL")
-  elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
-    set(BACKEND "HIP")
-  elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
-    set(BACKEND "CPU")
-  else()
-    message("-- ${Red}Warning: RPP backend option unknown -- ${BACKEND}${ColourReset}")
-    message("-- ${Red}Warning: RPP default backend will enforced${ColourReset}")
-    set(BACKEND "HIP")
-  endif()
+    if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
+        set(BACKEND "OCL")
+    elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
+        set(BACKEND "HIP")
+    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
+        set(BACKEND "CPU")
+    else()
+        message("-- ${Red}Warning: ${PROJECT_NAME} backend option unknown -- ${BACKEND}${ColourReset}")
+        message("-- ${Red}Warning: ${PROJECT_NAME} default backend will enforced${ColourReset}")
+        set(BACKEND "HIP")
+    endif()
 endif()
+message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
 
 # RPP Build Type
 if(NOT CMAKE_BUILD_TYPE)
@@ -99,7 +98,7 @@ else()
     # -O3 -- Optimize output file; TBD:CHECK -Ofast - Optimize for speed disregarding exact standards compliance; -DNDEBUG -- turn off asserts 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -DNDEBUG")
 endif()
-message("-- ${BoldBlue}MIVisionX Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
+message("-- ${BoldBlue}AMD RPP Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
 
 if(WIN32 AND CMAKE_CROSSCOMPILING)
     set(WINE_CMD "wine")
@@ -108,19 +107,19 @@ else()
 endif()
 
 # Cmake checks and setups
-if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-    message(FATAL_ERROR "-- ${Red}In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
-endif ()
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+    message(FATAL_ERROR "${Red}${PROJECT_NAME} -- In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
+endif()
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Set Compilers for HIP and OPENCL backends
-set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+# Set Compilers for backends
 set(COMPILER_FOR_OPENCL clang++)
 set(COMPILER_FOR_CPU clang++)
 
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
-    add_definitions(-DSTATIC) # This line is to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
+    # TBD: to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
+    add_definitions(-DSTATIC)
 
     if(NOT DEFINED HIP_PATH)
         if(NOT DEFINED ENV{HIP_PATH})
@@ -129,41 +128,48 @@ if("${BACKEND}" STREQUAL "HIP")
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/lib/cmake/hip ${HIP_PATH}/cmake)
+    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR}/cmake/hip ${HIP_PATH}/cmake)
     find_package(HIP QUIET)
-    if(HIP_FOUND)
-        message(STATUS "Using HIP -- Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION})
-        if(HIP_COMPILER STREQUAL clang)
-             # Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
+	if(HIP_FOUND)
+		message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER})
+		if(HIP_COMPILER STREQUAL clang)
+			# TBD: Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
             add_definitions(-DGPU_SUPPORT)
-            set(RPP_BACKEND_HIP 1) # For cmakedefine01 in rpp_backend.h.in
-            add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP}) # To use RPP_BACKEND_HIP
-            set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-            set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-            include_directories(${ROCM_PATH}/include)
-            link_directories(${HIP_PATH}/lib)
-            target_link_libraries(${PROJECT_NAME} ${HIP_PATH}/lib/libamdhip64.so)
+            # For cmakedefine01 in rpp_backend.h.in
+            set(RPP_BACKEND_HIP 1)
+            # To use RPP_BACKEND_HIP
+            add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
+
+			set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+			set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+			set(COMPILER_FOR_HIP ${ROCM_PATH}/${CMAKE_INSTALL_BINDIR}/hipcc)
+			set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_CXX_FLAGS}")
+
+			include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
+			link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
+
+			target_link_libraries(${PROJECT_NAME} stdc++ ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
+
             # Add modules
             set(MODULES_LIST modules)
             foreach(MOD_NAME ${MODULES_LIST})
                 add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
             endforeach(MOD_NAME)
-            # Set compiler and flags
-            set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-            set(HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
-            link_libraries(stdc++)
-            message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using HIP backend${ColourReset}")
-        else()
+
+            message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
+		else()
+			message("-- ${Yellow}${PROJECT_NAME} -- Unsupported HIP compiler")
             set(BACKEND "CPU")
-            message("-- ${Yellow}HIP not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
+            message("-- ${Yellow}${PROJECT_NAME} set to build with CPU backend${ColourReset}")
         endif()
     else()
         set(BACKEND "CPU")
-        message("-- ${Yellow}HIP not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
+        message("-- ${Yellow}HIP not found! ${PROJECT_NAME} set to build with CPU backend${ColourReset}")
     endif()
 elseif("${BACKEND}" STREQUAL "OPENCL")
-    find_package(OpenCL QUIET)    # Find package OpenCL
+    # Find package OpenCL
+    find_package(OpenCL QUIET)
     if(OpenCL_FOUND)
 
         # Set external flag to notify GPU_SUPPORT and OPENCL backend availability - Compatible with rocAL and MIVisionX
@@ -185,7 +191,6 @@ elseif("${BACKEND}" STREQUAL "OPENCL")
         add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
 
         message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using OpenCL backend${ColourReset}")
-
     else()
         set(BACKEND "CPU")
         message("-- ${Yellow}OpenCL not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
@@ -200,7 +205,6 @@ if("${BACKEND}" STREQUAL "CPU")
         add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
 endif()
-message("-- ${BoldBlue}RPP Backend set to -- ${BACKEND}${ColourReset}")
 
 configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
 
