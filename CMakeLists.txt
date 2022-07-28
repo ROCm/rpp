@@ -162,10 +162,11 @@ if("${BACKEND}" STREQUAL "HIP")
         set(BACKEND "CPU")
         message("-- ${Yellow}HIP not found! ${PROJECT_NAME} set to build with CPU backend${ColourReset}")
     endif()
-elseif("${BACKEND}" STREQUAL "OPENCL")
+elseif("${BACKEND}" STREQUAL "OCL")
     # Find package OpenCL
     find_package(OpenCL QUIET)
     if(OpenCL_FOUND)
+        message("-- ${White}${PROJECT_NAME} -- Using OpenCL - LIB:" ${OpenCL_LIBRARIES} "\tInclude:" ${OpenCL_INCLUDE_DIRS}${ColourReset})
         # Set external flag to notify GPU_SUPPORT and OPENCL backend availability - Compatible with rocAL and MIVisionX
         add_definitions(-DGPU_SUPPORT)
         set(RPP_BACKEND_OPENCL 1) # For cmakedefine01 in rpp_backend.h.in
