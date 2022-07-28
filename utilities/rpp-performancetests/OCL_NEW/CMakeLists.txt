@@ -24,8 +24,8 @@ if (OpenCL_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, OpenCL and OpenCV${ColourReset}")
     # include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers) # commented since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
     include_directories(${OpenCV_INCLUDE_DIRS})
-    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/rpp/include /usr/local/include)
-    link_directories(${ROCM_PATH}/lib ${ROCM_PATH}/rpp/lib/ /usr/local/lib)
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+    link_directories(${ROCM_PATH}/lib ${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(BatchPD_ocl_pkd3 BatchPD_ocl_pkd3.cpp)
     add_executable(BatchPD_ocl_pln1 BatchPD_ocl_pln1.cpp)

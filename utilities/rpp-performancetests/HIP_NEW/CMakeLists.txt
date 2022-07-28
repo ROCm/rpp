@@ -28,8 +28,8 @@ if (hip_FOUND AND OpenCV_FOUND)
 
     include_directories(${hip_INCLUDE_DIRS} ${hip_INCLUDE_DIRS}/hip)
     include_directories(${OpenCV_INCLUDE_DIRS})
-    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/rpp/include /usr/local/include)
-    link_directories(${ROCM_PATH}/lib ${ROCM_PATH}/rpp/lib/ /usr/local/lib)
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+    link_directories(${ROCM_PATH}/lib ${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(BatchPD_hip_pkd3 BatchPD_hip_pkd3.cpp)
     add_executable(BatchPD_hip_pln1 BatchPD_hip_pln1.cpp)
