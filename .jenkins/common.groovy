@@ -6,13 +6,24 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
+    String backend = ''
+
+    if (platform.jenkinsLabel.contains('centos')) {
+        backend = 'CPU'
+    }
+    else if (platform.jenkinsLabel.contains('ubuntu18')) {
+         backend = 'OCL'
+    }
+    else {
+         backend = 'HIP'
+    }
 
     def command = """#!/usr/bin/env bash
                 set -x
                 echo Build RPP - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
-                cmake -DBACKEND=OCL ${buildTypeArg} ../..
+                cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
                 sudo make package
