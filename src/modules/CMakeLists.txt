@@ -123,6 +123,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     set(INCLUDE_LIST ${INCLUDE_LIST} ${ROCM_INC})
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Set CPU compiler and flags
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
     if(APPLE)
         if(CMAKE_C_COMPILER_ID MATCHES "Clang")
             set(OpenMP_C "${CMAKE_C_COMPILER}")
