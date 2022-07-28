@@ -106,7 +106,7 @@ else()
     set(WINE_CMD)
 endif()
 
-# Cmake checks and setups
+# CMake checks and setups
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "${Red}${PROJECT_NAME} -- In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
 endif()
@@ -170,6 +170,7 @@ elseif("${BACKEND}" STREQUAL "OPENCL")
         add_definitions(-DGPU_SUPPORT)
         set(RPP_BACKEND_OPENCL 1) # For cmakedefine01 in rpp_backend.h.in
         add_definitions(-DRPP_BACKEND_OPENCL=${RPP_BACKEND_OPENCL}) # To use RPP_BACKEND_HIP
+        include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
 
         # Add modules
         set(MODULES_LIST modules)
@@ -242,6 +243,7 @@ if( "${BACKEND}" STREQUAL "HIP")
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
     )
 elseif( "${BACKEND}" STREQUAL "OCL")
+    target_link_libraries(${PROJECT_NAME} ${OpenCL_LIBRARIES})
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cl
