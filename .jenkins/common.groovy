@@ -40,7 +40,7 @@ def runTestCommand (platform, project) {
 
     def command = """#!/usr/bin/env bash
                 set -x
-                ldd -v /opt/rocm/rpp/lib/libamd_rpp.so
+                ldd -v /opt/rocm/lib/libamd_rpp.so
                 """
 
     platform.runCommand(this, command)
