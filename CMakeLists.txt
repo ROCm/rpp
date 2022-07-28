@@ -170,6 +170,7 @@ elseif("${BACKEND}" STREQUAL "OCL")
         # Set external flag to notify GPU_SUPPORT and OPENCL backend availability - Compatible with rocAL and MIVisionX
         add_definitions(-DGPU_SUPPORT)
         set(RPP_BACKEND_OPENCL 1) # For cmakedefine01 in rpp_backend.h.in
+        set(COMPILER_FOR_OPENCL clang++)
         add_definitions(-DRPP_BACKEND_OPENCL=${RPP_BACKEND_OPENCL}) # To use RPP_BACKEND_HIP
         include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
 
@@ -180,7 +181,6 @@ elseif("${BACKEND}" STREQUAL "OCL")
         endforeach(MOD_NAME)
 
         # Set compiler and flags
-        set(COMPILER_FOR_OPENCL clang++)
         set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
         set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
         # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})  # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
