@@ -131,7 +131,7 @@ if("${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR}/cmake/hip ${HIP_PATH}/cmake)
     find_package(HIP QUIET)
 	if(HIP_FOUND)
-		message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER})
+		message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER}${ColourReset})
 		if(HIP_COMPILER STREQUAL clang)
 			# TBD: Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
             add_definitions(-DGPU_SUPPORT)
