@@ -139,17 +139,9 @@ if("${BACKEND}" STREQUAL "HIP")
             set(RPP_BACKEND_HIP 1)
             # To use RPP_BACKEND_HIP
             add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-
-			set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-			set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 			set(COMPILER_FOR_HIP ${ROCM_PATH}/${CMAKE_INSTALL_BINDIR}/hipcc)
-			set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_CXX_FLAGS}")
-
 			include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
 			link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
-
-			target_link_libraries(${PROJECT_NAME} stdc++ ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
 
             # Add modules
             set(MODULES_LIST modules)
@@ -244,6 +236,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 if( "${BACKEND}" STREQUAL "HIP")
+    target_link_libraries(${PROJECT_NAME} stdc++ ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip

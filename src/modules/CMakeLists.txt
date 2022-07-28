@@ -83,12 +83,11 @@ endif()
 # Backend specific settings
 
 if( "${BACKEND}" STREQUAL "HIP")
-
     # Add HIP kernels
     file(GLOB MOD_HIP_CPP "hip/*.cpp" )
     file(GLOB MOD_HIP_CPP_KERNELS "hip/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_CPP_KERNELS})
-    message("-- ${Green}HIP kernels added!${ColourReset}")
+    message("-- ${Green}HIP kernels added${ColourReset}")
 
     # Set HIP compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
@@ -101,10 +100,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(HIP_INC ${ROCM_PATH}/include/)
     list(APPEND HIP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${HIP_INCLUDE_DIRS} ${HIP_INC} ${INCLUDE_LIST})
-    message("-- ${Blue}HIP include directories -- ${INCLUDE_LIST}${ColourReset}")
-
 elseif( "${BACKEND}" STREQUAL "OCL")
-
     # Add OpenCL kernels
     file(GLOB MOD_CL_CPP "cl/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_CL_CPP})
@@ -125,10 +121,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST} ${ROCM_INC}) # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
     list(APPEND INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${INCLUDE_LIST} ${ROCM_INC})
-    message("-- ${Blue}OpenCL include directories -- ${INCLUDE_LIST}${ColourReset}")
-
 elseif( "${BACKEND}" STREQUAL "CPU")
-
     # Set CPU compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
     if(APPLE)
@@ -154,10 +147,9 @@ elseif( "${BACKEND}" STREQUAL "CPU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -std=gnu++14")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
-    message("-- ${White}CPU include directories -- ${INCLUDE_LIST}${ColourReset}")
 endif()
-message("-- ${White}AMD RPP -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}")
-
+message("-- ${White}${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
+message("-- ${White}${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
 # Kernels and includes additions
 
 add_kernels("${RPP_KERNELS}")
