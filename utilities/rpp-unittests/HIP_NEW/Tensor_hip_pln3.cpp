@@ -2132,8 +2132,8 @@ int main(int argc, char **argv)
     offsetted_output = output + dstDescPtr->offsetInBytes;
     for (j = 0; j < dstDescPtr->n; j++)
     {
-        int height = dstImgSizes[j].height;
-        int width = dstImgSizes[j].width;
+        int height = roiTensorPtrDst[j].xywhROI.roiHeight;
+        int width = roiTensorPtrDst[j].xywhROI.roiWidth;
 
         int op_size = height * width * dstDescPtr->c;
         Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
