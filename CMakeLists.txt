@@ -112,10 +112,6 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Set Compilers for backends
-set(COMPILER_FOR_OPENCL clang++)
-set(COMPILER_FOR_CPU clang++)
-
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
     # TBD: to be removed once STATIC becomes the only option within HIP backend, and all STATIC compile time switches are removed.
@@ -163,7 +159,6 @@ elseif("${BACKEND}" STREQUAL "OPENCL")
     # Find package OpenCL
     find_package(OpenCL QUIET)
     if(OpenCL_FOUND)
-
         # Set external flag to notify GPU_SUPPORT and OPENCL backend availability - Compatible with rocAL and MIVisionX
         add_definitions(-DGPU_SUPPORT)
         set(RPP_BACKEND_OPENCL 1) # For cmakedefine01 in rpp_backend.h.in
@@ -176,6 +171,7 @@ elseif("${BACKEND}" STREQUAL "OPENCL")
         endforeach(MOD_NAME)
 
         # Set compiler and flags
+        set(COMPILER_FOR_OPENCL clang++)
         set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
         set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
         # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})  # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
@@ -196,6 +192,9 @@ if("${BACKEND}" STREQUAL "CPU")
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
+
+    set(COMPILER_FOR_CPU clang++)
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
 endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
