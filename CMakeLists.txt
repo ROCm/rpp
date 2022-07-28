@@ -187,14 +187,14 @@ elseif("${BACKEND}" STREQUAL "OPENCL")
 endif()
 # CPU backend specific settings
 if("${BACKEND}" STREQUAL "CPU")
+    set(COMPILER_FOR_CPU clang++)
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
+
     # Add modules
     set(MODULES_LIST modules)
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
-
-    set(COMPILER_FOR_CPU clang++)
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
 endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
