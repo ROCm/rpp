@@ -372,6 +372,11 @@ int main(int argc, char **argv)
         roiTensorPtrDst[count].xywhROI.roiWidth = image.cols;
         roiTensorPtrDst[count].xywhROI.roiHeight = image.rows;
 
+        srcImgSizes[count].width = roiTensorPtrSrc[count].xywhROI.roiWidth;
+        srcImgSizes[count].height = roiTensorPtrSrc[count].xywhROI.roiHeight;
+        dstImgSizes[count].width = roiTensorPtrDst[count].xywhROI.roiWidth;
+        dstImgSizes[count].height = roiTensorPtrDst[count].xywhROI.roiHeight;
+
         maxHeight = RPPMAX2(maxHeight, roiTensorPtrSrc[count].xywhROI.roiHeight);
         maxWidth = RPPMAX2(maxWidth, roiTensorPtrSrc[count].xywhROI.roiWidth);
         maxDstHeight = RPPMAX2(maxDstHeight, roiTensorPtrDst[count].xywhROI.roiHeight);
