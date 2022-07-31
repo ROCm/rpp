@@ -23,6 +23,7 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #ifndef GUARD_RPP_OCL_KERNEL_HPP_
 #define GUARD_RPP_OCL_KERNEL_HPP_
 
@@ -38,10 +39,10 @@
 #include <utility>
 #include <vector>
 
-#include <rpp/clhelper.hpp>
-#include <rpp/each_args.hpp>
-#include <rpp/errors.hpp>
-#include <rpp/op_kernel_args.hpp>
+#include "rpp/clhelper.hpp"
+#include "rpp/each_args.hpp"
+#include "rpp/errors.hpp"
+#include "rpp/op_kernel_args.hpp"
 
 namespace rpp {
 

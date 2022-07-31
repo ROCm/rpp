@@ -5,6 +5,34 @@
 ### Online Documentation
 [RPP Documentation](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 
+### RPP 0.95
+
+#### Added
+* New Tests
+
+#### Optimizations
+* Readme Updates
+
+#### Changed
+* **Backend** - Default Backend set to `HIP`
+* CPU Backend Added
+
+#### Fixed
+* Minor bugs and warnings
+
+### Tested Configurations
+* Linux distribution
+  + Ubuntu - `18.04` / `20.04`
+  + CentOS - `8`
+* ROCm: rocm-core - `5.2.0.50200-65`
+* Clang - Version `6.0`
+* CMake - Version `3.22.3`
+* Boost - Version `1.72`
+* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+
+### Known issues
+* `ROCm reorganization` - install updates does not match ROCm specification 
+
 ### RPP 0.93
 
 #### Added

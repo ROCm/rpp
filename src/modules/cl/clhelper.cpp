@@ -23,21 +23,23 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+
 #include <cstdio>
 #include <cstring>
 #include <fstream>
-#include <rpp/clhelper.hpp>
-#include <rpp/errors.hpp>
-#include <rpp/gcn_asm_utils.hpp>
-#include <rpp/hip_build_utils.hpp>
-#include <rpp/kernel.hpp>
-#include <rpp/kernel_warnings.hpp>
-#include <rpp/stringutils.hpp>
-#include <rpp/ocldeviceinfo.hpp>
-#include <rpp/tmp_dir.hpp>
-#include <rpp/write_file.hpp>
 #include <string>
 #include <vector>
+
+#include "rpp/clhelper.hpp"
+#include "rpp/errors.hpp"
+#include "rpp/gcn_asm_utils.hpp"
+#include "rpp/hip_build_utils.hpp"
+#include "rpp/kernel.hpp"
+#include "rpp/kernel_warnings.hpp"
+#include "rpp/stringutils.hpp"
+#include "rpp/ocldeviceinfo.hpp"
+#include "rpp/tmp_dir.hpp"
+#include "rpp/write_file.hpp"
 
 namespace rpp {
 
@@ -50,15 +52,10 @@ void ParseDevName(std::string& name)
 
 static cl_program CreateProgram(cl_context ctx, const char* char_source, size_t size)
 {
-//    std::cerr<<"Attempting to CreatePRogramm " << char_source<<std::endl;
     cl_int status;
     auto result = clCreateProgramWithSource(ctx, 1, &char_source, &size, &status);
-
     if(status != CL_SUCCESS)
-    {
-        RPP_THROW_CL_STATUS(status,
-                               "Error Creating OpenCL Program (cl_program) in LoadProgram()");
-    }
+        RPP_THROW_CL_STATUS(status, "Error Creating OpenCL Program (cl_program) in LoadProgram()");
 
     return result;
 }
@@ -71,8 +68,7 @@ static void ClAssemble(cl_device_id device, std::string& source, const std::stri
     AmdgcnAssemble(source, std::string("-mcpu=") + name + " " + params);
 }
 
-static cl_program
-CreateProgramWithBinary(cl_context ctx, cl_device_id device, const char* char_source, size_t size)
+static cl_program CreateProgramWithBinary(cl_context ctx, cl_device_id device, const char* char_source, size_t size)
 {
     cl_int status, binaryStatus;
     auto result = clCreateProgramWithBinary(ctx,
@@ -84,10 +80,7 @@ CreateProgramWithBinary(cl_context ctx, cl_device_id device, const char* char_so
                                             &binaryStatus);
 
     if(status != CL_SUCCESS)
-    {
-        RPP_THROW_CL_STATUS(
-            status, "Error creating code object program (cl_program) in LoadProgramFromBinary()");
-    }
+        RPP_THROW_CL_STATUS(status, "Error creating code object program (cl_program) in LoadProgramFromBinary()");
 
     return result;
 }
@@ -96,8 +89,7 @@ static std::string BuildProgramInfo(cl_program program, cl_device_id device)
 {
     std::vector<char> errorbuf(1024 * 1024);
     size_t psize;
-    clGetProgramBuildInfo(
-        program, device, CL_PROGRAM_BUILD_LOG, 1024 * 1024, errorbuf.data(), &psize);
+    clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 1024 * 1024, errorbuf.data(), &psize);
     return errorbuf.data();
 }
 
@@ -105,17 +97,12 @@ static void BuildProgram(cl_program program, cl_device_id device, const std::str
 {
     auto status = clBuildProgram(program, 1, &device, params.c_str(), nullptr, nullptr);
 
-//    std::cerr<<"Attempting to call with params " << params.c_str()<<std::endl;
     auto msg = BuildProgramInfo(program, device);
     if(!msg.empty())
         std::cerr << msg << std::endl;
 
     if(status != CL_SUCCESS)
-    {
-        RPP_THROW_CL_STATUS(status,
-                               "Error Building OpenCL Program in BuildProgram()\n" +
-                                   BuildProgramInfo(program, device));
-    }
+        RPP_THROW_CL_STATUS(status, "Error Building OpenCL Program in BuildProgram()\n" + BuildProgramInfo(program, device));
 }
 
 ClProgramPtr LoadBinaryProgram(cl_context ctx, cl_device_id device, const std::string& source)
@@ -125,15 +112,8 @@ ClProgramPtr LoadBinaryProgram(cl_context ctx, cl_device_id device, const std::s
     return result;
 }
 
-ClProgramPtr LoadProgram(cl_context ctx,
-                         cl_device_id device,
-                         const std::string& program_name,
-                         std::string params,
-                         bool is_kernel_str,
-                         const std::string& kernel_src)
+ClProgramPtr LoadProgram(cl_context ctx, cl_device_id device, const std::string& program_name, std::string params, bool is_kernel_str, const std::string& kernel_src)
 {
-//    std::cerr<<"Attempting to call Load PRogram" << program_name.c_str()<<std::endl;
-//    std::cerr<<"Attempting to call Load PRogram with kernel src" << kernel_src.c_str()<<std::endl;
     bool is_binary = false;
     std::string source;
     if(is_kernel_str)

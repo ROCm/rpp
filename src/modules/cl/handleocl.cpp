@@ -23,26 +23,22 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include <config.h>
-#include <rpp/device_name.hpp>
-#include <rpp/errors.hpp>
-#include <rpp/logger.hpp>
-#include <rpp/handle.hpp>
-#include <rpp/kernel_cache.hpp>
-#include <rpp/manage_ptr.hpp>
-#include <rpp/ocldeviceinfo.hpp>
-#include <rpp/binary_cache.hpp>
-#include <rpp/load_file.hpp>
-#include <boost/filesystem.hpp>
-#include <rpp/handle_lock.hpp>
-#if RPP_USE_RPPGEMM
-#include <rpp/gemm_geometry.hpp>
-#endif
-#include <string>
 
+#include <boost/filesystem.hpp>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+
+#include "config.h"
+#include "rpp/device_name.hpp"
+#include "rpp/errors.hpp"
+#include "rpp/logger.hpp"
+#include "rpp/handle.hpp"
+#include "rpp/kernel_cache.hpp"
+#include "rpp/binary_cache.hpp"
+#include "rpp/handle_lock.hpp"
+#include "rpp/ocldeviceinfo.hpp"
+#include "rpp/load_file.hpp"
 
 namespace rpp {
 
@@ -234,7 +230,7 @@ void dumpKernel(cl_kernel kern,
                work.c_str());
     }
 }
-#endif
+#endif // NDEBUG
 
 void* default_allocator(void* context, size_t sz)
 {
@@ -253,27 +249,21 @@ void default_deallocator(void*, void* mem) { clReleaseMemObject(DataCast(mem)); 
 
 struct HandleImpl
 {
+    using AqPtr = rpp::manage_ptr<typename std::remove_pointer<rppAcceleratorQueue_t>::type, decltype(&clReleaseCommandQueue), &clReleaseCommandQueue>;
+    using ContextPtr = rpp::manage_ptr<typename std::remove_pointer<cl_context>::type, decltype(&clReleaseContext), &clReleaseContext>;
 
-    using AqPtr = rpp::manage_ptr<typename std::remove_pointer<rppAcceleratorQueue_t>::type,
-                                     decltype(&clReleaseCommandQueue),
-                                     &clReleaseCommandQueue>;
-    using ContextPtr = rpp::manage_ptr<typename std::remove_pointer<cl_context>::type,
-                                          decltype(&clReleaseContext),
-                                          &clReleaseContext>;
-
-    ContextPtr context  = nullptr;
-    AqPtr queue         = nullptr;
+    ContextPtr context = nullptr;
+    AqPtr queue = nullptr;
     cl_device_id device = nullptr; // NOLINT
     Allocator allocator{};
     KernelCache cache;
-    bool enable_profiling  = false;
+    bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
     InitHandle* initHandle = nullptr;
 
     ContextPtr create_context()
     {
-        // TODO(paul): Change errors to CL errors
         cl_uint numPlatforms;
         cl_platform_id platform = nullptr;
         if(clGetPlatformIDs(0, nullptr, &numPlatforms) != CL_SUCCESS)
@@ -305,9 +295,7 @@ struct HandleImpl
             }
         }
 
-        /////////////////////////////////////////////////////////////////
         // Create an OpenCL context
-        /////////////////////////////////////////////////////////////////
         cl_int status                = 0;
         cl_context_properties cps[3] = {
             CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(platform), 0};
@@ -320,6 +308,7 @@ struct HandleImpl
         }
         return result;
     }
+
     ContextPtr create_context_from_queue()
     {
         // FIXME: hack for all the queues on the same context
@@ -336,8 +325,16 @@ struct HandleImpl
         clRetainContext(ctx);
         return ContextPtr{ctx};
     }
-    void ResetProfilingResult() { profiling_result = 0.0; }
-    void AccumProfilingResult(float curr_res) { profiling_result += curr_res; }
+
+    void ResetProfilingResult()
+    {
+        profiling_result = 0.0;
+    }
+
+    void AccumProfilingResult(float curr_res)
+    {
+        profiling_result += curr_res;
+    }
 
     void SetProfilingResult(cl_event& e)
     {
@@ -349,106 +346,80 @@ struct HandleImpl
             profiling_result = static_cast<float>(end - st) * 1.0e-6; // NOLINT
         }
     }
-    void PreInitializeBufferCPU() {
-	    this->initHandle = new InitHandle();
 
-	    this->initHandle->nbatchSize = this->nBatchSize;
-	    this->initHandle->mem.mcpu.srcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-	    this->initHandle->mem.mcpu.dstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-	    this->initHandle->mem.mcpu.maxSrcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-	    this->initHandle->mem.mcpu.maxDstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-	    this->initHandle->mem.mcpu.roiPoints = (RppiROI *)malloc(sizeof(RppiROI) * this->nBatchSize);
-	    this->initHandle->mem.mcpu.srcBatchIndex = (Rpp64u *)malloc(sizeof(Rpp64u) * this->nBatchSize);
-	    this->initHandle->mem.mcpu.dstBatchIndex = (Rpp64u *)malloc(sizeof(Rpp64u) * this->nBatchSize);
-	    this->initHandle->mem.mcpu.inc = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mcpu.dstInc = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+    void PreInitializeBufferCPU()
+    {
+        this->initHandle = new InitHandle();
 
-	    for(int i = 0; i < 10; i++)
-	    {
-		this->initHandle->mem.mcpu.floatArr[i].floatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * this->nBatchSize);
-		this->initHandle->mem.mcpu.uintArr[i].uintmem = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-		this->initHandle->mem.mcpu.intArr[i].intmem = (Rpp32s *)malloc(sizeof(Rpp32s) * this->nBatchSize);
-		this->initHandle->mem.mcpu.ucharArr[i].ucharmem = (Rpp8u *)malloc(sizeof(Rpp8u) * this->nBatchSize);
-		this->initHandle->mem.mcpu.charArr[i].charmem = (Rpp8s *)malloc(sizeof(Rpp8s) * this->nBatchSize);
-	    }
+        this->initHandle->nbatchSize = this->nBatchSize;
+        this->initHandle->mem.mcpu.srcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
+        this->initHandle->mem.mcpu.dstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
+        this->initHandle->mem.mcpu.maxSrcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
+        this->initHandle->mem.mcpu.maxDstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
+        this->initHandle->mem.mcpu.roiPoints = (RppiROI *)malloc(sizeof(RppiROI) * this->nBatchSize);
+        this->initHandle->mem.mcpu.srcBatchIndex = (Rpp64u *)malloc(sizeof(Rpp64u) * this->nBatchSize);
+        this->initHandle->mem.mcpu.dstBatchIndex = (Rpp64u *)malloc(sizeof(Rpp64u) * this->nBatchSize);
+        this->initHandle->mem.mcpu.inc = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mcpu.dstInc = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+
+        for(int i = 0; i < 10; i++)
+        {
+            this->initHandle->mem.mcpu.floatArr[i].floatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * this->nBatchSize);
+            this->initHandle->mem.mcpu.uintArr[i].uintmem = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+            this->initHandle->mem.mcpu.intArr[i].intmem = (Rpp32s *)malloc(sizeof(Rpp32s) * this->nBatchSize);
+            this->initHandle->mem.mcpu.ucharArr[i].ucharmem = (Rpp8u *)malloc(sizeof(Rpp8u) * this->nBatchSize);
+            this->initHandle->mem.mcpu.charArr[i].charmem = (Rpp8s *)malloc(sizeof(Rpp8s) * this->nBatchSize);
+        }
+        this->initHandle->mem.mcpu.tempFloatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
     }
 
-    void PreInitializeBuffer() {
-
-	    this->initHandle = new InitHandle();
+    void PreInitializeBuffer()
+    {
+        this->initHandle = new InitHandle();
         this->PreInitializeBufferCPU();
-	    // this->initHandle->nbatchSize = this->nBatchSize;
-	    // this->initHandle->mem.mcpu.srcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-	    // this->initHandle->mem.mcpu.dstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-	    // this->initHandle->mem.mcpu.maxSrcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-	    // this->initHandle->mem.mcpu.maxDstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-	    // this->initHandle->mem.mcpu.roiPoints = (RppiROI *)malloc(sizeof(RppiROI) * this->nBatchSize);
-	    // this->initHandle->mem.mcpu.srcBatchIndex = (Rpp64u *)malloc(sizeof(Rpp64u) * this->nBatchSize);
-	    // this->initHandle->mem.mcpu.dstBatchIndex = (Rpp64u *)malloc(sizeof(Rpp64u) * this->nBatchSize);
-	    // this->initHandle->mem.mcpu.inc = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    // this->initHandle->mem.mcpu.dstInc = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
 
-	    // for(int i = 0; i < 10; i++)
-	    // {
-		// this->initHandle->mem.mcpu.floatArr[i].floatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * this->nBatchSize);
-		// this->initHandle->mem.mcpu.uintArr[i].uintmem = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-		// this->initHandle->mem.mcpu.intArr[i].intmem = (Rpp32s *)malloc(sizeof(Rpp32s) * this->nBatchSize);
-		// this->initHandle->mem.mcpu.ucharArr[i].ucharmem = (Rpp8u *)malloc(sizeof(Rpp8u) * this->nBatchSize);
-		// this->initHandle->mem.mcpu.charArr[i].charmem = (Rpp8s *)malloc(sizeof(Rpp8s) * this->nBatchSize);
-	    // }
-	    cl_int err;
-	    auto ctx = this->context.get();
-	    this->initHandle->mem.mgpu.csrcSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.csrcSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.cdstSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.cdstSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.cmaxSrcSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.cmaxSrcSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.cmaxDstSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.cmaxDstSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.croiPoints.x = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.croiPoints.y = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.croiPoints.roiHeight = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.croiPoints.roiWidth = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-	    this->initHandle->mem.mgpu.srcSize.height = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.srcSize.width = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.dstSize.height = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.dstSize.width = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.maxSrcSize.height = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.maxSrcSize.width = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.maxDstSize.height = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.maxDstSize.width = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.roiPoints.x = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.roiPoints.y = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.roiPoints.roiHeight = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.roiPoints.roiWidth = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.inc = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.dstInc = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        cl_int err;
+        auto ctx = this->context.get();
+        this->initHandle->mem.mgpu.csrcSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.csrcSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.cdstSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.cdstSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.cmaxSrcSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.cmaxSrcSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.cmaxDstSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.cmaxDstSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.croiPoints.x = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.croiPoints.y = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.croiPoints.roiHeight = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.croiPoints.roiWidth = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
+        this->initHandle->mem.mgpu.srcSize.height = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.srcSize.width = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.dstSize.height = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.dstSize.width = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.maxSrcSize.height = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.maxSrcSize.width = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.maxDstSize.height = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.maxDstSize.width = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.roiPoints.x = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.roiPoints.y = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.roiPoints.roiHeight = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.roiPoints.roiWidth = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.inc = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.dstInc = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
 
-	    this->initHandle->mem.mgpu.srcBatchIndex = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp64u) * this->nBatchSize, NULL, &err);
-	    this->initHandle->mem.mgpu.dstBatchIndex = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp64u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.srcBatchIndex = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp64u) * this->nBatchSize, NULL, &err);
+        this->initHandle->mem.mgpu.dstBatchIndex = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp64u) * this->nBatchSize, NULL, &err);
 
-	    for(int i = 0; i < 10; i++)
-	    {
-		this->initHandle->mem.mgpu.floatArr[i].floatmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32f) * this->nBatchSize, NULL, &err);
-		this->initHandle->mem.mgpu.uintArr[i].uintmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
-		this->initHandle->mem.mgpu.intArr[i].intmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32s) * this->nBatchSize, NULL, &err);
-		this->initHandle->mem.mgpu.ucharArr[i].ucharmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp8u) * this->nBatchSize, NULL, &err);
-		this->initHandle->mem.mgpu.charArr[i].charmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp8s) * this->nBatchSize, NULL, &err);
-	    }
+        for(int i = 0; i < 10; i++)
+        {
+            this->initHandle->mem.mgpu.floatArr[i].floatmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32f) * this->nBatchSize, NULL, &err);
+            this->initHandle->mem.mgpu.uintArr[i].uintmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32u) * this->nBatchSize, NULL, &err);
+            this->initHandle->mem.mgpu.intArr[i].intmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp32s) * this->nBatchSize, NULL, &err);
+            this->initHandle->mem.mgpu.ucharArr[i].ucharmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp8u) * this->nBatchSize, NULL, &err);
+            this->initHandle->mem.mgpu.charArr[i].charmem = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(Rpp8s) * this->nBatchSize, NULL, &err);
+        }
     }
 };
-
-Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
-{
-    clRetainCommandQueue(stream);
-    impl->queue   = HandleImpl::AqPtr{stream};
-    impl->context = impl->create_context_from_queue();
-
-    this->SetAllocator(nullptr, nullptr, nullptr);
-    // impl->PreInitializeBufferCPU();
-    impl->PreInitializeBuffer();
-}
 
 Handle::Handle(rppAcceleratorQueue_t stream, size_t batchSize) : impl(new HandleImpl())
 {
@@ -458,7 +429,16 @@ Handle::Handle(rppAcceleratorQueue_t stream, size_t batchSize) : impl(new Handle
     impl->context = impl->create_context_from_queue();
 
     this->SetAllocator(nullptr, nullptr, nullptr);
-    // impl->PreInitializeBufferCPU();
+    impl->PreInitializeBuffer();
+}
+
+Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
+{
+    clRetainCommandQueue(stream);
+    impl->queue   = HandleImpl::AqPtr{stream};
+    impl->context = impl->create_context_from_queue();
+
+    this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBuffer();
 }
 
@@ -471,14 +451,12 @@ Handle::Handle(size_t batchSize) : impl(new HandleImpl())
 
 Handle::Handle() : impl(new HandleImpl())
 {
-
     impl->PreInitializeBuffer();
-      /////////////////////////////////////////////////////////////////
-    // Create an OpenCL context
-    /////////////////////////////////////////////////////////////////
 
+    // Create an OpenCL context
     impl->context = impl->create_context();
-    /* First, get the size of device list data */
+
+    // Get the size of device list data
     cl_uint deviceListSize;
     if(clGetContextInfo(impl->context.get(),
                         CL_CONTEXT_NUM_DEVICES,
@@ -488,18 +466,15 @@ Handle::Handle() : impl(new HandleImpl())
     {
         RPP_THROW("Error: Getting Handle Info (device list size, clGetContextInfo)");
     }
-
     if(deviceListSize == 0)
     {
         RPP_THROW("Error: No devices found.");
     }
 
-    /////////////////////////////////////////////////////////////////
     // Detect OpenCL devices
-    /////////////////////////////////////////////////////////////////
     std::vector<cl_device_id> devices(deviceListSize);
 
-    /* Now, get the device list data */
+    // Get the device list data
     if(clGetContextInfo(impl->context.get(),
                         CL_CONTEXT_DEVICES,
                         deviceListSize * sizeof(cl_device_id),
@@ -526,9 +501,7 @@ Handle::Handle() : impl(new HandleImpl())
     RPP_LOG_I("Device name: " << deviceName);
 #endif
 
-    /////////////////////////////////////////////////////////////////
     // Create an OpenCL command queue
-    /////////////////////////////////////////////////////////////////
     cl_int status = 0;
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -564,23 +537,6 @@ void Handle::SetStream(rppAcceleratorQueue_t streamID) const
 void Handle::rpp_destroy_object_gpu()
 {
     this->rpp_destroy_object_host();
-    // free(this->GetInitHandle()->mem.mcpu.srcSize);
-    // free(this->GetInitHandle()->mem.mcpu.dstSize);
-    // free(this->GetInitHandle()->mem.mcpu.maxSrcSize);
-    // free(this->GetInitHandle()->mem.mcpu.maxDstSize);
-    // free(this->GetInitHandle()->mem.mcpu.roiPoints);
-    // free(this->GetInitHandle()->mem.mcpu.srcBatchIndex);
-    // free(this->GetInitHandle()->mem.mcpu.dstBatchIndex);
-    // free(this->GetInitHandle()->mem.mcpu.inc);
-    // free(this->GetInitHandle()->mem.mcpu.dstInc);
-    // for(int i = 0; i < 10; i++)
-    // {
-    //     free(this->GetInitHandle()->mem.mcpu.floatArr[i].floatmem);
-    //     free(this->GetInitHandle()->mem.mcpu.uintArr[i].uintmem);
-    //     free(this->GetInitHandle()->mem.mcpu.intArr[i].intmem);
-    //     free(this->GetInitHandle()->mem.mcpu.ucharArr[i].ucharmem);
-    //     free(this->GetInitHandle()->mem.mcpu.charArr[i].charmem);
-    // }
 
     free(this->GetInitHandle()->mem.mgpu.csrcSize.height);
     free(this->GetInitHandle()->mem.mgpu.csrcSize.width);
@@ -619,12 +575,11 @@ void Handle::rpp_destroy_object_gpu()
         clReleaseMemObject(this->GetInitHandle()->mem.mgpu.intArr[i].intmem);
         clReleaseMemObject(this->GetInitHandle()->mem.mgpu.ucharArr[i].ucharmem);
         clReleaseMemObject(this->GetInitHandle()->mem.mgpu.charArr[i].charmem);
-	    }
+    }
 }
 
 void Handle::rpp_destroy_object_host()
 {
-    // std::cerr<<"\n rpp_destroy_object_host\n";
     free(this->GetInitHandle()->mem.mcpu.srcSize);
     free(this->GetInitHandle()->mem.mcpu.dstSize);
     free(this->GetInitHandle()->mem.mcpu.maxSrcSize);
@@ -634,6 +589,7 @@ void Handle::rpp_destroy_object_host()
     free(this->GetInitHandle()->mem.mcpu.dstBatchIndex);
     free(this->GetInitHandle()->mem.mcpu.inc);
     free(this->GetInitHandle()->mem.mcpu.dstInc);
+
     for(int i = 0; i < 10; i++)
     {
         free(this->GetInitHandle()->mem.mcpu.floatArr[i].floatmem);
@@ -642,15 +598,29 @@ void Handle::rpp_destroy_object_host()
         free(this->GetInitHandle()->mem.mcpu.ucharArr[i].ucharmem);
         free(this->GetInitHandle()->mem.mcpu.charArr[i].charmem);
     }
+
+    free(this->GetInitHandle()->mem.mcpu.tempFloatmem);
 }
 
-size_t Handle::GetBatchSize() const {return this->impl->nBatchSize;}
+size_t Handle::GetBatchSize() const
+{
+    return this->impl->nBatchSize;
+}
 
-void Handle::SetBatchSize(size_t bSize) const {this->impl->nBatchSize = bSize;}
+void Handle::SetBatchSize(size_t bSize) const
+{
+    this->impl->nBatchSize = bSize;
+}
 
-rppAcceleratorQueue_t Handle::GetStream() const { return impl->queue.get(); }
+rppAcceleratorQueue_t Handle::GetStream() const
+{
+    return impl->queue.get();
+}
 
-InitHandle* Handle::GetInitHandle() const { return impl->initHandle;}
+InitHandle* Handle::GetInitHandle() const
+{
+    return impl->initHandle;
+}
 
 void Handle::SetAllocator(rppAllocatorFunction allocator,
                           rppDeallocatorFunction deallocator,
@@ -662,17 +632,28 @@ void Handle::SetAllocator(rppAllocatorFunction allocator,
     }
     this->impl->allocator.allocator   = allocator == nullptr ? default_allocator : allocator;
     this->impl->allocator.deallocator = deallocator == nullptr ? default_deallocator : deallocator;
-
-    this->impl->allocator.context =
-        allocatorContext == nullptr ? this->impl->context.get() : allocatorContext;
+    this->impl->allocator.context = allocatorContext == nullptr ? this->impl->context.get() : allocatorContext;
 }
 
-void Handle::EnableProfiling(bool enable) { this->impl->enable_profiling = enable; }
+void Handle::EnableProfiling(bool enable)
+{
+    this->impl->enable_profiling = enable;
+}
 
-void Handle::ResetKernelTime() { this->impl->ResetProfilingResult(); }
-void Handle::AccumKernelTime(float curr_time) { this->impl->AccumProfilingResult(curr_time); }
+void Handle::ResetKernelTime()
+{
+    this->impl->ResetProfilingResult();
+}
 
-float Handle::GetKernelTime() const { return this->impl->profiling_result; }
+void Handle::AccumKernelTime(float curr_time)
+{
+    this->impl->AccumProfilingResult(curr_time);
+}
+
+float Handle::GetKernelTime() const
+{
+    return this->impl->profiling_result;
+}
 
 KernelInvoke Handle::AddKernel(const std::string& algorithm,
                                const std::string& network_config,
@@ -707,12 +688,10 @@ bool Handle::HasKernel(const std::string& algorithm, const std::string& network_
 
 void Handle::ClearKernels(const std::string& algorithm, const std::string& network_config)
 {
-
     this->impl->cache.ClearKernels(algorithm, network_config);
 }
 
-const std::vector<Kernel>& Handle::GetKernelsImpl(const std::string& algorithm,
-                                                  const std::string& network_config)
+const std::vector<Kernel>& Handle::GetKernelsImpl(const std::string& algorithm, const std::string& network_config)
 {
     return this->impl->cache.GetKernels(algorithm, network_config);
 }
@@ -724,37 +703,48 @@ KernelInvoke Handle::Run(Kernel k)
     {
         return k.Invoke(q,
                         std::bind(&HandleImpl::SetProfilingResult,
-                                  std::ref(*this->impl),
-                                  std::placeholders::_1));
+                        std::ref(*this->impl),
+                        std::placeholders::_1));
     }
     else
     {
-        // std::cerr<<"\n coming to Run Gonna Invoke";
         return k.Invoke(q);
     }
 }
 
-Program Handle::LoadProgram(const std::string& program_name,
-                            std::string params,
-                            bool is_kernel_str,
-                            const std::string& kernel_src)
+auto Handle::GetKernels(const std::string& algorithm, const std::string& network_config)
 {
-    auto cache_file =
-        rpp::LoadBinary(this->GetDeviceName(), program_name, params, is_kernel_str);
+    return this->GetKernelsImpl(algorithm, network_config) |
+            boost::adaptors::transformed([this](Kernel k) { return this->Run(k); });
+}
+
+KernelInvoke Handle::GetKernel(const std::string& algorithm, const std::string& network_config)
+{
+    auto ks = this->GetKernelsImpl(algorithm, network_config);
+    if(ks.empty())
+    {
+        RPP_THROW("looking for default kernel (does not exist): " + algorithm + ", " +
+                        network_config);
+    }
+    return this->Run(ks.front());
+}
+
+Program Handle::LoadProgram(const std::string& program_name, std::string params, bool is_kernel_str, const std::string& kernel_src)
+{
+    auto cache_file = rpp::LoadBinary(this->GetDeviceName(), program_name, params, is_kernel_str);
     if(cache_file.empty())
     {
         auto p = rpp::LoadProgram(rpp::GetContext(this->GetStream()),
-                                     rpp::GetDevice(this->GetStream()),
-                                     program_name,
-                                     params,
-                                     is_kernel_str,
-                                     kernel_src);
+                                  rpp::GetDevice(this->GetStream()),
+                                  program_name,
+                                  params,
+                                  is_kernel_str,
+                                  kernel_src);
 
         // Save to cache
         auto path = rpp::GetCachePath() / boost::filesystem::unique_path();
         rpp::SaveProgramBinary(p, path.string());
-        rpp::SaveBinary(
-            path.string(), this->GetDeviceName(), program_name, params, is_kernel_str);
+        rpp::SaveBinary(path.string(), this->GetDeviceName(), program_name, params, is_kernel_str);
 
         return std::move(p);
     }
@@ -766,11 +756,20 @@ Program Handle::LoadProgram(const std::string& program_name,
     }
 }
 
-void Handle::Finish() const { clFinish(this->GetStream()); }
+void Handle::Finish() const
+{
+    clFinish(this->GetStream());
+}
 
-void Handle::Flush() const { clFlush(this->GetStream()); }
+void Handle::Flush() const
+{
+    clFlush(this->GetStream());
+}
 
-bool Handle::IsProfilingEnabled() const { return this->impl->enable_profiling; }
+bool Handle::IsProfilingEnabled() const
+{
+    return this->impl->enable_profiling;
+}
 
 std::size_t Handle::GetLocalMemorySize()
 {
@@ -791,15 +790,13 @@ std::string Handle::GetDeviceName()
 
 std::ostream& Handle::Print(std::ostream& os) const
 {
-    // os << "stream: " << this->impl->queue.get() << ", device_id: " << this->impl->device;
     return os;
 }
 
 std::size_t Handle::GetMaxMemoryAllocSize()
 {
     if(m_MaxMemoryAllocSizeCached == 0)
-        m_MaxMemoryAllocSizeCached = rpp::GetDeviceInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(
-            rpp::GetDevice(this->GetStream()));
+        m_MaxMemoryAllocSizeCached = rpp::GetDeviceInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(rpp::GetDevice(this->GetStream()));
     return m_MaxMemoryAllocSizeCached;
 }
 
@@ -815,13 +812,11 @@ Allocator::ManageDataPtr Handle::Create(std::size_t sz)
     return this->impl->allocator(sz);
 }
 
-Allocator::ManageDataPtr&
-Handle::WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz)
+Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
     RPP_HANDLE_LOCK
     this->Finish();
-    cl_int status = clEnqueueWriteBuffer(
-        this->GetStream(), ddata.get(), CL_TRUE, 0, sz, data, 0, nullptr, nullptr);
+    cl_int status = clEnqueueWriteBuffer(this->GetStream(), ddata.get(), CL_TRUE, 0, sz, data, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
     {
         RPP_THROW_CL_STATUS(status, "OpenCL error writing to buffer: " + std::to_string(sz));
@@ -833,8 +828,7 @@ void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size
 {
     RPP_HANDLE_LOCK
     this->Finish();
-    auto status = clEnqueueReadBuffer(
-        this->GetStream(), ddata.get(), CL_TRUE, 0, sz, data, 0, nullptr, nullptr);
+    auto status = clEnqueueReadBuffer(this->GetStream(), ddata.get(), CL_TRUE, 0, sz, data, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
     {
         RPP_THROW_CL_STATUS(status, "OpenCL error reading from buffer: " + std::to_string(sz));
@@ -845,8 +839,7 @@ void Handle::Copy(ConstData_t src, Data_t dest, std::size_t size)
 {
     RPP_HANDLE_LOCK
     this->Finish();
-    auto status =
-        clEnqueueCopyBuffer(this->GetStream(), src, dest, 0, 0, size, 0, nullptr, nullptr);
+    auto status = clEnqueueCopyBuffer(this->GetStream(), src, dest, 0, 0, size, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
     {
         RPP_THROW_CL_STATUS(status, "OpenCL error copying buffer: " + std::to_string(size));
@@ -862,7 +855,7 @@ shared<Data_t> Handle::CreateSubBuffer(Data_t data, std::size_t offset, std::siz
         std::size_t size;
     };
     cl_int error = 0;
-    auto r       = region{offset, size};
+    auto r = region{offset, size};
     auto mem = clCreateSubBuffer(data, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &r, &error);
     return {mem, manage_deleter<decltype(&clReleaseMemObject), &clReleaseMemObject>{}};
 }

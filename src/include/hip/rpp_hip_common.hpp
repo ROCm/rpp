@@ -4,9 +4,11 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_fp16.h>
 #include <half.hpp>
+
 #include "rppdefs.h"
-#include "hip/rpp/handle.hpp"
-#include "hip/rpp_hip_roi_conversion.hpp"
+#include "rpp/handle.hpp"
+#include "rpp_hip_roi_conversion.hpp"
+
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 typedef unsigned char uchar;
@@ -89,6 +91,9 @@ struct RPPTensorFunctionMetaData
 #define SIX_OVER_360                    0.01666667f
 #define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
 #define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+#define RGB_TO_GREY_WEIGHT_RED          0.299f
+#define RGB_TO_GREY_WEIGHT_GREEN        0.587f
+#define RGB_TO_GREY_WEIGHT_BLUE         0.114f
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
@@ -176,6 +181,14 @@ __device__ __forceinline__ void rpp_hip_pixel_check_0to1(d_float24 *pix_f24)
     pix_f24->f4[3] = rpp_hip_pixel_check_0to1(pix_f24->f4[3]);
     pix_f24->f4[4] = rpp_hip_pixel_check_0to1(pix_f24->f4[4]);
     pix_f24->f4[5] = rpp_hip_pixel_check_0to1(pix_f24->f4[5]);
+}
+
+// ROI range check for source locations calculated
+
+__device__ __forceinline__ void rpp_hip_roi_range_check(float2 *locSrcFloor_f2, int4 *roiPtrSrc_i4, int2 *locSrc_i2)
+{
+    locSrc_i2->x = (int)fminf(fmaxf(locSrcFloor_f2->x, roiPtrSrc_i4->x), roiPtrSrc_i4->z - 1);
+    locSrc_i2->y = (int)fminf(fmaxf(locSrcFloor_f2->y, roiPtrSrc_i4->y), roiPtrSrc_i4->w - 1);
 }
 
 // d_float8 adjust pixel range for different bit depths
@@ -1711,12 +1724,12 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *sr
 
 // float bilinear interpolation computation
 
-__device__ __forceinline__ void rpp_hip_interpolate_bilinear(float4 *srcNeighborhood_f4, float2 *weightedWH, float2 *oneMinusWeightedWH, float *dst)
+__device__ __forceinline__ void rpp_hip_interpolate_bilinear(float4 *srcNeighborhood_f4, float2 *weightedWH_f2, float2 *oneMinusWeightedWH_f2, float *dst)
 {
-    *dst = fmaf(srcNeighborhood_f4->x, oneMinusWeightedWH->y * oneMinusWeightedWH->x,
-                fmaf(srcNeighborhood_f4->y, oneMinusWeightedWH->y * weightedWH->x,
-                    fmaf(srcNeighborhood_f4->z, weightedWH->y * oneMinusWeightedWH->x,
-                        srcNeighborhood_f4->w * weightedWH->y * weightedWH->x)));
+    *dst = fmaf(srcNeighborhood_f4->x, oneMinusWeightedWH_f2->y * oneMinusWeightedWH_f2->x,
+                fmaf(srcNeighborhood_f4->y, oneMinusWeightedWH_f2->y * weightedWH_f2->x,
+                    fmaf(srcNeighborhood_f4->z, weightedWH_f2->y * oneMinusWeightedWH_f2->x,
+                        srcNeighborhood_f4->w * weightedWH_f2->y * weightedWH_f2->x)));
 }
 
 // float bilinear interpolation pln1
@@ -1733,10 +1746,10 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_pln1(T *srcPtr, ui
     }
     else
     {
-        weightedWH.x = locSrcX - locSrcFloor.x;
-        weightedWH.y = locSrcY - locSrcFloor.y;
-        oneMinusWeightedWH.x = 1.0f - weightedWH.x;
-        oneMinusWeightedWH.y = 1.0f - weightedWH.y;
+        weightedWH_f2.x = locSrcX - locSrcFloor_f2.x;
+        weightedWH_f2.y = locSrcY - locSrcFloor_f2.y;
+        oneMinusWeightedWH_f2.x = 1.0f - weightedWH_f2.x;
+        oneMinusWeightedWH_f2.y = 1.0f - weightedWH_f2.y;
         float4 srcNeighborhood_f4;
         rpp_hip_interpolate1_bilinear_load_pln1(srcPtr, srcStrideH, &locSrcFloor, roiPtrSrc_i4, &srcNeighborhood_f4);
         rpp_hip_interpolate_bilinear(&srcNeighborhood_f4, &weightedWH, &oneMinusWeightedWH, dst);
@@ -1757,10 +1770,10 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_pkd3(T *srcPtr, ui
     }
     else
     {
-        weightedWH.x = locSrcX - locSrcFloor.x;
-        weightedWH.y = locSrcY - locSrcFloor.y;
-        oneMinusWeightedWH.x = 1.0f - weightedWH.x;
-        oneMinusWeightedWH.y = 1.0f - weightedWH.y;
+        weightedWH_f2.x = locSrcX - locSrcFloor_f2.x;
+        weightedWH_f2.y = locSrcY - locSrcFloor_f2.y;
+        oneMinusWeightedWH_f2.x = 1.0f - weightedWH_f2.x;
+        oneMinusWeightedWH_f2.y = 1.0f - weightedWH_f2.y;
         d_float12 srcNeighborhood_f12;
         rpp_hip_interpolate3_bilinear_load_pkd3(srcPtr, srcStrideH, &locSrcFloor, roiPtrSrc_i4, &srcNeighborhood_f12);
         rpp_hip_interpolate_bilinear(&srcNeighborhood_f12.f4[0], &weightedWH, &oneMinusWeightedWH, &(dst_f3->x));

@@ -1,9 +1,8 @@
 #ifndef STATISTICAL_OPERATIONS_HPP
 #define STATISTICAL_OPERATIONS_HPP
-#include <cpu/rpp_cpu_common.hpp>
+
 #include <limits>
-
-
+#include "rpp_cpu_common.hpp"
 
 /**************** min ***************/
 
