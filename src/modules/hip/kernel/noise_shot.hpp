@@ -22,7 +22,7 @@ __device__ void shot_noise_8_hip_compute(d_float8 *pix_f8, RpptXorwowStateBoxMul
     shot_noise_1_hip_compute(&pix_f8->f1[7], xorwowState);
 }
 
-__device__ void shot_noise_24_hip_compute(d_float24 *pix_f24, RpptXorwowStateBoxMuller *xorwowState)//, float shotNoiseFactorInv, float shotNoiseFactor)
+__device__ void shot_noise_24_hip_compute(d_float24 *pix_f24, RpptXorwowStateBoxMuller *xorwowState)
 {
     shot_noise_8_hip_compute(&pix_f24->f8[0], xorwowState);
     shot_noise_8_hip_compute(&pix_f24->f8[1], xorwowState);
@@ -242,7 +242,7 @@ __global__ void shot_noise_pkd3_pln3_tensor(T *srcPtr,
 
         shot_noise_24_adjusted_input_hip_compute(srcPtr, &pix_f24);
         rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactorInv);
-        shot_noise_24_hip_compute(&pix_f24, &xorwowState);//, shotNoiseFactorInv, shotNoiseFactor);
+        shot_noise_24_hip_compute(&pix_f24, &xorwowState);
         rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactor);
         rpp_hip_pixel_check_0to255(&pix_f24);
         shot_noise_24_adjusted_output_hip_compute(srcPtr, &pix_f24);
@@ -293,7 +293,7 @@ __global__ void shot_noise_pln3_pkd3_tensor(T *srcPtr,
 
         shot_noise_24_adjusted_input_hip_compute(srcPtr, &pix_f24);
         rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactorInv);
-        shot_noise_24_hip_compute(&pix_f24, &xorwowState);//, shotNoiseFactorInv, shotNoiseFactor);
+        shot_noise_24_hip_compute(&pix_f24, &xorwowState);
         rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactor);
         rpp_hip_pixel_check_0to255(&pix_f24);
         shot_noise_24_adjusted_output_hip_compute(srcPtr, &pix_f24);
