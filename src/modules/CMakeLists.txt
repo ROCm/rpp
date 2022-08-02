@@ -91,7 +91,7 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Set HIP compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -mavx2 -mfma -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -mavx2 -mfma -std=gnu++14")
 
     # Add HIP specific preprocessor flags
     add_definitions(-DHIP_COMPILE)
@@ -108,7 +108,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 
     # Set OpenCL compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -mavx2 -mfma -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -std=gnu++14")
 
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
@@ -124,26 +124,6 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Set CPU compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
-    if(APPLE)
-        if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-            set(OpenMP_C "${CMAKE_C_COMPILER}")
-            set(OpenMP_C_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
-            set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
-            set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
-            set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
-            set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
-        endif()
-        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            set(OpenMP_CXX "${CMAKE_CXX_COMPILER}")
-            set(OpenMP_CXX_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
-            set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5")
-            set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-            set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-            set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-        endif()
-    else()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-    endif()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -std=gnu++14")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)

@@ -118,6 +118,32 @@ set(BOOST_COMPONENTS filesystem system)
 add_definitions(-DBOOST_ALL_NO_LIB=1)
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+
+# OpenMP
+find_package(OpenMP REQUIRED)
+if(APPLE)
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        set(OpenMP_C "${CMAKE_C_COMPILER}")
+        set(OpenMP_C_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
+        set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
+        set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+        set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+        set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(OpenMP_CXX "${CMAKE_CXX_COMPILER}")
+        set(OpenMP_CXX_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
+        set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5")
+        set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
+        set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
+        set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
+    endif()
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(LINK_LIBRARY_LIST "${LINK_LIBRARY_LIST} ${OpenMP_SHARED_LINKER_FLAGS}")
+endif()
 
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
@@ -126,7 +152,7 @@ if("${BACKEND}" STREQUAL "HIP")
 
     if(NOT DEFINED HIP_PATH)
         if(NOT DEFINED ENV{HIP_PATH})
-            set(HIP_PATH ${ROCM_PATH}/hip CACHE PATH "Path to which HIP has been installed")
+            set(HIP_PATH ${ROCM_PATH} CACHE PATH "Path to which HIP has been installed")
         else()
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
@@ -145,6 +171,7 @@ if("${BACKEND}" STREQUAL "HIP")
 			set(COMPILER_FOR_HIP ${ROCM_PATH}/${CMAKE_INSTALL_BINDIR}/hipcc)
 			include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
 			link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
+            set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
 
             # Add modules
             set(MODULES_LIST modules)
@@ -182,7 +209,7 @@ elseif("${BACKEND}" STREQUAL "OCL")
 
         # Set compiler and flags
         set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-        set(LINK_LIST ${OpenCL_LIBRARIES} ${LINK_LIST})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenCL_LIBRARIES})
         # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})  # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
         set(INCLUDE_LIST ${INCLUDE_LIST})
         add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
@@ -221,10 +248,9 @@ else()
 endif()
 
 
-target_link_libraries(${PROJECT_NAME} stdc++ ${Boost_FILESYSTEM_LIBRARY})
+target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST} stdc++)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-find_package(OpenMP)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -238,13 +264,11 @@ target_include_directories(${PROJECT_NAME}
 )
 
 if( "${BACKEND}" STREQUAL "HIP")
-    target_link_libraries(${PROJECT_NAME} ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
     )
 elseif( "${BACKEND}" STREQUAL "OCL")
-    target_link_libraries(${PROJECT_NAME} ${OpenCL_LIBRARIES})
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cl
