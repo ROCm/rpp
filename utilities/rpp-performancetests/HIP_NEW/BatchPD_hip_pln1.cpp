@@ -14,7 +14,7 @@
 #include <fstream>
 #include <algorithm>
 #include <iterator>
-#include "hip/hip_runtime_api.h"
+#include <hip/hip_runtime_api.h>
 #include "helpers/testSuite_helper.hpp"
 
 using namespace cv;
@@ -3088,4 +3088,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

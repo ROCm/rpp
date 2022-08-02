@@ -14,7 +14,7 @@
 #include <fstream>
 #include <algorithm>
 #include <iterator>
-#include "hip/hip_runtime_api.h"
+#include <hip/hip_runtime_api.h>
 
 using namespace cv;
 using namespace std;
