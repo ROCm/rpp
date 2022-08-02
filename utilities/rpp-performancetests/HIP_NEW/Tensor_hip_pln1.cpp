@@ -953,7 +953,7 @@ int main(int argc, char **argv)
                     for (i = 0; i < images; i++)
                     {
                         meanTensor[i] = 0.0f;
-                        stdDevTensor[i] = 0.4f;
+                        stdDevTensor[i] = 0.9f;
                     }
 
                     // Uncomment to run test case with an xywhROI override
