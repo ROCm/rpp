@@ -91,7 +91,7 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Set HIP compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -mavx2 -mfma -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
 
     # Add HIP specific preprocessor flags
     add_definitions(-DHIP_COMPILE)
@@ -106,10 +106,6 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_CL_CPP})
     message("-- ${Green}OpenCL kernels added!${ColourReset}")
 
-    # Set OpenCL compiler and flags
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -std=gnu++14")
-
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
@@ -122,13 +118,10 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     list(APPEND INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${INCLUDE_LIST} ${ROCM_INC})
 elseif( "${BACKEND}" STREQUAL "CPU")
-    # Set CPU compiler and flags
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -std=gnu++14")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
 endif()
-message("-- ${White}AMD RPP ${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
+#message("-- ${White}AMD RPP ${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
 # Kernels and includes additions
 

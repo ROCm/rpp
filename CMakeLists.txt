@@ -19,10 +19,13 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
+# Set Default Compiler & Standard
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_CXX_STANDARD 14)
+
 project(amd_rpp CXX)
 set(VERSION "0.96")
-
-set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -79,8 +82,8 @@ else()
     elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
         set(BACKEND "CPU")
     else()
-        message("-- ${Red}Warning: ${PROJECT_NAME} backend option unknown -- ${BACKEND}${ColourReset}")
-        message("-- ${Red}Warning: ${PROJECT_NAME} default backend will enforced${ColourReset}")
+        message("-- ${Red}Warning: ${PROJECT_NAME} backend option: ${BACKEND} -- unknown${ColourReset}")
+        message("-- ${Red}Warning: ${PROJECT_NAME} default backend will be enforced${ColourReset}")
         set(BACKEND "HIP")
     endif()
 endif()
@@ -142,8 +145,20 @@ if(APPLE)
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    #set(LINK_LIBRARY_LIST "${LINK_LIBRARY_LIST} ${OpenMP_SHARED_LINKER_FLAGS}")
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 endif()
+
+# Threads
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
+
+# set global compiler flags for the project
+# -fPIC -- Generate position-independent code if possible.
+# -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation.
+# -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation.
+# -std=gnu++14 -- Conform to the ISO 2014 C++ standard with GNU extensions.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mfma -std=gnu++14")
 
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
@@ -208,7 +223,6 @@ elseif("${BACKEND}" STREQUAL "OCL")
         endforeach(MOD_NAME)
 
         # Set compiler and flags
-        set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenCL_LIBRARIES})
         # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})  # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
         set(INCLUDE_LIST ${INCLUDE_LIST})
@@ -223,7 +237,6 @@ elseif("${BACKEND}" STREQUAL "OCL")
 endif()
 # CPU backend specific settings
 if("${BACKEND}" STREQUAL "CPU")
-    set(COMPILER_FOR_CPU clang++)
     # Add modules
     set(MODULES_LIST modules)
     foreach(MOD_NAME ${MODULES_LIST})
@@ -247,8 +260,11 @@ else()
     message("-- ${Red}${PROJECT_NAME} set to build without ENABLE_SIMD_INTRINSICS${ColourReset}")
 endif()
 
-
-target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST} stdc++)
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++)
+message("-- ${White}${PROJECT_NAME} -- Using Compiler - Path:" ${CMAKE_CXX_COMPILER} "\tVersion:" ${CMAKE_CXX_COMPILER_VERSION} "\tCompiler:" ${CMAKE_CXX_COMPILER_ID}${ColourReset})
+message("-- ${White}${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
+message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
+target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 

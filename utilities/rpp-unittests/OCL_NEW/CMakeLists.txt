@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(rpp_unittests/OCL_NEW)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
@@ -29,7 +29,6 @@ set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_S
 find_package(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-set(LINK_LIBRARY_LIST "${LINK_LIBRARY_LIST} ${OpenMP_SHARED_LINKER_FLAGS}")
 
 if (OpenCL_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, OpenCL and OpenCV${ColourReset}")
