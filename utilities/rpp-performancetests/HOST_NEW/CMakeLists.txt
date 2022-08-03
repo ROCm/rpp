@@ -34,7 +34,7 @@ if (OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp and OpenCV${ColourReset}")
     include_directories(${OpenCV_INCLUDE_DIRS})
     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
-    link_directories(${ROCM_PATH}/lib ${ROCM_PATH}/lib /usr/local/lib)
+    link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(BatchPD_host_pkd3 BatchPD_host_pkd3.cpp)
     add_executable(BatchPD_host_pln1 BatchPD_host_pln1.cpp)

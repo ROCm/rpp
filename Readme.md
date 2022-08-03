@@ -25,11 +25,9 @@ RPP is developed for **Linux** operating system.
 
 -   [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
 
--   Clang Version `6.0`
+-   Clang Version `6.0+`
 
-        sudo apt-get install clang-6.0
-        sudo ln -s /usr/bin/clang-6.0 /usr/bin/clang
-        sudo ln -s /usr/bin/clang++-6.0 /usr/bin/clang++
+        sudo apt-get install clang
 
 -   CMake Version `3.5` or higher
 
