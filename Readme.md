@@ -33,7 +33,8 @@ RPP is developed for **Linux** operating system.
 
         sudo apt-get install cmake
 
--   Boost Version `1.72` (install from source: Easy Build and Install - <https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install>)
+-   Boost Version `1.72`
+    * Install from source: [Build and Install](https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install)
 
         wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
         tar -xzvf boost_1_72_0.tar.gz
