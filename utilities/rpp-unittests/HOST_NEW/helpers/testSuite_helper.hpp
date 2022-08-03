@@ -1,7 +1,7 @@
 #ifndef TESTSUITE_HELPER
 #define TESTSUITE_HELPER
 
-#include "/opt/rocm/rpp/include/rppi.h"
+#include "rppi.h"
 
 RppStatus compute_image_location_host(RppiSize batch_srcSizeMax, int batchCount, Rpp32u *loc, Rpp32u channel)
 {
