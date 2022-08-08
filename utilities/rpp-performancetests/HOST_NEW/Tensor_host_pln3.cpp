@@ -5,13 +5,13 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "/opt/rocm/rpp/include/rpp.h"
+#include "rpp.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include <fstream>
 
 using namespace cv;
@@ -157,6 +157,9 @@ int main(int argc, char **argv)
         break;
     case 70:
         strcpy(funcName, "copy");
+        break;
+    case 80:
+        strcpy(funcName, "resize_mirror_normalize");
         break;
     case 81:
         strcpy(funcName, "color_jitter");
@@ -1018,12 +1021,6 @@ int main(int argc, char **argv)
         {
             test_case_name = "resize";
 
-            if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
-            {
-                missingFuncFlag = 1;
-                break;
-            }
-
             for (i = 0; i < images; i++)
             {
                 dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
@@ -1306,6 +1303,81 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_copy_host(inputi8, srcDescPtr, outputi8, dstDescPtr, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
+        case 80:
+        {
+            test_case_name = "resize_mirror_normalize";
+
+            if (interpolationType != RpptInterpolationType::BILINEAR)
+            {
+                missingFuncFlag = 1;
+                break;
+            }
+
+            for (i = 0; i < images; i++)
+            {
+                dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+                dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+            }
+
+            Rpp32f mean[images * 3];
+            Rpp32f stdDev[images * 3];
+            Rpp32u mirror[images];
+            for (i = 0, j = 0; i < images; i++, j += 3)
+            {
+                mean[j] = 60.0;
+                stdDev[j] = 1.0;
+
+                mean[j + 1] = 80.0;
+                stdDev[j + 1] = 1.0;
+
+                mean[j + 2] = 100.0;
+                stdDev[j + 2] = 1.0;
+                mirror[i] = 1;
+            }
+
+            // Uncomment to run test case with an xywhROI override
+            // for (i = 0; i < images; i++)
+            // {
+            //     roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            //     roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            //     dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            //     dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            // }
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_resize_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_resize_mirror_normalize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_resize_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                rppt_resize_mirror_normalize_host(input, srcDescPtr, outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 4)
+                rppt_resize_mirror_normalize_host(input, srcDescPtr, outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 5)
+                rppt_resize_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
