@@ -1233,13 +1233,13 @@ int main(int argc, char **argv)
             Rpp32u mirror[images];
             for (i = 0, j = 0; i < images; i++, j += 3)
             {
-                mean[j] = 0.0;
+                mean[j] = 60.0;
                 stdDev[j] = 1.0;
 
-                mean[j + 1] = 0.0;
+                mean[j + 1] = 80.0;
                 stdDev[j + 1] = 1.0;
 
-                mean[j + 2] = 0.0;
+                mean[j + 2] = 100.0;
                 stdDev[j + 2] = 1.0;
                 mirror[i] = 1;
             }
