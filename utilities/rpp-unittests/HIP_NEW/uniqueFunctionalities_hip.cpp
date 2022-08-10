@@ -5,12 +5,12 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "/opt/rocm/rpp/include/rppi.h"
+#include "rppi.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include <fstream>
 
 using namespace cv;

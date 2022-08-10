@@ -83,36 +83,28 @@ endif()
 # Backend specific settings
 
 if( "${BACKEND}" STREQUAL "HIP")
-
     # Add HIP kernels
     file(GLOB MOD_HIP_CPP "hip/*.cpp" )
     file(GLOB MOD_HIP_CPP_KERNELS "hip/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_CPP_KERNELS})
-    message("-- ${Green}HIP kernels added!${ColourReset}")
+    message("-- ${Green}HIP kernels added${ColourReset}")
 
     # Set HIP compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
 
     # Add HIP specific preprocessor flags
     add_definitions(-DHIP_COMPILE)
 
     # Add HIP specific includes
-    set(HIP_INC "/opt/rocm/hip/include")
+    set(HIP_INC ${ROCM_PATH}/include/)
     list(APPEND HIP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${HIP_INCLUDE_DIRS} ${HIP_INC} ${INCLUDE_LIST})
-    message("-- ${Blue}HIP include directories -- ${INCLUDE_LIST}${ColourReset}")
-
 elseif( "${BACKEND}" STREQUAL "OCL")
-
     # Add OpenCL kernels
     file(GLOB MOD_CL_CPP "cl/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_CL_CPP})
     message("-- ${Green}OpenCL kernels added!${ColourReset}")
-
-    # Set OpenCL compiler and flags
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14 -Wno-deprecated-declarations")
 
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
@@ -120,24 +112,17 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     add_definitions(-DMOD_CL_PATH="${CMAKE_CURRENT_LIST_DIR}/cl/kernel/")
 
     # Add OpenCL specific includes
-    set(ROCM_INC "/opt/rocm/include")
-    list(APPEND OpenCL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
-    set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST} ${ROCM_INC})
-    message("-- ${Blue}OpenCL include directories -- ${INCLUDE_LIST}${ColourReset}")
-
+    set(ROCM_INC ${ROCM_PATH}/include/)
+    # list(APPEND OpenCL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/) # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
+    # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST} ${ROCM_INC}) # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
+    list(APPEND INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    set(INCLUDE_LIST ${INCLUDE_LIST} ${ROCM_INC})
 elseif( "${BACKEND}" STREQUAL "CPU")
-
-    # Set CPU compiler and flags
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_CPU}) # GCC and G++ donst work for creating .so file
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14 -Wno-deprecated-declarations")
-
     # Add CPU specific includes
-    set(ROCM_INC "/opt/rocm/include")
-    set(INCLUDE_LIST ${ROCM_INC} ${CMAKE_SOURCE_DIR}/src/include/common/)
-    message("-- ${Blue}CPU include directories -- ${INCLUDE_LIST}${ColourReset}")
-
+    set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
 endif()
-
+#message("-- ${White}AMD RPP ${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
+message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
 # Kernels and includes additions
 
 add_kernels("${RPP_KERNELS}")

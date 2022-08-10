@@ -22,9 +22,9 @@ THE SOFTWARE.
 
 #ifndef RPPDEFS_H
 #define RPPDEFS_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 #include <stddef.h>
 #include <cmath>
@@ -584,6 +584,7 @@ typedef struct
     hipMemSize maxDstSize;
     hipMemROI roiPoints;
     hipMemRpp32f floatArr[10];
+    hipMemRpp32f float3Arr[10];
     hipMemRpp64f doubleArr[10];
     hipMemRpp32u uintArr[10];
     hipMemRpp32s intArr[10];
@@ -619,7 +620,7 @@ typedef struct
     memMgmt mem;
 } InitHandle;
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 #endif /* RPPDEFS_H */

@@ -5,19 +5,14 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "/opt/rocm/rpp/include/rppi.h"
+#include "rppi.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include <fstream>
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-// #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
-
-#include </opt/rocm/opencl/include/CL/cl.h>
-// #include </usr/include/CL/cl.h>
+#include <CL/cl.h>
 
 using namespace cv;
 using namespace std;
@@ -156,15 +151,15 @@ int main(int argc, char **argv)
         err |= clEnqueueWriteBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 36 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
 
         start = clock();
-        
+
         rppi_tensor_transpose_u8_gpu(d_srcPtr1, d_dstPtr, inTensorDim, perm, handle);
-      
+
         end = clock();
 
         if (missingFuncFlag != 1)
         {
             clEnqueueReadBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 36 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
-        
+
             printf("\n\nInput:\n");
             displayTensor(srcPtr, totalNumberOfElements);
             printf("\n\nOutput of tensor_transpose:\n");
@@ -196,9 +191,9 @@ int main(int argc, char **argv)
         Rpp32u perm[4] = {0, 3, 1, 2};
         Rpp32u shape[4] = {2, 4, 5, 3};
         Rpp8u srcPtr[120] = {
-            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0, 
-            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110, 
-            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135, 
+            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0,
+            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110,
+            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135,
             70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 15, 14, 13, 12, 11, 10
         };
         Rpp8u dstPtr[120] = {0};
@@ -214,7 +209,7 @@ int main(int argc, char **argv)
         }
 
         start = clock();
-        
+
         if (ip_bitDepth == 0)
         {
             d_srcPtr1 = clCreateBuffer(theContext, CL_MEM_READ_ONLY, 120 * sizeof(Rpp8u), NULL, NULL);
@@ -255,7 +250,7 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-      
+
         end = clock();
 
         if (ip_bitDepth == 0)
@@ -302,7 +297,7 @@ int main(int argc, char **argv)
             gpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
             cout << "\nGPU Time - BatchPD : " << gpu_time_used;
             printf("\n");
-        
+
         break;
     }
     case 2:
@@ -325,7 +320,7 @@ int main(int argc, char **argv)
         err |= clEnqueueWriteBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 36 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
 
         start = clock();
-        
+
         if (ip_bitDepth == 0)
             rppi_tensor_add_u8_gpu(d_srcPtr1, d_srcPtr2, d_dstPtr, tensorDimension, tensorDimensionValues, handle);
         else if (ip_bitDepth == 1)
@@ -342,13 +337,13 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-      
+
         end = clock();
 
         if (missingFuncFlag != 1)
         {
             clEnqueueReadBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 36 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
-            
+
             printf("\n\nInput 1:\n");
             displayTensor(srcPtr1, 36);
             printf("\n\nInput 2:\n");
@@ -385,7 +380,7 @@ int main(int argc, char **argv)
         err |= clEnqueueWriteBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 36 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
 
         start = clock();
-        
+
         if (ip_bitDepth == 0)
             rppi_tensor_subtract_u8_gpu(d_srcPtr1, d_srcPtr2, d_dstPtr, tensorDimension, tensorDimensionValues, handle);
         else if (ip_bitDepth == 1)
@@ -402,13 +397,13 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-      
+
         end = clock();
 
         if (missingFuncFlag != 1)
         {
             clEnqueueReadBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 36 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
-            
+
             printf("\n\nInput 1:\n");
             displayTensor(srcPtr1, 36);
             printf("\n\nInput 2:\n");
@@ -445,7 +440,7 @@ int main(int argc, char **argv)
         err |= clEnqueueWriteBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 36 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
 
         start = clock();
-        
+
         if (ip_bitDepth == 0)
             rppi_tensor_multiply_u8_gpu(d_srcPtr1, d_srcPtr2, d_dstPtr, tensorDimension, tensorDimensionValues, handle);
         else if (ip_bitDepth == 1)
@@ -462,13 +457,13 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-      
+
         end = clock();
 
         if (missingFuncFlag != 1)
         {
             clEnqueueReadBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 36 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
-            
+
             printf("\n\nInput 1:\n");
             displayTensor(srcPtr1, 36);
             printf("\n\nInput 2:\n");
@@ -504,7 +499,7 @@ int main(int argc, char **argv)
         err |= clEnqueueWriteBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 12 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
 
         start = clock();
-        
+
         if (ip_bitDepth == 0)
             rppi_tensor_matrix_multiply_u8_gpu(d_srcPtr1, d_srcPtr2, d_dstPtr, tensorDimensionValues1, tensorDimensionValues2, handle);
         else if (ip_bitDepth == 1)
@@ -521,13 +516,13 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-      
+
         end = clock();
 
         if (missingFuncFlag != 1)
         {
             clEnqueueReadBuffer(theQueue, d_dstPtr, CL_TRUE, 0, 12 * sizeof(Rpp8u), dstPtr, 0, NULL, NULL);
-            
+
             printf("\n\nInput 1:\n");
             displayTensor(srcPtr1, 6);
             printf("\n\nInput 1 Tensor Shape:\n");
@@ -567,7 +562,7 @@ int main(int argc, char **argv)
     //     for (int i = 0; i < 3; i++)
     //     {
     //         start = clock();
-            
+
     //         if (ip_bitDepth == 0)
     //         {
     //             if (i == 0)
@@ -579,7 +574,7 @@ int main(int argc, char **argv)
     //         }
     //         else
     //             missingFuncFlag = 1;
-          
+
     //         end = clock();
 
     //         if (missingFuncFlag != 1)
@@ -626,7 +621,7 @@ int main(int argc, char **argv)
     //     for (int i = 0; i < 3; i++)
     //     {
     //         start = clock();
-            
+
     //         if (ip_bitDepth == 0)
     //         {
     //             if (i == 0)
@@ -638,7 +633,7 @@ int main(int argc, char **argv)
     //         }
     //         else
     //             missingFuncFlag = 1;
-          
+
     //         end = clock();
 
     //         if (missingFuncFlag != 1)
@@ -668,17 +663,17 @@ int main(int argc, char **argv)
         test_case_name = "control_flow";
 
         rppHandle_t handle;
-        
+
         bool b1 = true, b2 = false;
         bool b3 =  true;
         Rpp8u u1 = 120, u2 = 100;
         Rpp8u u3 = 20;
-        
+
         start = clock();
-        
+
         rpp_bool_control_flow(b1, b2, &b3, RPP_SCALAR_OP_AND, handle );
         rpp_u8_control_flow(u1, u2, &u3, RPP_SCALAR_OP_ADD, handle );
-      
+
         end = clock();
 
         if(u3 == 220)
@@ -699,7 +694,7 @@ int main(int argc, char **argv)
     // case 9:
     // {
     //     test_case_name = "histogram";
-        
+
     //     rppHandle_t handle;
     //     int count = 0;
 
@@ -708,14 +703,14 @@ int main(int argc, char **argv)
     //     RppiSize srcSize;
     //     Rpp32u *outputHistogram = (Rpp32u *) calloc (bins, sizeof(Rpp32u));
     //     Rpp32u *outputHistogramTemp;
-        
+
     //     memset(outputHistogram, 0, bins * sizeof(Rpp32u));
     //     srcSize.height = 6;
     //     srcSize.width = 6;
     //     start = clock();
-        
+
     //     rppi_histogram_u8_pln1_gpu(srcPtr, srcSize, outputHistogram, bins, handle);
-      
+
     //     end = clock();
     //     printf("\n\nOutput of histogram_u8_pln1 for %d bins:\n", bins);
     //     outputHistogramTemp = outputHistogram;
@@ -738,9 +733,9 @@ int main(int argc, char **argv)
     //     srcSize.height = 3;
     //     srcSize.width = 4;
     //     start = clock();
-        
+
     //     rppi_histogram_u8_pln3_gpu(srcPtr, srcSize, outputHistogram, bins, handle);
-      
+
     //     end = clock();
     //     printf("\n\nOutput of histogram_u8_pln3 for %d bins:\n", bins);
     //     outputHistogramTemp = outputHistogram;
@@ -763,9 +758,9 @@ int main(int argc, char **argv)
     //     srcSize.height = 3;
     //     srcSize.width = 4;
     //     start = clock();
-        
+
     //     rppi_histogram_u8_pkd3_gpu(srcPtr, srcSize, outputHistogram, bins, handle);
-      
+
     //     end = clock();
     //     printf("\n\nOutput of histogram_u8_pkd3 for %d bins:\n", bins);
     //     outputHistogramTemp = outputHistogram;
@@ -791,7 +786,7 @@ int main(int argc, char **argv)
     //     test_case_name = "convert_bit_depth";
 
     //     rppHandle_t handle;
-        
+
     //     Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
     //     Rpp8s dstPtr8s[36];
     //     Rpp16u dstPtr16u[36];
@@ -818,7 +813,7 @@ int main(int argc, char **argv)
     //     for (int i = 0; i < 9; i++)
     //     {
     //         start = clock();
-            
+
     //         if (ip_bitDepth == 0)
     //         {
     //             if (i == 0)
@@ -842,7 +837,7 @@ int main(int argc, char **argv)
     //         }
     //         else
     //             missingFuncFlag = 1;
-          
+
     //         end = clock();
 
     //         if (missingFuncFlag != 1)
@@ -906,7 +901,7 @@ int main(int argc, char **argv)
     //     test_case_name = "tensor_convert_bit_depth";
 
     //     rppHandle_t handle;
-        
+
     //     Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
     //     Rpp8s dstPtr8s[36];
     //     Rpp16u dstPtr16u[36];
@@ -918,7 +913,7 @@ int main(int argc, char **argv)
     //     for (int i = 0; i < 3; i++)
     //     {
     //         start = clock();
-            
+
     //         if (ip_bitDepth == 0)
     //         {
     //             if (i == 0)
@@ -930,7 +925,7 @@ int main(int argc, char **argv)
     //         }
     //         else
     //             missingFuncFlag = 1;
-          
+
     //         end = clock();
 
     //         if (missingFuncFlag != 1)
@@ -972,12 +967,12 @@ int main(int argc, char **argv)
     //     }
 
     //     start = clock();
-        
+
     //     if (ip_bitDepth == 0)
     //         rppi_tensor_look_up_table_u8_gpu(srcPtr, dstPtr, lutPtr, tensorDimension, tensorDimensionValues);
     //     else
     //         missingFuncFlag = 1;
-      
+
     //     end = clock();
 
     //     if (missingFuncFlag != 1)

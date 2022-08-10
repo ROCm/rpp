@@ -35,7 +35,7 @@ class InlineException : public std::exception
 {
     public:
     InlineException(const std::string& trace) : _trace(trace) {}
-
+    virtual ~InlineException() throw() {return ;}
     virtual std::string What() const = 0;
     const std::string& GetTrace() const { return _trace; }
 
@@ -73,6 +73,7 @@ class WrongInlineDirectiveException : public InlineException
 class IncludeFileExceptionBase : public InlineException
 {
     public:
+    virtual ~IncludeFileExceptionBase() throw() {return ;}
     IncludeFileExceptionBase(const std::string& file, const std::string& trace)
         : InlineException(trace), _file(file)
     {
@@ -88,10 +89,12 @@ class IncludeFileExceptionBase : public InlineException
 class IncludeNotFoundException : public IncludeFileExceptionBase
 {
     public:
+    virtual ~IncludeNotFoundException() throw() {return ;}
     IncludeNotFoundException(const std::string& file, const std::string& trace)
         : IncludeFileExceptionBase(file, trace)
     {
     }
+
 
     std::string GetMessage() const override
     {

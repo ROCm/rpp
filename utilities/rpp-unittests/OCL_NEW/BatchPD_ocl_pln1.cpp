@@ -5,18 +5,18 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "/opt/rocm/rpp/include/rppi.h"
+#include "rppi.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include <fstream>
 #include <algorithm>
 #include <iterator>
 #include "helpers/testSuite_helper.hpp"
-#include </opt/rocm/opencl/include/CL/cl.h>
+#include <CL/cl.h>
 
 using namespace cv;
 using namespace std;
