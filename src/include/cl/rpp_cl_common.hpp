@@ -9,7 +9,7 @@
 #include <math.h>
 #include <algorithm>
 #include <rppdefs.h>
-#include <half.hpp>
+#include <half/half.hpp>
 using half_float::half;
 typedef half Rpp16f;
 
