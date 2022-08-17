@@ -22,9 +22,9 @@ THE SOFTWARE.
 
 #ifndef RPPDEFS_H
 #define RPPDEFS_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 #include <stddef.h>
 #include <cmath>
@@ -620,7 +620,7 @@ typedef struct
     memMgmt mem;
 } InitHandle;
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 #endif /* RPPDEFS_H */

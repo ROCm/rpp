@@ -3,7 +3,7 @@
 
 #include "stdio.h"
 #include "rppdefs.h"
-#include <half.hpp>
+#include <half/half.hpp>
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 
