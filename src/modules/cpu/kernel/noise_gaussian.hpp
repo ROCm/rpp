@@ -2,6 +2,18 @@
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
+inline void compute_gaussian_noise_params_initialize_4_host_sse(Rpp32f &mean, Rpp32f &stdDev, __m128 *pGaussianNoiseParams)
+{
+    pGaussianNoiseParams[0] = _mm_set1_ps(mean);
+    pGaussianNoiseParams[1] = _mm_set1_ps(stdDev);
+}
+
+inline void compute_gaussian_noise_params_initialize_8_host_avx(Rpp32f &mean, Rpp32f &stdDev, __m256 *pGaussianNoiseParams)
+{
+    pGaussianNoiseParams[0] = _mm256_set1_ps(mean);
+    pGaussianNoiseParams[1] = _mm256_set1_ps(stdDev);
+}
+
 RppStatus gaussian_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                                            RpptDescPtr srcDescPtr,
                                            Rpp8u *dstPtr,
@@ -42,39 +54,16 @@ RppStatus gaussian_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
 
         RpptXorwowStateBoxMuller xorwowState;
-        xorwowState.x[0] = xorwowInitialStatePtr[0].x[0] + offset;
-        xorwowState.x[1] = xorwowInitialStatePtr[0].x[1] + offset;
-        xorwowState.x[2] = xorwowInitialStatePtr[0].x[2] + offset;
-        xorwowState.x[3] = xorwowInitialStatePtr[0].x[3] + offset;
-        xorwowState.x[4] = xorwowInitialStatePtr[0].x[4] + offset;
-        xorwowState.counter = xorwowInitialStatePtr[0].counter + offset;
-        xorwowState.boxMullerFlag = xorwowInitialStatePtr[0].boxMullerFlag;
-        xorwowState.boxMullerExtra = xorwowInitialStatePtr[0].boxMullerExtra;
-
 #if __AVX2__
         __m256i pxXorwowStateX[5], pxXorwowStateCounter;
-        pxXorwowStateX[0] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset, xorwowInitialStatePtr[4].x[0] + offset, xorwowInitialStatePtr[5].x[0] + offset, xorwowInitialStatePtr[6].x[0] + offset, xorwowInitialStatePtr[7].x[0] + offset);
-        pxXorwowStateX[1] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[1] + offset, xorwowInitialStatePtr[1].x[1] + offset, xorwowInitialStatePtr[2].x[1] + offset, xorwowInitialStatePtr[3].x[1] + offset, xorwowInitialStatePtr[4].x[1] + offset, xorwowInitialStatePtr[5].x[1] + offset, xorwowInitialStatePtr[6].x[1] + offset, xorwowInitialStatePtr[7].x[1] + offset);
-        pxXorwowStateX[2] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[2] + offset, xorwowInitialStatePtr[1].x[2] + offset, xorwowInitialStatePtr[2].x[2] + offset, xorwowInitialStatePtr[3].x[2] + offset, xorwowInitialStatePtr[4].x[2] + offset, xorwowInitialStatePtr[5].x[2] + offset, xorwowInitialStatePtr[6].x[2] + offset, xorwowInitialStatePtr[7].x[2] + offset);
-        pxXorwowStateX[3] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[3] + offset, xorwowInitialStatePtr[1].x[3] + offset, xorwowInitialStatePtr[2].x[3] + offset, xorwowInitialStatePtr[3].x[3] + offset, xorwowInitialStatePtr[4].x[3] + offset, xorwowInitialStatePtr[5].x[3] + offset, xorwowInitialStatePtr[6].x[3] + offset, xorwowInitialStatePtr[7].x[3] + offset);
-        pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset, xorwowInitialStatePtr[4].x[4] + offset, xorwowInitialStatePtr[5].x[4] + offset, xorwowInitialStatePtr[6].x[4] + offset, xorwowInitialStatePtr[7].x[4] + offset);
-        pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset, xorwowInitialStatePtr[4].counter + offset, xorwowInitialStatePtr[5].counter + offset, xorwowInitialStatePtr[6].counter + offset, xorwowInitialStatePtr[7].counter + offset);
-
         __m256 pGaussianNoiseParams[2];
-        pGaussianNoiseParams[0] = _mm256_set1_ps(mean);
-        pGaussianNoiseParams[1] = _mm256_set1_ps(stdDev);
+        rpp_host_rng_xorwow_state_offsetted_avx(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        compute_gaussian_noise_params_initialize_8_host_avx(mean, stdDev, pGaussianNoiseParams);
 #else
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
-        pxXorwowStateX[0] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset);
-        pxXorwowStateX[1] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[1] + offset, xorwowInitialStatePtr[1].x[1] + offset, xorwowInitialStatePtr[2].x[1] + offset, xorwowInitialStatePtr[3].x[1] + offset);
-        pxXorwowStateX[2] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[2] + offset, xorwowInitialStatePtr[1].x[2] + offset, xorwowInitialStatePtr[2].x[2] + offset, xorwowInitialStatePtr[3].x[2] + offset);
-        pxXorwowStateX[3] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[3] + offset, xorwowInitialStatePtr[1].x[3] + offset, xorwowInitialStatePtr[2].x[3] + offset, xorwowInitialStatePtr[3].x[3] + offset);
-        pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset);
-        pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset);
-
         __m128 pGaussianNoiseParams[2];
-        pGaussianNoiseParams[0] = _mm_set1_ps(mean);
-        pGaussianNoiseParams[1] = _mm_set1_ps(stdDev);
+        rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        compute_gaussian_noise_params_initialize_4_host_sse(mean, stdDev, pGaussianNoiseParams);
 #endif
 
         // Gaussian Noise with fused output-layout toggle (NHWC -> NCHW)
@@ -392,47 +381,24 @@ RppStatus gaussian_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
         dstPtrChannel = dstPtrImage;
 
         RpptXorwowStateBoxMuller xorwowState;
-        xorwowState.x[0] = xorwowInitialStatePtr[0].x[0] + offset;
-        xorwowState.x[1] = xorwowInitialStatePtr[0].x[1] + offset;
-        xorwowState.x[2] = xorwowInitialStatePtr[0].x[2] + offset;
-        xorwowState.x[3] = xorwowInitialStatePtr[0].x[3] + offset;
-        xorwowState.x[4] = xorwowInitialStatePtr[0].x[4] + offset;
-        xorwowState.counter = xorwowInitialStatePtr[0].counter + offset;
-        xorwowState.boxMullerFlag = xorwowInitialStatePtr[0].boxMullerFlag;
-        xorwowState.boxMullerExtra = xorwowInitialStatePtr[0].boxMullerExtra;
-
 #if __AVX2__
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
         __m256i pxXorwowStateX[5], pxXorwowStateCounter;
-        pxXorwowStateX[0] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset, xorwowInitialStatePtr[4].x[0] + offset, xorwowInitialStatePtr[5].x[0] + offset, xorwowInitialStatePtr[6].x[0] + offset, xorwowInitialStatePtr[7].x[0] + offset);
-        pxXorwowStateX[1] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[1] + offset, xorwowInitialStatePtr[1].x[1] + offset, xorwowInitialStatePtr[2].x[1] + offset, xorwowInitialStatePtr[3].x[1] + offset, xorwowInitialStatePtr[4].x[1] + offset, xorwowInitialStatePtr[5].x[1] + offset, xorwowInitialStatePtr[6].x[1] + offset, xorwowInitialStatePtr[7].x[1] + offset);
-        pxXorwowStateX[2] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[2] + offset, xorwowInitialStatePtr[1].x[2] + offset, xorwowInitialStatePtr[2].x[2] + offset, xorwowInitialStatePtr[3].x[2] + offset, xorwowInitialStatePtr[4].x[2] + offset, xorwowInitialStatePtr[5].x[2] + offset, xorwowInitialStatePtr[6].x[2] + offset, xorwowInitialStatePtr[7].x[2] + offset);
-        pxXorwowStateX[3] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[3] + offset, xorwowInitialStatePtr[1].x[3] + offset, xorwowInitialStatePtr[2].x[3] + offset, xorwowInitialStatePtr[3].x[3] + offset, xorwowInitialStatePtr[4].x[3] + offset, xorwowInitialStatePtr[5].x[3] + offset, xorwowInitialStatePtr[6].x[3] + offset, xorwowInitialStatePtr[7].x[3] + offset);
-        pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset, xorwowInitialStatePtr[4].x[4] + offset, xorwowInitialStatePtr[5].x[4] + offset, xorwowInitialStatePtr[6].x[4] + offset, xorwowInitialStatePtr[7].x[4] + offset);
-        pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset, xorwowInitialStatePtr[4].counter + offset, xorwowInitialStatePtr[5].counter + offset, xorwowInitialStatePtr[6].counter + offset, xorwowInitialStatePtr[7].counter + offset);
-
         __m256 pGaussianNoiseParams[2];
-        pGaussianNoiseParams[0] = _mm256_set1_ps(mean);
-        pGaussianNoiseParams[1] = _mm256_set1_ps(stdDev);
+        rpp_host_rng_xorwow_state_offsetted_avx(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        compute_gaussian_noise_params_initialize_8_host_avx(mean, stdDev, pGaussianNoiseParams);
 #else
         Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
-        pxXorwowStateX[0] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset);
-        pxXorwowStateX[1] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[1] + offset, xorwowInitialStatePtr[1].x[1] + offset, xorwowInitialStatePtr[2].x[1] + offset, xorwowInitialStatePtr[3].x[1] + offset);
-        pxXorwowStateX[2] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[2] + offset, xorwowInitialStatePtr[1].x[2] + offset, xorwowInitialStatePtr[2].x[2] + offset, xorwowInitialStatePtr[3].x[2] + offset);
-        pxXorwowStateX[3] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[3] + offset, xorwowInitialStatePtr[1].x[3] + offset, xorwowInitialStatePtr[2].x[3] + offset, xorwowInitialStatePtr[3].x[3] + offset);
-        pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset);
-        pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset);
-
         __m128 pGaussianNoiseParams[2];
-        pGaussianNoiseParams[0] = _mm_set1_ps(mean);
-        pGaussianNoiseParams[1] = _mm_set1_ps(stdDev);
+        rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        compute_gaussian_noise_params_initialize_4_host_sse(mean, stdDev, pGaussianNoiseParams);
 #endif
 
         // Gaussian Noise with fused output-layout toggle (NHWC -> NCHW)
@@ -735,47 +701,24 @@ RppStatus gaussian_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
         dstPtrChannel = dstPtrImage;
 
         RpptXorwowStateBoxMuller xorwowState;
-        xorwowState.x[0] = xorwowInitialStatePtr[0].x[0] + offset;
-        xorwowState.x[1] = xorwowInitialStatePtr[0].x[1] + offset;
-        xorwowState.x[2] = xorwowInitialStatePtr[0].x[2] + offset;
-        xorwowState.x[3] = xorwowInitialStatePtr[0].x[3] + offset;
-        xorwowState.x[4] = xorwowInitialStatePtr[0].x[4] + offset;
-        xorwowState.counter = xorwowInitialStatePtr[0].counter + offset;
-        xorwowState.boxMullerFlag = xorwowInitialStatePtr[0].boxMullerFlag;
-        xorwowState.boxMullerExtra = xorwowInitialStatePtr[0].boxMullerExtra;
-
 #if __AVX2__
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
         __m256i pxXorwowStateX[5], pxXorwowStateCounter;
-        pxXorwowStateX[0] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset, xorwowInitialStatePtr[4].x[0] + offset, xorwowInitialStatePtr[5].x[0] + offset, xorwowInitialStatePtr[6].x[0] + offset, xorwowInitialStatePtr[7].x[0] + offset);
-        pxXorwowStateX[1] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[1] + offset, xorwowInitialStatePtr[1].x[1] + offset, xorwowInitialStatePtr[2].x[1] + offset, xorwowInitialStatePtr[3].x[1] + offset, xorwowInitialStatePtr[4].x[1] + offset, xorwowInitialStatePtr[5].x[1] + offset, xorwowInitialStatePtr[6].x[1] + offset, xorwowInitialStatePtr[7].x[1] + offset);
-        pxXorwowStateX[2] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[2] + offset, xorwowInitialStatePtr[1].x[2] + offset, xorwowInitialStatePtr[2].x[2] + offset, xorwowInitialStatePtr[3].x[2] + offset, xorwowInitialStatePtr[4].x[2] + offset, xorwowInitialStatePtr[5].x[2] + offset, xorwowInitialStatePtr[6].x[2] + offset, xorwowInitialStatePtr[7].x[2] + offset);
-        pxXorwowStateX[3] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[3] + offset, xorwowInitialStatePtr[1].x[3] + offset, xorwowInitialStatePtr[2].x[3] + offset, xorwowInitialStatePtr[3].x[3] + offset, xorwowInitialStatePtr[4].x[3] + offset, xorwowInitialStatePtr[5].x[3] + offset, xorwowInitialStatePtr[6].x[3] + offset, xorwowInitialStatePtr[7].x[3] + offset);
-        pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset, xorwowInitialStatePtr[4].x[4] + offset, xorwowInitialStatePtr[5].x[4] + offset, xorwowInitialStatePtr[6].x[4] + offset, xorwowInitialStatePtr[7].x[4] + offset);
-        pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset, xorwowInitialStatePtr[4].counter + offset, xorwowInitialStatePtr[5].counter + offset, xorwowInitialStatePtr[6].counter + offset, xorwowInitialStatePtr[7].counter + offset);
-
         __m256 pGaussianNoiseParams[2];
-        pGaussianNoiseParams[0] = _mm256_set1_ps(mean);
-        pGaussianNoiseParams[1] = _mm256_set1_ps(stdDev);
+        rpp_host_rng_xorwow_state_offsetted_avx(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        compute_gaussian_noise_params_initialize_8_host_avx(mean, stdDev, pGaussianNoiseParams);
 #else
         Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
-        pxXorwowStateX[0] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset);
-        pxXorwowStateX[1] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[1] + offset, xorwowInitialStatePtr[1].x[1] + offset, xorwowInitialStatePtr[2].x[1] + offset, xorwowInitialStatePtr[3].x[1] + offset);
-        pxXorwowStateX[2] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[2] + offset, xorwowInitialStatePtr[1].x[2] + offset, xorwowInitialStatePtr[2].x[2] + offset, xorwowInitialStatePtr[3].x[2] + offset);
-        pxXorwowStateX[3] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[3] + offset, xorwowInitialStatePtr[1].x[3] + offset, xorwowInitialStatePtr[2].x[3] + offset, xorwowInitialStatePtr[3].x[3] + offset);
-        pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset);
-        pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset);
-
         __m128 pGaussianNoiseParams[2];
-        pGaussianNoiseParams[0] = _mm_set1_ps(mean);
-        pGaussianNoiseParams[1] = _mm_set1_ps(stdDev);
+        rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        compute_gaussian_noise_params_initialize_4_host_sse(mean, stdDev, pGaussianNoiseParams);
 #endif
 
         // Gaussian Noise with fused output-layout toggle (NHWC -> NCHW)
@@ -1127,39 +1070,16 @@ RppStatus gaussian_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
 
         RpptXorwowStateBoxMuller xorwowState;
-        xorwowState.x[0] = xorwowInitialStatePtr[0].x[0] + offset;
-        xorwowState.x[1] = xorwowInitialStatePtr[0].x[1] + offset;
-        xorwowState.x[2] = xorwowInitialStatePtr[0].x[2] + offset;
-        xorwowState.x[3] = xorwowInitialStatePtr[0].x[3] + offset;
-        xorwowState.x[4] = xorwowInitialStatePtr[0].x[4] + offset;
-        xorwowState.counter = xorwowInitialStatePtr[0].counter + offset;
-        xorwowState.boxMullerFlag = xorwowInitialStatePtr[0].boxMullerFlag;
-        xorwowState.boxMullerExtra = xorwowInitialStatePtr[0].boxMullerExtra;
-
 #if __AVX2__
         __m256i pxXorwowStateX[5], pxXorwowStateCounter;
-        pxXorwowStateX[0] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset, xorwowInitialStatePtr[4].x[0] + offset, xorwowInitialStatePtr[5].x[0] + offset, xorwowInitialStatePtr[6].x[0] + offset, xorwowInitialStatePtr[7].x[0] + offset);
-        pxXorwowStateX[1] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[1] + offset, xorwowInitialStatePtr[1].x[1] + offset, xorwowInitialStatePtr[2].x[1] + offset, xorwowInitialStatePtr[3].x[1] + offset, xorwowInitialStatePtr[4].x[1] + offset, xorwowInitialStatePtr[5].x[1] + offset, xorwowInitialStatePtr[6].x[1] + offset, xorwowInitialStatePtr[7].x[1] + offset);
-        pxXorwowStateX[2] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[2] + offset, xorwowInitialStatePtr[1].x[2] + offset, xorwowInitialStatePtr[2].x[2] + offset, xorwowInitialStatePtr[3].x[2] + offset, xorwowInitialStatePtr[4].x[2] + offset, xorwowInitialStatePtr[5].x[2] + offset, xorwowInitialStatePtr[6].x[2] + offset, xorwowInitialStatePtr[7].x[2] + offset);
-        pxXorwowStateX[3] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[3] + offset, xorwowInitialStatePtr[1].x[3] + offset, xorwowInitialStatePtr[2].x[3] + offset, xorwowInitialStatePtr[3].x[3] + offset, xorwowInitialStatePtr[4].x[3] + offset, xorwowInitialStatePtr[5].x[3] + offset, xorwowInitialStatePtr[6].x[3] + offset, xorwowInitialStatePtr[7].x[3] + offset);
-        pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset, xorwowInitialStatePtr[4].x[4] + offset, xorwowInitialStatePtr[5].x[4] + offset, xorwowInitialStatePtr[6].x[4] + offset, xorwowInitialStatePtr[7].x[4] + offset);
-        pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset, xorwowInitialStatePtr[4].counter + offset, xorwowInitialStatePtr[5].counter + offset, xorwowInitialStatePtr[6].counter + offset, xorwowInitialStatePtr[7].counter + offset);
-
         __m256 pGaussianNoiseParams[2];
-        pGaussianNoiseParams[0] = _mm256_set1_ps(mean);
-        pGaussianNoiseParams[1] = _mm256_set1_ps(stdDev);
+        rpp_host_rng_xorwow_state_offsetted_avx(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        compute_gaussian_noise_params_initialize_8_host_avx(mean, stdDev, pGaussianNoiseParams);
 #else
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
-        pxXorwowStateX[0] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[0] + offset, xorwowInitialStatePtr[1].x[0] + offset, xorwowInitialStatePtr[2].x[0] + offset, xorwowInitialStatePtr[3].x[0] + offset);
-        pxXorwowStateX[1] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[1] + offset, xorwowInitialStatePtr[1].x[1] + offset, xorwowInitialStatePtr[2].x[1] + offset, xorwowInitialStatePtr[3].x[1] + offset);
-        pxXorwowStateX[2] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[2] + offset, xorwowInitialStatePtr[1].x[2] + offset, xorwowInitialStatePtr[2].x[2] + offset, xorwowInitialStatePtr[3].x[2] + offset);
-        pxXorwowStateX[3] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[3] + offset, xorwowInitialStatePtr[1].x[3] + offset, xorwowInitialStatePtr[2].x[3] + offset, xorwowInitialStatePtr[3].x[3] + offset);
-        pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4] + offset, xorwowInitialStatePtr[1].x[4] + offset, xorwowInitialStatePtr[2].x[4] + offset, xorwowInitialStatePtr[3].x[4] + offset);
-        pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter + offset, xorwowInitialStatePtr[1].counter + offset, xorwowInitialStatePtr[2].counter + offset, xorwowInitialStatePtr[3].counter + offset);
-
         __m128 pGaussianNoiseParams[2];
-        pGaussianNoiseParams[0] = _mm_set1_ps(mean);
-        pGaussianNoiseParams[1] = _mm_set1_ps(stdDev);
+        rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        compute_gaussian_noise_params_initialize_4_host_sse(mean, stdDev, pGaussianNoiseParams);
 #endif
 
         // Gaussian Noise with fused output-layout toggle (NHWC -> NCHW)
