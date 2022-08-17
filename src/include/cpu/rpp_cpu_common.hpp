@@ -152,6 +152,7 @@ struct RPPTensorFunctionMetaData
 };
 #endif // GPU_SUPPORT
 
+// Uses fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
 inline float rpp_host_math_inverse_sqrt_1(float x)
 {
     float xHalf = 0.5f * x;
@@ -163,6 +164,7 @@ inline float rpp_host_math_inverse_sqrt_1(float x)
     return x;
 }
 
+// SSE implementation of fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
 inline __m128 rpp_host_math_inverse_sqrt_4_sse(__m128 p)
 {
     __m128 pHalfNeg;
@@ -176,6 +178,7 @@ inline __m128 rpp_host_math_inverse_sqrt_4_sse(__m128 p)
     return p;
 }
 
+// AVX2 implementation of fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
 inline __m256 rpp_host_math_inverse_sqrt_8_avx(__m256 p)
 {
     __m256 pHalfNeg;
@@ -210,12 +213,12 @@ inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState 
     // Loop to initialize STREAM_SIZE xorwow initial states for multi-stream random number generation
     for (int i = 0; i < STREAM_SIZE; i++)
     {
-        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U
-        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U
-        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U
-        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U
-        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U
-        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U
+        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
     }
 }
 
@@ -231,15 +234,45 @@ inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream_boxmuller(RpptXo
     // Loop to initialize STREAM_SIZE xorwow initial states for multi-stream random number generation
     for (int i = 0; i < STREAM_SIZE; i++)
     {
-        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U
-        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U
-        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U
-        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U
-        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U
-        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U
+        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
         xorwowInitialState[i].boxMullerFlag = 0;
         xorwowInitialState[i].boxMullerExtra = 0.0f;
     }
+}
+
+template<typename T>
+inline void rpp_host_rng_xorwow_state_offsetted_avx(T *xorwowInitialStatePtr, T &xorwowState, Rpp32u offset, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter)
+{
+    xorwowState = xorwowInitialStatePtr[0];
+    xorwowState.x[0] = xorwowInitialStatePtr[0].x[0] + offset;
+
+    __m256i pxOffset = _mm256_set1_epi32(offset);
+    pxXorwowStateX[0] = _mm256_add_epi32(_mm256_setr_epi32(xorwowInitialStatePtr[0].x[0], xorwowInitialStatePtr[1].x[0], xorwowInitialStatePtr[2].x[0], xorwowInitialStatePtr[3].x[0], xorwowInitialStatePtr[4].x[0], xorwowInitialStatePtr[5].x[0], xorwowInitialStatePtr[6].x[0], xorwowInitialStatePtr[7].x[0]), pxOffset);
+    pxXorwowStateX[1] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[1], xorwowInitialStatePtr[1].x[1], xorwowInitialStatePtr[2].x[1], xorwowInitialStatePtr[3].x[1], xorwowInitialStatePtr[4].x[1], xorwowInitialStatePtr[5].x[1], xorwowInitialStatePtr[6].x[1], xorwowInitialStatePtr[7].x[1]);
+    pxXorwowStateX[2] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[2], xorwowInitialStatePtr[1].x[2], xorwowInitialStatePtr[2].x[2], xorwowInitialStatePtr[3].x[2], xorwowInitialStatePtr[4].x[2], xorwowInitialStatePtr[5].x[2], xorwowInitialStatePtr[6].x[2], xorwowInitialStatePtr[7].x[2]);
+    pxXorwowStateX[3] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[3], xorwowInitialStatePtr[1].x[3], xorwowInitialStatePtr[2].x[3], xorwowInitialStatePtr[3].x[3], xorwowInitialStatePtr[4].x[3], xorwowInitialStatePtr[5].x[3], xorwowInitialStatePtr[6].x[3], xorwowInitialStatePtr[7].x[3]);
+    pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4], xorwowInitialStatePtr[1].x[4], xorwowInitialStatePtr[2].x[4], xorwowInitialStatePtr[3].x[4], xorwowInitialStatePtr[4].x[4], xorwowInitialStatePtr[5].x[4], xorwowInitialStatePtr[6].x[4], xorwowInitialStatePtr[7].x[4]);
+    *pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter, xorwowInitialStatePtr[1].counter, xorwowInitialStatePtr[2].counter, xorwowInitialStatePtr[3].counter, xorwowInitialStatePtr[4].counter, xorwowInitialStatePtr[5].counter, xorwowInitialStatePtr[6].counter, xorwowInitialStatePtr[7].counter);
+}
+
+template<typename T>
+inline void rpp_host_rng_xorwow_state_offsetted_sse(T *xorwowInitialStatePtr, T &xorwowState, Rpp32u offset, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter)
+{
+    xorwowState = xorwowInitialStatePtr[0];
+    xorwowState.x[0] = xorwowInitialStatePtr[0].x[0] + offset;
+
+    __m128i pxOffset = _mm_set1_epi32(offset);
+    pxXorwowStateX[0] = _mm_add_epi32(_mm_setr_epi32(xorwowInitialStatePtr[0].x[0], xorwowInitialStatePtr[1].x[0], xorwowInitialStatePtr[2].x[0], xorwowInitialStatePtr[3].x[0]), pxOffset);
+    pxXorwowStateX[1] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[1], xorwowInitialStatePtr[1].x[1], xorwowInitialStatePtr[2].x[1], xorwowInitialStatePtr[3].x[1]);
+    pxXorwowStateX[2] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[2], xorwowInitialStatePtr[1].x[2], xorwowInitialStatePtr[2].x[2], xorwowInitialStatePtr[3].x[2]);
+    pxXorwowStateX[3] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[3], xorwowInitialStatePtr[1].x[3], xorwowInitialStatePtr[2].x[3], xorwowInitialStatePtr[3].x[3]);
+    pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4], xorwowInitialStatePtr[1].x[4], xorwowInitialStatePtr[2].x[4], xorwowInitialStatePtr[3].x[4]);
+    *pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter, xorwowInitialStatePtr[1].counter, xorwowInitialStatePtr[2].counter, xorwowInitialStatePtr[3].counter);
 }
 
 inline void rpp_host_rng_xorwow_8_state_update_avx(__m256i *pxXorwowStateXParam, __m256i *pxXorwowStateCounterParam)
@@ -278,12 +311,8 @@ inline __m256 rpp_host_rng_xorwow_8_f32_avx(__m256i *pxXorwowStateXParam, __m256
     rpp_host_rng_xorwow_8_state_update_avx(pxXorwowStateXParam, pxXorwowStateCounterParam);
 
     // Initialize avx-xorwow specific constants
-    __m256i pxFFFFFFFF = _mm256_set1_epi32(0xFFFFFFFF);
     __m256i px7FFFFF = _mm256_set1_epi32(0x7FFFFF);
     __m256i pxExponentFloat = _mm256_set1_epi32(XORWOW_EXPONENT_MASK);
-
-    // Mask counter param
-    *pxXorwowStateCounterParam = _mm256_and_si256(*pxXorwowStateCounterParam, pxFFFFFFFF);  // xorwowState->counter &= 0xFFFFFFFF;
 
     // Create float representation and return 0 <= pxS < 1
     __m256i pxS = _mm256_or_si256(pxExponentFloat, _mm256_and_si256(_mm256_add_epi32(pxXorwowStateXParam[4], *pxXorwowStateCounterParam), px7FFFFF));   // uint out = (XORWOW_EXPONENT_MASK | ((xorwowState->x[4] + xorwowState->counter) & 0x7FFFFF));
@@ -326,12 +355,8 @@ inline __m128 rpp_host_rng_xorwow_4_f32_sse(__m128i *pxXorwowStateXParam, __m128
     rpp_host_rng_xorwow_4_state_update_sse(pxXorwowStateXParam, pxXorwowStateCounterParam);
 
     // Initialize sse-xorwow specific constants
-    __m128i pxFFFFFFFF = _mm_set1_epi32(0xFFFFFFFF);
     __m128i px7FFFFF = _mm_set1_epi32(0x7FFFFF);
     __m128i pxExponentFloat = _mm_set1_epi32(XORWOW_EXPONENT_MASK);
-
-    // Mask counter param
-    *pxXorwowStateCounterParam = _mm_and_si128(*pxXorwowStateCounterParam, pxFFFFFFFF); // xorwowState->counter &= 0xFFFFFFFF;
 
     // Create float representation and return 0 <= pxS < 1
     __m128i pxS = _mm_or_si128(pxExponentFloat, _mm_and_si128(_mm_add_epi32(pxXorwowStateXParam[4], *pxXorwowStateCounterParam), px7FFFFF));    // uint out = (XORWOW_EXPONENT_MASK | ((xorwowState->x[4] + xorwowState->counter) & 0x7FFFFF));
@@ -374,7 +399,6 @@ inline Rpp32f rpp_host_rng_xorwow_f32(T *xorwowState)
     rpp_host_rng_xorwow_state_update(xorwowState);
 
     // Create float representation and return 0 <= outFloat < 1
-    xorwowState->counter &= 0xFFFFFFFF;                                                             // set new state param counter
     Rpp32u out = (XORWOW_EXPONENT_MASK | ((xorwowState->x[4] + xorwowState->counter) & 0x7FFFFF));  // bitmask 23 mantissa bits, OR with exponent
     Rpp32f outFloat = *(Rpp32f *)&out;                                                              // reinterpret out as float
     return  outFloat - 1;                                                                           // return 0 <= outFloat < 1
@@ -391,7 +415,7 @@ inline void rpp_host_rng_16_gaussian_f32_avx(__m256 *pRngVals, __m256i *pxXorwow
     pV = _mm256_or_ps(_mm256_andnot_ps(pS, pV), _mm256_and_ps(pS, _mm256_add_ps(avx_p2Pow32, pV)));     // Adjust int32 out of bound values in float for v
     pU = _mm256_fmadd_ps(pU, avx_p2Pow32Inv, avx_p2Pow32InvDiv2);                                       // u = u * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
     pV = _mm256_fmadd_ps(pV, avx_p2Pow32InvMul2Pi, avx_p2Pow32InvMul2PiDiv2);                           // v = v * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
-    pS = _mm256_div_ps(avx_p1, rpp_host_math_inverse_sqrt_8_avx(_mm256_mul_ps(avx_pm2, log_ps(pU))));   // s = 1 / rpp_host_math_inverse_sqrt_1(-2.0f * std::log(u));
+    pS = _mm256_sqrt_ps(_mm256_mul_ps(avx_pm2, log_ps(pU)));                                            // s = sqrt(-2.0f * std::log(u));
     sincos_ps(pV, &pU, &pV);                                                                            // std::sin(v) and std::cos(v) computation
     pRngVals[0] = _mm256_mul_ps(pU, pS);                                                                // u = std::sin(v) * s;
     pRngVals[1] = _mm256_mul_ps(pV, pS);                                                                // v = std::cos(v) * s;
@@ -408,7 +432,7 @@ inline void rpp_host_rng_8_gaussian_f32_sse(__m128 *pRngVals, __m128i *pxXorwowS
     pV = _mm_or_ps(_mm_andnot_ps(pS, pV), _mm_and_ps(pS, _mm_add_ps(xmm_p2Pow32, pV)));         // Adjust int32 out of bound values in float for v
     pU = _mm_fmadd_ps(pU, xmm_p2Pow32Inv, xmm_p2Pow32InvDiv2);                                  // u = u * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
     pV = _mm_fmadd_ps(pV, xmm_p2Pow32InvMul2Pi, xmm_p2Pow32InvMul2PiDiv2);                      // v = v * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
-    pS = _mm_div_ps(xmm_p1, rpp_host_math_inverse_sqrt_4_sse(_mm_mul_ps(xmm_pm2, log_ps(pU)))); // s = 1 / rpp_host_math_inverse_sqrt_1(-2.0f * std::log(u));
+    pS = _mm_sqrt_ps(_mm_mul_ps(xmm_pm2, log_ps(pU)));                                          // s = sqrt(-2.0f * std::log(u));
     sincos_ps(pV, &pU, &pV);                                                                    // std::sin(v) and std::cos(v) computation
     pRngVals[0] = _mm_mul_ps(pU, pS);                                                           // u = std::sin(v) * s;
     pRngVals[1] = _mm_mul_ps(pV, pS);                                                           // v = std::cos(v) * s;
@@ -416,12 +440,12 @@ inline void rpp_host_rng_8_gaussian_f32_sse(__m128 *pRngVals, __m128i *pxXorwowS
 
 inline float rpp_host_rng_1_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
 {
-    if(xorwowState->boxMullerFlag == 0)
+    if(!xorwowState->boxMullerFlag)
     {
         Rpp32f u, v, s;
         u = (Rpp32f)rpp_host_rng_xorwow_u32(xorwowState) * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
         v = (Rpp32f)rpp_host_rng_xorwow_u32(xorwowState) * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
-        s = 1 / rpp_host_math_inverse_sqrt_1(-2.0f * std::log(u));
+        s = sqrt(-2.0f * std::log(u));
         u = std::sin(v) * s;
         v = std::cos(v) * s;
         xorwowState->boxMullerExtra = v;
@@ -3262,8 +3286,8 @@ inline void compute_gaussian_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, _
     rpp_host_rng_16_gaussian_f32_avx(pRngVals, pxXorwowStateX, pxXorwowStateCounter);               // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     pRngVals[0] = _mm256_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);   // rngVal = rngVal * stdDev + mean;
     pRngVals[1] = _mm256_fmadd_ps(pRngVals[1], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);   // rngVal = rngVal * stdDev + mean;
-    pSqrt[0] = _mm256_div_ps(avx_p1, rpp_host_math_inverse_sqrt_8_avx(p[0]));                       // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
-    pSqrt[1] = _mm256_div_ps(avx_p1, rpp_host_math_inverse_sqrt_8_avx(p[1]));                       // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
+    pSqrt[0] = _mm256_sqrt_ps(p[0]);                                                                // pixSqrt = sqrt(pixVal);
+    pSqrt[1] = _mm256_sqrt_ps(p[1]);                                                                // pixSqrt = sqrt(pixVal);
     p[0] = _mm256_fmadd_ps(pSqrt[0], pRngVals[0], p[0]);                                            // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
     p[1] = _mm256_fmadd_ps(pSqrt[1], pRngVals[1], p[1]);                                            // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
@@ -3275,8 +3299,8 @@ inline void compute_gaussian_noise_8_host(__m128 *p, __m128i *pxXorwowStateX, __
     rpp_host_rng_8_gaussian_f32_sse(pRngVals, pxXorwowStateX, pxXorwowStateCounter);            // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     pRngVals[0] = _mm_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
     pRngVals[1] = _mm_fmadd_ps(pRngVals[1], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
-    pSqrt[0] = _mm_div_ps(xmm_p1, rpp_host_math_inverse_sqrt_4_sse(p[0]));                      // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
-    pSqrt[1] = _mm_div_ps(xmm_p1, rpp_host_math_inverse_sqrt_4_sse(p[1]));                      // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
+    pSqrt[0] = _mm_sqrt_ps(p[0]);                                                               // pixSqrt = sqrt(pixVal);
+    pSqrt[1] = _mm_sqrt_ps(p[1]);                                                               // pixSqrt = sqrt(pixVal);
     p[0] = _mm_fmadd_ps(pSqrt[0], pRngVals[0], p[0]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
     p[1] = _mm_fmadd_ps(pSqrt[1], pRngVals[1], p[1]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
@@ -3308,7 +3332,7 @@ inline void compute_gaussian_noise_24_host(__m256 *p, __m256i *pxXorwowStateX, _
     __m256 pRngVals[2], pSqrt;
     rpp_host_rng_16_gaussian_f32_avx(pRngVals, pxXorwowStateX, pxXorwowStateCounter);               // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     pRngVals[0] = _mm256_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);   // rngVal = rngVal * stdDev + mean;
-    pSqrt = _mm256_div_ps(avx_p1, rpp_host_math_inverse_sqrt_8_avx(p[2]));                          // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
+    pSqrt = _mm256_sqrt_ps(p[2]);                                                                   // pixSqrt = sqrt(pixVal);
     p[2] = _mm256_fmadd_ps(pSqrt, pRngVals[0], p[2]);                                               // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
 
@@ -3319,7 +3343,7 @@ inline void compute_gaussian_noise_12_host(__m128 *p, __m128i *pxXorwowStateX, _
     __m128 pRngVals[2], pSqrt;
     rpp_host_rng_8_gaussian_f32_sse(pRngVals, pxXorwowStateX, pxXorwowStateCounter);            // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     pRngVals[0] = _mm_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
-    pSqrt = _mm_div_ps(xmm_p1, rpp_host_math_inverse_sqrt_4_sse(p[2]));                         // pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
+    pSqrt = _mm_sqrt_ps(p[2]);                                                                  // pixSqrt = sqrt(pixVal);
     p[2] = _mm_fmadd_ps(pSqrt, pRngVals[0], p[2]);                                              // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
 
@@ -3328,7 +3352,7 @@ inline Rpp32f compute_gaussian_noise_1_host(Rpp32f pixVal, RpptXorwowStateBoxMul
     Rpp32f rngVal, pixSqrt;
     rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     rngVal = rngVal * stdDev + mean;
-    pixSqrt = 1 / rpp_host_math_inverse_sqrt_1(pixVal);
+    pixSqrt = sqrt(pixVal);
 
     return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
