@@ -1454,8 +1454,8 @@ __device__ __forceinline__ void rpp_hip_math_subtract16(d_float16 *src1Ptr_f16, 
 
 __device__ __forceinline__ void rpp_hip_math_subtract8_const(d_float8 *src_f8, d_float8 *dst_f8, float4 subtrahend_f4)
 {
-    dst_f8->f4[0] = src_f8->f4[0] + subtrahend_f4;
-    dst_f8->f4[1] = src_f8->f4[1] + subtrahend_f4;
+    dst_f8->f4[0] = src_f8->f4[0] - subtrahend_f4;
+    dst_f8->f4[1] = src_f8->f4[1] - subtrahend_f4;
 }
 
 // d_float24 subtract with constant
