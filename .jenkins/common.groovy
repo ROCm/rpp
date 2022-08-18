@@ -9,11 +9,13 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String backend = ''
     String depsInstall = ''
     String sourceDeps = ''
+    String sourceClang = ''
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
         if (platform.jenkinsLabel.contains('centos7')) {
             depsInstall = 'sudo yum -y install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra'
+            sourceClang = 'scl enable llvm-toolset-7 bash'
             sourceDeps = 'echo scl enable llvm-toolset-7 bash | sudo tee /etc/profile.d/ree.sh && sudo chmod +x /etc/profile.d/ree.sh && . /etc/profile && scl enable llvm-toolset-7 bash'
         }
     }
@@ -35,7 +37,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 echo Build RPP - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
-                cmake -DBACKEND=${backend} ${buildTypeArg} ../..
+                ${sourceClang} && cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
                 sudo make package
