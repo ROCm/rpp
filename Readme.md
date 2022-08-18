@@ -19,19 +19,28 @@ RPP is developed for **Linux** operating system.
 
 -   OS
     -   Ubuntu `18.04`/`20.04`
-    -   CentOS/RHEL `8.0`
+    -   CentOS/RHEL `7`/`8`
+    -   SLES - `15-SP2`
 
 -   [ROCm supported hardware](https://rocm.github.io/hardware.html)
 
 -   [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
 
--   Clang Version `6.0+`
-
+-   Clang Version `5.0.1` and above
+    - Ubuntu `18`/`20`
         sudo apt-get install clang
 
--   CMake Version `3.5+`
+    - CentOS `7`
+        sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
+        scl enable llvm-toolset-7 bash
 
-        sudo apt-get install cmake
+    - CentOS `8`
+        sudo yum install clang
+
+    - SLES `15-SP2`
+        sudo zypper install llvm-clang
+
+-   CMake Version `3.5+`
 
 -   Boost Version `1.72`
 

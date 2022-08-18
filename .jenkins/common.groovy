@@ -7,9 +7,13 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = ''
+    String depsInstall = ''
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
+        if (platform.jenkinsLabel.contains('centos7')) {
+            depsInstall = 'sudo yum -y install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra && scl enable llvm-toolset-7 bash'
+        }
     }
     else if (platform.jenkinsLabel.contains('ubuntu18')) {
          backend = 'OCL'
@@ -20,6 +24,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
     def command = """#!/usr/bin/env bash
                 set -x
+                ${depsInstall}
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
                 unzip half-1.12.0.zip -d half-files
                 sudo mkdir -p /usr/local/include/half

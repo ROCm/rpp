@@ -25,7 +25,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 14)
 
 project(amd_rpp CXX)
-set(VERSION "0.96")
+set(VERSION "0.97")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
