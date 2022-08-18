@@ -1,5 +1,5 @@
 #include <hip/hip_runtime.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include "rpp_hip_host_decls.hpp"
 
 using half_float::half;
