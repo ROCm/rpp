@@ -8,11 +8,13 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = ''
     String depsInstall = ''
+    String sourceDeps = ''
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
         if (platform.jenkinsLabel.contains('centos7')) {
-            depsInstall = 'sudo yum -y install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra && scl enable llvm-toolset-7 bash'
+            depsInstall = 'sudo yum -y install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra'
+            sourceDeps = 'echo scl enable llvm-toolset-7 bash | sudo tee /etc/profile.d/ree.sh && sudo chmod +x /etc/profile.d/ree.sh && . /etc/profile && scl enable llvm-toolset-7 bash'
         }
     }
     else if (platform.jenkinsLabel.contains('ubuntu18')) {
@@ -25,6 +27,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     def command = """#!/usr/bin/env bash
                 set -x
                 ${depsInstall}
+                ${sourceDeps}
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
                 unzip half-1.12.0.zip -d half-files
                 sudo mkdir -p /usr/local/include/half
