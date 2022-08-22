@@ -314,6 +314,13 @@ typedef struct
     Rpp32u counter;
 } RpptXorwowState;
 
+typedef struct
+{   Rpp32s x[5];
+    Rpp32s counter;
+    int boxMullerFlag;
+    float boxMullerExtra;
+} RpptXorwowStateBoxMuller;
+
 typedef struct Filter
 {
     Rpp32f scale = 1.0f;
