@@ -1290,9 +1290,9 @@ int main(int argc, char **argv)
             else if (ip_bitDepth == 2)
                 rppt_crop_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
+                rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf16, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
+                rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf32, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 5)
                 rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
