@@ -109,8 +109,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     int incrementPerImage = id_z * channelsDst;
     d_float8 pix_f8, cmnParams_f8;
-    cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage];
-    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);
+    cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage];          // Get mean for R channel
+    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);  // Get (1 / stdDev) for R channel
 
     if(mirrorTensor[id_z] == 1)
     {

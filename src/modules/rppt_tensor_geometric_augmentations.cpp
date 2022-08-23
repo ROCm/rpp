@@ -153,19 +153,6 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                 roiType,
                                                 layoutParams);
     }
-    else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F16))
-    {
-        crop_mirror_normalize_u8_f16_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                                 srcDescPtr,
-                                                 (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                                 dstDescPtr,
-                                                 meanTensor,
-                                                 stdDevTensor,
-                                                 mirrorTensor,
-                                                 roiTensorPtrSrc,
-                                                 roiType,
-                                                 layoutParams);
-    }
     else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         crop_mirror_normalize_u8_f32_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -179,6 +166,20 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                  roiType,
                                                  layoutParams);
     }
+    else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        crop_mirror_normalize_u8_f16_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                 srcDescPtr,
+                                                 (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                 dstDescPtr,
+                                                 meanTensor,
+                                                 stdDevTensor,
+                                                 mirrorTensor,
+                                                 roiTensorPtrSrc,
+                                                 roiType,
+                                                 layoutParams);
+    }
+
     return RPP_SUCCESS;
 }
 
