@@ -1056,16 +1056,19 @@ int main(int argc, char **argv)
                 {
                     roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                     roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                    roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                    roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
                 }*/
 
                 // Uncomment to run test case with an ltrbROI override
                 /*for (i = 0; i < images; i++)
+                {
                     roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                     roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                     roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                     roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
                 }
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
@@ -1107,16 +1110,19 @@ int main(int argc, char **argv)
                 {
                     roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                     roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                    roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                    roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
                 }*/
 
                 // Uncomment to run test case with an ltrbROI override
                 /*for (i = 0; i < images; i++)
+                {
                     roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                     roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                     roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
                     roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
                 }
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
