@@ -2260,7 +2260,7 @@ int main(int argc, char **argv)
         {
             memcpy(temp_output_row, (output_row), elementsInRow * sizeof (Rpp8u));
             temp_output_row += elementsInRow;
-            output_row += dstDescPtr->strides.hStride;
+            output_row += elementsInRowMax;
         }
         count += dstDescPtr->strides.nStride;
 
