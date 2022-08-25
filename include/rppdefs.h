@@ -22,9 +22,9 @@ THE SOFTWARE.
 
 #ifndef RPPDEFS_H
 #define RPPDEFS_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 #include <stddef.h>
 #include <cmath>
@@ -313,6 +313,13 @@ typedef struct
 {   Rpp32u x[5];
     Rpp32u counter;
 } RpptXorwowState;
+
+typedef struct
+{   Rpp32s x[5];
+    Rpp32s counter;
+    int boxMullerFlag;
+    float boxMullerExtra;
+} RpptXorwowStateBoxMuller;
 
 typedef struct Filter
 {
@@ -620,7 +627,7 @@ typedef struct
     memMgmt mem;
 } InitHandle;
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 #endif /* RPPDEFS_H */

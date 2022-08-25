@@ -5,13 +5,13 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "/opt/rocm/rpp/include/rppi.h"
+#include "rppi.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include <fstream>
 
 using namespace cv;
@@ -3525,11 +3525,11 @@ int main(int argc, char **argv)
 
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
         omp_time_used = end_omp - start_omp;
-        if (cpu_time_used > max_time_used)
-            max_time_used = cpu_time_used;
-        if (cpu_time_used < min_time_used)
-            min_time_used = cpu_time_used;
-        avg_time_used += cpu_time_used;
+        if (omp_time_used > max_time_used)
+            max_time_used = omp_time_used;
+        if (omp_time_used < min_time_used)
+            min_time_used = omp_time_used;
+        avg_time_used += omp_time_used;
     }
 
     avg_time_used /= 100;
