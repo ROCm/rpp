@@ -1730,12 +1730,12 @@ __device__ __forceinline__ void rpp_hip_compute_bicubic_coefficient(float weight
 __device__ __forceinline__ float rpp_hip_sinc(float x)
 {
     x *= PI;
-    return (fabs(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sin(x) / x;
+    return (fabsf(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sinf(x) / x;
 }
 
 __device__ __forceinline__ void rpp_hip_compute_lanczos3_coefficient(float weight, float *coeff)
 {
-    *coeff = fabs(weight) >= 3 ? 0.0f : (rpp_hip_sinc(weight) * rpp_hip_sinc(weight / 3));
+    *coeff = fabsf(weight) >= 3 ? 0.0f : (rpp_hip_sinc(weight) * rpp_hip_sinc(weight / 3));
 }
 
 __device__ __forceinline__ void rpp_hip_compute_gaussian_coefficient(float weight, float *coeff)
@@ -1745,7 +1745,7 @@ __device__ __forceinline__ void rpp_hip_compute_gaussian_coefficient(float weigh
 
 __device__ __forceinline__ void rpp_hip_compute_triangular_coefficient(float weight, float *coeff)
 {
-    *coeff = 1 - std::fabs(weight);
+    *coeff = 1 - fabsf(weight);
     *coeff = *coeff < 0 ? 0 : *coeff;
 }
 
