@@ -3,10 +3,10 @@
 
 // -------------------- Set 0 - resize device helpers --------------------
 
-__device__ void resize_roi_and_srclocs_hip_compute(uint2 *srcDimsWH, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
+__device__ void resize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
 {
-    float wRatio = float(srcDimsWH->x) / (float)dstDimsWH->x;
-    float hRatio = float(srcDimsWH->y) / (float)dstDimsWH->y;
+    float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) / dstDimsWH->x;
+    float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) / dstDimsWH->y;
     float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
     float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
 
@@ -18,10 +18,10 @@ __device__ void resize_roi_and_srclocs_hip_compute(uint2 *srcDimsWH, uint2 *dstD
     locDst_f8y.f4[0] = (float4)id_y;
     locDst_f8y.f4[1] = (float4)id_y;
 
-    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * (float4)wRatio) + wOffset_f4;  // Compute First 4 locSrcX
-    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * (float4)wRatio) + wOffset_f4;  // Compute Next 4 locSrcX
-    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * (float4)hRatio) + hOffset_f4;  // Compute First 4 locSrcY
-    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * (float4)hRatio) + hOffset_f4;  // Compute Next 4 locSrcY
+    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [0-3]
+    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [4-7]
+    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [0-3]
+    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [4-7]
 }
 
 __device__ void resize_generic_srclocs_hip_compute(int dstLocation, float scale, int limit, int *srcLoc, float *weight, float offset, int srcStride)
@@ -59,11 +59,8 @@ __global__ void resize_bilinear_pkd_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
-    uint2 srcDimsWH;
-    srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
-    srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
     d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcDimsWH, &dstDimsWH, id_x, id_y, &locSrc_f16);
+    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
     rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
@@ -96,11 +93,8 @@ __global__ void resize_bilinear_pln_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
-    uint2 srcDimsWH;
-    srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
-    srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
     d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcDimsWH, &dstDimsWH, id_x, id_y, &locSrc_f16);
+    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float8 dst_f8;
     rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
@@ -147,11 +141,8 @@ __global__ void resize_bilinear_pkd3_pln3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
-    uint2 srcDimsWH;
-    srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
-    srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
     d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcDimsWH, &dstDimsWH, id_x, id_y, &locSrc_f16);
+    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
     rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
@@ -183,11 +174,8 @@ __global__ void resize_bilinear_pln3_pkd3_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
-    uint2 srcDimsWH;
-    srcDimsWH.x = srcRoi_i4.z - srcRoi_i4.x + 1;
-    srcDimsWH.y = srcRoi_i4.w - srcRoi_i4.y + 1;
     d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcDimsWH, &dstDimsWH, id_x, id_y, &locSrc_f16);
+    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
     rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
@@ -265,10 +253,7 @@ __global__ void resize_generic_pkd_tensor(T *srcPtr,
             outPixelB += (float) *(srcRowPtrsForInterp + 2 + colIndex) * coeff;
         }
     }
-
-    rowCoeffSum = 1 / rowCoeffSum;
-    colCoeffSum = 1 / colCoeffSum;
-    invCoeffSum = rowCoeffSum * colCoeffSum;
+    invCoeffSum = 1 /(rowCoeffSum * colCoeffSum);
 
     outPixelR *= invCoeffSum;
     outPixelG *= invCoeffSum;
@@ -356,10 +341,7 @@ __global__ void resize_generic_pln3_tensor(T *srcPtr,
             outPixelB += (float) *(srcRowPtrsForInterp[2] + colIndex) * coeff;
         }
     }
-
-    rowCoeffSum = 1 / rowCoeffSum;
-    colCoeffSum = 1 / colCoeffSum;
-    invCoeffSum = rowCoeffSum * colCoeffSum;
+    invCoeffSum = 1 /(rowCoeffSum * colCoeffSum);
 
     outPixelR *= invCoeffSum;
     outPixelG *= invCoeffSum;
@@ -439,10 +421,7 @@ __global__ void resize_generic_pln1_tensor(T *srcPtr,
             outPixel += (float) *(srcRowPtrsForInterp + colIndex) * coeff;
         }
     }
-
-    rowCoeffSum = 1 / rowCoeffSum;
-    colCoeffSum = 1 / colCoeffSum;
-    invCoeffSum = rowCoeffSum * colCoeffSum;
+    invCoeffSum = 1 /(rowCoeffSum * colCoeffSum);
 
     outPixel *= invCoeffSum;
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -520,10 +499,7 @@ __global__ void resize_generic_pkd3_pln3_tensor(T *srcPtr,
             outPixelB += (float) *(srcRowPtrsForInterp + 2 + colIndex) * coeff;
         }
     }
-
-    rowCoeffSum = 1 / rowCoeffSum;
-    colCoeffSum = 1 / colCoeffSum;
-    invCoeffSum = rowCoeffSum * colCoeffSum;
+    invCoeffSum = 1 /(rowCoeffSum * colCoeffSum);
 
     outPixelR *= invCoeffSum;
     outPixelG *= invCoeffSum;
@@ -611,10 +587,7 @@ __global__ void resize_generic_pln3_pkd3_tensor(T *srcPtr,
             outPixelB += (float) *(srcRowPtrsForInterp[2] + colIndex) * coeff;
         }
     }
-
-    rowCoeffSum = 1 / rowCoeffSum;
-    colCoeffSum = 1 / colCoeffSum;
-    invCoeffSum = rowCoeffSum * colCoeffSum;
+    invCoeffSum = 1 /(rowCoeffSum * colCoeffSum);
 
     outPixelR *= invCoeffSum;
     outPixelG *= invCoeffSum;
@@ -641,7 +614,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
 {
     if (roiType == RpptRoiType::XYWH)
         hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
-    
+
     if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
     {
         return RPP_ERROR_NOT_IMPLEMENTED;
