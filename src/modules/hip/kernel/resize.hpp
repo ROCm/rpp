@@ -641,8 +641,12 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
 {
     if (roiType == RpptRoiType::XYWH)
         hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
-
-    if (interpolationType == RpptInterpolationType::BILINEAR)
+    
+    if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+    else if (interpolationType == RpptInterpolationType::BILINEAR)
     {
         int localThreads_x = 16;
         int localThreads_y = 16;
