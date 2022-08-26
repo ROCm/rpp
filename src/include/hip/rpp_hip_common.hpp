@@ -153,11 +153,11 @@ __device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, uchar
     *dst = (uchar)pixel;
 }
 
-// float pixel check for -127-128 range
+// float pixel check for -128-127 range
 
 __device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, schar* dst)
 {
-    pixel = fmax(fminf(pixel - 128, 127), -128);
+    pixel = fmax(fminf(pixel, 127), -128);
     *dst = (schar)pixel;
 }
 
@@ -1601,6 +1601,12 @@ __device__ __forceinline__ float rpp_hip_math_exp_lim256approx(float x)
   return x;
 }
 
+__device__ __forceinline__ float rpp_hip_math_sinc(float x)
+{
+    x *= PI;
+    return (fabsf(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sinf(x) / x;
+}
+
 // /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
 
 template<typename T>
@@ -1727,15 +1733,9 @@ __device__ __forceinline__ void rpp_hip_compute_bicubic_coefficient(float weight
     *coeff = (x >= 2) ? 0 : ((x > 1) ? (x * x * (-0.5f * x + 2.5f) - 4.0f * x + 2.0f) : (x * x * (1.5f * x - 2.5f) + 1.0f));
 }
 
-__device__ __forceinline__ float rpp_hip_sinc(float x)
-{
-    x *= PI;
-    return (fabsf(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sinf(x) / x;
-}
-
 __device__ __forceinline__ void rpp_hip_compute_lanczos3_coefficient(float weight, float *coeff)
 {
-    *coeff = fabsf(weight) >= 3 ? 0.0f : (rpp_hip_sinc(weight) * rpp_hip_sinc(weight / 3));
+    *coeff = fabsf(weight) >= 3 ? 0.0f : (rpp_hip_math_sinc(weight) * rpp_hip_math_sinc(weight / 3));
 }
 
 __device__ __forceinline__ void rpp_hip_compute_gaussian_coefficient(float weight, float *coeff)
