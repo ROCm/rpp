@@ -10,6 +10,9 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
+        if (platform.jenkinsLabel.contains('centos7')) {
+            backend = 'HIP'
+        }
     }
     else if (platform.jenkinsLabel.contains('ubuntu18')) {
          backend = 'OCL'
