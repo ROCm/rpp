@@ -89,6 +89,7 @@ struct RPPTensorFunctionMetaData
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
 #define ONE_OVER_6                      0.1666666f
+#define ONE_OVER_3                      0.3333333f
 #define PI                              3.14159265
 #define RGB_TO_GREY_WEIGHT_RED          0.299f
 #define RGB_TO_GREY_WEIGHT_GREEN        0.587f
@@ -1735,7 +1736,7 @@ __device__ __forceinline__ void rpp_hip_compute_bicubic_coefficient(float weight
 
 __device__ __forceinline__ void rpp_hip_compute_lanczos3_coefficient(float weight, float *coeff)
 {
-    *coeff = fabsf(weight) >= 3 ? 0.0f : (rpp_hip_math_sinc(weight) * rpp_hip_math_sinc(weight / 3));
+    *coeff = fabsf(weight) >= 3 ? 0.0f : (rpp_hip_math_sinc(weight) * rpp_hip_math_sinc(weight * ONE_OVER_3));
 }
 
 __device__ __forceinline__ void rpp_hip_compute_gaussian_coefficient(float weight, float *coeff)
@@ -1778,13 +1779,13 @@ __device__ __forceinline__ void rpp_hip_compute_interpolation_coefficient(RpptIn
     }
 }
 
-__device__ __forceinline__ void rpp_hip_compute_weight(RpptInterpolationType interpolationType, float weight, int k, float *coeffs, float scale, float radius)
+__device__ __forceinline__ void rpp_hip_compute_interpolation_weight(RpptInterpolationType interpolationType, float weight, int k, float *coeff, float scale, float radius)
 {
     weight -= radius;
-    rpp_hip_compute_interpolation_coefficient(interpolationType, (weight + k) * scale , coeffs);
+    rpp_hip_compute_interpolation_coefficient(interpolationType, (weight + k) * scale , coeff);
 }
 
-__device__ void rpp_hip_compute_scale_and_radius(RpptInterpolationType interpolationType, uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
+__device__ void rpp_hip_compute_interpolation_scale_and_radius(RpptInterpolationType interpolationType, uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
 {
     switch(interpolationType)
     {
