@@ -214,7 +214,7 @@ elif profilingOption == "YES":
                             except IOError:
                                 print("Unable to open case results")
                                 continue
-                    elif (CASE_NUM == 24) and TYPE.startswith("Tensor"):
+                    elif (CASE_NUM == 24 or CASE_NUM == 21) and TYPE.startswith("Tensor"):
                         INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
                         # Loop through extra param interpolationType
                         for INTERPOLATIONTYPE in INTERPOLATIONTYPE_LIST:
