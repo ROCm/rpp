@@ -12,7 +12,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
         if (platform.jenkinsLabel.contains('centos7')) {
-            enableSCL ='scl enable llvm-toolset-7 bash'
+            enableSCL = 'source scl_source enable llvm-toolset-7'
         }
     }
     else if (platform.jenkinsLabel.contains('ubuntu18')) {
