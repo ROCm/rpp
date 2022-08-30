@@ -1779,12 +1779,6 @@ __device__ __forceinline__ void rpp_hip_compute_interpolation_coefficient(RpptIn
     }
 }
 
-__device__ __forceinline__ void rpp_hip_compute_interpolation_weight(RpptInterpolationType interpolationType, float weight, int k, float *coeff, float scale, float radius)
-{
-    weight -= radius;
-    rpp_hip_compute_interpolation_coefficient(interpolationType, (weight + k) * scale , coeff);
-}
-
 __device__ void rpp_hip_compute_interpolation_scale_and_radius(RpptInterpolationType interpolationType, uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
 {
     switch(interpolationType)
