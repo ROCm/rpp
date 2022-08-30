@@ -7,7 +7,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = ''
-    String enableSCL = ''
+    String enableSCL = 'echo build-rpp'
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
