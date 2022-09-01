@@ -57,6 +57,7 @@ typedef union
 const __m128 xmm_p0 = _mm_set1_ps(0.0f);
 const __m128 xmm_p1 = _mm_set1_ps(1.0f);
 const __m128 xmm_p2 = _mm_set1_ps(2.0f);
+const __m128 xmm_pm2 = _mm_set1_ps(-2.0f);
 const __m128 xmm_p3 = _mm_set1_ps(3.0f);
 const __m128 xmm_p4 = _mm_set1_ps(4.0f);
 const __m128 xmm_p6 = _mm_set1_ps(6.0f);
@@ -65,6 +66,20 @@ const __m128 xmm_p255 = _mm_set1_ps(255.0f);
 const __m128 xmm_p1op255 = _mm_set1_ps(1.0f / 255.0f);
 const __m128 xmm_p1op3 = _mm_set1_ps(1.0f / 3.0f);
 const __m128 xmm_p2op3 = _mm_set1_ps(2.0f / 3.0f);
+
+const __m128 xmm_cephesSQRTHF = _mm_set1_ps(0.707106781186547524);
+const __m128 xmm_cephesLogP0 = _mm_set1_ps(7.0376836292E-2);
+const __m128 xmm_cephesLogP1 = _mm_set1_ps(-1.1514610310E-1);
+const __m128 xmm_cephesLogP2 = _mm_set1_ps(1.1676998740E-1);
+const __m128 xmm_cephesLogP3 = _mm_set1_ps(-1.2420140846E-1);
+const __m128 xmm_cephesLogP4 = _mm_set1_ps(1.4249322787E-1);
+const __m128 xmm_cephesLogP5 = _mm_set1_ps(-1.6668057665E-1);
+const __m128 xmm_cephesLogP6 = _mm_set1_ps(2.0000714765E-1);
+const __m128 xmm_cephesLogP7 = _mm_set1_ps(-2.4999993993E-1);
+const __m128 xmm_cephesLogP8 = _mm_set1_ps(3.3333331174E-1);
+const __m128 xmm_cephesLogQ1 = _mm_set1_ps(-2.12194440e-4);
+const __m128 xmm_cephesLogQ2 = _mm_set1_ps(0.693359375);
+
 const __m128i xmm_px0 = _mm_set1_epi32(0);
 const __m128i xmm_px1 = _mm_set1_epi32(1);
 const __m128i xmm_px2 = _mm_set1_epi32(2);
@@ -77,6 +92,7 @@ const __m128 xmm_pDstLocInit = _mm_setr_ps(0, 1, 2, 3);
 const __m256 avx_p0 = _mm256_set1_ps(0.0f);
 const __m256 avx_p1 = _mm256_set1_ps(1.0f);
 const __m256 avx_p2 = _mm256_set1_ps(2.0f);
+const __m256 avx_pm2 = _mm256_set1_ps(-2.0f);
 const __m256 avx_p3 = _mm256_set1_ps(3.0f);
 const __m256 avx_p4 = _mm256_set1_ps(4.0f);
 const __m256 avx_p6 = _mm256_set1_ps(6.0f);
@@ -85,6 +101,20 @@ const __m256 avx_p255 = _mm256_set1_ps(255.0f);
 const __m256 avx_p1op255 = _mm256_set1_ps(1.0f / 255.0f);
 const __m256 avx_p1op3 = _mm256_set1_ps(1.0f / 3.0f);
 const __m256 avx_p2op3 = _mm256_set1_ps(2.0f / 3.0f);
+
+const __m256i avx_cephesSQRTHF = _mm256_set1_ps(0.707106781186547524);
+const __m256i avx_cephesLogP0 = _mm256_set1_ps(7.0376836292E-2);
+const __m256i avx_cephesLogP1 = _mm256_set1_ps(-1.1514610310E-1);
+const __m256i avx_cephesLogP2 = _mm256_set1_ps(1.1676998740E-1);
+const __m256i avx_cephesLogP3 = _mm256_set1_ps(-1.2420140846E-1);
+const __m256i avx_cephesLogP4 = _mm256_set1_ps(1.4249322787E-1);
+const __m256i avx_cephesLogP5 = _mm256_set1_ps(-1.6668057665E-1);
+const __m256i avx_cephesLogP6 = _mm256_set1_ps(2.0000714765E-1);
+const __m256i avx_cephesLogP7 = _mm256_set1_ps(-2.4999993993E-1);
+const __m256i avx_cephesLogP8 = _mm256_set1_ps(3.3333331174E-1);
+const __m256i avx_cephesLogQ1 = _mm256_set1_ps(-2.12194440e-4);
+const __m256i avx_cephesLogQ2 = _mm256_set1_ps(0.693359375);
+
 const __m256i avx_px0 = _mm256_set1_epi32(0);
 const __m256i avx_px1 = _mm256_set1_epi32(1);
 const __m256i avx_px2 = _mm256_set1_epi32(2);
@@ -419,6 +449,18 @@ inline void rpp_store12_f32pln3_to_f32pkd3(Rpp32f *dstPtr, __m128 *p)
     _mm_storeu_ps(dstPtr + 3, p[1]);
     _mm_storeu_ps(dstPtr + 6, p[2]);
     _mm_storeu_ps(dstPtr + 9, p[3]);
+}
+
+inline void rpp_load8_f32_to_f32(Rpp32f *srcPtr, __m128 *p)
+{
+    p[0] = _mm_loadu_ps(srcPtr);
+    p[1] = _mm_loadu_ps(srcPtr + 4);
+}
+
+inline void rpp_store8_f32_to_f32(Rpp32f *dstPtr, __m128 *p)
+{
+    _mm_storeu_ps(dstPtr, p[0]);
+    _mm_storeu_ps(dstPtr + 4, p[1]);
 }
 
 inline void rpp_load4_f32_to_f32(Rpp32f *srcPtr, __m128 *p)
@@ -890,6 +932,12 @@ inline void rpp_load16_f32_to_f32_avx(Rpp32f *srcPtr, __m256 *p)
     p[1] = _mm256_loadu_ps(srcPtr + 8);
 }
 
+inline void rpp_store16_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
+{
+    _mm256_storeu_ps(dstPtr, p[0]);
+    _mm256_storeu_ps(dstPtr + 8, p[1]);
+}
+
 inline void rpp_load8_f32_to_f32_avx(Rpp32f *srcPtr, __m256 *p)
 {
     p[0] = _mm256_loadu_ps(srcPtr);
@@ -1075,6 +1123,46 @@ inline void rpp_normalize48_avx(__m256 *p)
     p[5] = _mm256_mul_ps(p[5], avx_p1op255);
 }
 
+inline void rpp_multiply48_constant(__m256 *p, __m256 pMultiplier)
+{
+    p[0] = _mm256_mul_ps(p[0], pMultiplier);
+    p[1] = _mm256_mul_ps(p[1], pMultiplier);
+    p[2] = _mm256_mul_ps(p[2], pMultiplier);
+    p[3] = _mm256_mul_ps(p[3], pMultiplier);
+    p[4] = _mm256_mul_ps(p[4], pMultiplier);
+    p[5] = _mm256_mul_ps(p[5], pMultiplier);
+}
+
+inline void rpp_multiply48_constant(__m128 *p, __m128 pMultiplier)
+{
+    p[0] = _mm_mul_ps(p[0], pMultiplier);
+    p[1] = _mm_mul_ps(p[1], pMultiplier);
+    p[2] = _mm_mul_ps(p[2], pMultiplier);
+    p[3] = _mm_mul_ps(p[3], pMultiplier);
+    p[4] = _mm_mul_ps(p[4], pMultiplier);
+    p[5] = _mm_mul_ps(p[5], pMultiplier);
+    p[6] = _mm_mul_ps(p[6], pMultiplier);
+    p[7] = _mm_mul_ps(p[7], pMultiplier);
+    p[8] = _mm_mul_ps(p[8], pMultiplier);
+    p[9] = _mm_mul_ps(p[9], pMultiplier);
+    p[10] = _mm_mul_ps(p[10], pMultiplier);
+    p[11] = _mm_mul_ps(p[11], pMultiplier);
+}
+
+inline void rpp_multiply16_constant(__m256 *p, __m256 pMultiplier)
+{
+    p[0] = _mm256_mul_ps(p[0], pMultiplier);
+    p[1] = _mm256_mul_ps(p[1], pMultiplier);
+}
+
+inline void rpp_multiply16_constant(__m128 *p, __m128 pMultiplier)
+{
+    p[0] = _mm_mul_ps(p[0], pMultiplier);
+    p[1] = _mm_mul_ps(p[1], pMultiplier);
+    p[2] = _mm_mul_ps(p[2], pMultiplier);
+    p[3] = _mm_mul_ps(p[3], pMultiplier);
+}
+
 template <typename FuncType, typename... ArgTypes>
 inline void rpp_simd_load(FuncType &&rpp_simd_load_routine, ArgTypes&&... args)
 {
@@ -1212,11 +1300,40 @@ static  inline __m128 fast_exp_sse (__m128 x)
     return r;
 }
 
+#if __AVX2__
+static inline __m256 fast_exp_avx(__m256 x)
+{
+    __m256 t, f, e, p, r;
+    __m256i i, j;
+    __m256 l2e = _mm256_set1_ps(1.442695041f);    /* log2(e) */
+    __m256 c0  = _mm256_set1_ps(0.3371894346f);
+    __m256 c1  = _mm256_set1_ps(0.657636276f);
+    __m256 c2  = _mm256_set1_ps(1.00172476f);
+
+    /* exp(x) = 2^i * 2^f; i = floor (log2(e) * x), 0 <= f <= 1 */
+    t = _mm256_mul_ps(x, l2e);             /* t = log2(e) * x */
+    e = _mm256_floor_ps(t);                /* floor(t) */
+    i = _mm256_cvtps_epi32(e);             /* (int)floor(t) */
+    f = _mm256_sub_ps(t, e);               /* f = t - floor(t) */
+    p = c0;                                /* c0 */
+    p = _mm256_mul_ps(p, f);               /* c0 * f */
+    p = _mm256_add_ps(p, c1);              /* c0 * f + c1 */
+    p = _mm256_mul_ps(p, f);               /* (c0 * f + c1) * f */
+    p = _mm256_add_ps(p, c2);              /* p = (c0 * f + c1) * f + c2 ~= 2^f */
+    j = _mm256_slli_epi32(i, 23);          /* i << 23 */
+    r = _mm256_castsi256_ps(_mm256_add_epi32(j, _mm256_castps_si256(p)));    /* r = p * 2^i*/
+    return r;
+}
+#endif
+
 #define set1_ps_hex(x) _mm_castsi128_ps(_mm_set1_epi32(x))
+#define set1_ps_hex_avx(x) _mm256_castsi256_ps(_mm256_set1_epi32(x))
 
 static const __m128 _ps_0 = _mm_set1_ps(0.f);
 static const __m128 _ps_1 = _mm_set1_ps(1.f);
 static const __m128 _ps_0p5 = _mm_set1_ps(0.5f);
+static const __m128 _ps_n0p5 = _mm_set1_ps(-0.5f);
+static const __m128 _ps_1p5 = _mm_set1_ps(1.5f);
 static const __m128 _ps_min_norm_pos = set1_ps_hex(0x00800000);
 static const __m128 _ps_mant_mask = set1_ps_hex(0x7f800000);
 static const __m128 _ps_inv_mant_mask = set1_ps_hex(~0x7f800000);
@@ -1239,6 +1356,111 @@ static const __m128 _ps_coscof_p0 = _mm_set1_ps( 2.443315711809948E-005f);
 static const __m128 _ps_coscof_p1 = _mm_set1_ps(-1.388731625493765E-003f);
 static const __m128 _ps_coscof_p2 = _mm_set1_ps( 4.166664568298827E-002f);
 static const __m128 _ps_cephes_FOPI = _mm_set1_ps(1.27323954473516f); // 4 / M_PI
+
+static const __m256 _ps_1_avx = _mm256_set1_ps(1.f);
+static const __m256 _ps_0p5_avx = _mm256_set1_ps(0.5f);
+static const __m256 _ps_n0p5_avx = _mm256_set1_ps(-0.5f);
+static const __m256 _ps_1p5_avx = _mm256_set1_ps(1.5f);
+static const __m256 _ps_min_norm_pos_avx = set1_ps_hex_avx(0x00800000);
+static const __m256 _ps_inv_mant_mask_avx = set1_ps_hex_avx(~0x7f800000);
+static const __m256 _ps_sign_mask_avx = set1_ps_hex_avx(0x80000000);
+
+static const __m256i _pi32_1_avx = _mm256_set1_epi32(1);
+static const __m256i _pi32_inv1_avx = _mm256_set1_epi32(~1);
+static const __m256i _pi32_2_avx = _mm256_set1_epi32(2);
+static const __m256i _pi32_4_avx = _mm256_set1_epi32(4);
+static const __m256i _pi32_0x7f_avx = _mm256_set1_epi32(0x7f);
+
+static const __m256 _ps_minus_cephes_DP1_avx = _mm256_set1_ps(-0.78515625f);
+static const __m256 _ps_minus_cephes_DP2_avx = _mm256_set1_ps(-2.4187564849853515625e-4f);
+static const __m256 _ps_minus_cephes_DP3_avx = _mm256_set1_ps(-3.77489497744594108e-8f);
+static const __m256 _ps_sincof_p0_avx = _mm256_set1_ps(-1.9515295891E-4f);
+static const __m256 _ps_sincof_p1_avx = _mm256_set1_ps( 8.3321608736E-3f);
+static const __m256 _ps_sincof_p2_avx = _mm256_set1_ps(-1.6666654611E-1f);
+static const __m256 _ps_coscof_p0_avx = _mm256_set1_ps( 2.443315711809948E-005f);
+static const __m256 _ps_coscof_p1_avx = _mm256_set1_ps(-1.388731625493765E-003f);
+static const __m256 _ps_coscof_p2_avx = _mm256_set1_ps( 4.166664568298827E-002f);
+static const __m256 _ps_cephes_FOPI_avx = _mm256_set1_ps(1.27323954473516f); // 4 / M_PI
+
+static inline void sincos_ps(__m256 x, __m256 *s, __m256 *c)
+{
+    // Extract the sign bit (upper one)
+    __m256 sign_bit_sin = _mm256_and_ps(x, _ps_sign_mask_avx);
+    // take the absolute value
+    x = _mm256_xor_ps(x, sign_bit_sin);
+
+    // Scale by 4/Pi
+    __m256 y = _mm256_mul_ps(x, _ps_cephes_FOPI_avx);
+
+    // Store the integer part of y in emm2
+    __m256i emm2 = _mm256_cvttps_epi32(y);
+
+    // j=(j+1) & (~1) (see the cephes sources)
+    emm2 = _mm256_add_epi32(emm2, _pi32_1_avx);
+    emm2 = _mm256_and_si256(emm2, _pi32_inv1_avx);
+    y = _mm256_cvtepi32_ps(emm2);
+
+    __m256i emm4 = emm2;
+
+    // Get the swap sign flag for the sine
+    __m256i emm0 = _mm256_and_si256(emm2, _pi32_4_avx);
+    emm0 = _mm256_slli_epi32(emm0, 29);
+    __m256 swap_sign_bit_sin = _mm256_castsi256_ps(emm0);
+
+    // Get the polynom selection mask for the sine
+    emm2 = _mm256_and_si256(emm2, _pi32_2_avx);
+    emm2 = _mm256_cmpeq_epi32(emm2, _mm256_setzero_si256());
+    __m256 poly_mask = _mm256_castsi256_ps(emm2);
+    // The magic pass: "Extended precision modular arithmetic - x = ((x - y * DP1) - y * DP2) - y * DP3;
+    __m256 xmm1 = _mm256_mul_ps(y, _ps_minus_cephes_DP1_avx);
+    __m256 xmm2 = _mm256_mul_ps(y, _ps_minus_cephes_DP2_avx);
+    __m256 xmm3 = _mm256_mul_ps(y, _ps_minus_cephes_DP3_avx);
+    x = _mm256_add_ps(_mm256_add_ps(x, xmm1), _mm256_add_ps(xmm2, xmm3));
+
+    emm4 = _mm256_sub_epi32(emm4, _pi32_2_avx);
+    emm4 = _mm256_andnot_si256(emm4, _pi32_4_avx);
+    emm4 = _mm256_slli_epi32(emm4, 29);
+    __m256 sign_bit_cos = _mm256_castsi256_ps(emm4);
+
+    sign_bit_sin = _mm256_xor_ps(sign_bit_sin, swap_sign_bit_sin);
+
+    // Evaluate the first polynom  (0 <= x <= Pi/4)
+    __m256 z = _mm256_mul_ps(x,x);
+    y = _ps_coscof_p0_avx;
+
+    y = _mm256_mul_ps(y, z);
+    y = _mm256_add_ps(y, _ps_coscof_p1_avx);
+    y = _mm256_mul_ps(y, z);
+    y = _mm256_add_ps(y, _ps_coscof_p2_avx);
+    y = _mm256_mul_ps(y, _mm256_mul_ps(z, z));
+    __m256 tmp = _mm256_mul_ps(z, _ps_0p5_avx);
+    y = _mm256_sub_ps(y, tmp);
+    y = _mm256_add_ps(y, _ps_1_avx);
+
+    // Evaluate the second polynom  (Pi/4 <= x <= 0)
+
+    __m256 y2 = _ps_sincof_p0_avx;
+    y2 = _mm256_mul_ps(y2, z);
+    y2 = _mm256_add_ps(y2, _ps_sincof_p1_avx);
+    y2 = _mm256_mul_ps(y2, z);
+    y2 = _mm256_add_ps(y2, _ps_sincof_p2_avx);
+    y2 = _mm256_mul_ps(y2, _mm256_mul_ps(z, x));
+    y2 = _mm256_add_ps(y2, x);
+
+    // Select the correct result from the two polynoms
+    xmm3 = poly_mask;
+    __m256 ysin2 = _mm256_and_ps(xmm3, y2);
+    __m256 ysin1 = _mm256_andnot_ps(xmm3, y);
+    y2 = _mm256_sub_ps(y2,ysin2);
+    y = _mm256_sub_ps(y, ysin1);
+
+    xmm1 = _mm256_add_ps(ysin1,ysin2);
+    xmm2 = _mm256_add_ps(y,y2);
+
+    // Update the sign
+    *s = _mm256_xor_ps(xmm1, sign_bit_sin);
+    *c = _mm256_xor_ps(xmm2, sign_bit_cos);
+}
 
 static inline void sincos_ps(__m128 x, __m128 *s, __m128 *c)
 {
@@ -1437,6 +1659,130 @@ static inline __m128 atan2_ps( __m128 y, __m128 x )
     result = _mm_or_ps( result, pi_result );
 
     return result;
+}
+
+// Modified AVX2 version of the original SSE version at https://github.com/RJVB/sse_mathfun/blob/master/sse_mathfun.h
+static inline __m256 log_ps(__m256 x)
+{
+    __m256 e;
+    __m256i emm0;
+    __m256 one = *(__m256 *)&_ps_1_avx;
+    __m256 invalid_mask = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OQ);
+
+    // cut off denormalized stuff
+    x = _mm256_max_ps(x, *(__m256 *)&_ps_min_norm_pos_avx);
+
+    // part 1: x = frexpf(x, &e);
+    emm0 = _mm256_srli_epi32(_mm256_castps_si256(x), 23);
+
+    // keep only the fractional part
+    x = _mm256_and_ps(x, *(__m256 *)&_ps_inv_mant_mask_avx);
+    x = _mm256_or_ps(x, *(__m256 *)&_ps_0p5_avx);
+
+    emm0 = _mm256_sub_epi32(emm0, *(__m256i *)&_pi32_0x7f_avx);
+    e = _mm256_cvtepi32_ps(emm0);
+
+    e = _mm256_add_ps(e, one);
+
+    // part 2: if( x < SQRTHF ) { e -= 1; x = x + x - 1.0; } else { x = x - 1.0; }
+    __m256 z, y;
+    __m256 mask = _mm256_cmp_ps(x, *(__m256 *)&avx_cephesSQRTHF, _CMP_LT_OQ);
+    __m256 tmp = _mm256_and_ps(x, mask);
+    x = _mm256_sub_ps(x, one);
+    e = _mm256_sub_ps(e, _mm256_and_ps(one, mask));
+    x = _mm256_add_ps(x, tmp);
+    z = _mm256_mul_ps(x,x);
+    y = *(__m256 *)&avx_cephesLogP0;
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_add_ps(y, *(__m256 *)&avx_cephesLogP1);
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_add_ps(y, *(__m256 *)&avx_cephesLogP2);
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_add_ps(y, *(__m256 *)&avx_cephesLogP3);
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_add_ps(y, *(__m256 *)&avx_cephesLogP4);
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_add_ps(y, *(__m256 *)&avx_cephesLogP5);
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_add_ps(y, *(__m256 *)&avx_cephesLogP6);
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_add_ps(y, *(__m256 *)&avx_cephesLogP7);
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_add_ps(y, *(__m256 *)&avx_cephesLogP8);
+    y = _mm256_mul_ps(y, x);
+    y = _mm256_mul_ps(y, z);
+    tmp = _mm256_mul_ps(e, *(__m256 *)&avx_cephesLogQ1);
+    y = _mm256_add_ps(y, tmp);
+    tmp = _mm256_mul_ps(z, *(__m256 *)&_ps_0p5_avx);
+    y = _mm256_sub_ps(y, tmp);
+    tmp = _mm256_mul_ps(e, *(__m256 *)&avx_cephesLogQ2);
+    x = _mm256_add_ps(x, y);
+    x = _mm256_add_ps(x, tmp);
+    x = _mm256_or_ps(x, invalid_mask); // negative arg will be NAN
+
+    return x;
+}
+
+// Modified version of the original SSE version at https://github.com/RJVB/sse_mathfun/blob/master/sse_mathfun.h
+static inline __m128 log_ps(__m128 x)
+{
+    __m128 e;
+    __m128i emm0;
+    __m128 one = *(__m128 *)&_ps_1;
+    __m128 invalid_mask = _mm_cmple_ps(x, xmm_p0);
+
+    // cut off denormalized stuff
+    x = _mm_max_ps(x, *(__m128 *)&_ps_min_norm_pos);
+
+    // part 1: x = frexpf(x, &e);
+    emm0 = _mm_srli_epi32(_mm_castps_si128(x), 23);
+
+    // keep only the fractional part
+    x = _mm_and_ps(x, *(__m128 *)&_ps_inv_mant_mask);
+    x = _mm_or_ps(x, *(__m128 *)&_ps_0p5);
+
+    emm0 = _mm_sub_epi32(emm0, *(__m128i *)&_pi32_0x7f);
+    e = _mm_cvtepi32_ps(emm0);
+
+    e = _mm_add_ps(e, one);
+
+    // part 2: if( x < SQRTHF ) { e -= 1; x = x + x - 1.0; } else { x = x - 1.0; }
+    __m128 z, y;
+    __m128 mask = _mm_cmplt_ps(x, *(__m128 *)&xmm_cephesSQRTHF);
+    __m128 tmp = _mm_and_ps(x, mask);
+    x = _mm_sub_ps(x, one);
+    e = _mm_sub_ps(e, _mm_and_ps(one, mask));
+    x = _mm_add_ps(x, tmp);
+    z = _mm_mul_ps(x,x);
+    y = *(__m128 *)&xmm_cephesLogP0;
+    y = _mm_mul_ps(y, x);
+    y = _mm_add_ps(y, *(__m128 *)&xmm_cephesLogP1);
+    y = _mm_mul_ps(y, x);
+    y = _mm_add_ps(y, *(__m128 *)&xmm_cephesLogP2);
+    y = _mm_mul_ps(y, x);
+    y = _mm_add_ps(y, *(__m128 *)&xmm_cephesLogP3);
+    y = _mm_mul_ps(y, x);
+    y = _mm_add_ps(y, *(__m128 *)&xmm_cephesLogP4);
+    y = _mm_mul_ps(y, x);
+    y = _mm_add_ps(y, *(__m128 *)&xmm_cephesLogP5);
+    y = _mm_mul_ps(y, x);
+    y = _mm_add_ps(y, *(__m128 *)&xmm_cephesLogP6);
+    y = _mm_mul_ps(y, x);
+    y = _mm_add_ps(y, *(__m128 *)&xmm_cephesLogP7);
+    y = _mm_mul_ps(y, x);
+    y = _mm_add_ps(y, *(__m128 *)&xmm_cephesLogP8);
+    y = _mm_mul_ps(y, x);
+    y = _mm_mul_ps(y, z);
+    tmp = _mm_mul_ps(e, *(__m128 *)&xmm_cephesLogQ1);
+    y = _mm_add_ps(y, tmp);
+    tmp = _mm_mul_ps(z, *(__m128 *)&_ps_0p5);
+    y = _mm_sub_ps(y, tmp);
+    tmp = _mm_mul_ps(e, *(__m128 *)&xmm_cephesLogQ2);
+    x = _mm_add_ps(x, y);
+    x = _mm_add_ps(x, tmp);
+    x = _mm_or_ps(x, invalid_mask); // negative arg will be NAN
+
+    return x;
 }
 
 static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
@@ -2188,7 +2534,7 @@ inline void rpp_resize_store_pkd3(Rpp8s *dstPtr, __m128 *p)
     rpp_store48_f32pln3_to_i8pkd3(dstPtr, p);
 }
 
-inline RppStatus rpp_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
+inline void rpp_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01
@@ -2197,11 +2543,9 @@ inline RppStatus rpp_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m
     px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  // LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 31
     px[0] = _mm_unpacklo_epi64(_mm_unpacklo_epi32(px[0], px[1]), _mm_unpacklo_epi32(px[2], px[3]));    // Unpack to obtain [R01|G01|B01|R02|R11|G11|B11|R12|R21|G21|B21|R22|R31|G31|B31|R32]
     p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    // Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00]
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
+inline void rpp_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
@@ -2211,22 +2555,18 @@ inline RppStatus rpp_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m
     px[0] = _mm_unpacklo_epi8(px[0], px[2]);    // unpack 8 lo-pixels of px[0] and px[2]
     px[1] = _mm_unpacklo_epi8(px[1], px[3]);    // unpack 8 lo-pixels of px[1] and px[3]
     p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 *p)
+inline void rpp_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 *p)
 {
     p[0] = _mm_loadu_ps(srcRowPtrsForInterp + loc[0]);  // LOC0 load [R01|G01|B01|R02] - Need RGB 01
     p[1] = _mm_loadu_ps(srcRowPtrsForInterp + loc[1]);  // LOC1 load [R11|G11|B11|R12] - Need RGB 11
     p[2] = _mm_loadu_ps(srcRowPtrsForInterp + loc[2]);  // LOC2 load [R21|G21|B21|R22] - Need RGB 21
     __m128 pTemp = _mm_loadu_ps(srcRowPtrsForInterp + loc[3]);  // LOC2 load [R31|G31|B31|R32]  - Need RGB 31
     _MM_TRANSPOSE4_PS(p[0], p[1], p[2], pTemp); // Transpose to obtain RGB in each vector
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 &p)
+inline void rpp_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 &p)
 {
     __m128 pTemp[4];
     pTemp[0] = _mm_loadu_ps(srcRowPtrsForInterp + loc[0]);  // LOC0 load [R01|R02|R03|R04] - Need R01
@@ -2236,11 +2576,9 @@ inline RppStatus rpp_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, _
     pTemp[0] = _mm_unpacklo_ps(pTemp[0], pTemp[2]);
     pTemp[1] = _mm_unpacklo_ps(pTemp[1], pTemp[3]);
     p = _mm_unpacklo_ps(pTemp[0], pTemp[1]);    // Unpack to obtain [R01|R11|R21|R31]
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
+inline void rpp_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01
@@ -2249,11 +2587,9 @@ inline RppStatus rpp_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m
     px[3] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[3]));  // LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 31
     px[0] = _mm_unpacklo_epi64(_mm_unpacklo_epi32(px[0], px[1]), _mm_unpacklo_epi32(px[2], px[3]));    // Unpack to obtain [R01|G01|B01|R02|R11|G11|B11|R12|R21|G21|B21|R22|R31|G31|B31|R32]
     p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    // Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00]
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_nn_load_i8pln1(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
+inline void rpp_nn_load_i8pln1(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
@@ -2263,60 +2599,46 @@ inline RppStatus rpp_nn_load_i8pln1(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m
     px[0] = _mm_unpacklo_epi8(px[0], px[2]);    // unpack 8 lo-pixels of px[0] and px[2]
     px[1] = _mm_unpacklo_epi8(px[1], px[3]);    // unpack 8 lo-pixels of px[1] and px[3]
     p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_store4_u8pkd3_to_u8pln3(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp8u* dstPtrB, __m128i &p)
+inline void rpp_store4_u8pkd3_to_u8pln3(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp8u* dstPtrB, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtrR), _mm_shuffle_epi8(p, xmm_char_maskR)); /* Shuffle and extract the R pixels*/
     _mm_storeu_si128((__m128i *)(dstPtrG), _mm_shuffle_epi8(p, xmm_char_maskG)); /* Shuffle and extract the G pixels*/
     _mm_storeu_si128((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
+inline void rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtr), p);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_store12_u8pln3_to_u8pkd3(Rpp8u* dstPtr, __m128i *p)
+inline void rpp_store12_u8pln3_to_u8pkd3(Rpp8u* dstPtr, __m128i *p)
 {
     __m128i px[4];
     px[0] = _mm_unpacklo_epi8(p[0], p[1]);
     px[1] = _mm_unpacklo_epi64(px[0], p[2]);
     _mm_storeu_si128((__m128i *)(dstPtr), _mm_shuffle_epi8(px[1], xmm_store4_pkd_pixels));
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_store4_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* dstPtrB, __m128i &p)
+inline void rpp_store4_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* dstPtrB, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtrR), _mm_shuffle_epi8(p, xmm_char_maskR)); /* Shuffle and extract the R pixels*/
     _mm_storeu_si128((__m128i *)(dstPtrG), _mm_shuffle_epi8(p, xmm_char_maskG)); /* Shuffle and extract the G pixels*/
     _mm_storeu_si128((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_store4_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
+inline void rpp_store4_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtr), p);
-
-    return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_store12_i8pln3_to_i8pkd3(Rpp8s* dstPtr, __m128i *p)
+inline void rpp_store12_i8pln3_to_i8pkd3(Rpp8s* dstPtr, __m128i *p)
 {
     __m128i px[4];
     px[0] = _mm_unpacklo_epi8(p[0], p[1]);
     px[1] = _mm_unpacklo_epi64(px[0], p[2]);
     _mm_storeu_si128((__m128i *)(dstPtr), _mm_shuffle_epi8(px[1], xmm_store4_pkd_pixels));
-
-    return RPP_SUCCESS;
 }
 
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
