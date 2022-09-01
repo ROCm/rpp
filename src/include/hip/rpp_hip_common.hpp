@@ -88,8 +88,6 @@ struct RPPTensorFunctionMetaData
 #define ONE_OVER_255                    0.00392157f
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
-#define ONE_OVER_6                      0.1666666f
-#define ONE_OVER_3                      0.3333333f
 #define PI                              3.14159265
 #define RGB_TO_GREY_WEIGHT_RED          0.299f
 #define RGB_TO_GREY_WEIGHT_GREEN        0.587f
@@ -1785,9 +1783,9 @@ __device__ __forceinline__ void rpp_hip_compute_bicubic_scale_and_radius(float *
     *radius = 2.0f;
 }
 
-__device__ __forceinline__ void rpp_hip_compute_lanczos3_scale_and_radius(uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
+__device__ __forceinline__ void rpp_hip_compute_lanczos3_scale_and_radius(float *scale, float *radius, float scaleRatio)
 {
-    if(inSize > outSize)
+    if(scaleRatio > 1.0f)
     {
         *radius = 3.0f * scaleRatio;
         *scale = (1 / scaleRatio);
@@ -1796,18 +1794,18 @@ __device__ __forceinline__ void rpp_hip_compute_lanczos3_scale_and_radius(uint i
         *radius = 3.0f;
 }
 
-__device__ __forceinline__ void rpp_hip_compute_gaussian_scale_and_radius(uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
+__device__ __forceinline__ void rpp_hip_compute_gaussian_scale_and_radius(float *scale, float *radius, float scaleRatio)
 {
-    if(inSize > outSize)
+    if(scaleRatio > 1.0f)
     {
         *radius = scaleRatio;
         *scale = (1 / scaleRatio);
     }
 }
 
-__device__ __forceinline__ void rpp_hip_compute_triangular_scale_and_radius(uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
+__device__ __forceinline__ void rpp_hip_compute_triangular_scale_and_radius(float *scale, float *radius, float scaleRatio)
 {
-    if(inSize > outSize)
+    if(scaleRatio > 1.0f)
     {
         *radius = scaleRatio;
         *scale = (1 / scaleRatio);
@@ -1815,7 +1813,7 @@ __device__ __forceinline__ void rpp_hip_compute_triangular_scale_and_radius(uint
 }
 
 template <RpptInterpolationType interpolationType>
-__device__ void rpp_hip_compute_interpolation_scale_and_radius(uint inSize, uint outSize, float *scale, float *radius, float scaleRatio)
+__device__ void rpp_hip_compute_interpolation_scale_and_radius(float *scale, float *radius, float scaleRatio)
 {
     switch(interpolationType)
     {
@@ -1826,17 +1824,17 @@ __device__ void rpp_hip_compute_interpolation_scale_and_radius(uint inSize, uint
         }
         case RpptInterpolationType::LANCZOS:
         {
-            rpp_hip_compute_lanczos3_scale_and_radius(inSize, outSize, scale, radius, scaleRatio);
+            rpp_hip_compute_lanczos3_scale_and_radius(scale, radius, scaleRatio);
             break;
         }
         case RpptInterpolationType::GAUSSIAN:
         {
-            rpp_hip_compute_gaussian_scale_and_radius(inSize, outSize, scale, radius, scaleRatio);
+            rpp_hip_compute_gaussian_scale_and_radius(scale, radius, scaleRatio);
             break;
         }
         case RpptInterpolationType::TRIANGULAR:
         {
-            rpp_hip_compute_triangular_scale_and_radius(inSize, outSize, scale, radius, scaleRatio);
+            rpp_hip_compute_triangular_scale_and_radius(scale, radius, scaleRatio);
             break;
         }
         default:

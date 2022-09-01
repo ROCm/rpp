@@ -26,10 +26,10 @@ __device__ void resize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *ds
 
 __device__ void resize_roi_generic_srcloc_and_weight_hip_compute(int roiLoc, int dstLocation, float scale, int limit, int *srcLoc, float *weight, float offset, int srcStride)
 {
-    float srcLocationFloat = ((float) dstLocation) * scale + offset + (float)roiLoc;
-    int srcLocation = (int)ceilf(srcLocationFloat);
-    *weight = srcLocation - srcLocationFloat;
-    *srcLoc = ((srcLocation > limit) ? limit : srcLocation) * srcStride;
+    float srcLocationRaw = ((float) dstLocation) * scale + offset + (float)roiLoc;
+    int srcLocationRounded = (int)ceilf(srcLocationRaw);
+    *weight = srcLocationRounded - srcLocationRaw;
+    *srcLoc = ((ceilf(srcLocationRaw) > limit) ? limit : srcLocationRounded) * srcStride;
 }
 
 // -------------------- Set 1 - Bilinear Interpolation --------------------
@@ -214,8 +214,8 @@ __global__ void resize_generic_pkd_tensor(T *srcPtr,
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
 
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&wScale, &wRadius, wRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceilf(wRadius * 2);
@@ -246,6 +246,8 @@ __global__ void resize_generic_pkd_tensor(T *srcPtr,
             outPixel_f3 += (make_float3(srcRowPtrsForInterp[colIndex], srcRowPtrsForInterp[colIndex + 1], srcRowPtrsForInterp[colIndex + 2]) * coeff_f3);
         }
     }
+    rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
+    colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
     outPixel_f3 *= (float3)(1 / (rowCoeffSum * colCoeffSum));
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
     rpp_hip_pixel_check_and_store(outPixel_f3.x, &dstPtr[dstIdx]);
@@ -284,8 +286,8 @@ __global__ void resize_generic_pln3_tensor(T *srcPtr,
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
 
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&wScale, &wRadius, wRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceilf(wRadius * 2);
@@ -323,6 +325,8 @@ __global__ void resize_generic_pln3_tensor(T *srcPtr,
             outPixel_f3 += (make_float3(srcRowPtrsForInterp[0][colIndex], srcRowPtrsForInterp[1][colIndex], srcRowPtrsForInterp[2][colIndex]) * coeff_f3);
         }
     }
+    rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
+    colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
     outPixel_f3 *= (float3)(1 / (rowCoeffSum * colCoeffSum));
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     rpp_hip_pixel_check_and_store(outPixel_f3.x, &dstPtr[dstIdx]);
@@ -361,8 +365,8 @@ __global__ void resize_generic_pln1_tensor(T *srcPtr,
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
 
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&wScale, &wRadius, wRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceilf(wRadius * 2);
@@ -393,6 +397,8 @@ __global__ void resize_generic_pln1_tensor(T *srcPtr,
             outPixel += (float) srcRowPtrsForInterp[colIndex] * coeff;
         }
     }
+    rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
+    colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
     invCoeffSum = 1 / (rowCoeffSum * colCoeffSum);
     outPixel *= invCoeffSum;
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -430,8 +436,8 @@ __global__ void resize_generic_pkd3_pln3_tensor(T *srcPtr,
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
 
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&wScale, &wRadius, wRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceilf(wRadius * 2);
@@ -462,6 +468,8 @@ __global__ void resize_generic_pkd3_pln3_tensor(T *srcPtr,
             outPixel_f3 += (make_float3(srcRowPtrsForInterp[colIndex], srcRowPtrsForInterp[colIndex + 1], srcRowPtrsForInterp[colIndex + 2]) * coeff_f3);
         }
     }
+    rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
+    colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
     outPixel_f3 *= 1 / (rowCoeffSum * colCoeffSum);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     rpp_hip_pixel_check_and_store(outPixel_f3.x, &dstPtr[dstIdx]);
@@ -500,8 +508,8 @@ __global__ void resize_generic_pln3_pkd3_tensor(T *srcPtr,
     float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
     float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
 
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.x, dstDimsWH.x, &wScale, &wRadius, wRatio);
-    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(srcDimsWH.y, dstDimsWH.y, &hScale, &hRadius, hRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&wScale, &wRadius, wRatio);
+    rpp_hip_compute_interpolation_scale_and_radius<interpolationType>(&hScale, &hRadius, hRatio);
     float wOffset = (wRatio - 1) * 0.5f - wRadius;
     float hOffset = (hRatio - 1) * 0.5f - hRadius;
     int wKernelSize = ceilf(wRadius * 2);
@@ -539,6 +547,8 @@ __global__ void resize_generic_pln3_pkd3_tensor(T *srcPtr,
             outPixel_f3 += (make_float3(srcRowPtrsForInterp[0][colIndex], srcRowPtrsForInterp[1][colIndex], srcRowPtrsForInterp[2][colIndex]) * coeff_f3);
         }
     }
+    rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
+    colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
     outPixel_f3 *= (float3)(1 / (rowCoeffSum * colCoeffSum));
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
     rpp_hip_pixel_check_and_store(outPixel_f3.x, &dstPtr[dstIdx]);
