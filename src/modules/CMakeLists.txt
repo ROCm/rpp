@@ -113,15 +113,12 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 
     # Add OpenCL specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
-    # list(APPEND OpenCL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/) # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
-    # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST} ${ROCM_INC}) # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
     list(APPEND INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${INCLUDE_LIST} ${ROCM_INC})
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
 endif()
-#message("-- ${White}AMD RPP ${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
 # Kernels and includes additions
 
@@ -129,11 +126,9 @@ add_kernels("${RPP_KERNELS}")
 add_kernel_includes("${RPP_KERNEL_INCLUDES}")
 
 # Add library
-
 add_library(${PROJECT_NAME} OBJECT ${Rpp_Source})
 
 # Target settings
-
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories( ${PROJECT_NAME}
     PUBLIC
@@ -149,11 +144,11 @@ target_include_directories( ${PROJECT_NAME}
 if( "${BACKEND}" STREQUAL "HIP")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
+        ${CMAKE_SOURCE_DIR}/src/include/hip
     )
 elseif( "${BACKEND}" STREQUAL "OCL")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cl
+        ${CMAKE_SOURCE_DIR}/src/include/cl
     )
 endif()

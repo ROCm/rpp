@@ -95,10 +95,14 @@ if(NOT CMAKE_BUILD_TYPE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    # -O0  -- Don't Optimize output file; -g -- generate debugging information; -Og -- Optimize for debugging experience rather than speed or size
+    # -O0  -- Don't Optimize output file
+    # -g -- generate debugging information
+    # -Og -- Optimize for debugging experience rather than speed or size
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -Og")
 else()
-    # -O3 -- Optimize output file; TBD:CHECK -Ofast - Optimize for speed disregarding exact standards compliance; -DNDEBUG -- turn off asserts 
+    # -O3 -- Optimize output file
+    # TBD:Verify Requirement -Ofast - Optimize for speed disregarding exact standards compliance
+    # -DNDEBUG -- turn off asserts 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -DNDEBUG")
 endif()
 message("-- ${BoldBlue}AMD RPP Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
@@ -110,7 +114,7 @@ else()
 endif()
 
 # CMake checks and setups
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "${Red}${PROJECT_NAME} -- In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -191,12 +195,12 @@ if("${BACKEND}" STREQUAL "HIP")
             # Add modules
             set(MODULES_LIST modules)
             foreach(MOD_NAME ${MODULES_LIST})
-                add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+                add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
             endforeach(MOD_NAME)
 
             message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
 		else()
-			message("-- ${Yellow}${PROJECT_NAME} -- Unsupported HIP compiler")
+			message("-- ${Yellow}${PROJECT_NAME} -- Unsupported HIP compiler${ColourReset}")
             set(BACKEND "CPU")
             message("-- ${Yellow}${PROJECT_NAME} set to build with CPU backend${ColourReset}")
         endif()
@@ -219,7 +223,7 @@ elseif("${BACKEND}" STREQUAL "OCL")
         # Add modules
         set(MODULES_LIST modules)
         foreach(MOD_NAME ${MODULES_LIST})
-            add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
         endforeach(MOD_NAME)
 
         # Set compiler and flags
@@ -240,7 +244,7 @@ if("${BACKEND}" STREQUAL "CPU")
     # Add modules
     set(MODULES_LIST modules)
     foreach(MOD_NAME ${MODULES_LIST})
-        add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+        add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
 endif()
 
@@ -297,8 +301,8 @@ add_subdirectory(addkernels)
 # install RPP libs -- {ROCM_PATH}/lib
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 # install RPP include files -- {ROCM_PATH}/include/rpp/
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp)
 
 # Set package information
 set(CPACK_PACKAGE_VERSION       ${VERSION})
@@ -349,7 +353,6 @@ if(APPLE)
     set(CPACK_GENERATOR "Bundle")
     set(CPACK_BUNDLE_NAME ${CPACK_PACKAGE_NAME})
     set(CPACK_BUNDLE_ICON ${CPACK_PACKAGE_ICON})
-    set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/.github/info.plist")
 else()
     set(CPACK_GENERATOR "TGZ;ZIP")
     if(EXISTS ${MAKE_NSIS_EXE})
