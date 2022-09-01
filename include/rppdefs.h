@@ -37,6 +37,9 @@ THE SOFTWARE.
 #define RPP_MIN_16U     ( 0 )
 #define RPP_MAX_16U     ( 65535 )
 
+const float ONE_OVER_6 = 1.0f / 6;
+const float ONE_OVER_3 = 1.0f / 3;
+
 /******************** RPP typedefs ********************/
 
 typedef unsigned char       Rpp8u;
