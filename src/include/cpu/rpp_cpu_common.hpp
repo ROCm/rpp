@@ -2647,6 +2647,18 @@ inline void compute_cmn_48_host(__m256 *p, __m256 *pCMNParams)
     p[5] = _mm256_mul_ps(_mm256_sub_ps(p[5], pCMNParams[4]), pCMNParams[5]);
 }
 
+inline void compute_cmn_48_rgb_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
+    p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pCMNParams[0]), pCMNParams[1]);
+    p[2] = _mm256_mul_ps(_mm256_sub_ps(p[2], pCMNParams[0]), pCMNParams[1]);
+    p[3] = _mm256_mul_ps(_mm256_sub_ps(p[3], pCMNParams[0]), pCMNParams[1]);
+    p[4] = _mm256_mul_ps(_mm256_sub_ps(p[4], pCMNParams[0]), pCMNParams[1]);
+    p[5] = _mm256_mul_ps(_mm256_sub_ps(p[5], pCMNParams[0]), pCMNParams[1]);
+    p[6] = _mm256_mul_ps(_mm256_sub_ps(p[6], pCMNParams[0]), pCMNParams[1]);
+    p[7] = _mm256_mul_ps(_mm256_sub_ps(p[7], pCMNParams[0]), pCMNParams[1]);
+}
+
 inline void compute_cmn_24_host(__m256 *p, __m256 *pCMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pCMNParams[0]), pCMNParams[1]);
