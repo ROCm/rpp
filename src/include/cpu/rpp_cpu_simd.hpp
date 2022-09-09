@@ -226,6 +226,18 @@ inline void rpp_mm256_print_ps(__m256 vPrintArray)
     }
 }
 
+inline void rpp_saturate64_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+    p[1] = _mm256_min_ps(_mm256_max_ps(p[1], avx_p0), avx_p1);
+    p[2] = _mm256_min_ps(_mm256_max_ps(p[2], avx_p0), avx_p1);
+    p[3] = _mm256_min_ps(_mm256_max_ps(p[3], avx_p0), avx_p1);
+    p[4] = _mm256_min_ps(_mm256_max_ps(p[4], avx_p0), avx_p1);
+    p[5] = _mm256_min_ps(_mm256_max_ps(p[5], avx_p0), avx_p1);
+    p[6] = _mm256_min_ps(_mm256_max_ps(p[6], avx_p0), avx_p1);
+    p[7] = _mm256_min_ps(_mm256_max_ps(p[7], avx_p0), avx_p1);
+}
+
 inline void rpp_saturate48_0to1_avx(__m256 *p)
 {
     p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
