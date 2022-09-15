@@ -97,9 +97,9 @@ if( "${BACKEND}" STREQUAL "HIP")
     add_definitions(-DHIP_COMPILE)
 
     # Add HIP specific includes
-    set(HIP_INC ${ROCM_PATH}/include/)
-    list(APPEND HIP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
-    set(INCLUDE_LIST ${HIP_INC} ${HIP_INCLUDE_DIRS} ${INCLUDE_LIST})
+    set(ROCM_INC ${ROCM_PATH}/include/)
+    list(APPEND HIP_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    set(INCLUDE_LIST ${ROCM_INC} ${HIP_LOCAL_INCLUDE_DIRS} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "OCL")
     # Add OpenCL kernels
     file(GLOB MOD_CL_CPP "cl/*.cpp" )
@@ -113,8 +113,8 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 
     # Add OpenCL specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
-    list(APPEND OCL_INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
-    set(INCLUDE_LIST ${ROCM_INC} ${OCL_INCLUDE_LIST} ${INCLUDE_LIST})
+    list(APPEND OCL_LOCAL_INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    set(INCLUDE_LIST ${ROCM_INC} ${OCL_LOCAL_INCLUDE_LIST} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
@@ -133,7 +133,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories( ${PROJECT_NAME}
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include
-        ${HIP_INC}
+        ${ROCM_INC}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/cpu
         ${CMAKE_SOURCE_DIR}/src/include/common
