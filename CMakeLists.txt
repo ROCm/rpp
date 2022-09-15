@@ -176,34 +176,29 @@ if("${BACKEND}" STREQUAL "HIP")
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR}/cmake/hip ${HIP_PATH}/cmake)
+    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
     find_package(HIP QUIET)
 	if(HIP_FOUND)
-		message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER}${ColourReset})
-		if(HIP_COMPILER STREQUAL clang)
-			# TBD: Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
-            add_definitions(-DGPU_SUPPORT)
-            # For cmakedefine01 in rpp_backend.h.in
-            set(RPP_BACKEND_HIP 1)
-            # To use RPP_BACKEND_HIP
-            add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-			set(COMPILER_FOR_HIP ${ROCM_PATH}/${CMAKE_INSTALL_BINDIR}/hipcc)
-			include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
-			link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
-            set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
+        message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER}${ColourReset})
+        # TBD: Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
+        add_definitions(-DGPU_SUPPORT)
+        # For cmakedefine01 in rpp_backend.h.in
+        set(RPP_BACKEND_HIP 1)
+        # To use RPP_BACKEND_HIP
+        add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
+        set(COMPILER_FOR_HIP ${ROCM_PATH}/llvm/bin/clang++)
+        include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
+        link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
+        # TBD: Link To Host/Device HIP -- hip::host/hip::device
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
 
-            # Add modules
-            set(MODULES_LIST modules)
-            foreach(MOD_NAME ${MODULES_LIST})
-                add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
-            endforeach(MOD_NAME)
+        # Add modules
+        set(MODULES_LIST modules)
+        foreach(MOD_NAME ${MODULES_LIST})
+            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
+        endforeach(MOD_NAME)
 
-            message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
-		else()
-			message("-- ${Yellow}${PROJECT_NAME} -- Unsupported HIP compiler${ColourReset}")
-            set(BACKEND "CPU")
-            message("-- ${Yellow}${PROJECT_NAME} set to build with CPU backend${ColourReset}")
-        endif()
+        message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
     else()
         set(BACKEND "CPU")
         message("-- ${Yellow}HIP not found! ${PROJECT_NAME} set to build with CPU backend${ColourReset}")
