@@ -113,8 +113,8 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 
     # Add OpenCL specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
-    list(APPEND INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
-    set(INCLUDE_LIST ${INCLUDE_LIST} ${ROCM_INC})
+    list(APPEND OCL_INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    set(INCLUDE_LIST ${ROCM_INC} ${OCL_INCLUDE_LIST} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
