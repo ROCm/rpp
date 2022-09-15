@@ -99,7 +99,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     # Add HIP specific includes
     set(HIP_INC ${ROCM_PATH}/include/)
     list(APPEND HIP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
-    set(INCLUDE_LIST ${HIP_INCLUDE_DIRS} ${HIP_INC} ${INCLUDE_LIST})
+    set(INCLUDE_LIST ${HIP_INC} ${HIP_INCLUDE_DIRS} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "OCL")
     # Add OpenCL kernels
     file(GLOB MOD_CL_CPP "cl/*.cpp" )
@@ -146,6 +146,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/hip
     )
+    target_link_libraries(${PROJECT_NAME} hip::device)
 elseif( "${BACKEND}" STREQUAL "OCL")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
