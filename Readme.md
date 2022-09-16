@@ -24,7 +24,7 @@ RPP is developed for **Linux** operating system.
 
 * [ROCm supported hardware](https://rocm.github.io/hardware.html)
 
-* ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
+* [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories) `5.3` and above
 
 * Clang Version `5.0.1` and above
 
