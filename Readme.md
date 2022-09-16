@@ -18,7 +18,7 @@ RPP is developed for **Linux** operating system.
 ## Prerequisites
 
 * OS
-  + Ubuntu `18.04`/`20.04`
+  + Ubuntu `20.04`/`22.04`
   + CentOS/RHEL `7`/`8`
   + SLES - `15-SP2`
 
@@ -28,7 +28,7 @@ RPP is developed for **Linux** operating system.
 
 * Clang Version `5.0.1` and above
 
-  + Ubuntu `18`/`20`
+  + Ubuntu `20`/`22`
     ```
     sudo apt-get install clang
     ```

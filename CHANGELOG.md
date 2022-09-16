@@ -9,13 +9,15 @@
 
 #### Added
 * Support for CentOS 7 & SLES 15 SP2
+* Support for ROCm 5.3+ 
+* Support for Ubuntu 22.04
 
 #### Optimizations
 * Readme Updates
 
 #### Changed
 
-* 
+* CMakeList Updates
 
 #### Fixed
 * Minor bugs and warnings
