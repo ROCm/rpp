@@ -59,7 +59,7 @@ boost::filesystem::path HipBuild(boost::optional<TmpDir>& tmp_dir,
     auto bin_file = tmp_dir->path / (filename + ".o");
     // compile with hcc
     auto env = std::string("KMOPTLLC=-mattr=+enable-ds128");
-    tmp_dir->Execute(env + std::string(" ") + "/opt/rocm/hip/bin/hipcc",
+    tmp_dir->Execute(env + std::string(" ") + "/opt/rocm/bin/hipcc",
                      params + filename + " -o " + bin_file.string());
     if(!boost::filesystem::exists(bin_file))
         RPP_THROW(filename + " failed to compile");
