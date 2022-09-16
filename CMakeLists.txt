@@ -186,11 +186,11 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-        set(COMPILER_FOR_HIP ${ROCM_PATH}/${CMAKE_INSTALL_BINDIR}/hipcc)
+        set(COMPILER_FOR_HIP ${ROCM_PATH}/llvm/bin/clang++)
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
-        # TBD: Link To Host/Device HIP -- hip::host/hip::device
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
+        # link To HIP Host library -- [hip::host] to use host API
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hip::host)
 
         # Add modules
         set(MODULES_LIST modules)
