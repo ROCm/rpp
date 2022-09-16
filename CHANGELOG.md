@@ -5,7 +5,7 @@
 ### Online Documentation
 [RPP Documentation](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 
-### RPP 0.97 (Unreleased)
+### RPP 0.97
 
 #### Added
 * Support for CentOS 7 & SLES 15 SP2
@@ -24,9 +24,9 @@
 
 ### Tested Configurations
 * Linux distribution
-  + Ubuntu - `18.04` / `20.04`
-  + CentOS - `8`
-* ROCm: rocm-core - `5.2.0.50200-65`
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7`/`8`
+* ROCm: rocm-core - `5.3.0.50300-36`
 * Clang - Version `5.0.1` and above
 * CMake - Version `3.22.3` 
 * Boost - Version `1.72`
