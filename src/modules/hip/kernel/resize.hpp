@@ -29,7 +29,7 @@ __device__ void resize_roi_generic_srcloc_and_weight_hip_compute(int roiLoc, int
     float srcLocationRaw = ((float) dstLocation) * scale + offset + (float)roiLoc;
     int srcLocationRounded = (int)ceilf(srcLocationRaw);
     *weight = srcLocationRounded - srcLocationRaw;
-    *srcLoc = ((ceilf(srcLocationRaw) > limit) ? limit : srcLocationRounded) * srcStride;
+    *srcLoc = ((srcLocationRounded > limit) ? limit : srcLocationRounded) * srcStride;
 }
 
 // -------------------- Set 1 - Bilinear Interpolation --------------------
