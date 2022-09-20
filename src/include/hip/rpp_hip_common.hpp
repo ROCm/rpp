@@ -1748,8 +1748,7 @@ __device__ __forceinline__ void rpp_hip_compute_triangular_coefficient(float wei
     *coeff = *coeff < 0 ? 0 : *coeff;
 }
 
-template <RpptInterpolationType interpolationType>
-__device__ __forceinline__ void rpp_hip_compute_interpolation_coefficient(float weight, float *coeff)
+__device__ __forceinline__ void rpp_hip_compute_interpolation_coefficient(RpptInterpolationType interpolationType, float weight, float *coeff)
 {
     switch (interpolationType)
     {
@@ -1778,67 +1777,50 @@ __device__ __forceinline__ void rpp_hip_compute_interpolation_coefficient(float 
     }
 }
 
-__device__ __forceinline__ void rpp_hip_compute_bicubic_scale_and_radius(float *radius)
+__device__ void rpp_hip_compute_interpolation_scale_and_radius(RpptInterpolationType interpolationType, float *scale, float *radius, float scaleRatio)
 {
-    *radius = 2.0f;
-}
-
-__device__ __forceinline__ void rpp_hip_compute_lanczos3_scale_and_radius(float *scale, float *radius, float scaleRatio)
-{
-    if(scaleRatio > 1.0f)
-    {
-        *radius = 3.0f * scaleRatio;
-        *scale = (1 / scaleRatio);
-    }
-    else
-        *radius = 3.0f;
-}
-
-__device__ __forceinline__ void rpp_hip_compute_gaussian_scale_and_radius(float *scale, float *radius, float scaleRatio)
-{
-    if(scaleRatio > 1.0f)
-    {
-        *radius = scaleRatio;
-        *scale = (1 / scaleRatio);
-    }
-}
-
-__device__ __forceinline__ void rpp_hip_compute_triangular_scale_and_radius(float *scale, float *radius, float scaleRatio)
-{
-    if(scaleRatio > 1.0f)
-    {
-        *radius = scaleRatio;
-        *scale = (1 / scaleRatio);
-    }
-}
-
-template <RpptInterpolationType interpolationType>
-__device__ void rpp_hip_compute_interpolation_scale_and_radius(float *scale, float *radius, float scaleRatio)
-{
-    switch(interpolationType)
+    switch (interpolationType)
     {
         case RpptInterpolationType::BICUBIC:
         {
-            rpp_hip_compute_bicubic_scale_and_radius(radius);
+            *radius = 2.0f;
             break;
         }
         case RpptInterpolationType::LANCZOS:
         {
-            rpp_hip_compute_lanczos3_scale_and_radius(scale, radius, scaleRatio);
+            if(scaleRatio > 1.0f)
+            {
+                *radius = 3.0f * scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
+            else
+                *radius = 3.0f;
             break;
         }
         case RpptInterpolationType::GAUSSIAN:
         {
-            rpp_hip_compute_gaussian_scale_and_radius(scale, radius, scaleRatio);
+            if(scaleRatio > 1.0f)
+            {
+                *radius = scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
             break;
         }
         case RpptInterpolationType::TRIANGULAR:
         {
-            rpp_hip_compute_triangular_scale_and_radius(scale, radius, scaleRatio);
+            if(scaleRatio > 1.0f)
+            {
+                *radius = scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
             break;
         }
         default:
+        {
+            *radius = 1.0f;
+            *scale = 1.0f;
             break;
+        }
     }
 }
 
