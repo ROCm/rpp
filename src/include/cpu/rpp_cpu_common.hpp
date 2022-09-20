@@ -4828,6 +4828,127 @@ inline void compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr
     }
 }
 
+/* Warp affine helper functions */
+
+inline void compute_generic_nn_srclocs_and_validate_sse(__m128 pSrcY, __m128 pSrcX, __m128 *pRoiLTRB, __m128 pSrcStrideH, Rpp32s *srcLoc, Rpp32s *invalidLoad, bool hasRGBChannels = false)
+{
+    pSrcY = _mm_round_ps(pSrcY, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));
+    pSrcX = _mm_round_ps(pSrcX, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));
+    _mm_storeu_si128((__m128i*) invalidLoad, _mm_cvtps_epi32(_mm_or_ps(
+        _mm_or_ps(_mm_cmplt_ps(pSrcX, pRoiLTRB[0]), _mm_cmplt_ps(pSrcY, pRoiLTRB[1])),
+        _mm_or_ps(_mm_cmpgt_ps(pSrcX, pRoiLTRB[2]), _mm_cmpgt_ps(pSrcY, pRoiLTRB[3]))
+    )));
+    if (hasRGBChannels)
+        pSrcX = _mm_mul_ps(pSrcX, xmm_p3);
+    __m128i pxSrcLoc = _mm_cvtps_epi32(_mm_fmadd_ps(pSrcY, pSrcStrideH, pSrcX));
+    _mm_storeu_si128((__m128i*) srcLoc, pxSrcLoc);
+}
+
+inline void compute_warp_affine_src_loc_next_term_sse(__m128 &pSrcY, __m128 &pSrcX, __m128 &pAffineMatrixTerm3Incr, __m128 &pAffineMatrixTerm0Incr)
+{
+    pSrcY = _mm_add_ps(pSrcY, pAffineMatrixTerm3Incr);
+    pSrcX = _mm_add_ps(pSrcX, pAffineMatrixTerm0Incr);
+}
+
+inline void compute_warp_affine_src_loc(Rpp32s dstY, Rpp32s dstX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f6 *affineMatrix_f6, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
+{
+    dstX -= roiHalfWidth;
+    dstY -= roiHalfHeight;
+    srcX = std::fma(dstX, affineMatrix_f6->data[0], std::fma(dstY, affineMatrix_f6->data[1], affineMatrix_f6->data[2])) + roiHalfWidth;
+    srcY = std::fma(dstX, affineMatrix_f6->data[3], std::fma(dstY, affineMatrix_f6->data[4], affineMatrix_f6->data[5])) + roiHalfHeight;
+}
+
+inline void compute_warp_affine_src_loc_next_term(Rpp32s dstX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f6 *affineMatrix_f6)
+{
+    srcX += affineMatrix_f6->data[0];
+    srcY += affineMatrix_f6->data[3];
+}
+
+template <typename T>
+inline void compute_nn_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTempR, T *dstPtrTempG, T *dstPtrTempB, T *srcPtrChannel, RpptDescPtr srcDescPtr)
+{
+    srcY = std::round(srcY);
+    srcX = std::round(srcX);
+    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    {
+        *dstPtrTempR = 0;
+        *dstPtrTempG = 0;
+        *dstPtrTempB = 0;
+    }
+    else
+    {
+        T *srcPtrTemp;
+        srcPtrTemp = srcPtrChannel + ((Rpp32s)srcY * srcDescPtr->strides.hStride) + ((Rpp32s)srcX * srcDescPtr->strides.wStride);
+        *dstPtrTempR = *srcPtrTemp++;
+        *dstPtrTempG = *srcPtrTemp++;
+        *dstPtrTempB = *srcPtrTemp;
+    }
+}
+
+template <typename T>
+inline void compute_nn_interpolation_pkd3_to_pkd3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr)
+{
+    srcY = std::round(srcY);
+    srcX = std::round(srcX);
+    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    {
+        memset(dstPtrTemp, 0, 3 * sizeof(T));
+    }
+    else
+    {
+        T *srcPtrTemp;
+        srcPtrTemp = srcPtrChannel + ((Rpp32s)srcY * srcDescPtr->strides.hStride) + ((Rpp32s)srcX * srcDescPtr->strides.wStride);
+        memcpy(dstPtrTemp, srcPtrTemp, 3 * sizeof(T));
+    }
+}
+
+template <typename T>
+inline void compute_nn_interpolation_pln3_to_pkd3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr)
+{
+    srcY = std::round(srcY);
+    srcX = std::round(srcX);
+    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    {
+        memset(dstPtrTemp, 0, 3 * sizeof(T));
+    }
+    else
+    {
+        T *srcPtrTemp;
+        srcPtrTemp = srcPtrChannel + ((Rpp32s)srcY * srcDescPtr->strides.hStride) + ((Rpp32s)srcX * srcDescPtr->strides.wStride);
+        *dstPtrTemp++ = *srcPtrTemp;
+        srcPtrTemp += srcDescPtr->strides.cStride;
+        *dstPtrTemp++ = *srcPtrTemp;
+        srcPtrTemp += srcDescPtr->strides.cStride;
+        *dstPtrTemp = *srcPtrTemp;
+    }
+}
+
+template <typename T>
+inline void compute_nn_interpolation_pln_to_pln(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+{
+    srcY = std::round(srcY);
+    srcX = std::round(srcX);
+    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    {
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            *dstPtrTemp = 0;
+            dstPtrTemp += dstDescPtr->strides.cStride;
+        }
+    }
+    else
+    {
+        T *srcPtrTemp;
+        srcPtrTemp = srcPtrChannel + ((Rpp32s)srcY * srcDescPtr->strides.hStride) + ((Rpp32s)srcX * srcDescPtr->strides.wStride);
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            *dstPtrTemp = *srcPtrTemp;
+            srcPtrTemp += srcDescPtr->strides.cStride;
+            dstPtrTemp += dstDescPtr->strides.cStride;
+        }
+    }
+}
+
 /* Resize helper functions */
 inline void compute_dst_size_cap_host(RpptImagePatchPtr dstImgSize, RpptDescPtr dstDescPtr)
 {
