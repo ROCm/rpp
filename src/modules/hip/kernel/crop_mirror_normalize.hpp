@@ -1,33 +1,45 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ void cmn_hip_compute(uchar *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
+__device__ void cmn_hip_compute(uchar *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
+{
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1] * (float4) ONE_OVER_255);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1] * (float4) ONE_OVER_255);
+}
+
+__device__ void cmn_hip_compute(uchar *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
+{
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1] * (float4) ONE_OVER_255);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1] * (float4) ONE_OVER_255);
+}
+
+__device__ void cmn_hip_compute(uchar *srcPtr, uchar *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
     pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
     pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
 }
 
-__device__ void cmn_hip_compute(float *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
+__device__ void cmn_hip_compute(float *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
     pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
     pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
 }
 
-__device__ void cmn_hip_compute(schar *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
+__device__ void cmn_hip_compute(schar *srcPtr, schar *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
     pix_f8->f4[0] = rpp_hip_pixel_check_0to255(((pix_f8->f4[0] + (float4)128) - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]) - (float4)128;
     pix_f8->f4[1] = rpp_hip_pixel_check_0to255(((pix_f8->f4[1] + (float4)128) - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]) - (float4)128;
 }
-__device__ void cmn_hip_compute(half *srcPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
+__device__ void cmn_hip_compute(half *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
     pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
     pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
 }
 
-template <typename T>
+template <typename T, typename U>
 __global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
                                                  uint2 srcStridesNH,
-                                                 T *dstPtr,
+                                                 U *dstPtr,
                                                  uint2 dstStridesNH,
                                                  float *meanTensor,
                                                  float *stdDevTensor,
@@ -58,20 +70,25 @@ __global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
     }
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    d_float8 cmnParams_f8;
-    cmnParams_f8.f4[0] = (float4)meanTensor[id_z];
-    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
+    int incrementPerImage = id_z * 3;
+    d_float8 cmnParamsR_f8, cmnParamsG_f8, cmnParamsB_f8;
+    cmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
+    cmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
+    cmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
+    cmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
+    cmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
+    cmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
 
-    cmn_hip_compute(srcPtr, &pix_f24.f8[0], &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.f8[1], &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.f8[2], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[0], &cmnParamsR_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[1], &cmnParamsG_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[2], &cmnParamsB_f8);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
-template <typename T>
+template <typename T, typename U>
 __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
                                                  uint3 srcStridesNCH,
-                                                 T *dstPtr,
+                                                 U *dstPtr,
                                                  uint3 dstStridesNCH,
                                                  int channelsDst,
                                                  float *meanTensor,
@@ -89,17 +106,17 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
     }
 
     uint srcIdx;
-    d_float8 pix_f8, cmnParams_f8;
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-
-    cmnParams_f8.f4[0] = (float4)meanTensor[id_z];
-    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
+    int incrementPerImage = id_z * channelsDst;
+    d_float8 pix_f8, cmnParams_f8;
+    cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage];          // Get mean for R channel
+    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);  // Get (1 / stdDev) for R channel
 
     if(mirrorTensor[id_z] == 1)
     {
         srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x - 8);
         rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
-        cmn_hip_compute(srcPtr, &pix_f8, &cmnParams_f8);
+        cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
         if (channelsDst == 3)
@@ -107,15 +124,21 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
             srcIdx += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
 
+            cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
+            cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
+
             rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
-            cmn_hip_compute(srcPtr, &pix_f8, &cmnParams_f8);
+            cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
             srcIdx += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
 
+            cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
+            cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+
             rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
-            cmn_hip_compute(srcPtr, &pix_f8, &cmnParams_f8);
+            cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
         }
     }
@@ -123,7 +146,7 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
     {
         srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-        cmn_hip_compute(srcPtr, &pix_f8, &cmnParams_f8);
+        cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
         if (channelsDst == 3)
@@ -131,24 +154,30 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
             srcIdx += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
 
+            cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
+            cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
+
             rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-            cmn_hip_compute(srcPtr, &pix_f8, &cmnParams_f8);
+            cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
             srcIdx += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
 
+            cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
+            cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+
             rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-            cmn_hip_compute(srcPtr, &pix_f8, &cmnParams_f8);
+            cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
         }
     }
 }
 
-template <typename T>
+template <typename T, typename U>
 __global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
                                                        uint2 srcStridesNH,
-                                                       T *dstPtr,
+                                                       U *dstPtr,
                                                        uint3 dstStridesNCH,
                                                        float *meanTensor,
                                                        float *stdDevTensor,
@@ -178,21 +207,25 @@ __global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
     }
 
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    int incrementPerImage = id_z * 3;
+    d_float8 cmnParamsR_f8, cmnParamsG_f8, cmnParamsB_f8;
+    cmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
+    cmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
+    cmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
+    cmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
+    cmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
+    cmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
 
-    d_float8 cmnParams_f8;
-    cmnParams_f8.f4[0] = (float4)meanTensor[id_z];
-    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
-
-    cmn_hip_compute(srcPtr, &pix_f24.f8[0], &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.f8[1], &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.f8[2], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[0], &cmnParamsR_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[1], &cmnParamsG_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[2], &cmnParamsB_f8);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
-template <typename T>
+template <typename T, typename U>
 __global__ void crop_mirror_normalize_pln3_pkd3_tensor(T *srcPtr,
                                                        uint3 srcStridesNCH,
-                                                       T *dstPtr,
+                                                       U *dstPtr,
                                                        uint2 dstStridesNH,
                                                        float *meanTensor,
                                                        float *stdDevTensor,
@@ -222,21 +255,25 @@ __global__ void crop_mirror_normalize_pln3_pkd3_tensor(T *srcPtr,
     }
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    int incrementPerImage = id_z * 3;
+    d_float8 cmnParamsR_f8, cmnParamsG_f8, cmnParamsB_f8;
+    cmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
+    cmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
+    cmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
+    cmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
+    cmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
+    cmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
 
-    d_float8 cmnParams_f8;
-    cmnParams_f8.f4[0] = (float4)meanTensor[id_z];
-    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[id_z]);
-
-    cmn_hip_compute(srcPtr, &pix_f24.f8[0], &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.f8[1], &cmnParams_f8);
-    cmn_hip_compute(srcPtr, &pix_f24.f8[2], &cmnParams_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[0], &cmnParamsR_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[1], &cmnParamsG_f8);
+    cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[2], &cmnParamsB_f8);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
-template <typename T>
+template <typename T, typename U>
 RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
                                                 RpptDescPtr srcDescPtr,
-                                                T *dstPtr,
+                                                U *dstPtr,
                                                 RpptDescPtr dstDescPtr,
                                                 RpptROIPtr roiTensorPtrSrc,
                                                 RpptRoiType roiType,
@@ -263,27 +300,47 @@ RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                           handle.GetInitHandle()->mem.mgpu.float3Arr[0].floatmem,
+                           handle.GetInitHandle()->mem.mgpu.float3Arr[1].floatmem,
                            handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(crop_mirror_normalize_pln_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr,
-                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                           dstPtr,
-                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                           dstDescPtr->c,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                           roiTensorPtrSrc);
+        if(srcDescPtr->c == 1)
+        {
+            hipLaunchKernelGGL(crop_mirror_normalize_pln_tensor,
+                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               dstDescPtr->c,
+                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                               roiTensorPtrSrc);
+        }
+        else if(srcDescPtr->c == 3)
+        {
+            hipLaunchKernelGGL(crop_mirror_normalize_pln_tensor,
+                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               dstDescPtr->c,
+                               handle.GetInitHandle()->mem.mgpu.float3Arr[0].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.float3Arr[1].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
+                               roiTensorPtrSrc);
+        }
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -298,8 +355,8 @@ RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.float3Arr[0].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.float3Arr[1].floatmem,
                                handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
                                roiTensorPtrSrc);
         }
@@ -315,8 +372,8 @@ RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.float3Arr[0].floatmem,
+                               handle.GetInitHandle()->mem.mgpu.float3Arr[1].floatmem,
                                handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
                                roiTensorPtrSrc);
         }

@@ -1342,23 +1342,29 @@ int main(int argc, char **argv)
     case 38:
     {
         test_case_name = "crop_mirror_normalize";
-        Rpp32f mean[images];
-        Rpp32f stdDev[images];
+        Rpp32f mean[images * 3];
+        Rpp32f stdDev[images * 3];
         Rpp32u mirror[images];
-        for (i = 0; i < images; i++)
+        for (i = 0, j = 0; i < images; i++, j += 3)
         {
-            mean[i] = 0.0;
-            stdDev[i] = 1.0;
+            mean[j] = 60.0;
+            stdDev[j] = 1.0;
+
+            mean[j + 1] = 80.0;
+            stdDev[j + 1] = 1.0;
+
+            mean[j + 2] = 100.0;
+            stdDev[j + 2] = 1.0;
             mirror[i] = 1;
         }
 
         // Uncomment to run test case with an xywhROI override
         for (i = 0; i < images; i++)
         {
-            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.x = 50;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 50;
             dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
         }
 
         // Uncomment to run test case with an ltrbROI override
@@ -1383,9 +1389,9 @@ int main(int argc, char **argv)
         else if (ip_bitDepth == 2)
             rppt_crop_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
+            rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf16, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
+            rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf32, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 5)
             rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
