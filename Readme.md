@@ -17,66 +17,89 @@ RPP is developed for **Linux** operating system.
 
 ## Prerequisites
 
--   OS
-    -   Ubuntu `18.04`/`20.04`
-    -   CentOS/RHEL `8.0`
+* OS
+  + Ubuntu `20.04`/`22.04`
+  + CentOS/RHEL `7`/`8`
+  + SLES - `15-SP2`
 
--   [ROCm supported hardware](https://rocm.github.io/hardware.html)
+* [ROCm supported hardware](https://rocm.github.io/hardware.html)
 
--   [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories)
+* [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories) `5.3` and above
 
--   Clang Version `6.0+`
+* Clang Version `5.0.1` and above
 
-        sudo apt-get install clang
+  + Ubuntu `20`/`22`
+    ```
+    sudo apt-get install clang
+    ```
+  
+  + CentOS `7`
+    ```
+    sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
+    scl enable llvm-toolset-7 bash
+    ```
 
--   CMake Version `3.5+`
+  + CentOS `8`
+    ```
+    sudo yum install clang
+    ```
 
-        sudo apt-get install cmake
+  + SLES `15-SP2`
+    ```
+    sudo zypper install llvm-clang
+    ```
 
--   Boost Version `1.72`
+* CMake Version `3.5` and above
 
-        wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
-        tar -xzvf boost_1_72_0.tar.gz
-        cd boost_1_72_0
-        ./bootstrap.sh
-        ./b2 install
-    
-    * **NOTE:** [Install from source](https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install)
+* Boost Version `1.72`
+  ```
+  wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
+  tar -xzvf boost_1_72_0.tar.gz
+  cd boost_1_72_0
+  ./bootstrap.sh
+  ./b2 install
+  ```
+  + **NOTE:** [Install from source](https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install)
 
--   IEEE 754-based half-precision floating-point library - half.hpp
+* IEEE 754-based half-precision floating-point library - half.hpp
 
-        wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
-        unzip half-1.12.0.zip -d half-files
-        sudo mkdir /usr/local/include/half
-        sudo cp half-files/include/half.hpp /usr/local/include/half
+  ```
+  wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
+  unzip half-1.12.0.zip -d half-files
+  sudo mkdir /usr/local/include/half
+  sudo cp half-files/include/half.hpp /usr/local/include/half
+  ```
 
 ## Prerequisites for Test Suite
--   OpenCV 3.4.0 or OpenCV 4.5.5 pre-requisites
+* OpenCV 3.4.0 or OpenCV 4.5.5 pre-requisites
+  ```
+  sudo apt-get update
+  sudo -S apt-get -y --allow-unauthenticated install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev python-dev python-numpy
+  sudo -S apt-get -y --allow-unauthenticated install libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev unzip wget
+  ```
 
-        sudo apt-get update
-        sudo -S apt-get -y --allow-unauthenticated install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev python-dev python-numpy
-        sudo -S apt-get -y --allow-unauthenticated install libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev unzip wget
+* OpenCV 3.4.0 or OpenCV 4.5.5 download
+  ```
+  wget https://github.com/opencv/opencv/archive/3.4.0.zip
+  unzip 3.4.0.zip
+  cd opencv-3.4.0/
+  ```
+  OR
+  ```
+  wget https://github.com/opencv/opencv/archive/4.5.5.zip
+  unzip 4.5.5.zip
+  cd opencv-4.5.5/
+  ```
 
--   OpenCV 3.4.0 or OpenCV 4.5.5 download
-
-        wget https://github.com/opencv/opencv/archive/3.4.0.zip
-        unzip 3.4.0.zip
-        cd opencv-3.4.0/
-
-    OR
-
-        wget https://github.com/opencv/opencv/archive/4.5.5.zip
-        unzip 4.5.5.zip
-        cd opencv-4.5.5/
-
--   OpenCV 3.4.0 or OpenCV 4.5.5 installation
-
-        mkdir build
-        cd build
-        cmake -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
-        sudo -S make -j128 <Or other number of threads to use>
-        sudo -S make install
-        sudo -S ldconfig
+* OpenCV 3.4.0 or OpenCV 4.5.5 installation
+  ```
+  mkdir build
+  cd build
+  cmake -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
+  sudo -S make -j128 <Or other number of threads to use>
+  sudo -S make install
+  sudo -S ldconfig
+  ```
 
 ## Supported Functionalities and Variants
 
@@ -100,35 +123,32 @@ RPP is developed for **Linux** operating system.
 
 ## [Instructions to build the library](#rpp-installation)
 
-The Radeon Performance Primitives (RPP) library has support for two backends: HIP and OPENCL:
+The Radeon Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 
--   Instructions for building RPP with the **HIP** backend (default):
+* Instructions for building RPP with the **HIP** backend **(default)**:
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
-$ cd rpp
-$ mkdir build
-$ cd build
-$ cmake ..
-or
-$ cmake -DBACKEND=HIP ..
-or
-$ cmake -DBACKEND=hip ..
-$ make -j16
+$ mkdir build && cd build
+$ cmake -DBACKEND=HIP ../rpp
+$ make -j8
 $ sudo make install
 ```
 
--   Instructions for building RPP with the **OPENCL** backend:
+* Instructions for building RPP with the **OPENCL** backend:
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
-$ cd rpp
-$ mkdir build
-$ cd build
-$ cmake -DBACKEND=OCL ..
-or
-$ cmake -DBACKEND=OPENCL ..
-or
-$ cmake -DBACKEND=OpenCL ..
-$ make -j16
+$ mkdir build && cd build
+$ cmake -DBACKEND=OCL ../rpp
+$ make -j8
+$ sudo make install
+```
+
+* Instructions for building RPP with the **CPU** backend:
+```
+$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
+$ mkdir build && cd build
+$ cmake -DBACKEND=CPU ../rpp
+$ make -j8
 $ sudo make install
 ```
 

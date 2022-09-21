@@ -25,7 +25,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 14)
 
 project(amd_rpp CXX)
-set(VERSION "0.96")
+set(VERSION "0.97")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -95,10 +95,14 @@ if(NOT CMAKE_BUILD_TYPE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    # -O0  -- Don't Optimize output file; -g -- generate debugging information; -Og -- Optimize for debugging experience rather than speed or size
+    # -O0  -- Don't Optimize output file
+    # -g -- generate debugging information
+    # -Og -- Optimize for debugging experience rather than speed or size
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -Og")
 else()
-    # -O3 -- Optimize output file; TBD:CHECK -Ofast - Optimize for speed disregarding exact standards compliance; -DNDEBUG -- turn off asserts
+    # -O3 -- Optimize output file
+    # TBD:Verify Requirement -Ofast - Optimize for speed disregarding exact standards compliance
+    # -DNDEBUG -- turn off asserts
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -DNDEBUG")
 endif()
 message("-- ${BoldBlue}AMD RPP Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
@@ -110,7 +114,7 @@ else()
 endif()
 
 # CMake checks and setups
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "${Red}${PROJECT_NAME} -- In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -172,34 +176,29 @@ if("${BACKEND}" STREQUAL "HIP")
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR}/cmake/hip ${HIP_PATH}/cmake)
+    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
     find_package(HIP QUIET)
-	if(HIP_FOUND)
-		message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER}${ColourReset})
-		if(HIP_COMPILER STREQUAL clang)
-			# TBD: Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
-            add_definitions(-DGPU_SUPPORT)
-            # For cmakedefine01 in rpp_backend.h.in
-            set(RPP_BACKEND_HIP 1)
-            # To use RPP_BACKEND_HIP
-            add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-			set(COMPILER_FOR_HIP ${ROCM_PATH}/${CMAKE_INSTALL_BINDIR}/hipcc)
-			include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
-			link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
-            set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${HIP_PATH}/${CMAKE_INSTALL_LIBDIR}/libamdhip64.so)
+    if(HIP_FOUND)
+        message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER}${ColourReset})
+        # TBD: Set external flag to notify GPU_SUPPORT and HIP backend availability - Compatible with rocAL and MIVisionX
+        add_definitions(-DGPU_SUPPORT)
+        # For cmakedefine01 in rpp_backend.h.in
+        set(RPP_BACKEND_HIP 1)
+        # To use RPP_BACKEND_HIP
+        add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
+        set(COMPILER_FOR_HIP ${ROCM_PATH}/llvm/bin/clang++)
+        include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
+        link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
+        # link To HIP Host library -- [hip::host] to use host API
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hip::host)
 
-            # Add modules
-            set(MODULES_LIST modules)
-            foreach(MOD_NAME ${MODULES_LIST})
-                add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
-            endforeach(MOD_NAME)
+        # Add modules
+        set(MODULES_LIST modules)
+        foreach(MOD_NAME ${MODULES_LIST})
+            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
+        endforeach(MOD_NAME)
 
-            message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
-		else()
-			message("-- ${Yellow}${PROJECT_NAME} -- Unsupported HIP compiler")
-            set(BACKEND "CPU")
-            message("-- ${Yellow}${PROJECT_NAME} set to build with CPU backend${ColourReset}")
-        endif()
+        message("-- ${Green}${PROJECT_NAME} set to build with HIP backend${ColourReset}")
     else()
         set(BACKEND "CPU")
         message("-- ${Yellow}HIP not found! ${PROJECT_NAME} set to build with CPU backend${ColourReset}")
@@ -219,13 +218,11 @@ elseif("${BACKEND}" STREQUAL "OCL")
         # Add modules
         set(MODULES_LIST modules)
         foreach(MOD_NAME ${MODULES_LIST})
-            add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
         endforeach(MOD_NAME)
 
         # Set compiler and flags
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenCL_LIBRARIES})
-        # set(INCLUDE_LIST ${OpenCL_INCLUDE_DIRS} ${INCLUDE_LIST})  # using substitute since OpenCL_INCLUDE_DIRS points to a deprecated /opt/rocm/opencl/include
-        set(INCLUDE_LIST ${INCLUDE_LIST})
         add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
 
         message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using OpenCL backend${ColourReset}")
@@ -240,7 +237,7 @@ if("${BACKEND}" STREQUAL "CPU")
     # Add modules
     set(MODULES_LIST modules)
     foreach(MOD_NAME ${MODULES_LIST})
-        add_subdirectory(${CMAKE_SOURCE_DIR}/src/${MOD_NAME})
+        add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
 endif()
 
@@ -297,7 +294,7 @@ add_subdirectory(addkernels)
 # install RPP libs -- {ROCM_PATH}/lib
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 # install RPP include files -- {ROCM_PATH}/include/rpp/
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
 install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp)
 
 # Set package information
@@ -348,8 +345,8 @@ set(CPACK_RPM_PACKAGE_AUTOREQPROV   "no")
 if(APPLE)
     set(CPACK_GENERATOR "Bundle")
     set(CPACK_BUNDLE_NAME ${CPACK_PACKAGE_NAME})
-    set(CPACK_BUNDLE_ICON ${CPACK_PACKAGE_ICON})
-    set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/.github/info.plist")
+    set(CPACK_BUNDLE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/.github/rpp.png")
+    set(CPACK_BUNDLE_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/.github/info.plist")
 else()
     set(CPACK_GENERATOR "TGZ;ZIP")
     if(EXISTS ${MAKE_NSIS_EXE})

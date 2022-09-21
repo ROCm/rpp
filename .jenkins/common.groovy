@@ -7,9 +7,13 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = ''
+    String enableSCL = 'echo build-rpp'
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
+        if (platform.jenkinsLabel.contains('centos7')) {
+            enableSCL = 'source scl_source enable llvm-toolset-7'
+        }
     }
     else if (platform.jenkinsLabel.contains('ubuntu18')) {
          backend = 'OCL'
@@ -27,7 +31,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 echo Build RPP - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
-                cmake -DBACKEND=${backend} ${buildTypeArg} ../..
+                (${enableSCL}; cmake -DBACKEND=${backend} ${buildTypeArg} ../..)
                 make -j\$(nproc)
                 sudo make install
                 sudo make package
