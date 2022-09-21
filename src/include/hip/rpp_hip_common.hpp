@@ -88,6 +88,7 @@ struct RPPTensorFunctionMetaData
 #define ONE_OVER_255                    0.00392157f
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
+#define PI                              3.14159265
 #define RGB_TO_GREY_WEIGHT_RED          0.299f
 #define RGB_TO_GREY_WEIGHT_GREEN        0.587f
 #define RGB_TO_GREY_WEIGHT_BLUE         0.114f
@@ -142,6 +143,36 @@ inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u k
 /******************** DEVICE FUNCTIONS ********************/
 
 // -------------------- Set 0 - Range checks and Range adjustment --------------------
+
+// float pixel check for 0-255 range
+
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, uchar* dst)
+{
+    pixel = fmax(fminf(pixel, 255), 0);
+    *dst = (uchar)pixel;
+}
+
+// float pixel check for -128-127 range
+
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, schar* dst)
+{
+    pixel = fmax(fminf(pixel, 127), -128);
+    *dst = (schar)pixel;
+}
+
+// float pixel check for 0-1 range
+
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, float* dst)
+{
+    pixel = fmax(fminf(pixel, 1), 0);
+    *dst = pixel;
+}
+
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, half* dst)
+{
+    pixel = fmax(fminf(pixel, 1), 0);
+    *dst = (half)pixel;
+}
 
 // float4 pixel check for 0-255 range
 
@@ -1569,6 +1600,12 @@ __device__ __forceinline__ float rpp_hip_math_exp_lim256approx(float x)
   return x;
 }
 
+__device__ __forceinline__ float rpp_hip_math_sinc(float x)
+{
+    x *= PI;
+    return (fabsf(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sinf(x) / x;
+}
+
 // /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
 
 template<typename T>
@@ -1688,6 +1725,104 @@ __device__ __forceinline__ float rpp_hip_rng_1_inverse_transform_sampling_f32(fl
 }
 
 // /******************** DEVICE INTERPOLATION HELPER FUNCTIONS ********************/
+
+__device__ __forceinline__ void rpp_hip_compute_bicubic_coefficient(float weight, float *coeff)
+{
+    Rpp32f x = fabsf(weight);
+    *coeff = (x >= 2) ? 0 : ((x > 1) ? (x * x * (-0.5f * x + 2.5f) - 4.0f * x + 2.0f) : (x * x * (1.5f * x - 2.5f) + 1.0f));
+}
+
+__device__ __forceinline__ void rpp_hip_compute_lanczos3_coefficient(float weight, float *coeff)
+{
+    *coeff = fabsf(weight) >= 3 ? 0.0f : (rpp_hip_math_sinc(weight) * rpp_hip_math_sinc(weight * ONE_OVER_3));
+}
+
+__device__ __forceinline__ void rpp_hip_compute_gaussian_coefficient(float weight, float *coeff)
+{
+    *coeff = expf(weight * weight * -4.0f);
+}
+
+__device__ __forceinline__ void rpp_hip_compute_triangular_coefficient(float weight, float *coeff)
+{
+    *coeff = 1 - fabsf(weight);
+    *coeff = *coeff < 0 ? 0 : *coeff;
+}
+
+__device__ __forceinline__ void rpp_hip_compute_interpolation_coefficient(RpptInterpolationType interpolationType, float weight, float *coeff)
+{
+    switch (interpolationType)
+    {
+        case RpptInterpolationType::BICUBIC:
+        {
+            rpp_hip_compute_bicubic_coefficient(weight, coeff);
+            break;
+        }
+        case RpptInterpolationType::LANCZOS:
+        {
+            rpp_hip_compute_lanczos3_coefficient(weight, coeff);
+            break;
+        }
+        case RpptInterpolationType::GAUSSIAN:
+        {
+            rpp_hip_compute_gaussian_coefficient(weight, coeff);
+            break;
+        }
+        case RpptInterpolationType::TRIANGULAR:
+        {
+            rpp_hip_compute_triangular_coefficient(weight, coeff);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+__device__ void rpp_hip_compute_interpolation_scale_and_radius(RpptInterpolationType interpolationType, float *scale, float *radius, float scaleRatio)
+{
+    switch (interpolationType)
+    {
+        case RpptInterpolationType::BICUBIC:
+        {
+            *radius = 2.0f;
+            break;
+        }
+        case RpptInterpolationType::LANCZOS:
+        {
+            if(scaleRatio > 1.0f)
+            {
+                *radius = 3.0f * scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
+            else
+                *radius = 3.0f;
+            break;
+        }
+        case RpptInterpolationType::GAUSSIAN:
+        {
+            if(scaleRatio > 1.0f)
+            {
+                *radius = scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
+            break;
+        }
+        case RpptInterpolationType::TRIANGULAR:
+        {
+            if(scaleRatio > 1.0f)
+            {
+                *radius = scaleRatio;
+                *scale = (1 / scaleRatio);
+            }
+            break;
+        }
+        default:
+        {
+            *radius = 1.0f;
+            *scale = 1.0f;
+            break;
+        }
+    }
+}
 
 // BILINEAR INTERPOLATION LOAD HELPERS (separate load routines for each bit depth)
 

@@ -16,7 +16,6 @@ typedef halfhpp Rpp16f;
 #define PI_OVER_180                     0.0174532925
 #define ONE_OVER_255                    0.00392157f
 #define ONE_OVER_256                    0.00390625f
-#define ONE_OVER_6                      0.1666666f
 #define RPP_128_OVER_255                0.50196078431f
 #define RAD(deg)                        (deg * PI / 180)
 #define RPPABS(a)                       ((a < 0) ? (-a) : (a))
