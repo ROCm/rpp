@@ -1888,6 +1888,47 @@ inline void rpp_generic_nn_load_i8pln1(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp
     p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
 }
 
+template <typename T>
+inline void rpp_generic_bilinear_load_3c_avx(T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, __m256 *pSrc)
+{
+    Rpp32s invalidLoadMask[8];
+    _mm256_storeu_si256((__m256i*) invalidLoadMask, _mm256_cvtps_epi32(_mm256_or_ps(
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[0], _CMP_LT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[1], _CMP_LT_OQ)),
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[2], _CMP_GT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[3], _CMP_GT_OQ))
+    )));
+
+    RpptBilinearNbhoodValsVecLen8 srcVals;
+    memset(&srcVals, 0, sizeof(RpptBilinearNbhoodValsVecLen8));
+
+    for (int j = 0; j < 8; j++)
+    {
+        if (invalidLoadMask[j] == 0) // invalidLoadMask vector is true for all invalid loads
+        {
+            for (int c = 0; c < srcDescPtr->c * 8; c += 8)
+            {
+                Rpp32s pos = c + j;
+                srcVals.srcValsTL.data[pos] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsTL.data[pos]];
+                srcVals.srcValsTR.data[pos] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsTR.data[pos]];
+                srcVals.srcValsBL.data[pos] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsBL.data[pos]];
+                srcVals.srcValsBR.data[pos] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsBR.data[pos]];
+            }
+        }
+    }
+
+    pSrc[0] = _mm256_loadu_ps(&srcVals.srcValsTL.data[0]);      // R channel Top-Left
+    pSrc[1] = _mm256_loadu_ps(&srcVals.srcValsTR.data[0]);      // R channel Top-Right
+    pSrc[2] = _mm256_loadu_ps(&srcVals.srcValsBL.data[0]);      // R channel Bottom-Left
+    pSrc[3] = _mm256_loadu_ps(&srcVals.srcValsBR.data[0]);      // R channel Bottom-Right
+    pSrc[4] = _mm256_loadu_ps(&srcVals.srcValsTL.data[8]);      // G channel Top-Left
+    pSrc[5] = _mm256_loadu_ps(&srcVals.srcValsTR.data[8]);      // G channel Top-Right
+    pSrc[6] = _mm256_loadu_ps(&srcVals.srcValsBL.data[8]);      // G channel Bottom-Left
+    pSrc[7] = _mm256_loadu_ps(&srcVals.srcValsBR.data[8]);      // G channel Bottom-Right
+    pSrc[8] = _mm256_loadu_ps(&srcVals.srcValsTL.data[16]);     // B channel Top-Left
+    pSrc[9] = _mm256_loadu_ps(&srcVals.srcValsTR.data[16]);     // B channel Top-Right
+    pSrc[10] = _mm256_loadu_ps(&srcVals.srcValsBL.data[16]);    // B channel Bottom-Left
+    pSrc[11] = _mm256_loadu_ps(&srcVals.srcValsBR.data[16]);    // B channel Bottom-Right
+}
+
 /* Resize loads and stores */
 inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {

@@ -130,6 +130,16 @@ typedef struct
     Rpp32f data[6];
 } Rpp32f6;
 
+typedef struct
+{
+    Rpp32s data[24];
+} Rpp32s24;
+
+typedef struct
+{
+    Rpp32f data[24];
+} Rpp32f24;
+
 /******************** RPPI typedefs ********************/
 
 typedef enum
@@ -320,6 +330,22 @@ typedef struct
     int boxMullerFlag;
     float boxMullerExtra;
 } RpptXorwowStateBoxMuller;
+
+typedef struct
+{
+    Rpp32s24 srcLocsTL;
+    Rpp32s24 srcLocsTR;
+    Rpp32s24 srcLocsBL;
+    Rpp32s24 srcLocsBR;
+} RpptBilinearNbhoodLocsVecLen8;
+
+typedef struct
+{
+    Rpp32f24 srcValsTL;
+    Rpp32f24 srcValsTR;
+    Rpp32f24 srcValsBL;
+    Rpp32f24 srcValsBR;
+} RpptBilinearNbhoodValsVecLen8;
 
 typedef struct Filter
 {
