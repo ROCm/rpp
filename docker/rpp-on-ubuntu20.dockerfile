@@ -21,6 +21,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-de
 
 WORKDIR /workspace
 
-# install MIVisionX
+# install RPP
 RUN git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git && mkdir build && cd build && \
         cmake ../rpp && make -j8 && make install
