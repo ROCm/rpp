@@ -27,13 +27,13 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 endif()
 
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/rpp_kernels.h)
-message("-- Added custom command for rpp_kernels")
+message("-- ${Green}Added custom command for rpp_kernels${ColourReset}")
 add_custom_command(
     OUTPUT ${PROJECT_BINARY_DIR}/rpp_kernels.h
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS addkernels ${RPP_KERNELS} ${RPP_KERNEL_INCLUDES}
     COMMAND ${WINE_CMD} $<TARGET_FILE:addkernels> -guard GUARD_RPP_KERNELS_HPP_ -target ${PROJECT_BINARY_DIR}/rpp_kernels.h -source ${RPP_KERNELS}
-    COMMENT "Inlining Rpp kernels"
+    COMMENT "Inlining RPP kernels"
     )
 
 function(add_kernels KERNEL_FILES)
