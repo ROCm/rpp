@@ -8,7 +8,7 @@ RUN apt-get update -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install gcc g++ clang cmake git wget unzip libbz2-dev python3-dev git && \
         wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip && \
         unzip half-1.12.0.zip -d half-files && mkdir -p /usr/local/include/half && cp half-files/include/half.hpp /usr/local/include/half && \
-        wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz && tar xjvf boost_1_72_0.tar.bz2 && \
+        wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz && tar -xzvf boost_1_72_0.tar.gz && \
         cd boost_1_72_0 && ./bootstrap.sh --prefix=/usr/local --with-python=python3 && \
         ./b2 stage -j16 threading=multi link=shared && ./b2 install threading=multi link=shared --with-system --with-filesystem && \
         ./b2 install threading=multi link=static --with-system --with-filesystem
