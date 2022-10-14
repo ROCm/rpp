@@ -97,6 +97,7 @@ const __m256 avx_p3 = _mm256_set1_ps(3.0f);
 const __m256 avx_p4 = _mm256_set1_ps(4.0f);
 const __m256 avx_p6 = _mm256_set1_ps(6.0f);
 const __m256 avx_p8 = _mm256_set1_ps(8.0f);
+const __m256 avx_p128 = _mm256_set1_ps(128.0f);
 const __m256 avx_p255 = _mm256_set1_ps(255.0f);
 const __m256 avx_p1op255 = _mm256_set1_ps(1.0f / 255.0f);
 const __m256 avx_p1op3 = _mm256_set1_ps(1.0f / 3.0f);
@@ -1888,21 +1889,47 @@ inline void rpp_generic_nn_load_i8pln1(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp
     p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
 }
 
-template <typename T>
-inline void rpp_generic_bilinear_load_3c_avx(T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, __m256 *pSrc)
+inline void rpp_generic_bilinear_load_mask_avx(__m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, Rpp32s *invalidLoadMask)
 {
-    Rpp32s invalidLoadMask[8];
     _mm256_storeu_si256((__m256i*) invalidLoadMask, _mm256_cvtps_epi32(_mm256_or_ps(
         _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[0], _CMP_LT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[1], _CMP_LT_OQ)),
         _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[2], _CMP_GT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[3], _CMP_GT_OQ))
     )));
+}
 
+template <typename T>
+inline void rpp_generic_bilinear_load_1c_avx(T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, __m256 *pSrc)
+{
+    Rpp32s invalidLoadMask[8];
     RpptBilinearNbhoodValsVecLen8 srcVals;
     memset(&srcVals, 0, sizeof(RpptBilinearNbhoodValsVecLen8));
-
+    rpp_generic_bilinear_load_mask_avx(pSrcY, pSrcX, pRoiLTRB, invalidLoadMask);
     for (int j = 0; j < 8; j++)
     {
-        if (invalidLoadMask[j] == 0) // invalidLoadMask vector is true for all invalid loads
+        if (invalidLoadMask[j] == 0) // Loading specific pixels where invalidLoadMask is set to 0
+        {
+            srcVals.srcValsTL.data[j] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsTL.data[j]];
+            srcVals.srcValsTR.data[j] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsTR.data[j]];
+            srcVals.srcValsBL.data[j] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsBL.data[j]];
+            srcVals.srcValsBR.data[j] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsBR.data[j]];
+        }
+    }
+    pSrc[0] = _mm256_loadu_ps(&srcVals.srcValsTL.data[0]);      // R channel Top-Left
+    pSrc[1] = _mm256_loadu_ps(&srcVals.srcValsTR.data[0]);      // R channel Top-Right
+    pSrc[2] = _mm256_loadu_ps(&srcVals.srcValsBL.data[0]);      // R channel Bottom-Left
+    pSrc[3] = _mm256_loadu_ps(&srcVals.srcValsBR.data[0]);      // R channel Bottom-Right
+}
+
+template <typename T>
+inline void rpp_generic_bilinear_load_3c_avx(T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, __m256 *pSrc)
+{
+    Rpp32s invalidLoadMask[8];
+    RpptBilinearNbhoodValsVecLen8 srcVals;
+    memset(&srcVals, 0, sizeof(RpptBilinearNbhoodValsVecLen8));
+    rpp_generic_bilinear_load_mask_avx(pSrcY, pSrcX, pRoiLTRB, invalidLoadMask);
+    for (int j = 0; j < 8; j++)
+    {
+        if (invalidLoadMask[j] == 0) // Loading specific pixels where invalidLoadMask is set to 0
         {
             for (int c = 0; c < srcDescPtr->c * 8; c += 8)
             {
@@ -1914,7 +1941,6 @@ inline void rpp_generic_bilinear_load_3c_avx(T *srcPtrChannel, RpptDescPtr srcDe
             }
         }
     }
-
     pSrc[0] = _mm256_loadu_ps(&srcVals.srcValsTL.data[0]);      // R channel Top-Left
     pSrc[1] = _mm256_loadu_ps(&srcVals.srcValsTR.data[0]);      // R channel Top-Right
     pSrc[2] = _mm256_loadu_ps(&srcVals.srcValsBL.data[0]);      // R channel Bottom-Left

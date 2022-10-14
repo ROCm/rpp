@@ -850,7 +850,7 @@ omp_set_dynamic(0);
 
         Rpp32s vectorIncrementPerChannel = 8;
         Rpp32s vectorIncrementPkd = 24;
-        Rpp32u alignedLength = dstDescPtr->w & ~7;   // Align dst width to process 4 dst pixels per iteration
+        Rpp32u alignedLength = dstDescPtr->w & ~7;   // Align dst width to process 8 dst pixels per iteration
 
         __m256 pWeightParams[4], pBilinearCoeffs[4], pSrcBilinearLTyx[2];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
@@ -895,7 +895,7 @@ omp_set_dynamic(0);
                     __m256 pSrc[12], pDst[3];
                     compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
                     compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
-                    compute_generic_bilinear_srclocs_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
@@ -922,10 +922,6 @@ omp_set_dynamic(0);
         {
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            Rpp8u *srcPtrChannelR, *srcPtrChannelG, *srcPtrChannelB;
-            srcPtrChannelR = srcPtrChannel;
-            srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
-            srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
 
             for(int i = 0; i < dstDescPtr->h; i++)
             {
@@ -934,21 +930,22 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                // pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                // pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     __m128i pRow[3];
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelR, srcLoc, invalidLoad, pRow[0]);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
-                //     rpp_simd_store(rpp_store12_u8pln3_to_u8pkd3, dstPtrTemp, pRow);
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPkd;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -974,19 +971,22 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                // pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                // pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     __m128i pRow;
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pkd3, srcPtrChannel, srcLoc, invalidLoad, pRow);
-                //     rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTemp, pRow);
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPkd;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1000,7 +1000,55 @@ omp_set_dynamic(0);
         }
 
         // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
-        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp8u *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < dstDescPtr->h; i++)
+            {
+                Rpp8u *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                Rpp32f srcX, srcY;
+                __m256 pSrcX, pSrcY;
+                compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
+                srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
+                for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
+                    compute_warp_affine_src_loc_next_term(vectorLoopCount, srcY, srcX, affineMatrix_f6);
+                }
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
@@ -1012,27 +1060,22 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                // pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                // pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     Rpp8u *dstPtrTempChn, *srcPtrTempChn;
-                //     srcPtrTempChn = srcPtrChannel;
-                //     dstPtrTempChn = dstPtrTemp;
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                //     for(int c = 0; c < srcDescPtr->c; c++)
-                //     {
-                //         __m128i pRow;
-                //         rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrTempChn, srcLoc, invalidLoad, pRow);
-                //         rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTempChn, pRow);
-                //         srcPtrTempChn += srcDescPtr->strides.cStride;
-                //         dstPtrTempChn += dstDescPtr->strides.cStride;
-                //     }
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPerChannel;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[4], pDst;
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_1c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW);
+                    rpp_simd_load(rpp_generic_bilinear_load_1c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store8_f32pln1_to_u8pln1_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPerChannel;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1079,22 +1122,26 @@ omp_set_dynamic(0);
         srcPtrChannel = srcPtrImage;
         dstPtrChannel = dstPtrImage;
 
-        Rpp32s vectorIncrementPerChannel = 4;
-        Rpp32s vectorIncrementPkd = 12;
-        Rpp32u alignedLength = dstDescPtr->w & ~3;   // Align dst width to process 4 dst pixels per iteration
-        Rpp32s srcLoc[4] = {0};         // Since 4 dst pixels are processed per iteration
-        Rpp32s invalidLoad[4] = {0};    // Since 4 dst pixels are processed per iteration
+        Rpp32s vectorIncrementPerChannel = 8;
+        Rpp32s vectorIncrementPkd = 24;
+        Rpp32u alignedLength = dstDescPtr->w & ~7;   // Align dst width to process 8 dst pixels per iteration
 
-        __m128 pSrcStrideH = _mm_set1_ps(srcDescPtr->strides.hStride);
-        __m128 pAffineMatrixTerm0 = _mm_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3);
-        __m128 pAffineMatrixTerm3 = _mm_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3);
-        __m128 pAffineMatrixTerm0Incr = _mm_set1_ps(affineMatrix_f6->data[0] * 4);
-        __m128 pAffineMatrixTerm3Incr = _mm_set1_ps(affineMatrix_f6->data[3] * 4);
-        __m128 pRoiLTRB[4];
-        pRoiLTRB[0] = _mm_set1_ps(roiLTRB.ltrbROI.lt.x);
-        pRoiLTRB[1] = _mm_set1_ps(roiLTRB.ltrbROI.lt.y);
-        pRoiLTRB[2] = _mm_set1_ps(roiLTRB.ltrbROI.rb.x);
-        pRoiLTRB[3] = _mm_set1_ps(roiLTRB.ltrbROI.rb.y);
+        __m256 pWeightParams[4], pBilinearCoeffs[4], pSrcBilinearLTyx[2];
+        __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
+        __m256 pAffineMatrixTerm0 = _mm256_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3, affineMatrix_f6->data[0] * 4, affineMatrix_f6->data[0] * 5, affineMatrix_f6->data[0] * 6, affineMatrix_f6->data[0] * 7);
+        __m256 pAffineMatrixTerm3 = _mm256_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3, affineMatrix_f6->data[3] * 4, affineMatrix_f6->data[3] * 5, affineMatrix_f6->data[3] * 6, affineMatrix_f6->data[3] * 7);
+        __m256 pAffineMatrixTerm0Incr = _mm256_set1_ps(affineMatrix_f6->data[0] * 8);
+        __m256 pAffineMatrixTerm3Incr = _mm256_set1_ps(affineMatrix_f6->data[3] * 8);
+        __m256 pRoiLTRB[4];
+        pRoiLTRB[0] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.x);
+        pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
+        pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
+        pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
+        __m256i pxSrcStridesCHW[3];
+        pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
+        pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
+        pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
+        RpptBilinearNbhoodLocsVecLen8 srcLocs;
 
         // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1113,21 +1160,24 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     __m128i pRow;
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pkd3, srcPtrChannel, srcLoc, invalidLoad, pRow);
-                //     rpp_simd_store(rpp_store12_u8pkd3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTempR += vectorIncrementPerChannel;
-                //     dstPtrTempG += vectorIncrementPerChannel;
-                //     dstPtrTempB += vectorIncrementPerChannel;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1146,10 +1196,6 @@ omp_set_dynamic(0);
         {
             Rpp32f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            Rpp32f *srcPtrChannelR, *srcPtrChannelG, *srcPtrChannelB;
-            srcPtrChannelR = srcPtrChannel;
-            srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
-            srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
 
             for(int i = 0; i < dstDescPtr->h; i++)
             {
@@ -1158,21 +1204,22 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     __m128i pRow[3];
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelR, srcLoc, invalidLoad, pRow[0]);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
-                //     rpp_simd_store(rpp_store12_u8pln3_to_u8pkd3, dstPtrTemp, pRow);
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPkd;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1198,19 +1245,22 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     __m128i pRow;
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pkd3, srcPtrChannel, srcLoc, invalidLoad, pRow);
-                //     rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTemp, pRow);
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPkd;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1224,7 +1274,55 @@ omp_set_dynamic(0);
         }
 
         // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
-        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < dstDescPtr->h; i++)
+            {
+                Rpp32f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                Rpp32f srcX, srcY;
+                __m256 pSrcX, pSrcY;
+                compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
+                srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
+                for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
+                    compute_warp_affine_src_loc_next_term(vectorLoopCount, srcY, srcX, affineMatrix_f6);
+                }
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
@@ -1236,27 +1334,22 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     Rpp32f *dstPtrTempChn, *srcPtrTempChn;
-                //     srcPtrTempChn = srcPtrChannel;
-                //     dstPtrTempChn = dstPtrTemp;
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                //     for(int c = 0; c < srcDescPtr->c; c++)
-                //     {
-                //         __m128i pRow;
-                //         rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrTempChn, srcLoc, invalidLoad, pRow);
-                //         rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTempChn, pRow);
-                //         srcPtrTempChn += srcDescPtr->strides.cStride;
-                //         dstPtrTempChn += dstDescPtr->strides.cStride;
-                //     }
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPerChannel;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[4], pDst;
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_1c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW);
+                    rpp_simd_load(rpp_generic_bilinear_load_1c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store8_f32pln1_to_f32pln1_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPerChannel;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1303,22 +1396,26 @@ omp_set_dynamic(0);
         srcPtrChannel = srcPtrImage;
         dstPtrChannel = dstPtrImage;
 
-        Rpp32s vectorIncrementPerChannel = 4;
-        Rpp32s vectorIncrementPkd = 12;
-        Rpp32u alignedLength = dstDescPtr->w & ~3;   // Align dst width to process 4 dst pixels per iteration
-        Rpp32s srcLoc[4] = {0};         // Since 4 dst pixels are processed per iteration
-        Rpp32s invalidLoad[4] = {0};    // Since 4 dst pixels are processed per iteration
+        Rpp32s vectorIncrementPerChannel = 8;
+        Rpp32s vectorIncrementPkd = 24;
+        Rpp32u alignedLength = dstDescPtr->w & ~7;   // Align dst width to process 8 dst pixels per iteration
 
-        __m128 pSrcStrideH = _mm_set1_ps(srcDescPtr->strides.hStride);
-        __m128 pAffineMatrixTerm0 = _mm_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3);
-        __m128 pAffineMatrixTerm3 = _mm_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3);
-        __m128 pAffineMatrixTerm0Incr = _mm_set1_ps(affineMatrix_f6->data[0] * 4);
-        __m128 pAffineMatrixTerm3Incr = _mm_set1_ps(affineMatrix_f6->data[3] * 4);
-        __m128 pRoiLTRB[4];
-        pRoiLTRB[0] = _mm_set1_ps(roiLTRB.ltrbROI.lt.x);
-        pRoiLTRB[1] = _mm_set1_ps(roiLTRB.ltrbROI.lt.y);
-        pRoiLTRB[2] = _mm_set1_ps(roiLTRB.ltrbROI.rb.x);
-        pRoiLTRB[3] = _mm_set1_ps(roiLTRB.ltrbROI.rb.y);
+        __m256 pWeightParams[4], pBilinearCoeffs[4], pSrcBilinearLTyx[2];
+        __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
+        __m256 pAffineMatrixTerm0 = _mm256_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3, affineMatrix_f6->data[0] * 4, affineMatrix_f6->data[0] * 5, affineMatrix_f6->data[0] * 6, affineMatrix_f6->data[0] * 7);
+        __m256 pAffineMatrixTerm3 = _mm256_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3, affineMatrix_f6->data[3] * 4, affineMatrix_f6->data[3] * 5, affineMatrix_f6->data[3] * 6, affineMatrix_f6->data[3] * 7);
+        __m256 pAffineMatrixTerm0Incr = _mm256_set1_ps(affineMatrix_f6->data[0] * 8);
+        __m256 pAffineMatrixTerm3Incr = _mm256_set1_ps(affineMatrix_f6->data[3] * 8);
+        __m256 pRoiLTRB[4];
+        pRoiLTRB[0] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.x);
+        pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
+        pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
+        pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
+        __m256i pxSrcStridesCHW[3];
+        pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
+        pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
+        pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
+        RpptBilinearNbhoodLocsVecLen8 srcLocs;
 
         // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1337,21 +1434,25 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     __m128i pRow;
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pkd3, srcPtrChannel, srcLoc, invalidLoad, pRow);
-                //     rpp_simd_store(rpp_store12_u8pkd3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTempR += vectorIncrementPerChannel;
-                //     dstPtrTempG += vectorIncrementPerChannel;
-                //     dstPtrTempB += vectorIncrementPerChannel;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8s>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    compute_offset_i8_3c_avx(pDst);
+                    rpp_simd_store(rpp_store24_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1370,10 +1471,6 @@ omp_set_dynamic(0);
         {
             Rpp8s *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            Rpp8s *srcPtrChannelR, *srcPtrChannelG, *srcPtrChannelB;
-            srcPtrChannelR = srcPtrChannel;
-            srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
-            srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
 
             for(int i = 0; i < dstDescPtr->h; i++)
             {
@@ -1382,21 +1479,23 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     __m128i pRow[3];
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelR, srcLoc, invalidLoad, pRow[0]);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
-                //     rpp_simd_store(rpp_store12_u8pln3_to_u8pkd3, dstPtrTemp, pRow);
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPkd;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8s>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    compute_offset_i8_3c_avx(pDst);
+                    rpp_simd_store(rpp_store24_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1422,19 +1521,23 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     __m128i pRow;
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
-                //     rpp_simd_load(rpp_generic_nn_load_u8pkd3, srcPtrChannel, srcLoc, invalidLoad, pRow);
-                //     rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTemp, pRow);
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPkd;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8s>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    compute_offset_i8_3c_avx(pDst);
+                    rpp_simd_store(rpp_store24_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1448,7 +1551,56 @@ omp_set_dynamic(0);
         }
 
         // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
-        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp8s *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < dstDescPtr->h; i++)
+            {
+                Rpp8s *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                Rpp32f srcX, srcY;
+                __m256 pSrcX, pSrcY;
+                compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8s>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    compute_offset_i8_3c_avx(pDst);
+                    rpp_simd_store(rpp_store24_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
+                srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
+                for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
+                    compute_warp_affine_src_loc_next_term(vectorLoopCount, srcY, srcX, affineMatrix_f6);
+                }
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRow;
             dstPtrRow = dstPtrChannel;
@@ -1460,27 +1612,23 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
-                __m128 pSrcX, pSrcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
-                pSrcY = _mm_add_ps(_mm_set1_ps(srcY), pAffineMatrixTerm3);
-                pSrcX = _mm_add_ps(_mm_set1_ps(srcX), pAffineMatrixTerm0);
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-                // {
-                //     Rpp8s *dstPtrTempChn, *srcPtrTempChn;
-                //     srcPtrTempChn = srcPtrChannel;
-                //     dstPtrTempChn = dstPtrTemp;
-                //     compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                //     for(int c = 0; c < srcDescPtr->c; c++)
-                //     {
-                //         __m128i pRow;
-                //         rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrTempChn, srcLoc, invalidLoad, pRow);
-                //         rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTempChn, pRow);
-                //         srcPtrTempChn += srcDescPtr->strides.cStride;
-                //         dstPtrTempChn += dstDescPtr->strides.cStride;
-                //     }
-                //     compute_warp_affine_src_loc_next_term_sse(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
-                //     dstPtrTemp += vectorIncrementPerChannel;
-                // }
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[4], pDst;
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_1c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW);
+                    rpp_simd_load(rpp_generic_bilinear_load_1c_avx<Rpp8s>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    compute_offset_i8_1c_avx(pDst);
+                    rpp_simd_store(rpp_store8_f32pln1_to_i8pln1_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    dstPtrTemp += vectorIncrementPerChannel;
+                }
                 srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
                 srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
@@ -1527,6 +1675,27 @@ omp_set_dynamic(0);
         srcPtrChannel = srcPtrImage;
         dstPtrChannel = dstPtrImage;
 
+        Rpp32s vectorIncrementPerChannel = 8;
+        Rpp32s vectorIncrementPkd = 24;
+        Rpp32u alignedLength = dstDescPtr->w & ~7;   // Align dst width to process 8 dst pixels per iteration
+
+        __m256 pWeightParams[4], pBilinearCoeffs[4], pSrcBilinearLTyx[2];
+        __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
+        __m256 pAffineMatrixTerm0 = _mm256_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3, affineMatrix_f6->data[0] * 4, affineMatrix_f6->data[0] * 5, affineMatrix_f6->data[0] * 6, affineMatrix_f6->data[0] * 7);
+        __m256 pAffineMatrixTerm3 = _mm256_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3, affineMatrix_f6->data[3] * 4, affineMatrix_f6->data[3] * 5, affineMatrix_f6->data[3] * 6, affineMatrix_f6->data[3] * 7);
+        __m256 pAffineMatrixTerm0Incr = _mm256_set1_ps(affineMatrix_f6->data[0] * 8);
+        __m256 pAffineMatrixTerm3Incr = _mm256_set1_ps(affineMatrix_f6->data[3] * 8);
+        __m256 pRoiLTRB[4];
+        pRoiLTRB[0] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.x);
+        pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
+        pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
+        pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
+        __m256i pxSrcStridesCHW[3];
+        pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
+        pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
+        pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
+        RpptBilinearNbhoodLocsVecLen8 srcLocs;
+
         // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -1544,7 +1713,33 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                    {
+                        dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
+                        dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
+                        dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
+                srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
@@ -1561,10 +1756,6 @@ omp_set_dynamic(0);
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            Rpp16f *srcPtrChannelR, *srcPtrChannelG, *srcPtrChannelB;
-            srcPtrChannelR = srcPtrChannel;
-            srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
-            srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
 
             for(int i = 0; i < dstDescPtr->h; i++)
             {
@@ -1573,7 +1764,27 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    Rpp32f dstPtrTemp_ps[25];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    for(int cnt = 0; cnt < vectorIncrementPkd; cnt++)
+                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    dstPtrTemp += vectorIncrementPkd;
+                }
+                srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
+                srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -1597,7 +1808,27 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    Rpp32f dstPtrTemp_ps[25];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    for(int cnt = 0; cnt < vectorIncrementPkd; cnt++)
+                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    dstPtrTemp += vectorIncrementPkd;
+                }
+                srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
+                srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -1609,7 +1840,62 @@ omp_set_dynamic(0);
         }
 
         // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
-        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < dstDescPtr->h; i++)
+            {
+                Rpp16f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                Rpp32f srcX, srcY;
+                __m256 pSrcX, pSrcY;
+                compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                    {
+                        dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
+                        dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
+                        dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
+                srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
+                for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
+                    compute_warp_affine_src_loc_next_term(vectorLoopCount, srcY, srcX, affineMatrix_f6);
+                }
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
@@ -1621,7 +1907,27 @@ omp_set_dynamic(0);
 
                 int vectorLoopCount = 0;
                 Rpp32f srcX, srcY;
+                __m256 pSrcX, pSrcY;
                 compute_warp_affine_src_loc(i, vectorLoopCount, srcY, srcX, affineMatrix_f6, roiHalfHeight, roiHalfWidth);
+                pSrcY = _mm256_add_ps(_mm256_set1_ps(srcY), pAffineMatrixTerm3);
+                pSrcX = _mm256_add_ps(_mm256_set1_ps(srcX), pAffineMatrixTerm0);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[4], pDst;
+                    Rpp32f dstPtrTemp_ps[8];
+                    compute_generic_bilinear_weight_params_avx(pSrcY, pSrcX, pSrcBilinearLTyx, pWeightParams);
+                    compute_bilinear_coefficients_avx(pWeightParams, pBilinearCoeffs);
+                    compute_generic_bilinear_srclocs_1c_avx(pSrcBilinearLTyx, srcLocs, pSrcStrideH, pxSrcStridesCHW);
+                    rpp_simd_load(rpp_generic_bilinear_load_1c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store8_f32pln1_to_f32pln1_avx, dstPtrTemp_ps, pDst); // Store dst pixels
+                    compute_warp_affine_src_loc_next_term_avx(pSrcY, pSrcX, pAffineMatrixTerm3Incr, pAffineMatrixTerm0Incr);
+                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    dstPtrTemp += vectorIncrementPerChannel;
+                }
+                srcY += (affineMatrix_f6->data[3] * vectorLoopCount);
+                srcX += (affineMatrix_f6->data[0] * vectorLoopCount);
                 for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);

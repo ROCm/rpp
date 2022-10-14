@@ -3365,6 +3365,18 @@ inline Rpp32f compute_gaussian_noise_1_host(Rpp32f pixVal, RpptXorwowStateBoxMul
     return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
 
+inline void compute_offset_i8_1c_avx(__m256 &p)
+{
+    p = _mm256_add_ps(p, avx_p128);
+}
+
+inline void compute_offset_i8_3c_avx(__m256 *p)
+{
+    compute_offset_i8_1c_avx(p[0]);
+    compute_offset_i8_1c_avx(p[1]);
+    compute_offset_i8_1c_avx(p[2]);
+}
+
 // Compute Functions for RPP Image API
 
 template<typename T>
@@ -4899,7 +4911,19 @@ inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBi
     pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);    // weightedHeight * weightedWidth
 }
 
-inline void compute_generic_bilinear_srclocs_avx(__m256 *pSrcBilinearLTyx, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, Rpp32s srcChannels, bool isSrcPKD3 = false)
+inline void compute_generic_bilinear_srclocs_1c_avx(__m256 *pSrcBilinearLTyx, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW)
+{
+    __m256i pxSrcLocsTL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));
+    __m256i pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[2]);
+    __m256i pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[1]);
+    __m256i pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[2]);
+    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTL.data[0], pxSrcLocsTL);         // Precompute bilinear Top-Left locations
+    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTR.data[0], pxSrcLocsTR);         // Precompute bilinear Top-Right locations
+    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBL.data[0], pxSrcLocsBL);         // Precompute bilinear Bottom-Left locations
+    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBR.data[0], pxSrcLocsBR);         // Precompute bilinear Bottom-Right locations
+}
+
+inline void compute_generic_bilinear_srclocs_3c_avx(__m256 *pSrcBilinearLTyx, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, Rpp32s srcChannels, bool isSrcPKD3 = false)
 {
     if(isSrcPKD3)
         pSrcBilinearLTyx[1] = _mm256_mul_ps(pSrcBilinearLTyx[1], avx_p3);
