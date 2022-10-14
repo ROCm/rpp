@@ -14,7 +14,7 @@
 * Readme Updates
 
 #### Changed
-* CMakeList Updates
+* CMakeList
 
 #### Fixed
 * Minor bugs and warnings
