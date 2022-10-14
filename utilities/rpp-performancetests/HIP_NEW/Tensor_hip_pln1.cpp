@@ -1723,8 +1723,6 @@ int main(int argc, char **argv)
                 roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
                 dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
                 dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/

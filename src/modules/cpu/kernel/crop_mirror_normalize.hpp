@@ -317,7 +317,7 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                         dstPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
                         dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0] - mean[0]) * invStdDev[0])));
@@ -704,7 +704,7 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTemp += vectorIncrement;
                         srcPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         dstPtrTemp[0] = RPPPIXELCHECKF32((srcPtrTemp[0] - mean[0]) * invStdDev[0]);
                         dstPtrTemp[1] = RPPPIXELCHECKF32((srcPtrTemp[1] - mean[1]) * invStdDev[1]);
@@ -742,7 +742,7 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                         dstPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
                         dstPtrTemp[0] = RPPPIXELCHECKF32((srcPtrTemp[0] - mean[0]) * invStdDev[0]);
@@ -1159,7 +1159,7 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                         dstPtrTemp += vectorIncrement;
                         srcPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[0] - mean[0]) * invStdDev[0]);
                         dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[1] - mean[1]) * invStdDev[1]);
@@ -1201,7 +1201,7 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                         dstPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
                         dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[0] - mean[0]) * invStdDev[0]);
@@ -1593,7 +1593,7 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                         dstPtrTemp += vectorIncrement;
                         srcPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(((Rpp32f) (srcPtrTemp[0]) + 128 - mean[0]) * invStdDev[0] - 128);
                         dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(((Rpp32f) (srcPtrTemp[1]) + 128 - mean[1]) * invStdDev[1] - 128);
@@ -1630,7 +1630,7 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                         dstPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
                         dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(((Rpp32f) (srcPtrTemp[0]) + 128 - mean[0]) * invStdDev[0] - 128);
@@ -2042,7 +2042,7 @@ RppStatus crop_mirror_normalize_u8_f32_host_tensor(Rpp8u *srcPtr,
                         dstPtrTemp += vectorIncrement;
                         srcPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         dstPtrTemp[0] = RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[0] - mean[0]) * invStdDev[0]);
                         dstPtrTemp[1] = RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[1] - mean[1]) * invStdDev[1]);
@@ -2082,7 +2082,7 @@ RppStatus crop_mirror_normalize_u8_f32_host_tensor(Rpp8u *srcPtr,
 
                         dstPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
                         dstPtrTemp[0] = RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[0] - mean[0]) * invStdDev[0]);
@@ -2500,7 +2500,7 @@ RppStatus crop_mirror_normalize_u8_f16_host_tensor(Rpp8u *srcPtr,
                         srcPtrTemp += vectorIncrement;
                         dstPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[0] - mean[0]) * invStdDev[0]);
                         dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[1] - mean[1]) * invStdDev[1]);
@@ -2540,7 +2540,7 @@ RppStatus crop_mirror_normalize_u8_f16_host_tensor(Rpp8u *srcPtr,
 
                         dstPtrTemp += vectorIncrement;
                     }
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
                         dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(((Rpp32f)srcPtrTemp[0] - mean[0]) * invStdDev[0]);
