@@ -13,7 +13,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install gcc g++ clang cmake git wg
         ./b2 stage -j16 threading=multi link=shared cxxflags="-std=c++11" && \
         ./b2 install threading=multi link=shared --with-system --with-filesystem && \
         ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" && \
-        ./b2 install threading=multi link=static --with-system --with-filesystem && cd ../ && \
+        ./b2 install threading=multi link=static --with-system --with-filesystem
 # install ROCm for rpp OpenCL/HIP dependency - Level 2
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-dev wget sudo keyboard-configuration &&  \
         wget https://repo.radeon.com/amdgpu-install/5.3/ubuntu/focal/amdgpu-install_5.3.50300-1_all.deb && \
