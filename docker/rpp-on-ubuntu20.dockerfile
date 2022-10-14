@@ -11,9 +11,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install gcc g++ clang cmake git wg
         wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2 && tar xjvf boost_1_72_0.tar.bz2 && \
         cd boost_1_72_0 && ./bootstrap.sh --prefix=/usr/local --with-python=python3 && \
         ./b2 stage -j16 threading=multi link=shared cxxflags="-std=c++11" && \
-        sudo ./b2 install threading=multi link=shared --with-system --with-filesystem && \
+        ./b2 install threading=multi link=shared --with-system --with-filesystem && \
         ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" && \
-        sudo ./b2 install threading=multi link=static --with-system --with-filesystem && cd ../ && \
+        ./b2 install threading=multi link=static --with-system --with-filesystem && cd ../ && \
 # install ROCm for rpp OpenCL/HIP dependency - Level 2
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-dev wget sudo keyboard-configuration &&  \
         wget https://repo.radeon.com/amdgpu-install/5.3/ubuntu/focal/amdgpu-install_5.3.50300-1_all.deb && \
