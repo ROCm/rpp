@@ -4851,14 +4851,14 @@ inline void compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr
 
 inline void compute_generic_bilinear_weight_params(Rpp32f &srcY, Rpp32f &srcX, RppiPoint *srcLT, RppiPoint *srcRB, Rpp32f *weightParams)
 {
-    srcLT->y = (Rpp32s) srcY;
-    srcRB->y = srcLT->y + 1;
-    srcLT->x = (Rpp32s) srcX;
-    srcRB->x = srcLT->x + 1;
-    weightParams[0] = srcY - srcLT->y;
-    weightParams[1] = 1 - weightParams[0];
-    weightParams[2] = srcX - srcLT->x;
-    weightParams[3] = 1 - weightParams[2];
+    srcLT->y = (Rpp32s) srcY;               // Bilinear LT point y value
+    srcRB->y = srcLT->y + 1;                // Bilinear RB point y value
+    srcLT->x = (Rpp32s) srcX;               // Bilinear LT point x value
+    srcRB->x = srcLT->x + 1;                // Bilinear RB point x value
+    weightParams[0] = srcY - srcLT->y;      // weightedHeight
+    weightParams[1] = 1 - weightParams[0];  // 1 - weightedHeight
+    weightParams[2] = srcX - srcLT->x;      // weightedWidth
+    weightParams[3] = 1 - weightParams[2];  // 1 - weightedWidth
 }
 
 inline void compute_bilinear_coefficients(Rpp32f *weightParams, Rpp32f *bilinearCoeffs)
@@ -4946,9 +4946,9 @@ inline void compute_generic_bilinear_srclocs_3c_avx(__m256 *pSrcBilinearLTyx, Rp
 
 inline void compute_generic_nn_srclocs_and_validate_sse(__m128 pSrcY, __m128 pSrcX, __m128 *pRoiLTRB, __m128 pSrcStrideH, Rpp32s *srcLoc, Rpp32s *invalidLoad, bool hasRGBChannels = false)
 {
-    pSrcY = _mm_round_ps(pSrcY, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));
-    pSrcX = _mm_round_ps(pSrcX, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));
-    _mm_storeu_si128((__m128i*) invalidLoad, _mm_cvtps_epi32(_mm_or_ps(
+    pSrcY = _mm_round_ps(pSrcY, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));        // Nearest Neighbor Y location vector
+    pSrcX = _mm_round_ps(pSrcX, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));        // Nearest Neighbor X location vector
+    _mm_storeu_si128((__m128i*) invalidLoad, _mm_cvtps_epi32(_mm_or_ps(                 // Vectorized ROI boundary check
         _mm_or_ps(_mm_cmplt_ps(pSrcX, pRoiLTRB[0]), _mm_cmplt_ps(pSrcY, pRoiLTRB[1])),
         _mm_or_ps(_mm_cmpgt_ps(pSrcX, pRoiLTRB[2]), _mm_cmpgt_ps(pSrcY, pRoiLTRB[3]))
     )));
@@ -4961,8 +4961,8 @@ inline void compute_generic_nn_srclocs_and_validate_sse(__m128 pSrcY, __m128 pSr
 template <typename T>
 inline void compute_generic_nn_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTempR, T *dstPtrTempG, T *dstPtrTempB, T *srcPtrChannel, RpptDescPtr srcDescPtr)
 {
-    srcY = std::round(srcY);
-    srcX = std::round(srcX);
+    srcY = std::round(srcY);    // Nearest Neighbor Y location
+    srcX = std::round(srcX);    // Nearest Neighbor X location
     if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
     {
         *dstPtrTempR = 0;
@@ -4982,8 +4982,8 @@ inline void compute_generic_nn_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp32f sr
 template <typename T>
 inline void compute_generic_nn_interpolation_pkd3_to_pkd3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr)
 {
-    srcY = std::round(srcY);
-    srcX = std::round(srcX);
+    srcY = std::round(srcY);    // Nearest Neighbor Y location
+    srcX = std::round(srcX);    // Nearest Neighbor X location
     if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
     {
         memset(dstPtrTemp, 0, 3 * sizeof(T));
@@ -4999,8 +4999,8 @@ inline void compute_generic_nn_interpolation_pkd3_to_pkd3(Rpp32f srcY, Rpp32f sr
 template <typename T>
 inline void compute_generic_nn_interpolation_pln3_to_pkd3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr)
 {
-    srcY = std::round(srcY);
-    srcX = std::round(srcX);
+    srcY = std::round(srcY);    // Nearest Neighbor Y location
+    srcX = std::round(srcX);    // Nearest Neighbor X location
     if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
     {
         memset(dstPtrTemp, 0, 3 * sizeof(T));
@@ -5020,8 +5020,8 @@ inline void compute_generic_nn_interpolation_pln3_to_pkd3(Rpp32f srcY, Rpp32f sr
 template <typename T>
 inline void compute_generic_nn_interpolation_pln_to_pln(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
-    srcY = std::round(srcY);
-    srcX = std::round(srcX);
+    srcY = std::round(srcY);    // Nearest Neighbor Y location
+    srcX = std::round(srcX);    // Nearest Neighbor X location
     if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
     {
         for(int c = 0; c < srcDescPtr->c; c++)
@@ -5114,14 +5114,14 @@ inline void compute_generic_bilinear_interpolation_pln_to_pln(Rpp32f srcY, Rpp32
 
 inline void compute_warp_affine_src_loc_next_term_sse(__m128 &pSrcY, __m128 &pSrcX, __m128 &pAffineMatrixTerm3Incr, __m128 &pAffineMatrixTerm0Incr)
 {
-    pSrcY = _mm_add_ps(pSrcY, pAffineMatrixTerm3Incr);
-    pSrcX = _mm_add_ps(pSrcX, pAffineMatrixTerm0Incr);
+    pSrcY = _mm_add_ps(pSrcY, pAffineMatrixTerm3Incr);   // Vectorized computation of next 4 src Y locations by adding the delta from previous location
+    pSrcX = _mm_add_ps(pSrcX, pAffineMatrixTerm0Incr);   // Vectorized computation of next 4 src X locations by adding the delta from previous location
 }
 
 inline void compute_warp_affine_src_loc_next_term_avx(__m256 &pSrcY, __m256 &pSrcX, __m256 &pAffineMatrixTerm3Incr, __m256 &pAffineMatrixTerm0Incr)
 {
-    pSrcY = _mm256_add_ps(pSrcY, pAffineMatrixTerm3Incr);
-    pSrcX = _mm256_add_ps(pSrcX, pAffineMatrixTerm0Incr);
+    pSrcY = _mm256_add_ps(pSrcY, pAffineMatrixTerm3Incr);   // Vectorized computation of next 8 src Y locations by adding the delta from previous location
+    pSrcX = _mm256_add_ps(pSrcX, pAffineMatrixTerm0Incr);   // Vectorized computation of next 8 src X locations by adding the delta from previous location
 }
 
 inline void compute_warp_affine_src_loc(Rpp32s dstY, Rpp32s dstX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f6 *affineMatrix_f6, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
@@ -5134,8 +5134,8 @@ inline void compute_warp_affine_src_loc(Rpp32s dstY, Rpp32s dstX, Rpp32f &srcY, 
 
 inline void compute_warp_affine_src_loc_next_term(Rpp32s dstX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f6 *affineMatrix_f6)
 {
-    srcX += affineMatrix_f6->data[0];
-    srcY += affineMatrix_f6->data[3];
+    srcY += affineMatrix_f6->data[3];   // Computation of next src Y locations by adding the delta from previous location
+    srcX += affineMatrix_f6->data[0];   // Computation of next src X locations by adding the delta from previous location
 }
 
 /* Resize helper functions */
