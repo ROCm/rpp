@@ -27,7 +27,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 endif()
 
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/rpp_kernels.h)
-message("-- ${Green}Added custom command for rpp_kernels${ColourReset}")
+message("-- ${Green}${PROJECT_NAME} -- Adding custom commands to rpp_kernels${ColourReset}")
 add_custom_command(
     OUTPUT ${PROJECT_BINARY_DIR}/rpp_kernels.h
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
