@@ -16,7 +16,7 @@ RUN wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
         ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" && \
         ./b2 install threading=multi link=static --with-system --with-filesystem
 # install ROCm for rpp OpenCL/HIP dependency
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y wget sudo install initramfs-tools libnuma-dev keyboard-configuration &&  \
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget sudo initramfs-tools libnuma-dev keyboard-configuration &&  \
         wget https://repo.radeon.com/amdgpu-install/5.3/ubuntu/focal/amdgpu-install_5.3.50300-1_all.deb && \
         sudo apt-get install -y ./amdgpu-install_5.3.50300-1_all.deb && \
         sudo apt-get update -y && \
