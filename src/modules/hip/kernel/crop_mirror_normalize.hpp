@@ -3,37 +3,37 @@
 
 __device__ void cmn_hip_compute(uchar *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = (pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1];
-    pix_f8->f4[1] = (pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1];
+    pix_f8->f4[0] = (pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
+    pix_f8->f4[1] = (pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
 }
 
 __device__ void cmn_hip_compute(uchar *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = (pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1];
-    pix_f8->f4[1] = (pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1];
+    pix_f8->f4[0] = (pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
+    pix_f8->f4[1] = (pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
 }
 
 __device__ void cmn_hip_compute(uchar *srcPtr, uchar *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1]);
 }
 
 __device__ void cmn_hip_compute(float *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
+    pix_f8->f4[0] = (pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
+    pix_f8->f4[1] = (pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
 }
 
 __device__ void cmn_hip_compute(schar *srcPtr, schar *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(((pix_f8->f4[0] + (float4)128) - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]) - (float4)128;
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(((pix_f8->f4[1] + (float4)128) - cmnParams_f8->f4[0]) * cmnParams_f8->f4[1]) - (float4)128;
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] + (float4)128) * cmnParams_f8->f4[0] +  cmnParams_f8->f4[1]) - (float4)128;
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] + (float4)128) * cmnParams_f8->f4[0] +  cmnParams_f8->f4[1]) - (float4)128;
 }
 __device__ void cmn_hip_compute(half *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - cmnParams_f8->f4[0] * (float4) ONE_OVER_255) * cmnParams_f8->f4[1]);
+    pix_f8->f4[0] = (pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
+    pix_f8->f4[1] = (pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
 }
 
 template <typename T, typename U>
@@ -41,8 +41,8 @@ __global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
                                                  uint2 srcStridesNH,
                                                  U *dstPtr,
                                                  uint2 dstStridesNH,
-                                                 float *meanTensor,
-                                                 float *stdDevTensor,
+                                                 float *offsetTensor,
+                                                 float *multiplierTensor,
                                                  unsigned int *mirrorTensor,
                                                  RpptROIPtr roiTensorPtrSrc)
 {
@@ -80,12 +80,12 @@ __global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
 
     int incrementPerImage = id_z * 3;
     d_float8 cmnParamsR_f8, cmnParamsG_f8, cmnParamsB_f8;
-    cmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
-    cmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
-    cmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-    cmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
-    cmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-    cmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+    cmnParamsR_f8.f4[0] = (float4)offsetTensor[incrementPerImage];          // Get offset for R channel
+    cmnParamsR_f8.f4[1] = (float4)multiplierTensor[incrementPerImage];      // Get multiplier for R channel
+    cmnParamsG_f8.f4[0] = (float4)offsetTensor[incrementPerImage + 1];      // Get offset for G channel
+    cmnParamsG_f8.f4[1] = (float4)multiplierTensor[incrementPerImage + 1];  // Get multiplier for G channel
+    cmnParamsB_f8.f4[0] = (float4)offsetTensor[incrementPerImage + 2];      // Get offset for B channel
+    cmnParamsB_f8.f4[1] = (float4)multiplierTensor[incrementPerImage + 2];  // Get multiplier for B channel
 
     cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[0], &cmnParamsR_f8);
     cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[1], &cmnParamsG_f8);
@@ -99,8 +99,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
                                                  U *dstPtr,
                                                  uint3 dstStridesNCH,
                                                  int channelsDst,
-                                                 float *meanTensor,
-                                                 float *stdDevTensor,
+                                                 float *offsetTensor,
+                                                 float *multiplierTensor,
                                                  uint *mirrorTensor,
                                                  RpptROIPtr roiTensorPtrSrc)
 {
@@ -117,8 +117,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     int incrementPerImage = id_z * channelsDst;
     d_float8 pix_f8, cmnParams_f8;
-    cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage];          // Get mean for R channel
-    cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);  // Get (1 / stdDev) for R channel
+    cmnParams_f8.f4[1] = (float4)offsetTensor[incrementPerImage];      // Get offset for R channel
+    cmnParams_f8.f4[0] = (float4)multiplierTensor[incrementPerImage];  // Get multiplier for R channel
 
     if(mirrorTensor[id_z] == 1)
     {
@@ -142,8 +142,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
             srcIdx += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
 
-            cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-            cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
+            cmnParams_f8.f4[1] = (float4)offsetTensor[incrementPerImage + 1];      // Get offset for G channel
+            cmnParams_f8.f4[0] = (float4)multiplierTensor[incrementPerImage + 1];  // Get multiplier for G channel
 
             rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
             cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
@@ -152,8 +152,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
             srcIdx += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
 
-            cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-            cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+            cmnParams_f8.f4[1] = (float4)offsetTensor[incrementPerImage + 2];      // Get offset for B channel
+            cmnParams_f8.f4[0] = (float4)multiplierTensor[incrementPerImage + 2];  // Get multiplier for B channel
 
             rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
             cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
@@ -172,8 +172,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
             srcIdx += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
 
-            cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-            cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
+            cmnParams_f8.f4[1] = (float4)offsetTensor[incrementPerImage + 1];      // Get offset for G channel
+            cmnParams_f8.f4[0] = (float4)multiplierTensor[incrementPerImage + 1];  // Get multiplier for G channel
 
             rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
             cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
@@ -182,8 +182,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
             srcIdx += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
 
-            cmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-            cmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+            cmnParams_f8.f4[1] = (float4)offsetTensor[incrementPerImage + 2];      // Get offset for B channel
+            cmnParams_f8.f4[0] = (float4)multiplierTensor[incrementPerImage + 2];  // Get multiplier for B channel
 
             rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
             cmn_hip_compute(srcPtr, dstPtr, &pix_f8, &cmnParams_f8);
@@ -197,8 +197,8 @@ __global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
                                                        uint2 srcStridesNH,
                                                        U *dstPtr,
                                                        uint3 dstStridesNCH,
-                                                       float *meanTensor,
-                                                       float *stdDevTensor,
+                                                       float *offsetTensor,
+                                                       float *multiplierTensor,
                                                        uint *mirrorTensor,
                                                        RpptROIPtr roiTensorPtrSrc)
 {
@@ -236,12 +236,12 @@ __global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
 
     int incrementPerImage = id_z * 3;
     d_float8 cmnParamsR_f8, cmnParamsG_f8, cmnParamsB_f8;
-    cmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
-    cmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
-    cmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-    cmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
-    cmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-    cmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+    cmnParamsR_f8.f4[0] = (float4)offsetTensor[incrementPerImage];          // Get offset for R channel
+    cmnParamsR_f8.f4[1] = (float4)multiplierTensor[incrementPerImage];      // Get multiplier for R channel
+    cmnParamsG_f8.f4[0] = (float4)offsetTensor[incrementPerImage + 1];      // Get offset for G channel
+    cmnParamsG_f8.f4[1] = (float4)multiplierTensor[incrementPerImage + 1];  // Get multiplier for G channel
+    cmnParamsB_f8.f4[0] = (float4)offsetTensor[incrementPerImage + 2];      // Get offset for B channel
+    cmnParamsB_f8.f4[1] = (float4)multiplierTensor[incrementPerImage + 2];  // Get multiplier for B channel
 
     cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[0], &cmnParamsR_f8);
     cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[1], &cmnParamsG_f8);
@@ -254,8 +254,8 @@ __global__ void crop_mirror_normalize_pln3_pkd3_tensor(T *srcPtr,
                                                        uint3 srcStridesNCH,
                                                        U *dstPtr,
                                                        uint2 dstStridesNH,
-                                                       float *meanTensor,
-                                                       float *stdDevTensor,
+                                                       float *offsetTensor,
+                                                       float *multiplierTensor,
                                                        uint *mirrorTensor,
                                                        RpptROIPtr roiTensorPtrSrc)
 {
@@ -293,12 +293,12 @@ __global__ void crop_mirror_normalize_pln3_pkd3_tensor(T *srcPtr,
 
     int incrementPerImage = id_z * 3;
     d_float8 cmnParamsR_f8, cmnParamsG_f8, cmnParamsB_f8;
-    cmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
-    cmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
-    cmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-    cmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
-    cmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-    cmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+    cmnParamsR_f8.f4[0] = (float4)offsetTensor[incrementPerImage];          // Get offset for R channel
+    cmnParamsR_f8.f4[1] = (float4)multiplierTensor[incrementPerImage];      // Get multiplier for R channel
+    cmnParamsG_f8.f4[0] = (float4)offsetTensor[incrementPerImage + 1];      // Get offset for G channel
+    cmnParamsG_f8.f4[1] = (float4)multiplierTensor[incrementPerImage + 1];  // Get multiplier for G channel
+    cmnParamsB_f8.f4[0] = (float4)offsetTensor[incrementPerImage + 2];      // Get offset for B channel
+    cmnParamsB_f8.f4[1] = (float4)multiplierTensor[incrementPerImage + 2];  // Get multiplier for B channel
 
     cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[0], &cmnParamsR_f8);
     cmn_hip_compute(srcPtr, dstPtr, &pix_f24.f8[1], &cmnParamsG_f8);
