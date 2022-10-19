@@ -493,6 +493,9 @@ int main(int argc, char **argv)
     closedir(dr2);
 
     // Convert inputs to test various other bit depths
+    Rpp32f divisionFactor = 255.0;
+    if(test_case == 38)
+        divisionFactor = 1.0;
 
     if (ip_bitDepth == 1)
     {
@@ -507,8 +510,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp = ((Rpp16f)*inputTemp) / 255.0;
-            *inputf16_secondTemp = ((Rpp16f)*input_secondTemp) / 255.0;
+            *inputf16Temp = ((Rpp16f)*inputTemp) / divisionFactor;
+            *inputf16_secondTemp = ((Rpp16f)*input_secondTemp) / divisionFactor;
             inputTemp++;
             inputf16Temp++;
             input_secondTemp++;
@@ -528,8 +531,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf32Temp = ((Rpp32f)*inputTemp) / 255.0;
-            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / 255.0;
+            *inputf32Temp = ((Rpp32f)*inputTemp) / divisionFactor;
+            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / divisionFactor;
             inputTemp++;
             inputf32Temp++;
             input_secondTemp++;
@@ -1143,11 +1146,16 @@ int main(int argc, char **argv)
         Rpp32f mean[images];
         Rpp32f stdDev[images];
         Rpp32u mirror[images];
+        Rpp32f multiplier[images];
+        Rpp32f offset[images];
+
         for (i = 0; i < images; i++)
         {
             mean[i] = 0.0;
             stdDev[i] = 1.0;
             mirror[i] = 1;
+            multiplier[i] = 1 / stdDev[i];
+            offset[i] = - (mean[i] / stdDev[i]);
         }
 
         // Uncomment to run test case with an xywhROI override
@@ -1175,17 +1183,17 @@ int main(int argc, char **argv)
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
-            rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_crop_mirror_normalize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_crop_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
-            rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf16, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 4)
-            rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf32, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 5)
-            rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1522,7 +1530,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << *outputf16Temp << ",";
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * 255.0);
+                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * divisionFactor);
                 outputf16Temp++;
                 outputTemp++;
             }
@@ -1544,7 +1552,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << *outputf32Temp << ",";
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * 255.0);
+                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * divisionFactor);
                 outputf32Temp++;
                 outputTemp++;
             }

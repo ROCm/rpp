@@ -76,7 +76,6 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
                     }
-
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[incrementPerImage]) + offsetTensor[incrementPerImage])));
@@ -276,7 +275,6 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTemp += vectorIncrement;
                         dstPtrTemp += vectorIncrement;
                     }
-
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[incrementPerImage]) + offsetTensor[incrementPerImage])));
@@ -493,7 +491,6 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
                     }
-
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         *dstPtrTempR = ((srcPtrTemp[0] * multiplierTensor[incrementPerImage]) + offsetTensor[incrementPerImage]);
@@ -914,7 +911,6 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
                     }
-
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         *dstPtrTempR = (Rpp16f) (((Rpp32f)srcPtrTemp[0] * multiplierTensor[incrementPerImage]) + offsetTensor[incrementPerImage]);
@@ -1372,7 +1368,6 @@ RppStatus crop_mirror_normalize_i8_i8_host_tensor(Rpp8s *srcPtr,
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
                     }
-
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8(((Rpp32f) (srcPtrTemp[0]) + 128 * multiplierTensor[incrementPerImage]) + offsetTensor[incrementPerImage] - 128);
@@ -1801,7 +1796,6 @@ RppStatus crop_mirror_normalize_u8_f32_host_tensor(Rpp8u *srcPtr,
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
                     }
-
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         *dstPtrTempR = ((Rpp32f)srcPtrTemp[0] * multiplierTensor[incrementPerImage]) + offsetTensor[incrementPerImage];
@@ -2245,7 +2239,6 @@ RppStatus crop_mirror_normalize_u8_f16_host_tensor(Rpp8u *srcPtr,
                         dstPtrTempG += vectorIncrementPerChannel;
                         dstPtrTempB += vectorIncrementPerChannel;
                     }
-
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         *dstPtrTempR = (Rpp16f) (((Rpp32f)srcPtrTemp[0] * multiplierTensor[incrementPerImage]) + offsetTensor[incrementPerImage]);

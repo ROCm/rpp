@@ -520,6 +520,9 @@ int main(int argc, char **argv)
     closedir(dr2);
 
     // Convert inputs to test various other bit depths and copy to hip buffers
+    Rpp32f divisionFactor = 255.0;
+    if(test_case == 38)
+        divisionFactor = 1.0;
 
     half *inputf16, *inputf16_second, *outputf16;
     Rpp32f *inputf32, *inputf32_second, *outputf32;
@@ -553,8 +556,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp = (half)(((float)*inputTemp) / 255.0);
-            *inputf16_secondTemp = (half)(((float)*input_secondTemp) / 255.0);
+            *inputf16Temp = (half)(((float)*inputTemp) / divisionFactor);
+            *inputf16_secondTemp = (half)(((float)*input_secondTemp) / divisionFactor);
             inputTemp++;
             inputf16Temp++;
             input_secondTemp++;
@@ -585,8 +588,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf32Temp = ((Rpp32f)*inputTemp) / 255.0;
-            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / 255.0;
+            *inputf32Temp = ((Rpp32f)*inputTemp) / divisionFactor;
+            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / divisionFactor;
             inputTemp++;
             inputf32Temp++;
             input_secondTemp++;
@@ -1388,11 +1391,16 @@ int main(int argc, char **argv)
             Rpp32f mean[images];
             Rpp32f stdDev[images];
             Rpp32u mirror[images];
+            Rpp32f multiplier[images];
+            Rpp32f offset[images];
+
             for (i = 0; i < images; i++)
             {
                 mean[i] = 0.0;
                 stdDev[i] = 1.0;
                 mirror[i] = 1;
+                multiplier[i] = 1 / stdDev[i];
+                offset[i] = - (mean[i] / stdDev[i]);
             }
 
             // Uncomment to run test case with an xywhROI override
@@ -1422,17 +1430,17 @@ int main(int argc, char **argv)
             start = clock();
 
             if (ip_bitDepth == 0)
-                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                rppt_crop_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                rppt_crop_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
-                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 4)
-                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 5)
-                rppt_crop_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
