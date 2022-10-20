@@ -4849,38 +4849,32 @@ inline void compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr
 
 /* Generic interpolation helper functions */
 
-inline void compute_generic_bilinear_weight_params(Rpp32f &srcY, Rpp32f &srcX, RppiPoint *srcLT, RppiPoint *srcRB, Rpp32f *weightParams)
-{
-    srcLT->y = (Rpp32s) srcY;               // Bilinear LT point y value
-    srcRB->y = srcLT->y + 1;                // Bilinear RB point y value
-    srcLT->x = (Rpp32s) srcX;               // Bilinear LT point x value
-    srcRB->x = srcLT->x + 1;                // Bilinear RB point x value
-    weightParams[0] = srcY - srcLT->y;      // weightedHeight
-    weightParams[1] = 1 - weightParams[0];  // 1 - weightedHeight
-    weightParams[2] = srcX - srcLT->x;      // weightedWidth
-    weightParams[3] = 1 - weightParams[2];  // 1 - weightedWidth
-}
-
-inline void compute_bilinear_coefficients(Rpp32f *weightParams, Rpp32f *bilinearCoeffs)
-{
-    bilinearCoeffs[0] = weightParams[1] * weightParams[3];    // (1 - weightedHeight) * (1 - weightedWidth)
-    bilinearCoeffs[1] = weightParams[1] * weightParams[2];    // (1 - weightedHeight) * weightedWidth
-    bilinearCoeffs[2] = weightParams[0] * weightParams[3];    // weightedHeight * (1 - weightedWidth)
-    bilinearCoeffs[3] = weightParams[0] * weightParams[2];    // weightedHeight * weightedWidth
-}
-
 template <typename T>
-inline void compute_generic_bilinear_srclocs_and_interpolate(RppiPoint *srcLT, RppiPoint *srcRB, T *srcPtrChannel, RpptDescPtr srcDescPtr, Rpp32f *bilinearCoeffs, T *dst)
+inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, RpptDescPtr srcDescPtr, Rpp32f &srcY, Rpp32f &srcX, T *dst)
 {
+    RppiPoint srcLT, srcRB;
+    Rpp32f weightParams[4], bilinearCoeffs[4];
     Rpp32s srcLoc[4];
-    srcLT->y *= srcDescPtr->strides.hStride;
-    srcRB->y *= srcDescPtr->strides.hStride;
-    srcLT->x *= srcDescPtr->strides.wStride;
-    srcRB->x *= srcDescPtr->strides.wStride;
-    srcLoc[0] = srcLT->y + srcLT->x;
-    srcLoc[1] = srcLT->y + srcRB->x;
-    srcLoc[2] = srcRB->y + srcLT->x;
-    srcLoc[3] = srcRB->y + srcRB->x;
+    srcLT.y = (Rpp32s) srcY;                                    // Bilinear LT point y value
+    srcRB.y = srcLT.y + 1;                                      // Bilinear RB point y value
+    srcLT.x = (Rpp32s) srcX;                                    // Bilinear LT point x value
+    srcRB.x = srcLT.x + 1;                                      // Bilinear RB point x value
+    weightParams[0] = srcY - srcLT.y;                           // weightedHeight
+    weightParams[1] = 1 - weightParams[0];                      // 1 - weightedHeight
+    weightParams[2] = srcX - srcLT.x;                           // weightedWidth
+    weightParams[3] = 1 - weightParams[2];                      // 1 - weightedWidth
+    bilinearCoeffs[0] = weightParams[1] * weightParams[3];      // (1 - weightedHeight) * (1 - weightedWidth)
+    bilinearCoeffs[1] = weightParams[1] * weightParams[2];      // (1 - weightedHeight) * weightedWidth
+    bilinearCoeffs[2] = weightParams[0] * weightParams[3];      // weightedHeight * (1 - weightedWidth)
+    bilinearCoeffs[3] = weightParams[0] * weightParams[2];      // weightedHeight * weightedWidth
+    srcLT.y *= srcDescPtr->strides.hStride;                     // LT Row * hStride
+    srcRB.y *= srcDescPtr->strides.hStride;                     // RB Row * hStride
+    srcLT.x *= srcDescPtr->strides.wStride;                     // LT Col * wStride
+    srcRB.x *= srcDescPtr->strides.wStride;                     // LT Col * wStride
+    srcLoc[0] = srcLT.y + srcLT.x;                              // Left-Top pixel memory location
+    srcLoc[1] = srcLT.y + srcRB.x;                              // Right-Top pixel memory location
+    srcLoc[2] = srcRB.y + srcLT.x;                              // Left-Bottom pixel memory location
+    srcLoc[3] = srcRB.y + srcRB.x;                              // Right-Bottom pixel memory location
 
     for (int c = 0; c < srcDescPtr->c; c++)
     {
@@ -4892,55 +4886,113 @@ inline void compute_generic_bilinear_srclocs_and_interpolate(RppiPoint *srcLT, R
     }
 }
 
-inline void compute_generic_bilinear_weight_params_avx(__m256 &pSrcY, __m256 &pSrcX, __m256 *pSrcBilinearLTyx, __m256 *pWeightParams)
+inline void compute_generic_bilinear_srclocs_1c_avx(__m256 &pSrcY, __m256 &pSrcX, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 *pBilinearCoeffs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW)
 {
-    pSrcBilinearLTyx[0] = _mm256_floor_ps(pSrcY);                   // srcLT->y = (Rpp32s) srcY;
-    pSrcBilinearLTyx[1] = _mm256_floor_ps(pSrcX);                   // srcLT->x = (Rpp32s) srcX;
-    pWeightParams[0] = _mm256_sub_ps(pSrcY, pSrcBilinearLTyx[0]);   // weightParams[0] = srcY - srcLT->y;
-    pWeightParams[1] = _mm256_sub_ps(avx_p1, pWeightParams[0]);     // weightParams[1] = 1 - weightParams[0];
-    pWeightParams[2] = _mm256_sub_ps(pSrcX, pSrcBilinearLTyx[1]);   // weightParams[2] = srcX - srcLT->x;
-    pWeightParams[3] = _mm256_sub_ps(avx_p1, pWeightParams[2]);     // weightParams[3] = 1 - weightParams[2]
+    __m256 pWeightParams[4], pSrcBilinearLTyx[2];
+    pSrcBilinearLTyx[0] = _mm256_floor_ps(pSrcY);                               // srcLT->y = (Rpp32s) srcY;
+    pSrcBilinearLTyx[1] = _mm256_floor_ps(pSrcX);                               // srcLT->x = (Rpp32s) srcX;
+    pWeightParams[0] = _mm256_sub_ps(pSrcY, pSrcBilinearLTyx[0]);               // weightParams[0] = srcY - srcLT->y;
+    pWeightParams[1] = _mm256_sub_ps(avx_p1, pWeightParams[0]);                 // weightParams[1] = 1 - weightParams[0];
+    pWeightParams[2] = _mm256_sub_ps(pSrcX, pSrcBilinearLTyx[1]);               // weightParams[2] = srcX - srcLT->x;
+    pWeightParams[3] = _mm256_sub_ps(avx_p1, pWeightParams[2]);                 // weightParams[3] = 1 - weightParams[2]
+    pBilinearCoeffs[0] = _mm256_mul_ps(pWeightParams[1], pWeightParams[3]);     // (1 - weightedHeight) * (1 - weightedWidth)
+    pBilinearCoeffs[1] = _mm256_mul_ps(pWeightParams[1], pWeightParams[2]);     // (1 - weightedHeight) * weightedWidth
+    pBilinearCoeffs[2] = _mm256_mul_ps(pWeightParams[0], pWeightParams[3]);     // weightedHeight * (1 - weightedWidth)
+    pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);     // weightedHeight * weightedWidth
+    __m256i pxSrcLocsTL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));   // 8 Top-Left memory locations = 8 Top-Left srcYs * hStride + 8 Top-Left srcXs
+    __m256i pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[2]);                                            // 8 Top-Right memory locations = 8 Top-Left memory locations + wStride
+    __m256i pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[1]);                                            // 8 Bottom-Left memory locations = 8 Top-Left memory locations + hStride
+    __m256i pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[2]);                                            // 8 Bottom-Right memory locations = 8 Bottom-Left memory locations + wStride
+    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTL.data[0], pxSrcLocsTL);    // Store precomputed bilinear Top-Left locations
+    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTR.data[0], pxSrcLocsTR);    // Store precomputed bilinear Top-Right locations
+    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBL.data[0], pxSrcLocsBL);    // Store precomputed bilinear Bottom-Left locations
+    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBR.data[0], pxSrcLocsBR);    // Store precomputed bilinear Bottom-Right locations
 }
 
-inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBilinearCoeffs)
+inline void compute_generic_bilinear_srclocs_3c_avx(__m256 &pSrcY, __m256 &pSrcX, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 *pBilinearCoeffs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, Rpp32s srcChannels, bool isSrcPKD3 = false)
 {
-    pBilinearCoeffs[0] = _mm256_mul_ps(pWeightParams[1], pWeightParams[3]);    // (1 - weightedHeight) * (1 - weightedWidth)
-    pBilinearCoeffs[1] = _mm256_mul_ps(pWeightParams[1], pWeightParams[2]);    // (1 - weightedHeight) * weightedWidth
-    pBilinearCoeffs[2] = _mm256_mul_ps(pWeightParams[0], pWeightParams[3]);    // weightedHeight * (1 - weightedWidth)
-    pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);    // weightedHeight * weightedWidth
-}
-
-inline void compute_generic_bilinear_srclocs_1c_avx(__m256 *pSrcBilinearLTyx, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW)
-{
-    __m256i pxSrcLocsTL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));
-    __m256i pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[2]);
-    __m256i pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[1]);
-    __m256i pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[2]);
-    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTL.data[0], pxSrcLocsTL);         // Precompute bilinear Top-Left locations
-    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTR.data[0], pxSrcLocsTR);         // Precompute bilinear Top-Right locations
-    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBL.data[0], pxSrcLocsBL);         // Precompute bilinear Bottom-Left locations
-    _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBR.data[0], pxSrcLocsBR);         // Precompute bilinear Bottom-Right locations
-}
-
-inline void compute_generic_bilinear_srclocs_3c_avx(__m256 *pSrcBilinearLTyx, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, Rpp32s srcChannels, bool isSrcPKD3 = false)
-{
+    __m256 pWeightParams[4], pSrcBilinearLTyx[2];
+    pSrcBilinearLTyx[0] = _mm256_floor_ps(pSrcY);                               // srcLT->y = (Rpp32s) srcY;
+    pSrcBilinearLTyx[1] = _mm256_floor_ps(pSrcX);                               // srcLT->x = (Rpp32s) srcX;
+    pWeightParams[0] = _mm256_sub_ps(pSrcY, pSrcBilinearLTyx[0]);               // weightParams[0] = srcY - srcLT->y;
+    pWeightParams[1] = _mm256_sub_ps(avx_p1, pWeightParams[0]);                 // weightParams[1] = 1 - weightParams[0];
+    pWeightParams[2] = _mm256_sub_ps(pSrcX, pSrcBilinearLTyx[1]);               // weightParams[2] = srcX - srcLT->x;
+    pWeightParams[3] = _mm256_sub_ps(avx_p1, pWeightParams[2]);                 // weightParams[3] = 1 - weightParams[2]
+    pBilinearCoeffs[0] = _mm256_mul_ps(pWeightParams[1], pWeightParams[3]);     // (1 - weightedHeight) * (1 - weightedWidth)
+    pBilinearCoeffs[1] = _mm256_mul_ps(pWeightParams[1], pWeightParams[2]);     // (1 - weightedHeight) * weightedWidth
+    pBilinearCoeffs[2] = _mm256_mul_ps(pWeightParams[0], pWeightParams[3]);     // weightedHeight * (1 - weightedWidth)
+    pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);     // weightedHeight * weightedWidth
     if(isSrcPKD3)
-        pSrcBilinearLTyx[1] = _mm256_mul_ps(pSrcBilinearLTyx[1], avx_p3);
-    __m256i pxSrcLocsTL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));
-    __m256i pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[2]);
-    __m256i pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[1]);
-    __m256i pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[2]);
-
+        pSrcBilinearLTyx[1] = _mm256_mul_ps(pSrcBilinearLTyx[1], avx_p3);       // if pkd3, multiply Left-Top column location by 3
+    __m256i pxSrcLocsTL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));      // 8 Top-Left memory locations = 8 Top-Left srcYs * hStride + 8 Top-Left srcXs
+    __m256i pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[2]);                                               // 8 Top-Right memory locations = 8 Top-Left memory locations + wStride
+    __m256i pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[1]);                                               // 8 Bottom-Left memory locations = 8 Top-Left memory locations + hStride
+    __m256i pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[2]);                                               // 8 Bottom-Right memory locations = 8 Bottom-Left memory locations + wStride
     for (int c = 0; c < srcChannels * 8; c += 8)
     {
-        _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTL.data[c], pxSrcLocsTL);         // Precompute bilinear Top-Left locations
-        _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTR.data[c], pxSrcLocsTR);         // Precompute bilinear Top-Right locations
-        _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBL.data[c], pxSrcLocsBL);         // Precompute bilinear Bottom-Left locations
-        _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBR.data[c], pxSrcLocsBR);         // Precompute bilinear Bottom-Right locations
-        pxSrcLocsTL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[0]);
-        pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTR, pxSrcStridesCHW[0]);
-        pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[0]);
-        pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBR, pxSrcStridesCHW[0]);
+        _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTL.data[c], pxSrcLocsTL);    // Store precomputed bilinear Top-Left locations
+        _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTR.data[c], pxSrcLocsTR);    // Store precomputed bilinear Top-Right locations
+        _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBL.data[c], pxSrcLocsBL);    // Store precomputed bilinear Bottom-Left locations
+        _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBR.data[c], pxSrcLocsBR);    // Store precomputed bilinear Bottom-Right locations
+        pxSrcLocsTL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[0]);            // Increment Top-Left locations by cStride
+        pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTR, pxSrcStridesCHW[0]);            // Increment Top-Right locations by cStride
+        pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[0]);            // Increment Bottom-Left locations by cStride
+        pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBR, pxSrcStridesCHW[0]);            // Increment Bottom-Right locations by cStride
+    }
+}
+
+template <typename T>
+inline void compute_generic_bilinear_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTempR, T *dstPtrTempG, T *dstPtrTempB, T *srcPtrChannel, RpptDescPtr srcDescPtr)
+{
+    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    {
+        *dstPtrTempR = 0;
+        *dstPtrTempG = 0;
+        *dstPtrTempB = 0;
+    }
+    else
+    {
+        T dst[3];
+        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, dst);
+        *dstPtrTempR = dst[0];
+        *dstPtrTempG = dst[1];
+        *dstPtrTempB = dst[2];
+    }
+}
+
+template <typename T>
+inline void compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr)
+{
+    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    {
+        memset(dstPtrTemp, 0, 3 * sizeof(T));
+    }
+    else
+    {
+        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, dstPtrTemp);
+    }
+}
+
+template <typename T>
+inline void compute_generic_bilinear_interpolation_pln_to_pln(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+{
+    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    {
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            *dstPtrTemp = 0;
+            dstPtrTemp += dstDescPtr->strides.cStride;
+        }
+    }
+    else
+    {
+        T dst[3];
+        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, dst);
+        for(int c = 0; c < srcDescPtr->c; c++)
+        {
+            *dstPtrTemp = dst[c];
+            dstPtrTemp += dstDescPtr->strides.cStride;
+        }
     }
 }
 
@@ -5041,101 +5093,6 @@ inline void compute_generic_nn_interpolation_pln_to_pln(Rpp32f srcY, Rpp32f srcX
             dstPtrTemp += dstDescPtr->strides.cStride;
         }
     }
-}
-
-template <typename T>
-inline void compute_generic_bilinear_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTempR, T *dstPtrTempG, T *dstPtrTempB, T *srcPtrChannel, RpptDescPtr srcDescPtr)
-{
-    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
-    {
-        *dstPtrTempR = 0;
-        *dstPtrTempG = 0;
-        *dstPtrTempB = 0;
-    }
-    else
-    {
-        T dst[3];
-        RppiPoint srcLT, srcRB;
-        Rpp32f weightParams[4], bilinearCoeffs[4];
-        compute_generic_bilinear_weight_params(srcY, srcX, &srcLT, &srcRB, weightParams);
-        compute_bilinear_coefficients(weightParams, bilinearCoeffs);
-        compute_generic_bilinear_srclocs_and_interpolate(&srcLT, &srcRB, srcPtrChannel, srcDescPtr, bilinearCoeffs, dst);
-        *dstPtrTempR = dst[0];
-        *dstPtrTempG = dst[1];
-        *dstPtrTempB = dst[2];
-    }
-}
-
-template <typename T>
-inline void compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr)
-{
-    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
-    {
-        memset(dstPtrTemp, 0, 3 * sizeof(T));
-    }
-    else
-    {
-        RppiPoint srcLT, srcRB;
-        Rpp32f weightParams[4], bilinearCoeffs[4];
-        compute_generic_bilinear_weight_params(srcY, srcX, &srcLT, &srcRB, weightParams);
-        compute_bilinear_coefficients(weightParams, bilinearCoeffs);
-        compute_generic_bilinear_srclocs_and_interpolate(&srcLT, &srcRB, srcPtrChannel, srcDescPtr, bilinearCoeffs, dstPtrTemp);
-    }
-}
-
-template <typename T>
-inline void compute_generic_bilinear_interpolation_pln_to_pln(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
-{
-    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
-    {
-        for(int c = 0; c < srcDescPtr->c; c++)
-        {
-            *dstPtrTemp = 0;
-            dstPtrTemp += dstDescPtr->strides.cStride;
-        }
-    }
-    else
-    {
-        T dst[3];
-        RppiPoint srcLT, srcRB;
-        Rpp32f weightParams[4], bilinearCoeffs[4];
-        compute_generic_bilinear_weight_params(srcY, srcX, &srcLT, &srcRB, weightParams);
-        compute_bilinear_coefficients(weightParams, bilinearCoeffs);
-        compute_generic_bilinear_srclocs_and_interpolate(&srcLT, &srcRB, srcPtrChannel, srcDescPtr, bilinearCoeffs, dst);
-        for(int c = 0; c < srcDescPtr->c; c++)
-        {
-            *dstPtrTemp = dst[c];
-            dstPtrTemp += dstDescPtr->strides.cStride;
-        }
-    }
-}
-
-/* Warp affine helper functions */
-
-inline void compute_warp_affine_src_loc_next_term_sse(__m128 &pSrcY, __m128 &pSrcX, __m128 &pAffineMatrixTerm3Incr, __m128 &pAffineMatrixTerm0Incr)
-{
-    pSrcY = _mm_add_ps(pSrcY, pAffineMatrixTerm3Incr);   // Vectorized computation of next 4 src Y locations by adding the delta from previous location
-    pSrcX = _mm_add_ps(pSrcX, pAffineMatrixTerm0Incr);   // Vectorized computation of next 4 src X locations by adding the delta from previous location
-}
-
-inline void compute_warp_affine_src_loc_next_term_avx(__m256 &pSrcY, __m256 &pSrcX, __m256 &pAffineMatrixTerm3Incr, __m256 &pAffineMatrixTerm0Incr)
-{
-    pSrcY = _mm256_add_ps(pSrcY, pAffineMatrixTerm3Incr);   // Vectorized computation of next 8 src Y locations by adding the delta from previous location
-    pSrcX = _mm256_add_ps(pSrcX, pAffineMatrixTerm0Incr);   // Vectorized computation of next 8 src X locations by adding the delta from previous location
-}
-
-inline void compute_warp_affine_src_loc(Rpp32s dstY, Rpp32s dstX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f6 *affineMatrix_f6, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
-{
-    dstX -= roiHalfWidth;
-    dstY -= roiHalfHeight;
-    srcX = std::fma(dstX, affineMatrix_f6->data[0], std::fma(dstY, affineMatrix_f6->data[1], affineMatrix_f6->data[2])) + roiHalfWidth;
-    srcY = std::fma(dstX, affineMatrix_f6->data[3], std::fma(dstY, affineMatrix_f6->data[4], affineMatrix_f6->data[5])) + roiHalfHeight;
-}
-
-inline void compute_warp_affine_src_loc_next_term(Rpp32s dstX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f6 *affineMatrix_f6)
-{
-    srcY += affineMatrix_f6->data[3];   // Computation of next src Y locations by adding the delta from previous location
-    srcX += affineMatrix_f6->data[0];   // Computation of next src X locations by adding the delta from previous location
 }
 
 /* Resize helper functions */
@@ -5309,6 +5266,22 @@ inline void set_zeros_avx(__m256 *pVecs, Rpp32s numVecs)
 {
     for(int i = 0; i < numVecs; i++)
         pVecs[i] = avx_p0;
+}
+
+inline void compute_bilinear_coefficients(Rpp32f *weightParams, Rpp32f *bilinearCoeffs)
+{
+    bilinearCoeffs[0] = weightParams[1] * weightParams[3];    // (1 - weightedHeight) * (1 - weightedWidth)
+    bilinearCoeffs[1] = weightParams[1] * weightParams[2];    // (1 - weightedHeight) * weightedWidth
+    bilinearCoeffs[2] = weightParams[0] * weightParams[3];    // weightedHeight * (1 - weightedWidth)
+    bilinearCoeffs[3] = weightParams[0] * weightParams[2];    // weightedHeight * weightedWidth
+}
+
+inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBilinearCoeffs)
+{
+    pBilinearCoeffs[0] = _mm256_mul_ps(pWeightParams[1], pWeightParams[3]);    // (1 - weightedHeight) * (1 - weightedWidth)
+    pBilinearCoeffs[1] = _mm256_mul_ps(pWeightParams[1], pWeightParams[2]);    // (1 - weightedHeight) * weightedWidth
+    pBilinearCoeffs[2] = _mm256_mul_ps(pWeightParams[0], pWeightParams[3]);    // weightedHeight * (1 - weightedWidth)
+    pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);    // weightedHeight * weightedWidth
 }
 
 template <typename T, typename U>
