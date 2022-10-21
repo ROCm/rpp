@@ -5,7 +5,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "/opt/rocm/rpp/include/rpp.h"
+#include "rpp.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <verbosity = 0/1>\n");
+        printf("\nUsage: ./Tensor_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <verbosity = 0/1>\n");
         return -1;
     }
     if (atoi(argv[5]) != 0)
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
         printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (0:84) = %s", argv[6]);
+        printf("\ncase number (0:86) = %s", argv[6]);
     }
 
     int ip_channel = 1;
@@ -175,6 +175,10 @@ int main(int argc, char **argv)
         strcpy(funcName, "crop_mirror_normalize");
         outputFormatToggle = 0;
         break;
+    case 39:
+        strcpy(funcName, "resize_crop_mirror");
+        outputFormatToggle = 0;
+        break;
     case 40:
         strcpy(funcName, "erode");
         outputFormatToggle = 0;
@@ -187,12 +191,28 @@ int main(int argc, char **argv)
         strcpy(funcName, "box_filter");
         outputFormatToggle = 0;
         break;
+    case 70:
+        strcpy(funcName, "copy");
+        outputFormatToggle = 0;
+        break;
+     case 80:
+        strcpy(funcName, "resize_mirror_normalize");
+        outputFormatToggle = 0;
+        break;
     case 83:
         strcpy(funcName, "gridmask");
         outputFormatToggle = 0;
         break;
     case 84:
         strcpy(funcName, "spatter");
+        outputFormatToggle = 0;
+        break;
+    case 85:
+        strcpy(funcName, "swap_channels");
+        outputFormatToggle = 0;
+        break;
+    case 86:
+        strcpy(funcName, "color_to_greyscale");
         outputFormatToggle = 0;
         break;
     default:
@@ -964,12 +984,112 @@ int main(int argc, char **argv)
             }
             case 1:
             {
-                missingFuncFlag = 1;
+                Rpp32f meanTensor[images];
+                Rpp32f stdDevTensor[images];
+                Rpp32u seed = 1255459;
+                for (i = 0; i < images; i++)
+                {
+                    meanTensor[i] = 0.0f;
+                    stdDevTensor[i] = 0.2f;
+                }
+
+                // Uncomment to run test case with an xywhROI override
+                /*for (i = 0; i < images; i++)
+                {
+                    roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                    roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                }*/
+
+                // Uncomment to run test case with an ltrbROI override
+                /*for (i = 0; i < images; i++)
+                {
+                    roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                    roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                    roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                    roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                }
+                roiTypeSrc = RpptRoiType::LTRB;
+                roiTypeDst = RpptRoiType::LTRB;*/
+
+                hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+                start = clock();
+
+                if (ip_bitDepth == 0)
+                    rppt_gaussian_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, meanTensor, stdDevTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 1)
+                    rppt_gaussian_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, meanTensor, stdDevTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 2)
+                    rppt_gaussian_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, meanTensor, stdDevTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 3)
+                    missingFuncFlag = 1;
+                else if (ip_bitDepth == 4)
+                    missingFuncFlag = 1;
+                else if (ip_bitDepth == 5)
+                    rppt_gaussian_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, meanTensor, stdDevTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 6)
+                    missingFuncFlag = 1;
+                else
+                    missingFuncFlag = 1;
+
                 break;
             }
             case 2:
             {
-                missingFuncFlag = 1;
+                Rpp32f shotNoiseFactorTensor[images];
+                Rpp32u seed = 1255459;
+                for (i = 0; i < images; i++)
+                {
+                    shotNoiseFactorTensor[i] = 80.0f;
+                }
+
+                // Uncomment to run test case with an xywhROI override
+                /*for (i = 0; i < images; i++)
+                {
+                    roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                    roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                }*/
+
+                // Uncomment to run test case with an ltrbROI override
+                /*for (i = 0; i < images; i++)
+                {
+                    roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                    roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                    roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                    roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                }
+                roiTypeSrc = RpptRoiType::LTRB;
+                roiTypeDst = RpptRoiType::LTRB;*/
+
+                hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+                start = clock();
+
+                if (ip_bitDepth == 0)
+                    rppt_shot_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, shotNoiseFactorTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 1)
+                    rppt_shot_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, shotNoiseFactorTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 2)
+                    rppt_shot_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, shotNoiseFactorTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 3)
+                    missingFuncFlag = 1;
+                else if (ip_bitDepth == 4)
+                    missingFuncFlag = 1;
+                else if (ip_bitDepth == 5)
+                    rppt_shot_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, shotNoiseFactorTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 6)
+                    missingFuncFlag = 1;
+                else
+                    missingFuncFlag = 1;
+
                 break;
             }
             default:
@@ -1096,12 +1216,6 @@ int main(int argc, char **argv)
     case 21:
     {
         test_case_name = "resize";
-
-        if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR)
-        {
-            missingFuncFlag = 1;
-            break;
-        }
 
         for (i = 0; i < images; i++)
         {
@@ -1329,6 +1443,68 @@ int main(int argc, char **argv)
 
         break;
     }
+    case 39:
+    {
+        test_case_name = "resize_crop_mirror";
+
+        if (interpolationType != RpptInterpolationType::BILINEAR)
+        {
+            missingFuncFlag = 1;
+            break;
+        }
+
+        Rpp32u mirror[images];
+        for (i = 0; i < images; i++)
+        {
+            mirror[i] = 1;
+        }
+
+        for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+            roiTensorPtrSrc[i].xywhROI.roiWidth = 50;
+            roiTensorPtrSrc[i].xywhROI.roiHeight = 50;
+        }
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+        hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_dstImgSizes, interpolationType, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_resize_crop_mirror_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_resize_crop_mirror_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_resize_crop_mirror_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_dstImgSizes, interpolationType, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
     case 40:
     {
         test_case_name = "erode";
@@ -1475,6 +1651,101 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
             rppt_box_filter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
+    case 70:
+    {
+        test_case_name = "copy";
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+        else if (ip_bitDepth == 1)
+            rppt_copy_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, handle);
+        else if (ip_bitDepth == 2)
+            rppt_copy_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_copy_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
+    case 80:
+    {
+        test_case_name = "resize_mirror_normalize";
+
+        if (interpolationType != RpptInterpolationType::BILINEAR)
+        {
+            missingFuncFlag = 1;
+            break;
+        }
+
+        for (i = 0; i < images; i++)
+        {
+            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+        }
+
+        Rpp32f mean[images];
+        Rpp32f stdDev[images];
+        Rpp32u mirror[images];
+        for (i = 0; i < images; i++)
+        {
+            mean[i] = 100.0;
+            stdDev[i] = 1.0;
+            mirror[i] = 1;
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        // for (i = 0; i < images; i++)
+        // {
+        //     roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+        //     roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+        //     dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+        //     dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        // }
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+        hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
+
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_resize_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_resize_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 4)
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 5)
+            rppt_resize_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else

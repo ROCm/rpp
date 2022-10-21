@@ -7,7 +7,7 @@
 #include <cstring>
 #include <rppdefs.h>
 #include <omp.h>
-#include <half.hpp>
+#include <half/half.hpp>
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 #include "rpp_cpu_simd.hpp"
@@ -15,6 +15,8 @@ typedef halfhpp Rpp16f;
 #define PI                              3.14159265
 #define PI_OVER_180                     0.0174532925
 #define ONE_OVER_255                    0.00392157f
+#define ONE_OVER_256                    0.00390625f
+#define RPP_128_OVER_255                0.50196078431f
 #define RAD(deg)                        (deg * PI / 180)
 #define RPPABS(a)                       ((a < 0) ? (-a) : (a))
 #define RPPMIN2(a,b)                    ((a < b) ? a : b)
@@ -33,6 +35,32 @@ typedef halfhpp Rpp16f;
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 #define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
 #define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
+#define RGB_TO_GREY_WEIGHT_RED          0.299f
+#define RGB_TO_GREY_WEIGHT_GREEN        0.587f
+#define RGB_TO_GREY_WEIGHT_BLUE         0.114f
+#define INTERP_BILINEAR_KERNEL_SIZE     2           // Kernel size needed for Bilinear Interpolation
+#define INTERP_BILINEAR_KERNEL_RADIUS   1.0f        // Kernel radius needed for Bilinear Interpolation
+#define INTERP_BILINEAR_NUM_COEFFS      4           // Number of coefficents needed for Bilinear Interpolation
+#define NEWTON_METHOD_INITIAL_GUESS     0x5f3759df          // Initial guess for Newton Raphson Inverse Square Root
+#define RPP_2POW32                      0x100000000         // (2^32)
+#define RPP_2POW32_INV                  2.3283064e-10f      // (1 / 2^32)
+#define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
+#define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
+#define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
+
+const __m128 xmm_p2Pow32 = _mm_set1_ps(RPP_2POW32);
+const __m128 xmm_p2Pow32Inv = _mm_set1_ps(RPP_2POW32_INV);
+const __m128 xmm_p2Pow32InvDiv2 = _mm_set1_ps(RPP_2POW32_INV_DIV_2);
+const __m128 xmm_p2Pow32InvMul2Pi = _mm_set1_ps(RPP_2POW32_INV_MUL_2PI);
+const __m128 xmm_p2Pow32InvMul2PiDiv2 = _mm_set1_ps(RPP_2POW32_INV_MUL_2PI_DIV_2);
+const __m128i xmm_newtonMethodInitialGuess = _mm_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
+
+const __m256 avx_p2Pow32 = _mm256_set1_ps(RPP_2POW32);
+const __m256 avx_p2Pow32Inv = _mm256_set1_ps(RPP_2POW32_INV);
+const __m256 avx_p2Pow32InvDiv2 = _mm256_set1_ps(RPP_2POW32_INV_DIV_2);
+const __m256 avx_p2Pow32InvMul2Pi = _mm256_set1_ps(RPP_2POW32_INV_MUL_2PI);
+const __m256 avx_p2Pow32InvMul2PiDiv2 = _mm256_set1_ps(RPP_2POW32_INV_MUL_2PI_DIV_2);
+const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
 
 #if __AVX2__
 #define SIMD_FLOAT_VECTOR_LENGTH        8
@@ -40,6 +68,10 @@ typedef halfhpp Rpp16f;
 #define SIMD_FLOAT_VECTOR_LENGTH        4
 #endif
 
+/*Constants used for Gaussian interpolation*/
+// Here sigma is considered as 0.5f
+#define GAUSSCONSTANT1                 -2.0f          // 1 / (sigma * sigma * -1 * 2);
+#define GAUSSCONSTANT2                  0.7978845608028654f // 1 / ((2 * PI)*(1/2) * sigma)
 static uint16_t wyhash16_x;
 
 alignas(64) const Rpp32f sch_mat[16] = {0.701f, -0.299f, -0.300f, 0.0f, -0.587f, 0.413f, -0.588f, 0.0f, -0.114f, -0.114f, 0.886f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
@@ -84,6 +116,90 @@ inline int fastrand()
     return (g_seed>>16)&0x7FFF;
 }
 
+#if !GPU_SUPPORT
+enum class RPPTensorDataType
+{
+    U8 = 0,
+    FP32,
+    FP16,
+    I8,
+};
+
+struct RPPTensorFunctionMetaData
+{
+    RPPTensorDataType _in_type = RPPTensorDataType::U8;
+    RPPTensorDataType _out_type = RPPTensorDataType::U8;
+    RppiChnFormat _in_format = RppiChnFormat::RPPI_CHN_PACKED;
+    RppiChnFormat _out_format = RppiChnFormat::RPPI_CHN_PLANAR;
+    Rpp32u _in_channels = 3;
+
+    RPPTensorFunctionMetaData(RppiChnFormat in_chn_format, RPPTensorDataType in_tensor_type,
+                              RPPTensorDataType out_tensor_type, Rpp32u in_channels,
+                              bool out_format_change) : _in_format(in_chn_format), _in_type(in_tensor_type),
+                                                        _out_type(out_tensor_type), _in_channels(in_channels)
+    {
+        if (out_format_change)
+        {
+            if (_in_format == RPPI_CHN_PLANAR)
+                _out_format = RppiChnFormat::RPPI_CHN_PACKED;
+            else
+                _out_format = RppiChnFormat::RPPI_CHN_PLANAR;
+        }
+        else
+            _out_format = _in_format;
+    }
+};
+#endif // GPU_SUPPORT
+
+// Uses fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
+inline float rpp_host_math_inverse_sqrt_1(float x)
+{
+    float xHalf = 0.5f * x;
+    int i = *(int*)&x;                              // float bits in int
+    i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);     // initial guess for Newton's method
+    x = *(float*)&i;                                // new bits to float
+    x = x * (1.5f - xHalf * x * x);                 // One round of Newton's method
+
+    return x;
+}
+
+// SSE implementation of fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
+inline __m128 rpp_host_math_inverse_sqrt_4_sse(__m128 p)
+{
+    __m128 pHalfNeg;
+    __m128i pxI;
+    pHalfNeg = _mm_mul_ps(_ps_n0p5, p);                                         // float xHalfNeg = -0.5f * x;
+    pxI = *(__m128i *)&p;                                                       // int i = *(int*)&x;
+    pxI = _mm_sub_epi32(xmm_newtonMethodInitialGuess, _mm_srli_epi32(pxI, 1));  // i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);
+    p = *(__m128 *)&pxI;                                                        // x = *(float*)&i;
+    p = _mm_mul_ps(p, _mm_fmadd_ps(p, _mm_mul_ps(p, pHalfNeg), _ps_1p5));       // x = x * (1.5f - xHalf * x * x);
+
+    return p;
+}
+
+// AVX2 implementation of fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
+inline __m256 rpp_host_math_inverse_sqrt_8_avx(__m256 p)
+{
+    __m256 pHalfNeg;
+    __m256i pxI;
+    pHalfNeg = _mm256_mul_ps(_ps_n0p5_avx, p);                                          // float xHalfNeg = -0.5f * x;
+    pxI = *(__m256i *)&p;                                                               // int i = *(int*)&x;
+    pxI = _mm256_sub_epi32(avx_newtonMethodInitialGuess, _mm256_srli_epi32(pxI, 1));    // i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);
+    p = *(__m256 *)&pxI;                                                                // x = *(float*)&i;
+    p = _mm256_mul_ps(p, _mm256_fmadd_ps(p, _mm256_mul_ps(p, pHalfNeg), _ps_1p5_avx));  // x = x * (1.5f - xHalf * x * x);
+
+    return p;
+}
+
+inline Rpp32f rpp_host_math_exp_lim256approx(Rpp32f x)
+{
+  x = 1.0 + x * ONE_OVER_256;
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x; x *= x; x *= x;
+
+  return x;
+}
+
 template<Rpp32s STREAM_SIZE>
 inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState *xorwowInitialState, Rpp32u seed)
 {
@@ -96,92 +212,248 @@ inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState 
     // Loop to initialize STREAM_SIZE xorwow initial states for multi-stream random number generation
     for (int i = 0; i < STREAM_SIZE; i++)
     {
-        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U
-        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U
-        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U
-        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U
-        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U
-        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U
+        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
     }
+}
+
+template<Rpp32s STREAM_SIZE>
+inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream_boxmuller(RpptXorwowStateBoxMuller *xorwowInitialState, Rpp32u seed)
+{
+    Rpp32u xorwowSeedStream[STREAM_SIZE];
+
+    // Loop to initialize seed stream of size STREAM_SIZE based on user seed and offset
+    for (int i = 0; i < STREAM_SIZE; i++)
+        xorwowSeedStream[i] = seed + multiseedStreamOffset[i];
+
+    // Loop to initialize STREAM_SIZE xorwow initial states for multi-stream random number generation
+    for (int i = 0; i < STREAM_SIZE; i++)
+    {
+        xorwowInitialState[i].x[0] = 0x75BCD15 + xorwowSeedStream[i];      // state param x[0] offset 123456789U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[1] = 0x159A55E5 + xorwowSeedStream[i];     // state param x[1] offset 362436069U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[2] = 0x1F123BB5 + xorwowSeedStream[i];     // state param x[2] offset 521288629U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[3] = 0x5491333 + xorwowSeedStream[i];      // state param x[3] offset 88675123U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].x[4] = 0x583F19 + xorwowSeedStream[i];       // state param x[4] offset 5783321U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].counter = 0x64F0C9 + xorwowSeedStream[i];    // state param counter offset 6615241U from Marsaglia, G. (2003). Xorshift RNGs. Journal of Statistical Software, 8(14), 1–6. https://doi.org/10.18637/jss.v008.i14
+        xorwowInitialState[i].boxMullerFlag = 0;
+        xorwowInitialState[i].boxMullerExtra = 0.0f;
+    }
+}
+
+template<typename T>
+inline void rpp_host_rng_xorwow_state_offsetted_avx(T *xorwowInitialStatePtr, T &xorwowState, Rpp32u offset, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter)
+{
+    xorwowState = xorwowInitialStatePtr[0];
+    xorwowState.x[0] = xorwowInitialStatePtr[0].x[0] + offset;
+
+    __m256i pxOffset = _mm256_set1_epi32(offset);
+    pxXorwowStateX[0] = _mm256_add_epi32(_mm256_setr_epi32(xorwowInitialStatePtr[0].x[0], xorwowInitialStatePtr[1].x[0], xorwowInitialStatePtr[2].x[0], xorwowInitialStatePtr[3].x[0], xorwowInitialStatePtr[4].x[0], xorwowInitialStatePtr[5].x[0], xorwowInitialStatePtr[6].x[0], xorwowInitialStatePtr[7].x[0]), pxOffset);
+    pxXorwowStateX[1] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[1], xorwowInitialStatePtr[1].x[1], xorwowInitialStatePtr[2].x[1], xorwowInitialStatePtr[3].x[1], xorwowInitialStatePtr[4].x[1], xorwowInitialStatePtr[5].x[1], xorwowInitialStatePtr[6].x[1], xorwowInitialStatePtr[7].x[1]);
+    pxXorwowStateX[2] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[2], xorwowInitialStatePtr[1].x[2], xorwowInitialStatePtr[2].x[2], xorwowInitialStatePtr[3].x[2], xorwowInitialStatePtr[4].x[2], xorwowInitialStatePtr[5].x[2], xorwowInitialStatePtr[6].x[2], xorwowInitialStatePtr[7].x[2]);
+    pxXorwowStateX[3] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[3], xorwowInitialStatePtr[1].x[3], xorwowInitialStatePtr[2].x[3], xorwowInitialStatePtr[3].x[3], xorwowInitialStatePtr[4].x[3], xorwowInitialStatePtr[5].x[3], xorwowInitialStatePtr[6].x[3], xorwowInitialStatePtr[7].x[3]);
+    pxXorwowStateX[4] = _mm256_setr_epi32(xorwowInitialStatePtr[0].x[4], xorwowInitialStatePtr[1].x[4], xorwowInitialStatePtr[2].x[4], xorwowInitialStatePtr[3].x[4], xorwowInitialStatePtr[4].x[4], xorwowInitialStatePtr[5].x[4], xorwowInitialStatePtr[6].x[4], xorwowInitialStatePtr[7].x[4]);
+    *pxXorwowStateCounter = _mm256_setr_epi32(xorwowInitialStatePtr[0].counter, xorwowInitialStatePtr[1].counter, xorwowInitialStatePtr[2].counter, xorwowInitialStatePtr[3].counter, xorwowInitialStatePtr[4].counter, xorwowInitialStatePtr[5].counter, xorwowInitialStatePtr[6].counter, xorwowInitialStatePtr[7].counter);
+}
+
+template<typename T>
+inline void rpp_host_rng_xorwow_state_offsetted_sse(T *xorwowInitialStatePtr, T &xorwowState, Rpp32u offset, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter)
+{
+    xorwowState = xorwowInitialStatePtr[0];
+    xorwowState.x[0] = xorwowInitialStatePtr[0].x[0] + offset;
+
+    __m128i pxOffset = _mm_set1_epi32(offset);
+    pxXorwowStateX[0] = _mm_add_epi32(_mm_setr_epi32(xorwowInitialStatePtr[0].x[0], xorwowInitialStatePtr[1].x[0], xorwowInitialStatePtr[2].x[0], xorwowInitialStatePtr[3].x[0]), pxOffset);
+    pxXorwowStateX[1] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[1], xorwowInitialStatePtr[1].x[1], xorwowInitialStatePtr[2].x[1], xorwowInitialStatePtr[3].x[1]);
+    pxXorwowStateX[2] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[2], xorwowInitialStatePtr[1].x[2], xorwowInitialStatePtr[2].x[2], xorwowInitialStatePtr[3].x[2]);
+    pxXorwowStateX[3] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[3], xorwowInitialStatePtr[1].x[3], xorwowInitialStatePtr[2].x[3], xorwowInitialStatePtr[3].x[3]);
+    pxXorwowStateX[4] = _mm_setr_epi32(xorwowInitialStatePtr[0].x[4], xorwowInitialStatePtr[1].x[4], xorwowInitialStatePtr[2].x[4], xorwowInitialStatePtr[3].x[4]);
+    *pxXorwowStateCounter = _mm_setr_epi32(xorwowInitialStatePtr[0].counter, xorwowInitialStatePtr[1].counter, xorwowInitialStatePtr[2].counter, xorwowInitialStatePtr[3].counter);
+}
+
+inline void rpp_host_rng_xorwow_8_state_update_avx(__m256i *pxXorwowStateXParam, __m256i *pxXorwowStateCounterParam)
+{
+    // Initialize avx-xorwow specific constants
+    __m256i pxXorwowCounterInc = _mm256_set1_epi32(XORWOW_COUNTER_INC);
+
+    // Save current first and last x-params of xorwow state and compute pxT
+    __m256i pxT = pxXorwowStateXParam[0];                                                           // uint t  = xorwowState->x[0];
+    __m256i pxS = pxXorwowStateXParam[4];                                                           // uint s  = xorwowState->x[4];
+    pxT = _mm256_xor_si256(pxT, _mm256_srli_epi32(pxT, 2));                                         // t ^= t >> 2;
+    pxT = _mm256_xor_si256(pxT, _mm256_slli_epi32(pxT, 1));                                         // t ^= t << 1;
+    pxT = _mm256_xor_si256(pxT, _mm256_xor_si256(pxS, _mm256_slli_epi32(pxS, 4)));                  // t ^= s ^ (s << 4);
+
+    // Update all 6 xorwow state params
+    pxXorwowStateXParam[0] = pxXorwowStateXParam[1];                                                // xorwowState->x[0] = xorwowState->x[1];
+    pxXorwowStateXParam[1] = pxXorwowStateXParam[2];                                                // xorwowState->x[1] = xorwowState->x[2];
+    pxXorwowStateXParam[2] = pxXorwowStateXParam[3];                                                // xorwowState->x[2] = xorwowState->x[3];
+    pxXorwowStateXParam[3] = pxXorwowStateXParam[4];                                                // xorwowState->x[3] = xorwowState->x[4];
+    pxXorwowStateXParam[4] = pxT;                                                                   // xorwowState->x[4] = t;
+    *pxXorwowStateCounterParam = _mm256_add_epi32(*pxXorwowStateCounterParam, pxXorwowCounterInc);  // xorwowState->counter += XORWOW_COUNTER_INC;
+}
+
+inline __m256i rpp_host_rng_xorwow_8_u32_avx(__m256i *pxXorwowStateXParam, __m256i *pxXorwowStateCounterParam)
+{
+    // Update xorwow state
+    rpp_host_rng_xorwow_8_state_update_avx(pxXorwowStateXParam, pxXorwowStateCounterParam);
+
+    // Return u32 random number
+    return  _mm256_add_epi32(pxXorwowStateXParam[4], *pxXorwowStateCounterParam);   // return x[4] + counter
 }
 
 inline __m256 rpp_host_rng_xorwow_8_f32_avx(__m256i *pxXorwowStateXParam, __m256i *pxXorwowStateCounterParam)
 {
+    // Update xorwow state
+    rpp_host_rng_xorwow_8_state_update_avx(pxXorwowStateXParam, pxXorwowStateCounterParam);
+
     // Initialize avx-xorwow specific constants
-    __m256i pxFFFFFFFF = _mm256_set1_epi32(0xFFFFFFFF);
     __m256i px7FFFFF = _mm256_set1_epi32(0x7FFFFF);
-    __m256i pxXorwowCounterInc = _mm256_set1_epi32(XORWOW_COUNTER_INC);
     __m256i pxExponentFloat = _mm256_set1_epi32(XORWOW_EXPONENT_MASK);
 
+    // Create float representation and return 0 <= pxS < 1
+    __m256i pxS = _mm256_or_si256(pxExponentFloat, _mm256_and_si256(_mm256_add_epi32(pxXorwowStateXParam[4], *pxXorwowStateCounterParam), px7FFFFF));   // uint out = (XORWOW_EXPONENT_MASK | ((xorwowState->x[4] + xorwowState->counter) & 0x7FFFFF));
+    return _mm256_sub_ps(*(__m256 *)&pxS, avx_p1);                                                                                                      // return  *(float *)&out - 1;
+}
+
+inline void rpp_host_rng_xorwow_4_state_update_sse(__m128i *pxXorwowStateXParam, __m128i *pxXorwowStateCounterParam)
+{
+    // Initialize sse-xorwow specific constants
+    __m128i pxXorwowCounterInc = _mm_set1_epi32(XORWOW_COUNTER_INC);
+
     // Save current first and last x-params of xorwow state and compute pxT
-    __m256i pxT = pxXorwowStateXParam[0];                                                                                           // uint t  = xorwowState->x[0];
-    __m256i pxS = pxXorwowStateXParam[4];                                                                                           // uint s  = xorwowState->x[4];
-    pxT = _mm256_xor_si256(pxT, _mm256_srli_epi32(pxT, 2));                                                                         // t ^= t >> 2;
-    pxT = _mm256_xor_si256(pxT, _mm256_slli_epi32(pxT, 1));                                                                         // t ^= t << 1;
-    pxT = _mm256_xor_si256(pxT, _mm256_xor_si256(pxS, _mm256_slli_epi32(pxS, 4)));                                                  // t ^= s ^ (s << 4);
+    __m128i pxT = pxXorwowStateXParam[0];                                                       // uint t  = xorwowState->x[0];
+    __m128i pxS = pxXorwowStateXParam[4];                                                       // uint s  = xorwowState->x[4];
+    pxT = _mm_xor_si128(pxT, _mm_srli_epi32(pxT, 2));                                           // t ^= t >> 2;
+    pxT = _mm_xor_si128(pxT, _mm_slli_epi32(pxT, 1));                                           // t ^= t << 1;
+    pxT = _mm_xor_si128(pxT, _mm_xor_si128(pxS, _mm_slli_epi32(pxS, 4)));                       // t ^= s ^ (s << 4);
 
     // Update all 6 xorwow state params
-    pxXorwowStateXParam[0] = pxXorwowStateXParam[1];                                                                                // xorwowState->x[0] = xorwowState->x[1];
-    pxXorwowStateXParam[1] = pxXorwowStateXParam[2];                                                                                // xorwowState->x[1] = xorwowState->x[2];
-    pxXorwowStateXParam[2] = pxXorwowStateXParam[3];                                                                                // xorwowState->x[2] = xorwowState->x[3];
-    pxXorwowStateXParam[3] = pxXorwowStateXParam[4];                                                                                // xorwowState->x[3] = xorwowState->x[4];
-    pxXorwowStateXParam[4] = pxT;                                                                                                   // xorwowState->x[4] = t;
-    *pxXorwowStateCounterParam = _mm256_and_si256(_mm256_add_epi32(*pxXorwowStateCounterParam, pxXorwowCounterInc), pxFFFFFFFF);    // xorwowState->counter = (xorwowState->counter + XORWOW_COUNTER_INC) & 0xFFFFFFFF;
+    pxXorwowStateXParam[0] = pxXorwowStateXParam[1];                                            // xorwowState->x[0] = xorwowState->x[1];
+    pxXorwowStateXParam[1] = pxXorwowStateXParam[2];                                            // xorwowState->x[1] = xorwowState->x[2];
+    pxXorwowStateXParam[2] = pxXorwowStateXParam[3];                                            // xorwowState->x[2] = xorwowState->x[3];
+    pxXorwowStateXParam[3] = pxXorwowStateXParam[4];                                            // xorwowState->x[3] = xorwowState->x[4];
+    pxXorwowStateXParam[4] = pxT;                                                               // xorwowState->x[4] = t;
+    *pxXorwowStateCounterParam = _mm_add_epi32(*pxXorwowStateCounterParam, pxXorwowCounterInc); // xorwowState->counter += XORWOW_COUNTER_INC;
+}
 
-    // Create float representation and return 0 <= pxS < 1
-    pxS = _mm256_or_si256(pxExponentFloat, _mm256_and_si256(_mm256_add_epi32(pxT, *pxXorwowStateCounterParam), px7FFFFF));          // uint out = (XORWOW_EXPONENT_MASK | ((t + xorwowState->counter) & 0x7FFFFF));
-    return _mm256_sub_ps(*(__m256 *)&pxS, avx_p1);                                                                                  // return  *(float *)&out - 1;
+inline __m128i rpp_host_rng_xorwow_4_u32_sse(__m128i *pxXorwowStateXParam, __m128i *pxXorwowStateCounterParam)
+{
+    // Update xorwow state
+    rpp_host_rng_xorwow_4_state_update_sse(pxXorwowStateXParam, pxXorwowStateCounterParam);
+
+    // Return u32 random number
+    return  _mm_add_epi32(pxXorwowStateXParam[4], *pxXorwowStateCounterParam);   // return x[4] + counter
 }
 
 inline __m128 rpp_host_rng_xorwow_4_f32_sse(__m128i *pxXorwowStateXParam, __m128i *pxXorwowStateCounterParam)
 {
+    // Update xorwow state
+    rpp_host_rng_xorwow_4_state_update_sse(pxXorwowStateXParam, pxXorwowStateCounterParam);
+
     // Initialize sse-xorwow specific constants
-    __m128i pxFFFFFFFF = _mm_set1_epi32(0xFFFFFFFF);
     __m128i px7FFFFF = _mm_set1_epi32(0x7FFFFF);
-    __m128i pxXorwowCounterInc = _mm_set1_epi32(XORWOW_COUNTER_INC);
     __m128i pxExponentFloat = _mm_set1_epi32(XORWOW_EXPONENT_MASK);
 
-    // Save current first and last x-params of xorwow state and compute pxT
-    __m128i pxT = pxXorwowStateXParam[0];                                                                                           // uint t  = xorwowState->x[0];
-    __m128i pxS = pxXorwowStateXParam[4];                                                                                           // uint s  = xorwowState->x[4];
-    pxT = _mm_xor_si128(pxT, _mm_srli_epi32(pxT, 2));                                                                               // t ^= t >> 2;
-    pxT = _mm_xor_si128(pxT, _mm_slli_epi32(pxT, 1));                                                                               // t ^= t << 1;
-    pxT = _mm_xor_si128(pxT, _mm_xor_si128(pxS, _mm_slli_epi32(pxS, 4)));                                                           // t ^= s ^ (s << 4);
-
-    // Update all 6 xorwow state params
-    pxXorwowStateXParam[0] = pxXorwowStateXParam[1];                                                                                // xorwowState->x[0] = xorwowState->x[1];
-    pxXorwowStateXParam[1] = pxXorwowStateXParam[2];                                                                                // xorwowState->x[1] = xorwowState->x[2];
-    pxXorwowStateXParam[2] = pxXorwowStateXParam[3];                                                                                // xorwowState->x[2] = xorwowState->x[3];
-    pxXorwowStateXParam[3] = pxXorwowStateXParam[4];                                                                                // xorwowState->x[3] = xorwowState->x[4];
-    pxXorwowStateXParam[4] = pxT;                                                                                                   // xorwowState->x[4] = t;
-    *pxXorwowStateCounterParam = _mm_and_si128(_mm_add_epi32(*pxXorwowStateCounterParam, pxXorwowCounterInc), pxFFFFFFFF);          // xorwowState->counter = (xorwowState->counter + XORWOW_COUNTER_INC) & 0xFFFFFFFF;
-
     // Create float representation and return 0 <= pxS < 1
-    pxS = _mm_or_si128(pxExponentFloat, _mm_and_si128(_mm_add_epi32(pxT, *pxXorwowStateCounterParam), px7FFFFF));                   // uint out = (XORWOW_EXPONENT_MASK | ((t + xorwowState->counter) & 0x7FFFFF));
-    return _mm_sub_ps(*(__m128 *)&pxS, xmm_p1);                                                                                     // return  *(float *)&out - 1;
+    __m128i pxS = _mm_or_si128(pxExponentFloat, _mm_and_si128(_mm_add_epi32(pxXorwowStateXParam[4], *pxXorwowStateCounterParam), px7FFFFF));    // uint out = (XORWOW_EXPONENT_MASK | ((xorwowState->x[4] + xorwowState->counter) & 0x7FFFFF));
+    return _mm_sub_ps(*(__m128 *)&pxS, xmm_p1);                                                                                                 // return  *(float *)&out - 1;
 }
 
-inline float rpp_host_rng_xorwow_f32(RpptXorwowState *xorwowState)
+template<typename T>
+inline void rpp_host_rng_xorwow_state_update(T *xorwowState)
 {
     // Save current first and last x-params of xorwow state and compute t
-    uint t  = xorwowState->x[0];
-    uint s  = xorwowState->x[4];
+    Rpp32s t  = xorwowState->x[0];
+    Rpp32s s  = xorwowState->x[4];
     t ^= t >> 2;
     t ^= t << 1;
     t ^= s ^ (s << 4);
 
     // Update all 6 xorwow state params
-    xorwowState->x[0] = xorwowState->x[1];                                              // set new state param x[0]
-    xorwowState->x[1] = xorwowState->x[2];                                              // set new state param x[1]
-    xorwowState->x[2] = xorwowState->x[3];                                              // set new state param x[2]
-    xorwowState->x[3] = xorwowState->x[4];                                              // set new state param x[3]
-    xorwowState->x[4] = t;                                                              // set new state param x[4]
-    xorwowState->counter = (xorwowState->counter + XORWOW_COUNTER_INC) & 0xFFFFFFFF;    // set new state param counter
+    xorwowState->x[0] = xorwowState->x[1];                              // set new state param x[0]
+    xorwowState->x[1] = xorwowState->x[2];                              // set new state param x[1]
+    xorwowState->x[2] = xorwowState->x[3];                              // set new state param x[2]
+    xorwowState->x[3] = xorwowState->x[4];                              // set new state param x[3]
+    xorwowState->x[4] = t;                                              // set new state param x[4]
+    xorwowState->counter = xorwowState->counter + XORWOW_COUNTER_INC;   // set new state param counter
+}
+
+template<typename T>
+inline Rpp32u rpp_host_rng_xorwow_u32(T *xorwowState)
+{
+    // Update xorwow state
+    rpp_host_rng_xorwow_state_update(xorwowState);
+
+    // Return u32 random number
+    return  xorwowState->x[4] + xorwowState->counter;   // return x[4] + counter
+}
+
+template<typename T>
+inline Rpp32f rpp_host_rng_xorwow_f32(T *xorwowState)
+{
+    // Update xorwow state
+    rpp_host_rng_xorwow_state_update(xorwowState);
 
     // Create float representation and return 0 <= outFloat < 1
-    uint out = (XORWOW_EXPONENT_MASK | ((t + xorwowState->counter) & 0x7FFFFF));        // bitmask 23 mantissa bits, OR with exponent
-    float outFloat = *(float *)&out;                                                    // reinterpret out as float
-    return  outFloat - 1;                                                               // return 0 <= outFloat < 1
+    Rpp32u out = (XORWOW_EXPONENT_MASK | ((xorwowState->x[4] + xorwowState->counter) & 0x7FFFFF));  // bitmask 23 mantissa bits, OR with exponent
+    Rpp32f outFloat = *(Rpp32f *)&out;                                                              // reinterpret out as float
+    return  outFloat - 1;                                                                           // return 0 <= outFloat < 1
+}
+
+inline void rpp_host_rng_16_gaussian_f32_avx(__m256 *pRngVals, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter)
+{
+    __m256 pU, pV, pS;                                                                                  // Rpp32f u, v, s;
+    pU = _mm256_cvtepi32_ps(rpp_host_rng_xorwow_8_u32_avx(pxXorwowStateX, pxXorwowStateCounter));       // u = (Rpp32f)rpp_host_rng_xorwow_u32(xorwowState);
+    pV = _mm256_cvtepi32_ps(rpp_host_rng_xorwow_8_u32_avx(pxXorwowStateX, pxXorwowStateCounter));       // v = (Rpp32f)rpp_host_rng_xorwow_u32(xorwowState);
+    pS = _mm256_cmp_ps(pU, avx_p0, _CMP_LT_OQ);                                                         // Adjust int32 out of bound values in float for u
+    pU = _mm256_or_ps(_mm256_andnot_ps(pS, pU), _mm256_and_ps(pS, _mm256_add_ps(avx_p2Pow32, pU)));     // Adjust int32 out of bound values in float for u
+    pS = _mm256_cmp_ps(pV, avx_p0, _CMP_LT_OQ);                                                         // Adjust int32 out of bound values in float for v
+    pV = _mm256_or_ps(_mm256_andnot_ps(pS, pV), _mm256_and_ps(pS, _mm256_add_ps(avx_p2Pow32, pV)));     // Adjust int32 out of bound values in float for v
+    pU = _mm256_fmadd_ps(pU, avx_p2Pow32Inv, avx_p2Pow32InvDiv2);                                       // u = u * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
+    pV = _mm256_fmadd_ps(pV, avx_p2Pow32InvMul2Pi, avx_p2Pow32InvMul2PiDiv2);                           // v = v * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
+    pS = _mm256_sqrt_ps(_mm256_mul_ps(avx_pm2, log_ps(pU)));                                            // s = sqrt(-2.0f * std::log(u));
+    sincos_ps(pV, &pU, &pV);                                                                            // std::sin(v) and std::cos(v) computation
+    pRngVals[0] = _mm256_mul_ps(pU, pS);                                                                // u = std::sin(v) * s;
+    pRngVals[1] = _mm256_mul_ps(pV, pS);                                                                // v = std::cos(v) * s;
+}
+
+inline void rpp_host_rng_8_gaussian_f32_sse(__m128 *pRngVals, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter)
+{
+    __m128 pU, pV, pS;                                                                          // Rpp32f u, v, s;
+    pU = _mm_cvtepi32_ps(rpp_host_rng_xorwow_4_u32_sse(pxXorwowStateX, pxXorwowStateCounter));  // u = (Rpp32f)rpp_host_rng_xorwow_u32(xorwowState);
+    pV = _mm_cvtepi32_ps(rpp_host_rng_xorwow_4_u32_sse(pxXorwowStateX, pxXorwowStateCounter));  // v = (Rpp32f)rpp_host_rng_xorwow_u32(xorwowState);
+    pS = _mm_cmplt_ps(pU, xmm_p0);                                                              // Adjust int32 out of bound values in float for u
+    pU = _mm_or_ps(_mm_andnot_ps(pS, pU), _mm_and_ps(pS, _mm_add_ps(xmm_p2Pow32, pU)));         // Adjust int32 out of bound values in float for u
+    pS = _mm_cmplt_ps(pV, xmm_p0);                                                              // Adjust int32 out of bound values in float for v
+    pV = _mm_or_ps(_mm_andnot_ps(pS, pV), _mm_and_ps(pS, _mm_add_ps(xmm_p2Pow32, pV)));         // Adjust int32 out of bound values in float for v
+    pU = _mm_fmadd_ps(pU, xmm_p2Pow32Inv, xmm_p2Pow32InvDiv2);                                  // u = u * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
+    pV = _mm_fmadd_ps(pV, xmm_p2Pow32InvMul2Pi, xmm_p2Pow32InvMul2PiDiv2);                      // v = v * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
+    pS = _mm_sqrt_ps(_mm_mul_ps(xmm_pm2, log_ps(pU)));                                          // s = sqrt(-2.0f * std::log(u));
+    sincos_ps(pV, &pU, &pV);                                                                    // std::sin(v) and std::cos(v) computation
+    pRngVals[0] = _mm_mul_ps(pU, pS);                                                           // u = std::sin(v) * s;
+    pRngVals[1] = _mm_mul_ps(pV, pS);                                                           // v = std::cos(v) * s;
+}
+
+inline float rpp_host_rng_1_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
+{
+    if(!xorwowState->boxMullerFlag)
+    {
+        Rpp32f u, v, s;
+        u = (Rpp32f)rpp_host_rng_xorwow_u32(xorwowState) * RPP_2POW32_INV + RPP_2POW32_INV_DIV_2;
+        v = (Rpp32f)rpp_host_rng_xorwow_u32(xorwowState) * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
+        s = sqrt(-2.0f * std::log(u));
+        u = std::sin(v) * s;
+        v = std::cos(v) * s;
+        xorwowState->boxMullerExtra = v;
+        xorwowState->boxMullerFlag = 1;
+        return u;
+    }
+    xorwowState->boxMullerFlag = 0;
+
+    return xorwowState->boxMullerExtra;
 }
 
 inline int power_function(int a, int b)
@@ -190,6 +462,26 @@ inline int power_function(int a, int b)
     for(int i = 0; i < b; i++)
         product *= product * a;
     return product;
+}
+
+inline void saturate_pixel(Rpp32f pixel, Rpp8u* dst)
+{
+    *dst = RPPPIXELCHECK(pixel);
+}
+
+inline void saturate_pixel(Rpp32f pixel, Rpp8s* dst)
+{
+    *dst = (Rpp8s)RPPPIXELCHECKI8(pixel - 128);
+}
+
+inline void saturate_pixel(Rpp32f pixel, Rpp32f* dst)
+{
+    *dst = (Rpp32f)pixel;
+}
+
+inline void saturate_pixel(Rpp32f pixel, Rpp16f* dst)
+{
+    *dst = (Rpp16f)pixel;
 }
 
 template <typename T>
@@ -2108,6 +2400,42 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline void compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
+    p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pRMNParams[2]), pRMNParams[3]);
+    p[2] = _mm256_mul_ps(_mm256_sub_ps(p[2], pRMNParams[4]), pRMNParams[5]);
+}
+
+inline void compute_rmn_8_host(__m256 *p, __m256 *pRMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
+}
+
+inline void compute_color_48_to_greyscale_16_host(__m256 *p, __m256 *pChannelWeights)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pChannelWeights[0], _mm256_fmadd_ps(p[2], pChannelWeights[1], _mm256_mul_ps(p[4], pChannelWeights[2])));
+    p[1] = _mm256_fmadd_ps(p[1], pChannelWeights[0], _mm256_fmadd_ps(p[3], pChannelWeights[1], _mm256_mul_ps(p[5], pChannelWeights[2])));
+}
+
+inline void compute_color_48_to_greyscale_16_host(__m128 *p, __m128 *pChannelWeights)
+{
+    p[0] = _mm_fmadd_ps(p[0], pChannelWeights[0], _mm_fmadd_ps(p[4], pChannelWeights[1], _mm_mul_ps(p[8], pChannelWeights[2])));
+    p[1] = _mm_fmadd_ps(p[1], pChannelWeights[0], _mm_fmadd_ps(p[5], pChannelWeights[1], _mm_mul_ps(p[9], pChannelWeights[2])));
+    p[2] = _mm_fmadd_ps(p[2], pChannelWeights[0], _mm_fmadd_ps(p[6], pChannelWeights[1], _mm_mul_ps(p[10], pChannelWeights[2])));
+    p[3] = _mm_fmadd_ps(p[3], pChannelWeights[0], _mm_fmadd_ps(p[7], pChannelWeights[1], _mm_mul_ps(p[11], pChannelWeights[2])));
+}
+
+inline void compute_color_24_to_greyscale_8_host(__m256 *p, __m256 *pChannelWeights)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pChannelWeights[0], _mm256_fmadd_ps(p[1], pChannelWeights[1], _mm256_mul_ps(p[2], pChannelWeights[2])));
+}
+
+inline void compute_color_12_to_greyscale_4_host(__m128 *p, __m128 *pChannelWeights)
+{
+    p[0] = _mm_fmadd_ps(p[0], pChannelWeights[0], _mm_fmadd_ps(p[1], pChannelWeights[1], _mm_mul_ps(p[2], pChannelWeights[2])));
+}
+
 inline void compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
 {
     p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
@@ -2849,6 +3177,183 @@ inline void compute_salt_and_pepper_noise_48_host(__m128 *p, __m128i *pxXorwowSt
     compute_salt_and_pepper_noise_12_host(p + 1, p + 5, p +  9, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_12_host(p + 2, p + 6, p + 10, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
     compute_salt_and_pepper_noise_12_host(p + 3, p + 7, p + 11, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+}
+
+inline void compute_shot_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
+{
+    __m256 pShotNoiseValue = avx_p0;                                                                                                                                // Rpp32u shotNoiseValue = 0;
+    __m256 pFactValue = fast_exp_avx(_mm256_mul_ps(*p, *pShotNoiseFactorInv));                                                                                      // Rpp32f factValue = expf(lambda);
+    __m256 pFactValueMask = avx_p1;                                                                                                                                 // Set mask for pFactValue computation to 1
+    do
+    {
+        pShotNoiseValue = _mm256_or_ps(_mm256_andnot_ps(pFactValueMask, pShotNoiseValue), _mm256_and_ps(pFactValueMask, _mm256_add_ps(pShotNoiseValue, avx_p1)));   // shotNoiseValue++;
+        pFactValue = _mm256_mul_ps(pFactValue, rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter));                                                // factValue *= rpp_host_rng_xorwow_f32(xorwowStatePtr);
+        pFactValueMask = _mm256_cmp_ps(pFactValue, avx_p1, _CMP_GT_OQ);                                                                                             // compute new pFactValueMask for loop exit condition
+    } while (_mm256_movemask_epi8(_mm256_cvtps_epi32(pFactValueMask)) != 0);                                                                                        // while (factValue > 1.0f);
+
+    pShotNoiseValue = _mm256_sub_ps(pShotNoiseValue, avx_p1);                                                                                                       // shotNoiseValue -= 1;
+    *p = _mm256_mul_ps(pShotNoiseValue, *pShotNoiseFactor);                                                                                                         // dst = pShotNoiseValue * shotNoiseFactor;
+}
+
+inline void compute_shot_noise_4_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pShotNoiseFactorInv, __m128 *pShotNoiseFactor)
+{
+    __m128 pShotNoiseValue = xmm_p0;                                                                                                                    // Rpp32u shotNoiseValue = 0;
+    __m128 pFactValue = fast_exp_sse(_mm_mul_ps(*p, *pShotNoiseFactorInv));                                                                             // Rpp32f factValue = expf(lambda);
+    __m128 pFactValueMask = xmm_p1;                                                                                                                     // Set mask for pFactValue computation to 1
+    do
+    {
+        pShotNoiseValue = _mm_or_ps(_mm_andnot_ps(pFactValueMask, pShotNoiseValue), _mm_and_ps(pFactValueMask, _mm_add_ps(pShotNoiseValue, xmm_p1)));   // shotNoiseValue++;
+        pFactValue = _mm_mul_ps(pFactValue, rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter));                                       // factValue *= rpp_host_rng_xorwow_f32(xorwowStatePtr);
+        pFactValueMask = _mm_cmpgt_ps(pFactValue, xmm_p1);                                                                                              // compute new pFactValueMask for loop exit condition
+    } while (_mm_movemask_epi8(_mm_cvtps_epi32(pFactValueMask)) != 0);                                                                                  // while (factValue > 1.0f);
+
+    pShotNoiseValue = _mm_sub_ps(pShotNoiseValue, xmm_p1);                                                                                              // shotNoiseValue -= 1;
+    *p = _mm_mul_ps(pShotNoiseValue, *pShotNoiseFactor);                                                                                                // dst = pShotNoiseValue * shotNoiseFactor;
+}
+
+inline void compute_shot_noise_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
+{
+    compute_shot_noise_8_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  3, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  4, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  5, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_48_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pShotNoiseFactorInv, __m128 *pShotNoiseFactor)
+{
+    compute_shot_noise_4_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  3, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  4, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  5, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  6, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  7, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  8, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  9, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p + 10, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p + 11, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_24_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
+{
+    compute_shot_noise_8_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
+{
+    compute_shot_noise_8_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pShotNoiseFactorInv, __m128 *pShotNoiseFactor)
+{
+    compute_shot_noise_4_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  3, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_12_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pShotNoiseFactorInv, __m128 *pShotNoiseFactor)
+{
+    compute_shot_noise_4_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline Rpp32u compute_shot_noise_1_host(RpptXorwowState *xorwowStatePtr, Rpp32f lambda)
+{
+    Rpp32u shotNoiseValue = 0;                                   // initialize shotNoiseValue to 0
+    Rpp32f factValue = rpp_host_math_exp_lim256approx(lambda);   // initialize factValue to e^lambda
+    do
+    {
+        shotNoiseValue++;                                        // additively cumulate shotNoiseValue by 1 until exit condition
+        factValue *= rpp_host_rng_xorwow_f32(xorwowStatePtr);    // multiplicatively cumulate factValue by the next uniform random number until exit condition
+    } while (factValue > 1.0f);                                  // loop while factValue >= 1.0f
+
+    return shotNoiseValue - 1;
+}
+
+inline void compute_gaussian_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pGaussianNoiseParams)
+{
+    __m256 pRngVals[2], pSqrt[2];
+
+    rpp_host_rng_16_gaussian_f32_avx(pRngVals, pxXorwowStateX, pxXorwowStateCounter);               // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
+    pRngVals[0] = _mm256_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);   // rngVal = rngVal * stdDev + mean;
+    pRngVals[1] = _mm256_fmadd_ps(pRngVals[1], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);   // rngVal = rngVal * stdDev + mean;
+    pSqrt[0] = _mm256_sqrt_ps(p[0]);                                                                // pixSqrt = sqrt(pixVal);
+    pSqrt[1] = _mm256_sqrt_ps(p[1]);                                                                // pixSqrt = sqrt(pixVal);
+    p[0] = _mm256_fmadd_ps(pSqrt[0], pRngVals[0], p[0]);                                            // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+    p[1] = _mm256_fmadd_ps(pSqrt[1], pRngVals[1], p[1]);                                            // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+}
+
+inline void compute_gaussian_noise_8_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
+{
+    __m128 pRngVals[2], pSqrt[2];
+
+    rpp_host_rng_8_gaussian_f32_sse(pRngVals, pxXorwowStateX, pxXorwowStateCounter);            // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
+    pRngVals[0] = _mm_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
+    pRngVals[1] = _mm_fmadd_ps(pRngVals[1], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
+    pSqrt[0] = _mm_sqrt_ps(p[0]);                                                               // pixSqrt = sqrt(pixVal);
+    pSqrt[1] = _mm_sqrt_ps(p[1]);                                                               // pixSqrt = sqrt(pixVal);
+    p[0] = _mm_fmadd_ps(pSqrt[0], pRngVals[0], p[0]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+    p[1] = _mm_fmadd_ps(pSqrt[1], pRngVals[1], p[1]);                                           // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+}
+
+inline void compute_gaussian_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
+{
+    compute_gaussian_noise_8_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+    compute_gaussian_noise_8_host(&p[2], pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+}
+
+inline void compute_gaussian_noise_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pGaussianNoiseParams)
+{
+    compute_gaussian_noise_16_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+    compute_gaussian_noise_16_host(&p[2], pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+    compute_gaussian_noise_16_host(&p[4], pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+}
+
+inline void compute_gaussian_noise_48_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
+{
+    compute_gaussian_noise_16_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+    compute_gaussian_noise_16_host(&p[4], pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+    compute_gaussian_noise_16_host(&p[8], pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+}
+
+inline void compute_gaussian_noise_24_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pGaussianNoiseParams)
+{
+    compute_gaussian_noise_16_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+
+    __m256 pRngVals[2], pSqrt;
+    rpp_host_rng_16_gaussian_f32_avx(pRngVals, pxXorwowStateX, pxXorwowStateCounter);               // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
+    pRngVals[0] = _mm256_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);   // rngVal = rngVal * stdDev + mean;
+    pSqrt = _mm256_sqrt_ps(p[2]);                                                                   // pixSqrt = sqrt(pixVal);
+    p[2] = _mm256_fmadd_ps(pSqrt, pRngVals[0], p[2]);                                               // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+}
+
+inline void compute_gaussian_noise_12_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
+{
+    compute_gaussian_noise_8_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
+
+    __m128 pRngVals[2], pSqrt;
+    rpp_host_rng_8_gaussian_f32_sse(pRngVals, pxXorwowStateX, pxXorwowStateCounter);            // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
+    pRngVals[0] = _mm_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
+    pSqrt = _mm_sqrt_ps(p[2]);                                                                  // pixSqrt = sqrt(pixVal);
+    p[2] = _mm_fmadd_ps(pSqrt, pRngVals[0], p[2]);                                              // return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+}
+
+inline Rpp32f compute_gaussian_noise_1_host(Rpp32f pixVal, RpptXorwowStateBoxMuller *xorwowStatePtr, Rpp32f mean, Rpp32f stdDev)
+{
+    Rpp32f rngVal, pixSqrt;
+    rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
+    rngVal = rngVal * stdDev + mean;
+    pixSqrt = sqrt(pixVal);
+
+    return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
 
 // Compute Functions for RPP Image API
@@ -4329,27 +4834,170 @@ inline void compute_dst_size_cap_host(RpptImagePatchPtr dstImgSize, RpptDescPtr 
     dstImgSize->height = std::min(dstImgSize->height, dstDescPtr->h);
 }
 
-inline void compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u limit, Rpp32s &srcLoc, Rpp32f *weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
+inline void compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32s &srcLoc, Rpp32f &weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
+{
+    Rpp32f srcLocationFloat = ((Rpp32f) dstLocation) * scale + offset;
+    Rpp32s srcLocation = (Rpp32s) std::ceil(srcLocationFloat);
+    weight = srcLocation - srcLocationFloat;
+    srcLoc = srcLocation * srcStride;
+}
+
+inline void compute_resize_nn_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u limit, Rpp32s &srcLoc, Rpp32f offset = 0, Rpp32u srcStride = 1)
 {
     Rpp32f srcLocation = ((Rpp32f) dstLocation) * scale + offset;
     Rpp32s srcLocationFloor = (Rpp32s) RPPFLOOR(srcLocation);
-    weight[0] = srcLocation - srcLocationFloor;
-    weight[1] = 1 - weight[0];
     srcLoc = ((srcLocationFloor > limit) ? limit : srcLocationFloor) * srcStride;
 }
 
-inline void compute_resize_src_loc_avx(__m256 &pDstLoc, __m256 &pScale, __m256 &pLimit, Rpp32s *srcLoc, __m256 *pWeight, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
+inline void compute_resize_bilinear_src_loc_and_weights(Rpp32s dstLocation, Rpp32f scale, Rpp32s &srcLoc, Rpp32f *weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
 {
-    __m256 pLoc = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
-    pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
-    __m256 pLocFloor = _mm256_floor_ps(pLoc);
-    pWeight[0] = _mm256_sub_ps(pLoc, pLocFloor);
-    pWeight[1] = _mm256_sub_ps(avx_p1, pWeight[0]);
-    pLocFloor = _mm256_max_ps(_mm256_min_ps(pLocFloor, pLimit), avx_p0);
+    compute_resize_src_loc(dstLocation, scale, srcLoc, weight[1], offset, srcStride);
+    weight[0] = 1 - weight[1];
+}
+
+inline void compute_resize_nn_src_loc_sse(__m128 &pDstLoc, __m128 &pScale, __m128 &pLimit, Rpp32s *srcLoc, __m128 pOffset = xmm_p0, bool hasRGBChannels = false)
+{
+    __m128 pLoc = _mm_fmadd_ps(pDstLoc, pScale, pOffset);
+    pDstLoc = _mm_add_ps(pDstLoc, xmm_p4);
+    __m128 pLocFloor = _mm_floor_ps(pLoc);
+    pLocFloor = _mm_max_ps(_mm_min_ps(pLocFloor, pLimit), xmm_p0);
     if(hasRGBChannels)
-        pLocFloor = _mm256_mul_ps(pLocFloor, avx_p3);
-    __m256i pxLocFloor = _mm256_cvtps_epi32(pLocFloor);
-    _mm256_storeu_si256((__m256i*) srcLoc, pxLocFloor);
+        pLocFloor = _mm_mul_ps(pLocFloor, xmm_p3);
+    __m128i pxLocFloor = _mm_cvtps_epi32(pLocFloor);
+    _mm_storeu_si128((__m128i*) srcLoc, pxLocFloor);
+}
+
+inline void compute_resize_bilinear_src_loc_and_weights_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256i &pxLoc, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
+{
+    __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
+    pDstLoc = _mm256_add_ps(pDstLoc, avx_p8);
+    __m256 pLoc = _mm256_ceil_ps(pLocFloat);
+    pWeight[1] = _mm256_sub_ps(pLoc, pLocFloat);
+    pWeight[0] = _mm256_sub_ps(avx_p1, pWeight[1]);
+    if(hasRGBChannels)
+        pLoc = _mm256_mul_ps(pLoc, avx_p3);
+    pxLoc = _mm256_cvtps_epi32(pLoc);
+    _mm256_storeu_si256((__m256i*) srcLoc, pxLoc);
+}
+
+inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstLoc, __m256 &pScale, Rpp32s *srcLoc, __m256 *pWeight, __m256i &pxLoc, __m256 pOffset = avx_p0, bool hasRGBChannels = false)
+{
+    __m256 pLocFloat = _mm256_fmadd_ps(pDstLoc, pScale, pOffset);
+    pDstLoc = _mm256_sub_ps(pDstLoc, avx_p8);
+    __m256 pLoc = _mm256_ceil_ps(pLocFloat);
+    pWeight[1] = _mm256_sub_ps(pLoc, pLocFloat);
+    pWeight[0] = _mm256_sub_ps(avx_p1, pWeight[1]);
+    if (hasRGBChannels)
+        pLoc = _mm256_mul_ps(pLoc, avx_p3);
+    pxLoc = _mm256_cvtps_epi32(pLoc);
+    _mm256_storeu_si256((__m256i *)srcLoc, pxLoc);
+}
+
+inline void compute_bicubic_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+    Rpp32f x = fabsf(weight);
+    coeff = (x >= 2) ? 0 : ((x > 1) ? (x * x * (-0.5f * x + 2.5f) - 4.0f * x + 2.0f) : (x * x * (1.5f * x - 2.5f) + 1.0f));
+}
+
+inline Rpp32f sinc(Rpp32f x)
+{
+    x *= PI;
+    return (std::abs(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : std::sin(x) / x;
+}
+
+inline void compute_lanczos3_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+    coeff = fabs(weight) >= 3 ? 0.0f : (sinc(weight) * sinc(weight * 0.333333f));
+}
+
+inline void compute_gaussian_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+    coeff = expf(weight * weight * -4.0f);
+}
+
+inline void compute_triangular_coefficient(Rpp32f weight, Rpp32f &coeff)
+{
+    coeff = 1 - std::fabs(weight);
+    coeff = coeff < 0 ? 0 : coeff;
+}
+
+inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f weight, Rpp32f &coeff)
+{
+    switch (interpolationType)
+    {
+    case RpptInterpolationType::BICUBIC:
+    {
+        compute_bicubic_coefficient(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::LANCZOS:
+    {
+        compute_lanczos3_coefficient(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::GAUSSIAN:
+    {
+        compute_gaussian_coefficient(weight, coeff);
+        break;
+    }
+    case RpptInterpolationType::TRIANGULAR:
+    {
+        compute_triangular_coefficient(weight, coeff);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+// Computes the row coefficients for separable resampling
+inline void compute_row_coefficients(RpptInterpolationType interpolationType, Filter &filter , Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+{
+    Rpp32f sum = 0;
+    weight = weight - filter.radius;
+    for(int k = 0; k < filter.size; k++)
+    {
+        compute_coefficient(interpolationType, (weight + k) * filter.scale, coeffs[k]);
+        sum += coeffs[k];
+    }
+    if(sum)
+    {
+        sum = 1 / sum;
+        for(int k = 0; k < filter.size; k++)
+            coeffs[k] = coeffs[k] * sum;
+    }
+}
+
+// Computes the column coefficients for separable resampling
+inline void compute_col_coefficients(RpptInterpolationType interpolationType, Filter &filter, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+{
+    Rpp32f sum = 0;
+    weight = weight - filter.radius;
+
+    // The coefficients are computed for 4 dst locations and stored consecutively for ease of access
+    for(int k = 0, kPos = 0; k < filter.size; k++, kPos += 4)
+    {
+        compute_coefficient(interpolationType, (weight + k) * filter.scale, coeffs[kPos]);
+        sum += coeffs[kPos];
+    }
+    if(sum)
+    {
+        sum = 1 / sum;
+        for(int k = 0, kPos = 0; k < filter.size; k++, kPos += 4)
+            coeffs[kPos] = coeffs[kPos] * sum;
+    }
+}
+
+inline void set_zeros(__m128 *pVecs, Rpp32s numVecs)
+{
+    for(int i = 0; i < numVecs; i++)
+        pVecs[i] = xmm_p0;
+}
+
+inline void set_zeros_avx(__m256 *pVecs, Rpp32s numVecs)
+{
+    for(int i = 0; i < numVecs; i++)
+        pVecs[i] = avx_p0;
 }
 
 inline void compute_bilinear_coefficients(Rpp32f *weightParams, Rpp32f *bilinearCoeffs)
@@ -4368,39 +5016,42 @@ inline void compute_bilinear_coefficients_avx(__m256 *pWeightParams, __m256 *pBi
     pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);    // weightedHeight * weightedWidth
 }
 
-template <typename T>
-inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtr)
+template <typename T, typename U>
+inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, U *dstPtr)
 {
-    *dstPtr = (T)(((*(srcRowPtrsForInterp[0] + loc)) * bilinearCoeffs[0]) +         // TopRow 1st Pixel * coeff0
-                  ((*(srcRowPtrsForInterp[0] + loc + 1)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
-                  ((*(srcRowPtrsForInterp[1] + loc)) * bilinearCoeffs[2]) +         // BottomRow 1st Pixel * coeff2
-                  ((*(srcRowPtrsForInterp[1] + loc + 1)) * bilinearCoeffs[3]));     // BottomRow 2nd Pixel * coeff3
+    Rpp32s loc1 = std::min(std::max(loc, 0), limit);
+    Rpp32s loc2 = std::min(std::max(loc + 1, 0), limit);
+    *dstPtr = (U)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
+                  ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
+                  ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
+                  ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3]));     // BottomRow 2nd Pixel * coeff3
 }
 
-template <typename T>
-inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+template <typename T, typename U>
+inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, U *dstPtrR, U *dstPtrG, U *dstPtrB)
 {
-    Rpp32s channels = 3;
-    *dstPtrR = (T)(((*(srcRowPtrsForInterp[0] + loc)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc + 3)) * bilinearCoeffs[1]) +    // TopRow R02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc + 3)) * bilinearCoeffs[3]));    // BottomRow R02 Pixel * coeff3
-    *dstPtrG = (T)(((*(srcRowPtrsForInterp[0] + loc + 1)) * bilinearCoeffs[0]) +    // TopRow G01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc + 4)) * bilinearCoeffs[1]) +    // TopRow G02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc + 1)) * bilinearCoeffs[2]) +    // BottomRow G01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc + 4)) * bilinearCoeffs[3]));    // BottomRow G02 Pixel * coeff3
-    *dstPtrB = (T)(((*(srcRowPtrsForInterp[0] + loc + 2)) * bilinearCoeffs[0]) +    // TopRow B01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc + 5)) * bilinearCoeffs[1]) +    // TopRow B02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc + 2)) * bilinearCoeffs[2]) +    // BottomRow B01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc + 5)) * bilinearCoeffs[3]));    // BottomRow B02 Pixel * coeff3
+    Rpp32s loc1 = std::min(std::max(loc, 0), limit);
+    Rpp32s loc2 = std::min(std::max(loc + 3, 0), limit);
+    *dstPtrR = (U)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
+                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
+                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
+                   ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3]));        // BottomRow R02 Pixel * coeff3
+    *dstPtrG = (U)(((*(srcRowPtrsForInterp[0] + loc1 + 1)) * bilinearCoeffs[0]) +    // TopRow G01 Pixel * coeff0
+                   ((*(srcRowPtrsForInterp[0] + loc2 + 1)) * bilinearCoeffs[1]) +    // TopRow G02 Pixel * coeff1
+                   ((*(srcRowPtrsForInterp[1] + loc1 + 1)) * bilinearCoeffs[2]) +    // BottomRow G01 Pixel * coeff2
+                   ((*(srcRowPtrsForInterp[1] + loc2 + 1)) * bilinearCoeffs[3]));    // BottomRow G02 Pixel * coeff3
+    *dstPtrB = (U)(((*(srcRowPtrsForInterp[0] + loc1 + 2)) * bilinearCoeffs[0]) +    // TopRow B01 Pixel * coeff0
+                   ((*(srcRowPtrsForInterp[0] + loc2 + 2)) * bilinearCoeffs[1]) +    // TopRow B02 Pixel * coeff1
+                   ((*(srcRowPtrsForInterp[1] + loc1 + 2)) * bilinearCoeffs[2]) +    // BottomRow B01 Pixel * coeff2
+                   ((*(srcRowPtrsForInterp[1] + loc2 + 2)) * bilinearCoeffs[3]));    // BottomRow B02 Pixel * coeff3
 }
 
-template <typename T>
-inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32f *bilinearCoeffs, T *dstPtrR, T *dstPtrG, T *dstPtrB)
+template <typename T, typename U>
+inline void compute_bilinear_interpolation_3c_pln(T **srcRowPtrsForInterp, Rpp32s loc, Rpp32s limit, Rpp32f *bilinearCoeffs, U *dstPtrR, U *dstPtrG, U *dstPtrB)
 {
-    compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, bilinearCoeffs, dstPtrR);
-    compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[2], loc, bilinearCoeffs, dstPtrG);
-    compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[4], loc, bilinearCoeffs, dstPtrB);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp, loc, limit, bilinearCoeffs, dstPtrR);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 2, loc, limit, bilinearCoeffs, dstPtrG);
+    compute_bilinear_interpolation_1c(srcRowPtrsForInterp + 4, loc, limit, bilinearCoeffs, dstPtrB);
 }
 
 inline void compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 &pDstPixels)
@@ -4411,26 +5062,500 @@ inline void compute_bilinear_interpolation_1c_avx(__m256 *pSrcPixels, __m256 *pB
 
 inline void compute_bilinear_interpolation_3c_avx(__m256 *pSrcPixels, __m256 *pBilinearCoeffs, __m256 *pDstPixels)
 {
-    compute_bilinear_interpolation_1c_avx(&pSrcPixels[0], &pBilinearCoeffs[0], pDstPixels[0]);
-    compute_bilinear_interpolation_1c_avx(&pSrcPixels[4], &pBilinearCoeffs[0], pDstPixels[1]);
-    compute_bilinear_interpolation_1c_avx(&pSrcPixels[8], &pBilinearCoeffs[0], pDstPixels[2]);
+    compute_bilinear_interpolation_1c_avx(pSrcPixels, pBilinearCoeffs, pDstPixels[0]);
+    compute_bilinear_interpolation_1c_avx(pSrcPixels + 4, pBilinearCoeffs, pDstPixels[1]);
+    compute_bilinear_interpolation_1c_avx(pSrcPixels + 8, pBilinearCoeffs, pDstPixels[2]);
 }
 
 template <typename T>
-inline void compute_src_row_ptrs_for_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, RpptDescPtr descPtr)
+inline void compute_src_row_ptrs_for_bilinear_interpolation(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + loc * descPtr->strides.hStride;          // TopRow for bilinear interpolation
-    rowPtrsForInterp[1]  = rowPtrsForInterp[0] + descPtr->strides.hStride;  // BottomRow for bilinear interpolation
+    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, 0), limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation
+    rowPtrsForInterp[1]  = srcPtr + std::min(std::max(loc + 1, 0), limit) * descPtr->strides.hStride;     // BottomRow for bilinear interpolation
 }
 
 template <typename T>
-inline void compute_src_row_ptrs_for_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, RpptDescPtr descPtr)
+inline void compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForInterp, T *srcPtr, Rpp32s loc, Rpp32s limit, RpptDescPtr descPtr)
 {
-    rowPtrsForInterp[0] = srcPtr + loc * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
-    rowPtrsForInterp[1]  = rowPtrsForInterp[0] + descPtr->strides.hStride;  // BottomRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[0] = srcPtr + std::min(std::max(loc, 0), limit) * descPtr->strides.hStride;          // TopRow for bilinear interpolation (R channel)
+    rowPtrsForInterp[1] = srcPtr + std::min(std::max(loc + 1, 0), limit) * descPtr->strides.hStride;      // BottomRow for bilinear interpolation (R channel)
     rowPtrsForInterp[2] = rowPtrsForInterp[0] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (G channel)
     rowPtrsForInterp[3] = rowPtrsForInterp[1] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (G channel)
     rowPtrsForInterp[4] = rowPtrsForInterp[2] + descPtr->strides.cStride;   // TopRow for bilinear interpolation (B channel)
     rowPtrsForInterp[5] = rowPtrsForInterp[3] + descPtr->strides.cStride;   // BottomRow for bilinear interpolation (B channel)
 }
+
+// Perform resampling along the rows
+template <typename T>
+inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, RpptDescPtr inputDescPtr, RpptDescPtr outputDescPtr,
+                                                RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, Filter &filter)
+{
+
+    static constexpr Rpp32s maxNumLanes = 16;                                  // Maximum number of pixels that can be present in a vector for U8 type
+    static constexpr Rpp32s loadLanes = maxNumLanes / sizeof(T);
+    static constexpr Rpp32s storeLanes = maxNumLanes / sizeof(Rpp32f);
+    static constexpr Rpp32s numLanes = std::max(loadLanes, storeLanes);        // No of pixels that can be present in a vector wrt data type
+    static constexpr Rpp32s numVecs = numLanes * sizeof(Rpp32f) / maxNumLanes; // No of float vectors required to process numLanes pixels
+
+    Rpp32s inputHeightLimit = inputImgSize.height - 1;
+    Rpp32s outPixelsPerIter = 4;
+
+    // For PLN3 inputs/outputs
+    if (inputDescPtr->c == 3 && inputDescPtr->layout == RpptLayout::NCHW)
+    {
+        T *inRowPtrR[filter.size];
+        T *inRowPtrG[filter.size];
+        T *inRowPtrB[filter.size];
+        for (int outLocRow = 0; outLocRow < outputImgSize.height; outLocRow++)
+        {
+            Rpp32f *outRowPtrR = outputPtr + outLocRow * outputDescPtr->strides.hStride;
+            Rpp32f *outRowPtrG = outRowPtrR + outputDescPtr->strides.cStride;
+            Rpp32f *outRowPtrB = outRowPtrG + outputDescPtr->strides.cStride;
+            Rpp32s k0 = outLocRow * filter.size;
+            __m128 pCoeff[filter.size];
+
+            // Determine the input row pointers and coefficients to be used for interpolation
+            for (int k = 0; k < filter.size; k++)
+            {
+                Rpp32s inLocRow = index[outLocRow] + k;
+                inLocRow = std::min(std::max(inLocRow, 0), inputHeightLimit);
+                inRowPtrR[k] = inputPtr + inLocRow * inputDescPtr->strides.hStride;
+                inRowPtrG[k] = inRowPtrR[k] + inputDescPtr->strides.cStride;
+                inRowPtrB[k] = inRowPtrG[k] + inputDescPtr->strides.cStride;
+                pCoeff[k] = _mm_set1_ps(coeffs[k0 + k]);    // Each row is associated with a single coeff
+            }
+            Rpp32s bufferLength = inputImgSize.width;
+            Rpp32s alignedLength = bufferLength &~ (numLanes-1);
+            Rpp32s outLocCol = 0;
+
+            // Load the input pixels from filter.size rows
+            // Multiply input vec from each row with it's correspondig coefficient
+            // Add the results from filter.size rows to obtain the pixels of an output row
+            for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
+            {
+                __m128 pTempR[numVecs], pTempG[numVecs], pTempB[numVecs];
+                set_zeros(pTempR, numVecs);
+                set_zeros(pTempG, numVecs);
+                set_zeros(pTempB, numVecs);
+                for (int k = 0; k < filter.size; k++)
+                {
+                    __m128 pInputR[numVecs], pInputG[numVecs], pInputB[numVecs];
+
+                    // Load numLanes input pixels from each row
+                    rpp_resize_load(inRowPtrR[k] + outLocCol, pInputR);
+                    rpp_resize_load(inRowPtrG[k] + outLocCol, pInputG);
+                    rpp_resize_load(inRowPtrB[k] + outLocCol, pInputB);
+                    for (int v = 0; v < numVecs; v++)
+                    {
+                        pTempR[v] = _mm_fmadd_ps(pCoeff[k], pInputR[v], pTempR[v]);
+                        pTempG[v] = _mm_fmadd_ps(pCoeff[k], pInputG[v], pTempG[v]);
+                        pTempB[v] = _mm_fmadd_ps(pCoeff[k], pInputB[v], pTempB[v]);
+                    }
+                }
+                for(int vec = 0, outStoreStride = 0; vec < numVecs; vec++, outStoreStride += outPixelsPerIter)    // Since 4 output pixels are stored per iteration
+                {
+                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrR + outLocCol + outStoreStride, pTempR + vec);
+                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrG + outLocCol + outStoreStride, pTempG + vec);
+                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtrB + outLocCol + outStoreStride, pTempB + vec);
+                }
+            }
+
+            for (; outLocCol < bufferLength; outLocCol++)
+            {
+                Rpp32f tempR, tempG, tempB;
+                tempR = tempG = tempB = 0;
+                for (int k = 0; k < filter.size; k++)
+                {
+                    Rpp32f coefficient = coeffs[k0 + k];
+                    tempR += (inRowPtrR[k][outLocCol] * coefficient);
+                    tempG += (inRowPtrG[k][outLocCol] * coefficient);
+                    tempB += (inRowPtrB[k][outLocCol] * coefficient);
+                }
+                outRowPtrR[outLocCol] = tempR;
+                outRowPtrG[outLocCol] = tempG;
+                outRowPtrB[outLocCol] = tempB;
+            }
+        }
+    }
+    // For PKD3 and PLN1 inputs/outputs
+    else
+    {
+        T *inRowPtr[filter.size];
+        for (int outLocRow = 0; outLocRow < outputImgSize.height; outLocRow++)
+        {
+            __m128 pCoeff[filter.size];
+            Rpp32s k0 = outLocRow * filter.size;
+            Rpp32f *outRowPtr = outputPtr + outLocRow * outputDescPtr->strides.hStride;
+
+            // Determine the input row pointers and coefficients to be used for interpolation
+            for (int k = 0; k < filter.size; k++)
+            {
+                Rpp32s inLocRow = index[outLocRow] + k;
+                inLocRow = std::min(std::max(inLocRow, 0), inputHeightLimit);
+                inRowPtr[k] = inputPtr + inLocRow * inputDescPtr->strides.hStride;
+                pCoeff[k] = _mm_set1_ps(coeffs[k0 + k]);    // Each row is associated with a single coeff
+            }
+            Rpp32s bufferLength = inputImgSize.width * inputDescPtr->strides.wStride;
+            Rpp32s alignedLength = bufferLength &~ (numLanes-1);
+            Rpp32s outLocCol = 0;
+
+            // Load the input pixels from filter.size rows
+            // Multiply input vec from each row with it's correspondig coefficient
+            // Add the results from filter.size rows to obtain the pixels of an output row
+            for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
+            {
+                __m128 pTemp[numVecs];
+                set_zeros(pTemp, numVecs);
+                for (int k = 0; k < filter.size; k++)
+                {
+                    __m128 pInput[numVecs];
+                    rpp_resize_load(inRowPtr[k] + outLocCol, pInput);   // Load numLanes input pixels from each row
+                    for (int v = 0; v < numVecs; v++)
+                        pTemp[v] = _mm_fmadd_ps(pInput[v], pCoeff[k], pTemp[v]);
+                }
+                for(int vec = 0, outStoreStride = 0; vec < numVecs; vec++, outStoreStride += outPixelsPerIter)     // Since 4 output pixels are stored per iteration
+                    rpp_simd_store(rpp_store4_f32_to_f32, outRowPtr + outLocCol + outStoreStride, &pTemp[vec]);
+            }
+
+            for (; outLocCol < bufferLength; outLocCol++)
+            {
+                Rpp32f temp = 0;
+                for (int k = 0; k < filter.size; k++)
+                    temp += (inRowPtr[k][outLocCol] * coeffs[k0 + k]);
+                outRowPtr[outLocCol] = temp;
+            }
+        }
+    }
+}
+
+// Perform resampling along the columns
+template <typename T>
+inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr, RpptDescPtr inputDescPtr, RpptDescPtr outputDescPtr,
+                        RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, Filter &filter)
+{
+    static constexpr Rpp32s maxNumLanes = 16;                                   // Maximum number of pixels that can be present in a vector
+    static constexpr Rpp32s numLanes = maxNumLanes / sizeof(T);                 // No of pixels that can be present in a vector wrt data type
+    static constexpr Rpp32s numVecs = numLanes * sizeof(Rpp32f) / maxNumLanes;  // No of float vectors required to process numLanes pixels
+    Rpp32s numOutPixels, filterKernelStride;
+    numOutPixels = filterKernelStride = 4;
+    Rpp32s filterKernelSizeOverStride = filter.size % filterKernelStride;
+    Rpp32s filterKernelRadiusWStrided = (Rpp32s)(filter.radius) * inputDescPtr->strides.wStride;
+
+    Rpp32s inputWidthLimit = (inputImgSize.width - 1) * inputDescPtr->strides.wStride;
+    __m128i pxInputWidthLimit = _mm_set1_epi32(inputWidthLimit);
+
+    // For PLN3 inputs
+    if(inputDescPtr->c == 3 && inputDescPtr->layout == RpptLayout::NCHW)
+    {
+        for (int outLocRow = 0; outLocRow < outputImgSize.height; outLocRow++)
+        {
+            T *outRowPtrR = outputPtr + outLocRow * outputDescPtr->strides.hStride;
+            T *outRowPtrG = outRowPtrR + outputDescPtr->strides.cStride;
+            T *outRowPtrB = outRowPtrG + outputDescPtr->strides.cStride;
+            Rpp32f *inRowPtrR = inputPtr + outLocRow * inputDescPtr->strides.hStride;
+            Rpp32f *inRowPtrG = inRowPtrR + inputDescPtr->strides.cStride;
+            Rpp32f *inRowPtrB = inRowPtrG + inputDescPtr->strides.cStride;
+            Rpp32s bufferLength = outputImgSize.width;
+            Rpp32s alignedLength = bufferLength &~ (numLanes-1);
+            __m128 pFirstValR = _mm_set1_ps(inRowPtrR[0]);
+            __m128 pFirstValG = _mm_set1_ps(inRowPtrG[0]);
+            __m128 pFirstValB = _mm_set1_ps(inRowPtrB[0]);
+            bool breakLoop = false;
+            Rpp32s outLocCol = 0;
+
+            // Load filter.size consecutive pixels from a location in the row
+            // Multiply with corresponding coeffs and add together to obtain the output pixel
+            for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
+            {
+                __m128 pOutputChannel[numVecs * 3];
+                set_zeros(pOutputChannel, numVecs * 3);
+                __m128 *pOutputR = pOutputChannel;
+                __m128 *pOutputG = pOutputChannel + numVecs;
+                __m128 *pOutputB = pOutputChannel + (numVecs * 2);
+                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += numOutPixels)
+                {
+                    Rpp32s coeffIdx = (x * filter.size);
+                    if(index[x] < 0)
+                    {
+                        __m128i pxIdx[numOutPixels];
+                        pxIdx[0] = _mm_set1_epi32(index[x]);
+                        pxIdx[1] = _mm_set1_epi32(index[x + 1]);
+                        pxIdx[2] = _mm_set1_epi32(index[x + 2]);
+                        pxIdx[3] = _mm_set1_epi32(index[x + 3]);
+                        for(int k = 0; k < filter.size; k += filterKernelStride)
+                        {
+                            // Generate mask to determine the negative indices in the iteration
+                            __m128i pxNegativeIndexMask[numOutPixels];
+                            __m128i pxKernelIdx = _mm_set1_epi32(k);
+                            __m128 pInputR[numOutPixels], pInputG[numOutPixels], pInputB[numOutPixels], pCoeffs[numOutPixels];
+                            Rpp32s kernelAdd = (k + filterKernelStride) > filter.size ? filterKernelSizeOverStride : filterKernelStride;
+                            set_zeros(pInputR, numOutPixels);
+                            set_zeros(pInputG, numOutPixels);
+                            set_zeros(pInputB, numOutPixels);
+                            set_zeros(pCoeffs, numOutPixels);
+
+                            for(int l = 0; l < numOutPixels; l++)
+                            {
+                                pxNegativeIndexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pDstLocInit), xmm_px0);    // Generate mask to determine the negative indices in the iteration
+                                Rpp32s srcx = index[x + l] + k;
+
+                                // Load filterKernelStride(4) consecutive pixels
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrR + srcx, pInputR + l);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrG + srcx, pInputG + l);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrB + srcx, pInputB + l);
+                                pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));        // Load coefficients
+
+                                // If negative index is present replace the input pixel value with first value in the row
+                                pInputR[l] = _mm_blendv_ps(pInputR[l], pFirstValR, pxNegativeIndexMask[l]);
+                                pInputG[l] = _mm_blendv_ps(pInputG[l], pFirstValG, pxNegativeIndexMask[l]);
+                                pInputB[l] = _mm_blendv_ps(pInputB[l], pFirstValB, pxNegativeIndexMask[l]);
+                            }
+
+                            // Perform transpose operation to arrange input pixels from different output locations in each vector
+                            _MM_TRANSPOSE4_PS(pInputR[0], pInputR[1], pInputR[2], pInputR[3]);
+                            _MM_TRANSPOSE4_PS(pInputG[0], pInputG[1], pInputG[2], pInputG[3]);
+                            _MM_TRANSPOSE4_PS(pInputB[0], pInputB[1], pInputB[2], pInputB[3]);
+                            for (int l = 0; l < kernelAdd; l++)
+                            {
+                                pOutputR[vec] = _mm_fmadd_ps(pCoeffs[l], pInputR[l], pOutputR[vec]);
+                                pOutputG[vec] = _mm_fmadd_ps(pCoeffs[l], pInputG[l], pOutputG[vec]);
+                                pOutputB[vec] = _mm_fmadd_ps(pCoeffs[l], pInputB[l], pOutputB[vec]);
+                            }
+                        }
+                    }
+                    else if(index[x + 3] >= (inputWidthLimit - filterKernelRadiusWStrided))    // If the index value exceeds the limit, break the loop
+                    {
+                        breakLoop = true;
+                        break;
+                    }
+                    else
+                    {
+                        // Considers a 4x1 window for computation each time
+                        for(int k = 0; k < filter.size; k += filterKernelStride)
+                        {
+                            __m128 pInputR[numOutPixels], pInputG[numOutPixels], pInputB[numOutPixels];
+                            __m128 pCoeffs[numOutPixels];
+                            Rpp32s kernelAdd = (k + filterKernelStride) > filter.size ? filterKernelSizeOverStride : filterKernelStride;
+                            for (int l = 0; l < numOutPixels; l++)
+                            {
+                                pInputR[l] = pInputG[l] = pInputB[l] = pCoeffs[l] = xmm_p0;
+                                pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)])); // Load coefficients
+                                Rpp32s srcx = index[x + l] + k;
+                                srcx = std::min(std::max(srcx, 0), inputWidthLimit);
+                                // Load filterKernelStride(4) consecutive pixels
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrR + srcx, pInputR + l);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrG + srcx, pInputG + l);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtrB + srcx, pInputB + l);
+                            }
+
+                            // Perform transpose operation to arrange input pixels from different output locations in each vector
+                            _MM_TRANSPOSE4_PS(pInputR[0], pInputR[1], pInputR[2], pInputR[3]);
+                            _MM_TRANSPOSE4_PS(pInputG[0], pInputG[1], pInputG[2], pInputG[3]);
+                            _MM_TRANSPOSE4_PS(pInputB[0], pInputB[1], pInputB[2], pInputB[3]);
+                            for (int l = 0; l < kernelAdd; l++)
+                            {
+                                pOutputR[vec] = _mm_fmadd_ps(pCoeffs[l], pInputR[l], pOutputR[vec]);
+                                pOutputG[vec] = _mm_fmadd_ps(pCoeffs[l], pInputG[l], pOutputG[vec]);
+                                pOutputB[vec] = _mm_fmadd_ps(pCoeffs[l], pInputB[l], pOutputB[vec]);
+                            }
+                        }
+                    }
+                }
+                if(breakLoop) break;
+                Rpp32s xStride = outLocCol * outputDescPtr->strides.wStride;
+                if(outputDescPtr->layout == RpptLayout::NCHW)       // For PLN3 outputs
+                    rpp_resize_store_pln3(outRowPtrR + xStride, outRowPtrG + xStride, outRowPtrB + xStride, pOutputChannel);
+                else if(outputDescPtr->layout == RpptLayout::NHWC)  // For PKD3 outputs
+                    rpp_resize_store_pkd3(outRowPtrR + xStride, pOutputChannel);
+            }
+            Rpp32s k0 = 0;
+            for (; outLocCol < outputImgSize.width; outLocCol++)
+            {
+                Rpp32s x0 = index[outLocCol];
+                k0 = outLocCol % 4 == 0 ? outLocCol * filter.size : k0 + 1; // Since coeffs are stored in continuously for 4 dst locations
+                Rpp32f sumR, sumG, sumB;
+                sumR = sumG = sumB = 0;
+                for (int k = 0; k < filter.size; k++)
+                {
+                    Rpp32s srcx = x0 + k;
+                    srcx = std::min(std::max(srcx, 0), inputWidthLimit);
+                    Rpp32s kPos = (k * 4);      // Since coeffs are stored in continuously for 4 dst locations
+                    sumR += (coeffs[k0 + kPos] * inRowPtrR[srcx]);
+                    sumG += (coeffs[k0 + kPos] * inRowPtrG[srcx]);
+                    sumB += (coeffs[k0 + kPos] * inRowPtrB[srcx]);
+                }
+                Rpp32s xStride = outLocCol * outputDescPtr->strides.wStride;
+                saturate_pixel(sumR, outRowPtrR + xStride);
+                saturate_pixel(sumG, outRowPtrG + xStride);
+                saturate_pixel(sumB, outRowPtrB + xStride);
+            }
+        }
+    }
+    // For PKD3 inputs
+    else if(inputDescPtr->c == 3 && inputDescPtr->layout == RpptLayout::NHWC)
+    {
+        for (int outLocRow = 0; outLocRow < outputImgSize.height; outLocRow++)
+        {
+            T *outRowPtrR = outputPtr + outLocRow * outputDescPtr->strides.hStride;
+            T *outRowPtrG = outRowPtrR + outputDescPtr->strides.cStride;
+            T *outRowPtrB = outRowPtrG + outputDescPtr->strides.cStride;
+            Rpp32f *inRowPtr = inputPtr + outLocRow * inputDescPtr->strides.hStride;
+            Rpp32s bufferLength = outputImgSize.width;
+            Rpp32s alignedLength = bufferLength &~ (numLanes-1);
+            Rpp32s outLocCol = 0;
+
+            // Load filter.size consecutive pixels from a location in the row
+            // Multiply with corresponding coeffs and add together to obtain the output pixel
+            for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
+            {
+                __m128 pOutputChannel[numVecs * 3];
+                set_zeros(pOutputChannel, numVecs * 3);
+                __m128 *pOutputR = pOutputChannel;
+                __m128 *pOutputG = pOutputChannel + numVecs;
+                __m128 *pOutputB = pOutputChannel + (numVecs * 2);
+                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += numOutPixels)   // 4 dst pixels processed per iteration
+                {
+                    Rpp32s coeffIdx = (x * filter.size);
+                    for(int k = 0, kStrided = 0; k < filter.size; k ++, kStrided = k * 3)
+                    {
+                        __m128 pInput[numOutPixels];
+                        __m128 pCoeffs = _mm_loadu_ps(&(coeffs[coeffIdx + (k * numOutPixels)]));
+                        for (int l = 0; l < numOutPixels; l++)
+                        {
+                            Rpp32s srcx = index[x + l] + kStrided;
+                            srcx = std::min(std::max(srcx, 0), inputWidthLimit);
+                            rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtr[srcx], &pInput[l]);   // Load RGB pixel from a src location
+                        }
+
+                        // Perform transpose operation to arrange input pixels by R,G and B separately in each vector
+                        _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);
+                        pOutputR[vec] = _mm_fmadd_ps(pCoeffs, pInput[0], pOutputR[vec]);
+                        pOutputG[vec] = _mm_fmadd_ps(pCoeffs, pInput[1], pOutputG[vec]);
+                        pOutputB[vec] = _mm_fmadd_ps(pCoeffs, pInput[2], pOutputB[vec]);
+                    }
+                }
+
+                Rpp32s xStride = outLocCol * outputDescPtr->strides.wStride;
+                if(outputDescPtr->layout == RpptLayout::NCHW)       // For PLN3 outputs
+                    rpp_resize_store_pln3(outRowPtrR + xStride, outRowPtrG + xStride, outRowPtrB + xStride, pOutputChannel);
+                else if(outputDescPtr->layout == RpptLayout::NHWC)  // For PKD3 outputs
+                    rpp_resize_store_pkd3(outRowPtrR + xStride, pOutputChannel);
+            }
+            Rpp32s k0 = 0;
+            for (; outLocCol < outputImgSize.width; outLocCol++)
+            {
+                Rpp32s x0 = index[outLocCol];
+                k0 = outLocCol % 4 == 0 ? outLocCol * filter.size : k0 + 1;  // Since coeffs are stored in continuously for 4 dst locations
+                Rpp32f sumR, sumG, sumB;
+                sumR = sumG = sumB = 0;
+                for (int k = 0; k < filter.size; k++)
+                {
+                    Rpp32s srcx = x0 + (k * 3);
+                    srcx = std::min(std::max(srcx, 0), inputWidthLimit);
+                    Rpp32s kPos = (k * 4);      // Since coeffs are stored in continuously for 4 dst locations
+                    sumR += (coeffs[k0 + kPos] * inRowPtr[srcx]);
+                    sumG += (coeffs[k0 + kPos] * inRowPtr[srcx + 1]);
+                    sumB += (coeffs[k0 + kPos] * inRowPtr[srcx + 2]);
+                }
+                Rpp32s xStride = outLocCol * outputDescPtr->strides.wStride;
+                saturate_pixel(sumR, outRowPtrR + xStride);
+                saturate_pixel(sumG, outRowPtrG + xStride);
+                saturate_pixel(sumB, outRowPtrB + xStride);
+            }
+        }
+    }
+    else
+    {
+        for (int outLocRow = 0; outLocRow < outputImgSize.height; outLocRow++)
+        {
+            T *out_row = outputPtr + outLocRow * outputDescPtr->strides.hStride;
+            Rpp32f *inRowPtr = inputPtr + outLocRow * inputDescPtr->strides.hStride;
+            Rpp32s bufferLength = outputImgSize.width;
+            Rpp32s alignedLength = bufferLength &~ (numLanes-1);
+            __m128 pFirstVal = _mm_set1_ps(inRowPtr[0]);
+            bool breakLoop = false;
+            Rpp32s outLocCol = 0;
+
+            // Load filter.size consecutive pixels from a location in the row
+            // Multiply with corresponding coeffs and add together to obtain the output pixel
+            for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
+            {
+                __m128 pOutput[numVecs];
+                set_zeros(pOutput, numVecs);
+                for(int vec = 0, x = outLocCol; vec < numVecs; vec++, x += numOutPixels)
+                {
+                    Rpp32s coeffIdx = (x * filter.size);
+                    if(index[x] < 0)
+                    {
+                        __m128i pxIdx[numOutPixels];
+                        pxIdx[0] = _mm_set1_epi32(index[x]);
+                        pxIdx[1] = _mm_set1_epi32(index[x + 1]);
+                        pxIdx[2] = _mm_set1_epi32(index[x + 2]);
+                        pxIdx[3] = _mm_set1_epi32(index[x + 3]);
+                        for(int k = 0; k < filter.size; k += filterKernelStride)
+                        {
+                            __m128i pxNegativeIndexMask[numOutPixels];
+                            __m128i pxKernelIdx = _mm_set1_epi32(k);
+                            __m128 pInput[numOutPixels], pCoeffs[numOutPixels];
+                            Rpp32s kernelAdd = (k + filterKernelStride) > filter.size ? filterKernelSizeOverStride : filterKernelStride;
+                            set_zeros(pInput, numOutPixels);
+                            set_zeros(pCoeffs, numOutPixels);
+                            for(int l = 0; l < numOutPixels; l++)
+                            {
+                                pxNegativeIndexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pDstLocInit), xmm_px0);    // Generate mask to determine the negative indices in the iteration
+                                rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtr[index[x + l] + k], &pInput[l]);   // Load filterKernelStride(4) consecutive pixels
+                                pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));                 // Load coefficients
+                                pInput[l] = _mm_blendv_ps(pInput[l], pFirstVal, pxNegativeIndexMask[l]);        // If negative index is present replace the pixel value with first value in the row
+                            }
+                            _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);  // Perform transpose operation to arrange input pixels from different output locations in each vector
+                            for (int l = 0; l < kernelAdd; l++)
+                                pOutput[vec] = _mm_fmadd_ps(pCoeffs[l], pInput[l], pOutput[vec]);
+                        }
+                    }
+                    else if(index[x + 3] >= (inputWidthLimit - filterKernelRadiusWStrided))   // If the index value exceeds the limit, break the loop
+                    {
+                        breakLoop = true;
+                        break;
+                    }
+                    else
+                    {
+                        for(int k = 0; k < filter.size; k += filterKernelStride)
+                        {
+                            __m128 pInput[numOutPixels], pCoeffs[numOutPixels];
+                            Rpp32s kernelAdd = (k + filterKernelStride) > filter.size ? filterKernelSizeOverStride : filterKernelStride;
+                            for (int l = 0; l < numOutPixels; l++)
+                            {
+                                pInput[l] = pCoeffs[l] = xmm_p0;
+                                pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));     // Load coefficients
+                                Rpp32s srcx = index[x + l] + k;
+                                srcx = std::min(std::max(srcx, 0), inputWidthLimit);
+                                rpp_simd_load(rpp_load4_f32_to_f32, inRowPtr + srcx, pInput + l);   // Load filterKernelStride(4) consecutive pixels
+                            }
+                            _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);  // Perform transpose operation to arrange input pixels from different output locations in each vector
+                            for (int l = 0; l < kernelAdd; l++)
+                                pOutput[vec] = _mm_fmadd_ps(pCoeffs[l], pInput[l], pOutput[vec]);
+                        }
+                    }
+                }
+                if(breakLoop) break;
+                rpp_resize_store(out_row + outLocCol, pOutput);
+            }
+            Rpp32s k0 = 0;
+            for (; outLocCol < bufferLength; outLocCol++)
+            {
+                Rpp32s x0 = index[outLocCol];
+                k0 = outLocCol % 4 == 0 ? outLocCol * filter.size : k0 + 1;  // Since coeffs are stored in continuously for 4 dst locations
+                Rpp32f sum = 0;
+                for (int k = 0; k < filter.size; k++)
+                {
+                    Rpp32s srcx = x0 + k;
+                    srcx = std::min(std::max(srcx, 0), inputWidthLimit);
+                    sum += (coeffs[k0 + (k * 4)] * inRowPtr[srcx]);
+                }
+                saturate_pixel(sum, out_row + outLocCol);
+            }
+        }
+    }
+}
+
 #endif //RPP_CPU_COMMON_H

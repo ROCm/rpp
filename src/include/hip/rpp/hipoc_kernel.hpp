@@ -28,12 +28,13 @@
 
 #include <array>
 #include <cassert>
-#include <hip/rpp/errors.hpp>
-#include <hip/rpp/hipoc_program.hpp>
-#include <hip/rpp/stringutils.hpp>
-#include <hip/rpp/op_kernel_args.hpp>
 #include <vector>
 #include <memory.h>
+
+#include "rpp/errors.hpp"
+#include "rpp/hipoc_program.hpp"
+#include "rpp/stringutils.hpp"
+#include "rpp/op_kernel_args.hpp"
 
 namespace rpp {
 

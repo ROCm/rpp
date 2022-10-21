@@ -25,9 +25,15 @@ THE SOFTWARE.
 #include "rppt_tensor_filter_augmentations.h"
 
 #ifdef HIP_COMPILE
-    #include <hip/hip_fp16.h>
-    #include "hip/hip_tensor_filter_augmentations.hpp"
+#include <hip/hip_fp16.h>
+#include "hip/hip_tensor_filter_augmentations.hpp"
 #endif // HIP_COMPILE
+
+/********************************************************************************************************************/
+/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
+/********************************************************************************************************************/
+
+#ifdef GPU_SUPPORT
 
 /******************** box_filter ********************/
 
@@ -96,3 +102,5 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr,
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
+
+#endif // GPU_SUPPORT

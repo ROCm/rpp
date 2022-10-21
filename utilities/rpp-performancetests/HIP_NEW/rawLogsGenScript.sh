@@ -125,8 +125,8 @@ if (( "$#" < 1 )); then
     echo
     echo "Syntax: ./rawLogsGenScript.sh <P> <S> <E>"
     echo "P     PROFILING_OPTION (0 = Run without profiling (end to end api time) / 1 = Run with profiling (kernel time))"
-    echo "S     CASE_START (Starting case# (0-84))"
-    echo "E     CASE_END (Ending case# (0-84))"
+    echo "S     CASE_START (Starting case# (0:86))"
+    echo "E     CASE_END (Ending case# (0:86))"
     exit 1
 fi
 
@@ -137,13 +137,13 @@ if [ "$1" -ne 0 ]; then
     fi
 fi
 
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 84 ]]; then
-    echo "The starting case# must be in the 0-84 range!"
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 86 ]]; then
+    echo "The starting case# must be in the 0:86 range!"
     exit 1
 fi
 
-if [[ "$3" -lt 0 ]] | [[ "$3" -gt 84 ]]; then
-    echo "The ending case# must be in the 0-84 range!"
+if [[ "$3" -lt 0 ]] | [[ "$3" -gt 86 ]]; then
+    echo "The ending case# must be in the 0:86 range!"
     exit 1
 fi
 
@@ -174,7 +174,7 @@ echo "##########################################################################
 echo "Running all PKD3 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do
@@ -279,7 +279,7 @@ echo "##########################################################################
 echo "Running all PLN1 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do
@@ -384,7 +384,7 @@ echo "##########################################################################
 echo "Running all PLN3 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do

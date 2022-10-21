@@ -1,49 +1,61 @@
+/*
+Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #ifndef RPP_H
 #define RPP_H
 
 #include <export.h>
 
 #if RPP_BACKEND_OPENCL
+
 #define CL_TARGET_OPENCL_VERSION 220
 #if defined(__APPLE__) || defined(__MACOSX)
 #include <OpenCL/cl.h>
 #else
 #include <CL/cl.h>
 #endif
+typedef cl_command_queue rppAcceleratorQueue_t;
+
 #elif RPP_BACKEND_HIP
+
 #include <hip/hip_runtime_api.h>
+typedef hipStream_t rppAcceleratorQueue_t;
+
 #endif
 
-/*! Constructs type name from a struct */
-#define RPP_DECLARE_OBJECT(name) \
+// Constructs type name from a struct
+#define RPP_DECLARE_OBJECT(name)    \
     struct name                     \
     {                               \
     };                              \
     typedef struct name* name##_t;
 
+RPP_DECLARE_OBJECT(rppHandle);      // Create the rppHandle_t type
+typedef rppHandle_t RppHandle_t;    // Create typedef for RppHandle_t
 
-
-
-
-
-#if RPP_BACKEND_OPENCL
-typedef cl_command_queue rppAcceleratorQueue_t;
-#elif RPP_BACKEND_HIP
-typedef hipStream_t rppAcceleratorQueue_t;
-#endif
-
-
-/*! @ingroup handle
- * @brief Creates the rppHandle_t type
- */
-RPP_DECLARE_OBJECT(rppHandle);
-
-
-
-typedef rppHandle_t RppHandle_t;
-
-#ifdef __cplusplus
-extern "C" {
+#if _WIN32
+#define SHARED_PUBLIC __declspec(dllexport)
+#else
+#define SHARED_PUBLIC __attribute__ ((visibility ("default")))
 #endif
 
 #include "rppcore.h"
@@ -52,151 +64,148 @@ extern "C" {
 #include "rppt.h"
 #include "rppversion.h"
 
+/******************** rppAllocatorFunction ********************/
 
-
-/*! @brief Get character string for an error code.
- *
- * A function which returns a NULL terminated character string of the error code.
- *
- * @param error  rppStatus_t type error status (input)
- * @return       errorString
-*/
-RPP_EXPORT const char* rppGetErrorString(rppStatus_t error);
-
-/*! @brief Custom allocator function
- *
- * This function allow for user-defined custom allocator
- *
- * @param context     A pointer a context (input)
- * @param sizeBytes   Number of bytes to allocate (input)
- *
-*/
+// Custom allocator function to allow for user-defined custom allocation
+// *param[in] context A pointer to a context
+// *param[in] sizeBytes Number of bytes to allocate
 typedef void* (*rppAllocatorFunction)(void* context, size_t sizeBytes);
 
-/*! @brief Custom deallocator function
- *
- * This function allow for user-defined custom deallocation function
- *
- * @param context     A pointer context (input)
- * @param memory      A pointer allocated memory (input)
- *
-*/
+/******************** rppDeallocatorFunction ********************/
+
+// Custom deallocator function to allow for user-defined custom deallocation
+// *param[in] context A pointer to a context
+// *param[in] memory A pointer to allocated memory
 typedef void (*rppDeallocatorFunction)(void* context, void* memory);
 
-/*! @brief Method to create the MIOpen handle object.
- *
- * This function creates a MIOpen handle. This is called at the very start to initialize the MIOpen
- * environment.
- * @param handle     A pointer to a MIOpen handle type (output)
- *
- * @return           rppStatus_t
-*/
-RPP_EXPORT rppStatus_t rppCreate(rppHandle_t* handle);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/*! @brief Create a MIOpen handle with an accelerator stream.
- *
- * The HIP side returns a hipStream_t type for the stream, while OpenCL will return a
- * cl_command_queue.
- *
- * Create a handle with a previously created accelerator command queue.
- * @param handle     A pointer to a MIOpen handle type (input)
- * @param stream      An accelerator queue type (output)
- *
- * @return           rppStatus_t
-*/
-RPP_EXPORT rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize);
+/******************** rppGetErrorString ********************/
 
-RPP_EXPORT rppStatus_t rppCreateWithStream(rppHandle_t* handle,
-                                                    rppAcceleratorQueue_t stream);
+// Returns a NULL terminated character string of the passed error code
+// *param[in] error Error status of rppStatus_t type
+// *returns errorString
+extern "C" SHARED_PUBLIC const char* rppGetErrorString(rppStatus_t error);
 
+/******************** rppCreate ********************/
 
-RPP_EXPORT rppStatus_t rppCreateWithStreamAndBatchSize(rppHandle_t* handle,
-                                                    rppAcceleratorQueue_t stream, size_t nBatchSize);
-/*! @brief Destroys the MIOpen handle.
- *
- * This is called when breaking down the MIOpen environment.
- * @param handle     MIOpen handle (input)
- * @return           rppStatus_t
-*/
-RPP_EXPORT rppStatus_t rppDestroy(rppHandle_t handle);
+// Function to create a rpp handle. To be called in the beginning to initialize the rpp environment
+// *param[in] handle A pointer to rpp handle of type rppHandle_t
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle);
 
-RPP_EXPORT rppStatus_t rppDestroyGPU(rppHandle_t handle);
-RPP_EXPORT rppStatus_t rppDestroyHost(rppHandle_t handle);
-/*! @brief Set accelerator command queue previously created
- *
- * Set a command queue for an accelerator device
- * @param handle     MIOpen handle (input)
- * @param streamID   An accelerator queue type (input)
- * @return           rppStatus_t
-*/
-RPP_EXPORT rppStatus_t rppSetStream(rppHandle_t handle,
-                                             rppAcceleratorQueue_t streamID);
+/******************** rppCreateWithBatchSize ********************/
 
-/*! @brief Get the previously created accelerator command queue
- *
- * Creates a command queue for an accelerator device
- * @param handle     MIOpen handle (input)
- * @param streamID   Pointer to a accelerator queue type (output)
- * @return           rppStatus_t
-*/
-RPP_EXPORT rppStatus_t rppGetStream(rppHandle_t handle,
-                                             rppAcceleratorQueue_t* streamID);
+// Function to create a rpp handle for a batch. To be called in the beginning to initialize the rpp environment
+// *param[in] handle A pointer to rpp handle of type rppHandle_t
+// *param[in] nBatchSize Batch size
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize);
 
-/*! @brief Set allocator for previously created rppHandle
- *
- * Set a command queue for an accelerator device
- * @param handle     MIOpen handle
- * @param allocator  A callback function MIOpen will use for internal memory allocations.
- *      The provided callback function should allocate device memory with requested size
- *      and return a pointer to this memory.
- *      Passing 0 will restore the default MIOpen allocator and deallocator.
- * @param deallocator  A callback function MIOpen will use to for internal memory deallocation.
- *      The provided callback function should free the specified memory pointer
- * @param allocatorContext  User-specified pointer which is passed to \p allocator and \p
- * deallocator
- *      This allows the callback function to access state set by the caller to this function,
- *      for example a stateful heap allocator or a c++ class.
- * @return           rppStatus_t
-*/
-RPP_EXPORT rppStatus_t rppSetAllocator(rppHandle_t handle,
-                                                rppAllocatorFunction allocator,
-                                                rppDeallocatorFunction deallocator,
-                                                void* allocatorContext);
+/******************** rppDestroy ********************/
 
-/*! @brief Get time for last kernel launched
- *
- * This function is used only when profiling mode has been enabled.
- * Kernel timings are based on the MIOpen handle and is not thread-safe.
- * In order to use multi-threaded profiling, create an MIOpen handle for each
- * concurrent thread.
- *
- * @param handle     MIOpen handle (input)
- * @param time       Pointer to a float type to contain kernel time in milliseconds (output)
- * @return           rppStatus_t
-*/
-RPP_EXPORT rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time);
+// Function to destroy a rpp handle. To be called in the end to break down the rpp environment
+// *param[in] handle An rpp handle of type rppHandle_t
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppDestroy(rppHandle_t handle);
 
-/*! @brief Enable profiling to retrieve kernel time
- *
- * Enable or disable kernel profiling. This profiling is only for kernel time.
- * @param handle     MIOpen handle (input)
- * @param enable     Boolean to toggle profiling (input)
- * @return           rppStatus_t
-*/
-RPP_EXPORT rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable);
-/** @} */
+/******************** rppDestroyHost ********************/
 
+// Function to destroy a rpp handle's host memory allocation. To be called in the end to break down the rpp environment
+// *param[in] handle An rpp handle of type rppHandle_t
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppDestroyHost(rppHandle_t handle);
 
-/*TODO: Comments for rppSetBatchSize and rppGetBatchSize*/
+/******************** rppSetBatchSize ********************/
 
-RPP_EXPORT rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
+// Function to set batch size for handle previously created
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] batchSize Batch size
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t batchSize);
 
-RPP_EXPORT rppStatus_t rppSetBatchSize(rppHandle_t handle , size_t batchSize);
+/******************** rppGetBatchSize ********************/
 
+// Function to get batch size for handle previously created
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] batchSize Batch size
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
 
+#if GPU_SUPPORT
+
+/******************** rppCreateWithStream ********************/
+
+// Function to create a rpp handle with an accelerator stream. To be called in the beginning to initialize the rpp environment
+// *param[in] handle A pointer to rpp handle of type rppHandle_t
+// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStream(rppHandle_t* handle, rppAcceleratorQueue_t stream);
+
+/******************** rppCreateWithStreamAndBatchSize ********************/
+
+// Function to create a rpp handle with an accelerator stream for a batch. To be called in the beginning to initialize the rpp environment
+// *param[in] handle A pointer to rpp handle of type rppHandle_t
+// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+// *param[in] nBatchSize Batch size
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStreamAndBatchSize(rppHandle_t* handle, rppAcceleratorQueue_t stream, size_t nBatchSize);
+
+/******************** rppDestroyGPU ********************/
+
+// Function to destroy a rpp handle's device memory allocation. To be called in the end to break down the rpp environment
+// *param[in] handle An rpp handle of type rppHandle_t
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppDestroyGPU(rppHandle_t handle);
+
+/******************** rppSetStream ********************/
+
+// Function to set an accelerator command queue previously created
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppSetStream(rppHandle_t handle, rppAcceleratorQueue_t streamID);
+
+/******************** rppGetStream ********************/
+
+// Function to get an accelerator command queue previously created
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppGetStream(rppHandle_t handle, rppAcceleratorQueue_t* streamID);
+
+/******************** rppSetAllocator ********************/
+
+// Function to set allocator for previously created rppHandle_t
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] allocator A callback function rpp will use for internal memory allocations. The provided callback function should allocate device memory with requested size and return a pointer to this memory. Passing 0 will restore the default RPP allocator and deallocator.
+// *param[in] deallocator A callback function rpp will use to for internal memory deallocation. The provided callback function should free the specified memory pointer.
+// *param[in] allocatorContext User-specified pointer which is passed to allocator and deallocator. This allows the callback function to access state set by the caller to this function, for example a stateful heap allocator or a c++ class.
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppSetAllocator(rppHandle_t handle, rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext);
+
+/******************** rppGetKernelTime ********************/
+
+// Function to get time for last kernel launched. This function is used only when profiling mode has been enabled.
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] time Pointer to a float type to contain kernel time in milliseconds
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time);
+
+/******************** rppEnableProfiling ********************/
+
+// Function to enable profiling to retrieve kernel time
+// *param[in] handle An rpp handle of type rppHandle_t
+// *param[in] enable Boolean to toggle profiling
+// *returns a rppStatus_t enumeration.
+extern "C" SHARED_PUBLIC rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable);
+
+#endif // GPU_SUPPORT
 
 #ifdef __cplusplus
 }
-#endif
+#endif    // __cplusplus
 
-#endif
+#endif    // RPP_H
