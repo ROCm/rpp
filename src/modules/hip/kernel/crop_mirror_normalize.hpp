@@ -60,7 +60,8 @@ __global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
     d_float24 pix_f24;
     if(mirrorTensor[id_z] == 1)
     {
-        // To handle the case when trying to load from invalid memory location when width is not a multiple of 8
+        // Temporary change - To handle the case when trying to load from invalid memory location when width is not a multiple of 8
+        // This additional condition will be removed once the changes for adding an additional offset memory to allocated input memory are done in MIVisionX
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3;
@@ -122,7 +123,8 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
 
     if(mirrorTensor[id_z] == 1)
     {
-        // To handle the case when trying to load from invalid memory location when width is not a multiple of 8
+        // Temporary change - To handle the case when trying to load from invalid memory location when width is not a multiple of 8
+        // This additional condition will be removed once the changes for adding an additional offset memory to allocated input memory are done in MIVisionX
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + roiTensorPtrSrc[id_z].xywhROI.xy.x;
@@ -216,7 +218,8 @@ __global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
     d_float24 pix_f24;
     if(mirrorTensor[id_z] == 1)
     {
-        // To handle the case when trying to load from invalid memory location when width is not a multiple of 8
+        // Temporary change - To handle the case when trying to load from invalid memory location when width is not a multiple of 8
+        // This additional condition will be removed once the changes for adding an additional offset memory to allocated input memory are done in MIVisionX
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3;
@@ -273,7 +276,8 @@ __global__ void crop_mirror_normalize_pln3_pkd3_tensor(T *srcPtr,
     d_float24 pix_f24;
     if(mirrorTensor[id_z] == 1)
     {
-        // To handle the case when trying to load from invalid memory location when width is not a multiple of 8
+        // Temporary change - To handle the case when trying to load from invalid memory location when width is not a multiple of 8
+        // This additional condition will be removed once the changes for adding an additional offset memory to allocated input memory are done in MIVisionX
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + roiTensorPtrSrc[id_z].xywhROI.xy.x;
