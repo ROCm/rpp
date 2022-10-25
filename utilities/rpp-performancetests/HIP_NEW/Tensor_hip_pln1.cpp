@@ -520,15 +520,19 @@ int main(int argc, char **argv)
     closedir(dr2);
 
     // Convert inputs to test various other bit depths and copy to hip buffers
-    Rpp32f divisionFactor = 255.0;
-    if(test_case == 38)
-        divisionFactor = 1.0;
+
 
     half *inputf16, *inputf16_second, *outputf16;
     Rpp32f *inputf32, *inputf32_second, *outputf32;
     Rpp8s *inputi8, *inputi8_second, *outputi8;
     int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
     int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
+
+    // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
+
+    Rpp32f conversionFactor = 1.0f / 255.0;
+    if(test_case == 38)
+        conversionFactor = 1.0;
 
     if (ip_bitDepth == 0)
     {
@@ -556,8 +560,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp = (half)(((float)*inputTemp) / divisionFactor);
-            *inputf16_secondTemp = (half)(((float)*input_secondTemp) / divisionFactor);
+            *inputf16Temp = (half)(((float)*inputTemp) * conversionFactor);
+            *inputf16_secondTemp = (half)(((float)*input_secondTemp) * conversionFactor);
             inputTemp++;
             inputf16Temp++;
             input_secondTemp++;
@@ -588,8 +592,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf32Temp = ((Rpp32f)*inputTemp) / divisionFactor;
-            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / divisionFactor;
+            *inputf32Temp = ((Rpp32f)*inputTemp) * conversionFactor;
+            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) * conversionFactor;
             inputTemp++;
             inputf32Temp++;
             input_secondTemp++;
@@ -1388,19 +1392,19 @@ int main(int argc, char **argv)
         case 38:
         {
             test_case_name = "crop_mirror_normalize";
-            Rpp32f mean[images];
-            Rpp32f stdDev[images];
-            Rpp32u mirror[images];
             Rpp32f multiplier[images];
             Rpp32f offset[images];
+            Rpp32u mirror[images];
+            Rpp32f meanParam = 100.0f;
+            Rpp32f stdDevParam = 1.0f;
+            Rpp32f offsetParam = - meanParam / stdDevParam;
+            Rpp32f multiplierParam = 1.0f / stdDevParam;
 
             for (i = 0; i < images; i++)
             {
-                mean[i] = 0.0;
-                stdDev[i] = 1.0;
+                multiplier[i] = multiplierParam;
+                offset[i] = offsetParam;
                 mirror[i] = 1;
-                multiplier[i] = 1 / stdDev[i];
-                offset[i] = - (mean[i] / stdDev[i]);
             }
 
             // Uncomment to run test case with an xywhROI override

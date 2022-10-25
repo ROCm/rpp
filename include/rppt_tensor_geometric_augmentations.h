@@ -56,7 +56,7 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
 // *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDescPtr destination tensor descriptor
-// *param[in] offsetTensor offset value for each image in the batch (offsetTensor[n] >= 0)
+// *param[in] offsetTensor offset value for each image in the batch (offsetTensor[n] <= 0)
 // *param[in] multiplierTensor multiplier value for each image in the batch (multiplierTensor[n] > 0)
 // *param[in] mirrorTensor mirror flag value to set mirroring on/off for each image in the batch (mirrorTensor[n] = 0/1)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
