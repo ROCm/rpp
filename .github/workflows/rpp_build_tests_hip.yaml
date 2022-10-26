@@ -25,10 +25,10 @@ jobs:
         sudo docker exec abishek_workflows_do_not_use /bin/bash -c "cd /media/abishek/github-workflows/rpp; mkdir build; cd build; cmake -DBACKEND=HIP ..; sudo make -j20 install"
     - name: RPP performance check - Wall Time
       run: |
-        sudo docker exec abishek_workflows_do_not_use /bin/bash -c "cd /media/abishek/github-workflows/rpp/utilities/rpp-performancetests/HOST_NEW; python3 generatePerformanceLogs.py --case_start 21 --case_end 21"
+        sudo docker exec abishek_workflows_do_not_use /bin/bash -c "cd /media/abishek/github-workflows/rpp/utilities/rpp-performancetests/HIP_NEW; python3 generatePerformanceLogs.py --case_start 21 --case_end 21"
     - name: RPP performance check - Profiler Time
       run: |
-        sudo docker exec abishek_workflows_do_not_use /bin/bash -c "cd /media/abishek/github-workflows/rpp/utilities/rpp-performancetests/HOST_NEW; python3 generatePerformanceLogs.py --case_start 21 --case_end 21 --profiling YES"
+        sudo docker exec abishek_workflows_do_not_use /bin/bash -c "cd /media/abishek/github-workflows/rpp/utilities/rpp-performancetests/HIP_NEW; python3 generatePerformanceLogs.py --case_start 21 --case_end 21 --profiling YES"
     - name: MIVisionX HIP compatibility check
       run: |
         echo "PR#$PR_NUMBER is being verified."
