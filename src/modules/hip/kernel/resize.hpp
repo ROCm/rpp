@@ -32,7 +32,157 @@ __device__ void resize_roi_generic_srcloc_and_weight_hip_compute(int roiLoc, int
     *srcLoc = ((srcLocationRounded > limit) ? limit : srcLocationRounded) * srcStride;
 }
 
-// -------------------- Set 1 - Bilinear Interpolation --------------------
+// -------------------- Set 1 - Nearest Neighbor Interpolation --------------------
+
+template <typename T>
+__global__ void resize_nearest_neighbor_pkd_tensor(T *srcPtr,
+                                                   uint2 srcStridesNH,
+                                                   T *dstPtr,
+                                                   uint2 dstStridesNH,
+                                                   RpptImagePatchPtr dstImgSize,
+                                                   RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint2 dstDimsWH;
+    dstDimsWH.x = dstImgSize[id_z].width;
+    dstDimsWH.y = dstImgSize[id_z].height;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNH.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
+
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
+template <typename T>
+__global__ void resize_nearest_neighbor_pln_tensor(T *srcPtr,
+                                                   uint3 srcStridesNCH,
+                                                   T *dstPtr,
+                                                   uint3 dstStridesNCH,
+                                                   int channelsDst,
+                                                   RpptImagePatchPtr dstImgSize,
+                                                   RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint2 dstDimsWH;
+    dstDimsWH.x = dstImgSize[id_z].width;
+    dstDimsWH.y = dstImgSize[id_z].height;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
+
+    d_float8 dst_f8;
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+
+    if (channelsDst == 3)
+    {
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
+
+        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
+
+        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+    }
+}
+
+template <typename T>
+__global__ void resize_nearest_neighbor_pkd3_pln3_tensor(T *srcPtr,
+                                                         uint2 srcStridesNH,
+                                                         T *dstPtr,
+                                                         uint3 dstStridesNCH,
+                                                         RpptImagePatchPtr dstImgSize,
+                                                         RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint2 dstDimsWH;
+    dstDimsWH.x = dstImgSize[id_z].width;
+    dstDimsWH.y = dstImgSize[id_z].height;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNH.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
+
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+}
+
+template <typename T>
+__global__ void resize_nearest_neighbor_pln3_pkd3_tensor(T *srcPtr,
+                                                         uint3 srcStridesNCH,
+                                                         T *dstPtr,
+                                                         uint2 dstStridesNH,
+                                                         RpptImagePatchPtr dstImgSize,
+                                                         RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint2 dstDimsWH;
+    dstDimsWH.x = dstImgSize[id_z].width;
+    dstDimsWH.y = dstImgSize[id_z].height;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
+
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_nearest_neighbor_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
+// -------------------- Set 2 - Bilinear Interpolation --------------------
 
 template <typename T>
 __global__ void resize_bilinear_pkd_tensor(T *srcPtr,
@@ -579,7 +729,73 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
 
     if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
     {
-        return RPP_ERROR_NOT_IMPLEMENTED;
+        int localThreads_x = 16;
+        int localThreads_y = 16;
+        int localThreads_z = 1;
+        int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+        int globalThreads_y = dstDescPtr->h;
+        int globalThreads_z = handle.GetBatchSize();
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            hipLaunchKernelGGL(resize_nearest_neighbor_pkd_tensor,
+                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                            dim3(localThreads_x, localThreads_y, localThreads_z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                            dstImgSize,
+                            roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(resize_nearest_neighbor_pln_tensor,
+                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                            dim3(localThreads_x, localThreads_y, localThreads_z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                            dstDescPtr->c,
+                            dstImgSize,
+                            roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+        {
+            if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                hipLaunchKernelGGL(resize_nearest_neighbor_pkd3_pln3_tensor,
+                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                dim3(localThreads_x, localThreads_y, localThreads_z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiTensorPtrSrc);
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+                hipLaunchKernelGGL(resize_nearest_neighbor_pln3_pkd3_tensor,
+                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                                dim3(localThreads_x, localThreads_y, localThreads_z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiTensorPtrSrc);
+            }
+        }
     }
     else if (interpolationType == RpptInterpolationType::BILINEAR)
     {
