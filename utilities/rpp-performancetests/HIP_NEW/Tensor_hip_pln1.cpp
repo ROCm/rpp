@@ -1396,7 +1396,7 @@ int main(int argc, char **argv)
             Rpp32f offset[images];
             Rpp32u mirror[images];
             Rpp32f meanParam = 100.0f;
-            Rpp32f stdDevParam = 1.0f;
+            Rpp32f stdDevParam = 0.9f;
             Rpp32f offsetParam = - meanParam / stdDevParam;
             Rpp32f multiplierParam = 1.0f / stdDevParam;
 
