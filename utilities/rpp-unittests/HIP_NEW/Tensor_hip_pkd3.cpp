@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 24 || test_case == 40 || test_case == 41 || test_case == 49);
     bool kernelSizeCase = (test_case == 40 || test_case == 41 || test_case == 49);
-    bool interpolationTypeCase = (test_case == 21 || test_case == 24);
+    bool interpolationTypeCase = (test_case == 21 || test_case == 23 || test_case == 24);
     bool noiseTypeCase = (test_case == 8);
     bool pln1OutTypeCase = (test_case == 86);
 
@@ -1297,6 +1297,8 @@ int main(int argc, char **argv)
             roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
             roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
             roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
