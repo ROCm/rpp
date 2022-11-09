@@ -1285,14 +1285,12 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
     if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
         return RPP_ERROR_NOT_IMPLEMENTED;
     
-    Rpp32f *affineTensor = (Rpp32f *)malloc(rpp::deref(rppHandle).GetBatchSize() * 6 * sizeof(float));
+    Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem;
     for(int idx = 0; idx < rpp::deref(rppHandle).GetBatchSize(); idx++)
     {
         Rpp32f angleInRad = RAD(angle[idx]);
         Rpp32f alpha = cos(angleInRad);
         Rpp32f beta = sin(angleInRad);
-        // Rpp32f center_x = 0;
-        // Rpp32f center_y = 0;
 
         Rpp32s index = idx * 6;
         affineTensor[index] = alpha;
