@@ -1269,4 +1269,92 @@ return RPP_SUCCESS;
 #endif // backend
 }
 
+/******************** rotate ********************/
+
+RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          Rpp32f *angle,
+                          RpptInterpolationType interpolationType,
+                          RpptROIPtr roiTensorPtrSrc,
+                          RpptRoiType roiType,
+                          rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    
+    Rpp32f *affineTensor = (Rpp32f *)malloc(rpp::deref(rppHandle).GetBatchSize() * 6 * sizeof(float));
+    for(int idx = 0; idx < rpp::deref(rppHandle).GetBatchSize(); idx++)
+    {
+        Rpp32f angleInRad = RAD(angle[idx]);
+        Rpp32f alpha = cos(angleInRad);
+        Rpp32f beta = sin(angleInRad);
+        // Rpp32f center_x = 0;
+        // Rpp32f center_y = 0;
+
+        Rpp32s index = idx * 6;
+        affineTensor[index] = alpha;
+        affineTensor[index + 1] = -1 * beta;
+        affineTensor[index + 2] = 0;
+        affineTensor[index + 3] = beta;
+        affineTensor[index + 4] = alpha;
+        affineTensor[index + 5] = 0;
+    }
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_warp_affine_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                    srcDescPtr,
+                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                    dstDescPtr,
+                                    affineTensor,
+                                    interpolationType,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_warp_affine_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                    srcDescPtr,
+                                    (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                    dstDescPtr,
+                                    affineTensor,
+                                    interpolationType,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_warp_affine_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                    srcDescPtr,
+                                    (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                    dstDescPtr,
+                                    affineTensor,
+                                    interpolationType,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_warp_affine_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                    srcDescPtr,
+                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                    dstDescPtr,
+                                    affineTensor,
+                                    interpolationType,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
 #endif // GPU_SUPPORT
