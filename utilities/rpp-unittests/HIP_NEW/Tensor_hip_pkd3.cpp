@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     unsigned int outputFormatToggle = atoi(argv[5]);
     int test_case = atoi(argv[6]);
 
-    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 24 || test_case == 40 || test_case == 41 || test_case == 49);
+    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 23 || test_case == 24 || test_case == 40 || test_case == 41 || test_case == 49);
     bool kernelSizeCase = (test_case == 40 || test_case == 41 || test_case == 49);
     bool interpolationTypeCase = (test_case == 21 || test_case == 23 || test_case == 24);
     bool noiseTypeCase = (test_case == 8);
