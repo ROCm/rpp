@@ -102,7 +102,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 else()
     # -O3 -- Optimize output file
     # TBD:Verify Requirement -Ofast - Optimize for speed disregarding exact standards compliance
-    # -DNDEBUG -- turn off asserts 
+    # -DNDEBUG -- turn off asserts
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -DNDEBUG")
 endif()
 message("-- ${BoldBlue}AMD RPP Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
@@ -162,7 +162,7 @@ set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
 # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation.
 # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation.
 # -std=gnu++14 -- Conform to the ISO 2014 C++ standard with GNU extensions.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mfma -std=gnu++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mf16c -mfma -std=gnu++14")
 
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
