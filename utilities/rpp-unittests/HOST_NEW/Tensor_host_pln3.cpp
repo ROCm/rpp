@@ -145,7 +145,7 @@ int main(int argc, char **argv)
     case 21:
         strcpy(funcName, "resize");
         break;
-    case 21:
+    case 23:
         strcpy(funcName, "rotate");
         break;
     case 24:
