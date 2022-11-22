@@ -1401,19 +1401,12 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     
     Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem;
-    for(int idx = 0; idx < rpp::deref(rppHandle).GetBatchSize(); idx++)
+    for(int idx = 0; idx < srcDescPtr->n; idx++)
     {
-        Rpp32f angleInRad = RAD(angle[idx]);
+        Rpp32f angleInRad = angle[idx] * PI_OVER_180;
         Rpp32f alpha = cos(angleInRad);
         Rpp32f beta = sin(angleInRad);
-
-        Rpp32s index = idx * 6;
-        affineTensor[index] = alpha;
-        affineTensor[index + 1] = -1 * beta;
-        affineTensor[index + 2] = 0;
-        affineTensor[index + 3] = beta;
-        affineTensor[index + 4] = alpha;
-        affineTensor[index + 5] = 0;
+        ((Rpp32f6 *)affineTensor)[idx] = {alpha, -beta, 0, beta, alpha, 0};
     }
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))

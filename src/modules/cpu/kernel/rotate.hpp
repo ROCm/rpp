@@ -6,15 +6,10 @@
 
 inline void compute_rotate_affine_matrix(Rpp32f angle, Rpp32f6 &affineMatrix_f6)
 {
-    angle = RAD(angle);
+    angle = angle * PI_OVER_180;
     Rpp32f alpha = std::cos(angle);
     Rpp32f beta = std::sin(angle);
-    affineMatrix_f6.data[0] = alpha;
-    affineMatrix_f6.data[1] = - 1 * beta;
-    affineMatrix_f6.data[2] = 0;
-    affineMatrix_f6.data[3] = beta;
-    affineMatrix_f6.data[4] = alpha;
-    affineMatrix_f6.data[5] = 0;
+    affineMatrix_f6 = {alpha, -beta, 0, beta, alpha, 0};
 }
 
 inline void compute_rotate_src_loc_next_term_sse(__m128 &pSrcY, __m128 &pSrcX, __m128 &pAffineMatrixTerm3Incr, __m128 &pAffineMatrixTerm0Incr)
@@ -93,7 +88,7 @@ omp_set_dynamic(0);
         pRoiLTRB[2] = _mm_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm_set1_ps(roiLTRB.ltrbROI.rb.y);
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
+        // Rotate with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -138,7 +133,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NHWC)
+        // Rotate with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *dstPtrRow;
@@ -182,7 +177,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NHWC)
+        // Rotate with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *dstPtrRow;
@@ -220,7 +215,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
+        // Rotate with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *dstPtrRow;
@@ -317,7 +312,7 @@ omp_set_dynamic(0);
         pRoiLTRB[2] = _mm_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm_set1_ps(roiLTRB.ltrbROI.rb.y);
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
+        // Rotate with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -362,7 +357,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NHWC)
+        // Rotate with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *dstPtrRow;
@@ -406,7 +401,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NHWC)
+        // Rotate with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *dstPtrRow;
@@ -444,7 +439,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
+        // Rotate with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRow;
@@ -541,7 +536,7 @@ omp_set_dynamic(0);
         pRoiLTRB[2] = _mm_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm_set1_ps(roiLTRB.ltrbROI.rb.y);
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
+        // Rotate with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -586,7 +581,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NHWC)
+        // Rotate with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *dstPtrRow;
@@ -630,7 +625,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NHWC)
+        // Rotate with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *dstPtrRow;
@@ -668,7 +663,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
+        // Rotate with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRow;
@@ -748,7 +743,7 @@ omp_set_dynamic(0);
         srcPtrChannel = srcPtrImage;
         dstPtrChannel = dstPtrImage;
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
+        // Rotate with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -777,7 +772,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NHWC)
+        // Rotate with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *dstPtrRow;
@@ -805,7 +800,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NHWC)
+        // Rotate with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *dstPtrRow;
@@ -829,7 +824,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
+        // Rotate with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRow;
@@ -910,7 +905,7 @@ omp_set_dynamic(0);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
+        // Rotate with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -956,7 +951,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NHWC)
+        // Rotate with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *dstPtrRow;
@@ -995,7 +990,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NHWC)
+        // Rotate with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *dstPtrRow;
@@ -1034,7 +1029,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
+        // Rotate with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1080,7 +1075,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        // Rotate without fused output-layout toggle single channel (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *dstPtrRow;
@@ -1174,7 +1169,7 @@ omp_set_dynamic(0);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
+        // Rotate with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1220,7 +1215,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NHWC)
+        // Rotate with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *dstPtrRow;
@@ -1259,7 +1254,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NHWC)
+        // Rotate with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *dstPtrRow;
@@ -1298,7 +1293,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
+        // Rotate with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1344,7 +1339,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        // Rotate without fused output-layout toggle single channel (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRow;
@@ -1438,7 +1433,7 @@ omp_set_dynamic(0);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
+        // Rotate with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1485,7 +1480,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NHWC)
+        // Rotate with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *dstPtrRow;
@@ -1525,7 +1520,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NHWC)
+        // Rotate with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *dstPtrRow;
@@ -1565,7 +1560,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
+        // Rotate with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1612,7 +1607,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        // Rotate without fused output-layout toggle single channel (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRow;
@@ -1707,7 +1702,7 @@ omp_set_dynamic(0);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NCHW)
+        // Rotate with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1760,7 +1755,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NHWC)
+        // Rotate with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *dstPtrRow;
@@ -1802,7 +1797,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NHWC -> NHWC)
+        // Rotate with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *dstPtrRow;
@@ -1844,7 +1839,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine with fused output-layout toggle (NCHW -> NCHW)
+        // Rotate with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1897,7 +1892,7 @@ omp_set_dynamic(0);
             }
         }
 
-        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        // Rotate without fused output-layout toggle single channel (NCHW -> NCHW)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRow;

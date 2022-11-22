@@ -182,13 +182,13 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, R
 
 /******************** rotate ********************/
 
-// Warp Affine augmentation for a NCHW/NHWC layout tensor
+// Rotate augmentation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDescPtr destination tensor descriptor
-// *param[in] angle values for image rotation
+// *param[in] angle values for image rotation in degrees (positive deg-anticlockwise/negative deg-clockwise)
 // *param[in] interpolationType Interpolation type used (RpptInterpolationType::XYWH or RpptRoiType::LTRB)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
