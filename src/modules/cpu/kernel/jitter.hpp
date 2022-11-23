@@ -2,16 +2,26 @@
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-inline void compute_jitter_param_initialize_4_host_sse(Rpp32u &kernelSize, __m128 pJitterParam)
+inline void compute_jitter_param_initialize_4_host_sse(Rpp32u &kernelSize, __m128 &pJitterParam)
 {
     pJitterParam = _mm_set1_ps(kernelSize);
 }
 
-inline void compute_jitter_param_initialize_8_host_avx(Rpp32u &kernelSize, __m256 pJitterParam)
+void printVec8(__m128i vec)
 {
-    pJitterParam = _mm256_set1_ps(kernelSize);
-}
+    int i;
+    //char array[16];
+    int array[4];
+    _mm_store_si128( (__m128i *) array, vec);
+    /*for(i=0; i<16; i++){
+        printf("%3u , " , array[i]);
+    }*/
+    for(i=0; i<4; i++){
+        printf("%5d , " , array[i]);
+    }
+    printf("\n");
 
+}
 RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        Rpp8u *dstPtr,
@@ -23,6 +33,9 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+
+    __m128 pSrcChannel = _mm_set1_ps(srcDescPtr->c);
+    __m128 pSrcStride = _mm_set1_ps(srcDescPtr->strides.hStride);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -42,29 +55,25 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = widthLimit * layoutParams.bufferMultiplier;
+        //Rpp32u bufferLength = widthLimit * layoutParams.bufferMultiplier;
 
         Rpp8u *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u alignedLength = (bufferLength / 48) * 48;
-        Rpp32u vectorIncrement = 48;
-        Rpp32u vectorIncrementPerChannel = 16;
-        int seedVal;
+        Rpp32u alignedLength = widthLimit & ~3;   // Align dst width to process 4 dst pixels per iteration
+        Rpp32u vectorIncrement = 12;
+        Rpp32u vectorIncrementPerChannel = 4;
         RpptXorwowStateBoxMuller xorwowState;
+        Rpp32s jitterSrcLocArray[4] = {0}; 
 
-#if __AVX2__
-        __m256i pxXorwowStateX[5], pxXorwowStateCounter;
-        __m256 pJitterParam;
-        rpp_host_rng_xorwow_state_offsetted_avx(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
-        compute_jitter_param_initialize_8_host_avx(kernelSize, pJitterParam);
-#else
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
         __m128 pJitterParam;
         rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
         compute_jitter_param_initialize_4_host_sse(kernelSize, pJitterParam);
-#endif
+        __m128 pDstLoc = xmm_pDstLocInit;
+        //__m128 roix = _mm_set1_ps(roi.xywhROI.xy.x);
+        //__m128 roiy = _mm_set1_ps(roi.xywhROI.xy.y);
 
         // Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -87,7 +96,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 /*for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
-                    __m256 p[6];
+                    __m128 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);
                     compute_jitter_48_host(p, );  // jitter
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
@@ -104,15 +113,19 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempB += vectorIncrementPerChannel;
                 }*/
 
-                seedVal = rand() % (65536);
-                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                for (; vectorLoopCount < widthLimit; vectorLoopCount += 3)
                 {
-                    wyhash16_x = seedVal;
-                    Rpp16u nhx = rand_range16(kernelSize);
-                    Rpp16u nhy = rand_range16(kernelSize);
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[0] + (roi.xywhROI.xy.y + i + nhy)*srcDescPtr->strides.hStride + (roi.xywhROI.xy.x + nhx)));
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[1] + (roi.xywhROI.xy.y + i + nhy)*srcDescPtr->strides.hStride + (roi.xywhROI.xy.x + nhx)));
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[2] + (roi.xywhROI.xy.y + i + nhy)*srcDescPtr->strides.hStride + (roi.xywhROI.xy.x + nhx)));
+
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp16u nhx = randomNumberFloat * kernelSize;
+                    randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp16u nhy = randomNumberFloat * kernelSize;
+                    int rowLoc = (roi.xywhROI.xy.y + i + nhy) * srcDescPtr->strides.hStride;
+                    int colLoc = (roi.xywhROI.xy.x + vectorLoopCount + nhx) * srcDescPtr->c;
+                    int rowcolLoc = rowLoc + colLoc;
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[0] + rowcolLoc));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[1] + rowcolLoc));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[2] + rowcolLoc));
 
                     //srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -148,7 +161,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 /*for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
-                    __m256 p[6];
+                    __m128 p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_jitter_48_host(p, );  // jitter
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
@@ -164,15 +177,18 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTemp += vectorIncrement;
                 }*/
 
-                seedVal = rand() % (65536);
-                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                for (; vectorLoopCount < widthLimit; vectorLoopCount++)
                 {
-                    wyhash16_x = seedVal;
-                    Rpp16u nhx = rand_range16(kernelSize);
-                    Rpp16u nhy = rand_range16(kernelSize);
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTempR + (roi.xywhROI.xy.y + i + nhy)*srcDescPtr->strides.hStride + (roi.xywhROI.xy.x + nhx)));
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTempG + (roi.xywhROI.xy.y + i + nhy)*srcDescPtr->strides.hStride + (roi.xywhROI.xy.x + nhx)));
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTempB + (roi.xywhROI.xy.y + i + nhy)*srcDescPtr->strides.hStride + (roi.xywhROI.xy.x + nhx)));
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp16u nhx = randomNumberFloat * kernelSize;
+                    randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp16u nhy = randomNumberFloat * kernelSize;
+                    int rowLoc = (roi.xywhROI.xy.y + i + nhy) * srcDescPtr->strides.hStride;
+                    int colLoc = (roi.xywhROI.xy.x + vectorLoopCount + nhx) * srcDescPtr->c;
+                    int rowcolLoc = rowLoc + colLoc;
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTempR + rowcolLoc));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTempG + rowcolLoc));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTempB + rowcolLoc));
 
                     //srcPtrTempR++;
                     //srcPtrTempG++;
@@ -190,107 +206,97 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Jitter without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            //Rpp32u alignedLength = bufferLength & ~15;
-            Rpp8u *srcPtrRow, *dstPtrRow /*, *srcPtrTempRow*/;
-            srcPtrRow = srcPtrChannel;
+            Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            //srcPtrTempRow = srcPtrChannel;
-            int i=0;
-            for(; i < heightLimit; i++)
+
+
+            for(int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
+            {
+                Rpp8u *dstPtrTemp;
+                dstPtrTemp = dstPtrRow;
+
+                __m128 randomNumberFloatx, randomNumberFloaty, nhx, nhy, x, y, j;
+                __m128 pdstLocRow = _mm_set1_ps(dstLocRow);
+                //y = _mm_add_ps(roiy,pdstLocRow);
+                y = _mm_set1_ps(dstLocRow);
+
+                printf("%d\n",dstLocRow);
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m128i pRow;
+                    j = _mm_set1_ps(vectorLoopCount);
+                    //x = _mm_add_ps(roix,_mm_add_ps(j,pDstLoc));
+                    x = _mm_add_ps(j,pDstLoc);
+                    randomNumberFloatx = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, &pxXorwowStateCounter);
+                    nhx = _mm_mul_ps(randomNumberFloatx,pJitterParam);
+                    randomNumberFloaty = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, &pxXorwowStateCounter);
+                    nhy = _mm_mul_ps(randomNumberFloaty,pJitterParam);
+
+
+                    __m128 rowTemp = _mm_add_ps(y,nhy);
+                    __m128 colTemp = _mm_add_ps(x,nhx);
+                    printf("\nrowTemp\n");
+                    printVec8(_mm_cvtps_epi32(rowTemp));
+                    printf("\ncolTemp\n");
+                    printVec8(_mm_cvtps_epi32(colTemp));
+                    
+                    compute_jitter_loc(rowTemp, colTemp, jitterSrcLocArray, pSrcStride, pSrcChannel);
+                    printf("\ncompute loc done\n");
+                    rpp_simd_load(rpp_nn_load_u8pkd3, srcPtrChannel, jitterSrcLocArray, pRow);
+                    printf("simd load done\n");
+                    rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTemp, pRow);
+                    printf("simd store done\n");
+                    dstPtrTemp += vectorIncrement;
+                }
+
+                for (; vectorLoopCount < widthLimit; vectorLoopCount++)
+                {
+                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32u nhx = randomNumberFloat * kernelSize;
+                    randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                    Rpp32u nhy = randomNumberFloat * kernelSize;
+                    int rowLoc = (roi.xywhROI.xy.y + dstLocRow + nhy) * srcDescPtr->strides.hStride;
+                    int colLoc = (roi.xywhROI.xy.x + vectorLoopCount + nhx) * srcDescPtr->c;
+                    int rowcolLoc = rowLoc + colLoc;
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrChannel + rowcolLoc));
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrChannel + rowcolLoc + 1));
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrChannel + rowcolLoc + 2));
+                }
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+            /*int i=0;
+            for(; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp, *dstPtrTemp;                    
                 srcPtrTemp = srcPtrRow;
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-#if __AVX2__
-                    __m256 pRowCol[5], p[6];
-                    RpptFloatVector2D rowColVector;
-                    rowColVector.x = vectorLoopCount;
-                    rowColVector.y = i;
-                    pRowCol[0] = _mm256_set1_ps(rowColVector.x);
-                    pRowCol[1] = _mm256_set1_ps(rowColVector.y);
-                    pRowCol[2] = _mm256_set1_ps(roi.xywhROI.xy.x);
-                    pRowCol[3] = _mm256_set1_ps(roi.xywhROI.xy.y);
-                    pRowCol[4] = _mm256_set1_ps(srcDescPtr->strides.hStride);
-#endif
-                /*for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
-                {
-#if __AVX2__
-                    __m256 pRowCol[5], p[6];
-                    RpptFloatVector2D rowColVector;
-                    rowColVector.x = vectorLoopCount;
-                    rowColVector.y = i;
-                    pRowCol[0] = _mm256_set1_ps(rowColVector.x);
-                    pRowCol[1] = _mm256_set1_ps(rowColVector.y);
-                    pRowCol[2] = _mm256_set1_ps(roi.xywhROI.xy.x);
-                    pRowCol[3] = _mm256_set1_ps(roi.xywhROI.xy.y);
-                    pRowCol[4] = _mm256_set1_ps(srcDescPtr->strides.hStride);
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);                                 // simd loads
-                    compute_jitter_48_host(p, pxXorwowStateX, &pxXorwowStateCounter, pRowCol, pJitterParam); // jitter adjustment
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);                         // simd stores
-#else
-                    __m128 pRowCol[5], p[12];
-                    RpptFloatVector2D rowColVector;
-                    rowColVector.x = vectorLoopCount;
-                    rowColVector.y = i;
-                    pRowCol[0] = _mm_set1_ps(rowColVector.x);
-                    pRowCol[1] = _mm_set1_ps(rowColVector.y);
-                    pRowCol[2] = _mm_set1_ps(roi.xywhROI.xy.x);
-                    pRowCol[3] = _mm_set1_ps(roi.xywhROI.xy.y);
-                    pRowCol[4] = _mm_set1_ps(srcDescPtr->strides.hStride);
-                    rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);                                      // simd loads
-                    compute_jitter_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, pRowCol, pJitterParam); // jitter adjustment
-                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);                                    // simd stores
-#endif
-                    srcPtrTemp +=16;
-                    dstPtrTemp +=16;
-                }*/
-
-                //seedVal = rand() % (65536);
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    /*wyhash16_x = seedVal;
+                    wyhash16_x = seedVal;
                     Rpp16u nhx = rand_range16(kernelSize);
-                    Rpp16u nhy = rand_range16(kernelSize);*/
+                    Rpp16u nhy = rand_range16(kernelSize);
 
                     Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     Rpp16u nhx = randomNumberFloat * kernelSize;
                     randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
                     Rpp16u nhy = randomNumberFloat * kernelSize;
 
-#if __AVX2__
-                    /*__m256 randomNumberFloatx, randomNumberFloaty, nhx, nhy, Offset[2];
-                    __m256 pROffset;
-                    __m256 pkernelSize = _mm256_set1_ps(kernelSize);
-                    __m256 three = _mm256_set1_ps(3);
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);      // simd loads
-                    randomNumberFloatx = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, &pxXorwowStateCounter);
-                    nhx = _mm256_mul_ps(randomNumberFloatx,pkernelSize);
-                    randomNumberFloaty = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, &pxXorwowStateCounter);
-                    nhy = _mm256_mul_ps(randomNumberFloaty,pkernelSize);
-                    Offset[0] = _mm256_add_ps(pRowCol[3],_mm256_add_ps(pRowCol[1],nhy));
-                    Offset[0] = _mm256_mul_ps(Offset[0], pRowCol[4]);
-                    Offset[1] = _mm256_add_ps(pRowCol[2],_mm256_add_ps(pRowCol[0],nhx));
-                    Offset[1] = _mm256_mul_ps(Offset[1], three);
-                    pROffset = _mm256_add_ps(Offset[0], Offset[1]);
-                    *p = p + pROffset;
-                    *(p+2) = *(p + 2 + pGOffset + 1);
-                    *(p+4) = *(p + 4 + pBOffset + 2);
-                    rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);*/
                     int rowLoc = (roi.xywhROI.xy.y + i + nhy) * srcDescPtr->strides.hStride;
                     int colLoc = (roi.xywhROI.xy.x + vectorLoopCount + nhx) * srcDescPtr->c;
                     int rowcolLoc = rowLoc + colLoc;
                     *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowcolLoc));
                     *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowcolLoc + 1));
                     *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowcolLoc + 2));
-#endif
                 }
-                //*dstPtrTemp+=(3*bufferLengthMax-bufferLength);
+                *dstPtrTemp+=(3*bufferLengthMax-bufferLength);
                 dstPtrRow += dstDescPtr->strides.hStride;
                 //srcPtrTempRow += srcDescPtr->strides.hStride;
             }
-            /*for(;i<roi.xywhROI.roiHeight;i++)
+            for(;i<roi.xywhROI.roiHeight;i++)
             {
                 Rpp8u *srcPtrTemp, *dstPtrTemp;                    
                 srcPtrTemp = srcPtrTempRow;
@@ -306,12 +312,14 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
                 srcPtrTempRow += srcDescPtr->strides.hStride;
+            }
+            for(; i < roi.xywhROI.roiHeight; i++)
+            {
+                dstPtrRow += roi.xywhROI.roiWidth;
             }*/
-            //srcPtrChannel += srcDescPtr->strides.cStride;
         }
         else
         {
-            Rpp32u alignedLength = bufferLength & ~15;
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8u *srcPtrRow, *dstPtrRow;
@@ -328,7 +336,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     /*for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
 #if __AVX2__
-                        __m256 p[2];
+                        __m128 p[2];
 
                         rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrTemp, p);    // simd loads
                         compute_jitter_16_host(p, );  // jitter adjustment
@@ -344,27 +352,22 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTemp +=16;
                     }*/
 
-                    seedVal = rand() % (65536);
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    for (; vectorLoopCount < widthLimit; vectorLoopCount++)
                     {
-                        wyhash16_x = seedVal;
-                        Rpp16u nhx = rand_range16(kernelSize);
-                        Rpp16u nhy = rand_range16(kernelSize);
-                        int rowLoc = (i + nhy) * srcDescPtr->strides.hStride;
-                        int colLoc = (vectorLoopCount + nhx) * srcDescPtr->c;
-                        *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowLoc + colLoc));
-                        *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowLoc + colLoc + 1));
-                        *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowLoc + colLoc + 2));
-                        
-                        // srcPtrTemp++;
-                        // dstPtrTemp++;
+                        Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                        Rpp16u nhx = randomNumberFloat * kernelSize;
+                        randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
+                        Rpp16u nhy = randomNumberFloat * kernelSize;
+                        int rowLoc = (roi.xywhROI.xy.y + i + nhy) * srcDescPtr->strides.hStride;
+                        int colLoc = (roi.xywhROI.xy.x + vectorLoopCount + nhx) * srcDescPtr->c;
+                        int rowcolLoc = rowLoc + colLoc;
+                        *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowcolLoc));
+                        *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowcolLoc + 1));
+                        *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) *(srcPtrTemp + rowcolLoc + 2));
                     }
 
-                    // srcPtrRow += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
-                // srcPtrChannel += srcDescPtr->strides.cStride;
-                // dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
     }
@@ -438,7 +441,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 /*for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
-                    __m256 p[3];
+                    __m128 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_jitter_24_host(p, );  // jitter adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
@@ -497,7 +500,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 /*for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
-                    __m256 p[3];
+                    __m128 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_jitter_24_host(p, );  // jitter adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
@@ -557,7 +560,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     /*for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
 #if __AVX2__
-                        __m256 p[1];
+                        __m128 p[1];
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
                         compute_jitter_8_host(p, );  // jitter adjustment
@@ -666,7 +669,7 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
 
 #if __AVX2__
-                    __m256 p[3];
+                    __m128 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
                     compute_jitter_24_host(p, );  // jitter adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
@@ -742,7 +745,7 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
                     }
 #if __AVX2__
-                    __m256 p[3];
+                    __m128 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
                     compute_jitter_24_host(p, );  // jitter adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
@@ -810,7 +813,7 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                             srcPtrTemp_ps[cnt] = (Rpp16f) srcPtrTemp[cnt];
                         }
 #if __AVX2__
-                        __m256 p[1];
+                        __m128 p[1];
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, p);    // simd loads
                         compute_jitter_8_host(p, );  // jitter adjustment
@@ -923,7 +926,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 /*for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
-                    __m256 p[6];
+                    __m128 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);
                     compute_jitter_48_host(p, );  // jitter adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
@@ -984,7 +987,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 /*for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
-                    __m256 p[6];
+                    __m128 p[6];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_jitter_48_host(p, );  // jitter adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
@@ -1044,7 +1047,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     /*for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
 #if __AVX2__
-                        __m256 p[2];
+                        __m128 p[2];
 
                         rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtrTemp, p);    // simd loads
                         compute_jitter_16_host(p, );  // jitter adjustment
