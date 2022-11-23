@@ -71,7 +71,8 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 /******************** blend ********************/
 
 // Alpha blending augmentation for a NCHW/NHWC layout tensor
-// *param[in] srcPtr source tensor memory
+// *param[in] srcPtr1 source tensor memory
+// *param[in] srcPtr2 source tensor memory
 // *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDescPtr destination tensor descriptor
