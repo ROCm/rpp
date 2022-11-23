@@ -92,7 +92,7 @@ __global__ void jitter_pln_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint seedStreamIdx = (id_y * dstStridesNCH.y) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
+    uint seedStreamIdx = (id_y * dstStridesNCH.z) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
 
     uint kernelSize_u1 = kernelSize[id_z];
 
@@ -160,9 +160,9 @@ __global__ void jitter_pkd3_pln3_tensor(T *srcPtr,
     }
 
     uint srcIdx = (id_z * srcStridesNH.x);
-    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.y) + (id_x * 3);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    uint seedStreamIdx = (id_y * dstStridesNCH.y) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
+    uint seedStreamIdx = (id_y * dstStridesNCH.z) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
 
     RpptXorwowStateBoxMuller xorwowState;
     uint xorwowSeed = xorwowSeedStream[seedStreamIdx % SEED_STREAM_MAX_SIZE];
