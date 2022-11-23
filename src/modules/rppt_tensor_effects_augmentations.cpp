@@ -419,12 +419,14 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr,
                                RppPtr_t dstPtr,
                                RpptDescPtr dstDescPtr,
                                Rpp32u *kernelSizeTensor,
-                               RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                               Rpp32u seed,
                                RpptROIPtr roiTensorPtrSrc,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    RpptXorwowStateBoxMuller xorwowInitialState[SIMD_FLOAT_VECTOR_LENGTH];
+    rpp_host_rng_xorwow_f32_initialize_multiseed_stream_boxmuller<SIMD_FLOAT_VECTOR_LENGTH>(xorwowInitialState, seed);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -433,7 +435,7 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr,
                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
                                      kernelSizeTensor,
-                                     xorwowInitialStatePtr,
+                                     xorwowInitialState,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams);
@@ -445,6 +447,7 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr,
                                        (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                        dstDescPtr,
                                        kernelSizeTensor,
+                                       xorwowInitialState,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams);
@@ -456,6 +459,7 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr,
                                        (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                        dstDescPtr,
                                        kernelSizeTensor,
+                                       xorwowInitialState,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams);
@@ -467,6 +471,7 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr,
                                      static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
                                      kernelSizeTensor,
+                                     xorwowInitialState,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams);

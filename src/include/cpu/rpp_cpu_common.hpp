@@ -5558,4 +5558,13 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     }
 }
 
+inline void compute_jitter_loc(__m128 &pRow, __m128 &pCol, Rpp32s *locArray, __m128 &pStride, const __m128 &pChannel = xmm_p1)
+{
+    __m128i pxRemappedSrcLoc = _mm_cvtps_epi32(_mm_fmadd_ps(pRow, pStride, _mm_mul_ps(pCol, pChannel)));
+    _mm_storeu_si128((__m128i*) locArray, pxRemappedSrcLoc);
+    for(int i=0; i<4; i++){
+        printf("%5d , " , locArray[i]);
+    }
+}
+
 #endif //RPP_CPU_COMMON_H
