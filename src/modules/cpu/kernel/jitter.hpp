@@ -47,7 +47,8 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         Rpp32u kernelSize = kernelSizeTensor[batchCount];
         Rpp32u bound = (kernelSize-1)/2;
-        Rpp32u widthLimit = roi.xywhROI.roiWidth - bound;
+        // Rpp32u widthLimit = roi.xywhROI.roiWidth - bound;
+        Rpp32u widthLimit = roi.xywhROI.roiWidth;
         Rpp32u heightLimit = roi.xywhROI.roiHeight - bound;
         Rpp32u offset = batchCount * srcDescPtr->strides.nStride;
 
@@ -65,75 +66,57 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
         RpptXorwowStateBoxMuller xorwowState;
-        Rpp32s jitterSrcLocArray[4] = {0}; 
+        Rpp32s srcLocArray[4] = {0}; 
 
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
-        __m128 pJitterParam;
         rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
-        compute_jitter_param_initialize_4_host_sse(kernelSize, pJitterParam);
         __m128 pDstLoc = xmm_pDstLocInit;
-        //__m128 roix = _mm_set1_ps(roi.xywhROI.xy.x);
-        //__m128 roiy = _mm_set1_ps(roi.xywhROI.xy.y);
+        __m128 pKernelSize = _mm_set1_ps(kernelSize);
+        __m128 pChannel = _mm_set1_ps(layoutParams.bufferMultiplier);
+        __m128 pHStride = _mm_set1_ps(srcDescPtr->strides.hStride);
+        __m128 pHeightLimit = _mm_set1_ps(roi.xywhROI.roiHeight);
+        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth);
+
 
         // Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-            srcPtrRow = srcPtrChannel;
+            Rpp8u *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < heightLimit; i++)
+            for(int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
-                Rpp8u *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
-                srcPtrTemp = srcPtrRow;
+                Rpp8u *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-
+                
+                __m128 pRow = _mm_set1_ps(dstLocRow); 
                 int vectorLoopCount = 0;
-                /*for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-#if __AVX2__
-                    __m128 p[6];
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);
-                    compute_jitter_48_host(p, );  // jitter
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#else
-                    __m128 p[12];
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_jitter_48_host(p, );  // jitter
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-#endif
-
-                    srcPtrTemp += vectorIncrement;
+                    __m128 pCol = _mm_set1_ps(vectorLoopCount);
+                    pCol = _mm_add_ps(pCol, pDstLoc);
+                    __m128i pxRow;
+                    compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
+                    rpp_simd_load(rpp_nn_load_u8pkd3, srcPtrChannel, srcLocArray, pxRow);
+                    rpp_simd_store(rpp_store4_u8pkd3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, pxRow);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
-                }*/
-
-                for (; vectorLoopCount < widthLimit; vectorLoopCount += 3)
-                {
-
-                    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    Rpp16u nhx = randomNumberFloat * kernelSize;
-                    randomNumberFloat = rpp_host_rng_xorwow_f32(&xorwowState);
-                    Rpp16u nhy = randomNumberFloat * kernelSize;
-                    int rowLoc = (roi.xywhROI.xy.y + i + nhy) * srcDescPtr->strides.hStride;
-                    int colLoc = (roi.xywhROI.xy.x + vectorLoopCount + nhx) * srcDescPtr->c;
-                    int rowcolLoc = rowLoc + colLoc;
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[0] + rowcolLoc));
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[1] + rowcolLoc));
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[2] + rowcolLoc));
-
-                    //srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
-                //srcPtrRow += srcDescPtr->strides.hStride;
+                for (; vectorLoopCount < widthLimit; vectorLoopCount++)
+                {
+                    Rpp32s rowcolLoc;
+                    compute_jitter_src_loc(&xorwowState, dstLocRow, vectorLoopCount, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, srcDescPtr->strides.hStride, srcDescPtr->c, rowcolLoc);
+                    *dstPtrTempR++ = *(srcPtrChannel + rowcolLoc);
+                    *dstPtrTempG++ = *(srcPtrChannel + 1 + rowcolLoc);
+                    *dstPtrTempB++ = *(srcPtrChannel + 2 + rowcolLoc);
+                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;

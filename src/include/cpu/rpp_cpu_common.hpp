@@ -5632,4 +5632,29 @@ inline void compute_jitter_loc(__m128 &pRow, __m128 &pCol, Rpp32s *locArray, __m
     }
 }
 
+inline void compute_jitter_src_loc_sse(__m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 &pRow, __m128 &pCol, __m128 &pKernelSize, __m128 &pHeightLimit, __m128 &pWidthLimit, __m128 &pStride, __m128 &pChannel, Rpp32s *srcLoc)
+{
+    __m128 pRngX = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
+    __m128 pRngY = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
+
+    __m128 pX = _mm_mul_ps(pRngX, pKernelSize);
+    __m128 pY = _mm_mul_ps(pRngY, pKernelSize);
+
+    pX = _mm_min_ps(_mm_floor_ps(_mm_add_ps(pX, pRow)), pHeightLimit);
+    pY = _mm_min_ps(_mm_floor_ps(_mm_add_ps(pY, pCol)), pWidthLimit);
+    __m128 pSrcLoc = _mm_add_ps(_mm_mul_ps(pX, pStride), _mm_mul_ps(pY, pChannel));
+    __m128i pxSrcLoc = _mm_cvtps_epi32(pSrcLoc);
+    _mm_storeu_si128((__m128i*) srcLoc, pxSrcLoc);
+}
+
+inline void compute_jitter_src_loc(RpptXorwowStateBoxMuller *xorwowState, Rpp32s row, Rpp32s col, Rpp32s kSize, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s stride, Rpp32s channels, Rpp32s &loc)
+{
+    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(xorwowState);
+    Rpp32u nhx = randomNumberFloat * kSize;
+    randomNumberFloat = rpp_host_rng_xorwow_f32(xorwowState);
+    Rpp32u nhy = randomNumberFloat * kSize;
+    Rpp32s rowLoc = std::min(static_cast<int>(row + nhx), heightLimit) * stride;
+    Rpp32s colLoc = std::min(static_cast<int>(col + nhy), widthLimit) * channels;
+    loc = rowLoc + colLoc;
+}
 #endif //RPP_CPU_COMMON_H
