@@ -756,7 +756,7 @@ int main(int argc, char **argv)
             start = clock();
             if (ip_bitDepth == 0)
                 rppt_contrast_host(input, srcDescPtr, output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-            /*else if (ip_bitDepth == 1)
+            else if (ip_bitDepth == 1)
                 rppt_contrast_host(inputf16, srcDescPtr, outputf16, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
                 rppt_contrast_host(inputf32, srcDescPtr, outputf32, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -767,7 +767,7 @@ int main(int argc, char **argv)
             else if (ip_bitDepth == 5)
                 rppt_contrast_host(inputi8, srcDescPtr, outputi8, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;*/
+                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
