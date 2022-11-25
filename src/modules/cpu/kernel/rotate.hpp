@@ -7,8 +7,8 @@
 inline void compute_rotate_affine_matrix(Rpp32f angle, Rpp32f6 &affineMatrix_f6)
 {
     angle = angle * PI_OVER_180;
-    Rpp32f alpha = std::cos(angle);
-    Rpp32f beta = std::sin(angle);
+    Rpp32f alpha, beta;
+    sincosf(angle, &alpha, &beta);
     affineMatrix_f6 = {alpha, -beta, 0, beta, alpha, 0};
 }
 
