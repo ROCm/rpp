@@ -49,7 +49,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         __m128 pChannel = _mm_set1_ps(layoutParams.bufferMultiplier);
         __m128 pHStride = _mm_set1_ps(srcDescPtr->strides.hStride);
         __m128 pHeightLimit = _mm_set1_ps(heightLimit);
-        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth);
+        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth-1);
 
 
         // Jitter with fused output-layout toggle (NHWC -> NCHW)
@@ -274,7 +274,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
         __m128 pChannel = _mm_set1_ps(layoutParams.bufferMultiplier);
         __m128 pHStride = _mm_set1_ps(srcDescPtr->strides.hStride);
         __m128 pHeightLimit = _mm_set1_ps(heightLimit);
-        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth);
+        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth-1);
 
 
         // Jitter with fused output-layout toggle (NHWC -> NCHW)
@@ -596,7 +596,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
         __m128 pChannel = _mm_set1_ps(layoutParams.bufferMultiplier);
         __m128 pHStride = _mm_set1_ps(srcDescPtr->strides.hStride);
         __m128 pHeightLimit = _mm_set1_ps(heightLimit);
-        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth);
+        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth-1);
 
 
         // Jitter with fused output-layout toggle (NHWC -> NCHW)
