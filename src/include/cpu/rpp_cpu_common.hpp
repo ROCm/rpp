@@ -5623,7 +5623,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     }
 }
 
-inline void compute_jitter_src_loc_sse(__m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 &pRow, __m128 &pCol, __m128 &pKernelSize, __m128 &pHeightLimit, __m128 &pWidthLimit, __m128 &pStride, __m128 &pChannel, Rpp32s *srcLoc)
+inline void compute_jitter_src_loc_sse(__m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 &pRow, __m128 &pCol, __m128 &pKernelSize, __m128 &pBound, __m128 &pHeightLimit, __m128 &pWidthLimit, __m128 &pStride, __m128 &pChannel, Rpp32s *srcLoc)
 {
     __m128 pRngX = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
     __m128 pRngY = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
@@ -5631,8 +5631,8 @@ inline void compute_jitter_src_loc_sse(__m128i *pxXorwowStateX, __m128i *pxXorwo
     __m128 pX = _mm_mul_ps(pRngX, pKernelSize);
     __m128 pY = _mm_mul_ps(pRngY, pKernelSize);
 
-    pX = _mm_max_ps(_mm_min_ps(_mm_floor_ps(_mm_add_ps(pRow, pX)), pHeightLimit),xmm_p0);
-    pY =  _mm_max_ps(_mm_min_ps(_mm_floor_ps(_mm_add_ps(pCol, _mm_sub_ps(pY, xmm_p2))), pWidthLimit),xmm_p0);
+    pX = _mm_max_ps(_mm_min_ps(_mm_floor_ps(_mm_add_ps(pRow, _mm_sub_ps(pX, pBound))), pHeightLimit),xmm_p0);
+    pY =  _mm_max_ps(_mm_min_ps(_mm_floor_ps(_mm_add_ps(pCol, _mm_sub_ps(pY, pBound))), pWidthLimit),xmm_p0);
     __m128 pSrcLoc = _mm_fmadd_ps(pX, pStride, _mm_mul_ps(pY, pChannel));
     __m128i pxSrcLoc = _mm_cvtps_epi32(pSrcLoc);
     _mm_storeu_si128((__m128i*) srcLoc, pxSrcLoc);
