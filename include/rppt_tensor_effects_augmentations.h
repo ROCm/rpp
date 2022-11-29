@@ -28,6 +28,7 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *x_offset_r, Rpp32u *y_offset_r, Rpp32u *x_offset_g, Rpp32u *y_offset_g, Rpp32u *x_offset_b, Rpp32u *y_offset_b, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 /******************** gridmask ********************/
 
 // Gridmask augmentation for a NCHW/NHWC layout tensor
