@@ -737,99 +737,109 @@ RppStatus rppt_rotate_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    
+    // Compute affine transformation matrix from rotate angle
+    Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem;
+    for(int idx = 0; idx < srcDescPtr->n; idx++)
+    {
+        Rpp32f angleInRad = angle[idx] * PI_OVER_180;
+        Rpp32f alpha, beta;
+        sincosf(angleInRad, &alpha, &beta);
+        ((Rpp32f6 *)affineTensor)[idx] = {alpha, -beta, 0, beta, alpha, 0};
+    }
 
     if(interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
     {
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
-            rotate_nn_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                        dstDescPtr,
-                                        angle,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams);
+            warp_affine_nn_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                             srcDescPtr,
+                                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                             dstDescPtr,
+                                             affineTensor,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
-            rotate_nn_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                          srcDescPtr,
-                                          (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                          dstDescPtr,
-                                          angle,
-                                          roiTensorPtrSrc,
-                                          roiType,
-                                          layoutParams);
+            warp_affine_nn_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                               srcDescPtr,
+                                               (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                               dstDescPtr,
+                                               affineTensor,
+                                               roiTensorPtrSrc,
+                                               roiType,
+                                               layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            rotate_nn_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                          srcDescPtr,
-                                          (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                          dstDescPtr,
-                                          angle,
-                                          roiTensorPtrSrc,
-                                          roiType,
-                                          layoutParams);
+            warp_affine_nn_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                               srcDescPtr,
+                                               (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                               dstDescPtr,
+                                               affineTensor,
+                                               roiTensorPtrSrc,
+                                               roiType,
+                                               layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
-            rotate_nn_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                        dstDescPtr,
-                                        angle,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams);
+            warp_affine_nn_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                             srcDescPtr,
+                                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                             dstDescPtr,
+                                             affineTensor,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams);
         }
     }
     else if(interpolationType == RpptInterpolationType::BILINEAR)
     {
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
-            rotate_bilinear_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                              srcDescPtr,
-                                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                              dstDescPtr,
-                                              angle,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              layoutParams);
+            warp_affine_bilinear_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                   srcDescPtr,
+                                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                   dstDescPtr,
+                                                   affineTensor,
+                                                   roiTensorPtrSrc,
+                                                   roiType,
+                                                   layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
-            rotate_bilinear_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                                srcDescPtr,
-                                                (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                                dstDescPtr,
-                                                angle,
-                                                roiTensorPtrSrc,
-                                                roiType,
-                                                layoutParams);
+            warp_affine_bilinear_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                     srcDescPtr,
+                                                     (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                     dstDescPtr,
+                                                     affineTensor,
+                                                     roiTensorPtrSrc,
+                                                     roiType,
+                                                     layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            rotate_bilinear_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                                srcDescPtr,
-                                                (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                                dstDescPtr,
-                                                angle,
-                                                roiTensorPtrSrc,
-                                                roiType,
-                                                layoutParams);
+            warp_affine_bilinear_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                     srcDescPtr,
+                                                     (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                     dstDescPtr,
+                                                     affineTensor,
+                                                     roiTensorPtrSrc,
+                                                     roiType,
+                                                     layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
-            rotate_bilinear_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                              srcDescPtr,
-                                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                              dstDescPtr,
-                                              angle,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              layoutParams);
+            warp_affine_bilinear_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                   srcDescPtr,
+                                                   static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                   dstDescPtr,
+                                                   affineTensor,
+                                                   roiTensorPtrSrc,
+                                                   roiType,
+                                                   layoutParams);
         }
     }
 
@@ -1400,12 +1410,13 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
     if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
         return RPP_ERROR_NOT_IMPLEMENTED;
     
+    // Compute affine transformation matrix from rotate angle
     Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem;
     for(int idx = 0; idx < srcDescPtr->n; idx++)
     {
         Rpp32f angleInRad = angle[idx] * PI_OVER_180;
-        Rpp32f alpha = cos(angleInRad);
-        Rpp32f beta = sin(angleInRad);
+        Rpp32f alpha, beta;
+        sincosf(angleInRad, &alpha, &beta);
         ((Rpp32f6 *)affineTensor)[idx] = {alpha, -beta, 0, beta, alpha, 0};
     }
 
