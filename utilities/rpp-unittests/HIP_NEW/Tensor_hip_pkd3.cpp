@@ -2324,7 +2324,7 @@ int main(int argc, char **argv)
         count += dstDescPtr->strides.nStride;
 
         char temp[1000];
-        strcpy(temp, "dst");
+        strcpy(temp, dst);
         strcat(temp, imageNames[j]);
 
         Mat mat_op_image;

@@ -440,7 +440,7 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr,
                                      roiType,
                                      layoutParams);
     }
-    /*else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
         jitter_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
@@ -475,7 +475,7 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams);
-    }*/
+    }
 
     return RPP_SUCCESS;
 }
@@ -959,7 +959,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr,
                                    roiType,
                                    rpp::deref(rppHandle));
     }
-    /*else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
         hip_exec_jitter_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                    srcDescPtr,
@@ -991,7 +991,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));
-    }*/
+    }
 
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)

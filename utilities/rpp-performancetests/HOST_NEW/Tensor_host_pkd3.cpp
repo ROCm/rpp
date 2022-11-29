@@ -819,7 +819,7 @@ int main(int argc, char **argv)
             start = clock();
             if (ip_bitDepth == 0)
                 rppt_jitter_host(input, srcDescPtr, output, dstDescPtr, kernelSizeTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-            /*else if (ip_bitDepth == 1)
+            else if (ip_bitDepth == 1)
                 rppt_jitter_host(inputf16, srcDescPtr, outputf16, dstDescPtr, kernelSizeTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
                 rppt_jitter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, kernelSizeTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -830,7 +830,7 @@ int main(int argc, char **argv)
             else if (ip_bitDepth == 5)
                 rppt_jitter_host(inputi8, srcDescPtr, outputi8, dstDescPtr, kernelSizeTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;*/
+                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 

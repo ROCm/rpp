@@ -3590,7 +3590,7 @@ int main(int argc, char **argv)
         count += maxHeight * maxWidth * ip_channel;
 
         char temp[1000];
-        strcpy(temp, "dst");
+        strcpy(temp, dst);
         strcat(temp, imageNames[j]);
 
         Mat mat_op_image;
