@@ -163,7 +163,7 @@ do
                     printf "\n./Tensor_host_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
                     ./Tensor_host_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0" | tee -a "$DST_FOLDER/Tensor_host_pkd3_host_raw_performance_log.txt"
                 done
-            elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+            elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -219,7 +219,7 @@ do
                     printf "\n./Tensor_host_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
                     ./Tensor_host_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0" | tee -a "$DST_FOLDER/Tensor_host_pln1_host_raw_performance_log.txt"
                 done
-            elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+            elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -275,7 +275,7 @@ do
                     printf "\n./Tensor_host_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
                     ./Tensor_host_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "0" | tee -a "$DST_FOLDER/Tensor_host_pln3_host_raw_performance_log.txt"
                 done
-            elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+            elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do

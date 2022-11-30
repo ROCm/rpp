@@ -214,7 +214,7 @@ do
                         printf "\n./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                         ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
                     done
-                elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+                elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                 then
                     for ((interpolationType=0;interpolationType<6;interpolationType++))
                     do
@@ -242,7 +242,7 @@ do
                         printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kSize$kernelSize.csv" "./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                         rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kSize""$kernelSize"".csv" ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
                     done
-                elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+                elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                 then
                     for ((interpolationType=0;interpolationType<6;interpolationType++))
                     do
@@ -319,7 +319,7 @@ do
                         printf "\n./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                         ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
                     done
-                elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+                elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                 then
                     for ((interpolationType=0;interpolationType<6;interpolationType++))
                     do
@@ -347,7 +347,7 @@ do
                         printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kSize$kernelSize.csv" "./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                         rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kSize""$kernelSize"".csv" ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
                     done
-                elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+                elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                 then
                     for ((interpolationType=0;interpolationType<6;interpolationType++))
                     do
@@ -424,7 +424,7 @@ do
                         printf "\n./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                         ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
                     done
-                elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+                elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                 then
                     for ((interpolationType=0;interpolationType<6;interpolationType++))
                     do
@@ -452,7 +452,7 @@ do
                         printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kSize$kernelSize.csv" "./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                         rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kSize""$kernelSize"".csv" ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0" | tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
                     done
-                elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
+                elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                 then
                     for ((interpolationType=0;interpolationType<6;interpolationType++))
                     do
