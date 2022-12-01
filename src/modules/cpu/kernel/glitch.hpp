@@ -23,6 +23,11 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
+    // __m128i mask[3];
+    // mask[0] = _mm_setr_epi8(0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45);
+    // mask[1] = _mm_setr_epi8(1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 43, 46);
+    // mask[2] = _mm_setr_epi8(2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 41, 44, 47);
+
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -71,6 +76,7 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u alignedLengthPerChannel = (srcDescPtr->w / 16) * 16;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
+        memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp8u) * srcDescPtr->strides.nStride);
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -212,34 +218,75 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
-        memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp8u) * srcDescPtr->strides.nStride);
-        for(int c = 0; c < 3; c++)
-        {
-            Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-            Rpp8u *srcPtrImageTemp, *dstPtrImageTemp;
-            srcPtrImageTemp = srcPtrImage + (c * srcDescPtr->w * srcDescPtr->h) + yOffsetsLoc[c] + xOffsetsLoc[c];
-            dstPtrImageTemp = dstPtrImage + (c * dstDescPtr->w * dstDescPtr->h);
-            if(offset > 0)
+            for(int c = 0; c < 3; c++)
             {
-                for ( int i = 0; i < roi.xywhROI.roiHeight ; i++)
-                {
-                    for( int j = 0; j < srcDescPtr->strides.hStride ; j++)
+                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
+                Rpp8u *srcPtrImageTemp, *dstPtrImageTemp;
+                srcPtrImageTemp = srcPtrImage + (c * srcDescPtr->w * srcDescPtr->h) + yOffsetsLoc[c] + xOffsetsLoc[c];
+                dstPtrImageTemp = dstPtrImage + (c * dstDescPtr->w * dstDescPtr->h);
+                int LoopCount = 0;
+                for( ; LoopCount < srcDescPtr->strides.cStride; LoopCount += 32){
+                    if(offset < srcDescPtr->strides.cStride)
                     {
-                        if( offset < srcDescPtr->strides.cStride)
-                        {
-                            *dstPtrImageTemp = *srcPtrImageTemp;
-                            dstPtrImageTemp++;
-                            srcPtrImageTemp++;
-                            offset++;
-                        }
+                        __m256i p;
+                        p = _mm256_loadu_epi8((__m256i *)srcPtrImageTemp);
+                        _mm256_storeu_epi8((__m256i *)dstPtrImageTemp, p);
+                        srcPtrImageTemp += 32;
+                        dstPtrImageTemp += 32;
+                        offset += 32;
                     }
+                }
+                /* Remaining elements which are not fit into avx2 vectors*/
+                for(int i = 0; i < (srcDescPtr->strides.cStride - (yOffsetsLoc[c] + xOffsetsLoc[c])) % 32; i++ )
+                {
+                    *dstPtrImageTemp = *srcPtrImageTemp;
+                    srcPtrImageTemp++;
+                    dstPtrImageTemp++;
                 }
             }
         }
-    }
+    //     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
+    //     {
+    //         Rpp32u offsetR = yOffsetsLoc[0] + xOffsetsLoc[0];
+    //         Rpp32u offsetG = yOffsetsLoc[1] + xOffsetsLoc[1];
+    //         Rpp32u offsetB = yOffsetsLoc[2] + xOffsetsLoc[2];
+    //         Rpp8u *srcPtrImageTempR, *srcPtrImageTempG, *srcPtrImageTempB, *dstPtrImageTempR, *dstPtrImageTempG, *dstPtrImageTempB;
+    //         srcPtrImageTempR = srcPtrImage + offsetR;
+    //         srcPtrImageTempG = srcPtrImage + (srcDescPtr->w * srcDescPtr->h) + offsetG;
+    //         srcPtrImageTempB = srcPtrImage + (2 * srcDescPtr->w * srcDescPtr->h) + offsetB;
+    //         dstPtrImageTempR = dstPtrImage;
+    //         dstPtrImageTempG = dstPtrImage + (dstDescPtr->w * dstDescPtr->h);
+    //         dstPtrImageTempB = dstPtrImage + (2 * dstDescPtr->w * dstDescPtr->h);
+    //             for ( int i = 0; i < roi.xywhROI.roiHeight ; i++)
+    //             {
+    //                 for( int j = 0; j < srcDescPtr->strides.hStride ; j++)
+    //                 {
+    //                     if( offsetR < srcDescPtr->strides.cStride)
+    //                     {
+    //                         *dstPtrImageTempR = *srcPtrImageTempR;
+    //                         dstPtrImageTempR++;
+    //                         srcPtrImageTempR++;
+    //                         offsetR++;
+    //                     }
+    //                     if( offsetG < srcDescPtr->strides.cStride)
+    //                     {
+    //                         *dstPtrImageTempG = *srcPtrImageTempG;
+    //                         dstPtrImageTempG++;
+    //                         srcPtrImageTempG++;
+    //                         offsetG++;
+    //                     }
+    //                     if( offsetB < srcDescPtr->strides.cStride)
+    //                     {
+    //                         *dstPtrImageTempB = *srcPtrImageTempB;
+    //                         dstPtrImageTempB++;
+    //                         srcPtrImageTempB++;
+    //                         offsetB++;
+    //                     }
+    //                 }
+    //             }
+    // }
     else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC ))
     {
-        memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp8u) * srcDescPtr->strides.nStride);
         for(int c = 0 ; c < 3 ; c++)
         {
             Rpp32u offset = yOffsetsLoc[c] *3 + xOffsetsLoc[c] * 3;
