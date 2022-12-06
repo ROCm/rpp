@@ -149,6 +149,9 @@ int main(int argc, char **argv)
     case 31:
         strcpy(funcName, "color_cast");
         break;
+    case 35:
+        strcpy(funcName, "glitch");
+        break;
     case 36:
         strcpy(funcName, "color_twist");
         break;
@@ -1204,6 +1207,47 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_color_cast_host(inputi8, srcDescPtr, outputi8, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
+        case 35:
+        {
+            test_case_name = "glitch";
+            Rpp32u x_offset_r[images];
+            Rpp32u y_offset_r[images];
+            Rpp32u x_offset_g[images];
+            Rpp32u y_offset_g[images];
+            Rpp32u x_offset_b[images];
+            Rpp32u y_offset_b[images];
+
+            for (i = 0; i < images; i++)
+            {
+                x_offset_r[i] = 10;
+                y_offset_r[i] = 10;
+                x_offset_g[i] = 0;
+                y_offset_g[i] = 0;
+                x_offset_b[i] = 5;
+                y_offset_b[i] = 5;
+            }
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_glitch_host(input, srcDescPtr, output, dstDescPtr, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_glitch_host(inputf16, srcDescPtr, outputf16, dstDescPtr, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_glitch_host(inputf32, srcDescPtr, outputf32, dstDescPtr, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_glitch_host(inputi8, srcDescPtr, outputi8, dstDescPtr, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else

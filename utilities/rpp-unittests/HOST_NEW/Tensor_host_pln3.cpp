@@ -1326,7 +1326,6 @@ int main(int argc, char **argv)
             y_offset_g[i] = 0;
             x_offset_b[i] = 5;
             y_offset_b[i] = 5;
-
         }
 
         start_omp = omp_get_wtime();
