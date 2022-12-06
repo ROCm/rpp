@@ -743,29 +743,25 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                                      roiType,
                                      layoutParams);
     }
-    /*else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
         pixelate_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                       srcDescPtr,
-                                       (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                       dstDescPtr,
-                                       alphaTensor,
-                                       betaTensor,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       layoutParams);
+                                     srcDescPtr,
+                                     (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                     dstDescPtr,
+                                     roiTensorPtrSrc,
+                                     roiType,
+                                     layoutParams);
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         pixelate_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                       srcDescPtr,
-                                       (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                       dstDescPtr,
-                                       alphaTensor,
-                                       betaTensor,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       layoutParams);
+                                     srcDescPtr,
+                                     (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                     dstDescPtr,
+                                     roiTensorPtrSrc,
+                                     roiType,
+                                     layoutParams);
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -773,12 +769,10 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                                      srcDescPtr,
                                      static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
-                                     alphaTensor,
-                                     betaTensor,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams);
-    }*/
+    }
 
     return RPP_SUCCESS;
 }
