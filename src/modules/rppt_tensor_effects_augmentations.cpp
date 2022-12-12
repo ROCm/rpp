@@ -424,6 +424,9 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1,
                                      RpptRoiType roiType,
                                      rppHandle_t rppHandle)
 {
+    for(int i = 0; i < srcDescPtr->n; i++)
+        if (stdDevTensor[i] == 0)
+            return RPP_ERROR_ZERO_DIVISION;
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
