@@ -5,7 +5,7 @@ __device__ void non_linear_blend_gaussian_hip_compute(float &multiplier, int2 &h
 {
     float rowLocComponent;
     rowLocComponent = idXY_i2.y - halfDimsWH_i2.y;
-    rowLocComponent = rowLocComponent * rowLocComponent * multiplier;
+    rowLocComponent *= (rowLocComponent * multiplier);
 
     float4 rowLocComponent_f4 = (float4)rowLocComponent;
     float4 multiplier_f4 = (float4)multiplier;
