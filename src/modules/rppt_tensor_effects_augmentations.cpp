@@ -863,6 +863,9 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1,
                                     rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    for(int i = 0; i < srcDescPtr->n; i++)
+        if (stdDevTensor[i] == 0)
+            return RPP_ERROR_ZERO_DIVISION;
     Rpp32u paramIndex = 0;
     copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
 
