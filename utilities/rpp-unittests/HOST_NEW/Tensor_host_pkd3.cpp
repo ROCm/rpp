@@ -2082,6 +2082,8 @@ int main(int argc, char **argv)
 
     free(roiTensorPtrSrc);
     free(roiTensorPtrDst);
+    free(srcImgSizes);
+    free(dstImgSizes);
     free(input);
     free(input_second);
     free(output);
