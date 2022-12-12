@@ -329,21 +329,15 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
 
-    RpptROI *roiTensorPtrSrc = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
-    RpptROI *roiTensorPtrDst = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
-
     RpptROI *d_roiTensorPtrSrc, *d_roiTensorPtrDst;
-    hipMalloc(&d_roiTensorPtrSrc, noOfImages * sizeof(RpptROI));
-    hipMalloc(&d_roiTensorPtrDst, noOfImages * sizeof(RpptROI));
+    hipHostMalloc(&d_roiTensorPtrSrc, noOfImages * sizeof(RpptROI));
+    hipHostMalloc(&d_roiTensorPtrDst, noOfImages * sizeof(RpptROI));
 
     // Initialize the ImagePatch for source and destination
 
-    RpptImagePatch *srcImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
-    RpptImagePatch *dstImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
-
     RpptImagePatch *d_srcImgSizes, *d_dstImgSizes;
-    hipMalloc(&d_srcImgSizes, noOfImages * sizeof(RpptImagePatch));
-    hipMalloc(&d_dstImgSizes, noOfImages * sizeof(RpptImagePatch));
+    hipHostMalloc(&d_srcImgSizes, noOfImages * sizeof(RpptImagePatch));
+    hipHostMalloc(&d_dstImgSizes, noOfImages * sizeof(RpptImagePatch));
 
     // Set ROI tensors types for src/dst
 
@@ -368,25 +362,25 @@ int main(int argc, char **argv)
 
         image = imread(temp, 1);
 
-        roiTensorPtrSrc[count].xywhROI.xy.x = 0;
-        roiTensorPtrSrc[count].xywhROI.xy.y = 0;
-        roiTensorPtrSrc[count].xywhROI.roiWidth = image.cols;
-        roiTensorPtrSrc[count].xywhROI.roiHeight = image.rows;
+        d_roiTensorPtrSrc[count].xywhROI.xy.x = 0;
+        d_roiTensorPtrSrc[count].xywhROI.xy.y = 0;
+        d_roiTensorPtrSrc[count].xywhROI.roiWidth = image.cols;
+        d_roiTensorPtrSrc[count].xywhROI.roiHeight = image.rows;
 
-        roiTensorPtrDst[count].xywhROI.xy.x = 0;
-        roiTensorPtrDst[count].xywhROI.xy.y = 0;
-        roiTensorPtrDst[count].xywhROI.roiWidth = image.cols;
-        roiTensorPtrDst[count].xywhROI.roiHeight = image.rows;
+        d_roiTensorPtrDst[count].xywhROI.xy.x = 0;
+        d_roiTensorPtrDst[count].xywhROI.xy.y = 0;
+        d_roiTensorPtrDst[count].xywhROI.roiWidth = image.cols;
+        d_roiTensorPtrDst[count].xywhROI.roiHeight = image.rows;
 
-        srcImgSizes[count].width = roiTensorPtrSrc[count].xywhROI.roiWidth;
-        srcImgSizes[count].height = roiTensorPtrSrc[count].xywhROI.roiHeight;
-        dstImgSizes[count].width = roiTensorPtrDst[count].xywhROI.roiWidth;
-        dstImgSizes[count].height = roiTensorPtrDst[count].xywhROI.roiHeight;
+        d_srcImgSizes[count].width = d_roiTensorPtrSrc[count].xywhROI.roiWidth;
+        d_srcImgSizes[count].height = d_roiTensorPtrSrc[count].xywhROI.roiHeight;
+        d_dstImgSizes[count].width = d_roiTensorPtrDst[count].xywhROI.roiWidth;
+        d_dstImgSizes[count].height = d_roiTensorPtrDst[count].xywhROI.roiHeight;
 
-        maxHeight = RPPMAX2(maxHeight, roiTensorPtrSrc[count].xywhROI.roiHeight);
-        maxWidth = RPPMAX2(maxWidth, roiTensorPtrSrc[count].xywhROI.roiWidth);
-        maxDstHeight = RPPMAX2(maxDstHeight, roiTensorPtrDst[count].xywhROI.roiHeight);
-        maxDstWidth = RPPMAX2(maxDstWidth, roiTensorPtrDst[count].xywhROI.roiWidth);
+        maxHeight = RPPMAX2(maxHeight, d_roiTensorPtrSrc[count].xywhROI.roiHeight);
+        maxWidth = RPPMAX2(maxWidth, d_roiTensorPtrSrc[count].xywhROI.roiWidth);
+        maxDstHeight = RPPMAX2(maxDstHeight, d_roiTensorPtrDst[count].xywhROI.roiHeight);
+        maxDstWidth = RPPMAX2(maxDstWidth, d_roiTensorPtrDst[count].xywhROI.roiWidth);
 
         count++;
     }
@@ -493,9 +487,9 @@ int main(int argc, char **argv)
         Rpp8u *ip_image = image.data;
         Rpp8u *ip_image_second = image_second.data;
 
-        Rpp32u elementsInRow = roiTensorPtrSrc[i].xywhROI.roiWidth * srcDescPtr->c;
+        Rpp32u elementsInRow = d_roiTensorPtrSrc[i].xywhROI.roiWidth * srcDescPtr->c;
 
-        for (j = 0; j < roiTensorPtrSrc[i].xywhROI.roiHeight; j++)
+        for (j = 0; j < d_roiTensorPtrSrc[i].xywhROI.roiHeight; j++)
         {
             memcpy(input_temp, ip_image, elementsInRow * sizeof (Rpp8u));
             memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof (Rpp8u));
@@ -693,26 +687,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -748,26 +740,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -803,26 +793,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -860,27 +848,25 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
 
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -927,26 +913,24 @@ int main(int argc, char **argv)
                     // Uncomment to run test case with an xywhROI override
                     /*for (i = 0; i < images; i++)
                     {
-                        roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                        roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                        dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                        dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                        d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                        d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                        d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                        d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
                     }*/
 
                     // Uncomment to run test case with an ltrbROI override
                     /*for (i = 0; i < images; i++)
                     {
-                        roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                        roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                        roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                        roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                        dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                        dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                        d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                        d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                        d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                        d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                        d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                        d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
                     }
                     roiTypeSrc = RpptRoiType::LTRB;
                     roiTypeDst = RpptRoiType::LTRB;*/
-
-                    hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
                     start = clock();
 
@@ -983,25 +967,23 @@ int main(int argc, char **argv)
                     // Uncomment to run test case with an xywhROI override
                     /*for (i = 0; i < images; i++)
                     {
-                        roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                        roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                        dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                        dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                        d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                        d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                        d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                        d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
                     }*/
 
                     // Uncomment to run test case with an ltrbROI override
                     /*for (i = 0; i < images; i++)
-                        roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                        roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                        roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                        roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                        dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                        dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                        d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                        d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                        d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                        d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                        d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                        d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
                     }
                     roiTypeSrc = RpptRoiType::LTRB;
                     roiTypeDst = RpptRoiType::LTRB;*/
-
-                    hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
                     start = clock();
 
@@ -1036,25 +1018,23 @@ int main(int argc, char **argv)
                     // Uncomment to run test case with an xywhROI override
                     /*for (i = 0; i < images; i++)
                     {
-                        roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                        roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                        dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                        dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                        d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                        d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                        d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                        d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
                     }*/
 
                     // Uncomment to run test case with an ltrbROI override
                     /*for (i = 0; i < images; i++)
-                        roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                        roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                        roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                        roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                        dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                        dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                        d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                        d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                        d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                        d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                        d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                        d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
                     }
                     roiTypeSrc = RpptRoiType::LTRB;
                     roiTypeDst = RpptRoiType::LTRB;*/
-
-                    hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
                     start = clock();
 
@@ -1099,26 +1079,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1156,26 +1134,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1204,34 +1180,31 @@ int main(int argc, char **argv)
 
             for (i = 0; i < images; i++)
             {
-                dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
-                dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+                d_dstImgSizes[i].width = d_roiTensorPtrDst[i].xywhROI.roiWidth = d_roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+                d_dstImgSizes[i].height = d_roiTensorPtrDst[i].xywhROI.roiHeight = d_roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
             }
 
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
-            hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1273,25 +1246,23 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1339,26 +1310,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1399,26 +1368,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1460,26 +1427,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1509,26 +1474,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1579,26 +1542,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 50;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 50;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 50;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 50;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
             }
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1639,29 +1600,26 @@ int main(int argc, char **argv)
 
             for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
-                roiTensorPtrSrc[i].xywhROI.roiWidth = 50;
-                roiTensorPtrSrc[i].xywhROI.roiHeight = 50;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+                d_roiTensorPtrSrc[i].xywhROI.roiWidth = 50;
+                d_roiTensorPtrSrc[i].xywhROI.roiHeight = 50;
             }
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
-            hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
 
             start = clock();
             if (ip_bitDepth == 0)
@@ -1692,26 +1650,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1743,26 +1699,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1794,26 +1748,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -1872,8 +1824,8 @@ int main(int argc, char **argv)
 
             for (i = 0; i < images; i++)
             {
-                dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
-                dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+                d_dstImgSizes[i].width = d_roiTensorPtrDst[i].xywhROI.roiWidth = d_roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
+                d_dstImgSizes[i].height = d_roiTensorPtrDst[i].xywhROI.roiHeight = d_roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
             }
 
             Rpp32f mean[images * 3];
@@ -1895,27 +1847,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             // for (i = 0; i < images; i++)
             // {
-            //     roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-            //     roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            //     dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            //     dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            //     d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            //     d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            //     d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            //     d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             // }
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
-            hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
 
             start = clock();
             if (ip_bitDepth == 0)
@@ -1951,27 +1900,25 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
 
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -2018,27 +1965,24 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                d_roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                d_roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
             }*/
 
             // Uncomment to run test case with an ltrbROI override
             /*for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                d_roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                d_roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                d_dstImgSizes[i].width = d_roiTensorPtrSrc[i].ltrbROI.rb.x - d_roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                d_dstImgSizes[i].height = d_roiTensorPtrSrc[i].ltrbROI.rb.y - d_roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
             }
             roiTypeSrc = RpptRoiType::LTRB;
             roiTypeDst = RpptRoiType::LTRB;*/
-
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
 
             start = clock();
 
@@ -2142,14 +2086,10 @@ int main(int argc, char **argv)
 
     // Free memory
 
-    free(roiTensorPtrSrc);
-    free(roiTensorPtrDst);
-    hipFree(d_roiTensorPtrSrc);
-    hipFree(d_roiTensorPtrDst);
-    free(srcImgSizes);
-    free(dstImgSizes);
-    hipFree(d_srcImgSizes);
-    hipFree(d_dstImgSizes);
+    hipHostFree(d_roiTensorPtrSrc);
+    hipHostFree(d_roiTensorPtrDst);
+    hipHostFree(d_srcImgSizes);
+    hipHostFree(d_dstImgSizes);
     free(input);
     free(input_second);
     free(output);
