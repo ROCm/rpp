@@ -141,23 +141,27 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr,
                                      roiType,
                                      layoutParams);
     }
-    // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    // {
-    //     glitch_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-    //                                    srcDescPtr,
-    //                                    (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-    //                                    dstDescPtr,
-    //                                    alphaTensor,
-    //                                    betaTensor,
-    //                                    roiTensorPtrSrc,
-    //                                    roiType,
-    //                                    layoutParams);
-    // }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        glitch_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                    srcDescPtr,
+                                    (Rpp16f*)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                    dstDescPtr,
+                                    x_offset_r,
+                                    y_offset_r,
+                                    x_offset_g,
+                                    y_offset_g,
+                                    x_offset_b,
+                                    y_offset_b,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    layoutParams);
+    }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        glitch_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offsetInBytes,
+        glitch_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                     srcDescPtr,
-                                    static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                    (Rpp32f*)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                     dstDescPtr,
                                     x_offset_r,
                                     y_offset_r,
