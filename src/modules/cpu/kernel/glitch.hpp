@@ -7,7 +7,7 @@
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-template <typename T> void convert_f32_Pln3_Pkd3(T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int height)
+template <typename T> void convert_f32_Pln3_Pkd3(T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int width)
 {
     T *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
     srcPtrRowR = srcPtrChannel;
@@ -23,7 +23,7 @@ template <typename T> void convert_f32_Pln3_Pkd3(T *srcPtrChannel, T *dstPtrChan
         dstPtrTemp = dstPtrRow;
 
         int vectorLoopCount = 0;
-        for (; vectorLoopCount < height; vectorLoopCount += 8)
+        for (; vectorLoopCount < width; vectorLoopCount += 8)
         {
             if( typeid(T) == typeid(Rpp32f))
             {
@@ -110,7 +110,7 @@ template <typename T> void convert_f32_Pkd3_Pln3(T *srcPtrChannel, T *dstPtrChan
     }
 }
 
-template <typename T> void convert_Pln3_Pkd3( T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int height)
+template <typename T> void convert_Pln3_Pkd3( T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int width)
 {
     T *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
     srcPtrRowR = srcPtrChannel;
@@ -127,7 +127,7 @@ template <typename T> void convert_Pln3_Pkd3( T *srcPtrChannel, T *dstPtrChannel
         dstPtrTemp = dstPtrRow;
 
         int vectorLoopCount = 0;
-        for (; vectorLoopCount < height; vectorLoopCount += 16)
+        for (; vectorLoopCount < width; vectorLoopCount += 16)
         {
             if( typeid(T) == typeid(Rpp8u)){
                 __m256 p[6];
@@ -151,7 +151,7 @@ template <typename T> void convert_Pln3_Pkd3( T *srcPtrChannel, T *dstPtrChannel
     }
 }
 
-template <typename T> void convert_Pkd3_Pln3( T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int height)
+template <typename T> void convert_Pkd3_Pln3( T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int width)
 {
     T *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
     srcPtrRow = srcPtrChannel;
@@ -168,7 +168,7 @@ template <typename T> void convert_Pkd3_Pln3( T *srcPtrChannel, T *dstPtrChannel
         dstPtrTempB = dstPtrRowB;
 
         int vectorLoopCount = 0;
-        for (; vectorLoopCount < height; vectorLoopCount += 48)
+        for (; vectorLoopCount < width; vectorLoopCount += 48)
         {
             if(typeid(T) == typeid(Rpp8u))
             {
@@ -212,6 +212,8 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
+        __m128i maskR = _mm_setr_epi8(0, 0x80, 0x80, 3, 0x80, 0x80, 6, 0x80, 0x80, 9, 0x80, 0x80, 12, 0x80, 0x80, 15);
+        __m128i maskGB = _mm_setr_epi8(0x80, 1, 2, 0x80, 4, 5, 0x80, 7, 8, 0x80, 10, 11, 0x80, 13, 14, 0x80);
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
@@ -259,7 +261,8 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
-            convert_Pkd3_Pln3<Rpp8u>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiHeight);
+            printf("%d ",roi.xywhROI.roiWidth);
+            convert_Pkd3_Pln3<Rpp8u>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
             for(int c = 0; c < 3; c++)
             {
                 Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
@@ -335,7 +338,7 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                 }
             }
-            convert_Pln3_Pkd3<Rpp8u>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiHeight);
+            convert_Pln3_Pkd3<Rpp8u>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
@@ -382,54 +385,46 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
             memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp8u) * srcDescPtr->strides.nStride);
             for(int c = 0; c < 3; c++)
             {
+                Rpp8u *srcPtrRow, *dstPtrRow, *srcPtrRowOff;
                 Rpp32u offset = c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
-                Rpp8u *srcPtrRow, *srcPtrRowChn, *dstPtrRow;
                 srcPtrRow = dstPtrImage + c;
-                srcPtrRowChn = srcPtrImage + c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
+                srcPtrRowOff = srcPtrImage + c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
                 dstPtrRow = dstPtrImage + c;
                 if(offset > 2)
                 {
-                    for( int i = 0; i < roi.xywhROI.roiHeight; i++)
+                    for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                     {
-                        Rpp8u *srcPtrTemp, *srcPtrTempChn, *dstPtrTemp;
-                        srcPtrTemp = srcPtrRow;
-                        srcPtrTempChn = srcPtrRowChn;
-                        dstPtrTemp = dstPtrRow;
-                        int aligLen = ((alignedLength - (xOffsetsLoc[0] * 3)) / 48) * 48;
+                        Rpp8u *srcTemp, *dstTemp, *srcOffTemp;
+                        srcTemp = srcPtrRow;
+                        dstTemp = dstPtrRow; 
+                        srcOffTemp = srcPtrRowOff;
+                        int aligLen = ((alignedLength - (xOffsetsLoc[0] * 3)) / 18) * 18;
                         if(offset < srcDescPtr->strides.nStride)
                         {
-                            for( int j = 0; j < aligLen; j += 48)
+                            for(int j = 0; j < aligLen; j += 18)
                             {
-                                __m256 p1[6], p2[6];
-                                Rpp8u *dstTemp;
-                                dstTemp = (Rpp8u*)malloc(52 * sizeof(Rpp8u));
-                                rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p1);
-                                rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTempChn, p2);
-                                p1[0] = p2[0];
-                                p1[1] = p2[1];
-                                rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstTemp, p1);
-                                for(int i = 0; i < 3 ; i++)
-                                {
-                                    __m128i p;
-                                    p = _mm_loadu_si128((__m128i *)dstTemp);
-                                    _mm_storeu_si128((__m128i *)(dstPtrTemp + (i* 16)) , p);
-                                    dstTemp += 16;
-                                }
-                                dstPtrTemp += 48;
-                                srcPtrTemp += 48;
-                                srcPtrTempChn += 48;
+                               __m128i p[2];
+                               p[0] = _mm_loadu_si128((__m128i *)srcTemp);
+                               p[1] = _mm_loadu_si128((__m128i *)srcOffTemp);
+                               p[1] = _mm_shuffle_epi8(p[1],maskR);
+                               p[0] = _mm_shuffle_epi8(p[0],maskGB);
+                               p[1] = _mm_or_si128(p[1],p[0]);
+                               _mm_storeu_si128((__m128i *)dstTemp,p[1]);
+                               srcTemp += 18;
+                               dstTemp += 18;
+                               srcOffTemp += 18;
                             }
                             for(int j = 0; j < (alignedLength - (aligLen + xOffsetsLoc[c] * 3)); j+=3)
                             {
-                                *dstPtrTemp = *srcPtrTempChn;
-                                dstPtrTemp += 3;
-                                srcPtrTempChn += 3;
+                                *dstTemp = *srcOffTemp;
+                                dstTemp += 3;
+                                srcOffTemp += 3;
                             }
+                            srcPtrRow += srcDescPtr->strides.hStride;
+                            srcPtrRowOff += srcDescPtr->strides.hStride;
+                            dstPtrRow += dstDescPtr->strides.hStride;
+                            offset += srcDescPtr->strides.hStride;
                         }
-                        dstPtrRow += dstDescPtr->strides.hStride;
-                        srcPtrRow += srcDescPtr->strides.hStride;
-                        srcPtrRowChn += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
                     }
                 }
             }
@@ -457,6 +452,8 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
+        __m128i maskR = _mm_setr_epi8(0, 0x80, 0x80, 3, 0x80, 0x80, 6, 0x80, 0x80, 9, 0x80, 0x80, 12, 0x80, 0x80, 15);
+        __m128i maskGB = _mm_setr_epi8(0x80, 1, 2, 0x80, 4, 5, 0x80, 7, 8, 0x80, 10, 11, 0x80, 13, 14, 0x80);
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
@@ -504,7 +501,7 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
-            convert_Pkd3_Pln3<Rpp8s>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiHeight);
+            convert_Pkd3_Pln3<Rpp8s>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
             for(int c = 0; c < 3; c++)
             {
                 Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
@@ -580,7 +577,7 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     }
                 }
             }
-            convert_Pln3_Pkd3<Rpp8s>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiHeight);
+            convert_Pln3_Pkd3<Rpp8s>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
@@ -627,54 +624,46 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
             memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp8s) * srcDescPtr->strides.nStride);
             for(int c = 0; c < 3; c++)
             {
+                Rpp8s *srcPtrRow, *dstPtrRow, *srcPtrRowOff;
                 Rpp32u offset = c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
-                Rpp8s *srcPtrRow, *srcPtrRowChn, *dstPtrRow;
                 srcPtrRow = dstPtrImage + c;
-                srcPtrRowChn = srcPtrImage + c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
+                srcPtrRowOff = srcPtrImage + c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
                 dstPtrRow = dstPtrImage + c;
                 if(offset > 2)
                 {
-                    for( int i = 0; i < roi.xywhROI.roiHeight; i++)
+                    for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                     {
-                        Rpp8s *srcPtrTemp, *srcPtrTempChn, *dstPtrTemp;
-                        srcPtrTemp = srcPtrRow;
-                        srcPtrTempChn = srcPtrRowChn;
-                        dstPtrTemp = dstPtrRow;
-                        int aligLen = ((alignedLength - (xOffsetsLoc[0] * 3)) / 48) * 48;
+                        Rpp8s *srcTemp, *dstTemp, *srcOffTemp;
+                        srcTemp = srcPtrRow;
+                        dstTemp = dstPtrRow; 
+                        srcOffTemp = srcPtrRowOff;
+                        int aligLen = ((alignedLength - (xOffsetsLoc[0] * 3)) / 18) * 18;
                         if(offset < srcDescPtr->strides.nStride)
                         {
-                            for( int j = 0; j < aligLen; j += 48)
+                            for(int j = 0; j < aligLen; j += 18)
                             {
-                                __m256 p1[6], p2[6];
-                                Rpp8s *dstTemp;
-                                dstTemp = (Rpp8s*)malloc(52 * sizeof(Rpp8s));
-                                rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p1);
-                                rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTempChn, p2);
-                                p1[0] = p2[0];
-                                p1[1] = p2[1];
-                                rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstTemp, p1);
-                                for(int i = 0; i < 3 ; i++)
-                                {
-                                    __m128i p;
-                                    p = _mm_loadu_si128((__m128i *)dstTemp);
-                                    _mm_storeu_si128((__m128i *)(dstPtrTemp + (i* 16)) , p);
-                                    dstTemp += 16;
-                                }
-                                dstPtrTemp += 48;
-                                srcPtrTemp += 48;
-                                srcPtrTempChn += 48;
+                               __m128i p[2];
+                               p[0] = _mm_loadu_si128((__m128i *)srcTemp);
+                               p[1] = _mm_loadu_si128((__m128i *)srcOffTemp);
+                               p[1] = _mm_shuffle_epi8(p[1],maskR);
+                               p[0] = _mm_shuffle_epi8(p[0],maskGB);
+                               p[1] = _mm_or_si128(p[1],p[0]);
+                               _mm_storeu_si128((__m128i *)dstTemp,p[1]);
+                               srcTemp += 18;
+                               dstTemp += 18;
+                               srcOffTemp += 18;
                             }
                             for(int j = 0; j < (alignedLength - (aligLen + xOffsetsLoc[c] * 3)); j+=3)
                             {
-                                *dstPtrTemp = *srcPtrTempChn;
-                                dstPtrTemp += 3;
-                                srcPtrTempChn += 3;
+                                *dstTemp = *srcOffTemp;
+                                dstTemp += 3;
+                                srcOffTemp += 3;
                             }
+                            srcPtrRow += srcDescPtr->strides.hStride;
+                            srcPtrRowOff += srcDescPtr->strides.hStride;
+                            dstPtrRow += dstDescPtr->strides.hStride;
+                            offset += srcDescPtr->strides.hStride;
                         }
-                        dstPtrRow += dstDescPtr->strides.hStride;
-                        srcPtrRow += srcDescPtr->strides.hStride;
-                        srcPtrRowChn += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
                     }
                 }
             }
@@ -749,7 +738,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
-            convert_f32_Pkd3_Pln3(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiHeight);
+            convert_f32_Pkd3_Pln3(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
             for(int c = 0; c < 3; c++)
             {
                 Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
@@ -825,7 +814,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                 }
             }
-            convert_f32_Pln3_Pkd3(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiHeight);
+            convert_f32_Pln3_Pkd3(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
@@ -984,7 +973,7 @@ RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
-            convert_f32_Pkd3_Pln3<Rpp16f>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiHeight);
+            convert_f32_Pkd3_Pln3<Rpp16f>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
             for(int c = 0; c < 3; c++)
             {
                 Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
@@ -1078,7 +1067,7 @@ RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
                     }
                 }
             }
-            convert_f32_Pln3_Pkd3<Rpp16f>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiHeight);
+            convert_f32_Pln3_Pkd3<Rpp16f>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
