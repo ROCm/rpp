@@ -28,5 +28,6 @@ THE SOFTWARE.
 #include "kernel/noise_salt_and_pepper.hpp"
 #include "kernel/noise_shot.hpp"
 #include "kernel/noise_gaussian.hpp"
+#include "kernel/non_linear_blend.hpp"
 
 #endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
