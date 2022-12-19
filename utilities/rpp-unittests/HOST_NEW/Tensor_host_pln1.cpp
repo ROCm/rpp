@@ -98,9 +98,9 @@ int main(int argc, char **argv)
     unsigned int outputFormatToggle = atoi(argv[5]);
     int test_case = atoi(argv[6]);
 
-    bool additionalParamCase = (test_case == 8 || test_case == 21);
+    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 24);
     bool kernelSizeCase = false;
-    bool interpolationTypeCase = (test_case == 21);
+    bool interpolationTypeCase = (test_case == 21 || test_case == 24);
     bool noiseTypeCase = (test_case == 8);
 
     unsigned int verbosity = additionalParamCase ? atoi(argv[8]) : atoi(argv[7]);
@@ -152,6 +152,12 @@ int main(int argc, char **argv)
         break;
     case 21:
         strcpy(funcName, "resize");
+        break;
+    case 24:
+        strcpy(funcName, "warp_affine");
+        break;
+    case 30:
+        strcpy(funcName, "non_linear_blend");
         break;
     case 31:
         strcpy(funcName, "color_cast");
@@ -497,6 +503,13 @@ int main(int argc, char **argv)
 
     // Convert inputs to test various other bit depths
 
+    // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
+
+    Rpp32f conversionFactor = 1.0f / 255.0;
+    if(test_case == 38)
+        conversionFactor = 1.0;
+    Rpp32f invConversionFactor = 1.0f / conversionFactor;
+
     if (ip_bitDepth == 1)
     {
         Rpp8u *inputTemp, *input_secondTemp;
@@ -510,8 +523,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp = ((Rpp16f)*inputTemp) / 255.0;
-            *inputf16_secondTemp = ((Rpp16f)*input_secondTemp) / 255.0;
+            *inputf16Temp = ((Rpp16f)*inputTemp) * conversionFactor;
+            *inputf16_secondTemp = ((Rpp16f)*input_secondTemp) * conversionFactor;
             inputTemp++;
             inputf16Temp++;
             input_secondTemp++;
@@ -531,8 +544,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf32Temp = ((Rpp32f)*inputTemp) / 255.0;
-            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / 255.0;
+            *inputf32Temp = ((Rpp32f)*inputTemp) * conversionFactor;
+            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) * conversionFactor;
             inputTemp++;
             inputf32Temp++;
             input_secondTemp++;
@@ -1146,6 +1159,121 @@ int main(int argc, char **argv)
 
         break;
     }
+    case 24:
+    {
+        test_case_name = "warp_affine";
+
+        if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+        {
+            missingFuncFlag = 1;
+            break;
+        }
+
+        Rpp32f6 affineTensor_f6[images];
+        Rpp32f *affineTensor = (Rpp32f *)affineTensor_f6;
+        for (i = 0; i < images; i++)
+        {
+            affineTensor_f6[i].data[0] = 1.23;
+            affineTensor_f6[i].data[1] = 0.5;
+            affineTensor_f6[i].data[2] = 0;
+            affineTensor_f6[i].data[3] = -0.8;
+            affineTensor_f6[i].data[4] = 0.83;
+            affineTensor_f6[i].data[5] = 0;
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }*/
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_warp_affine_host(input, srcDescPtr, output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_warp_affine_host(inputf16, srcDescPtr, outputf16, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_warp_affine_host(inputf32, srcDescPtr, outputf32, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_warp_affine_host(inputi8, srcDescPtr, outputi8, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
+    case 30:
+    {
+        test_case_name = "non_linear_blend";
+
+        Rpp32f stdDev[images];
+        for (i = 0; i < images; i++)
+        {
+            stdDev[i] = 50.0;
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }*/
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_non_linear_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_non_linear_blend_host(inputf16, inputf16_second, srcDescPtr, outputf16, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_non_linear_blend_host(inputf32, inputf32_second, srcDescPtr, outputf32, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_non_linear_blend_host(inputi8, inputi8_second, srcDescPtr, outputi8, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
     case 37:
     {
         test_case_name = "crop";
@@ -1196,23 +1324,28 @@ int main(int argc, char **argv)
     case 38:
     {
         test_case_name = "crop_mirror_normalize";
-        Rpp32f mean[images];
-        Rpp32f stdDev[images];
+        Rpp32f multiplier[images];
+        Rpp32f offset[images];
         Rpp32u mirror[images];
+        Rpp32f meanParam = 100.0f;
+        Rpp32f stdDevParam = 0.9f;
+        Rpp32f offsetParam = - meanParam / stdDevParam;
+        Rpp32f multiplierParam = 1.0f / stdDevParam;
+
         for (i = 0; i < images; i++)
         {
-            mean[i] = 0.0;
-            stdDev[i] = 1.0;
+            multiplier[i] = multiplierParam;
+            offset[i] = offsetParam;
             mirror[i] = 1;
         }
 
         // Uncomment to run test case with an xywhROI override
         for (i = 0; i < images; i++)
         {
-            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.x = 50;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 50;
             dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
         }
 
         // Uncomment to run test case with an ltrbROI override
@@ -1231,17 +1364,17 @@ int main(int argc, char **argv)
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
-            rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_crop_mirror_normalize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_crop_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
+            rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
+            rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 5)
-            rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1578,7 +1711,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << *outputf16Temp << ",";
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * 255.0);
+                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * invConversionFactor);
                 outputf16Temp++;
                 outputTemp++;
             }
@@ -1600,7 +1733,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << *outputf32Temp << ",";
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * 255.0);
+                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * invConversionFactor);
                 outputf32Temp++;
                 outputTemp++;
             }

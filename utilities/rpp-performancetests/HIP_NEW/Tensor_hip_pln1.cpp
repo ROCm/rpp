@@ -161,6 +161,10 @@ int main(int argc, char **argv)
         strcpy(funcName, "warp_affine");
         outputFormatToggle = 0;
         break;
+    case 30:
+        strcpy(funcName, "non_linear_blend");
+        outputFormatToggle = 0;
+        break;
     case 31:
         strcpy(funcName, "color_cast");
         outputFormatToggle = 0;
@@ -525,11 +529,18 @@ int main(int argc, char **argv)
 
     // Convert inputs to test various other bit depths and copy to hip buffers
 
+
     half *inputf16, *inputf16_second, *outputf16;
     Rpp32f *inputf32, *inputf32_second, *outputf32;
     Rpp8s *inputi8, *inputi8_second, *outputi8;
     int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
     int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
+
+    // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
+
+    Rpp32f conversionFactor = 1.0f / 255.0;
+    if(test_case == 38)
+        conversionFactor = 1.0;
 
     if (ip_bitDepth == 0)
     {
@@ -557,8 +568,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp = (half)(((float)*inputTemp) / 255.0);
-            *inputf16_secondTemp = (half)(((float)*input_secondTemp) / 255.0);
+            *inputf16Temp = (half)(((float)*inputTemp) * conversionFactor);
+            *inputf16_secondTemp = (half)(((float)*input_secondTemp) * conversionFactor);
             inputTemp++;
             inputf16Temp++;
             input_secondTemp++;
@@ -589,8 +600,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf32Temp = ((Rpp32f)*inputTemp) / 255.0;
-            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) / 255.0;
+            *inputf32Temp = ((Rpp32f)*inputTemp) * conversionFactor;
+            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) * conversionFactor;
             inputTemp++;
             inputf32Temp++;
             input_secondTemp++;
@@ -1268,12 +1279,6 @@ int main(int argc, char **argv)
         {
             test_case_name = "resize";
 
-            if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
-            {
-                missingFuncFlag = 1;
-                break;
-            }
-
             for (i = 0; i < images; i++)
             {
                 dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
@@ -1393,6 +1398,61 @@ int main(int argc, char **argv)
 
             break;
         }
+        case 30:
+        {
+            test_case_name = "non_linear_blend";
+
+            Rpp32f stdDev[images];
+            for (i = 0; i < images; i++)
+            {
+                stdDev[i] = 50.0;
+            }
+
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+            start = clock();
+
+            if (ip_bitDepth == 0)
+                rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_non_linear_blend_gpu(d_inputf16, d_inputf16_second, srcDescPtr, d_outputf16, dstDescPtr, stdDev, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_non_linear_blend_gpu(d_inputf32, d_inputf32_second, srcDescPtr, d_outputf32, dstDescPtr, stdDev, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_non_linear_blend_gpu(d_inputi8, d_inputi8_second, srcDescPtr, d_outputi8, dstDescPtr, stdDev, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
         case 37:
         {
             test_case_name = "crop";
@@ -1445,13 +1505,18 @@ int main(int argc, char **argv)
         case 38:
         {
             test_case_name = "crop_mirror_normalize";
-            Rpp32f mean[images];
-            Rpp32f stdDev[images];
+            Rpp32f multiplier[images];
+            Rpp32f offset[images];
             Rpp32u mirror[images];
+            Rpp32f meanParam = 100.0f;
+            Rpp32f stdDevParam = 0.9f;
+            Rpp32f offsetParam = - meanParam / stdDevParam;
+            Rpp32f multiplierParam = 1.0f / stdDevParam;
+
             for (i = 0; i < images; i++)
             {
-                mean[i] = 0.0;
-                stdDev[i] = 1.0;
+                multiplier[i] = multiplierParam;
+                offset[i] = offsetParam;
                 mirror[i] = 1;
             }
 
@@ -1482,17 +1547,17 @@ int main(int argc, char **argv)
             start = clock();
 
             if (ip_bitDepth == 0)
-                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                rppt_crop_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                rppt_crop_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
+                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
+                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 5)
-                rppt_crop_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_crop_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else

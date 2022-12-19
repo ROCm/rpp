@@ -97,6 +97,7 @@ const __m256 avx_p3 = _mm256_set1_ps(3.0f);
 const __m256 avx_p4 = _mm256_set1_ps(4.0f);
 const __m256 avx_p6 = _mm256_set1_ps(6.0f);
 const __m256 avx_p8 = _mm256_set1_ps(8.0f);
+const __m256 avx_p128 = _mm256_set1_ps(128.0f);
 const __m256 avx_p255 = _mm256_set1_ps(255.0f);
 const __m256 avx_p1op255 = _mm256_set1_ps(1.0f / 255.0f);
 const __m256 avx_p1op3 = _mm256_set1_ps(1.0f / 3.0f);
@@ -128,6 +129,11 @@ const __m128i xmm_pxMask00To03 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x8
 const __m128i xmm_pxMask04To07 = _mm_setr_epi8(4, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80);
 const __m128i xmm_pxMask08To11 = _mm_setr_epi8(8, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
 const __m128i xmm_pxMask12To15 = _mm_setr_epi8(12, 0x80, 0x80, 0x80, 13, 0x80, 0x80, 0x80, 14, 0x80, 0x80, 0x80, 15, 0x80, 0x80, 0x80);
+
+const __m128i xmm_pxMask00To02 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
+const __m128i xmm_pxMask03To05 = _mm_setr_epi8(3, 0x80, 0x80, 0x80, 4, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
+const __m128i xmm_pxMask06To08 = _mm_setr_epi8(6, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80, 8, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
+const __m128i xmm_pxMask09To11 = _mm_setr_epi8(9, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
 
 const __m128i xmm_pxMask03To00 = _mm_setr_epi8(3, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 0, 0x80, 0x80, 0x80);
 const __m128i xmm_pxMask07To04 = _mm_setr_epi8(7, 0x80, 0x80, 0x80, 6, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 4, 0x80, 0x80, 0x80);
@@ -219,6 +225,46 @@ inline void rpp_mm256_print_ps(__m256 vPrintArray)
     {
         printf("%0.6f ", printArray[ct]);
     }
+}
+
+inline void rpp_saturate64_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+    p[1] = _mm256_min_ps(_mm256_max_ps(p[1], avx_p0), avx_p1);
+    p[2] = _mm256_min_ps(_mm256_max_ps(p[2], avx_p0), avx_p1);
+    p[3] = _mm256_min_ps(_mm256_max_ps(p[3], avx_p0), avx_p1);
+    p[4] = _mm256_min_ps(_mm256_max_ps(p[4], avx_p0), avx_p1);
+    p[5] = _mm256_min_ps(_mm256_max_ps(p[5], avx_p0), avx_p1);
+    p[6] = _mm256_min_ps(_mm256_max_ps(p[6], avx_p0), avx_p1);
+    p[7] = _mm256_min_ps(_mm256_max_ps(p[7], avx_p0), avx_p1);
+}
+
+inline void rpp_saturate48_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+    p[1] = _mm256_min_ps(_mm256_max_ps(p[1], avx_p0), avx_p1);
+    p[2] = _mm256_min_ps(_mm256_max_ps(p[2], avx_p0), avx_p1);
+    p[3] = _mm256_min_ps(_mm256_max_ps(p[3], avx_p0), avx_p1);
+    p[4] = _mm256_min_ps(_mm256_max_ps(p[4], avx_p0), avx_p1);
+    p[5] = _mm256_min_ps(_mm256_max_ps(p[5], avx_p0), avx_p1);
+}
+
+inline void rpp_saturate24_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+    p[1] = _mm256_min_ps(_mm256_max_ps(p[1], avx_p0), avx_p1);
+    p[2] = _mm256_min_ps(_mm256_max_ps(p[2], avx_p0), avx_p1);
+}
+
+inline void rpp_saturate16_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+    p[1] = _mm256_min_ps(_mm256_max_ps(p[1], avx_p0), avx_p1);
+}
+
+inline void rpp_saturate8_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
 }
 
 // SSE loads and stores
@@ -688,6 +734,142 @@ inline void rpp_normalize48(__m128 *p)
 
 // AVX loads and stores
 
+inline void rpp_load48_u8pkd3_to_f32pkd3_avx(Rpp8u *srcPtr, __m256 *p)
+{
+    __m128i px[4];
+
+    px[0] = _mm_loadu_si128((__m128i *)srcPtr);           /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04 */
+    px[1] = _mm_loadu_si128((__m128i *)(srcPtr + 12));    /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08 */
+    px[2] = _mm_loadu_si128((__m128i *)(srcPtr + 24));    /* load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12 */
+    px[3] = _mm_loadu_si128((__m128i *)(srcPtr + 36));    /* load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16 */
+
+    p[0] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], xmm_pxMask00To02), _mm_shuffle_epi8(px[0], xmm_pxMask03To05)));    /* Contains RGB 01-02 */
+    p[1] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], xmm_pxMask06To08), _mm_shuffle_epi8(px[0], xmm_pxMask09To11)));    /* Contains RGB 03-04 */
+    p[2] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[1], xmm_pxMask00To02), _mm_shuffle_epi8(px[1], xmm_pxMask03To05)));    /* Contains RGB 05-06 */
+    p[3] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[1], xmm_pxMask06To08), _mm_shuffle_epi8(px[1], xmm_pxMask09To11)));    /* Contains RGB 07-08 */
+    p[4] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], xmm_pxMask00To02), _mm_shuffle_epi8(px[2], xmm_pxMask03To05)));    /* Contains RGB 09-10 */
+    p[5] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], xmm_pxMask06To08), _mm_shuffle_epi8(px[2], xmm_pxMask09To11)));    /* Contains RGB 11-12 */
+    p[6] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[3], xmm_pxMask00To02), _mm_shuffle_epi8(px[3], xmm_pxMask03To05)));    /* Contains RGB 13-14 */
+    p[7] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[3], xmm_pxMask06To08), _mm_shuffle_epi8(px[3], xmm_pxMask09To11)));    /* Contains RGB 15-16 */
+}
+
+inline void rpp_load48_u8pkd3_to_f32pkd3_mirror_avx(Rpp8u *srcPtr, __m256 *p)
+{
+    __m128i px[4];
+
+    px[0] = _mm_loadu_si128((__m128i *)srcPtr);           /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01-04 */
+    px[1] = _mm_loadu_si128((__m128i *)(srcPtr + 12));    /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need RGB 05-08 */
+    px[2] = _mm_loadu_si128((__m128i *)(srcPtr + 24));    /* load [R09|G09|B09|R10|G10|B10|R11|G11|B11|R12|G12|B12|R13|G13|B13|R14] - Need RGB 09-12 */
+    px[3] = _mm_loadu_si128((__m128i *)(srcPtr + 36));    /* load [R13|G13|B13|R14|G14|B14|R15|G15|B15|R16|G16|B16|R17|G17|B17|R18] - Need RGB 13-16 */
+
+    p[0] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[3], xmm_pxMask09To11), _mm_shuffle_epi8(px[3], xmm_pxMask06To08)));    /* Contains RGB 16-15 */
+    p[1] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[3], xmm_pxMask03To05), _mm_shuffle_epi8(px[3], xmm_pxMask00To02)));    /* Contains RGB 14-13 */
+    p[2] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], xmm_pxMask09To11), _mm_shuffle_epi8(px[2], xmm_pxMask06To08)));    /* Contains RGB 12-11 */
+    p[3] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[2], xmm_pxMask03To05), _mm_shuffle_epi8(px[2], xmm_pxMask00To02)));    /* Contains RGB 10-09 */
+    p[4] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[1], xmm_pxMask09To11), _mm_shuffle_epi8(px[1], xmm_pxMask06To08)));    /* Contains RGB 08-07 */
+    p[5] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[1], xmm_pxMask03To05), _mm_shuffle_epi8(px[1], xmm_pxMask00To02)));    /* Contains RGB 06-05 */
+    p[6] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], xmm_pxMask09To11), _mm_shuffle_epi8(px[0], xmm_pxMask06To08)));    /* Contains RGB 04-03 */
+    p[7] =  _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], xmm_pxMask03To05), _mm_shuffle_epi8(px[0], xmm_pxMask00To02)));    /* Contains RGB 02-01 */
+}
+
+inline void rpp_store48_f32pkd3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
+{
+    __m128 p128[4];
+    p128[0] = _mm256_extractf128_ps(p[0], 0);
+    p128[1] = _mm256_extractf128_ps(p[0], 1);
+    p128[2] = _mm256_extractf128_ps(p[1], 0);
+    p128[3] = _mm256_extractf128_ps(p[1], 1);
+    _mm_storeu_ps(dstPtr, p128[0]);
+    _mm_storeu_ps(dstPtr + 3, p128[1]);
+    _mm_storeu_ps(dstPtr + 6, p128[2]);
+    _mm_storeu_ps(dstPtr + 9, p128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[2], 0);
+    p128[1] = _mm256_extractf128_ps(p[2], 1);
+    p128[2] = _mm256_extractf128_ps(p[3], 0);
+    p128[3] = _mm256_extractf128_ps(p[3], 1);
+    _mm_storeu_ps(dstPtr + 12, p128[0]);
+    _mm_storeu_ps(dstPtr + 15, p128[1]);
+    _mm_storeu_ps(dstPtr + 18, p128[2]);
+    _mm_storeu_ps(dstPtr + 21, p128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[4], 0);
+    p128[1] = _mm256_extractf128_ps(p[4], 1);
+    p128[2] = _mm256_extractf128_ps(p[5], 0);
+    p128[3] = _mm256_extractf128_ps(p[5], 1);
+    _mm_storeu_ps(dstPtr + 24, p128[0]);
+    _mm_storeu_ps(dstPtr + 27, p128[1]);
+    _mm_storeu_ps(dstPtr + 30, p128[2]);
+    _mm_storeu_ps(dstPtr + 33, p128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[6], 0);
+    p128[1] = _mm256_extractf128_ps(p[6], 1);
+    p128[2] = _mm256_extractf128_ps(p[7], 0);
+    p128[3] = _mm256_extractf128_ps(p[7], 1);
+    _mm_storeu_ps(dstPtr + 36, p128[0]);
+    _mm_storeu_ps(dstPtr + 39, p128[1]);
+    _mm_storeu_ps(dstPtr + 42, p128[2]);
+    _mm_storeu_ps(dstPtr + 45, p128[3]);
+}
+
+inline void rpp_store48_f32pkd3_to_f16pkd3_avx(Rpp16f *dstPtr, __m256 *p)
+{
+    __m128 p128[4];
+    p128[0] = _mm256_extractf128_ps(p[0], 0);
+    p128[1] = _mm256_extractf128_ps(p[0], 1);
+    p128[2] = _mm256_extractf128_ps(p[1], 0);
+    p128[3] = _mm256_extractf128_ps(p[1], 1);
+
+    __m128i px128[4];
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtr, px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 3), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 6), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 9), px128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[2], 0);
+    p128[1] = _mm256_extractf128_ps(p[2], 1);
+    p128[2] = _mm256_extractf128_ps(p[3], 0);
+    p128[3] = _mm256_extractf128_ps(p[3], 1);
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtr + 12), px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 15), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 18), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 21), px128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[4], 0);
+    p128[1] = _mm256_extractf128_ps(p[4], 1);
+    p128[2] = _mm256_extractf128_ps(p[5], 0);
+    p128[3] = _mm256_extractf128_ps(p[5], 1);
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtr + 24), px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 27), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 30), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 33), px128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[6], 0);
+    p128[1] = _mm256_extractf128_ps(p[6], 1);
+    p128[2] = _mm256_extractf128_ps(p[7], 0);
+    p128[3] = _mm256_extractf128_ps(p[7], 1);
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtr + 36), px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 39), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 42), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 45), px128[3]);
+}
+
 inline void rpp_load48_u8pkd3_to_f32pln3_avx(Rpp8u *srcPtr, __m256 *p)
 {
     __m128i px[4];
@@ -743,6 +925,129 @@ inline void rpp_store48_f32pln3_to_u8pln3_avx(Rpp8u *dstPtrR, Rpp8u *dstPtrG, Rp
     _mm_storeu_si128((__m128i *)dstPtrR, px[0]);    /* store [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
     _mm_storeu_si128((__m128i *)dstPtrG, px[1]);    /* store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
     _mm_storeu_si128((__m128i *)dstPtrB, px[2]);    /* store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
+}
+
+inline void rpp_store48_f32pln3_to_f32pln3_avx(Rpp32f *dstPtrR, Rpp32f *dstPtrG, Rpp32f *dstPtrB, __m256 *p)
+{
+    _mm256_storeu_ps(dstPtrR, p[0]);
+    _mm256_storeu_ps(dstPtrG, p[2]);
+    _mm256_storeu_ps(dstPtrB, p[4]);
+    _mm256_storeu_ps(dstPtrR + 8, p[1]);
+    _mm256_storeu_ps(dstPtrG + 8, p[3]);
+    _mm256_storeu_ps(dstPtrB + 8, p[5]);
+}
+
+inline void rpp_store48_f32pln3_to_f16pln3_avx(Rpp16f *dstPtrR, Rpp16f *dstPtrG, Rpp16f *dstPtrB, __m256 *p)
+{
+    __m128i px128[6];
+    px128[0] = _mm256_cvtps_ph(p[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm256_cvtps_ph(p[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm256_cvtps_ph(p[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm256_cvtps_ph(p[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[4] = _mm256_cvtps_ph(p[4], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[5] = _mm256_cvtps_ph(p[5], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtrR, px128[0]);
+    _mm_storeu_si128((__m128i *)dstPtrG, px128[2]);
+    _mm_storeu_si128((__m128i *)dstPtrB, px128[4]);
+    _mm_storeu_si128((__m128i *)(dstPtrR + 8), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtrG + 8), px128[3]);
+    _mm_storeu_si128((__m128i *)(dstPtrB + 8), px128[5]);
+}
+
+inline void rpp_store48_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
+{
+    __m128 p128[4];
+    p128[0] = _mm256_extractf128_ps(p[0], 0);
+    p128[1] = _mm256_extractf128_ps(p[2], 0);
+    p128[2] = _mm256_extractf128_ps(p[4], 0);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    _mm_storeu_ps(dstPtr, p128[0]);
+    _mm_storeu_ps(dstPtr + 3, p128[1]);
+    _mm_storeu_ps(dstPtr + 6, p128[2]);
+    _mm_storeu_ps(dstPtr + 9, p128[3]);
+    p128[0] = _mm256_extractf128_ps(p[0], 1);
+    p128[1] = _mm256_extractf128_ps(p[2], 1);
+    p128[2] = _mm256_extractf128_ps(p[4], 1);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    _mm_storeu_ps(dstPtr + 12, p128[0]);
+    _mm_storeu_ps(dstPtr + 15, p128[1]);
+    _mm_storeu_ps(dstPtr + 18, p128[2]);
+    _mm_storeu_ps(dstPtr + 21, p128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[1], 0);
+    p128[1] = _mm256_extractf128_ps(p[3], 0);
+    p128[2] = _mm256_extractf128_ps(p[5], 0);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    _mm_storeu_ps(dstPtr + 24, p128[0]);
+    _mm_storeu_ps(dstPtr + 27, p128[1]);
+    _mm_storeu_ps(dstPtr + 30, p128[2]);
+    _mm_storeu_ps(dstPtr + 33, p128[3]);
+    p128[0] = _mm256_extractf128_ps(p[1], 1);
+    p128[1] = _mm256_extractf128_ps(p[3], 1);
+    p128[2] = _mm256_extractf128_ps(p[5], 1);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    _mm_storeu_ps(dstPtr + 36, p128[0]);
+    _mm_storeu_ps(dstPtr + 39, p128[1]);
+    _mm_storeu_ps(dstPtr + 42, p128[2]);
+    _mm_storeu_ps(dstPtr + 45, p128[3]);
+}
+
+inline void rpp_store48_f32pln3_to_f16pkd3_avx(Rpp16f *dstPtr, __m256 *p)
+{
+    __m128 p128[4];
+    p128[0] = _mm256_extractf128_ps(p[0], 0);
+    p128[1] = _mm256_extractf128_ps(p[2], 0);
+    p128[2] = _mm256_extractf128_ps(p[4], 0);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+
+    __m128i px128[4];
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtr, px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 3), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 6), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 9), px128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[0], 1);
+    p128[1] = _mm256_extractf128_ps(p[2], 1);
+    p128[2] = _mm256_extractf128_ps(p[4], 1);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtr + 12), px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 15), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 18), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 21), px128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[1], 0);
+    p128[1] = _mm256_extractf128_ps(p[3], 0);
+    p128[2] = _mm256_extractf128_ps(p[5], 0);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtr + 24), px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 27), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 30), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 33), px128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[1], 1);
+    p128[1] = _mm256_extractf128_ps(p[3], 1);
+    p128[2] = _mm256_extractf128_ps(p[5], 1);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtr + 36), px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 39), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 42), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 45), px128[3]);
 }
 
 inline void rpp_load48_u8pln3_to_f32pln3_avx(Rpp8u *srcPtrR, Rpp8u *srcPtrG, Rpp8u *srcPtrB, __m256 *p)
@@ -907,7 +1212,7 @@ inline void rpp_load24_f32pln3_to_f32pln3_mirror_avx(Rpp32f *srcPtrR, Rpp32f *sr
 
 inline void rpp_store24_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
 {
-    __m128 p128[8];
+    __m128 p128[4];
     p128[0] = _mm256_extractf128_ps(p[0], 0);
     p128[1] = _mm256_extractf128_ps(p[1], 0);
     p128[2] = _mm256_extractf128_ps(p[2], 0);
@@ -938,6 +1243,15 @@ inline void rpp_store16_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
     _mm256_storeu_ps(dstPtr + 8, p[1]);
 }
 
+inline void rpp_store16_f32_to_f16_avx(Rpp16f *dstPtr, __m256 *p)
+{
+    __m128i px128[2];
+    px128[0] = _mm256_cvtps_ph(p[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm256_cvtps_ph(p[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtr, px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 8), px128[1]);
+}
+
 inline void rpp_load8_f32_to_f32_avx(Rpp32f *srcPtr, __m256 *p)
 {
     p[0] = _mm256_loadu_ps(srcPtr);
@@ -954,6 +1268,12 @@ inline void rpp_load8_f32_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
 inline void rpp_store8_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 {
     _mm256_storeu_ps(dstPtr, p[0]);
+}
+
+inline void rpp_store8_f32_to_f16_avx(Rpp16f *dstPtr, __m256 *p)
+{
+    __m128i px128 = _mm256_cvtps_ph(p[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtr, px128);
 }
 
 inline void rpp_load48_i8pkd3_to_f32pln3_avx(Rpp8s *srcPtr, __m256 *p)
@@ -1811,6 +2131,149 @@ static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
     }
 }
 
+/* Generic interpolation loads  */
+
+inline void rpp_generic_nn_load_u8pkd3(Rpp8u *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128i &p)
+{
+    __m128i px[4];
+    px[0] = invalidLoad[0] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[0]));  // LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01
+    px[1] = invalidLoad[1] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[1]));  // LOC1 load [R11|G11|B11|R12|G12|B12|R13|G13|B13|R14|G14|B14|R15|G15|B15|R16] - Need RGB 11
+    px[2] = invalidLoad[2] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[2]));  // LOC2 load [R21|G21|B21|R22|G22|B22|R23|G23|B23|R24|G24|B24|R25|G25|B25|R26] - Need RGB 21
+    px[3] = invalidLoad[3] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[3]));  // LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 31
+    px[0] = _mm_unpacklo_epi64(_mm_unpacklo_epi32(px[0], px[1]), _mm_unpacklo_epi32(px[2], px[3]));    // Unpack to obtain [R01|G01|B01|R02|R11|G11|B11|R12|R21|G21|B21|R22|R31|G31|B31|R32]
+    p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    // Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00]
+}
+
+inline void rpp_generic_nn_load_u8pln1(Rpp8u *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128i &p)
+{
+    __m128i px[4];
+    px[0] = invalidLoad[0] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
+    px[1] = invalidLoad[1] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[1]));  // LOC1 load [R11|R12|R13|R14|R15|R16...] - Need R11
+    px[2] = invalidLoad[2] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[2]));  // LOC2 load [R21|R22|R23|R24|R25|R26...] - Need R21
+    px[3] = invalidLoad[3] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[3]));  // LOC3 load [R31|R32|R33|R34|R35|R36...] - Need R31
+    px[0] = _mm_unpacklo_epi8(px[0], px[2]);    // unpack 8 lo-pixels of px[0] and px[2]
+    px[1] = _mm_unpacklo_epi8(px[1], px[3]);    // unpack 8 lo-pixels of px[1] and px[3]
+    p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
+}
+
+inline void rpp_generic_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128 *p)
+{
+    p[0] = invalidLoad[0] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[0]);  // LOC0 load [R01|G01|B01|R02] - Need RGB 01
+    p[1] = invalidLoad[1] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[1]);  // LOC1 load [R11|G11|B11|R12] - Need RGB 11
+    p[2] = invalidLoad[2] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[2]);  // LOC2 load [R21|G21|B21|R22] - Need RGB 21
+    __m128 pTemp = invalidLoad[3] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[3]);  // LOC2 load [R31|G31|B31|R32] - Need RGB 31
+    _MM_TRANSPOSE4_PS(p[0], p[1], p[2], pTemp); // Transpose to obtain RGB in each vector
+}
+
+inline void rpp_generic_nn_load_f32pkd3_to_f32pkd3(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128 *p)
+{
+    p[0] = invalidLoad[0] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[0]);  // LOC0 load [R01|G01|B01|R02] - Need RGB 01
+    p[1] = invalidLoad[1] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[1]);  // LOC1 load [R11|G11|B11|R12] - Need RGB 11
+    p[2] = invalidLoad[2] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[2]);  // LOC2 load [R21|G21|B21|R22] - Need RGB 21
+    p[3] = invalidLoad[3] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[3]);  // LOC2 load [R31|G31|B31|R32] - Need RGB 31
+}
+
+inline void rpp_generic_nn_load_f32pln1(Rpp32f *srcPtrChanel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128 &p)
+{
+    __m128 pTemp[4];
+    pTemp[0] = invalidLoad[0] ? xmm_p0 : _mm_loadu_ps(srcPtrChanel + srcLoc[0]);  // LOC0 load [R01|R02|R03|R04] - Need R01
+    pTemp[1] = invalidLoad[1] ? xmm_p0 : _mm_loadu_ps(srcPtrChanel + srcLoc[1]);  // LOC1 load [R11|R12|R13|R14] - Need R11
+    pTemp[2] = invalidLoad[2] ? xmm_p0 : _mm_loadu_ps(srcPtrChanel + srcLoc[2]);  // LOC2 load [R21|R22|R23|R24] - Need R21
+    pTemp[3] = invalidLoad[3] ? xmm_p0 : _mm_loadu_ps(srcPtrChanel + srcLoc[3]);  // LOC3 load [R31|R32|R33|R34] - Need R31
+    pTemp[0] = _mm_unpacklo_ps(pTemp[0], pTemp[2]);
+    pTemp[1] = _mm_unpacklo_ps(pTemp[1], pTemp[3]);
+    p = _mm_unpacklo_ps(pTemp[0], pTemp[1]);    // Unpack to obtain [R01|R11|R21|R31]
+}
+
+inline void rpp_generic_nn_load_i8pkd3(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128i &p)
+{
+    __m128i px[4];
+    px[0] = invalidLoad[0] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[0]));  // LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01
+    px[1] = invalidLoad[1] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[1]));  // LOC1 load [R11|G11|B11|R12|G12|B12|R13|G13|B13|R14|G14|B14|R15|G15|B15|R16] - Need RGB 11
+    px[2] = invalidLoad[2] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[2]));  // LOC2 load [R21|G21|B21|R22|G22|B22|R23|G23|B23|R24|G24|B24|R25|G25|B25|R26] - Need RGB 21
+    px[3] = invalidLoad[3] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[3]));  // LOC3 load [R31|G31|B31|R32|G32|B32|R33|G33|B33|R34|G34|B34|R35|G35|B35|R36] - Need RGB 31
+    px[0] = _mm_unpacklo_epi64(_mm_unpacklo_epi32(px[0], px[1]), _mm_unpacklo_epi32(px[2], px[3]));    // Unpack to obtain [R01|G01|B01|R02|R11|G11|B11|R12|R21|G21|B21|R22|R31|G31|B31|R32]
+    p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    // Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00]
+}
+
+inline void rpp_generic_nn_load_i8pln1(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128i &p)
+{
+    __m128i px[4];
+    px[0] = invalidLoad[0] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
+    px[1] = invalidLoad[1] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[1]));  // LOC1 load [R11|R12|R13|R14|R15|R16...] - Need R11
+    px[2] = invalidLoad[2] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[2]));  // LOC2 load [R21|R22|R23|R24|R25|R26...] - Need R21
+    px[3] = invalidLoad[3] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[3]));  // LOC3 load [R31|R32|R33|R34|R35|R36...] - Need R31
+    px[0] = _mm_unpacklo_epi8(px[0], px[2]);    // unpack 8 lo-pixels of px[0] and px[2]
+    px[1] = _mm_unpacklo_epi8(px[1], px[3]);    // unpack 8 lo-pixels of px[1] and px[3]
+    p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
+}
+
+inline void rpp_generic_bilinear_load_mask_avx(__m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, Rpp32s *invalidLoadMask)
+{
+    _mm256_storeu_si256((__m256i*) invalidLoadMask, _mm256_cvtps_epi32(_mm256_or_ps(                                    // Vectorized ROI boundary check for 8 locations
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[0], _CMP_LT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[1], _CMP_LT_OQ)),
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[2], _CMP_GT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[3], _CMP_GT_OQ))
+    )));
+}
+
+template <typename T>
+inline void rpp_generic_bilinear_load_1c_avx(T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, __m256 *pSrc)
+{
+    Rpp32s invalidLoadMask[8];
+    RpptBilinearNbhoodValsVecLen8 srcVals;
+    memset(&srcVals, 0, sizeof(RpptBilinearNbhoodValsVecLen8));
+    rpp_generic_bilinear_load_mask_avx(pSrcY, pSrcX, pRoiLTRB, invalidLoadMask);
+    for (int j = 0; j < 8; j++)
+    {
+        if (invalidLoadMask[j] == 0) // Loading specific pixels where invalidLoadMask is set to 0
+        {
+            srcVals.srcValsTL.data[j] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsTL.data[j]];
+            srcVals.srcValsTR.data[j] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsTR.data[j]];
+            srcVals.srcValsBL.data[j] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsBL.data[j]];
+            srcVals.srcValsBR.data[j] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsBR.data[j]];
+        }
+    }
+    pSrc[0] = _mm256_loadu_ps(&srcVals.srcValsTL.data[0]);      // R channel Top-Left
+    pSrc[1] = _mm256_loadu_ps(&srcVals.srcValsTR.data[0]);      // R channel Top-Right
+    pSrc[2] = _mm256_loadu_ps(&srcVals.srcValsBL.data[0]);      // R channel Bottom-Left
+    pSrc[3] = _mm256_loadu_ps(&srcVals.srcValsBR.data[0]);      // R channel Bottom-Right
+}
+
+template <typename T>
+inline void rpp_generic_bilinear_load_3c_avx(T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, __m256 *pSrc)
+{
+    Rpp32s invalidLoadMask[8];
+    RpptBilinearNbhoodValsVecLen8 srcVals;
+    memset(&srcVals, 0, sizeof(RpptBilinearNbhoodValsVecLen8));
+    rpp_generic_bilinear_load_mask_avx(pSrcY, pSrcX, pRoiLTRB, invalidLoadMask);
+    for (int j = 0; j < 8; j++)
+    {
+        if (invalidLoadMask[j] == 0) // Loading specific pixels where invalidLoadMask is set to 0
+        {
+            for (int c = 0; c < srcDescPtr->c * 8; c += 8)
+            {
+                Rpp32s pos = c + j;
+                srcVals.srcValsTL.data[pos] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsTL.data[pos]];
+                srcVals.srcValsTR.data[pos] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsTR.data[pos]];
+                srcVals.srcValsBL.data[pos] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsBL.data[pos]];
+                srcVals.srcValsBR.data[pos] = (Rpp32f) srcPtrChannel[srcLocs.srcLocsBR.data[pos]];
+            }
+        }
+    }
+    pSrc[0] = _mm256_loadu_ps(&srcVals.srcValsTL.data[0]);      // R channel Top-Left
+    pSrc[1] = _mm256_loadu_ps(&srcVals.srcValsTR.data[0]);      // R channel Top-Right
+    pSrc[2] = _mm256_loadu_ps(&srcVals.srcValsBL.data[0]);      // R channel Bottom-Left
+    pSrc[3] = _mm256_loadu_ps(&srcVals.srcValsBR.data[0]);      // R channel Bottom-Right
+    pSrc[4] = _mm256_loadu_ps(&srcVals.srcValsTL.data[8]);      // G channel Top-Left
+    pSrc[5] = _mm256_loadu_ps(&srcVals.srcValsTR.data[8]);      // G channel Top-Right
+    pSrc[6] = _mm256_loadu_ps(&srcVals.srcValsBL.data[8]);      // G channel Bottom-Left
+    pSrc[7] = _mm256_loadu_ps(&srcVals.srcValsBR.data[8]);      // G channel Bottom-Right
+    pSrc[8] = _mm256_loadu_ps(&srcVals.srcValsTL.data[16]);     // B channel Top-Left
+    pSrc[9] = _mm256_loadu_ps(&srcVals.srcValsTR.data[16]);     // B channel Top-Right
+    pSrc[10] = _mm256_loadu_ps(&srcVals.srcValsBL.data[16]);    // B channel Bottom-Left
+    pSrc[11] = _mm256_loadu_ps(&srcVals.srcValsBR.data[16]);    // B channel Bottom-Right
+}
+
 /* Resize loads and stores */
 inline void rpp_bilinear_load_u8pkd3_to_f32pln3_avx(Rpp8u **srcRowPtrsForInterp, Rpp32s *loc, __m256* p, __m256i &pxSrcLoc, __m256i &pxMaxSrcLoc, Rpp32s maxSrcLoc)
 {
@@ -2378,39 +2841,52 @@ inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInter
 
 inline void rpp_store24_f32pln3_to_f16pkd3_avx(Rpp16f* dstPtr, __m256* p)
 {
-    Rpp32f temp[3][8];
-    _mm256_storeu_ps((Rpp32f *)temp[0], p[0]);
-    _mm256_storeu_ps((Rpp32f *)temp[1], p[1]);
-    _mm256_storeu_ps((Rpp32f *)temp[2], p[2]);
-    for(int i = 0, wStride = 0; i < 8; i++)
-    {
-        wStride = i * 3;
-        *(dstPtr + wStride) = (Rpp16f)(temp[0][i]);
-        *(dstPtr + wStride + 1) = (Rpp16f)(temp[1][i]);
-        *(dstPtr + wStride + 2) = (Rpp16f)(temp[2][i]);
-    }
+    __m128 p128[4];
+    p128[0] = _mm256_extractf128_ps(p[0], 0);
+    p128[1] = _mm256_extractf128_ps(p[1], 0);
+    p128[2] = _mm256_extractf128_ps(p[2], 0);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+
+    __m128i px128[4];
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtr, px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 3), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 6), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 9), px128[3]);
+
+    p128[0] = _mm256_extractf128_ps(p[0], 1);
+    p128[1] = _mm256_extractf128_ps(p[1], 1);
+    p128[2] = _mm256_extractf128_ps(p[2], 1);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+
+    px128[0] = _mm_cvtps_ph(p128[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm_cvtps_ph(p128[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm_cvtps_ph(p128[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[3] = _mm_cvtps_ph(p128[3], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtr + 12), px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 15), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 18), px128[2]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 21), px128[3]);
 }
 
 inline void rpp_store8_f32pln1_to_f16pln1_avx(Rpp16f* dstPtr, __m256 p)
 {
-    Rpp32f temp[8];
-    _mm256_storeu_ps(temp, p);
-    for(int i = 0; i < 8; i++)
-        dstPtr[i] = (Rpp16f) temp[i];
+    __m128i px128 = _mm256_cvtps_ph(p, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtr, px128);
 }
 
 inline void rpp_store24_f32pln3_to_f16pln3_avx(Rpp16f* dstRPtr, Rpp16f* dstGPtr, Rpp16f* dstBPtr, __m256* p)
 {
-    Rpp32f temp[3][8];  // 8 float pixels per channel
-    _mm256_storeu_ps((Rpp32f *)temp[0], p[0]);
-    _mm256_storeu_ps((Rpp32f *)temp[1], p[1]);
-    _mm256_storeu_ps((Rpp32f *)temp[2], p[2]);
-    for(int i = 0; i < 8; i++)
-    {
-        *(dstRPtr + i) = (Rpp16f)(temp[0][i]);
-        *(dstGPtr + i) = (Rpp16f)(temp[1][i]);
-        *(dstBPtr + i) = (Rpp16f)(temp[2][i]);
-    }
+    __m128i px128[3];
+    px128[0] = _mm256_cvtps_ph(p[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm256_cvtps_ph(p[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm256_cvtps_ph(p[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstRPtr, px128[0]);
+    _mm_storeu_si128((__m128i *)dstGPtr, px128[1]);
+    _mm_storeu_si128((__m128i *)dstBPtr, px128[2]);
 }
 
 inline void rpp_resize_load(Rpp8u *srcPtr, __m128 *p)
@@ -2534,7 +3010,7 @@ inline void rpp_resize_store_pkd3(Rpp8s *dstPtr, __m128 *p)
     rpp_store48_f32pln3_to_i8pkd3(dstPtr, p);
 }
 
-inline void rpp_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
+inline void rpp_resize_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01
@@ -2545,7 +3021,7 @@ inline void rpp_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i 
     p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    // Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00]
 }
 
-inline void rpp_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
+inline void rpp_resize_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
@@ -2557,7 +3033,7 @@ inline void rpp_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, __m128i 
     p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
 }
 
-inline void rpp_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 *p)
+inline void rpp_resize_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 *p)
 {
     p[0] = _mm_loadu_ps(srcRowPtrsForInterp + loc[0]);  // LOC0 load [R01|G01|B01|R02] - Need RGB 01
     p[1] = _mm_loadu_ps(srcRowPtrsForInterp + loc[1]);  // LOC1 load [R11|G11|B11|R12] - Need RGB 11
@@ -2566,7 +3042,7 @@ inline void rpp_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcRowPtrsForInterp, Rpp32s *
     _MM_TRANSPOSE4_PS(p[0], p[1], p[2], pTemp); // Transpose to obtain RGB in each vector
 }
 
-inline void rpp_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 &p)
+inline void rpp_resize_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 &p)
 {
     __m128 pTemp[4];
     pTemp[0] = _mm_loadu_ps(srcRowPtrsForInterp + loc[0]);  // LOC0 load [R01|R02|R03|R04] - Need R01
@@ -2578,7 +3054,7 @@ inline void rpp_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128
     p = _mm_unpacklo_ps(pTemp[0], pTemp[1]);    // Unpack to obtain [R01|R11|R21|R31]
 }
 
-inline void rpp_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
+inline void rpp_resize_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need RGB 01
@@ -2589,7 +3065,7 @@ inline void rpp_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i 
     p = _mm_shuffle_epi8(px[0], xmm_pkd_mask);    // Shuffle to obtain 4 RGB [R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|00|00|00|00]
 }
 
-inline void rpp_nn_load_i8pln1(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
+inline void rpp_resize_nn_load_i8pln1(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
 {
     __m128i px[4];
     px[0] = _mm_loadu_si128((__m128i *)(srcRowPtrsForInterp + loc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
@@ -2601,7 +3077,7 @@ inline void rpp_nn_load_i8pln1(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i 
     p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
 }
 
-inline void rpp_store4_u8pkd3_to_u8pln3(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp8u* dstPtrB, __m128i &p)
+inline void rpp_store12_u8pkd3_to_u8pln3(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp8u* dstPtrB, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtrR), _mm_shuffle_epi8(p, xmm_char_maskR)); /* Shuffle and extract the R pixels*/
     _mm_storeu_si128((__m128i *)(dstPtrG), _mm_shuffle_epi8(p, xmm_char_maskG)); /* Shuffle and extract the G pixels*/
@@ -2621,7 +3097,7 @@ inline void rpp_store12_u8pln3_to_u8pkd3(Rpp8u* dstPtr, __m128i *p)
     _mm_storeu_si128((__m128i *)(dstPtr), _mm_shuffle_epi8(px[1], xmm_store4_pkd_pixels));
 }
 
-inline void rpp_store4_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* dstPtrB, __m128i &p)
+inline void rpp_store12_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* dstPtrB, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtrR), _mm_shuffle_epi8(p, xmm_char_maskR)); /* Shuffle and extract the R pixels*/
     _mm_storeu_si128((__m128i *)(dstPtrG), _mm_shuffle_epi8(p, xmm_char_maskG)); /* Shuffle and extract the G pixels*/
@@ -2639,6 +3115,14 @@ inline void rpp_store12_i8pln3_to_i8pkd3(Rpp8s* dstPtr, __m128i *p)
     px[0] = _mm_unpacklo_epi8(p[0], p[1]);
     px[1] = _mm_unpacklo_epi64(px[0], p[2]);
     _mm_storeu_si128((__m128i *)(dstPtr), _mm_shuffle_epi8(px[1], xmm_store4_pkd_pixels));
+}
+
+inline void rpp_store12_f32pkd3_to_f32pkd3(Rpp32f* dstPtr, __m128 *p)
+{
+    _mm_storeu_ps(dstPtr, p[0]); /* Store RGB set 1 */
+    _mm_storeu_ps(dstPtr + 3, p[1]); /* Store RGB set 2 */
+    _mm_storeu_ps(dstPtr + 6, p[2]); /* Store RGB set 3 */
+    _mm_storeu_ps(dstPtr + 9, p[3]); /* Store RGB set 4 */
 }
 
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
