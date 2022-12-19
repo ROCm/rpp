@@ -2,7 +2,7 @@
 #include "rpp_hip_common.hpp"
 #include "rng_seed_stream.hpp"
 
-__device__ void jitter_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, RpptXorwowStateBoxMuller *xorwowState, uint kernelSize, uint bound, uint heightLt, uint widthLt, int id_x, int id_y, d_float16 *locSrc_f16)
+__device__ void jitter_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, RpptXorwowStateBoxMuller *xorwowState, uint kernelSize, uint bound, int id_x, int id_y, d_float16 *locSrc_f16)
 {
     d_float8 nhx_f8, nhy_f8;
     rpp_hip_rng_8_jitter_f32(&nhx_f8,xorwowState);
@@ -40,8 +40,6 @@ __global__ void jitter_pkd_tensor(T *srcPtr,
     uint kernelSize_u1 = kernelSize[id_z];
 
     uint bound_u1 = (uint)((kernelSize_u1 - 1) / 2);
-    uint heightLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiHeight - bound_u1;
-    uint widthLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiWidth - bound_u1;
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -64,7 +62,7 @@ __global__ void jitter_pkd_tensor(T *srcPtr,
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, heightLimit_u1, widthLimit_u1, id_x, id_y, &locSrc_f16);
+    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
     rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
@@ -98,8 +96,6 @@ __global__ void jitter_pln_tensor(T *srcPtr,
     uint kernelSize_u1 = kernelSize[id_z];
 
     uint bound_u1 = (uint)((kernelSize_u1 - 1) / 2);
-    uint heightLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiHeight - bound_u1;
-    uint widthLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiWidth - bound_u1;
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -117,7 +113,7 @@ __global__ void jitter_pln_tensor(T *srcPtr,
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, heightLimit_u1, widthLimit_u1, id_x, id_y, &locSrc_f16);
+    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, id_x, id_y, &locSrc_f16);
 
     d_float8 dst_f8;
     rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
@@ -156,8 +152,6 @@ __global__ void jitter_pkd3_pln3_tensor(T *srcPtr,
     uint kernelSize_u1 = kernelSize[id_z];
 
     uint bound_u1 = (uint)((kernelSize_u1 - 1) / 2);
-    uint heightLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiHeight - bound_u1;
-    uint widthLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiWidth - bound_u1;
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -180,7 +174,7 @@ __global__ void jitter_pkd3_pln3_tensor(T *srcPtr,
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, heightLimit_u1, widthLimit_u1, id_x, id_y, &locSrc_f16);
+    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
     rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
@@ -204,8 +198,6 @@ __global__ void jitter_pln3_pkd3_tensor(T *srcPtr,
     uint kernelSize_u1 = kernelSize[id_z];
 
     uint bound_u1 = (uint)((kernelSize_u1 - 1) / 2);
-    uint heightLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiHeight - bound_u1;
-    uint widthLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiWidth - bound_u1;
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -228,7 +220,7 @@ __global__ void jitter_pln3_pkd3_tensor(T *srcPtr,
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, heightLimit_u1, widthLimit_u1, id_x, id_y, &locSrc_f16);
+    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
     rpp_hip_interpolate24_nearest_neighbor_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24);
