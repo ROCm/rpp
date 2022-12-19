@@ -2,7 +2,7 @@
 #include "rpp_hip_common.hpp"
 #include "rng_seed_stream.hpp"
 
-__device__ void jitter_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, RpptXorwowStateBoxMuller *xorwowState, uint kernelSize, int id_x, int id_y, d_float16 *locSrc_f16)
+__device__ void jitter_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, RpptXorwowStateBoxMuller *xorwowState, uint kernelSize, uint bound, uint heightLt, uint widthLt, int id_x, int id_y, d_float16 *locSrc_f16)
 {
     d_float8 nhx_f8, nhy_f8;
     rpp_hip_rng_8_jitter_f32(&nhx_f8,xorwowState);
@@ -15,24 +15,23 @@ __device__ void jitter_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, RpptXorwo
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
     locDst_f8x.f4[0] = (float4)id_x + increment_f8.f4[0];
     locDst_f8x.f4[1] = (float4)id_x + increment_f8.f4[1];
-    locDst_f8y.f4[0] = (float4)id_y;
-    locDst_f8y.f4[1] = (float4)id_y;
+    locDst_f8y.f4[0] = locDst_f8y.f4[1] = (float4)id_y;
 
-    locSrc_f16->f8[0].f4[0] = (float4)srcRoiPtr_i4->x + locDst_f8x.f4[0] + nhx_f8.f4[0];
-    locSrc_f16->f8[0].f4[1] = (float4)srcRoiPtr_i4->x + locDst_f8x.f4[1] + nhx_f8.f4[1];
-    locSrc_f16->f8[1].f4[0] = (float4)srcRoiPtr_i4->y + locDst_f8y.f4[0] + nhy_f8.f4[0];
-    locSrc_f16->f8[1].f4[1] = (float4)srcRoiPtr_i4->y + locDst_f8y.f4[1] + nhy_f8.f4[1];
+    locSrc_f16->f8[0].f4[0] = (float4)srcRoiPtr_i4->x + locDst_f8x.f4[0] + nhx_f8.f4[0] - (float4)bound;
+    locSrc_f16->f8[0].f4[1] = (float4)srcRoiPtr_i4->x + locDst_f8x.f4[1] + nhx_f8.f4[1] - (float4)bound;
+    locSrc_f16->f8[1].f4[0] = (float4)srcRoiPtr_i4->y + locDst_f8y.f4[0] + nhy_f8.f4[0] - (float4)bound;
+    locSrc_f16->f8[1].f4[1] = (float4)srcRoiPtr_i4->y + locDst_f8y.f4[1] + nhy_f8.f4[1] - (float4)bound;
 }
 
 template <typename T>
 __global__ void jitter_pkd_tensor(T *srcPtr,
-                                      uint2 srcStridesNH,
-                                      T *dstPtr,
-                                      uint2 dstStridesNH,
-                                      uint *kernelSize,
-                                      RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
-                                      uint *xorwowSeedStream,
-                                      RpptROIPtr roiTensorPtrSrc)
+                                  uint2 srcStridesNH,
+                                  T *dstPtr,
+                                  uint2 dstStridesNH,
+                                  uint *kernelSize,
+                                  RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                  uint *xorwowSeedStream,
+                                  RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -40,7 +39,9 @@ __global__ void jitter_pkd_tensor(T *srcPtr,
 
     uint kernelSize_u1 = kernelSize[id_z];
 
-    //int bound = (int)((kernelSize_u1 - 1) / 2);
+    uint bound_u1 = (uint)((kernelSize_u1 - 1) / 2);
+    uint heightLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiHeight - bound_u1;
+    uint widthLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiWidth - bound_u1;
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -63,23 +64,23 @@ __global__ void jitter_pkd_tensor(T *srcPtr,
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, id_x, id_y, &locSrc_f16);
+    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, heightLimit_u1, widthLimit_u1, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
+    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
 template <typename T>
 __global__ void jitter_pln_tensor(T *srcPtr,
-                                      uint3 srcStridesNCH,
-                                      T *dstPtr,
-                                      uint3 dstStridesNCH,
-                                      int channelsDst,
-                                      uint *kernelSize,
-                                      RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
-                                      uint *xorwowSeedStream,
-                                      RpptROIPtr roiTensorPtrSrc)
+                                  uint3 srcStridesNCH,
+                                  T *dstPtr,
+                                  uint3 dstStridesNCH,
+                                  int channelsDst,
+                                  uint *kernelSize,
+                                  RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                   uint *xorwowSeedStream,
+                                  RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -96,7 +97,9 @@ __global__ void jitter_pln_tensor(T *srcPtr,
 
     uint kernelSize_u1 = kernelSize[id_z];
 
-    //int bound = (int)((kernelSize_u1 - 1) / 2);
+    uint bound_u1 = (uint)((kernelSize_u1 - 1) / 2);
+    uint heightLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiHeight - bound_u1;
+    uint widthLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiWidth - bound_u1;
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -114,10 +117,10 @@ __global__ void jitter_pln_tensor(T *srcPtr,
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, id_x, id_y, &locSrc_f16);
+    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, heightLimit_u1, widthLimit_u1, id_x, id_y, &locSrc_f16);
 
     d_float8 dst_f8;
-    rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
@@ -125,26 +128,26 @@ __global__ void jitter_pln_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
+        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
+        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
 
 template <typename T>
 __global__ void jitter_pkd3_pln3_tensor(T *srcPtr,
-                                            uint2 srcStridesNH,
-                                            T *dstPtr,
-                                            uint3 dstStridesNCH,
-                                            uint *kernelSize,
-                                            RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
-                                            uint *xorwowSeedStream,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                        uint2 srcStridesNH,
+                                        T *dstPtr,
+                                        uint3 dstStridesNCH,
+                                        uint *kernelSize,
+                                        RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                        uint *xorwowSeedStream,
+                                        RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -152,7 +155,9 @@ __global__ void jitter_pkd3_pln3_tensor(T *srcPtr,
 
     uint kernelSize_u1 = kernelSize[id_z];
 
-    //int bound = (int)((kernelSize_u1 - 1) / 2);
+    uint bound_u1 = (uint)((kernelSize_u1 - 1) / 2);
+    uint heightLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiHeight - bound_u1;
+    uint widthLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiWidth - bound_u1;
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -175,22 +180,22 @@ __global__ void jitter_pkd3_pln3_tensor(T *srcPtr,
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, id_x, id_y, &locSrc_f16);
+    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, heightLimit_u1, widthLimit_u1, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
+    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
     rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>
 __global__ void jitter_pln3_pkd3_tensor(T *srcPtr,
-                                            uint3 srcStridesNCH,
-                                            T *dstPtr,
-                                            uint2 dstStridesNH,
-                                            uint *kernelSize,
-                                            RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
-                                            uint *xorwowSeedStream,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                        uint3 srcStridesNCH,
+                                        T *dstPtr,
+                                        uint2 dstStridesNH,
+                                        uint *kernelSize,
+                                        RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                        uint *xorwowSeedStream,
+                                        RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -198,7 +203,9 @@ __global__ void jitter_pln3_pkd3_tensor(T *srcPtr,
 
     uint kernelSize_u1 = kernelSize[id_z];
 
-    //int bound = (int)((kernelSize_u1 - 1) / 2);
+    uint bound_u1 = (uint)((kernelSize_u1 - 1) / 2);
+    uint heightLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiHeight - bound_u1;
+    uint widthLimit_u1 = roiTensorPtrSrc[id_z].xywhROI.roiWidth - bound_u1;
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -221,10 +228,10 @@ __global__ void jitter_pln3_pkd3_tensor(T *srcPtr,
 
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, id_x, id_y, &locSrc_f16);
+    jitter_roi_and_srclocs_hip_compute(&srcRoi_i4, &xorwowState, kernelSize_u1, bound_u1, heightLimit_u1, widthLimit_u1, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
+    rpp_hip_interpolate24_nearest_neighbor_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 

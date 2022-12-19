@@ -3199,69 +3199,6 @@ inline void compute_salt_and_pepper_noise_48_host(__m128 *p, __m128i *pxXorwowSt
     compute_salt_and_pepper_noise_12_host(p + 3, p + 7, p + 11, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
 }
 
-inline void compute_jitter_24_host(__m256 pROffset, __m256 pGOffset, __m256 pBOffset, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pRowCol, __m256 pJitterParam)
-{
-    __m256 pMask[2];
-    __m256 one = _mm256_set1_ps(1);
-    __m256 two = _mm256_set1_ps(2);
-    __m256 three = _mm256_set1_ps(3);
-    __m256 pRandomNumbers = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
-    __m256 nhx = _mm256_round_ps(_mm256_mul_ps(pRandomNumbers, pJitterParam),(_MM_FROUND_TO_NEAREST_INT));
-    pRandomNumbers = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
-    __m256 nhy = _mm256_round_ps(_mm256_mul_ps(pRandomNumbers, pJitterParam),(_MM_FROUND_TO_NEAREST_INT));
-    pMask[0] = _mm256_add_ps(pRowCol[3],_mm256_add_ps(pRowCol[1],nhy));
-    pMask[0] = _mm256_mul_ps(pMask[0], pRowCol[4]);
-    pMask[1] = _mm256_add_ps(pRowCol[2],_mm256_add_ps(pRowCol[0],nhx));
-    pMask[1] = _mm256_mul_ps(pMask[1], three);
-    pROffset = _mm256_add_ps(pMask[0], pMask[1]);
-    pGOffset = _mm256_add_ps(pMask[0], _mm256_add_ps(pMask[1],one));
-    pBOffset = _mm256_add_ps(pMask[0], _mm256_add_ps(pMask[1],two));
-    //memcpy(pR,pR+pROffset, sizeof(__m256)*8);
-    //(pR+pROffset) = pR[0];
-    //(pG+(__m256i *)pGOffset) = pG[0];
-    //(pB+(__m256i *)pBOffset) = pB[0];
-}
-
-inline void compute_jitter_12_host(__m128 *pR, __m128 *pG, __m128 *pB, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pRowCol, __m128 pJitterParam)
-{
-    __m128 pMask[2];
-    __m128 one = _mm_set1_ps(1);
-    __m128 two = _mm_set1_ps(2);
-    __m128 three = _mm_set1_ps(3);
-    __m128 pRandomNumbers = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
-    __m128 nhx = _mm_round_ps(_mm_mul_ps(pRandomNumbers, pJitterParam),(_MM_FROUND_TO_NEAREST_INT));
-    pRandomNumbers = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
-    __m128 nhy = _mm_round_ps(_mm_mul_ps(pRandomNumbers, pJitterParam),(_MM_FROUND_TO_NEAREST_INT));
-    pMask[0] = _mm_add_ps(pRowCol[3],_mm_add_ps(pRowCol[1],nhy));
-    pMask[0] = _mm_mul_ps(pMask[0], pRowCol[4]);
-    pMask[1] = _mm_add_ps(pRowCol[2],_mm_add_ps(pRowCol[0],nhx));
-    pMask[1] = _mm_mul_ps(pMask[1], three);
-    pR[0] = _mm_add_ps(pMask[0], pMask[1]);
-    pG[0] = _mm_add_ps(pMask[0], _mm_add_ps(pMask[1],one));
-    pB[0] = _mm_add_ps(pMask[0], _mm_add_ps(pMask[1],two));
-}
-
-inline void compute_jitter_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pRowCol, __m256 pJitterParam)
-{
-    __m256 *pROffset, *pGOffset, *pBOffset;
-    compute_jitter_24_host(*pROffset , *pGOffset, *pBOffset, pxXorwowStateX, pxXorwowStateCounter, pRowCol, pJitterParam);
-    /*memcpy(p,p+pROffset, sizeof(__m256)*8);
-    memcpy(p+2,p+pGOffset, sizeof(__m256)*8);
-    memcpy(p+4,p+pBOffset, sizeof(__m256)*8);*/
-    compute_jitter_24_host(*pROffset , *pGOffset, *pBOffset, pxXorwowStateX, pxXorwowStateCounter, pRowCol, pJitterParam);
-    /*memcpy(p+1,p+pROffset, sizeof(__m256)*8);
-    memcpy(p+3,p+pGOffset, sizeof(__m256)*8);
-    memcpy(p+5,p+pBOffset, sizeof(__m256)*8);*/
-}
-
-inline void compute_jitter_48_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pRowCol, __m128 pJitterParam)
-{
-    compute_jitter_12_host(p    , p + 4, p +  8, pxXorwowStateX, pxXorwowStateCounter, pRowCol, pJitterParam);
-    compute_jitter_12_host(p + 1, p + 5, p +  9, pxXorwowStateX, pxXorwowStateCounter, pRowCol, pJitterParam);
-    compute_jitter_12_host(p + 2, p + 6, p + 10, pxXorwowStateX, pxXorwowStateCounter, pRowCol, pJitterParam);
-    compute_jitter_12_host(p + 3, p + 7, p + 11, pxXorwowStateX, pxXorwowStateCounter, pRowCol, pJitterParam);
-}
-
 inline void compute_shot_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
 {
     __m256 pShotNoiseValue = avx_p0;                                                                                                                                // Rpp32u shotNoiseValue = 0;
@@ -5905,25 +5842,21 @@ inline void compute_jitter_src_loc_sse(__m128i *pxXorwowStateX, __m128i *pxXorwo
 {
     __m128 pRngX = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
     __m128 pRngY = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
-
     __m128 pX = _mm_mul_ps(pRngX, pKernelSize);
     __m128 pY = _mm_mul_ps(pRngY, pKernelSize);
-
-    pX = _mm_max_ps(_mm_min_ps(_mm_floor_ps(_mm_add_ps(pRow, _mm_sub_ps(pX, pBound))), pHeightLimit),xmm_p0);
-    pY =  _mm_max_ps(_mm_min_ps(_mm_floor_ps(_mm_add_ps(pCol, _mm_sub_ps(pY, pBound))), pWidthLimit),xmm_p0);
-    __m128 pSrcLoc = _mm_fmadd_ps(pX, pStride, _mm_mul_ps(pY, pChannel));
-    __m128i pxSrcLoc = _mm_cvtps_epi32(pSrcLoc);
+    pX = _mm_max_ps(_mm_min_ps(_mm_floor_ps(_mm_add_ps(pRow, _mm_sub_ps(pX, pBound))), pHeightLimit), xmm_p0);
+    pY =  _mm_max_ps(_mm_min_ps(_mm_floor_ps(_mm_add_ps(pCol, _mm_sub_ps(pY, pBound))), pWidthLimit), xmm_p0);
+    __m128i pxSrcLoc = _mm_cvtps_epi32(_mm_fmadd_ps(pX, pStride, _mm_mul_ps(pY, pChannel)));
     _mm_storeu_si128((__m128i*) srcLoc, pxSrcLoc);
 }
 
-inline void compute_jitter_src_loc(RpptXorwowStateBoxMuller *xorwowState, Rpp32s row, Rpp32s col, Rpp32s kSize, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s stride, Rpp32s channels, Rpp32s &loc)
+inline void compute_jitter_src_loc(RpptXorwowStateBoxMuller *xorwowState, Rpp32s row, Rpp32s col, Rpp32s kSize, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s stride, Rpp32s bound, Rpp32s channels, Rpp32s &loc)
 {
     Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(xorwowState);
     Rpp32u nhx = randomNumberFloat * kSize;
     randomNumberFloat = rpp_host_rng_xorwow_f32(xorwowState);
     Rpp32u nhy = randomNumberFloat * kSize;
-    Rpp32s rowLoc = std::max(std::min(static_cast<int>(row + nhx - (kSize/2)), heightLimit),0) * stride;
-    Rpp32s colLoc = std::max(std::min(static_cast<int>(col + nhy - (kSize/2)), (widthLimit-1)),0) * channels;
-    loc = rowLoc + colLoc;
+    loc = std::max(std::min(static_cast<int>(row + nhx - bound), heightLimit), 0) * stride;
+    loc += std::max(std::min(static_cast<int>(col + nhy - bound), (widthLimit - 1)), 0) * channels;
 }
 #endif //RPP_CPU_COMMON_H

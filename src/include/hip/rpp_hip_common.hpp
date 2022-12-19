@@ -1707,10 +1707,8 @@ __device__ void rpp_hip_rng_8_gaussian_f32(d_float8 *rngVals_f8, RpptXorwowState
 __device__ __forceinline__ float2 rpp_hip_rng_2_jitter_f32(RpptXorwowStateBoxMuller *xorwowState)
 {
     float2 result_f2;
-    float x = rpp_hip_rng_xorwow_f32(xorwowState);
-    float y = rpp_hip_rng_xorwow_f32(xorwowState);
-    result_f2.x = x;
-    result_f2.y = y;
+    result_f2.x = rpp_hip_rng_xorwow_f32(xorwowState);
+    result_f2.y = rpp_hip_rng_xorwow_f32(xorwowState);
 
     return result_f2;
 }

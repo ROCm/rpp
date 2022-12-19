@@ -878,7 +878,6 @@ int main(int argc, char **argv)
 
             Rpp32u kernelSizeTensor[images];
             Rpp32u seed = 1255459;
-            
             for (i = 0; i < images; i++)
             {
                 kernelSizeTensor[i] = 5;
