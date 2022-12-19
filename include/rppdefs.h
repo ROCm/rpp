@@ -61,6 +61,7 @@ typedef enum
     RPP_ERROR                           = -1,
     RPP_ERROR_INVALID_ARGUMENTS         = -2,
     RPP_ERROR_LOW_OFFSET                = -3,
+    RPP_ERROR_ZERO_DIVISION             = -4,
     RPP_ERROR_HIGH_SRC_DIMENSION        = -5,
     RPP_ERROR_NOT_IMPLEMENTED           = -6,
     RPP_ERROR_INVALID_SRC_CHANNELS      = -7,
