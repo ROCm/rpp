@@ -744,7 +744,7 @@ RppStatus rppt_rotate_host(RppPtr_t srcPtr,
     {
         Rpp32f angleInRad = angle[idx] * PI_OVER_180;
         Rpp32f alpha, beta;
-        sincosf(angleInRad, &alpha, &beta);
+        sincosf(angleInRad, &beta, &alpha);
         ((Rpp32f6 *)affineTensor)[idx] = {alpha, -beta, 0, beta, alpha, 0};
     }
 
@@ -1416,7 +1416,7 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
     {
         Rpp32f angleInRad = angle[idx] * PI_OVER_180;
         Rpp32f alpha, beta;
-        sincosf(angleInRad, &alpha, &beta);
+        sincosf(angleInRad, &beta, &alpha);
         ((Rpp32f6 *)affineTensor)[idx] = {alpha, -beta, 0, beta, alpha, 0};
     }
 
