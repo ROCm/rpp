@@ -195,9 +195,9 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, R
 // *retval RPP_ERROR : Error
 
 RppStatus rppt_pixelate_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-//#ifdef GPU_SUPPORT
-//RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-//#endif // GPU_SUPPORT
+#ifdef GPU_SUPPORT
+RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 #ifdef __cplusplus
 }
