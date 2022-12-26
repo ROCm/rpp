@@ -1177,7 +1177,6 @@ int main(int argc, char **argv)
 
                 break;
             }
-
             case 37:
             {
                 test_case_name = "crop";
@@ -1229,13 +1228,13 @@ int main(int argc, char **argv)
             case 38:
             {
                 test_case_name = "crop_mirror_normalize";
-                Rpp32f mean[images];
-                Rpp32f stdDev[images];
+                Rpp32f mean[images * 3];
+                Rpp32f stdDev[images* 3];
                 Rpp32u mirror[images];
-                for (i = 0; i < images; i++)
+                for (int i = 0, j = 0; i < images ; i++, j+=3)
                 {
-                    mean[i] = 0.0;
-                    stdDev[i] = 1.0;
+                    mean[j] = 0.0;
+                    stdDev[j] = 1.0;
                     mirror[i] = 1;
                 }
 
@@ -1801,45 +1800,8 @@ int main(int argc, char **argv)
         if (layout_type == 0 || layout_type == 1)
         {
             if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
-            {
-                Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
-                memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
-
-                Rpp8u *outputTemp, *outputCopyTemp;
-                outputTemp = output;
-                outputCopyTemp = outputCopy;
-
-                // omp_set_dynamic(0);
-                // #pragma omp parallel for num_threads(dstDescPtr->n)
-                for (int count = 0; count < dstDescPtr->n; count++)
-                {
-                    Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
-                    outputCopyTempR = outputCopyTemp;
-                    outputCopyTempG = outputCopyTempR + dstDescPtr->strides.cStride;
-                    outputCopyTempB = outputCopyTempG + dstDescPtr->strides.cStride;
-
-                    for (int i = 0; i < dstDescPtr->h; i++)
-                    {
-                        for (int j = 0; j < dstDescPtr->w; j++)
-                        {
-                            *outputTemp = *outputCopyTempR;
-                            outputTemp++;
-                            outputCopyTempR++;
-                            *outputTemp = *outputCopyTempG;
-                            outputTemp++;
-                            outputCopyTempG++;
-                            *outputTemp = *outputCopyTempB;
-                            outputTemp++;
-                            outputCopyTempB++;
-                        }
-                    }
-
-                    outputCopyTemp += dstDescPtr->strides.nStride;
-                }
-                free(outputCopy);
-            }
+                convert_pln3_to_pkd3(output, dstDescPtr);
         }
-
         rppDestroyHost(handle);
 
         // OpenCV dump (if test_type is unit test)

@@ -146,3 +146,34 @@ void set_nchw_strides(int layout_type, RpptDescPtr srcDescPtr, RpptDescPtr dstDe
         dstDescPtr->strides.wStride = 1;
     }
 }
+
+void convert_pln3_to_pkd3(Rpp8u *input, RpptDescPtr descPtr)
+{
+    unsigned long long bufferSize = (unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n;
+    Rpp8u *inputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
+    memcpy(inputCopy, input, bufferSize * sizeof(Rpp8u));
+
+omp_set_dynamic(0);
+#pragma omp parallel for num_threads(descPtr->n)
+    for (int count = 0; count < descPtr->n; count++)
+    {
+        Rpp8u *inputTemp = inputCopy + count * descPtr->strides.nStride;
+        Rpp8u *outputTemp = input + count * descPtr->strides.nStride;
+
+        Rpp8u *inputR, *inputG, *inputB;
+        inputR = inputTemp;
+        inputG = inputR + descPtr->w * descPtr->h;
+        inputB = inputG + descPtr->w * descPtr->h;
+        for (int i = 0; i < descPtr->h; i++)
+        {
+            for (int j = 0; j < descPtr->w; j++)
+            {
+                *outputTemp++ = *inputR++;
+                *outputTemp++ = *inputG++;
+                *outputTemp++ = *inputB++;
+            }
+        }
+    }
+
+    free(inputCopy);
+}
