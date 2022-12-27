@@ -1368,7 +1368,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         }
         RppPtr_t tempDstPtr;
         unsigned long long tempBufferSize = (unsigned long long)tempDescPtr->h * (unsigned long long)tempDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
-        hipMalloc(&tempDstPtr,sizeof(tempBufferSize));
+        hipMalloc(&tempDstPtr,tempBufferSize);
         hip_exec_resize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp8u*>(tempDstPtr),
@@ -1434,7 +1434,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         }
         RppPtr_t tempDstPtr;
         unsigned long long tempBufferSize = (unsigned long long)tempDescPtr->h * (unsigned long long)tempDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-        hipMalloc(&tempDstPtr,sizeof(tempBufferSize)*2);
+        hipMalloc(&tempDstPtr,tempBufferSize * 2);
         hip_exec_resize_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                srcDescPtr,
                                (half*) (static_cast<Rpp8u*>(tempDstPtr)),
@@ -1501,7 +1501,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         }
         RppPtr_t tempDstPtr;
         unsigned long long tempBufferSize = (unsigned long long)tempDescPtr->h * (unsigned long long)tempDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-        hipMalloc(&tempDstPtr,sizeof(tempBufferSize)*4);
+        hipMalloc(&tempDstPtr, tempBufferSize * 4);
         hip_exec_resize_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                srcDescPtr,
                                (Rpp32f*) (static_cast<Rpp8u*>(tempDstPtr)),
@@ -1568,7 +1568,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         }
         RppPtr_t tempDstPtr;
         unsigned long long tempBufferSize = (unsigned long long)tempDescPtr->h * (unsigned long long)tempDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-        hipMalloc(&tempDstPtr,sizeof(tempBufferSize));
+        hipMalloc(&tempDstPtr, tempBufferSize);
         hip_exec_resize_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp8s*>(tempDstPtr),
