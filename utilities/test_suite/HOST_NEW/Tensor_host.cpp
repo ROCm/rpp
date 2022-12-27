@@ -266,11 +266,6 @@ int main(int argc, char **argv)
         std::sprintf(additionalParam_char, "%u", additionalParam);
         func += "_kSize";
         func += additionalParam_char;
-        if (test_type == 0)
-        {
-            dst += "_kSize";
-            dst += additionalParam_char;
-        }
     }
     else if (interpolationTypeCase)
     {
@@ -278,11 +273,6 @@ int main(int argc, char **argv)
         interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
         func += "_interpolationType";
         func += interpolationTypeName.c_str();
-        if (test_type == 0)
-        {
-            dst += "_interpolationType";
-            dst += interpolationTypeName.c_str();
-        }
     }
     else if (noiseTypeCase)
     {
@@ -290,11 +280,6 @@ int main(int argc, char **argv)
         noiseTypeName = get_noise_type(additionalParam);
         func += "_noiseType";
         func += noiseTypeName.c_str();
-        if (test_type == 0)
-        {
-            dst += "_noiseType";
-            dst += noiseTypeName.c_str();
-        }
     }
     std::cerr<<"func: "<<func<<std::endl;
     printf("\nRunning %s...", func.c_str());
