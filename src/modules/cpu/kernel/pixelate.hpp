@@ -3,12 +3,12 @@
 #include "rpp_cpu_common.hpp"
 
 RppStatus pixelate_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp8u *dstPtr,
-                                       RpptDescPtr dstDescPtr,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams srcLayoutParams)
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams srcLayoutParams)
 {
     RpptImagePatchPtr internalDstImgSizes = (RpptImagePatch *) calloc(dstDescPtr->n, sizeof(RpptImagePatch));
     RpptROI *internalRoiTensorPtrSrc = (RpptROI *) calloc(dstDescPtr->n, sizeof(RpptROI));
@@ -38,12 +38,12 @@ RppStatus pixelate_u8_u8_host_tensor(Rpp8u *srcPtr,
 }
 
 RppStatus pixelate_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                         RpptDescPtr srcDescPtr,
-                                         Rpp32f *dstPtr,
-                                         RpptDescPtr dstDescPtr,
-                                         RpptROIPtr roiTensorPtrSrc,
-                                         RpptRoiType roiType,
-                                         RppLayoutParams srcLayoutParams)
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp32f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams srcLayoutParams)
 {
     RpptImagePatchPtr internalDstImgSizes = (RpptImagePatch *) calloc(dstDescPtr->n, sizeof(RpptImagePatch));
     RpptROI *internalRoiTensorPtrSrc = (RpptROI *) calloc(dstDescPtr->n, sizeof(RpptROI));
@@ -73,12 +73,12 @@ RppStatus pixelate_f32_f32_host_tensor(Rpp32f *srcPtr,
 }
 
 RppStatus pixelate_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                         RpptDescPtr srcDescPtr,
-                                         Rpp16f *dstPtr,
-                                         RpptDescPtr dstDescPtr,
-                                         RpptROIPtr roiTensorPtrSrc,
-                                         RpptRoiType roiType,
-                                         RppLayoutParams srcLayoutParams)
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp16f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams srcLayoutParams)
 {
     RpptImagePatchPtr internalDstImgSizes = (RpptImagePatch *) calloc(dstDescPtr->n, sizeof(RpptImagePatch));
     RpptROI *internalRoiTensorPtrSrc = (RpptROI *) calloc(dstDescPtr->n, sizeof(RpptROI));
@@ -108,12 +108,12 @@ RppStatus pixelate_f16_f16_host_tensor(Rpp16f *srcPtr,
 }
 
 RppStatus pixelate_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp8s *dstPtr,
-                                       RpptDescPtr dstDescPtr,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams srcLayoutParams)
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8s *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams srcLayoutParams)
 {
     RpptImagePatchPtr internalDstImgSizes = (RpptImagePatch *) calloc(dstDescPtr->n, sizeof(RpptImagePatch));
     RpptROI *internalRoiTensorPtrSrc = (RpptROI *) calloc(dstDescPtr->n, sizeof(RpptROI));

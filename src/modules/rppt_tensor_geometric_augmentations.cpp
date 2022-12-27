@@ -724,24 +724,24 @@ RppStatus rppt_resize_crop_mirror_host(RppPtr_t srcPtr,
 /******************** pixelate ********************/
 
 RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
+                             RpptDescPtr srcDescPtr,
+                             RppPtr_t dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         pixelate_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                     srcDescPtr,
-                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     layoutParams);
+                                   srcDescPtr,
+                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                   dstDescPtr,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams);
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -766,12 +766,12 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
         pixelate_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                     srcDescPtr,
-                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     layoutParams);
+                                   srcDescPtr,
+                                   static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                   dstDescPtr,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams);
     }
 
     return RPP_SUCCESS;
@@ -1328,12 +1328,12 @@ return RPP_SUCCESS;
 /******************** pixelate ********************/
 
 RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
-                          RpptDescPtr srcDescPtr,
-                          RppPtr_t dstPtr,
-                          RpptDescPtr dstDescPtr,
-                          RpptROIPtr roiTensorPtrSrc,
-                          RpptRoiType roiType,
-                          rppHandle_t rppHandle)
+                            RpptDescPtr srcDescPtr,
+                            RppPtr_t dstPtr,
+                            RpptDescPtr dstDescPtr,
+                            RpptROIPtr roiTensorPtrSrc,
+                            RpptRoiType roiType,
+                            rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
@@ -1379,7 +1379,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                roiType,
                                rpp::deref(rppHandle));
         hipDeviceSynchronize();
-        
+
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
@@ -1486,7 +1486,6 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         // Optionally set w stride as a multiple of 8 for src/dst
         tempDescPtr->h /= 8;
         tempDescPtr->w = ((tempDescPtr->w / 64) * 8) + 8;
-
         tempDescPtr->strides.nStride = tempDescPtr->w * tempDescPtr->h * tempDescPtr->c;
         // The stride changes with the change in the height and width
         if(srcDescPtr->layout == RpptLayout::NCHW)
@@ -1553,7 +1552,6 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         // Optionally set w stride as a multiple of 8 for src/dst
         tempDescPtr->h /= 8;
         tempDescPtr->w = ((tempDescPtr->w / 64) * 8) + 8;
-
         tempDescPtr->strides.nStride = tempDescPtr->w * tempDescPtr->h * tempDescPtr->c;
         // The stride changes with the change in the height and width
         if(srcDescPtr->layout == RpptLayout::NCHW)
