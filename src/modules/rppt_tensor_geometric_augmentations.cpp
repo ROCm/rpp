@@ -474,15 +474,15 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
     }
     else
     {
-        RpptDesc interDesc;
-        interDesc = *srcDescPtr;
-        RpptDescPtr interDescPtr = &interDesc;
-        interDescPtr->h = dstDescPtr->h;
-        interDescPtr->strides.nStride = srcDescPtr->w * dstDescPtr->h * srcDescPtr->c;
+        RpptDesc tempDesc;
+        tempDesc = *srcDescPtr;
+        RpptDescPtr tempDescPtr = &tempDesc;
+        tempDescPtr->h = dstDescPtr->h;
+        tempDescPtr->strides.nStride = srcDescPtr->w * dstDescPtr->h * srcDescPtr->c;
 
         // The channel stride changes with the change in the height for PLN images
         if(srcDescPtr->layout == RpptLayout::NCHW)
-            interDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
+            tempDescPtr->strides.cStride = srcDescPtr->w * dstDescPtr->h;
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -491,7 +491,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
-                                         interDescPtr,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
@@ -505,7 +505,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
-                                         interDescPtr,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
@@ -519,7 +519,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
-                                         interDescPtr,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
@@ -533,7 +533,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
-                                         interDescPtr,
+                                         tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
                                          roiType,
@@ -732,31 +732,14 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                              rppHandle_t rppHandle)
 {
     RppLayoutParams srcLayoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-    RpptDesc interDesc;
-    interDesc = *srcDescPtr;
-    RpptDescPtr interDescPtr = &interDesc;
+    RpptDescPtr interDescPtr = srcDescPtr;
     RpptImagePatchPtr internalDstImgSizes = (RpptImagePatch *) calloc(dstDescPtr->n, sizeof(RpptImagePatch));
     RpptROI *internalRoiTensorPtrSrc = (RpptROI *) calloc(dstDescPtr->n, sizeof(RpptROI));
     int resizeRatio = 8;
-    for(int i=0 ; i < dstDescPtr->n ; i++)
+    for(int i = 0 ; i < dstDescPtr->n ; i++)
     {
         internalDstImgSizes[i].width = internalRoiTensorPtrSrc[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / resizeRatio;
         internalDstImgSizes[i].height = internalRoiTensorPtrSrc[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / resizeRatio;
-    }
-    // Optionally set w stride as a multiple of 8 for src/dst
-    interDescPtr->h /= resizeRatio;
-    interDescPtr->w = ((interDescPtr->w / (8 * resizeRatio)) * 8) + 8;
-    interDescPtr->strides.nStride = interDescPtr->w * interDescPtr->h * interDescPtr->c;
-    // The stride changes with the change in the height and width
-    if(srcDescPtr->layout == RpptLayout::NCHW)
-    {
-        interDescPtr->strides.cStride = interDescPtr->w * interDescPtr->h;
-        interDescPtr->strides.hStride = interDescPtr->w;
-    }
-    if (srcDescPtr->layout == RpptLayout::NHWC)
-    {
-        interDescPtr->strides.cStride = 1;
-        interDescPtr->strides.hStride = interDescPtr->c * interDescPtr->w;
     }
     unsigned long long interBufferSize = (unsigned long long)interDescPtr->h * (unsigned long long)interDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
 
@@ -771,7 +754,7 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                                           roiTensorPtrSrc,
                                           roiType,
                                           srcLayoutParams);
-        for(int i=0 ; i < dstDescPtr->n ; i++)
+        for(int i = 0 ; i < dstDescPtr->n ; i++)
         {
             internalRoiTensorPtrSrc[i].xywhROI.xy.x = roiTensorPtrSrc[i].xywhROI.xy.x / resizeRatio;
             internalRoiTensorPtrSrc[i].xywhROI.xy.y = roiTensorPtrSrc[i].xywhROI.xy.y / resizeRatio;
@@ -799,7 +782,7 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                                             roiTensorPtrSrc,
                                             roiType,
                                             srcLayoutParams);
-        for(int i=0 ; i < dstDescPtr->n ; i++)
+        for(int i = 0 ; i < dstDescPtr->n ; i++)
         {
             internalRoiTensorPtrSrc[i].xywhROI.xy.x = roiTensorPtrSrc[i].xywhROI.xy.x / resizeRatio;
             internalRoiTensorPtrSrc[i].xywhROI.xy.y = roiTensorPtrSrc[i].xywhROI.xy.y / resizeRatio;
@@ -827,7 +810,7 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                                             roiTensorPtrSrc,
                                             roiType,
                                             srcLayoutParams);
-        for(int i=0 ; i < dstDescPtr->n ; i++)
+        for(int i = 0 ; i < dstDescPtr->n ; i++)
         {
             internalRoiTensorPtrSrc[i].xywhROI.xy.x = roiTensorPtrSrc[i].xywhROI.xy.x / resizeRatio;
             internalRoiTensorPtrSrc[i].xywhROI.xy.y = roiTensorPtrSrc[i].xywhROI.xy.y / resizeRatio;
@@ -855,7 +838,7 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                                           roiTensorPtrSrc,
                                           roiType,
                                           srcLayoutParams);
-        for(int i=0 ; i < dstDescPtr->n ; i++)
+        for(int i = 0 ; i < dstDescPtr->n ; i++)
         {
             internalRoiTensorPtrSrc[i].xywhROI.xy.x = roiTensorPtrSrc[i].xywhROI.xy.x / resizeRatio;
             internalRoiTensorPtrSrc[i].xywhROI.xy.y = roiTensorPtrSrc[i].xywhROI.xy.y / resizeRatio;
@@ -1448,8 +1431,10 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
     int resizeRatio = 8;
     for (int i = 0; i < srcDescPtr->n; i++)
     {
-        internalDstImgSizes[i].width = internalRoiTensorPtrSrc[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / resizeRatio;
-        internalDstImgSizes[i].height = internalRoiTensorPtrSrc[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / resizeRatio;
+        internalRoiTensorPtrSrc[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth;
+        internalRoiTensorPtrSrc[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight;
+        internalDstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth / resizeRatio;
+        internalDstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight / resizeRatio;
     }
     // Optionally set w stride as a multiple of 8 for src/dst
     interDescPtr->h /= resizeRatio;
@@ -1470,7 +1455,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
     unsigned long long interBufferSize = (unsigned long long)interDescPtr->h * (unsigned long long)interDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        hipMalloc(&interDstPtr,interBufferSize);
+        hipMalloc(&interDstPtr, interBufferSize);
         hip_exec_resize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp8u*>(interDstPtr),
@@ -1484,10 +1469,12 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
-            internalRoiTensorPtrSrc[i].xywhROI.xy.x = roiTensorPtrSrc[i].xywhROI.xy.x / resizeRatio;
-            internalRoiTensorPtrSrc[i].xywhROI.xy.y = roiTensorPtrSrc[i].xywhROI.xy.y / resizeRatio;
-            internalDstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
-            internalDstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
+            internalDstImgSizes[i].width = internalRoiTensorPtrSrc[i].xywhROI.roiWidth;
+            internalDstImgSizes[i].height = internalRoiTensorPtrSrc[i].xywhROI.roiHeight;
+            internalRoiTensorPtrSrc[i].xywhROI.roiWidth /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.roiHeight /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.xy.x /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.xy.y /= resizeRatio;
         }
         hip_exec_resize_tensor(static_cast<Rpp8u*>(interDstPtr),
                                interDescPtr,
@@ -1503,7 +1490,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        hipMalloc(&interDstPtr,interBufferSize * 2);
+        hipMalloc(&interDstPtr, interBufferSize * 2);
         hip_exec_resize_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                srcDescPtr,
                                (half*) (static_cast<Rpp8u*>(interDstPtr)),
@@ -1517,10 +1504,12 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
-            internalRoiTensorPtrSrc[i].xywhROI.xy.x = roiTensorPtrSrc[i].xywhROI.xy.x / resizeRatio;
-            internalRoiTensorPtrSrc[i].xywhROI.xy.y = roiTensorPtrSrc[i].xywhROI.xy.y / resizeRatio;
-            internalDstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
-            internalDstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
+            internalDstImgSizes[i].width = internalRoiTensorPtrSrc[i].xywhROI.roiWidth;
+            internalDstImgSizes[i].height = internalRoiTensorPtrSrc[i].xywhROI.roiHeight;
+            internalRoiTensorPtrSrc[i].xywhROI.roiWidth /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.roiHeight /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.xy.x /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.xy.y /= resizeRatio;
         }
         hip_exec_resize_tensor((half*) static_cast<Rpp8u*>(interDstPtr),
                                interDescPtr,
@@ -1550,10 +1539,12 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
-            internalRoiTensorPtrSrc[i].xywhROI.xy.x = roiTensorPtrSrc[i].xywhROI.xy.x / 8;
-            internalRoiTensorPtrSrc[i].xywhROI.xy.y = roiTensorPtrSrc[i].xywhROI.xy.y / 8;
-            internalDstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
-            internalDstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
+            internalDstImgSizes[i].width = internalRoiTensorPtrSrc[i].xywhROI.roiWidth;
+            internalDstImgSizes[i].height = internalRoiTensorPtrSrc[i].xywhROI.roiHeight;
+            internalRoiTensorPtrSrc[i].xywhROI.roiWidth /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.roiHeight /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.xy.x /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.xy.y /= resizeRatio;
         }
         hip_exec_resize_tensor((Rpp32f*) (static_cast<Rpp8u*>(interDstPtr)),
                                interDescPtr,
@@ -1583,10 +1574,12 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
-            internalRoiTensorPtrSrc[i].xywhROI.xy.x = roiTensorPtrSrc[i].xywhROI.xy.x / 8;
-            internalRoiTensorPtrSrc[i].xywhROI.xy.y = roiTensorPtrSrc[i].xywhROI.xy.y / 8;
-            internalDstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
-            internalDstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
+            internalDstImgSizes[i].width = internalRoiTensorPtrSrc[i].xywhROI.roiWidth;
+            internalDstImgSizes[i].height = internalRoiTensorPtrSrc[i].xywhROI.roiHeight;
+            internalRoiTensorPtrSrc[i].xywhROI.roiWidth /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.roiHeight /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.xy.x /= resizeRatio;
+            internalRoiTensorPtrSrc[i].xywhROI.xy.y /= resizeRatio;
         }
         hip_exec_resize_tensor(static_cast<Rpp8s*>(interDstPtr),
                                interDescPtr,

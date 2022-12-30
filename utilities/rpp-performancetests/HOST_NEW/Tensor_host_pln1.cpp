@@ -136,6 +136,9 @@ int main(int argc, char **argv)
     case 4:
         strcpy(funcName, "contrast");
         break;
+    case 5:
+        strcpy(funcName, "pixelate");
+        break;
     case 8:
         strcpy(funcName, "noise");
         break;
