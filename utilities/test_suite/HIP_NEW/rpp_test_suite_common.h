@@ -149,24 +149,24 @@ void set_nchw_strides(int layout_type, RpptDescPtr srcDescPtr, RpptDescPtr dstDe
 
 void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
 {
-        unsigned long long bufferSize = (unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n + (unsigned long long)dstDescPtr->offsetInBytes;
+        unsigned long long bufferSize = (unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n + (unsigned long long)descPtr->offsetInBytes;
         Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, 1);
         memcpy(outputCopy, output, bufferSize);
 
         Rpp8u *outputTemp, *outputCopyTemp;
-        outputTemp = output + dstDescPtr->offsetInBytes;
-        outputCopyTemp = outputCopy + dstDescPtr->offsetInBytes;
+        outputTemp = output + descPtr->offsetInBytes;
+        outputCopyTemp = outputCopy + descPtr->offsetInBytes;
 
-        for (int count = 0; count < dstDescPtr->n; count++)
+        for (int count = 0; count < descPtr->n; count++)
         {
             Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
             outputCopyTempR = outputCopyTemp;
-            outputCopyTempG = outputCopyTempR + dstDescPtr->strides.cStride;
-            outputCopyTempB = outputCopyTempG + dstDescPtr->strides.cStride;
+            outputCopyTempG = outputCopyTempR + descPtr->strides.cStride;
+            outputCopyTempB = outputCopyTempG + descPtr->strides.cStride;
 
-            for (int i = 0; i < dstDescPtr->h; i++)
+            for (int i = 0; i < descPtr->h; i++)
             {
-                for (int j = 0; j < dstDescPtr->w; j++)
+                for (int j = 0; j < descPtr->w; j++)
                 {
                     *outputTemp = *outputCopyTempR;
                     outputTemp++;
@@ -180,7 +180,7 @@ void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
                 }
             }
 
-            outputCopyTemp += dstDescPtr->strides.nStride;
+            outputCopyTemp += descPtr->strides.nStride;
         }
 
         free(outputCopy);

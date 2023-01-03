@@ -42,9 +42,9 @@ if testType < "0" or testType > "1":
 subprocess.call(["./testAllScript.sh", caseStart, caseEnd , uniqueFunc , testType , num_iterations])
 
 log_file_list = [
-    "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln3_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln1_raw_performance_log.txt"
+    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",
+    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln3_raw_performance_log.txt",
+    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln1_raw_performance_log.txt"
     ]
 
 functionality_group_list = [
@@ -91,7 +91,7 @@ if(int(testType) == 1):
                     minVals.extend([" ", " ", " "])
                     avgVals.extend([" ", " ", " "])
 
-            if "max,min,avg in ms" in line:
+            if "max,min,avg" in line:
                 split_word_start = "Running "
                 split_word_end = " 100"
                 prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]

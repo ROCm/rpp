@@ -20,6 +20,8 @@ DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_
 # DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"
 # DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src2"
 
+TEST_TYPE=$4
+
 # Output Images
 mkdir "$cwd/../OUTPUT_IMAGES_HOST_NEW"
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
