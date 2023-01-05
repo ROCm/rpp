@@ -48,9 +48,8 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         __m128 pChannel = _mm_set1_ps(layoutParams.bufferMultiplier);
         __m128 pHStride = _mm_set1_ps(srcDescPtr->strides.hStride);
         __m128 pHeightLimit = _mm_set1_ps(heightLimit);
-        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth-1);
+        __m128 pWidthLimit = _mm_set1_ps(roi.xywhROI.roiWidth - 1);
         __m128 pBound = _mm_set1_ps(bound);
-
 
         // Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -80,7 +79,6 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
                     Rpp32s loc;
@@ -89,7 +87,6 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     *dstPtrTempG++ = *(srcPtrChannel + 1 + loc);
                     *dstPtrTempB++ = *(srcPtrChannel + 2 + loc);
                 }
-
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -124,7 +121,6 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_store(rpp_store12_u8pln3_to_u8pkd3, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
                 }
-
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
                     Rpp32s loc;
@@ -159,7 +155,6 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
                 }
-
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
                     Rpp32s loc;
@@ -171,6 +166,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+
         // Jitter with fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -300,7 +296,6 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
                     Rpp32s loc;
@@ -309,7 +304,6 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     *dstPtrTempG++ = *(srcPtrChannel + 1 + loc);
                     *dstPtrTempB++ = *(srcPtrChannel + 2 + loc);
                 }
-
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -620,7 +614,6 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     *dstPtrTempG++ = *(srcPtrChannel + 1 + loc);
                     *dstPtrTempB++ = *(srcPtrChannel + 2 + loc);
                 }
-
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
