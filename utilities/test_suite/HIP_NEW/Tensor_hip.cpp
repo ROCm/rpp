@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <hip/hip_fp16.h>
+#include <hip/hip_fp16.h> 
 #include <fstream>
 #include "helpers/testSuite_helper.hpp"
 
@@ -1565,7 +1565,7 @@ int main(int argc, char **argv)
                 roiTensorPtrSrc[i].xywhROI.xy.x = 0;
                 roiTensorPtrSrc[i].xywhROI.xy.y = 0;
                 dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
             }
 
             // Uncomment to run test case with an ltrbROI override
