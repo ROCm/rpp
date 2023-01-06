@@ -6,7 +6,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include "rpp.h"
-#include "rpp_test_suite_common.h"
+#include "../rpp_test_suite_common.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -2328,6 +2328,9 @@ int main(int argc, char **argv)
                 roiTensorPtrSrc[i].xywhROI.roiHeight = rbY - ltY + 1;
             }
         }
+
+        compareOutput<Rpp8u>(output, func, srcDescPtr);
+
 
         RpptROI roiDefault;
         RpptROIPtr roiPtrDefault;

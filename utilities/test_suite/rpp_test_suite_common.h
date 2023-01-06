@@ -13,7 +13,8 @@
 #include <omp.h>
 #include <half/half.hpp>
 #include <fstream>
-#include "helpers/testSuite_helper.hpp"
+#include "HOST_NEW/helpers/testSuite_helper.hpp"
+#include "HIP_NEW/helpers/testSuite_helper.hpp"
 
 using namespace cv;
 using namespace std;
@@ -184,4 +185,50 @@ void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
         }
 
         free(outputCopy);
+}
+
+template <typename T>
+void compareOutput(T* output, string func, RpptDescPtr srcDescPtr)
+{
+    bool isEqual = false;
+    vector<vector<string>> content;
+    vector<string> row;
+    string line, word;
+    ifstream file("/media/rpp_testsuite/rpp/utilities/test_suite/reference_output/" + func + ".csv");
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+            row.clear();
+            stringstream str(line);
+            while(getline(str, word, ','))
+            row.push_back(word);
+            content.push_back(row);
+        }
+    }
+    else
+        cout<<"Could not open the file\n";
+
+    for(int i=0;i<content.size();i++)
+    {
+        for(int j=0;j<content[i].size();j++)
+        {
+            if( stoi(content[i][j]) == output[srcDescPtr->strides.hStride * i + j])
+            {
+                isEqual = true;
+                cout << "\n"<<content[i][j]<<"   "<<(int)output[srcDescPtr->strides.hStride * i + j];
+            }
+            else
+            {
+                isEqual = false;
+                cout << "\n"<<content[i][j]<<"   "<<(int)output[srcDescPtr->strides.hStride * i + j];
+                break;
+            }
+        }
+        cout<<"\n";
+    }
+    if(isEqual == true)
+        cout<<func<<" unit_test "<<"PASS \n";
+    else
+        cout<<func<<" unit_test "<<"FAIL \n";
 }

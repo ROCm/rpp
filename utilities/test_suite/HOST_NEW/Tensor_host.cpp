@@ -6,7 +6,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include "rpp.h"
-#include "rpp_test_suite_common.h"
+#include "../rpp_test_suite_common.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -1928,7 +1928,6 @@ int main(int argc, char **argv)
         // Reconvert other bit depths to 8u for output display purposes
         string fileName = std::to_string(ip_bitDepth);
         ofstream outputFile(fileName + ".csv");
-        ofstream outFile(func + ".csv");
         if (ip_bitDepth == 0)
         {
             Rpp8u *outputTemp;
@@ -1939,11 +1938,9 @@ int main(int argc, char **argv)
                 for (int i = 0; i < oBufferSize; i++)
                 {
                     outputFile << (Rpp32u)*outputTemp << ",";
-                    outFile << (Rpp32u)*outputTemp << ",";
                     outputTemp++;
                 }
                 outputFile.close();
-                outFile.close();
             }
             else
                 cout << "Unable to open file!";
@@ -1960,13 +1957,11 @@ int main(int argc, char **argv)
                 for (int i = 0; i < oBufferSize; i++)
                 {
                     outputFile << *outputf16Temp << ",";
-                    outFile << *outputf16Temp << ",";
                     *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * 255.0);
                     outputf16Temp++;
                     outputTemp++;
                 }
                 outputFile.close();
-                outFile.close();
             }
             else
                 cout << "Unable to open file!";
@@ -1983,13 +1978,11 @@ int main(int argc, char **argv)
                 for (int i = 0; i < oBufferSize; i++)
                 {
                     outputFile << *outputf32Temp << ",";
-                    outFile << *outputf32Temp << ",";
                     *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * 255.0);
                     outputf32Temp++;
                     outputTemp++;
                 }
                 outputFile.close();
-                outFile.close();
             }
             else
                 cout << "Unable to open file!";
@@ -2006,64 +1999,17 @@ int main(int argc, char **argv)
                 for (int i = 0; i < oBufferSize; i++)
                 {
                     outputFile << (Rpp32s)*outputi8Temp << ",";
-                    outFile << (Rpp32s)*outputi8Temp << ",";
                     *outputTemp = (Rpp8u)RPPPIXELCHECK(((Rpp32s)*outputi8Temp) + 128);
                     outputi8Temp++;
                     outputTemp++;
                 }
                 outputFile.close();
-                outFile.close();
             }
             else
                 cout << "Unable to open file!";
         }
 
-        bool isEqual = false;
-        vector<vector<string>> content1, content2;
-        vector<string> row1, row2;
-        string line1, line2, word1, word2;
-        ifstream file1("../reference_output/" + func + ".csv");
-        ifstream file2(func + ".csv");
-        if(file1.is_open() && file2.is_open())
-        {
-            while(getline(file1, line1))
-            {
-                row1.clear();
-                stringstream str(line1);
-                while(getline(str, word1, ','))
-                row1.push_back(word1);
-                content1.push_back(row1);
-            }
-            while(getline(file2, line2))
-            {
-                row2.clear();
-                stringstream str(line2);
-                while(getline(str, word2, ','))
-                row2.push_back(word2);
-                content2.push_back(row2);
-            }
-        }
-        else
-            cout<<"Could not open the file\n";
-
-        for(int i=0;i<content1.size();i++)
-        {
-            for(int j=0;j<content1[i].size();j++)
-            {
-                if( content1[i][j] == content2[i][j])
-                    isEqual = true;
-                else
-                {
-                    isEqual = false;
-                    break;
-                }
-            }
-            cout<<"\n";
-        }
-        if(isEqual == true)
-            cout<<"PASS \n";
-        else
-            cout<<"FAIL \n";
+        compareOutput<Rpp8u>(output, func, srcDescPtr);
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)
