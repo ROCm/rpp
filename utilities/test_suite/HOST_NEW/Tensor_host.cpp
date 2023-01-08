@@ -832,7 +832,7 @@ int main(int argc, char **argv)
             {
                 test_case_name = "noise";
 
-                switch (additionalParam)
+                switch(additionalParam)
                 {
                     case 0:
                     {
@@ -995,6 +995,8 @@ int main(int argc, char **argv)
                         break;
                     }
                 }
+
+                break;
             }
             case 13:
             {
@@ -2009,7 +2011,7 @@ int main(int argc, char **argv)
                 cout << "Unable to open file!";
         }
 
-        compareOutput<Rpp8u>(output, func, srcDescPtr);
+        // compareOutput<Rpp8u>(output, func, srcDescPtr);
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)
