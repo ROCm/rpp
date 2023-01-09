@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <hip/hip_fp16.h> 
+#include <hip/hip_fp16.h>
 #include <fstream>
 #include "helpers/testSuite_helper.hpp"
 
@@ -156,7 +156,6 @@ int main(int argc, char **argv)
 
     // Set case names
     string funcName = "";
-    string ref = "";
     funcName += funcType;
 
     switch(test_case)
@@ -238,7 +237,6 @@ int main(int argc, char **argv)
             break;
     }
 
-    ref += funcName;
     // Set src/dst data types in tensor descriptors
     set_data_type(ip_bitDepth, funcName, srcDescPtr, dstDescPtr);
 
@@ -393,7 +391,7 @@ int main(int argc, char **argv)
     dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
 
     // Set n/c/h/w strides for src/dst
-    set_nchw_strides(layout_type, srcDescPtr, dstDescPtr);
+    set_nchw_strides(srcDescPtr, dstDescPtr);
 
     // Set buffer sizes in pixels for src/dst
     ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)noOfImages;
@@ -484,80 +482,9 @@ int main(int argc, char **argv)
 
     if (layout_type == 1)
     {
-        // Convert default OpenCV PKD3 to PLN3 for first input batch
-        // Rpp8u *inputCopy = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, sizeof(Rpp8u));
-        // memcpy(inputCopy, input, ioBufferSizeInBytes_u8);
-
-        // Rpp8u *inputTemp, *inputCopyTemp;
-        // inputTemp = input + srcDescPtr->offsetInBytes;
-        // inputCopyTemp = inputCopy + srcDescPtr->offsetInBytes;
-
-        // omp_set_dynamic(0);
-        // #pragma omp parallel for num_threads(noOfImages)
-        // for (int count = 0; count < noOfImages; count++)
-        // {
-        //     Rpp8u *inputTempR, *inputTempG, *inputTempB;
-        //     inputTempR = inputTemp;
-        //     inputTempG = inputTempR + srcDescPtr->strides.cStride;
-        //     inputTempB = inputTempG + srcDescPtr->strides.cStride;
-
-        //     for (int i = 0; i < srcDescPtr->h; i++)
-        //     {
-        //         for (int j = 0; j < srcDescPtr->w; j++)
-        //         {
-        //             *inputTempR = *inputCopyTemp;
-        //             inputCopyTemp++;
-        //             inputTempR++;
-        //             *inputTempG = *inputCopyTemp;
-        //             inputCopyTemp++;
-        //             inputTempG++;
-        //             *inputTempB = *inputCopyTemp;
-        //             inputCopyTemp++;
-        //             inputTempB++;
-        //         }
-        //     }
-        //     inputTemp += srcDescPtr->strides.nStride;
-        // }
-
-        // free(inputCopy);
+        // Convert default OpenCV PKD3 to PLN3 for first and second input batch
         convert_pkd3_to_pln3(input, srcDescPtr);
-
-        // Convert default OpenCV PKD3 to PLN3 for second input batch
-        Rpp8u *inputSecondCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-        memcpy(inputSecondCopy, input_second, ioBufferSize * sizeof(Rpp8u));
-
-        Rpp8u *inputSecondTemp, *inputSecondCopyTemp;
-        inputSecondTemp = input_second;
-        inputSecondCopyTemp = inputSecondCopy;
-        omp_set_dynamic(0);
-        #pragma omp parallel for num_threads(noOfImages)
-        for (int count = 0; count < noOfImages; count++)
-        {
-            Rpp8u *inputSecondTempR, *inputSecondTempG, *inputSecondTempB;
-            inputSecondTempR = inputSecondTemp;
-            inputSecondTempG = inputSecondTempR + srcDescPtr->strides.cStride;
-            inputSecondTempB = inputSecondTempG + srcDescPtr->strides.cStride;
-
-            for (int i = 0; i < srcDescPtr->h; i++)
-            {
-                for (int j = 0; j < srcDescPtr->w; j++)
-                {
-                    *inputSecondTempR = *inputSecondCopyTemp;
-                    inputSecondCopyTemp++;
-                    inputSecondTempR++;
-                    *inputSecondTempG = *inputSecondCopyTemp;
-                    inputSecondCopyTemp++;
-                    inputSecondTempG++;
-                    *inputSecondTempB = *inputSecondCopyTemp;
-                    inputSecondCopyTemp++;
-                    inputSecondTempB++;
-                }
-            }
-
-            inputSecondTemp += srcDescPtr->strides.nStride;
-        }
-
-        free(inputSecondCopy);
+        convert_pkd3_to_pln3(input_second, srcDescPtr);
     }
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
@@ -714,7 +641,7 @@ int main(int argc, char **argv)
     double gpu_time_used, omp_time_used;
 
     string test_case_name;
-    
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), num_iterations, noOfImages);
     for (int perfRunCount = 0; perfRunCount < num_iterations; perfRunCount++)
@@ -2334,7 +2261,7 @@ int main(int argc, char **argv)
             }
         }
 
-        compareOutput<Rpp8u>(output, func, ref, dstDescPtr);
+        compare_output<Rpp8u>(output, func, test_case_name, dstDescPtr);
 
 
         RpptROI roiDefault;
@@ -2408,7 +2335,6 @@ int main(int argc, char **argv)
     }
 
     // Free memory
-
     free(roiTensorPtrSrc);
     free(roiTensorPtrDst);
     hipFree(d_roiTensorPtrSrc);

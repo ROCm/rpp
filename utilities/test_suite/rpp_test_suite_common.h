@@ -124,7 +124,7 @@ void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, Rp
     }
 }
 
-void set_nchw_strides(int layout_type, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+void set_nchw_strides(RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
     // set strides for src
     if (srcDescPtr->layout == RpptLayout::NHWC)
@@ -161,61 +161,61 @@ void set_nchw_strides(int layout_type, RpptDescPtr srcDescPtr, RpptDescPtr dstDe
 
 void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
 {
-        unsigned long long bufferSize = (unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n + (unsigned long long)descPtr->offsetInBytes;
-        Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, 1);
-        memcpy(outputCopy, output, bufferSize);
+    unsigned long long bufferSize = (unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n + (unsigned long long)descPtr->offsetInBytes;
+    Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, 1);
+    memcpy(outputCopy, output, bufferSize);
 
-        Rpp8u *outputTemp, *outputCopyTemp;
-        outputTemp = output + descPtr->offsetInBytes;
-        outputCopyTemp = outputCopy + descPtr->offsetInBytes;
+    Rpp8u *outputTemp, *outputCopyTemp;
+    outputTemp = output + descPtr->offsetInBytes;
+    outputCopyTemp = outputCopy + descPtr->offsetInBytes;
 
-        for (int count = 0; count < descPtr->n; count++)
+    for (int count = 0; count < descPtr->n; count++)
+    {
+        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
+        outputCopyTempR = outputCopyTemp;
+        outputCopyTempG = outputCopyTempR + descPtr->strides.cStride;
+        outputCopyTempB = outputCopyTempG + descPtr->strides.cStride;
+
+        for (int i = 0; i < descPtr->h; i++)
         {
-            Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
-            outputCopyTempR = outputCopyTemp;
-            outputCopyTempG = outputCopyTempR + descPtr->strides.cStride;
-            outputCopyTempB = outputCopyTempG + descPtr->strides.cStride;
-
-            for (int i = 0; i < descPtr->h; i++)
+            for (int j = 0; j < descPtr->w; j++)
             {
-                for (int j = 0; j < descPtr->w; j++)
-                {
-                    *outputTemp = *outputCopyTempR;
-                    outputTemp++;
-                    outputCopyTempR++;
-                    *outputTemp = *outputCopyTempG;
-                    outputTemp++;
-                    outputCopyTempG++;
-                    *outputTemp = *outputCopyTempB;
-                    outputTemp++;
-                    outputCopyTempB++;
-                }
+                *outputTemp = *outputCopyTempR;
+                outputTemp++;
+                outputCopyTempR++;
+                *outputTemp = *outputCopyTempG;
+                outputTemp++;
+                outputCopyTempG++;
+                *outputTemp = *outputCopyTempB;
+                outputTemp++;
+                outputCopyTempB++;
             }
-
-            outputCopyTemp += descPtr->strides.nStride;
         }
 
-        free(outputCopy);
+        outputCopyTemp += descPtr->strides.nStride;
+    }
+
+    free(outputCopy);
 }
 
 void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr srcDescPtr)
 {
-    unsigned long long bufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n + (unsigned long long)srcDescPtr->offsetInBytes;
+    unsigned long long bufferSize = ((unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n) + (unsigned long long)srcDescPtr->offsetInBytes;
     Rpp8u *inputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
-    memcpy(inputCopy, input, bufferSize);
+    memcpy(inputCopy, input, bufferSize * sizeof(Rpp8u));
 
     Rpp8u *inputTemp, *inputCopyTemp;
     inputTemp = input + srcDescPtr->offsetInBytes;
-    inputCopyTemp = inputCopy + srcDescPtr->offsetInBytes;
 
     omp_set_dynamic(0);
     #pragma omp parallel for num_threads(srcDescPtr->n)
     for (int count = 0; count < srcDescPtr->n; count++)
     {
         Rpp8u *inputTempR, *inputTempG, *inputTempB;
-        inputTempR = inputTemp;
+        inputTempR = inputTemp + count * srcDescPtr->strides.nStride;
         inputTempG = inputTempR + srcDescPtr->strides.cStride;
         inputTempB = inputTempG + srcDescPtr->strides.cStride;
+        Rpp8u *inputCopyTemp = inputCopy + srcDescPtr->offsetInBytes + count * srcDescPtr->strides.nStride;
 
         for (int i = 0; i < srcDescPtr->h; i++)
         {
@@ -232,13 +232,13 @@ void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr srcDescPtr)
                 inputTempB++;
             }
         }
-        inputTemp += srcDescPtr->strides.nStride;
     }
+
     free(inputCopy);
 }
 
 template <typename T>
-void compareOutput(T* output, string func, string funcName, RpptDescPtr srcDescPtr)
+void compare_output(T* output, string func, string funcName, RpptDescPtr srcDescPtr)
 {
     bool isEqual = false;
     string ref_path = get_current_dir_name();
