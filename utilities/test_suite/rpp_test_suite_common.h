@@ -15,9 +15,20 @@
 #include <fstream>
 #include "HOST_NEW/helpers/testSuite_helper.hpp"
 #include "HIP_NEW/helpers/testSuite_helper.hpp"
+#include <experimental/filesystem>
 
 using namespace cv;
 using namespace std;
+
+void remove_substring(string &str, string &pattern)
+{
+    std::string::size_type i = str.find(pattern);
+    while (i != std::string::npos)
+    {
+        str.erase(i, pattern.length());
+        i = str.find(pattern, i);
+   }
+}
 
 std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
 {
@@ -228,10 +239,16 @@ template <typename T>
 void compareOutput(T* output, string func, RpptDescPtr srcDescPtr)
 {
     bool isEqual = false;
+    string ref_path = get_current_dir_name();
+    string pattern = "HOST_NEW/build";
+    remove_substring(ref_path, pattern);
+
+    string ref_file = ref_path + "reference_output/" + func + ".csv";
+    ifstream file(ref_file);
+
     vector<vector<string>> content;
     vector<string> row;
     string line, word;
-    ifstream file("/media/rpp_testsuite/rpp/utilities/test_suite/reference_output/" + func + ".csv");
     if(file.is_open())
     {
         while(getline(file, line))
@@ -246,14 +263,13 @@ void compareOutput(T* output, string func, RpptDescPtr srcDescPtr)
     else
         cout<<"Could not open the file\n";
 
-    for(int i=0;i<content.size();i++)
+    for(int i = 0; i < content.size(); i++)
     {
-        for(int j=0;j<content[i].size();j++)
+        for(int j = 0; j < content[i].size(); j++)
         {
             if( stoi(content[i][j]) == output[srcDescPtr->strides.hStride * i + j])
             {
                 isEqual = true;
-                //cout << "\n"<<content[i][j]<<"   "<<(int)output[srcDescPtr->strides.hStride * i + j];
             }
             else
             {

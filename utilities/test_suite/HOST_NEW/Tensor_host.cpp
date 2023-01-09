@@ -832,7 +832,7 @@ int main(int argc, char **argv)
             {
                 test_case_name = "noise";
 
-                switch (additionalParam)
+                switch(additionalParam)
                 {
                     case 0:
                     {
@@ -995,6 +995,8 @@ int main(int argc, char **argv)
                         break;
                     }
                 }
+
+                break;
             }
             case 13:
             {

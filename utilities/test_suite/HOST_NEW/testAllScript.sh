@@ -13,26 +13,24 @@ cwd=$(pwd)
 # DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_224x224_src2"
 
 # Input Images - Three images (224 x 224)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
+DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
+DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
 
 # Input Images - Two images (mixed size)
 # DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"
 # DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src2"
 
 #Input Images - Two images (mixed size)
-DEFAULT_SRC_FOLDER_1="$cwd/TEST_IMAGES/"
-DEFAULT_SRC_FOLDER_2="$cwd/TEST_IMAGES/"
+# DEFAULT_SRC_FOLDER_1="$cwd/TEST_IMAGES/"
+# DEFAULT_SRC_FOLDER_2="$cwd/TEST_IMAGES/"
 
 TEST_TYPE=$4
 
 # Output Images
 mkdir "$cwd/../OUTPUT_IMAGES_HOST_NEW"
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
-# mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
-# LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
 
-# for logging
+# logging folders for performance tests
 if [ $TEST_TYPE -eq 1 ]; then
     rm -rvf "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
     mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
@@ -49,8 +47,7 @@ DEFAULT_HOG_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/hog"
 # <<<<<<<<<<<<<< PRINTING THE TEST TYPE THAT USER SPECIFIED >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if [ $TEST_TYPE -eq 0 ]; then
     printf "\nRunning Unittests...\n"
-fi
-if [ $TEST_TYPE -eq 1 ]; then
+elif [ $TEST_TYPE -eq 1 ]; then
     printf "\nRunning Performance tests...\n"
 fi
 
@@ -119,8 +116,8 @@ if [[ "$1" -lt 0 ]] | [[ "$1" -gt 86 ]]; then
     echo "S     CASE_START (Starting case# (0:86))"
     echo "E     CASE_END (Ending case# (0:86))"
     echo "U     UNIQUE_FUNC (0 = Skip / 1 = Run)"
-    echo "T     Type of Test - (0 = Unittests / 1 = Performancetests)"
-    echo "N     Number of Iterations - (0 = Unittests / 1 = Performancetests)"
+    echo "T     TEST_TYPE - (0 = Unittests / 1 = Performancetests)"
+    echo "N     NUM_ITERATIONS - (0 = Unittests / 1 = Performancetests)"
     exit 1
 fi
 
@@ -133,8 +130,8 @@ if [[ "$2" -lt 0 ]] | [[ "$2" -gt 86 ]]; then
     echo "S     CASE_START (Starting case# (0:86))"
     echo "E     CASE_END (Ending case# (0:86))"
     echo "U     UNIQUE_FUNC (0 = Skip / 1 = Run)"
-    echo "T     Type of Test - (0 = Unittests / 1 = Performancetests)"
-    echo "N     Number of Iterations - (0 = Unittests / 1 = Performancetests)"
+    echo "T     TEST_TYPE - (0 = Unittests / 1 = Performancetests)"
+    echo "N     NUM_ITERATIONS - (0 = Unittests / 1 = Performancetests)"
     exit 1
 fi
 
@@ -148,8 +145,8 @@ if [ "$3" -ne 0 ]; then
         echo "S     CASE_START (Starting case# (0:86))"
         echo "E     CASE_END (Ending case# (0:86))"
         echo "U     UNIQUE_FUNC (0 = Skip / 1 = Run)"
-        echo "T     Type of Test - (0 = Unittests / 1 = Performancetests)"
-        echo "N     Number of Iterations - (0 = Unittests / 1 = Performancetests)"
+        echo "T     TEST_TYPE - (0 = Unittests / 1 = Performancetests)"
+        echo "N     NUM_ITERATIONS - (0 = Unittests / 1 = Performancetests)"
         exit 1
     fi
 fi
@@ -173,7 +170,7 @@ shopt -s extglob
 mkdir build
 cd build
 rm -rvf ./*
-cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake ..
 make -j16
 
 printf "\n\n\n\n\n"
