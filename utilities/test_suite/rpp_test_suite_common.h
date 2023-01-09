@@ -209,7 +209,7 @@ void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr srcDescPtr)
     inputCopyTemp = inputCopy + srcDescPtr->offsetInBytes;
 
     omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(noOfImages)
+    #pragma omp parallel for num_threads(srcDescPtr->n)
     for (int count = 0; count < srcDescPtr->n; count++)
     {
         Rpp8u *inputTempR, *inputTempG, *inputTempB;
