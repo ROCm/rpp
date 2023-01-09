@@ -198,42 +198,44 @@ void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
         free(outputCopy);
 }
 
-/*void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr srcDescPtr)
+void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr srcDescPtr)
 {
-Rpp8u *inputCopy = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, sizeof(Rpp8u));
-        memcpy(inputCopy, input, ioBufferSizeInBytes_u8);
+    unsigned long long bufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n + (unsigned long long)srcDescPtr->offsetInBytes;
+    Rpp8u *inputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
+    memcpy(inputCopy, input, bufferSize);
 
-        Rpp8u *inputTemp, *inputCopyTemp;
-        inputTemp = input + srcDescPtr->offsetInBytes;
-        inputCopyTemp = inputCopy + srcDescPtr->offsetInBytes;
+    Rpp8u *inputTemp, *inputCopyTemp;
+    inputTemp = input + srcDescPtr->offsetInBytes;
+    inputCopyTemp = inputCopy + srcDescPtr->offsetInBytes;
 
-        omp_set_dynamic(0);
-        #pragma omp parallel for num_threads(noOfImages)
-        for (int count = 0; count < noOfImages; count++)
+    omp_set_dynamic(0);
+    #pragma omp parallel for num_threads(noOfImages)
+    for (int count = 0; count < srcDescPtr->n; count++)
+    {
+        Rpp8u *inputTempR, *inputTempG, *inputTempB;
+        inputTempR = inputTemp;
+        inputTempG = inputTempR + srcDescPtr->strides.cStride;
+        inputTempB = inputTempG + srcDescPtr->strides.cStride;
+
+        for (int i = 0; i < srcDescPtr->h; i++)
         {
-            Rpp8u *inputTempR, *inputTempG, *inputTempB;
-            inputTempR = inputTemp;
-            inputTempG = inputTempR + srcDescPtr->strides.cStride;
-            inputTempB = inputTempG + srcDescPtr->strides.cStride;
-
-            for (int i = 0; i < srcDescPtr->h; i++)
+            for (int j = 0; j < srcDescPtr->w; j++)
             {
-                for (int j = 0; j < srcDescPtr->w; j++)
-                {
-                    *inputTempR = *inputCopyTemp;
-                    inputCopyTemp++;
-                    inputTempR++;
-                    *inputTempG = *inputCopyTemp;
-                    inputCopyTemp++;
-                    inputTempG++;
-                    *inputTempB = *inputCopyTemp;
-                    inputCopyTemp++;
-                    inputTempB++;
-                }
+                *inputTempR = *inputCopyTemp;
+                inputCopyTemp++;
+                inputTempR++;
+                *inputTempG = *inputCopyTemp;
+                inputCopyTemp++;
+                inputTempG++;
+                *inputTempB = *inputCopyTemp;
+                inputCopyTemp++;
+                inputTempB++;
             }
-            inputTemp += srcDescPtr->strides.nStride;
         }
-}*/
+        inputTemp += srcDescPtr->strides.nStride;
+    }
+    free(inputCopy);
+}
 
 template <typename T>
 void compareOutput(T* output, string func, RpptDescPtr srcDescPtr)

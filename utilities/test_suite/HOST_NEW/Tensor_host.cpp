@@ -457,39 +457,40 @@ int main(int argc, char **argv)
     if (layout_type == 1)
     {
         // Convert default OpenCV PKD3 to PLN3 for first input batch
-        Rpp8u *inputCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-        memcpy(inputCopy, input, ioBufferSize * sizeof(Rpp8u));
+        // Rpp8u *inputCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
+        // memcpy(inputCopy, input, ioBufferSize * sizeof(Rpp8u));
 
-        Rpp8u *inputTemp, *inputCopyTemp;
+        // Rpp8u *inputTemp, *inputCopyTemp;
 
-        // omp_set_dynamic(0);
-        // #pragma omp parallel for num_threads(noOfImages)
-        for (int count = 0; count < noOfImages; count++)
-        {
-            Rpp8u *inputTempR, *inputTempG, *inputTempB;
-            inputTemp = input + count * srcDescPtr->strides.nStride;
-            inputCopyTemp = inputCopy + count * srcDescPtr->strides.nStride;
-            inputTempR = inputTemp;
-            inputTempG = inputTempR + srcDescPtr->strides.cStride;
-            inputTempB = inputTempG + srcDescPtr->strides.cStride;
-            for (int i = 0; i < srcDescPtr->h; i++)
-            {
-                for (int j = 0; j < srcDescPtr->w; j++)
-                {
-                    *inputTempR = *inputCopyTemp;
-                    inputCopyTemp++;
-                    inputTempR++;
-                    *inputTempG = *inputCopyTemp;
-                    inputCopyTemp++;
-                    inputTempG++;
-                    *inputTempB = *inputCopyTemp;
-                    inputCopyTemp++;
-                    inputTempB++;
-                }
-            }
-        }
+        // // omp_set_dynamic(0);
+        // // #pragma omp parallel for num_threads(noOfImages)
+        // for (int count = 0; count < noOfImages; count++)
+        // {
+        //     Rpp8u *inputTempR, *inputTempG, *inputTempB;
+        //     inputTemp = input + count * srcDescPtr->strides.nStride;
+        //     inputCopyTemp = inputCopy + count * srcDescPtr->strides.nStride;
+        //     inputTempR = inputTemp;
+        //     inputTempG = inputTempR + srcDescPtr->strides.cStride;
+        //     inputTempB = inputTempG + srcDescPtr->strides.cStride;
+        //     for (int i = 0; i < srcDescPtr->h; i++)
+        //     {
+        //         for (int j = 0; j < srcDescPtr->w; j++)
+        //         {
+        //             *inputTempR = *inputCopyTemp;
+        //             inputCopyTemp++;
+        //             inputTempR++;
+        //             *inputTempG = *inputCopyTemp;
+        //             inputCopyTemp++;
+        //             inputTempG++;
+        //             *inputTempB = *inputCopyTemp;
+        //             inputCopyTemp++;
+        //             inputTempB++;
+        //         }
+        //     }
+        // }
 
-        free(inputCopy);
+        // free(inputCopy);
+        convert_pkd3_to_pln3(input, srcDescPtr);
 
         // Convert default OpenCV PKD3 to PLN3 for second input batch
         Rpp8u *inputSecondCopy = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
