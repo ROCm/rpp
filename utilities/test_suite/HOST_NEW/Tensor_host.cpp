@@ -158,6 +158,7 @@ int main(int argc, char **argv)
 
     // Set case names
     string funcName = "";
+    string ref = "";
     funcName += funcType;
 
     switch(test_case)
@@ -233,6 +234,8 @@ int main(int argc, char **argv)
             break;
     }
 
+    ref += funcName;
+
     // Set src/dst data types in tensor descriptors
     set_data_type(ip_bitDepth, funcName, srcDescPtr, dstDescPtr);
 
@@ -270,7 +273,7 @@ int main(int argc, char **argv)
     else if (interpolationTypeCase)
     {
         std::string interpolationTypeName;
-        interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
+        interpolationTypeName = get_interpolation_type('8', interpolationType);
         func += "_interpolationType";
         func += interpolationTypeName.c_str();
     }
@@ -1439,10 +1442,10 @@ int main(int argc, char **argv)
                 // Uncomment to run test case with an xywhROI override
                 for (i = 0; i < images; i++)
                 {
-                    roiTensorPtrSrc[i].xywhROI.xy.x = 50;
-                    roiTensorPtrSrc[i].xywhROI.xy.y = 50;
-                    dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                    dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
+                    roiTensorPtrSrc[i].xywhROI.xy.x = 10;
+                    roiTensorPtrSrc[i].xywhROI.xy.y = 10;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
                 }
 
                 // Uncomment to run test case with an ltrbROI override
@@ -1931,7 +1934,6 @@ int main(int argc, char **argv)
         // Reconvert other bit depths to 8u for output display purposes
         string fileName = std::to_string(ip_bitDepth);
         ofstream outputFile(fileName + ".csv");
-        ofstream outFile(func + ".csv");
         if (ip_bitDepth == 0)
         {
             Rpp8u *outputTemp;
@@ -1942,11 +1944,9 @@ int main(int argc, char **argv)
                 for (int i = 0; i < oBufferSize; i++)
                 {
                     outputFile << (Rpp32u)*outputTemp << ",";
-                    outFile << (Rpp32u)*outputTemp << ",";
                     outputTemp++;
                 }
                 outputFile.close();
-                outFile.close();
             }
             else
                 cout << "Unable to open file!";
@@ -2015,7 +2015,7 @@ int main(int argc, char **argv)
                 cout << "Unable to open file!";
         }
 
-        compareOutput<Rpp8u>(output, func, dstDescPtr);
+        compareOutput<Rpp8u>(output, func, ref, dstDescPtr);
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)

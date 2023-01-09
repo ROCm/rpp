@@ -156,6 +156,7 @@ int main(int argc, char **argv)
 
     // Set case names
     string funcName = "";
+    string ref = "";
     funcName += funcType;
 
     switch(test_case)
@@ -237,6 +238,7 @@ int main(int argc, char **argv)
             break;
     }
 
+    ref += funcName;
     // Set src/dst data types in tensor descriptors
     set_data_type(ip_bitDepth, funcName, srcDescPtr, dstDescPtr);
 
@@ -1634,10 +1636,10 @@ int main(int argc, char **argv)
             // Uncomment to run test case with an xywhROI override
             for (i = 0; i < images; i++)
             {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 50;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 50;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
+                roiTensorPtrSrc[i].xywhROI.xy.x = 10;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 10;
+                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
             }
 
             // Uncomment to run test case with an ltrbROI override
@@ -2332,7 +2334,7 @@ int main(int argc, char **argv)
             }
         }
 
-        compareOutput<Rpp8u>(output, func, srcDescPtr);
+        compareOutput<Rpp8u>(output, func, ref, dstDescPtr);
 
 
         RpptROI roiDefault;

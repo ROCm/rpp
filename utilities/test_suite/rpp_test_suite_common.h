@@ -238,17 +238,16 @@ void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr srcDescPtr)
 }
 
 template <typename T>
-void compareOutput(T* output, string func, RpptDescPtr srcDescPtr)
+void compareOutput(T* output, string func, string funcName, RpptDescPtr srcDescPtr)
 {
     bool isEqual = false;
     string ref_path = get_current_dir_name();
     string pattern = "HOST_NEW/build";
     remove_substring(ref_path, pattern);
-
-    string ref_file = ref_path + "reference_output/" + func + ".csv";
+    string ref_file = ref_path + "REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
     ifstream file(ref_file);
 
-    vector<vector<string>> content;
+    vector<vector<string>> refOutput;
     vector<string> row;
     string line, word;
     if(file.is_open())
@@ -259,24 +258,23 @@ void compareOutput(T* output, string func, RpptDescPtr srcDescPtr)
             stringstream str(line);
             while(getline(str, word, ','))
             row.push_back(word);
-            content.push_back(row);
+            refOutput.push_back(row);
         }
     }
     else
         cout<<"Could not open the file\n";
 
-    for(int i = 0; i < content.size(); i++)
+    for(int i = 0; i < refOutput.size(); i++)
     {
-        for(int j = 0; j < content[i].size(); j++)
+        for(int j = 0; j < refOutput[i].size(); j++)
         {
-            if( stoi(content[i][j]) == output[srcDescPtr->strides.hStride * i + j])
+            if( stoi(refOutput[i][j]) == output[srcDescPtr->strides.hStride * i + j])
             {
                 isEqual = true;
             }
             else
             {
                 isEqual = false;
-                cout << "\n"<<content[i][j]<<"   "<<(int)output[srcDescPtr->strides.hStride * i + j];
                 break;
             }
         }

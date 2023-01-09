@@ -16,9 +16,9 @@ cwd=$(pwd)
 # DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
 # DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
 
-#Input Images - Two images (mixed size)
-DEFAULT_SRC_FOLDER_1="$cwd/../HOST_NEW/TEST_IMAGES/"
-DEFAULT_SRC_FOLDER_2="$cwd/../HOST_NEW/TEST_IMAGES/"
+#Input Images - Three images (mixed size)
+DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
+DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src1"
 
 # Input Images - Two images (mixed size)
 # DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"

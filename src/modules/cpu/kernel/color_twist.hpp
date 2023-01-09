@@ -106,9 +106,9 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pixel.G = (Rpp32f)srcPtrTemp[1] * ONE_OVER_255;
                     pixel.B = (Rpp32f)srcPtrTemp[2] * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(pixel.R);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(pixel.G);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(pixel.B);
+                    *dstPtrTempR = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.R));
+                    *dstPtrTempG = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.G));
+                    *dstPtrTempB = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.B));
 
                     srcPtrTemp+=3;
                     dstPtrTempR++;
@@ -172,9 +172,9 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pixel.G = (Rpp32f)*srcPtrTempG * ONE_OVER_255;
                     pixel.B = (Rpp32f)*srcPtrTempB * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(pixel.R);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(pixel.G);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(pixel.B);
+                    dstPtrTemp[0] = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.R));
+                    dstPtrTemp[1] = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.G));
+                    dstPtrTemp[2] = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.B));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -232,9 +232,9 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pixel.G = (Rpp32f)srcPtrTemp[1] * ONE_OVER_255;
                     pixel.B = (Rpp32f)srcPtrTemp[2] * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(pixel.R);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(pixel.G);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(pixel.B);
+                    dstPtrTemp[0] = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.R));
+                    dstPtrTemp[1] = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.G));
+                    dstPtrTemp[2] = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.B));
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -300,9 +300,9 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pixel.G = (Rpp32f)*srcPtrTempG * ONE_OVER_255;
                     pixel.B = (Rpp32f)*srcPtrTempB * ONE_OVER_255;
                     compute_color_twist_host(&pixel, brightnessParam, contrastParam, hueParam, saturationParam);
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(pixel.R);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(pixel.G);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(pixel.B);
+                    *dstPtrTempR = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.R));
+                    *dstPtrTempG = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.G));
+                    *dstPtrTempB = (Rpp8u) std::nearbyintf(RPPPIXELCHECK(pixel.B));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
