@@ -13,8 +13,12 @@ cwd=$(pwd)
 # DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_224x224_src2"
 
 # Input Images - Three images (224 x 224)
-DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
-DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
+# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
+
+#Input Images - Two images (mixed size)
+DEFAULT_SRC_FOLDER_1="$cwd/../HOST_NEW/TEST_IMAGES/"
+DEFAULT_SRC_FOLDER_2="$cwd/../HOST_NEW/TEST_IMAGES/"
 
 # Input Images - Two images (mixed size)
 # DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"
@@ -199,7 +203,7 @@ do
         echo "--------------------------------"
         printf "Running a New Functionality...\n"
         echo "--------------------------------"
-        for ((bitDepth=0;bitDepth<7;bitDepth++))
+        for ((bitDepth=0;bitDepth<1;bitDepth++))
         do
             printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
             for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))

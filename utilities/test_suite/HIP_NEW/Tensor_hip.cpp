@@ -2226,6 +2226,7 @@ int main(int argc, char **argv)
         // Reconvert other bit depths to 8u for output display purposes
         string fileName = std::to_string(ip_bitDepth);
         ofstream outputFile(fileName + ".csv");
+        ofstream outFile(func + ".csv");
 
         if (ip_bitDepth == 0)
         {
@@ -2238,6 +2239,7 @@ int main(int argc, char **argv)
                 for (int i = 0; i < oBufferSize; i++)
                 {
                     outputFile << (Rpp32u) *outputTemp << ",";
+                    outFile << (Rpp32u) *outputTemp << ",";
                     outputTemp++;
                 }
                 outputFile.close();

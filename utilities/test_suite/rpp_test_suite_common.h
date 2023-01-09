@@ -187,6 +187,43 @@ void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
         free(outputCopy);
 }
 
+/*void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr srcDescPtr)
+{
+Rpp8u *inputCopy = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, sizeof(Rpp8u));
+        memcpy(inputCopy, input, ioBufferSizeInBytes_u8);
+
+        Rpp8u *inputTemp, *inputCopyTemp;
+        inputTemp = input + srcDescPtr->offsetInBytes;
+        inputCopyTemp = inputCopy + srcDescPtr->offsetInBytes;
+
+        omp_set_dynamic(0);
+        #pragma omp parallel for num_threads(noOfImages)
+        for (int count = 0; count < noOfImages; count++)
+        {
+            Rpp8u *inputTempR, *inputTempG, *inputTempB;
+            inputTempR = inputTemp;
+            inputTempG = inputTempR + srcDescPtr->strides.cStride;
+            inputTempB = inputTempG + srcDescPtr->strides.cStride;
+
+            for (int i = 0; i < srcDescPtr->h; i++)
+            {
+                for (int j = 0; j < srcDescPtr->w; j++)
+                {
+                    *inputTempR = *inputCopyTemp;
+                    inputCopyTemp++;
+                    inputTempR++;
+                    *inputTempG = *inputCopyTemp;
+                    inputCopyTemp++;
+                    inputTempG++;
+                    *inputTempB = *inputCopyTemp;
+                    inputCopyTemp++;
+                    inputTempB++;
+                }
+            }
+            inputTemp += srcDescPtr->strides.nStride;
+        }
+}*/
+
 template <typename T>
 void compareOutput(T* output, string func, RpptDescPtr srcDescPtr)
 {
@@ -216,7 +253,7 @@ void compareOutput(T* output, string func, RpptDescPtr srcDescPtr)
             if( stoi(content[i][j]) == output[srcDescPtr->strides.hStride * i + j])
             {
                 isEqual = true;
-                cout << "\n"<<content[i][j]<<"   "<<(int)output[srcDescPtr->strides.hStride * i + j];
+                //cout << "\n"<<content[i][j]<<"   "<<(int)output[srcDescPtr->strides.hStride * i + j];
             }
             else
             {

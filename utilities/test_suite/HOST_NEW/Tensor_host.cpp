@@ -1928,6 +1928,7 @@ int main(int argc, char **argv)
         // Reconvert other bit depths to 8u for output display purposes
         string fileName = std::to_string(ip_bitDepth);
         ofstream outputFile(fileName + ".csv");
+        ofstream outFile(func + ".csv");
         if (ip_bitDepth == 0)
         {
             Rpp8u *outputTemp;
@@ -1938,9 +1939,11 @@ int main(int argc, char **argv)
                 for (int i = 0; i < oBufferSize; i++)
                 {
                     outputFile << (Rpp32u)*outputTemp << ",";
+                    outFile << (Rpp32u)*outputTemp << ",";
                     outputTemp++;
                 }
                 outputFile.close();
+                outFile.close();
             }
             else
                 cout << "Unable to open file!";
@@ -2009,7 +2012,7 @@ int main(int argc, char **argv)
                 cout << "Unable to open file!";
         }
 
-        compareOutput<Rpp8u>(output, func, srcDescPtr);
+        compareOutput<Rpp8u>(output, func, dstDescPtr);
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)
