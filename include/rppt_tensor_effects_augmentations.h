@@ -28,22 +28,6 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *x_offset_r, Rpp32u *y_offset_r, Rpp32u *x_offset_g, Rpp32u *y_offset_g, Rpp32u *x_offset_b, Rpp32u *y_offset_b, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#ifdef GPU_SUPPORT
-RppStatus rppt_glitch_gpu(RppPtr_t srcPtr,
-                            RpptDescPtr srcDescPtr,
-                            RppPtr_t dstPtr,
-                            RpptDescPtr dstDescPtr,
-                            Rpp32u *x_offset_r,
-                            Rpp32u *y_offset_r,
-                            Rpp32u *x_offset_g,
-                            Rpp32u *y_offset_g,
-                            Rpp32u *x_offset_b,
-                            Rpp32u *y_offset_b,
-                            RpptROIPtr roiTensorPtrSrc,
-                            RpptRoiType roiType,
-                            rppHandle_t rppHandle);
-#endif // GPU_SUPPORT
 /******************** gridmask ********************/
 
 // Gridmask augmentation for a NCHW/NHWC layout tensor
@@ -158,3 +142,10 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
 }
 #endif
 #endif // RPPT_TENSOR_EFFECTS_AUGMENTATIONS_H
+
+/******************** glitch ********************/
+
+RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *xOffsetR, Rpp32u *yOffsetR, Rpp32u *xOffsetG, Rpp32u *yOffsetG, Rpp32u *xOffsetB, Rpp32u *yOffsetB, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppt_glitch_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *xOffsetR, Rpp32u *yOffsetR, Rpp32u *xOffsetG, Rpp32u *yOffsetG, Rpp32u *xOffsetB, Rpp32u *yOffsetB, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
