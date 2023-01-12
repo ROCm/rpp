@@ -413,7 +413,7 @@ void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr srcDescPtr)
 template <typename T>
 void compare_output(T* output, string func, string funcName, RpptDescPtr srcDescPtr)
 {
-    bool isEqual = false;
+    bool isEqual = true;
     string ref_path = get_current_dir_name();
     string pattern = "HOST/build";
     remove_substring(ref_path, pattern);
@@ -441,15 +441,12 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr srcDesc
     {
         for(int j = 0; j < refOutput[i].size(); j++)
         {
-            if( stoi(refOutput[i][j]) == output[srcDescPtr->strides.hStride * i + j])
-            {
-                isEqual = true;
-            }
-            else
+            if( stoi(refOutput[i][j]) != *output)
             {
                 isEqual = false;
                 break;
             }
+            output++;
         }
         cout<<"\n";
     }

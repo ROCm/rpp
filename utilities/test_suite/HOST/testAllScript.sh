@@ -26,7 +26,7 @@ cwd=$(pwd)
 
 #Input Images - Three images (mixed size)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
-DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src1"
+DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 
 TEST_TYPE=$3
 
@@ -40,13 +40,6 @@ if [ $TEST_TYPE -eq 1 ]; then
     mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
     LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
 fi
-
-# # Images for unique functionalities
-# DEFAULT_FAST_CORNER_DETECTOR_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/fast_corner_detector"
-# DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/harris_corner_detector"
-# DEFAULT_HOUGH_LINES_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/hough_lines"
-# DEFAULT_HOG_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/hog"
-
 
 # <<<<<<<<<<<<<< PRINTING THE TEST TYPE THAT USER SPECIFIED >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if [ $TEST_TYPE -eq 0 ]; then

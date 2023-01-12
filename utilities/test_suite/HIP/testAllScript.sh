@@ -18,7 +18,7 @@ cwd=$(pwd)
 
 #Input Images - Three images (mixed size)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
-DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src1"
+DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 
 # Input Images - Two images (mixed size)
 # DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"
@@ -36,13 +36,6 @@ if [ $TEST_TYPE -eq 1 ]; then
     mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_NEW"
     LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_NEW"
 fi
-
-# Images for unique functionalities
-# DEFAULT_FAST_CORNER_DETECTOR_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/fast_corner_detector"
-# DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/harris_corner_detector"
-# DEFAULT_HOUGH_LINES_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/hough_lines"
-# DEFAULT_HOG_IMAGES="$cwd/../../rpp-unittests/TEST_IMAGES/hog"
-
 
 # <<<<<<<<<<<<<< PRINTING THE TEST TYPE THAT USER SPECIFIED >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if [ $TEST_TYPE -eq 0 ]; then
@@ -110,7 +103,7 @@ directory_name_generator() {
 if [[ "$1" -lt 0 ]] | [[ "$1" -gt 86 ]]; then
     echo "The starting case# must be in the 0:86 range!"
     echo
-    echo "The testAllScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HIP/OCL/HIP backends."
+    echo "The testAllScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./testAllScript.sh <S> <E> <T> <N>"
     echo "S     CASE_START (Starting case# (0:86))"
@@ -123,7 +116,7 @@ fi
 if [[ "$2" -lt 0 ]] | [[ "$2" -gt 86 ]]; then
     echo "The ending case# must be in the 0:86 range!"
     echo
-    echo "The testAllScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HIP/OCL/HIP backends."
+    echo "The testAllScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./testAllScript.sh <S> <E> <T> <N>"
     echo "S     CASE_START (Starting case# (0:86))"

@@ -33,7 +33,7 @@ if testType < "0" or testType > "1":
     exit(0)
 
 
-subprocess.call(["./testAllScript.sh", caseStart, caseEnd , testType , num_iterations])
+subprocess.call(["./testAllScript.sh", caseStart, caseEnd, testType , num_iterations])
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
