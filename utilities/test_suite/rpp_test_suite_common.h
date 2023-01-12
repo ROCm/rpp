@@ -411,11 +411,11 @@ void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr srcDescPtr)
 }
 
 template <typename T>
-void compare_output(T* output, string func, string funcName, RpptDescPtr srcDescPtr)
+void compare_output(T* output, string func, string funcName, RpptDescPtr srcDescPtr, std::string backend)
 {
     bool isEqual = true;
     string ref_path = get_current_dir_name();
-    string pattern = "HOST/build";
+    string pattern = backend + "/build";
     remove_substring(ref_path, pattern);
     string ref_file = ref_path + "REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
     ifstream file(ref_file);
@@ -435,7 +435,10 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr srcDesc
         }
     }
     else
-        cout<<"Could not open the file\n";
+    {
+        cout<<"Could not open the reference output. Please check the path specified\n";
+        return;
+    }
 
     for(int i = 0; i < refOutput.size(); i++)
     {

@@ -2004,7 +2004,7 @@ int main(int argc, char **argv)
                 cout << "Unable to open file!";
         }
 
-        compare_output<Rpp8u>(output, func, test_case_name, dstDescPtr);
+        compare_output<Rpp8u>(output, func, test_case_name, dstDescPtr, "HOST");
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)

@@ -2254,7 +2254,7 @@ int main(int argc, char **argv)
             }
         }
 
-        compare_output<Rpp8u>(output, func, test_case_name, dstDescPtr);
+        compare_output<Rpp8u>(output, func, test_case_name, dstDescPtr, "HIP");
 
 
         RpptROI roiDefault;
