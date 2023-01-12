@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(test_suite/HOST_NEW)
+project(test_suite/HOST)
 
 set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
 
@@ -37,13 +37,9 @@ if (OpenCV_FOUND)
 
     add_executable(Tensor_host Tensor_host.cpp)
 
-    # add_executable(Single_host Single_host.cpp)
-    add_executable(uniqueFunctionalities_host uniqueFunctionalities_host.cpp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
     target_link_libraries(Tensor_host ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
 
-    # target_link_libraries(Single_host ${OpenCV_LIBS} -lamd_rpp pthread boost_filesystem boost_system )
-    target_link_libraries(uniqueFunctionalities_host ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
 else()
     message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()

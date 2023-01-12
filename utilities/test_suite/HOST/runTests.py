@@ -5,13 +5,11 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--case_start", type=str, default="0", help="Testing range starting case # - (0:86)")
 parser.add_argument("--case_end", type=str, default="86", help="Testing range ending case # - (0:86)")
-parser.add_argument('--unique_func', type=str, default='0', help="Value to test unique functionalities (0 = Skip / 1 = Run)")
 parser.add_argument('--test_type', type=str, default='0', help="Type of Test - (0 = Unittests / 1 = Performancetests)")
 args = parser.parse_args()
 
 caseStart = args.case_start
 caseEnd = args.case_end
-uniqueFunc = args.unique_func
 testType = args.test_type
 if (int(testType) == 0):
     num_iterations = "1"
@@ -29,17 +27,13 @@ if caseStart < "0" or caseStart > "86":
 if caseEnd < "0" or caseEnd > "86":
     print("Ending case# must be in the 0:86 range. Aborting!")
     exit(0)
-  
-if uniqueFunc < "0" or uniqueFunc > "1":
-    print("Unique Function# must be in the 0:1 range. Aborting!")
-    exit(0)
-      
+
 if testType < "0" or testType > "1":
     print("Test Type# must be in the 0:1 range. Aborting!")
     exit(0)
 
 
-subprocess.call(["./testAllScript.sh", caseStart, caseEnd , uniqueFunc , testType , num_iterations])
+subprocess.call(["./testAllScript.sh", caseStart, caseEnd , testType , num_iterations])
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",

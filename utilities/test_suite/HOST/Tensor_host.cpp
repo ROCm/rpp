@@ -14,7 +14,6 @@
 #include <omp.h>
 #include <half/half.hpp>
 #include <fstream>
-#include "helpers/testSuite_helper.hpp"
 
 using namespace cv;
 using namespace std;
@@ -40,12 +39,12 @@ int main(int argc, char **argv)
     unsigned int outputFormatToggle = atoi(argv[5]);
     int test_case = atoi(argv[6]);
     int num_iterations = atoi(argv[8]);
-    int test_type = atoi(argv[9]);     // 0 for unit and 1 for performance test
+    int testType = atoi(argv[9]);     // 0 for unit and 1 for performance test
     int layout_type = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
 
-    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 24);
+    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 23 || test_case == 24);
     bool kernelSizeCase = false;
-    bool interpolationTypeCase = (test_case == 21 || test_case == 24);
+    bool interpolationTypeCase = (test_case == 21 || test_case == 23 || test_case == 24);
     bool noiseTypeCase = (test_case == 8);
     bool pln1OutTypeCase = (test_case == 86);
     unsigned int verbosity = atoi(argv[11]);
@@ -56,7 +55,7 @@ int main(int argc, char **argv)
         printf("\nInputs for this test case are:");
         printf("\nsrc1 = %s", argv[1]);
         printf("\nsrc2 = %s", argv[2]);
-        if (test_type == 0)
+        if (testType == 0)
             printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
@@ -68,7 +67,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        if (test_type == 0)
+        if (testType == 0)
         {
             printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of iterations > 0> <verbosity = 0/1>>\n");
             if (layout_type == 2)
@@ -82,7 +81,7 @@ int main(int argc, char **argv)
         }
     }
 
-    int ip_channel;
+    int inputChannel;
     string funcType;
 
     // Initialize tensor descriptors
@@ -93,7 +92,7 @@ int main(int argc, char **argv)
 
     if(layout_type == 0)
     {
-        ip_channel = 3;
+        inputChannel = 3;
         funcType = "Tensor_HOST_PKD3";
         srcDescPtr->layout = RpptLayout::NHWC;
 
@@ -119,7 +118,7 @@ int main(int argc, char **argv)
     }
     else if(layout_type == 1)
     {
-        ip_channel = 3;
+        inputChannel = 3;
         funcType = "Tensor_HOST_PLN3";
         srcDescPtr->layout = RpptLayout::NCHW;
 
@@ -145,7 +144,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        ip_channel = 1;
+        inputChannel = 1;
         funcType = "Tensor_HOST_PLN1";
         funcType += "_toPLN1";
 
@@ -183,6 +182,9 @@ int main(int argc, char **argv)
             break;
         case 21:
             funcName = "resize";
+            break;
+        case 23:
+            funcName = "rotate";
             break;
         case 24:
             funcName = "warp_affine";
@@ -268,7 +270,7 @@ int main(int argc, char **argv)
     else if (interpolationTypeCase)
     {
         std::string interpolationTypeName;
-        interpolationTypeName = get_interpolation_type('8', interpolationType);
+        interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
         func += "_interpolationType";
         func += interpolationTypeName.c_str();
     }
@@ -361,22 +363,23 @@ int main(int argc, char **argv)
     srcDescPtr->n = noOfImages;
     srcDescPtr->h = maxHeight;
     srcDescPtr->w = maxWidth;
-    srcDescPtr->c = ip_channel;
+    srcDescPtr->c = inputChannel;
 
     dstDescPtr->n = noOfImages;
     dstDescPtr->h = maxDstHeight;
     dstDescPtr->w = maxDstWidth;
     if (layout_type == 0 || layout_type == 1)
-        dstDescPtr->c = (pln1OutTypeCase) ? 1 : ip_channel;
+        dstDescPtr->c = (pln1OutTypeCase) ? 1 : inputChannel;
     else
-        dstDescPtr->c = ip_channel;
+        dstDescPtr->c = inputChannel;
 
     // Optionally set w stride as a multiple of 8 for src/dst
     srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
     dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
 
     // Set n/c/h/w strides for src/dst
-    set_nchw_strides(srcDescPtr, dstDescPtr);
+    set_nchw_strides(srcDescPtr);
+    set_nchw_strides(dstDescPtr);
 
     // Set buffer sizes for src/dst
     ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)noOfImages;
@@ -534,7 +537,7 @@ int main(int argc, char **argv)
     rppCreateWithBatchSize(&handle, noOfImages);
 
     double max_time_used = 0, min_time_used = 500, avg_time_used = 0;
-    double cpu_time_used, omp_time_used;
+    double cpuTime, wallTime;
     string test_case_name;
 
     // case-wise RPP API and measure time script for Unit and Performance test
@@ -1065,6 +1068,63 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 23:
+            {
+                test_case_name = "rotate";
+
+                if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
+
+                Rpp32f angle[images];
+                for (i = 0; i < images; i++)
+                {
+                    angle[i] = 50;
+                }
+
+                // Uncomment to run test case with an xywhROI override
+                /*for (i = 0; i < images; i++)
+                {
+                    roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                    roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                    roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                    roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+                }*/
+
+                // Uncomment to run test case with an ltrbROI override
+                /*for (i = 0; i < images; i++)
+                {
+                    roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                    roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                    roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                    roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+                }
+                roiTypeSrc = RpptRoiType::LTRB;
+                roiTypeDst = RpptRoiType::LTRB;*/
+
+                start_omp = omp_get_wtime();
+                start = clock();
+                if (ip_bitDepth == 0)
+                    rppt_rotate_host(input, srcDescPtr, output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 1)
+                    rppt_rotate_host(inputf16, srcDescPtr, outputf16, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 2)
+                    rppt_rotate_host(inputf32, srcDescPtr, outputf32, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 3)
+                    missingFuncFlag = 1;
+                else if (ip_bitDepth == 4)
+                    missingFuncFlag = 1;
+                else if (ip_bitDepth == 5)
+                    rppt_rotate_host(inputi8, srcDescPtr, outputi8, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (ip_bitDepth == 6)
+                    missingFuncFlag = 1;
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
             case 24:
             {
                 test_case_name = "warp_affine";
@@ -1343,6 +1403,7 @@ int main(int argc, char **argv)
             }
             case 38:
             {
+                test_case_name = "crop_mirror_normalize";
                 Rpp32f multiplier[images * 3];
                 Rpp32f offset[images * 3];
                 Rpp32u mirror[images];
@@ -1826,36 +1887,39 @@ int main(int argc, char **argv)
             return -1;
         }
 
-        cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-        omp_time_used = end_omp - start_omp;
+        cpuTime = ((double)(end - start)) / CLOCKS_PER_SEC;
+        wallTime = end_omp - start_omp;
 
-        if (cpu_time_used > max_time_used)
-            max_time_used = cpu_time_used;
-        if (cpu_time_used < min_time_used)
-            min_time_used = cpu_time_used;
-        avg_time_used += cpu_time_used;
+        // if (cpuTime > max_time_used)
+        //     max_time_used = cpuTime;
+        // if (cpuTime < min_time_used)
+        //     min_time_used = cpuTime;
+        // avg_time_used += cpuTime;
+        max_time_used = max(max_time_used, wallTime);
+        min_time_used = min(min_time_used, wallTime);
+        avg_time_used += wallTime;
     }
 
-    if (test_type == 0)
+    if (testType == 0)
     {
-        cpu_time_used = cpu_time_used * 1000;
-        omp_time_used = omp_time_used * 1000;
-        cout << "\nCPU Time - BatchPD : " << cpu_time_used;
-        cout << "\nOMP Time - BatchPD : " << omp_time_used;
+        cpuTime = cpuTime;
+        wallTime = wallTime;
+        cout << "\nCPU Time - Tensor : " << cpuTime <<" ms";
+        cout << "\nOMP Time - Tensor : " << wallTime <<" ms";
         printf("\n");
     }
     else
     {
         avg_time_used /= num_iterations;
-        max_time_used = max_time_used * 1000;
-        min_time_used = min_time_used * 1000;
-        avg_time_used = avg_time_used * 1000;
+        max_time_used = max_time_used;
+        min_time_used = min_time_used;
+        avg_time_used = avg_time_used;
         // Display measured times
 
         cout << fixed << "\nmax,min,avg in ms = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
     }
 
-    if (test_type == 0)
+    if (testType == 0)
     {
         // Reconvert other bit depths to 8u for output display purposes
         string fileName = std::to_string(ip_bitDepth);
@@ -1984,7 +2048,7 @@ int main(int argc, char **argv)
         }
         rppDestroyHost(handle);
 
-        // OpenCV dump (if test_type is unit test)
+        // OpenCV dump (if testType is unit test)
         mkdir(dst.c_str(), 0700);
         dst += "/";
 
