@@ -12,9 +12,9 @@ caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
 if (int(testType) == 0):
-    num_iterations = "1"
+    numIterations = "1"
 else:
-    num_iterations = "100"
+    numIterations = "100"
 
 if caseEnd < caseStart:
     print("Ending case# must be greater than starting case#. Aborting!")
@@ -33,7 +33,7 @@ if testType < "0" or testType > "1":
     exit(0)
 
 
-subprocess.call(["./testAllScript.sh", caseStart, caseEnd, testType , num_iterations])
+subprocess.call(["./testAllScript.sh", caseStart, caseEnd, testType, numIterations])
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",
@@ -57,7 +57,6 @@ functionality_group_list = [
 
 if(int(testType) == 1):
     for log_file in log_file_list:
-
         # Opening log file
         try:
             f = open(log_file,"r")

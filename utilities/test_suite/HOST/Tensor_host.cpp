@@ -35,18 +35,18 @@ int main(int argc, char **argv)
     char *src_second = argv[2];
     string dst = argv[3];
 
-    int ip_bitDepth = atoi(argv[4]);
+    int inputBitDepth = atoi(argv[4]);
     unsigned int outputFormatToggle = atoi(argv[5]);
-    int test_case = atoi(argv[6]);
-    int num_iterations = atoi(argv[8]);
+    int testCase = atoi(argv[6]);
+    int numIterations = atoi(argv[8]);
     int testType = atoi(argv[9]);     // 0 for unit and 1 for performance test
-    int layout_type = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
+    int layoutType = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
 
-    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 23 || test_case == 24);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
     bool kernelSizeCase = false;
-    bool interpolationTypeCase = (test_case == 21 || test_case == 23 || test_case == 24);
-    bool noiseTypeCase = (test_case == 8);
-    bool pln1OutTypeCase = (test_case == 86);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
+    bool noiseTypeCase = (testCase == 8);
+    bool pln1OutTypeCase = (testCase == 86);
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
         if (testType == 0)
         {
             printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of iterations > 0> <verbosity = 0/1>>\n");
-            if (layout_type == 2)
+            if (layoutType == 2)
             {
                 if (atoi(argv[5]) != 0)
                 {
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
     dstDescPtr = &dstDesc;
 
-    if(layout_type == 0)
+    if(layoutType == 0)
     {
         inputChannel = 3;
         funcType = "Tensor_HOST_PKD3";
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
             }
         }
     }
-    else if(layout_type == 1)
+    else if(layoutType == 1)
     {
         inputChannel = 3;
         funcType = "Tensor_HOST_PLN3";
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
     string funcName = "";
     funcName += funcType;
 
-    switch(test_case)
+    switch(testCase)
     {
         case 0:
             funcName = "brightness";
@@ -229,12 +229,12 @@ int main(int argc, char **argv)
             funcName = "color_to_greyscale";
             break;
         default:
-            funcName = "test_case";
+            funcName = "testCase";
             break;
     }
 
     // Set src/dst data types in tensor descriptors
-    set_data_type(ip_bitDepth, funcName, srcDescPtr, dstDescPtr);
+    set_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
 
     // Other initializations
     int missingFuncFlag = 0;
@@ -281,7 +281,6 @@ int main(int argc, char **argv)
         func += "_noiseType";
         func += noiseTypeName.c_str();
     }
-    std::cerr<<"func: "<<func<<std::endl;
     printf("\nRunning %s...", func.c_str());
     dst += "/";
     dst += func;
@@ -323,7 +322,7 @@ int main(int argc, char **argv)
         string temp = "";
         temp = src1;
         temp += imageNames[count];
-        if (layout_type == 0 || layout_type == 1)
+        if (layoutType == 0 || layoutType == 1)
             image = imread(temp, 1);
 
         else
@@ -368,7 +367,7 @@ int main(int argc, char **argv)
     dstDescPtr->n = noOfImages;
     dstDescPtr->h = maxDstHeight;
     dstDescPtr->w = maxDstWidth;
-    if (layout_type == 0 || layout_type == 1)
+    if (layoutType == 0 || layoutType == 1)
         dstDescPtr->c = (pln1OutTypeCase) ? 1 : inputChannel;
     else
         dstDescPtr->c = inputChannel;
@@ -378,8 +377,8 @@ int main(int argc, char **argv)
     dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
 
     // Set n/c/h/w strides for src/dst
-    set_nchw_strides(srcDescPtr);
-    set_nchw_strides(dstDescPtr);
+    set_strides(srcDescPtr);
+    set_strides(dstDescPtr);
 
     // Set buffer sizes for src/dst
     ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)noOfImages;
@@ -426,13 +425,13 @@ int main(int argc, char **argv)
         temp_second += de->d_name;
 
         Rpp32u elementsInRow;
-        if (layout_type == 0 || layout_type == 1)
+        if (layoutType == 0 || layoutType == 1)
         {
             image = imread(temp, 1);
             image_second = imread(temp_second, 1);
             elementsInRow = roiTensorPtrSrc[i].xywhROI.roiWidth * srcDescPtr->c;
         }
-        else if (layout_type == 2)
+        else if (layoutType == 2)
         {
             image = imread(temp, 0);
             image_second = imread(temp_second, 0);
@@ -455,7 +454,7 @@ int main(int argc, char **argv)
     }
     closedir(dr2);
 
-    if (layout_type == 1)
+    if (layoutType == 1)
     {
         // Convert default OpenCV PKD3 to PLN3 for first and second input batch
         convert_pkd3_to_pln3(input, srcDescPtr);
@@ -464,11 +463,11 @@ int main(int argc, char **argv)
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
-    if(test_case == 38)
+    if(testCase == 38)
         conversionFactor = 1.0;
 
     // Convert inputs to test various other bit depths
-    if (ip_bitDepth == 1)
+    if (inputBitDepth == 1)
     {
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp16f *inputf16Temp, *inputf16_secondTemp;
@@ -489,7 +488,7 @@ int main(int argc, char **argv)
             inputf16_secondTemp++;
         }
     }
-    else if (ip_bitDepth == 2)
+    else if (inputBitDepth == 2)
     {
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp32f *inputf32Temp, *inputf32_secondTemp;
@@ -510,7 +509,7 @@ int main(int argc, char **argv)
             inputf32_secondTemp++;
         }
     }
-    else if (ip_bitDepth == 5)
+    else if (inputBitDepth == 5)
     {
         Rpp8u *inputTemp, *input_secondTemp;
         Rpp8s *inputi8Temp, *inputi8_secondTemp;
@@ -541,12 +540,12 @@ int main(int argc, char **argv)
     string test_case_name;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), num_iterations, noOfImages);
-    for (int perfRunCount = 0; perfRunCount < num_iterations; perfRunCount++)
+    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numIterations, noOfImages);
+    for (int perfRunCount = 0; perfRunCount < numIterations; perfRunCount++)
     {
         clock_t start, end;
         double start_omp, end_omp;
-        switch (test_case)
+        switch (testCase)
         {
             case 0:
             {
@@ -584,19 +583,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_brightness_host(input, srcDescPtr, output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_brightness_host(inputf16, srcDescPtr, outputf16, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_brightness_host(inputf32, srcDescPtr, outputf32, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_brightness_host(inputi8, srcDescPtr, outputi8, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -637,19 +636,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_gamma_correction_host(input, srcDescPtr, output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_gamma_correction_host(inputf16, srcDescPtr, outputf16, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_gamma_correction_host(inputf32, srcDescPtr, outputf32, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_gamma_correction_host(inputi8, srcDescPtr, outputi8, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -690,19 +689,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_blend_host(inputf16, inputf16_second, srcDescPtr, outputf16, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_blend_host(inputf32, inputf32_second, srcDescPtr, outputf32, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_blend_host(inputi8, inputi8_second, srcDescPtr, outputi8, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -742,19 +741,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_contrast_host(input, srcDescPtr, output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_contrast_host(inputf16, srcDescPtr, outputf16, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_contrast_host(inputf32, srcDescPtr, outputf32, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_contrast_host(inputi8, srcDescPtr, outputi8, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -803,19 +802,19 @@ int main(int argc, char **argv)
 
                         start_omp = omp_get_wtime();
                         start = clock();
-                        if (ip_bitDepth == 0)
+                        if (inputBitDepth == 0)
                             rppt_salt_and_pepper_noise_host(input, srcDescPtr, output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 1)
+                        else if (inputBitDepth == 1)
                             rppt_salt_and_pepper_noise_host(inputf16, srcDescPtr, outputf16, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 2)
+                        else if (inputBitDepth == 2)
                             rppt_salt_and_pepper_noise_host(inputf32, srcDescPtr, outputf32, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 3)
+                        else if (inputBitDepth == 3)
                             missingFuncFlag = 1;
-                        else if (ip_bitDepth == 4)
+                        else if (inputBitDepth == 4)
                             missingFuncFlag = 1;
-                        else if (ip_bitDepth == 5)
+                        else if (inputBitDepth == 5)
                             rppt_salt_and_pepper_noise_host(inputi8, srcDescPtr, outputi8, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 6)
+                        else if (inputBitDepth == 6)
                             missingFuncFlag = 1;
                         else
                             missingFuncFlag = 1;
@@ -854,19 +853,19 @@ int main(int argc, char **argv)
 
                         start_omp = omp_get_wtime();
                         start = clock();
-                        if (ip_bitDepth == 0)
+                        if (inputBitDepth == 0)
                             rppt_gaussian_noise_host(input, srcDescPtr, output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 1)
+                        else if (inputBitDepth == 1)
                             rppt_gaussian_noise_host(inputf16, srcDescPtr, outputf16, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 2)
+                        else if (inputBitDepth == 2)
                             rppt_gaussian_noise_host(inputf32, srcDescPtr, outputf32, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 3)
+                        else if (inputBitDepth == 3)
                             missingFuncFlag = 1;
-                        else if (ip_bitDepth == 4)
+                        else if (inputBitDepth == 4)
                             missingFuncFlag = 1;
-                        else if (ip_bitDepth == 5)
+                        else if (inputBitDepth == 5)
                             rppt_gaussian_noise_host(inputi8, srcDescPtr, outputi8, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 6)
+                        else if (inputBitDepth == 6)
                             missingFuncFlag = 1;
                         else
                             missingFuncFlag = 1;
@@ -903,19 +902,19 @@ int main(int argc, char **argv)
 
                         start_omp = omp_get_wtime();
                         start = clock();
-                        if (ip_bitDepth == 0)
+                        if (inputBitDepth == 0)
                             rppt_shot_noise_host(input, srcDescPtr, output, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 1)
+                        else if (inputBitDepth == 1)
                             rppt_shot_noise_host(inputf16, srcDescPtr, outputf16, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 2)
+                        else if (inputBitDepth == 2)
                             rppt_shot_noise_host(inputf32, srcDescPtr, outputf32, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 3)
+                        else if (inputBitDepth == 3)
                             missingFuncFlag = 1;
-                        else if (ip_bitDepth == 4)
+                        else if (inputBitDepth == 4)
                             missingFuncFlag = 1;
-                        else if (ip_bitDepth == 5)
+                        else if (inputBitDepth == 5)
                             rppt_shot_noise_host(inputi8, srcDescPtr, outputi8, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                        else if (ip_bitDepth == 6)
+                        else if (inputBitDepth == 6)
                             missingFuncFlag = 1;
                         else
                             missingFuncFlag = 1;
@@ -965,19 +964,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_exposure_host(input, srcDescPtr, output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_exposure_host(inputf16, srcDescPtr, outputf16, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_exposure_host(inputf32, srcDescPtr, outputf32, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_exposure_host(inputi8, srcDescPtr, outputi8, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -998,19 +997,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_flip_host(input, srcDescPtr, output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_flip_host(inputf16, srcDescPtr, outputf16, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_flip_host(inputf32, srcDescPtr, outputf32, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_flip_host(inputi8, srcDescPtr, outputi8, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1049,19 +1048,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_resize_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_resize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_resize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_resize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1106,19 +1105,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_rotate_host(input, srcDescPtr, output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_rotate_host(inputf16, srcDescPtr, outputf16, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_rotate_host(inputf32, srcDescPtr, outputf32, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_rotate_host(inputi8, srcDescPtr, outputi8, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1168,19 +1167,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_warp_affine_host(input, srcDescPtr, output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_warp_affine_host(inputf16, srcDescPtr, outputf16, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_warp_affine_host(inputf32, srcDescPtr, outputf32, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_warp_affine_host(inputi8, srcDescPtr, outputi8, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1219,19 +1218,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_non_linear_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_non_linear_blend_host(inputf16, inputf16_second, srcDescPtr, outputf16, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_non_linear_blend_host(inputf32, inputf32_second, srcDescPtr, outputf32, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_non_linear_blend_host(inputi8, inputi8_second, srcDescPtr, outputi8, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1276,19 +1275,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_color_cast_host(input, srcDescPtr, output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_color_cast_host(inputf16, srcDescPtr, outputf16, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_color_cast_host(inputf32, srcDescPtr, outputf32, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_color_cast_host(inputi8, srcDescPtr, outputi8, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1335,19 +1334,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_color_twist_host(inputf16, srcDescPtr, outputf16, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_color_twist_host(inputf32, srcDescPtr, outputf32, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_color_twist_host(inputi8, srcDescPtr, outputi8, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1382,19 +1381,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_crop_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_crop_host(inputf16, srcDescPtr, outputf16, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_crop_host(inputf32, srcDescPtr, outputf32, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_crop_host(inputi8, srcDescPtr, outputi8, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1450,19 +1449,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_crop_mirror_normalize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_crop_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     rppt_crop_mirror_normalize_host(input, srcDescPtr, outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_crop_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1510,19 +1509,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_resize_crop_mirror_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_resize_crop_mirror_host(inputf16, srcDescPtr, outputf16, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_resize_crop_mirror_host(inputf32, srcDescPtr, outputf32, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_resize_crop_mirror_host(inputi8, srcDescPtr, outputi8, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1535,19 +1534,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_copy_host(input, srcDescPtr, output, dstDescPtr, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_copy_host(inputf16, srcDescPtr, outputf16, dstDescPtr, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_copy_host(inputf32, srcDescPtr, outputf32, dstDescPtr, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_copy_host(inputi8, srcDescPtr, outputi8, dstDescPtr, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1570,7 +1569,7 @@ int main(int argc, char **argv)
                     dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
                 }
                 int size_mean;
-                if (layout_type == 0 || layout_type == 1)
+                if (layoutType == 0 || layoutType == 1)
                     size_mean = images * 3;
 
                 else
@@ -1582,7 +1581,7 @@ int main(int argc, char **argv)
                 Rpp32u mirror[images];
                 for (i = 0, j = 0; i < images; i++, j += 3)
                 {
-                    if (layout_type == 2)
+                    if (layoutType == 2)
                     {
                         mean[i] = 100.0;
                         stdDev[i] = 1.0;
@@ -1626,19 +1625,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_resize_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_resize_mirror_normalize_host(inputf16, srcDescPtr, outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_resize_mirror_normalize_host(inputf32, srcDescPtr, outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     rppt_resize_mirror_normalize_host(input, srcDescPtr, outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     rppt_resize_mirror_normalize_host(input, srcDescPtr, outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_resize_mirror_normalize_host(inputi8, srcDescPtr, outputi8, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1685,19 +1684,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_color_jitter_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_color_jitter_host(inputf16, srcDescPtr, outputf16, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_color_jitter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_color_jitter_host(inputi8, srcDescPtr, outputi8, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1739,19 +1738,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_gridmask_host(input, srcDescPtr, output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_gridmask_host(inputf16, srcDescPtr, outputf16, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_gridmask_host(inputf32, srcDescPtr, outputf32, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_gridmask_host(inputi8, srcDescPtr, outputi8, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1803,19 +1802,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_spatter_host(input, srcDescPtr, output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_spatter_host(inputf16, srcDescPtr, outputf16, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_spatter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_spatter_host(inputi8, srcDescPtr, outputi8, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1828,19 +1827,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_swap_channels_host(input, srcDescPtr, output, dstDescPtr, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_swap_channels_host(inputf16, srcDescPtr, outputf16, dstDescPtr, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_swap_channels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_swap_channels_host(inputi8, srcDescPtr, outputi8, dstDescPtr, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1855,19 +1854,19 @@ int main(int argc, char **argv)
 
                 start_omp = omp_get_wtime();
                 start = clock();
-                if (ip_bitDepth == 0)
+                if (inputBitDepth == 0)
                     rppt_color_to_greyscale_host(input, srcDescPtr, output, dstDescPtr, srcSubpixelLayout, handle);
-                else if (ip_bitDepth == 1)
+                else if (inputBitDepth == 1)
                     rppt_color_to_greyscale_host(inputf16, srcDescPtr, outputf16, dstDescPtr, srcSubpixelLayout, handle);
-                else if (ip_bitDepth == 2)
+                else if (inputBitDepth == 2)
                     rppt_color_to_greyscale_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcSubpixelLayout, handle);
-                else if (ip_bitDepth == 3)
+                else if (inputBitDepth == 3)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 4)
+                else if (inputBitDepth == 4)
                     missingFuncFlag = 1;
-                else if (ip_bitDepth == 5)
+                else if (inputBitDepth == 5)
                     rppt_color_to_greyscale_host(inputi8, srcDescPtr, outputi8, dstDescPtr, srcSubpixelLayout, handle);
-                else if (ip_bitDepth == 6)
+                else if (inputBitDepth == 6)
                     missingFuncFlag = 1;
                 else
                     missingFuncFlag = 1;
@@ -1910,7 +1909,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        avg_time_used /= num_iterations;
+        avg_time_used /= numIterations;
         max_time_used = max_time_used;
         min_time_used = min_time_used;
         avg_time_used = avg_time_used;
@@ -1922,9 +1921,9 @@ int main(int argc, char **argv)
     if (testType == 0)
     {
         // Reconvert other bit depths to 8u for output display purposes
-        string fileName = std::to_string(ip_bitDepth);
+        string fileName = std::to_string(inputBitDepth);
         ofstream outputFile(fileName + ".csv");
-        if (ip_bitDepth == 0)
+        if (inputBitDepth == 0)
         {
             Rpp8u *outputTemp;
             outputTemp = output;
@@ -1941,7 +1940,7 @@ int main(int argc, char **argv)
             else
                 cout << "Unable to open file!";
         }
-        else if ((ip_bitDepth == 1) || (ip_bitDepth == 3))
+        else if ((inputBitDepth == 1) || (inputBitDepth == 3))
         {
             Rpp8u *outputTemp;
             outputTemp = output;
@@ -1962,7 +1961,7 @@ int main(int argc, char **argv)
             else
                 cout << "Unable to open file!";
         }
-        else if ((ip_bitDepth == 2) || (ip_bitDepth == 4))
+        else if ((inputBitDepth == 2) || (inputBitDepth == 4))
         {
             Rpp8u *outputTemp;
             outputTemp = output;
@@ -1983,7 +1982,7 @@ int main(int argc, char **argv)
             else
                 cout << "Unable to open file!";
         }
-        else if ((ip_bitDepth == 5) || (ip_bitDepth == 6))
+        else if ((inputBitDepth == 5) || (inputBitDepth == 6))
         {
             Rpp8u *outputTemp;
             outputTemp = output;
@@ -2041,7 +2040,7 @@ int main(int argc, char **argv)
         }
 
         // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
-        if (layout_type == 0 || layout_type == 1)
+        if (layoutType == 0 || layoutType == 1)
         {
             if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
                 convert_pln3_to_pkd3(output, dstDescPtr);
@@ -2080,9 +2079,9 @@ int main(int argc, char **argv)
             temp += imageNames[j];
 
             Mat mat_op_image;
-            if (layout_type == 0 || layout_type == 1)
+            if (layoutType == 0 || layoutType == 1)
                 mat_op_image = (pln1OutTypeCase) ? Mat(height, width, CV_8UC1, temp_output) : Mat(height, width, CV_8UC3, temp_output);
-            else if (layout_type == 2)
+            else if (layoutType == 2)
                 mat_op_image = Mat(height, width, CV_8UC1, temp_output);
 
             imwrite(temp, mat_op_image);

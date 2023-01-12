@@ -134,7 +134,7 @@ inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp3
     {
         stepY = 1;
     }
-    
+
     if (dx < 0)
     {
         dx = -dx;
@@ -201,7 +201,7 @@ inline RppStatus generate_bressenham_line_host(T *dstPtr, RppiSize dstSize, Rpp3
             }
         }
     }
-    
+
     return RPP_SUCCESS;
 }
 
@@ -311,7 +311,7 @@ void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, Rp
     }
 }
 
-void set_nchw_strides(RpptDescPtr descPtr)
+void set_strides(RpptDescPtr descPtr)
 {
     // set strides
     if (descPtr->layout == RpptLayout::NHWC)
