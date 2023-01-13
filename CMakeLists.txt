@@ -19,13 +19,9 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-# Set Default Compiler & Standard
-set(CMAKE_C_COMPILER clang)
-set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_STANDARD 14)
 
 project(amd_rpp CXX)
-set(VERSION "0.98")
+set(VERSION "0.99")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -88,6 +84,13 @@ else()
     endif()
 endif()
 message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
+
+# Set Default Compiler for OCL/CPU
+if(NOT "${BACKEND}" STREQUAL "HIP")
+    set(CMAKE_C_COMPILER clang)
+    set(CMAKE_CXX_COMPILER clang++)
+    set(CMAKE_CXX_STANDARD 14)
+endif()
 
 # RPP Build Type
 if(NOT CMAKE_BUILD_TYPE)
@@ -211,7 +214,6 @@ elseif("${BACKEND}" STREQUAL "OCL")
         # Set external flag to notify GPU_SUPPORT and OPENCL backend availability - Compatible with rocAL and MIVisionX
         add_definitions(-DGPU_SUPPORT)
         set(RPP_BACKEND_OPENCL 1) # For cmakedefine01 in rpp_backend.h.in
-        set(COMPILER_FOR_OPENCL clang++)
         add_definitions(-DRPP_BACKEND_OPENCL=${RPP_BACKEND_OPENCL}) # To use RPP_BACKEND_HIP
         include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
 
