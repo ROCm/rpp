@@ -383,8 +383,7 @@ int main(int argc, char **argv)
     half *inputf16, *inputf16_second, *outputf16;
     Rpp32f *inputf32, *inputf32_second, *outputf32;
     Rpp8s *inputi8, *inputi8_second, *outputi8;
-    int *d_input, *d_input_second, *d_inputf16, *d_inputf16_second, *d_inputf32, *d_inputf32_second, *d_inputi8, *d_inputi8_second;
-    int *d_output, *d_outputf16, *d_outputf32, *d_outputi8;
+    void *d_input, *d_input_second, *d_output;
 
     if (layoutType == 1)
     {
@@ -434,12 +433,12 @@ int main(int argc, char **argv)
             inputf16_secondTemp++;
         }
 
-        hipMalloc(&d_inputf16, ioBufferSizeInBytes_f16);
-        hipMalloc(&d_inputf16_second, ioBufferSizeInBytes_f16);
-        hipMalloc(&d_outputf16, oBufferSizeInBytes_f16);
-        hipMemcpy(d_inputf16, inputf16, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
-        hipMemcpy(d_inputf16_second, inputf16_second, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf16, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
+        hipMalloc(&d_input, ioBufferSizeInBytes_f16);
+        hipMalloc(&d_input_second, ioBufferSizeInBytes_f16);
+        hipMalloc(&d_output, oBufferSizeInBytes_f16);
+        hipMemcpy(d_input, inputf16, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, inputf16_second, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
+        hipMemcpy(d_output, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
     }
     else if (inputBitDepth == 2)
     {
@@ -466,32 +465,32 @@ int main(int argc, char **argv)
             inputf32_secondTemp++;
         }
 
-        hipMalloc(&d_inputf32, ioBufferSizeInBytes_f32);
-        hipMalloc(&d_inputf32_second, ioBufferSizeInBytes_f32);
-        hipMalloc(&d_outputf32, oBufferSizeInBytes_f32);
-        hipMemcpy(d_inputf32, inputf32, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
-        hipMemcpy(d_inputf32_second, inputf32_second, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf32, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
+        hipMalloc(&d_input, ioBufferSizeInBytes_f32);
+        hipMalloc(&d_input_second, ioBufferSizeInBytes_f32);
+        hipMalloc(&d_output, oBufferSizeInBytes_f32);
+        hipMemcpy(d_input, inputf32, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, inputf32_second, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
+        hipMemcpy(d_output, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
     }
     else if (inputBitDepth == 3)
     {
         outputf16 = (half *)calloc(oBufferSizeInBytes_f16, 1);
         hipMalloc(&d_input, ioBufferSizeInBytes_u8);
         hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_outputf16, oBufferSizeInBytes_f16);
+        hipMalloc(&d_output, oBufferSizeInBytes_f16);
         hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
         hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf16, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
+        hipMemcpy(d_output, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
     }
     else if (inputBitDepth == 4)
     {
         outputf32 = (Rpp32f *)calloc(oBufferSizeInBytes_f32, 1);
         hipMalloc(&d_input, ioBufferSizeInBytes_u8);
         hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_outputf32, oBufferSizeInBytes_f32);
+        hipMalloc(&d_output, oBufferSizeInBytes_f32);
         hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
         hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_outputf32, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
+        hipMemcpy(d_output, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
     }
     else if (inputBitDepth == 5)
     {
@@ -518,22 +517,22 @@ int main(int argc, char **argv)
             inputi8_secondTemp++;
         }
 
-        hipMalloc(&d_inputi8, ioBufferSizeInBytes_i8);
-        hipMalloc(&d_inputi8_second, ioBufferSizeInBytes_i8);
-        hipMalloc(&d_outputi8, oBufferSizeInBytes_i8);
-        hipMemcpy(d_inputi8, inputi8, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
-        hipMemcpy(d_inputi8_second, inputi8_second, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
-        hipMemcpy(d_outputi8, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
+        hipMalloc(&d_input, ioBufferSizeInBytes_i8);
+        hipMalloc(&d_input_second, ioBufferSizeInBytes_i8);
+        hipMalloc(&d_output, oBufferSizeInBytes_i8);
+        hipMemcpy(d_input, inputi8, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
+        hipMemcpy(d_input_second, inputi8_second, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
+        hipMemcpy(d_output, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
     }
     else if (inputBitDepth == 6)
     {
         outputi8 = (Rpp8s *)calloc(oBufferSizeInBytes_i8, 1);
         hipMalloc(&d_input, ioBufferSizeInBytes_u8);
         hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_outputi8, oBufferSizeInBytes_i8);
+        hipMalloc(&d_output, oBufferSizeInBytes_i8);
         hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
         hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_outputi8, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
+        hipMemcpy(d_output, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
     }
 
     // Run case-wise RPP API and measure time
@@ -592,20 +591,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_brightness_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_brightness_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_brightness_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -646,20 +633,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_gamma_correction_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_gamma_correction_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_gamma_correction_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -700,20 +675,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_blend_gpu(d_inputf16, d_inputf16_second, srcDescPtr, d_outputf16, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_blend_gpu(d_inputf32, d_inputf32_second, srcDescPtr, d_outputf32, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_blend_gpu(d_inputi8, d_inputi8_second, srcDescPtr, d_outputi8, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -756,20 +719,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_contrast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_contrast_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_contrast_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_contrast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -821,20 +772,8 @@ int main(int argc, char **argv)
                     start_omp = omp_get_wtime();
                     start = clock();
 
-                    if (inputBitDepth == 0)
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_salt_and_pepper_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 1)
-                        rppt_salt_and_pepper_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 2)
-                        rppt_salt_and_pepper_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 3)
-                        missingFuncFlag = 1;
-                    else if (inputBitDepth == 4)
-                        missingFuncFlag = 1;
-                    else if (inputBitDepth == 5)
-                        rppt_salt_and_pepper_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 6)
-                        missingFuncFlag = 1;
                     else
                         missingFuncFlag = 1;
 
@@ -876,20 +815,8 @@ int main(int argc, char **argv)
                     start_omp = omp_get_wtime();
                     start = clock();
 
-                    if (inputBitDepth == 0)
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_gaussian_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 1)
-                        rppt_gaussian_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 2)
-                        rppt_gaussian_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 3)
-                        missingFuncFlag = 1;
-                    else if (inputBitDepth == 4)
-                        missingFuncFlag = 1;
-                    else if (inputBitDepth == 5)
-                        rppt_gaussian_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 6)
-                        missingFuncFlag = 1;
                     else
                         missingFuncFlag = 1;
 
@@ -929,20 +856,8 @@ int main(int argc, char **argv)
                     start_omp = omp_get_wtime();
                     start = clock();
 
-                    if (inputBitDepth == 0)
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_shot_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 1)
-                        rppt_shot_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 2)
-                        rppt_shot_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 3)
-                        missingFuncFlag = 1;
-                    else if (inputBitDepth == 4)
-                        missingFuncFlag = 1;
-                    else if (inputBitDepth == 5)
-                        rppt_shot_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 6)
-                        missingFuncFlag = 1;
                     else
                         missingFuncFlag = 1;
 
@@ -992,20 +907,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_exposure_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_exposure_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_exposure_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1048,20 +951,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_flip_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_flip_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_flip_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1102,20 +993,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_resize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_resize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_resize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1161,20 +1040,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-             if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_rotate_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_rotate_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_rotate_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1227,20 +1094,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_warp_affine_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_warp_affine_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_warp_affine_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1281,20 +1136,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_non_linear_blend_gpu(d_inputf16, d_inputf16_second, srcDescPtr, d_outputf16, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_non_linear_blend_gpu(d_inputf32, d_inputf32_second, srcDescPtr, d_outputf32, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_non_linear_blend_gpu(d_inputi8, d_inputi8_second, srcDescPtr, d_outputi8, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1340,20 +1183,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_color_cast_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_color_cast_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_color_cast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1400,20 +1231,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_color_twist_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_color_twist_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_color_twist_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1448,20 +1267,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_crop_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_crop_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_crop_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1517,20 +1324,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                 rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_crop_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_crop_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 4)
-                rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 5)
-                rppt_crop_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1577,20 +1372,9 @@ int main(int argc, char **argv)
 
             start_omp = omp_get_wtime();
             start = clock();
-            if (inputBitDepth == 0)
+
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_resize_crop_mirror_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_resize_crop_mirror_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_resize_crop_mirror_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1627,20 +1411,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_erode_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_erode_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_erode_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_erode_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1677,20 +1449,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_dilate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_dilate_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_dilate_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_dilate_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1727,20 +1487,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_box_filter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_box_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_box_filter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1752,20 +1500,9 @@ int main(int argc, char **argv)
 
             start_omp = omp_get_wtime();
             start = clock();
-            if (inputBitDepth == 0)
+
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
-            else if (inputBitDepth == 1)
-                rppt_copy_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, handle);
-            else if (inputBitDepth == 2)
-                rppt_copy_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_copy_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1827,20 +1564,8 @@ int main(int argc, char **argv)
 
             start_omp = omp_get_wtime();
             start = clock();
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                 rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_resize_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_resize_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 4)
-                rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 5)
-                rppt_resize_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1882,20 +1607,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_gridmask_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_gridmask_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_gridmask_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1947,20 +1660,8 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
 
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 1)
-                rppt_spatter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 2)
-                rppt_spatter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_spatter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1972,20 +1673,9 @@ int main(int argc, char **argv)
 
             start_omp = omp_get_wtime();
             start = clock();
-            if (inputBitDepth == 0)
+
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_swap_channels_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
-            else if (inputBitDepth == 1)
-                rppt_swap_channels_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, handle);
-            else if (inputBitDepth == 2)
-                rppt_swap_channels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_swap_channels_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1999,20 +1689,8 @@ int main(int argc, char **argv)
 
             start_omp = omp_get_wtime();
             start = clock();
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_color_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, srcSubpixelLayout, handle);
-            else if (inputBitDepth == 1)
-                rppt_color_to_greyscale_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, srcSubpixelLayout, handle);
-            else if (inputBitDepth == 2)
-                rppt_color_to_greyscale_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcSubpixelLayout, handle);
-            else if (inputBitDepth == 3)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 4)
-                missingFuncFlag = 1;
-            else if (inputBitDepth == 5)
-                rppt_color_to_greyscale_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, srcSubpixelLayout, handle);
-            else if (inputBitDepth == 6)
-                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -2089,7 +1767,7 @@ int main(int argc, char **argv)
         }
         else if ((inputBitDepth == 1) || (inputBitDepth == 3))
         {
-            hipMemcpy(outputf16, d_outputf16, oBufferSizeInBytes_f16, hipMemcpyDeviceToHost);
+            hipMemcpy(outputf16, d_output, oBufferSizeInBytes_f16, hipMemcpyDeviceToHost);
             Rpp8u *outputTemp;
             outputTemp = output + dstDescPtr->offsetInBytes;
             half *outputf16Temp;
@@ -2111,7 +1789,7 @@ int main(int argc, char **argv)
         }
         else if ((inputBitDepth == 2) || (inputBitDepth == 4))
         {
-            hipMemcpy(outputf32, d_outputf32, oBufferSizeInBytes_f32, hipMemcpyDeviceToHost);
+            hipMemcpy(outputf32, d_output, oBufferSizeInBytes_f32, hipMemcpyDeviceToHost);
             Rpp8u *outputTemp;
             outputTemp = output + dstDescPtr->offsetInBytes;
             Rpp32f *outputf32Temp;
@@ -2133,7 +1811,7 @@ int main(int argc, char **argv)
         }
         else if ((inputBitDepth == 5) || (inputBitDepth == 6))
         {
-            hipMemcpy(outputi8, d_outputi8, oBufferSizeInBytes_i8, hipMemcpyDeviceToHost);
+            hipMemcpy(outputi8, d_output, oBufferSizeInBytes_i8, hipMemcpyDeviceToHost);
             Rpp8u *outputTemp;
             outputTemp = output + dstDescPtr->offsetInBytes;
             Rpp8s *outputi8Temp;
@@ -2250,60 +1928,39 @@ int main(int argc, char **argv)
     free(input);
     free(input_second);
     free(output);
+    hipFree(d_input);
+    hipFree(d_input_second);
+    hipFree(d_output);
 
-    if (inputBitDepth == 0)
-    {
-        hipFree(d_input);
-        hipFree(d_input_second);
-        hipFree(d_output);
-    }
-    else if (inputBitDepth == 1)
+    if (inputBitDepth == 1)
     {
         free(inputf16);
         free(inputf16_second);
         free(outputf16);
-        hipFree(d_inputf16);
-        hipFree(d_inputf16_second);
-        hipFree(d_outputf16);
     }
     else if (inputBitDepth == 2)
     {
         free(inputf32);
         free(inputf32_second);
         free(outputf32);
-        hipFree(d_inputf32);
-        hipFree(d_inputf32_second);
-        hipFree(d_outputf32);
     }
     else if (inputBitDepth == 3)
     {
         free(outputf16);
-        hipFree(d_input);
-        hipFree(d_input_second);
-        hipFree(d_outputf16);
     }
     else if (inputBitDepth == 4)
     {
         free(outputf32);
-        hipFree(d_input);
-        hipFree(d_input_second);
-        hipFree(d_outputf32);
     }
     else if (inputBitDepth == 5)
     {
         free(inputi8);
         free(inputi8_second);
         free(outputi8);
-        hipFree(d_inputi8);
-        hipFree(d_inputi8_second);
-        hipFree(d_outputi8);
     }
     else if (inputBitDepth == 6)
     {
         free(outputi8);
-        hipFree(d_input);
-        hipFree(d_input_second);
-        hipFree(d_outputi8);
     }
 
     return 0;
