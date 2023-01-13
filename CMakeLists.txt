@@ -19,15 +19,50 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
+
+# Set message options
+if(NOT WIN32)
+    string(ASCII 27 Esc)
+    set(ColourReset "${Esc}[m")
+    set(Red         "${Esc}[31m")
+    set(Green       "${Esc}[32m")
+    set(Yellow      "${Esc}[33m")
+    set(Blue        "${Esc}[34m")
+    set(BoldBlue    "${Esc}[1;34m")
+    set(Magenta     "${Esc}[35m")
+    set(Cyan        "${Esc}[36m")
+    set(White       "${Esc}[37m")
+endif()
+
+# Set backend options
+if(APPLE)
+  set(CMAKE_MACOSX_RPATH 1)
+  set(BACKEND "CPU")
+  message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
+endif()
+
+if(NOT DEFINED BACKEND)
+    set(BACKEND "HIP")   # set default backend to HIP
+else()
+    if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
+        set(BACKEND "OCL")
+    elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
+        set(BACKEND "HIP")
+    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
+        set(BACKEND "CPU")
+    else()
+        message("-- ${Red}Warning: ${PROJECT_NAME} backend option: ${BACKEND} -- unknown${ColourReset}")
+        message("-- ${Red}Warning: ${PROJECT_NAME} default backend will be enforced${ColourReset}")
+        set(BACKEND "HIP")
+    endif()
+endif()
+
 # Set Default Compiler for OCL/CPU
 if(NOT "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
 set(CMAKE_CXX_STANDARD 14)
-
-project(amd_rpp CXX)
-set(VERSION "0.99")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -51,44 +86,12 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
 
-# Set message options
-if(NOT WIN32)
-    string(ASCII 27 Esc)
-    set(ColourReset "${Esc}[m")
-    set(Red         "${Esc}[31m")
-    set(Green       "${Esc}[32m")
-    set(Yellow      "${Esc}[33m")
-    set(Blue        "${Esc}[34m")
-    set(BoldBlue    "${Esc}[1;34m")
-    set(Magenta     "${Esc}[35m")
-    set(Cyan        "${Esc}[36m")
-    set(White       "${Esc}[37m")
-endif()
+# RPP Version
+set(VERSION "0.99")
 
+project(amd_rpp CXX)
 message("-- ${BoldBlue}AMD Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
-
-if(APPLE)
-  set(CMAKE_MACOSX_RPATH 1)
-  set(BACKEND "CPU")
-  message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
-endif()
-
-if(NOT DEFINED BACKEND)
-    set(BACKEND "HIP")   # set default backend to HIP
-else()
-    if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
-        set(BACKEND "OCL")
-    elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
-        set(BACKEND "HIP")
-    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
-        set(BACKEND "CPU")
-    else()
-        message("-- ${Red}Warning: ${PROJECT_NAME} backend option: ${BACKEND} -- unknown${ColourReset}")
-        message("-- ${Red}Warning: ${PROJECT_NAME} default backend will be enforced${ColourReset}")
-        set(BACKEND "HIP")
-    endif()
-endif()
 message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
 
 # RPP Build Type
