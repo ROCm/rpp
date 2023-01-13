@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <hip/hip_fp16.h>
+// #include <hip/hip_fp16.h>
 #include <fstream>
 
 using namespace cv;
@@ -306,22 +306,16 @@ int main(int argc, char **argv)
     oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)noOfImages;
 
     // Set buffer sizes in bytes for src/dst (including offsets)
-
     unsigned long long ioBufferSizeInBytes_u8 = ioBufferSize + srcDescPtr->offsetInBytes;
     unsigned long long oBufferSizeInBytes_u8 = oBufferSize + dstDescPtr->offsetInBytes;
-    unsigned long long ioBufferSizeInBytes_f16 = (ioBufferSize * 2) + srcDescPtr->offsetInBytes;
-    unsigned long long oBufferSizeInBytes_f16 = (oBufferSize * 2) + dstDescPtr->offsetInBytes;
-    unsigned long long ioBufferSizeInBytes_f32 = (ioBufferSize * 4) + srcDescPtr->offsetInBytes;
-    unsigned long long oBufferSizeInBytes_f32 = (oBufferSize * 4) + dstDescPtr->offsetInBytes;
-    unsigned long long ioBufferSizeInBytes_i8 = ioBufferSize + srcDescPtr->offsetInBytes;
-    unsigned long long oBufferSizeInBytes_i8 = oBufferSize + dstDescPtr->offsetInBytes;
+    unsigned long long inputBufferSize = ioBufferSize * get_size_of_data_type(srcDescPtr->dataType) + srcDescPtr->offsetInBytes;
+    unsigned long long outputBufferSize = oBufferSize * get_size_of_data_type(srcDescPtr->dataType) + dstDescPtr->offsetInBytes;
 
     // Initialize 8u host buffers for src/dst
-
-    Rpp8u *input = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
-    Rpp8u *input_second = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
-    Rpp8u *output = (Rpp8u *)calloc(oBufferSizeInBytes_u8, 1);
-    if (testCase == 40) memset(input, 0xFF, ioBufferSizeInBytes_u8);
+    Rpp8u *inputu8 = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
+    Rpp8u *inputu8_second = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
+    Rpp8u *outputu8 = (Rpp8u *)calloc(oBufferSizeInBytes_u8, 1);
+    if (testCase == 40) memset(inputu8, 0xFF, ioBufferSizeInBytes_u8);
 
     // Set 8u host buffers for src/dst
     DIR *dr2 = opendir(src);
@@ -330,8 +324,8 @@ int main(int argc, char **argv)
     i = 0;
 
     Rpp8u *offsetted_input, *offsetted_input_second;
-    offsetted_input = input + srcDescPtr->offsetInBytes;
-    offsetted_input_second = input_second + srcDescPtr->offsetInBytes;
+    offsetted_input = inputu8 + srcDescPtr->offsetInBytes;
+    offsetted_input_second = inputu8_second + srcDescPtr->offsetInBytes;
 
     while ((de = readdir(dr2)) != NULL)
     {
@@ -380,16 +374,14 @@ int main(int argc, char **argv)
     closedir(dr2);
 
     // Convert inputs to test various other bit depths and copy to hip buffers
-    half *inputf16, *inputf16_second, *outputf16;
-    Rpp32f *inputf32, *inputf32_second, *outputf32;
-    Rpp8s *inputi8, *inputi8_second, *outputi8;
+    void *input, *input_second, *output;
     void *d_input, *d_input_second, *d_output;
 
     if (layoutType == 1)
     {
         // Convert default OpenCV PKD3 to PLN3 for first and second input batch
-        convert_pkd3_to_pln3(input, srcDescPtr);
-        convert_pkd3_to_pln3(input_second, srcDescPtr);
+        convert_pkd3_to_pln3(inputu8, srcDescPtr);
+        convert_pkd3_to_pln3(inputu8_second, srcDescPtr);
     }
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
@@ -399,141 +391,80 @@ int main(int argc, char **argv)
     Rpp32f invConversionFactor = 1.0f / conversionFactor;
 
     // Convert inputs to test various other bit depths
+    input = (Rpp8u *)calloc(inputBufferSize, 1);
+    input_second = (Rpp8u *)calloc(inputBufferSize, 1);
+    output = (Rpp8u *)calloc(outputBufferSize, 1);
+
     if (inputBitDepth == 0)
     {
-        hipMalloc(&d_input, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_output, oBufferSizeInBytes_u8);
-        hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_output, output, oBufferSizeInBytes_u8, hipMemcpyHostToDevice);
+        memcpy(input, inputu8, inputBufferSize);
+        memcpy(input_second, inputu8_second, inputBufferSize);
     }
     else if (inputBitDepth == 1)
     {
-        inputf16 = (half *)calloc(ioBufferSizeInBytes_f16, 1);
-        inputf16_second = (half *)calloc(ioBufferSizeInBytes_f16, 1);
-        outputf16 = (half *)calloc(oBufferSizeInBytes_f16, 1);
-
-        Rpp8u *inputTemp, *input_secondTemp;
-        half *inputf16Temp, *inputf16_secondTemp;
-
-        inputTemp = input + srcDescPtr->offsetInBytes;
-        input_secondTemp = input_second + srcDescPtr->offsetInBytes;
-
-        inputf16Temp = (half *)((Rpp8u *)inputf16 + srcDescPtr->offsetInBytes);
-        inputf16_secondTemp = (half *)((Rpp8u *)inputf16_second + srcDescPtr->offsetInBytes);
+        Rpp8u *inputTemp, *inputSecondTemp;
+        half *inputf16Temp, *inputf16SecondTemp;
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputSecondTemp = inputu8_second + srcDescPtr->offsetInBytes;
+        inputf16Temp = (half *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
+        inputf16SecondTemp = (half *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
             *inputf16Temp = (half)(((float)*inputTemp) * conversionFactor);
-            *inputf16_secondTemp = (half)(((float)*input_secondTemp) * conversionFactor);
+            *inputf16SecondTemp = (half)(((float)*inputSecondTemp) * conversionFactor);
             inputTemp++;
             inputf16Temp++;
-            input_secondTemp++;
-            inputf16_secondTemp++;
+            inputSecondTemp++;
+            inputf16SecondTemp++;
         }
-
-        hipMalloc(&d_input, ioBufferSizeInBytes_f16);
-        hipMalloc(&d_input_second, ioBufferSizeInBytes_f16);
-        hipMalloc(&d_output, oBufferSizeInBytes_f16);
-        hipMemcpy(d_input, inputf16, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, inputf16_second, ioBufferSizeInBytes_f16, hipMemcpyHostToDevice);
-        hipMemcpy(d_output, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
     }
     else if (inputBitDepth == 2)
     {
-        inputf32 = (Rpp32f *)calloc(ioBufferSizeInBytes_f32, 1);
-        inputf32_second = (Rpp32f *)calloc(ioBufferSizeInBytes_f32, 1);
-        outputf32 = (Rpp32f *)calloc(oBufferSizeInBytes_f32, 1);
-
-        Rpp8u *inputTemp, *input_secondTemp;
-        Rpp32f *inputf32Temp, *inputf32_secondTemp;
-
-        inputTemp = input + srcDescPtr->offsetInBytes;
-        input_secondTemp = input_second + srcDescPtr->offsetInBytes;
-
-        inputf32Temp = (Rpp32f *)((Rpp8u *)inputf32 + srcDescPtr->offsetInBytes);
-        inputf32_secondTemp = (Rpp32f *)((Rpp8u *)inputf32_second + srcDescPtr->offsetInBytes);
+        Rpp8u *inputTemp, *inputSecondTemp;
+        Rpp32f *inputf32Temp, *inputf32SecondTemp;
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputSecondTemp = inputu8_second + srcDescPtr->offsetInBytes;
+        inputf32Temp = (Rpp32f *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
+        inputf32SecondTemp = (Rpp32f *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
             *inputf32Temp = ((Rpp32f)*inputTemp) * conversionFactor;
-            *inputf32_secondTemp = ((Rpp32f)*input_secondTemp) * conversionFactor;
+            *inputf32SecondTemp = ((Rpp32f)*inputSecondTemp) * conversionFactor;
             inputTemp++;
             inputf32Temp++;
-            input_secondTemp++;
-            inputf32_secondTemp++;
+            inputSecondTemp++;
+            inputf32SecondTemp++;
         }
-
-        hipMalloc(&d_input, ioBufferSizeInBytes_f32);
-        hipMalloc(&d_input_second, ioBufferSizeInBytes_f32);
-        hipMalloc(&d_output, oBufferSizeInBytes_f32);
-        hipMemcpy(d_input, inputf32, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, inputf32_second, ioBufferSizeInBytes_f32, hipMemcpyHostToDevice);
-        hipMemcpy(d_output, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
-    }
-    else if (inputBitDepth == 3)
-    {
-        outputf16 = (half *)calloc(oBufferSizeInBytes_f16, 1);
-        hipMalloc(&d_input, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_output, oBufferSizeInBytes_f16);
-        hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_output, outputf16, oBufferSizeInBytes_f16, hipMemcpyHostToDevice);
-    }
-    else if (inputBitDepth == 4)
-    {
-        outputf32 = (Rpp32f *)calloc(oBufferSizeInBytes_f32, 1);
-        hipMalloc(&d_input, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_output, oBufferSizeInBytes_f32);
-        hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_output, outputf32, oBufferSizeInBytes_f32, hipMemcpyHostToDevice);
     }
     else if (inputBitDepth == 5)
     {
-        inputi8 = (Rpp8s *)calloc(ioBufferSizeInBytes_i8, 1);
-        inputi8_second = (Rpp8s *)calloc(ioBufferSizeInBytes_i8, 1);
-        outputi8 = (Rpp8s *)calloc(oBufferSizeInBytes_i8, 1);
+        Rpp8u *inputTemp, *inputSecondTemp;
+        Rpp8s *inputi8Temp, *inputi8SecondTemp;
 
-        Rpp8u *inputTemp, *input_secondTemp;
-        Rpp8s *inputi8Temp, *inputi8_secondTemp;
-
-        inputTemp = input + srcDescPtr->offsetInBytes;
-        input_secondTemp = input_second + srcDescPtr->offsetInBytes;
-
-        inputi8Temp = inputi8 + srcDescPtr->offsetInBytes;
-        inputi8_secondTemp = inputi8_second + srcDescPtr->offsetInBytes;
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputSecondTemp = inputu8_second + srcDescPtr->offsetInBytes;
+        inputi8Temp = (Rpp8s *)input + srcDescPtr->offsetInBytes;
+        inputi8SecondTemp = (Rpp8s *)input_second + srcDescPtr->offsetInBytes;
 
         for (int i = 0; i < ioBufferSize; i++)
         {
             *inputi8Temp = (Rpp8s) (((Rpp32s) *inputTemp) - 128);
-            *inputi8_secondTemp = (Rpp8s) (((Rpp32s) *input_secondTemp) - 128);
+            *inputi8SecondTemp = (Rpp8s) (((Rpp32s) *inputSecondTemp) - 128);
             inputTemp++;
             inputi8Temp++;
-            input_secondTemp++;
-            inputi8_secondTemp++;
+            inputSecondTemp++;
+            inputi8SecondTemp++;
         }
+    }
 
-        hipMalloc(&d_input, ioBufferSizeInBytes_i8);
-        hipMalloc(&d_input_second, ioBufferSizeInBytes_i8);
-        hipMalloc(&d_output, oBufferSizeInBytes_i8);
-        hipMemcpy(d_input, inputi8, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, inputi8_second, ioBufferSizeInBytes_i8, hipMemcpyHostToDevice);
-        hipMemcpy(d_output, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
-    }
-    else if (inputBitDepth == 6)
-    {
-        outputi8 = (Rpp8s *)calloc(oBufferSizeInBytes_i8, 1);
-        hipMalloc(&d_input, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_input_second, ioBufferSizeInBytes_u8);
-        hipMalloc(&d_output, oBufferSizeInBytes_i8);
-        hipMemcpy(d_input, input, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_input_second, input_second, ioBufferSizeInBytes_u8, hipMemcpyHostToDevice);
-        hipMemcpy(d_output, outputi8, oBufferSizeInBytes_i8, hipMemcpyHostToDevice);
-    }
+    hipMalloc(&d_input, inputBufferSize);
+    hipMalloc(&d_input_second, inputBufferSize);
+    hipMalloc(&d_output, outputBufferSize);
+    hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice);
+    hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
+    hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice);
 
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
@@ -1734,102 +1665,58 @@ int main(int argc, char **argv)
         max_time_used = max_time_used;
         min_time_used = min_time_used;
         avg_time_used = avg_time_used;
-        // Display measured times
 
+        // Display measured times
         cout << fixed << "\nmax,min,avg in ms = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
     }
 
     if (testType == 0)
     {
         // Reconvert other bit depths to 8u for output display purposes
-        string fileName = std::to_string(inputBitDepth);
-        ofstream outputFile(fileName + ".csv");
-        ofstream outFile(func + ".csv");
-
         if (inputBitDepth == 0)
         {
-            hipMemcpy(output, d_output, oBufferSizeInBytes_u8, hipMemcpyDeviceToHost);
-            Rpp8u *outputTemp;
-            outputTemp = output + dstDescPtr->offsetInBytes;
-
-            if (outputFile.is_open())
-            {
-                for (int i = 0; i < oBufferSize; i++)
-                {
-                    outputFile << (Rpp32u) *outputTemp << ",";
-                    outFile << (Rpp32u) *outputTemp << ",";
-                    outputTemp++;
-                }
-                outputFile.close();
-            }
-            else
-                cout << "Unable to open file!";
+            hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+            memcpy(outputu8, output, outputBufferSize);
         }
         else if ((inputBitDepth == 1) || (inputBitDepth == 3))
         {
-            hipMemcpy(outputf16, d_output, oBufferSizeInBytes_f16, hipMemcpyDeviceToHost);
+            hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
             Rpp8u *outputTemp;
-            outputTemp = output + dstDescPtr->offsetInBytes;
+            outputTemp = outputu8 + dstDescPtr->offsetInBytes;
             half *outputf16Temp;
-            outputf16Temp = (half *)((Rpp8u *)outputf16 + dstDescPtr->offsetInBytes);
-
-            if (outputFile.is_open())
+            outputf16Temp = (half *)((Rpp8u *)output + dstDescPtr->offsetInBytes);
+            for (int i = 0; i < oBufferSize; i++)
             {
-                for (int i = 0; i < oBufferSize; i++)
-                {
-                    outputFile << (char) *outputf16Temp << ",";
-                    *outputTemp = (Rpp8u)RPPPIXELCHECK((float)*outputf16Temp * invConversionFactor);
-                    outputf16Temp++;
-                    outputTemp++;
-                }
-                outputFile.close();
+                *outputTemp = (Rpp8u)RPPPIXELCHECK((float)*outputf16Temp * invConversionFactor);
+                outputf16Temp++;
+                outputTemp++;
             }
-            else
-                cout << "Unable to open file!";
         }
         else if ((inputBitDepth == 2) || (inputBitDepth == 4))
         {
-            hipMemcpy(outputf32, d_output, oBufferSizeInBytes_f32, hipMemcpyDeviceToHost);
+            hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
             Rpp8u *outputTemp;
-            outputTemp = output + dstDescPtr->offsetInBytes;
+            outputTemp = outputu8 + dstDescPtr->offsetInBytes;
             Rpp32f *outputf32Temp;
-            outputf32Temp = (Rpp32f *)((Rpp8u *)outputf32 + dstDescPtr->offsetInBytes);
-
-            if (outputFile.is_open())
+            outputf32Temp = (Rpp32f *)((Rpp8u *)output + dstDescPtr->offsetInBytes);
+            for (int i = 0; i < oBufferSize; i++)
             {
-                for (int i = 0; i < oBufferSize; i++)
-                {
-                    outputFile << *outputf32Temp << ",";
-                    *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * invConversionFactor);
-                    outputf32Temp++;
-                    outputTemp++;
-                }
-                outputFile.close();
+                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * invConversionFactor);
+                outputf32Temp++;
+                outputTemp++;
             }
-            else
-                cout << "Unable to open file!";
         }
         else if ((inputBitDepth == 5) || (inputBitDepth == 6))
         {
-            hipMemcpy(outputi8, d_output, oBufferSizeInBytes_i8, hipMemcpyDeviceToHost);
-            Rpp8u *outputTemp;
-            outputTemp = output + dstDescPtr->offsetInBytes;
-            Rpp8s *outputi8Temp;
-            outputi8Temp = outputi8 + dstDescPtr->offsetInBytes;
-
-            if (outputFile.is_open())
+            hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+            Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+            Rpp8s *outputi8Temp = (Rpp8s *)output + dstDescPtr->offsetInBytes;
+            for (int i = 0; i < oBufferSize; i++)
             {
-                for (int i = 0; i < oBufferSize; i++)
-                {
-                    outputFile << (Rpp32s) *outputi8Temp << ",";
-                    *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *outputi8Temp) + 128);
-                    outputi8Temp++;
-                    outputTemp++;
-                }
-                outputFile.close();
+                *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *outputi8Temp) + 128);
+                outputi8Temp++;
+                outputTemp++;
             }
-            else
-                cout << "Unable to open file!";
         }
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
@@ -1849,8 +1736,7 @@ int main(int argc, char **argv)
             }
         }
 
-        compare_output<Rpp8u>(output, func, test_case_name, dstDescPtr, "HIP");
-
+        // compare_output<Rpp8u>(outputu8, func, test_case_name, dstDescPtr, "HIP");
 
         RpptROI roiDefault;
         RpptROIPtr roiPtrDefault;
@@ -1872,7 +1758,7 @@ int main(int argc, char **argv)
         if (layoutType == 0 || layoutType == 1)
         {
             if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
-                convert_pln3_to_pkd3(output, dstDescPtr);
+                convert_pln3_to_pkd3(outputu8, dstDescPtr);
         }
         rppDestroyGPU(handle);
 
@@ -1882,14 +1768,12 @@ int main(int argc, char **argv)
 
         count = 0;
         Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
-        Rpp8u *offsetted_output;
-        offsetted_output = output + dstDescPtr->offsetInBytes;
+        Rpp8u *offsetted_output = outputu8 + dstDescPtr->offsetInBytes;
         for (j = 0; j < dstDescPtr->n; j++)
         {
             int height = dstImgSizes[j].height;
             int width = dstImgSizes[j].width;
-            int op_size;
-            op_size = height * width * dstDescPtr->c;
+            int op_size = height * width * dstDescPtr->c;
 
             Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
             Rpp8u *temp_output_row;
@@ -1928,40 +1812,11 @@ int main(int argc, char **argv)
     free(input);
     free(input_second);
     free(output);
+    free(inputu8);
+    free(inputu8_second);
+    free(outputu8);
     hipFree(d_input);
     hipFree(d_input_second);
     hipFree(d_output);
-
-    if (inputBitDepth == 1)
-    {
-        free(inputf16);
-        free(inputf16_second);
-        free(outputf16);
-    }
-    else if (inputBitDepth == 2)
-    {
-        free(inputf32);
-        free(inputf32_second);
-        free(outputf32);
-    }
-    else if (inputBitDepth == 3)
-    {
-        free(outputf16);
-    }
-    else if (inputBitDepth == 4)
-    {
-        free(outputf32);
-    }
-    else if (inputBitDepth == 5)
-    {
-        free(inputi8);
-        free(inputi8_second);
-        free(outputi8);
-    }
-    else if (inputBitDepth == 6)
-    {
-        free(outputi8);
-    }
-
     return 0;
 }

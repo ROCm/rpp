@@ -13,10 +13,13 @@
 #include <omp.h>
 #include <half/half.hpp>
 #include <fstream>
+#include <hip/hip_fp16.h>
 #include <experimental/filesystem>
 
 using namespace cv;
 using namespace std;
+
+typedef half Rpp16f;
 
 std::map<int, string> augmentationMap =
 {
@@ -163,22 +166,22 @@ void set_strides(RpptDescPtr descPtr)
 void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
 {
     unsigned long long bufferSize = (unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n + (unsigned long long)descPtr->offsetInBytes;
-    Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, 1);
-    memcpy(outputCopy, output, bufferSize);
+    Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
+    memcpy(outputCopy, output, bufferSize * sizeof(Rpp8u));
 
-    Rpp8u *outputTemp, *outputCopyTemp;
-    outputTemp = output + descPtr->offsetInBytes;
+    Rpp8u *outputCopyTemp;
     outputCopyTemp = outputCopy + descPtr->offsetInBytes;
 
+    // omp_set_dynamic(0);
+    // #pragma omp parallel for num_threads(descPtr->n)
     for (int count = 0; count < descPtr->n; count++)
     {
         Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
-        outputCopyTempR = outputCopyTemp;
+        outputCopyTempR = outputCopyTemp + count * descPtr->strides.nStride;
         outputCopyTempG = outputCopyTempR + descPtr->strides.cStride;
         outputCopyTempB = outputCopyTempG + descPtr->strides.cStride;
+        Rpp8u *outputTemp = output + descPtr->offsetInBytes + count * descPtr->strides.nStride;
 
-        omp_set_dynamic(0);
-        #pragma omp parallel for num_threads(descPtr->n)
         for (int i = 0; i < descPtr->h; i++)
         {
             for (int j = 0; j < descPtr->w; j++)
@@ -194,8 +197,6 @@ void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
                 outputCopyTempB++;
             }
         }
-
-        outputCopyTemp += descPtr->strides.nStride;
     }
 
     free(outputCopy);
@@ -297,4 +298,18 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr srcDesc
         cout<<func<<" unit_test "<<"PASS \n";
     else
         cout<<func<<" unit_test "<<"FAIL \n";
+}
+
+size_t get_size_of_data_type(RpptDataType dataType)
+{
+    if(dataType == RpptDataType::U8)
+        return sizeof(Rpp8u);
+    else if(dataType == RpptDataType::I8)
+        return sizeof(Rpp8s);
+    else if(dataType == RpptDataType::F16)
+        return sizeof(Rpp16f);
+    else if(dataType == RpptDataType::F32)
+        return sizeof(Rpp32f);
+    else
+        return 0;
 }
